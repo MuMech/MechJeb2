@@ -188,25 +188,22 @@ namespace MuMech
 
                 if (autopilot.showGuidanceSettings)
                 {
-                    GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartTime, "s");
-                    GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
                     GUILayout.BeginHorizontal();
-                    pegascent.pitchEndToggle = GUILayout.Toggle(pegascent.pitchEndToggle, "Booster Pitch end:");
-                    if (pegascent.pitchEndToggle)
-                        GuiUtils.SimpleTextBox("", pegascent.pitchEndTime, "s");
+                    GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartTime, "s");
                     GUILayout.EndHorizontal();
-                    if (pegascent.pitchEndToggle)
-                        GUILayout.Label(String.Format("ending pitch: {0:F1}°", 90.0 - (pegascent.pitchEndTime - pegascent.pitchStartTime)*pegascent.pitchRate));
-                    /*
-                       GUILayout.BeginHorizontal();
-                       pegascent.pegAfterStageToggle = GUILayout.Toggle(pegascent.pegAfterStageToggle, "Start Guidance after KSP Stage #");
-                       if (pegascent.pegAfterStageToggle)
-                       GuiUtils.SimpleTextBox("", pegascent.pegAfterStage);
-
-                       GUILayout.EndHorizontal();
-                       */
-                    GuiUtils.SimpleTextBox("Guidance Update Interval:", core.optimizer.pegInterval, "s");
+                    GUILayout.BeginHorizontal();
+                    GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GuiUtils.SimpleTextBox("Guidance Interval:", core.optimizer.pegInterval, "s");
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "kPa-rad");
+                    GUILayout.EndHorizontal();
+                    autopilot.limitQa = MuUtils.Clamp(autopilot.limitQa, 0.1, 10);
                 }
+
+                autopilot.limitQaEnabled = ( ascentPathIdx == 2 );  // this is mandatory for PVG
 
                 if (autopilot.showSettings)
                 {
@@ -233,6 +230,7 @@ namespace MuMech
                         core.thrust.electricThrottle = false;
 
                     }
+
                     GUILayout.BeginHorizontal();
                     autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, "Force Roll");
                     if (autopilot.forceRoll)
@@ -241,24 +239,29 @@ namespace MuMech
                         GuiUtils.SimpleTextBox("turn", autopilot.turnRoll, "º", 30f);
                     }
                     GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    GUIStyle s = new GUIStyle(GUI.skin.toggle);
-                    if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
-                    autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit AoA to", s, GUILayout.ExpandWidth(true));
-                    autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
-                    GUILayout.Label("º (" + autopilot.currentMaxAoA.ToString("F1") + "°)", GUILayout.ExpandWidth(true));
-                    GUILayout.EndHorizontal();
 
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Space(25);
-                    if (autopilot.limitAoA)
+                    if (ascentPathIdx != 2)
                     {
-                        GUIStyle sl = new GUIStyle(GUI.skin.label);
-                        if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
-                            sl.normal.textColor = sl.hover.textColor = Color.green;
-                        GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "pa", 50, sl);
+                        GUILayout.BeginHorizontal();
+                        GUIStyle s = new GUIStyle(GUI.skin.toggle);
+                        if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
+                        autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, "Limit AoA to", s, GUILayout.ExpandWidth(true));
+                        autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
+                        GUILayout.Label("º (" + autopilot.currentMaxAoA.ToString("F1") + "°)", GUILayout.ExpandWidth(true));
+                        GUILayout.EndHorizontal();
+
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Space(25);
+                        if (autopilot.limitAoA)
+                        {
+                            GUIStyle sl = new GUIStyle(GUI.skin.label);
+                            if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
+                                sl.normal.textColor = sl.hover.textColor = Color.green;
+                            GuiUtils.SimpleTextBox("Dynamic Pressure Fadeout", autopilot.aoALimitFadeoutPressure, "Pa", 50, sl);
+                        }
+                        GUILayout.EndHorizontal();
+                        autopilot.limitQaEnabled = false; // this is only for PVG
                     }
-                    GUILayout.EndHorizontal();
 
                     if ( ascentPathIdx == 0 )
                     {
@@ -305,10 +308,14 @@ namespace MuMech
                             GUILayout.Label(String.Format("{0}: {1}", i, core.optimizer.solution.ArcString(vesselState.time, i)));
                     }
 
-                    GUILayout.Label(String.Format("vgo: {0:F1}", core.optimizer.vgo));
-                    GUILayout.Label(String.Format("tgo: {0:F3}", core.optimizer.tgo));
-                    GUILayout.Label(String.Format("heading: {0:F1}", core.optimizer.heading));
-                    GUILayout.Label(String.Format("pitch: {0:F1}", core.optimizer.pitch));
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(String.Format("vgo: {0:F1}", core.optimizer.vgo), GUILayout.Width(100));
+                    GUILayout.Label(String.Format("heading: {0:F1}", core.optimizer.heading), GUILayout.Width(100));
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(String.Format("tgo: {0:F3}", core.optimizer.tgo), GUILayout.Width(100));
+                    GUILayout.Label(String.Format("pitch: {0:F1}", core.optimizer.pitch), GUILayout.Width(100));
+                    GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GUIStyle si = new GUIStyle(GUI.skin.label);
                     if ( core.optimizer.isStable() )

@@ -136,6 +136,8 @@ namespace MuMech
         public MovingAverage AoA = new MovingAverage();
         [ValueInfoItem("Angle of Sideslip", InfoItem.Category.Misc, format = "F2", units = "º")]
         public MovingAverage AoS = new MovingAverage();
+        [ValueInfoItem("Displacement Angle", InfoItem.Category.Misc, format = "F2", units = "º")]
+        public MovingAverage displacementAngle = new MovingAverage();
 
         public MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
 
@@ -208,6 +210,8 @@ namespace MuMech
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
+        [ValueInfoItem("Max dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
+        public double maxDynamicPressure;
         [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
         public double dynamicPressure;
         [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
@@ -575,6 +579,9 @@ namespace MuMech
                 AoS.value = double.IsNaN(tempAoS) || speedSurface.value < 0.01 ? 0 : tempAoS;
             }
 
+            // Displacement Angle (combination of AoA + AoS that ignores vehicle asymmetry)
+            displacementAngle.value = UtilMath.Rad2Deg * Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized), -1, 1));
+
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
             vesselRoll.value = (rotationVesselSurface.eulerAngles.z > 180) ? (rotationVesselSurface.eulerAngles.z - 360.0) : rotationVesselSurface.eulerAngles.z;
@@ -601,6 +608,8 @@ namespace MuMech
             {
                 dynamicPressure = vessel.dynamicPressurekPa * 1000;
             }
+            if (dynamicPressure > maxDynamicPressure)
+                maxDynamicPressure = dynamicPressure;
             freeMolecularAerothermalFlux = 0.5 * atmosphericDensity * speedSurface * speedSurface * speedSurface;
 
 
