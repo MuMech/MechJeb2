@@ -142,14 +142,7 @@ namespace MuMech {
                 }
                 else
                 {
-                    if (arc.complete_burn)
-                    {
-                        return String.Format("burn {0}: {1:F1}s {2:F1} m/s (complete)", arc.ksp_stage, tgo(t, n), dV(t, n));
-                    }
-                    else
-                    {
-                        return String.Format("burn {0}: {1:F1}s {2:F1} m/s", arc.ksp_stage, tgo(t, n), dV(t, n));
-                    }
+                    return String.Format("burn {0}: {1:F1}s {2:F1} m/s", arc.ksp_stage, tgo(t, n), dV(t, n));
                 }
             }
 
@@ -425,6 +418,8 @@ namespace MuMech {
             if (thread != null && thread.IsAlive)
                 return;
 
+            //Debug.Log("r0m = " + r0.magnitude + " v0m = " + v0.magnitude);
+
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             r0 = rot * r0;
             v0 = rot * v0;
@@ -635,10 +630,10 @@ namespace MuMech {
         public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
             multipleIntegrate(y0, null, sol, arcs, count: count);
-            //Debug.Log("DONE: rf = " + sol.rf().xzy + "; vf = " + sol.vf().xzy + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()).xzy + "; r_barf = " + sol.r_bar(sol.tmax()).xzy + " vf2 = " + sol.v_bar(sol.tmax()).xzy * v_scale + "; rf2 = " + sol.r_bar(sol.tmax()).xzy * r_scale );
+            //Debug.Log("DONE: rf = " + sol.rf().xzy.magnitude + "; vf = " + sol.vf().xzy.magnitude + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()).xzy.magnitude + "; r_barf = " + sol.r_bar(sol.tmax()).xzy.magnitude + " vf2 = " + sol.v_bar(sol.tmax()).xzy.magnitude * v_scale + "; rf2 = " + sol.r_bar(sol.tmax()).xzy.magnitude * r_scale );
         }
 
-        // copy the nth yf to the n+1th y0 for the next iteration
+        // copy the nth
         private void copy_yf_to_y0(double[] y0, double[] yf, int n, List<Arc> arcs)
         {
             int yf_index = 13 * n;
@@ -819,14 +814,13 @@ namespace MuMech {
 
             /* magnitude of terminal costate vector = 1.0 (dummy constraint for H(tf)=0 to optimize burntime because BC is keplerian) */
             int n = 13 * arcs.Count;
-            z[n] = 0.0;
 
             // FIXME: this isn't fixed_final_time, it is optimized terminal burn to a fixed final time coast.
             if (fixed_final_time)
             {
                 int i = 0;
 
-                // find the last burn arc
+                // find the last burn arc (uh, this has to be arcs.Count - 1 right?)
                 for(int j = 0; j < arcs.Count; j++)
                 {
                     if (arcs[j].thrust > 0)
@@ -845,6 +839,7 @@ namespace MuMech {
             }
             else
             {
+                z[n] = 0.0;
                 for(int i = 0; i < 3; i++)
                     z[n] = z[n] + yf[i+6+13*(arcs.Count-1)] * yf[i+6+13*(arcs.Count-1)];
                 z[n] = Math.Sqrt(z[n]) - 1.0;
@@ -853,7 +848,7 @@ namespace MuMech {
             n++;
 
             // positive arc time constraint
-            z[n] = ( y0[0] < 0 ) ? ( y0[0] - y0[1] * y0[1] ) : y0[1];
+            z[n] = ( y0[0] < 0 ) ? y0[0] - y0[1] * y0[1] : y0[1];
 
             n++;
 
@@ -896,7 +891,8 @@ namespace MuMech {
                         if (arcs[i].coast_after_jettison)
                         {
                             //z[n] = y0[index];
-                            z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-4 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - 2.0 ) / 1e-4 - 1.0 ) );
+                            //z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-4 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - 2.0 ) / 1e-4 - 1.0 ) );
+                            z[n] = H0t2;
                             // z[n] = pv2.magnitude - pv.magnitude;
                         }
                         else
@@ -923,15 +919,26 @@ namespace MuMech {
                         if (arcs[i].coast_after_jettison)
                         {
                             if (y0[index] > 2)
+                            {
+                                z[n-1] = 0;
                                 z[n] = y0[index] - 2 + y0[index+1] * y0[index+1];
+                            }
                             else if (y0[index] < 0)
+                            {
+                                z[n-1] = 0;
                                 z[n] = y0[index] - y0[index+1] * y0[index+1];
+                            }
                             else
+                            {
                                 z[n] = y0[index+1];
+                            }
                         }
                         else
                         {
-                            z[n] = ( y0[index] < 0 ) ? ( y0[index] - y0[index+1] * y0[index+1] ) : y0[index+1];
+                            //if ( y0[index] < 0 )
+                            //    z[n-1] = 0;
+                            z[n] = y0[index+1];
+                            // z[n] = y0[index] - y0[index+1] * y0[index+1];
                         }
                         n++;
                     }
@@ -942,24 +949,27 @@ namespace MuMech {
             }
 
             /* construct sum of the squares of the residuals for levenberg marquardt */
+            /*
             for(int i = 0; i < z.Length; i++)
-                z[i] = z[i] * z[i];
+                //z[i] = z[i] * z[i];
+                z[i] = Math.Abs(z[i]);
+                */
         }
 
         // NOTE TO SELF:  STOP FUCKING WITH THESE NUMBERS
-        double lmEpsx = 1e-8;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
+        double lmEpsx = 0; // 1e-8;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
                                // 1e-8 produces plenty accurate numbers, unless the transversality conditions are broken in some way
-        int lmIter = 20000;    // 20,000 does seem roughly appropriate -- 12,000 has been necessary to find some solutions
-        double lmDiffStep = 1e-8; // this matching lmEspx probably makes sense
+        int lmIter = 0; // 20000;    // 20,000 does seem roughly appropriate -- 12,000 has been necessary to find some solutions
+        double lmDiffStep = 1e-6; // 1e-8; // this matching lmEspx probably makes sense
 
         public bool runOptimizer(List<Arc> arcs)
         {
-            //Debug.Log("arcs in runOptimizer:");
-            //for(int i = 0; i < arcs.Count; i++)
-            //   Debug.Log(arcs[i]);
+            Debug.Log("arcs in runOptimizer:");
+            for(int i = 0; i < arcs.Count; i++)
+               Debug.Log(arcs[i]);
 
-            //for(int i = 0; i < y0.Length; i++)
-            //    Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
+            for(int i = 0; i < y0.Length; i++)
+                Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
 
             double[] z = new double[arcIndex(arcs,arcs.Count)];
             optimizationFunction(y0, z, arcs);
@@ -969,7 +979,7 @@ namespace MuMech {
             for(int i = 0; i < z.Length; i++)
             {
                 znorm += z[i] * z[i];
-                //Debug.Log("zbefore[" + i + "] = " + z[i]);
+                Debug.Log("zbefore[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
@@ -985,8 +995,8 @@ namespace MuMech {
 
             double[] y0_new = new double[y0.Length];
             alglib.minlmresultsbuf(state, ref y0_new, rep);
-            Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
-            Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
+            //Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
+            //Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
 
             if (rep.terminationtype == 2)
                 y0 = y0_new;
@@ -1001,16 +1011,17 @@ namespace MuMech {
                 if (z[i] > max_z)
                     max_z = z[i];
                 znorm += z[i] * z[i];
-                //Debug.Log("z[" + i + "] = " + z[i]);
+                Debug.Log("z[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
             Debug.Log("znorm = " + znorm);
 
             // this comes first because after max-iterations we may have an acceptable solution
-            if (max_z < 1e-4)
+            if (max_z < 1e-5)
                 return true;
 
+            // lol
             if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
                 return false;
 
@@ -1102,14 +1113,11 @@ namespace MuMech {
             multipleIntegrate(y0, yf, arcs, initialize: true);
         }
 
-        /* tweak coast at the ith stage, inserting burntime of the ith stage / 2 */
-        protected void RemoveCoast(List<Arc> arcs, int i, Solution sol)
+        /* remove an arc from the solution */
+        protected void RemoveArc(List<Arc> arcs, int i, Solution sol)
         {
             int bottom = arcIndex(arcs, i, parameters: true);
             int top = arcIndex(arcs, i+1, parameters: true);
-
-            if ( arcs[i].thrust != 0 )
-                throw new Exception("trying to remove a non-coasting coast");
 
             arcs.RemoveAt(i);
 
@@ -1126,7 +1134,7 @@ namespace MuMech {
 
         public abstract void Bootstrap(double t0);
 
-        public void Optimize(double t0)
+        public virtual void Optimize(double t0)
         {
             List<Arc> last_arcs = null;
 
@@ -1169,7 +1177,7 @@ namespace MuMech {
                     while(last_arcs[0].done)
                     {
                         // FIXME: if we fail, then we'll re-shrink y0 again and again
-                        Debug.Log("shrinking y0 array");
+                        //Debug.Log("shrinking y0 array");
                         double[] y0_old = y0;
                         y0 = new double[arcIndex(last_arcs, last_arcs.Count-1)];
                         // copy the 2 burntime parameters
@@ -1206,14 +1214,7 @@ namespace MuMech {
 
                     if ( !runOptimizer(last_arcs) )
                     {
-                        Debug.Log("optimizer failed3");
-                        y0 = null;
-                        return;
-                    }
-
-                    if (y0[0] < 0)
-                    {
-                        Debug.Log("optimizer failed4");
+                        //Debug.Log("optimizer failed3");
                         y0 = null;
                         return;
                     }
@@ -1237,11 +1238,12 @@ namespace MuMech {
 
 
                     //Debug.Log("Optimize done");
+
                 }
             }
             catch (Exception e)
             {
-                Debug.Log(e);
+                //Debug.Log(e);
             }
         }
 
@@ -1264,7 +1266,7 @@ namespace MuMech {
             {
                 for(int i = 0; i < (stages.Count - kspstages.Count); i++)
                 {
-                    Debug.Log("shrinking stage list by one");
+                    //Debug.Log("shrinking stage list by one");
                     stages[0].staged = true;
                     stages.RemoveAt(0);
                 }
@@ -1282,11 +1284,11 @@ namespace MuMech {
 
                 if ( first_thrusting && solution != null && solution.tgo(time) < 10 )
                 {
-                    if (Math.Abs(vesselMass * 1000 - m0) > m0 * 0.01)
-                        Debug.Log("MechJeb: mass of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display (or you're on RCS and this is normal).");
+                    //if (Math.Abs(vesselMass * 1000 - m0) > m0 * 0.01)
+                        //Debug.Log("MechJeb: mass of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display (or you're on RCS and this is normal).");
 
-                    if (Math.Abs(currentThrust * 1000 - thrust) > thrust *0.01)
-                        Debug.Log("MechJeb: thrust of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display (or you're on RCS and this is normal).");
+                    //if (Math.Abs(currentThrust * 1000 - thrust) > thrust *0.01)
+                        //Debug.Log("MechJeb: thrust of current stage is off by > 1%, precision of the burn will be off, fix the Delta-V display (or you're on RCS and this is normal).");
 
                 //    m0 = vesselMass * 1000;
                 //    thrust = currentThrust * 1000;
@@ -1296,7 +1298,7 @@ namespace MuMech {
 
                 if (stage_index >= stages.Count)
                 {
-                    Debug.Log("adding a new found stage");
+                    //Debug.Log("adding a new found stage");
                     stages.Add(new Stage(this, m0: m0, isp: isp, thrust: thrust, max_bt: max_bt, ksp_stage: ksp_stage));
                 }
                 else
