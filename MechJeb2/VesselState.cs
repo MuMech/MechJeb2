@@ -628,6 +628,7 @@ namespace MuMech
             else
             {
                 orbitLAN.value = -(vessel.transform.position - vessel.mainBody.transform.position).AngleInPlane(Planetarium.Zup.Z, Planetarium.Zup.X);
+                Debug.Log("orbitLAN = " + orbitLAN.value + " orbit.LAN = " + vessel.orbit.LAN);
                 orbitTimeToAp.value = 0;
             }
 
