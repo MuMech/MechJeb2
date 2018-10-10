@@ -42,6 +42,7 @@ namespace MuMech {
             }
         }
 
+        // FIXME?  think this is dead code, but it may be useful for debugging...
         protected double LAN(Vector3d r, Vector3d v)
         {
             Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
@@ -747,7 +748,9 @@ namespace MuMech {
                 if (arcs[n].thrust == 0)
                 {
                     if (!arcs[n].use_fixed_time)
+                    {
                         index += 2;
+                    }
                 }
             }
 
@@ -840,16 +843,15 @@ namespace MuMech {
             else
             {
                 z[n] = 0.0;
-                for(int i = 0; i < 3; i++)
+                for(int i = 0; i < 6; i++)
                     z[n] = z[n] + yf[i+6+13*(arcs.Count-1)] * yf[i+6+13*(arcs.Count-1)];
                 z[n] = Math.Sqrt(z[n]) - 1.0;
             }
-
             n++;
 
             // positive arc time constraint
-            z[n] = ( y0[0] < 0 ) ? y0[0] - y0[1] * y0[1] : y0[1];
-
+            z[n] = y0[1];
+            // z[n] = ( y0[0] < 0 ) ? y0[0] - y0[1] * y0[1] : y0[1];
             n++;
 
             double total_bt_bar = 0;
@@ -860,17 +862,21 @@ namespace MuMech {
                     int index = arcIndex(arcs, i, parameters: true);
                     if (total_bt_bar > y0[0] || (i == arcs.Count -1))
                     {
-                        // force unreachable coasts to zero (unless its the terminal coast)
-                        /*
                         if (arcs[i].coast_after_jettison)
-                            z[n] = y0[index] + Math.PI / 2.0;
-                        else
-                        */
+                        {
+                            Debug.Log("in setting coasts to zero");
                             z[n] = y0[index];
-
-                        n++;
-                        z[n] = y0[index+1];
-                        n++;
+                            n++;
+                            z[n] = y0[index+1];
+                            n++;
+                        }
+                        else
+                        {
+                            z[n] = y0[index];
+                            n++;
+                            z[n] = y0[index+1];
+                            n++;
+                        }
                     }
                     else
                     {
@@ -890,9 +896,19 @@ namespace MuMech {
                         double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
                         if (arcs[i].coast_after_jettison)
                         {
+                            Debug.Log("in normal coast");
                             //z[n] = y0[index];
-                            //z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-4 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - 2.0 ) / 1e-4 - 1.0 ) );
+                            z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-4 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - 2.0 ) / 1e-4 - 1.0 ) );
+                            /*
+                            if (y0[index] <= 1e-15 || y0[index] >= 2 - 1e-15)
+                                z[n] = 0;
+                            else
+                                z[n] = H0t2;
+                                */
+
                             z[n] = H0t2;
+
+                            //z[n] = y0[index];
                             // z[n] = pv2.magnitude - pv.magnitude;
                         }
                         else
@@ -918,20 +934,13 @@ namespace MuMech {
 
                         if (arcs[i].coast_after_jettison)
                         {
-                            if (y0[index] > 2)
-                            {
-                                z[n-1] = 0;
-                                z[n] = y0[index] - 2 + y0[index+1] * y0[index+1];
-                            }
-                            else if (y0[index] < 0)
-                            {
-                                z[n-1] = 0;
-                                z[n] = y0[index] - y0[index+1] * y0[index+1];
-                            }
-                            else
-                            {
-                                z[n] = y0[index+1];
-                            }
+                            //z[n] = ( y0[index] < 0 ) ? y0[index] - y0[index+1] * y0[index+1] : y0[index+1] * y0[index+1];
+                            //z[n] = y0[index] - Math.Abs(y0[index+1]); // * y0[index+1];
+                            z[n] = y0[index+1];
+                            //n++;
+                            //z[n] = ( y0[index] > 2 ) ? y0[index] - 2 + y0[index+2] * y0[index+2] : y0[index+2] * y0[index+2];
+                            //z[n] = y0[index] - 2 + Math.Abs(y0[index+2]); // * y0[index+2];
+                            //z[n] = y0[index+2];
                         }
                         else
                         {
@@ -985,9 +994,30 @@ namespace MuMech {
             znorm = Math.Sqrt(znorm);
             //Debug.Log("znorm = " + znorm);
 
+            double[] bndl = new double[arcIndex(arcs,arcs.Count)];
+            double[] bndu = new double[arcIndex(arcs,arcs.Count)];
+            for(int i = 0; i < bndl.Length; i++)
+            {
+                bndl[i] = Double.NegativeInfinity;
+                bndu[i] = Double.PositiveInfinity;
+            }
+
+            bndl[0] = 0;
+
+            for(int i = 0; i < arcs.Count; i++)
+            {
+                if (arcs[i].coast_after_jettison)
+                {
+                    int j = arcIndex(arcs, i, parameters: true);
+                    bndl[j] = 0.0;
+                    bndu[j] = 2.0;
+                }
+            }
+
             alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
             alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);  /* y0.Length must == z.Length returned by the BC function for square problems */
+            alglib.minlmsetbc(state, bndl, bndu);
             alglib.minlmsetcond(state, lmEpsx, lmIter);
             //Debug.Log("about to minlmoptmize");
             alglib.minlmoptimize(state, optimizationFunction, null, arcs);
@@ -998,10 +1028,7 @@ namespace MuMech {
             //Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
             //Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
 
-            if (rep.terminationtype == 2)
-                y0 = y0_new;
-
-            optimizationFunction(y0, z, arcs);
+            optimizationFunction(y0_new, z, arcs);
 
             znorm = 0.0;
             double max_z = 0.0;
@@ -1017,9 +1044,12 @@ namespace MuMech {
             znorm = Math.Sqrt(znorm);
             Debug.Log("znorm = " + znorm);
 
-            // this comes first because after max-iterations we may have an acceptable solution
+            // this comes first because after max-iterations we may still have an acceptable solution
             if (max_z < 1e-5)
+            {
+                y0 = y0_new;
                 return true;
+            }
 
             // lol
             if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
@@ -1087,8 +1117,8 @@ namespace MuMech {
             //y0_new[bottom] = Math.Asin(MuUtils.Clamp(0.5 / MAX_COAST_TAU - 1, -1, 1));
             y0_new[bottom] = dt/2.0;
             y0_new[bottom+1] = 0.0;
-            // subtract half the burn time of the upper stage
-            y0_new[0] = y0[0] - dt/2.0;
+            // keep the burntime of the upper stage constant
+            y0_new[0] = y0[0]; // - dt/2.0;
 
             // FIXME: copy the rest of the parameters for upper stage coasts
             y0 = y0_new;

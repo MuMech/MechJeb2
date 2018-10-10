@@ -140,6 +140,9 @@ namespace MuMech {
                 }
             }
 
+            for(int k = 0; k < y0.Length; k++)
+                Debug.Log("y0[" + k + "] = " + y0[k]);
+
             //Debug.Log("arcs.Count = " + arcs.Count);
             //Debug.Log("segments.Count = " + new_sol.segments.Count);
 
@@ -167,6 +170,9 @@ namespace MuMech {
 
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs, 10);
+
+            for(int k = 0; k < y0.Length; k++)
+                Debug.Log("y0[" + k + "] = " + y0[k]);
 
             if (insertedCoast)
             {
