@@ -18,6 +18,10 @@ namespace MuMech {
         public static void Solve(Vector3d R1, Vector3d V1, Vector3d R2, Vector3d V2, double tof, CelestialBody primary, int nrev, out Vector3d Vi, out Vector3d Vf) {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */
 
+            // if we don't catch this edge condition, the solver will spin forever (internal state will NaN and produce great sadness)
+            if ( tof == 0 )
+                throw new Exception( "MechJeb's Gooding Lambert Solver does not support zero time of flight (teleportation)" );
+
             double VR11, VT11, VR12, VT12;
             double VR21, VT21, VR22, VT22;
             int n;
