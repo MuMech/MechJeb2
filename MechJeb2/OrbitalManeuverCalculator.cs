@@ -652,12 +652,9 @@ namespace MuMech
         // Levenburg-Marquardt local optimization of a two burn transfer.  This is used to refine the results of the simulated annealing global
         // optimization search.
         //
-        // FIXME: minUT/maxUT is the min/max centered UT, so it already needs to have UT (the zero) guess subtracted off of it. it does the
-        //        right thing, but is named awkwardly.
+        // NOTE TO SELF: all UT times here are non-zero centered.
         public static Vector3d DeltaVAndTimeForBiImpulsiveTransfer(Orbit o, Orbit target, double UT, double TT, out double burnUT, double minUT = Double.NegativeInfinity, double maxUT = Double.PositiveInfinity, double maxTT = Double.PositiveInfinity, double maxUTplusT = Double.PositiveInfinity, bool intercept_only = false, double eps = 1e-9, int maxIter = 10000, bool shortway = false)
         {
-            double zeroUT = UT;
-
             double[] x = { 0, TT };
             double[] scale = { o.period / 2, TT };
 
@@ -665,8 +662,8 @@ namespace MuMech
             double[,] C = { { 1, 1, maxUTplusT } };
             int[] CT = { -1 };
 
-            double[] bndl = { minUT, 0 };
-            double[] bndu = { maxUT, maxTT };
+            double[] bndl = { minUT - UT, 0 };
+            double[] bndu = { maxUT - UT, maxTT };
 
             alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
@@ -690,9 +687,11 @@ namespace MuMech
             if ( rep.terminationtype != 2 )
                 Debug.Log("MechJeb Lambert Transfer minlmoptimize termination code: " + rep.terminationtype);
 
+            Debug.Log("DeltaVAndTimeForBiImpulsiveTransfer: x[0] = " + x[0] + " x[1] = " + x[1]);
+
             burnUT = UT + x[0];
 
-            return DeltaVToInterceptAtTime(o, burnUT, target, UT + x[0] + x[1], 0, shortway);
+            return DeltaVToInterceptAtTime(o, burnUT, target, burnUT + x[1], 0, shortway);
         }
 
         public static double acceptanceProbabilityForBiImpulsive(double currentCost, double newCost, double temp)
@@ -704,6 +703,9 @@ namespace MuMech
 
         // Simulated Annealing global search for a two burn transfer.
         //
+        // FIXME: there's some very confusing nomenclature between DeltaVAndTimeForBiImpulsiveTransfer and this
+        //        the minUT/maxUT values here are zero-centered on this methods UT.  the minUT/maxUT parameters to
+        //        the other method are proper UT times and not zero centered at all.
         public static Vector3d DeltaVAndTimeForBiImpulsiveAnnealed(Orbit o, Orbit target, double UT, out double burnUT, bool intercept_only = false)
         {
             double MAXTEMP = 10000;
@@ -726,7 +728,7 @@ namespace MuMech
 
             double minUT = 0.0; // FIXME: allow tweaking?
             double maxUTplusT = Double.PositiveInfinity;
-            double maxUT = 1.5 * o.SynodicPeriod(target); // FIXME: allow tweaking
+            double maxUT = 1.5 * o.SynodicPeriod(target);
 
             // min transfer time must be > 0 (no teleportation)
             double minTT = 1e-15;
@@ -735,19 +737,21 @@ namespace MuMech
             double a = ( o.semiMajorAxis + target.semiMajorAxis ) / 2;
             double maxTT = 2 * Math.PI * Math.Sqrt( a * a * a / o.referenceBody.gravParameter );   // FIXME: allow tweaking
 
-            // can't leave if our orbit has disappeared
-            if (o.patchEndTransition != Orbit.PatchTransitionType.FINAL)
-                maxUT = Math.Min(maxUT, o.EndUT - UT);
-
             if (target.patchEndTransition != Orbit.PatchTransitionType.FINAL)
             {
-                // can't leave if our target orbit has disappeared
-                maxUT = Math.Min(maxUT, target.EndUT - UT);
+                // reset the guess to search for start times out to the end of the target orbit
+                maxUT = target.EndUT - UT;
                 // longest possible transfer time would leave now and arrive at the target patch end
                 maxTT = Math.Min(maxTT, target.EndUT - UT);
                 // constraint on UT + TT <= maxUTplusT to arrive before the target orbit ends
                 maxUTplusT = Math.Min(maxUTplusT, target.EndUT - UT);
             }
+
+            // if our orbit ends, search for start times all the way to the end, but don't violate maxUTplusT if its set
+            if (o.patchEndTransition != Orbit.PatchTransitionType.FINAL)
+                maxUT = Math.Min(o.EndUT - UT, maxUTplusT);
+
+            Debug.Log("minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
 
             double currentUT = maxUT / 2;
             double currentTT = maxTT / 2;
@@ -802,7 +806,9 @@ namespace MuMech
 
             //return DeltaVToInterceptAtTime(o, UT + bestUT, target, UT + bestUT + bestTT, shortway: bestshortway);
 
-            return DeltaVAndTimeForBiImpulsiveTransfer(o, target, UT + bestUT, bestTT, out burnUT, minUT: minUT, maxUT: maxUT, maxTT: maxTT, maxUTplusT: maxUTplusT, intercept_only: intercept_only, shortway: bestshortway);
+            // FIXME: srsly this minUT = UT + minUT / maxUT = UT + maxUT / maxUTplusT = maxUTplusT - bestUT rosetta stone here needs to go
+            // and some consistency needs to happen.  this is just breeding bugs.
+            return DeltaVAndTimeForBiImpulsiveTransfer(o, target, UT + bestUT, bestTT, out burnUT, minUT: UT + minUT, maxUT: UT + maxUT, maxTT: maxTT, maxUTplusT: maxUTplusT - bestUT, intercept_only: intercept_only, shortway: bestshortway);
         }
 
         //Like DeltaVAndTimeForHohmannTransfer, but adds an additional step that uses the Lambert
