@@ -737,11 +737,14 @@ namespace MuMech
                 maxUT = 1.5 * o.SynodicPeriod(target);
 
             // figure the max transfer time of a Hohmann orbit using the SMAs of the two orbits instead of the radius (as a guess), multiplied by 2
-            double a = ( o.semiMajorAxis + target.semiMajorAxis ) / 2;
+            double a = ( Math.Abs(o.semiMajorAxis) + Math.Abs(target.semiMajorAxis) ) / 2;
             double maxTT = 2 * Math.PI * Math.Sqrt( a * a * a / o.referenceBody.gravParameter );   // FIXME: allow tweaking
 
-            if (target.patchEndTransition != Orbit.PatchTransitionType.FINAL)
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check1: minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
+
+            if (target.patchEndTransition != Orbit.PatchTransitionType.FINAL && target.patchEndTransition != Orbit.PatchTransitionType.INITIAL)
             {
+                Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed target.patchEndTransition = " + target.patchEndTransition);
                 // reset the guess to search for start times out to the end of the target orbit
                 maxUT = target.EndUT - UT;
                 // longest possible transfer time would leave now and arrive at the target patch end
@@ -751,8 +754,11 @@ namespace MuMech
             }
 
             // if our orbit ends, search for start times all the way to the end, but don't violate maxUTplusT if its set
-            if (o.patchEndTransition != Orbit.PatchTransitionType.FINAL)
+            if (o.patchEndTransition != Orbit.PatchTransitionType.FINAL && o.patchEndTransition != Orbit.PatchTransitionType.INITIAL)
+            {
+                Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed o.patchEndTransition = " + o.patchEndTransition);
                 maxUT = Math.Min(o.EndUT - UT, maxUTplusT);
+            }
 
             // user requested a burn at a specific time
             if (fixed_ut)
@@ -761,7 +767,7 @@ namespace MuMech
                 minUT = 0;
             }
 
-            Debug.Log("minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check2: minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
 
             double currentUT = maxUT / 2;
             double currentTT = maxTT / 2;

@@ -32,11 +32,11 @@ namespace MuMech
 
             if (!target.NormalTargetExists)
             {
-                throw new OperationException("must select a target for the Bi-impulsive transfer.");
+                throw new OperationException("must select a target for the bi-impulsive transfer.");
             }
             else if (o.referenceBody != target.TargetOrbit.referenceBody)
             {
-                throw new OperationException("target for Bi-impulsive transfer must be in the same sphere of influence.");
+                throw new OperationException("target for bi-impulsive transfer must be in the same sphere of influence.");
             }
 
             var anExists = o.AscendingNodeExists(target.TargetOrbit);
