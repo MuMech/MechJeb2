@@ -737,8 +737,10 @@ namespace MuMech
                 maxUT = 1.5 * o.SynodicPeriod(target);
 
             // figure the max transfer time of a Hohmann orbit using the SMAs of the two orbits instead of the radius (as a guess), multiplied by 2
-            double a = ( o.semiMajorAxis + target.semiMajorAxis ) / 2;
+            double a = ( Math.Abs(o.semiMajorAxis) + Math.Abs(target.semiMajorAxis) ) / 2;
             double maxTT = 2 * Math.PI * Math.Sqrt( a * a * a / o.referenceBody.gravParameter );   // FIXME: allow tweaking
+
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check1: minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
 
             if (target.patchEndTransition != Orbit.PatchTransitionType.FINAL && target.patchEndTransition != Orbit.PatchTransitionType.INITIAL)
             {
@@ -765,7 +767,7 @@ namespace MuMech
                 minUT = 0;
             }
 
-            Debug.Log("minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check2: minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
 
             double currentUT = maxUT / 2;
             double currentTT = maxTT / 2;
