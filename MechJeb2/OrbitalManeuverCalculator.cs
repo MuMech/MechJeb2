@@ -434,12 +434,14 @@ namespace MuMech
 
             Vector3d transferVi, transferVf;
 
-            GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, finalUT - initialUT, o.referenceBody, 0, out transferVi, out transferVf);
+            LambertSolver.Solve(initialRelPos, finalRelPos, finalUT - initialUT, o.referenceBody, shortway, out transferVi, out transferVf);
+            // GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, finalUT - initialUT, o.referenceBody, 0, out transferVi, out transferVf);
 
             if (offsetDistance != 0)
             {
                 finalRelPos += offsetDistance * Vector3d.Cross(finalVelocity, finalRelPos).normalized;
-                GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, finalUT - initialUT, o.referenceBody, 0, out transferVi, out transferVf);
+                LambertSolver.Solve(initialRelPos, finalRelPos, finalUT - initialUT, o.referenceBody, shortway, out transferVi, out transferVf);
+                //GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, finalUT - initialUT, o.referenceBody, 0, out transferVi, out transferVf);
             }
 
             secondDV = finalVelocity - transferVf;
@@ -706,7 +708,7 @@ namespace MuMech
         // FIXME: there's some very confusing nomenclature between DeltaVAndTimeForBiImpulsiveTransfer and this
         //        the minUT/maxUT values here are zero-centered on this methods UT.  the minUT/maxUT parameters to
         //        the other method are proper UT times and not zero centered at all.
-        public static Vector3d DeltaVAndTimeForBiImpulsiveAnnealed(Orbit o, Orbit target, double UT, out double burnUT, bool intercept_only = false)
+        public static Vector3d DeltaVAndTimeForBiImpulsiveAnnealed(Orbit o, Orbit target, double UT, out double burnUT, double minUT = 0.0, double maxUT = Double.PositiveInfinity, bool intercept_only = false, bool fixed_ut = false)
         {
             double MAXTEMP = 10000;
             double temp = MAXTEMP;
@@ -726,12 +728,13 @@ namespace MuMech
             prob.zeroUT = UT;
             prob.intercept_only = intercept_only;
 
-            double minUT = 0.0; // FIXME: allow tweaking?
             double maxUTplusT = Double.PositiveInfinity;
-            double maxUT = 1.5 * o.SynodicPeriod(target);
 
             // min transfer time must be > 0 (no teleportation)
             double minTT = 1e-15;
+
+            if (maxUT == Double.PositiveInfinity)
+                maxUT = 1.5 * o.SynodicPeriod(target);
 
             // figure the max transfer time of a Hohmann orbit using the SMAs of the two orbits instead of the radius (as a guess), multiplied by 2
             double a = ( o.semiMajorAxis + target.semiMajorAxis ) / 2;
@@ -750,6 +753,13 @@ namespace MuMech
             // if our orbit ends, search for start times all the way to the end, but don't violate maxUTplusT if its set
             if (o.patchEndTransition != Orbit.PatchTransitionType.FINAL)
                 maxUT = Math.Min(o.EndUT - UT, maxUTplusT);
+
+            // user requested a burn at a specific time
+            if (fixed_ut)
+            {
+                maxUT = 0;
+                minUT = 0;
+            }
 
             Debug.Log("minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
 
@@ -804,11 +814,11 @@ namespace MuMech
 
             burnUT = UT + bestUT;
 
-            //return DeltaVToInterceptAtTime(o, UT + bestUT, target, UT + bestUT + bestTT, shortway: bestshortway);
+            return DeltaVToInterceptAtTime(o, UT + bestUT, target, UT + bestUT + bestTT, shortway: bestshortway);
 
             // FIXME: srsly this minUT = UT + minUT / maxUT = UT + maxUT / maxUTplusT = maxUTplusT - bestUT rosetta stone here needs to go
             // and some consistency needs to happen.  this is just breeding bugs.
-            return DeltaVAndTimeForBiImpulsiveTransfer(o, target, UT + bestUT, bestTT, out burnUT, minUT: UT + minUT, maxUT: UT + maxUT, maxTT: maxTT, maxUTplusT: maxUTplusT - bestUT, intercept_only: intercept_only, shortway: bestshortway);
+            //return DeltaVAndTimeForBiImpulsiveTransfer(o, target, UT + bestUT, bestTT, out burnUT, minUT: UT + minUT, maxUT: UT + maxUT, maxTT: maxTT, maxUTplusT: maxUTplusT - bestUT, intercept_only: intercept_only, shortway: bestshortway);
         }
 
         //Like DeltaVAndTimeForHohmannTransfer, but adds an additional step that uses the Lambert
