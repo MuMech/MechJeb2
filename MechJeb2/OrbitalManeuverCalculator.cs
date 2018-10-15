@@ -814,11 +814,11 @@ namespace MuMech
 
             burnUT = UT + bestUT;
 
-            return DeltaVToInterceptAtTime(o, UT + bestUT, target, UT + bestUT + bestTT, shortway: bestshortway);
+            //return DeltaVToInterceptAtTime(o, UT + bestUT, target, UT + bestUT + bestTT, shortway: bestshortway);
 
             // FIXME: srsly this minUT = UT + minUT / maxUT = UT + maxUT / maxUTplusT = maxUTplusT - bestUT rosetta stone here needs to go
             // and some consistency needs to happen.  this is just breeding bugs.
-            //return DeltaVAndTimeForBiImpulsiveTransfer(o, target, UT + bestUT, bestTT, out burnUT, minUT: UT + minUT, maxUT: UT + maxUT, maxTT: maxTT, maxUTplusT: maxUTplusT - bestUT, intercept_only: intercept_only, shortway: bestshortway);
+            return DeltaVAndTimeForBiImpulsiveTransfer(o, target, UT + bestUT, bestTT, out burnUT, minUT: UT + minUT, maxUT: UT + maxUT, maxTT: maxTT, maxUTplusT: maxUTplusT - bestUT, intercept_only: intercept_only, shortway: bestshortway);
         }
 
         //Like DeltaVAndTimeForHohmannTransfer, but adds an additional step that uses the Lambert
