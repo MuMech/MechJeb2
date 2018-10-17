@@ -35,7 +35,7 @@ namespace MuMech
 
             core.node.autowarp = core.node.autowarp && core.target.Distance > 1000;
 
-            //If we get within the target distance and then next maneuver node is still 
+            //If we get within the target distance and then next maneuver node is still
             //far in the future, delete it and we will create a new one to match velocities immediately.
             //This can often happen because the target vessel's orbit shifts slightly when it is unpacked.
             if (core.target.Distance < desiredDistance
@@ -99,7 +99,7 @@ namespace MuMech
 
                     double UT = vesselState.time + 15;
                     double interceptUT = UT + closingTime;
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT, 0);
+                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
                     status = "Close to target: plotting intercept";
@@ -107,7 +107,7 @@ namespace MuMech
             }
             else if (orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time) < core.target.TargetOrbit.semiMajorAxis / 25)
             {
-                //We're not close to the target, but we're on an approximate intercept course. 
+                //We're not close to the target, but we're on an approximate intercept course.
                 //Kill relative velocities at closest approach
                 double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
@@ -130,7 +130,7 @@ namespace MuMech
             else if (orbit.RelativeInclination(core.target.TargetOrbit) < 0.05 && orbit.eccentricity < 0.05)
             {
                 //We're not on an intercept course, but we have a circular orbit in the right plane.
-                
+
                 double hohmannUT;
                 Vector3d hohmannDV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out hohmannUT);
 

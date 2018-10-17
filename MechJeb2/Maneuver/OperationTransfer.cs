@@ -9,6 +9,8 @@ namespace MuMech
         public bool intercept_only = false;
 
         [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble periodOffset = 0;
+        [Persistent(pass = (int)Pass.Global)]
         public EditableTime MinDepartureUT = 0;
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime MaxDepartureUT = 0;
@@ -23,6 +25,7 @@ namespace MuMech
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             intercept_only = GUILayout.Toggle(intercept_only, "intercept only, no capture burn (impact/flyby)");
+            GuiUtils.SimpleTextBox("fractional target period offset:", periodOffset);
             timeSelector.DoChooseTimeGUI();
         }
 
@@ -84,11 +87,11 @@ namespace MuMech
 
             if (timeSelector.timeReference == TimeReference.COMPUTED)
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, target.TargetOrbit, universalTime, out UT, intercept_only: intercept_only);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, target.TargetOrbit, universalTime, out UT, intercept_only: intercept_only, periodOffset: periodOffset);
             }
             else
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, target.TargetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, target.TargetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true, periodOffset: periodOffset);
             }
 
             return new ManeuverParameters(dV, UT);
