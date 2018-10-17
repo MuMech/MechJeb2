@@ -20,13 +20,13 @@ namespace MuMech
         public EditableDouble autostagePostDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
         public EditableInt autostageLimit = 0;
-        [Persistent(pass = (int)Pass.Type) | Pass.Global))]]
+        [Persistent(pass = (int)Pass.Type) | Pass.Global))]
         public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
-        [Persistent(pass = (int)Pass.Type) | Pass.Global))]]
+        [Persistent(pass = (int)Pass.Type) | Pass.Global))]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
         [Persistent(pass = (int)Pass.Type)]
         public EditableDouble clampAutoStageThrustPct = 0.95;
-        [Persistent(pass = (int)Pass.Type) | Pass.Global))]]
+        [Persistent(pass = (int)Pass.Type) | Pass.Global))]
         public EditableDoubleMult fairingMaxAerothermalFlux = new EditableDoubleMult(1135, 1);
 
         public bool autostagingOnce = false;
