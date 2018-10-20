@@ -85,13 +85,20 @@ namespace MuMech
 
             Vector3d dV;
 
+            Orbit targetOrbit = new Orbit(target.TargetOrbit);
+
+            if ( periodOffset != 0 )
+            {
+                targetOrbit.MutatedOrbit(periodOffset: periodOffset);
+            }
+
             if (timeSelector.timeReference == TimeReference.COMPUTED)
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, target.TargetOrbit, universalTime, out UT, intercept_only: intercept_only, periodOffset: periodOffset);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out UT, intercept_only: intercept_only);
             }
             else
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, target.TargetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true, periodOffset: periodOffset);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
             }
 
             return new ManeuverParameters(dV, UT);
