@@ -354,12 +354,14 @@ namespace MuMech {
 
                         for(int j = 0; j < n; j++)
                         {
-                            if (j > 1 && t[j] == t[j-1])
+                            if (j > 1 && Math.Abs(t[j] - ti[j2-1]) < 1e-15)
                                 continue;
 
                             ti[j2] = t[j];
                             for(int i = 0; i < 14; i++)
+                            {
                                 yi[i][j2] = y[j][i];
+                            }
 
                             j2++;
                         }
@@ -478,51 +480,6 @@ namespace MuMech {
             dy[13] = At;
         }
 
-        /*
-        public void terminal5constraint(Vector3d rT, Vector3d vT)
-        {
-            bcfun = (double[] yT, double[] zterm) => terminal5constraint(yT, zterm, rT, vT);
-        }
-
-        private void terminal5constraint(double[] yT, double[] z, Vector3d rT, Vector3d vT)
-        {
-            QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
-            Vector3d rT_bar = rot * rT / r_scale;
-            Vector3d vT_bar = rot * vT / v_scale;
-
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
-
-            Vector3d hT = Vector3d.Cross(rT_bar, vT_bar);
-
-            if (hT[1] == 0)
-            {
-                rf = rf.Reorder(231);
-                vf = vf.Reorder(231);
-                rT_bar = rT_bar.Reorder(231);
-                vT_bar = vT_bar.Reorder(231);
-                prf = prf.Reorder(231);
-                pvf = pvf.Reorder(231);
-                hT = Vector3d.Cross(rT_bar, vT_bar);
-            }
-
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d eT = - ( rT_bar.normalized + Vector3d.Cross(hT, vT_bar) );
-            Vector3d ef = - ( rf.normalized + Vector3d.Cross(hf, vf) );
-            Vector3d hmiss = hf - hT;
-            Vector3d emiss = ef - eT;
-            double trans = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
-
-            z[0] = hmiss[0];
-            z[1] = hmiss[1];
-            z[2] = hmiss[2];
-            z[3] = emiss[0];
-            z[4] = emiss[2];
-            z[5] = trans;
-        }
-        */
 
         double ckEps = 1e-6;  /* matches Matlab's default 1e-6 ode45 reltol? */
 
