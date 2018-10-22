@@ -544,9 +544,7 @@ namespace MuMech
             mesh.triangles = triangles;
 
             mesh.RecalculateBounds();
-            mesh.Optimize();
-
-
+            
             return cone;
         }
 
@@ -716,7 +714,6 @@ namespace MuMech
             mesh.normals = normales;
 
             mesh.RecalculateBounds();
-            mesh.Optimize();
 
             return gameObject;
         }
