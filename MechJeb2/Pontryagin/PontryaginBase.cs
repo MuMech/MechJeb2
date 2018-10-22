@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace MuMech {
     public abstract class PontryaginBase {
+        const double MAX_COAST_TAU = 1.5;
+
         public class Arc
         {
             public Stage stage;
@@ -337,10 +339,7 @@ namespace MuMech {
                 {
                     int n = t.Count;
                     double[] ti = new double[n];
-
-                    //Debug.Log("t.Count = " + t.Count);
-                    //Debug.Log("y.Count = " + y.Count);
-                    //Debug.Log("y[0].Length = " + y[0].Length);
+                    double[][] yi = new double[14][];
 
                     tmin = t[0];
                     tmax = t[n-1];
@@ -348,21 +347,26 @@ namespace MuMech {
                     // if tmin == tmax (zero delta-t arc) alglib explodes
                     if (tmin != tmax)
                     {
+                        for(int i = 0; i < 14; i++)
+                            yi[i] = new double[n];
+
+                        int j2 = 0;
+
                         for(int j = 0; j < n; j++)
                         {
-                            ti[j] = t[j];
-                            //Debug.Log(ti[j]);
+                            if (j > 1 && t[j] == t[j-1])
+                                continue;
+
+                            ti[j2] = t[j];
+                            for(int i = 0; i < 14; i++)
+                                yi[i][j2] = y[j][i];
+
+                            j2++;
                         }
 
                         for(int i = 0; i < 14; i++)
-                        {
-                            double[] yi = new double[n];
-                            for(int j = 0; j < n; j++)
-                            {
-                                yi[j] = y[j][i];
-                            }
-                            alglib.spline1dbuildcubic(ti, yi, out interpolant[i]);
-                        }
+                          alglib.spline1dbuildcubic(ti, yi[i], j2, 0, 0, 0, 0, out interpolant[i]);
+
                     } else {
                         ysaved = y[0];
                     }
@@ -645,8 +649,6 @@ namespace MuMech {
                 y0[y0_index+12] = m0;
         }
 
-        const double MAX_COAST_TAU = 2;
-
         private void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2, bool initialize = false)
         {
             double t = 0;
@@ -864,7 +866,6 @@ namespace MuMech {
                     {
                         if (arcs[i].coast_after_jettison)
                         {
-                            Debug.Log("in setting coasts to zero");
                             z[n] = y0[index];
                             n++;
                             z[n] = y0[index+1];
@@ -896,17 +897,16 @@ namespace MuMech {
                         double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
                         if (arcs[i].coast_after_jettison)
                         {
-                            Debug.Log("in normal coast");
                             //z[n] = y0[index];
-                            z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-4 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - 2.0 ) / 1e-4 - 1.0 ) );
-                            /*
-                            if (y0[index] <= 1e-15 || y0[index] >= 2 - 1e-15)
-                                z[n] = 0;
-                            else
-                                z[n] = H0t2;
-                                */
+                            z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-2 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - MAX_COAST_TAU ) / 1e-2 - 1.0 ) );
 
-                            z[n] = H0t2;
+                            //if (y0[index] <= 0 || y0[index] >= 2)
+                            //    z[n] = 0;
+                            //else
+                            //    z[n] = H0t2;
+
+                            // z[n] = H0t2;
+
 
                             //z[n] = y0[index];
                             // z[n] = pv2.magnitude - pv.magnitude;
@@ -994,6 +994,9 @@ namespace MuMech {
             znorm = Math.Sqrt(znorm);
             //Debug.Log("znorm = " + znorm);
 
+            Debug.Log("length = " + arcIndex(arcs,arcs.Count));
+            Debug.Log("y0 length = " + y0.Length);
+
             double[] bndl = new double[arcIndex(arcs,arcs.Count)];
             double[] bndu = new double[arcIndex(arcs,arcs.Count)];
             for(int i = 0; i < bndl.Length; i++)
@@ -1010,7 +1013,7 @@ namespace MuMech {
                 {
                     int j = arcIndex(arcs, i, parameters: true);
                     bndl[j] = 0.0;
-                    bndu[j] = 2.0;
+                    bndu[j] = MAX_COAST_TAU;
                 }
             }
 
@@ -1025,8 +1028,8 @@ namespace MuMech {
 
             double[] y0_new = new double[y0.Length];
             alglib.minlmresultsbuf(state, ref y0_new, rep);
-            //Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
-            //Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
+            Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
+            Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
 
             optimizationFunction(y0_new, z, arcs);
 
@@ -1206,17 +1209,18 @@ namespace MuMech {
                 {
                     while(last_arcs[0].done)
                     {
-                        // FIXME: if we fail, then we'll re-shrink y0 again and again
                         //Debug.Log("shrinking y0 array");
                         double[] y0_old = y0;
-                        y0 = new double[arcIndex(last_arcs, last_arcs.Count-1)];
+                        last_arcs.RemoveAt(0);
+                        int new_upper_length = arcIndex(last_arcs,last_arcs.Count) - 2;
+
+                        // copy the upper N-1 arcs
+                        int start = y0_old.Length - new_upper_length;
+                        // neeed the upper N-1 arcs plus the 2 burntime parameters
+                        y0 = new double[new_upper_length+2];
                         // copy the 2 burntime parameters
                         Array.Copy(y0_old, 0, y0, 0, 2);
-                        // copy the upper N-1 arcs
-                        int start = arcIndex(last_arcs, 1, parameters: true);
-                        int end = y0_old.Length;
-                        Array.Copy(y0_old, start, y0, 2, end - start);
-                        last_arcs.RemoveAt(0);
+                        Array.Copy(y0_old, start, y0, 2, new_upper_length);
 
                         if (last_arcs[0].thrust == 0)
                             last_arcs[0].coast_after_jettison = false;  /* we can't be after a jettison if we're first */
@@ -1271,9 +1275,18 @@ namespace MuMech {
 
                 }
             }
+            catch (alglib.alglibexception e)
+            {
+                Debug.Log("An exception occurred: " + e.GetType().Name);
+                Debug.Log("Message: " + e.Message);
+                Debug.Log("MSG: " + e.msg);
+                Debug.Log("Stack Trace:\n" + e.StackTrace);
+            }
             catch (Exception e)
             {
-                //Debug.Log(e);
+                Debug.Log("An exception occurred: " + e.GetType().Name);
+                Debug.Log("Message: " + e.Message);
+                Debug.Log("Stack Trace:\n" + e.StackTrace);
             }
         }
 
