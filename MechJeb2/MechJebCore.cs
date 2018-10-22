@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using KSP.IO;
 using System.Diagnostics;
+using UnityEngine.Profiling;
 using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
