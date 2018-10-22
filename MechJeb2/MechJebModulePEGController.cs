@@ -4,50 +4,6 @@ using KSP.UI.Screens;
 using System.Collections.Generic;
 using System.Reflection;
 
-/*
- * PEG algorithm references:
- *
- * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19760024151.pdf (Langston1976)
- * - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19740004402.pdf (Brand1973)
- * - https://ntrs.nasa.gov/search.jsp?R=19790048206 (Mchenry1979)
- * - https://arc.aiaa.org/doi/abs/10.2514/6.1977-1051 (Jaggers1977)
- * - https://ntrs.nasa.gov/search.jsp?R=19760020204 (Jaggers1976)
- * - https://ntrs.nasa.gov/search.jsp?R=19740024190 (Jaggers1974)
- * - i've found the Jaggers thrust integrals aren't stable
- *
- * For future inspiration:
- *
- * - https://arc.aiaa.org/doi/abs/10.2514/6.2012-4843 (Ping Lu's updated PEG)
- *
- */
-
-/*
- *  Higher Priority / Nearer Term TODO list:
- *
- *  - UX overhaul
- *    - bring back stock node executor and allow switching
- *    - embed PEG details into maneuver planner when PEG is doing the node executor
- *
- *  Medium Priority / Medium Term TODO list:
- *
- *  - landings and rendezvous
- *     - engine throttling
- *     - lambert solver integration
- *  - injection into orbits at other than the periapsis
- *  - matching planes with contract orbits
- *  - direct ascent to Lunar intercept
- *  - J^2 fixes for Principia
- *
- *  Wishlist for PEG Nirvana:
- *
- *  - throttling down core engine asymmetrically until booster sep (Delta IV Heavy)
- *  - constant accelleration phase through throttle down (space shuttle style g-limiting)
- *  - timed stage-and-a-half booster separation (Atlas I/II)
- *  - PEG for landing
- *  - launch to free-return around Moon (with and without N-body Principia)
- *  - direct ascent to interplanetary trajectories, 'cuz why the hell not?
- */
-
 namespace MuMech
 {
     public enum PegStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, BURNING_STAGING, COASTING_STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
@@ -170,7 +126,12 @@ namespace MuMech
 
             bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.up > 0 );
 
-            if (p != null && p.solution != null && tgo < ( 2 * TimeWarp.fixedDeltaTime) )  // FIXME: why do I need 2x here?
+            // stopping one tick short is more accurate for non-RCS but sometimes we overshoot for RCS
+            int ticks = 1;
+            if (has_rcs)
+                ticks = 2;
+
+            if (p != null && p.solution != null && tgo < ( ticks * TimeWarp.fixedDeltaTime) )  // FIXME: why do I need 2x here?
             {
                 Debug.Log("has_rcs = " + has_rcs + " up = " + vesselState.rcsThrustAvailable.up);
                 Debug.Log("kraken = " + Krakensbane.GetFrameVelocity() );
