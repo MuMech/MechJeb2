@@ -20,13 +20,13 @@ namespace MuMech
         public EditableDouble autostagePostDelay = 1.0;
         [Persistent(pass = (int)Pass.Type)]
         public EditableInt autostageLimit = 0;
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
         [Persistent(pass = (int)Pass.Type)]
         public EditableDouble clampAutoStageThrustPct = 0.95;
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMaxAerothermalFlux = new EditableDoubleMult(1135, 1);
 
         public bool autostagingOnce = false;
@@ -187,7 +187,7 @@ namespace MuMech
             }
             return false;
         }
-        
+
         public void UpdateActiveModuleEngines()
         {
             activeModuleEngines.Clear();
@@ -327,7 +327,7 @@ namespace MuMech
             }
             return false;
         }
-        
+
         //determine if there are chutes being fired that wouldn't also get decoupled
         public static bool HasStayingChutes(int inverseStage, Vessel v)
         {
@@ -348,8 +348,8 @@ namespace MuMech
         // determine if there is a fairing to be deployed
         public static bool HasFairing(int inverseStage, Vessel v)
         {
-            return v.parts.Slinq().Any((p,_inverseStage) => 
-                p.inverseStage == _inverseStage && 
+            return v.parts.Slinq().Any((p,_inverseStage) =>
+                p.inverseStage == _inverseStage &&
                 (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing && p.Modules.Contains("ProceduralFairingDecoupler"))), inverseStage);
         }
     }

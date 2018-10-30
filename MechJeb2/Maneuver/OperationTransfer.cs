@@ -4,48 +4,109 @@ namespace MuMech
 {
     public class OperationGeneric : Operation
     {
-        public override string getName() { return "Hohmann transfer to target";}
+        public override string getName() { return "bi-impulsive (Hohmann) transfer to target";}
+
+        public bool intercept_only = false;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble periodOffset = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableTime MinDepartureUT = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableTime MaxDepartureUT = 0;
+
+        private TimeSelector timeSelector;
 
         public OperationGeneric ()
         {
+            timeSelector = new TimeSelector(new TimeReference[] { TimeReference.COMPUTED, TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING, TimeReference.CLOSEST_APPROACH });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GUILayout.Label("Schedule the burn at the next transfer window.");
+            intercept_only = GUILayout.Toggle(intercept_only, "intercept only, no capture burn (impact/flyby)");
+            GuiUtils.SimpleTextBox("fractional target period offset:", periodOffset);
+            timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
+        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
+            double UT = 0;
+
             if (!target.NormalTargetExists)
             {
-                throw new OperationException("must select a target for the Hohmann transfer.");
+                throw new OperationException("must select a target for the bi-impulsive transfer.");
             }
             else if (o.referenceBody != target.TargetOrbit.referenceBody)
             {
-                throw new OperationException("target for Hohmann transfer must be in the same sphere of influence.");
-            }
-            else if (o.eccentricity > 1)
-            {
-                throw new OperationException("starting orbit for Hohmann transfer must not be hyperbolic.");
-            }
-            else if (target.TargetOrbit.eccentricity > 1)
-            {
-                throw new OperationException("target orbit for Hohmann transfer must not be hyperbolic.");
-            }
-            else if (o.RelativeInclination(target.TargetOrbit) > 30 && o.RelativeInclination(target.TargetOrbit) < 150)
-            {
-                errorMessage = "Warning: target's orbital plane is at a " + o.RelativeInclination(target.TargetOrbit).ToString("F0") + "º angle to starting orbit's plane (recommend at most 30º). Planned transfer may not intercept target properly.";
-            }
-            else if (o.eccentricity > 0.2)
-            {
-                errorMessage = "Warning: Recommend starting Hohmann transfers from a near-circular orbit (eccentricity < 0.2). Planned transfer is starting from an orbit with eccentricity " + o.eccentricity.ToString("F2") + " and so may not intercept target properly.";
+                throw new OperationException("target for bi-impulsive transfer must be in the same sphere of influence.");
             }
 
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, target.TargetOrbit, UT, out UT);
+            var anExists = o.AscendingNodeExists(target.TargetOrbit);
+            var dnExists = o.DescendingNodeExists(target.TargetOrbit);
+            double anTime = o.TimeOfAscendingNode(target.TargetOrbit, universalTime);
+            double dnTime = o.TimeOfDescendingNode(target.TargetOrbit, universalTime);
+
+            if(timeSelector.timeReference == TimeReference.REL_ASCENDING)
+            {
+                if(!anExists)
+                {
+                    throw new OperationException("ascending node with target doesn't exist.");
+                }
+                UT = anTime;
+            }
+            else if(timeSelector.timeReference == TimeReference.REL_DESCENDING)
+            {
+                if(!dnExists)
+                {
+                    throw new OperationException("descending node with target doesn't exist.");
+                }
+                UT = dnTime;
+            }
+            else if(timeSelector.timeReference == TimeReference.REL_NEAREST_AD)
+            {
+                if(!anExists && !dnExists)
+                {
+                    throw new OperationException("neither ascending nor descending node with target exists.");
+                }
+                if(!dnExists || anTime <= dnTime)
+                {
+                    UT = anTime;
+                }
+                else
+                {
+                    UT = dnTime;
+                }
+            }
+            else if (timeSelector.timeReference != TimeReference.COMPUTED)
+            {
+                UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            }
+
+            Vector3d dV;
+
+            Orbit targetOrbit = new Orbit(target.TargetOrbit);
+
+            if ( periodOffset != 0 )
+            {
+                targetOrbit.MutatedOrbit(periodOffset: periodOffset);
+            }
+
+            if (timeSelector.timeReference == TimeReference.COMPUTED)
+            {
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out UT, intercept_only: intercept_only);
+            }
+            else
+            {
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
+            }
 
             return new ManeuverParameters(dV, UT);
         }
+
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

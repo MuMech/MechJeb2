@@ -80,7 +80,7 @@ namespace MuMech
         //normalized vector parallel to the planet's surface and pointing in the eastward direction
         public static Vector3d East(this Orbit o, double UT)
         {
-            return Vector3d.Cross(o.Up(UT), o.North(UT)); //I think this is the opposite of what it should be, but it gives the right answer
+            return Vector3d.Cross(o.Up(UT), o.North(UT));
         }
 
         //distance from the center of the planet
@@ -94,6 +94,19 @@ namespace MuMech
         {
             //should these in fact be swapped?
             return MuUtils.OrbitFromStateVectors(o.SwappedAbsolutePositionAtUT(UT), o.SwappedOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
+        }
+
+        // This does not allocate a new orbit object and the caller should call new Orbit if/when required
+        public static void MutatedOrbit(this Orbit o, double periodOffset = Double.NegativeInfinity)
+        {
+            double UT = Planetarium.GetUniversalTime();
+
+            if (periodOffset.IsFinite())
+            {
+                Vector3d pos, vel;
+                o.GetOrbitalStateVectorsAtUT(UT + o.period * periodOffset, out pos, out vel);
+                o.UpdateFromStateVectors(pos, vel, o.referenceBody, UT);
+            }
         }
 
         //mean motion is rate of increase of the mean anomaly
