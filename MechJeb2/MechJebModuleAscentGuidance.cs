@@ -200,7 +200,18 @@ namespace MuMech
                     GUILayout.BeginHorizontal();
                     GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "kPa-rad");
                     GUILayout.EndHorizontal();
-                    autopilot.limitQa = MuUtils.Clamp(autopilot.limitQa, 0.1, 10);
+                    if ( autopilot.limitQa < 1 || autopilot.limitQa > 4 )
+                    {
+                        GUIStyle s = new GUIStyle(GUI.skin.label);
+                        s.normal.textColor = Color.yellow;
+
+                        if ( autopilot.limitQa < 0.1 )
+                            GUILayout.Label("Qα limit cannot be set to lower than 0.1 kPa-rad", s);
+                        else if ( autopilot.limitQa > 10 )
+                            GUILayout.Label("Qα limit cannot be set to higher than 10 kPa-rad", s);
+                        else
+                            GUILayout.Label("Qα limit is recommended to be 1 to 4 kPa-rad", s);
+                    }
                 }
 
                 autopilot.limitQaEnabled = ( ascentPathIdx == 2 );  // this is mandatory for PVG
