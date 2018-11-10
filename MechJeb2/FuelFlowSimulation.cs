@@ -13,15 +13,17 @@ namespace MuMech
     public class FuelFlowSimulation
     {
         public int simStage; //the simulated rocket's current stage
-        readonly List<FuelNode> nodes = new List<FuelNode>(); //a list of FuelNodes representing all the parts of the ship
-        readonly Dictionary<Part, FuelNode> nodeLookup = new Dictionary<Part, FuelNode>();
-        readonly Dictionary<FuelNode, Part> partLookup = new Dictionary<FuelNode, Part>();
+        private readonly List<FuelNode> nodes = new List<FuelNode>(); //a list of FuelNodes representing all the parts of the ship
+        private readonly Dictionary<Part, FuelNode> nodeLookup = new Dictionary<Part, FuelNode>();
+        private readonly Dictionary<FuelNode, Part> partLookup = new Dictionary<FuelNode, Part>();
 
         private double KpaToAtmospheres;
 
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
         public void Init(List<Part> parts, bool dVLinearThrust)
         {
+            //print("==================================================");
+            //print("Init Start");
             KpaToAtmospheres = PhysicsGlobals.KpaToAtmospheres;
 
             // Create FuelNodes corresponding to each Part
@@ -41,14 +43,16 @@ namespace MuMech
             Part rootPart = parts[0]; // hopefully always correct
             nodeLookup[rootPart].AssignDecoupledInStage(rootPart, nodeLookup, -1);
 
+            simStage = StageManager.LastStage;
+
             // Set up the fuel flow graph
             for (int i = 0; i < parts.Count; i++)
             {
                 Part p = parts[i];
-                nodeLookup[p].AddCrossfeedSouces(p.crossfeedPartSet.GetParts(), nodeLookup);
+                FuelNode node = nodeLookup[p];
+                node.AddCrossfeedSouces(p.crossfeedPartSet.GetParts(), nodeLookup);
+                if (node.decoupledInStage >= simStage) simStage = node.decoupledInStage + 1;
             }
-
-            simStage = StageManager.LastStage + 1;
 
             // Add a fake stage if we are beyond the first one
             // Mostly useful for the Node Executor who use the last stage info
@@ -56,13 +60,14 @@ namespace MuMech
             // some engine were activated manually
             if (StageManager.CurrentStage > StageManager.LastStage)
                 simStage++;
+            //print("Init End");
         }
 
         //Simulate the activation and execution of each stage of the rocket,
         //and return stats for each stage
         public Stats[] SimulateAllStages(float throttle, double staticPressureKpa, double atmDensity, double machNumber)
         {
-            Stats[] stages = new Stats[simStage];
+            Stats[] stages = new Stats[simStage + 1];
 
             int maxStages = simStage - 1;
 
@@ -70,13 +75,12 @@ namespace MuMech
 
             //print("**************************************************");
             //print("SimulateAllStages starting from stage " + simStage + " throttle=" + throttle + " staticPressureKpa=" + staticPressureKpa + " atmDensity=" + atmDensity + " machNumber=" + machNumber);
-            SimulateStageActivation();
 
             while (simStage >= 0)
             {
                 //print("Simulating stage " + simStage + "(vessel mass = " + VesselMass(simStage) + ")");
                 stages[simStage] = SimulateStage(throttle, staticPressure, atmDensity, machNumber);
-                if (simStage != maxStages)
+                if (simStage + 1 < stages.Length)
                     stages[simStage].stagedMass = stages[simStage + 1].endMass - stages[simStage].startMass;
                 //print("Staging at t = " + t);
                 SimulateStageActivation();
@@ -135,6 +139,7 @@ namespace MuMech
                 // BS engine detected. Bail out.
                 if (dt == double.MaxValue || double.IsInfinity(dt))
                 {
+                    //print("BS engine detected. Bail out.");
                     break;
                 }
             }
@@ -208,11 +213,13 @@ namespace MuMech
 
             using (Disposable<List<FuelNode>> decoupledNodes = ListPool<FuelNode>.Instance.BorrowDisposable())
             {
-                nodes.Slinq().Where((n, stage) => n.decoupledInStage == stage, simStage).AddTo(decoupledNodes);
+                nodes.Slinq().Where((n, stage) => n.decoupledInStage >= stage, simStage).AddTo(decoupledNodes);
 
                 for (int i = 0; i < decoupledNodes.value.Count; i++)
                 {
-                    nodes.Remove(decoupledNodes.value[i]); //remove the decoupled nodes from the simulated ship
+                    FuelNode decoupledNode = decoupledNodes.value[i];
+                    nodes.Remove(decoupledNode); //remove the decoupled nodes from the simulated ship
+                    //print("Decoupling: " + decoupledNode.partName + " decoupledInStage=" + decoupledNode.decoupledInStage);
                 }
 
                 for (int i = 0; i < nodes.Count; i++)
@@ -234,6 +241,7 @@ namespace MuMech
         private bool AllowedToStage()
         {
             //print("Checking whether allowed to stage at t = " + t);
+            //print("Checking whether allowed to stage");
 
             using (var activeEngines = FindActiveEngines())
             {
@@ -278,8 +286,6 @@ namespace MuMech
                                     }
                                 }
                             }
-
-
                         }
                     }
                 }
@@ -355,6 +361,8 @@ namespace MuMech
         {
             var param = new Tuple<int, List<FuelNode>>(simStage, nodes);
             var activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
+            //print("Finding engines in " + nodes.Count + " parts, there are " + nodes.Slinq().Where(n => n.isEngine).Count());
+            //nodes.Slinq().Where(n => n.isEngine).ForEach(node => print("  (" + node.partName + " " + node.inverseStage + ">=" + simStage + " " + (node.inverseStage >= simStage) + ")"));
             //print("Finding active engines: excluding resource considerations, there are " + nodes.Slinq().Where(n => n.isEngine && n.inverseStage >= simStage).Count());
             nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p.Item1 && n.isDrawingResources && n.CanDrawNeededResources(p.Item2), param).AddTo(activeEngines.value);
             //print("Finding active engines: including resource considerations, there are " + activeEngines.value.Count);
@@ -449,8 +457,11 @@ namespace MuMech
 
         public int decoupledInStage;    //the stage in which this part will be decoupled from the rocket
         public int inverseStage;        //stage in which this part is activated
+        public bool isLaunchClamp;        //whether this part is a launch clamp
         public bool isSepratron;        //whether this part is a sepratron
         public bool isEngine = false;   //whether this part is an engine
+        public bool isthrottleLocked = false;
+        public bool activatesEvenIfDisconnected = false;
         public bool isDrawingResources = true; // Is the engine actually using any resources
 
         private double resourceRequestRemainingThreshold;
@@ -503,6 +514,9 @@ namespace MuMech
             crossfeedSources.Clear();
 
             isEngine = false;
+            isthrottleLocked = false;
+            activatesEvenIfDisconnected = part.ActivatesEvenIfDisconnected;
+            isLaunchClamp = part.IsLaunchClamp();
 
             dryMass = 0;
             modulesStagedMass = 0;
@@ -510,7 +524,7 @@ namespace MuMech
             decoupledInStage = int.MinValue;
 
             modulesUnstagedMass = 0;
-            if (!part.IsLaunchClamp())
+            if (!isLaunchClamp)
             {
                 dryMass = part.prefabMass; // Intentionally ignore the physic flag.
 
@@ -585,7 +599,8 @@ namespace MuMech
                         inverseStage = StageManager.CurrentStage;
 
                     isEngine = true;
-
+                    isthrottleLocked = engine.throttleLocked;
+                    //print(partName + " isEngine = true and inverseStage=" + inverseStage);
                     g = engine.g;
 
                     // If we take into account the engine rotation
@@ -655,6 +670,8 @@ namespace MuMech
             if (decoupledInStage != int.MinValue)
                 return;
 
+            //print(partName + " AssignDecoupledInStage");
+
             bool isDecoupler = false;
             decoupledInStage = parentDecoupledInStage;
 
@@ -704,7 +721,7 @@ namespace MuMech
 
                             if (attach != null && attach.attachedPart != null)
                             {
-                                if (attach.attachedPart == p.parent)
+                                if (attach.attachedPart == p.parent && mDecouple.staged)
                                 {
                                     isDecoupler = true;
                                     // We are decoupling our parent
@@ -756,7 +773,7 @@ namespace MuMech
                         }
                         if (attach != null && attach.attachedPart != null)
                         {
-                            if (attach.attachedPart == p.parent)
+                            if (attach.attachedPart == p.parent && mAnchoredDecoupler.staged)
                             {
                                 isDecoupler = true;
                                 // We are decoupling our parent
@@ -826,7 +843,7 @@ namespace MuMech
                 }
             }
 
-            if (p.IsLaunchClamp())
+            if (isLaunchClamp)
             {
                 decoupledInStage = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
                 //print("AssignDecoupledInStage D " + p.partInfo.name + " " + parentDecoupledInStage);
@@ -838,7 +855,8 @@ namespace MuMech
                 //print("AssignDecoupledInStage                         " + p.partInfo.name + "(" + p.inverseStage + ")" + decoupledInStage);
             }
 
-            isSepratron = isEngine && (inverseStage == decoupledInStage);
+            isSepratron = isEngine && isthrottleLocked && activatesEvenIfDisconnected && (inverseStage == decoupledInStage);
+            //print(partName + " decoupledInStage=" + decoupledInStage + " isSepratron=" + isSepratron);
 
             for (int i = 0; i < p.children.Count; i++)
             {

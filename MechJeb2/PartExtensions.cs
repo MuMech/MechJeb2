@@ -119,7 +119,7 @@ namespace MuMech
         public static bool IsSepratron(this Part p)
         {
             return p.ActivatesEvenIfDisconnected
-                && p.IsEngine()
+                && p.IsThrottleLockedEngine()
                 && p.IsDecoupledInStage(p.inverseStage)
                 && p.isControlSource == Vessel.ControlLevel.NONE;
         }
@@ -130,6 +130,16 @@ namespace MuMech
             {
                 PartModule m = p.Modules[i];
                 if (m is ModuleEngines) return true;
+            }
+            return false;
+        }
+
+        public static bool IsThrottleLockedEngine(this Part p)
+        {
+            for (int i = 0; i < p.Modules.Count; i++)
+            {
+                PartModule m = p.Modules[i];
+                if (m is ModuleEngines engines && engines.throttleLocked) return true;
             }
             return false;
         }
