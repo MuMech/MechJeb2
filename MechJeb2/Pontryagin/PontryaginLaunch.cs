@@ -9,6 +9,8 @@ namespace MuMech {
         {
         }
 
+        public bool omitCoast;
+
         double rTm;
         double vTm;
         double gamma;
@@ -148,7 +150,7 @@ namespace MuMech {
 
             bool insertedCoast = false;
 
-            if (arcs.Count > 1)
+            if (arcs.Count > 1 && !omitCoast)
             {
                 InsertCoast(arcs, arcs.Count-1, new_sol);
                 insertedCoast = true;
