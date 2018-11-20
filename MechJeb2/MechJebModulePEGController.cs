@@ -133,8 +133,8 @@ namespace MuMech
 
             if (p != null && p.solution != null && tgo < ( ticks * TimeWarp.fixedDeltaTime) )  // FIXME: why do I need 2x here?
             {
-                Debug.Log("has_rcs = " + has_rcs + " up = " + vesselState.rcsThrustAvailable.up);
-                Debug.Log("kraken = " + Krakensbane.GetFrameVelocity() );
+                //Debug.Log("has_rcs = " + has_rcs + " up = " + vesselState.rcsThrustAvailable.up);
+                //Debug.Log("kraken = " + Krakensbane.GetFrameVelocity() );
 
                 if (has_rcs)
                 {
@@ -151,7 +151,7 @@ namespace MuMech
             {
                 Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
                 double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
-                Debug.Log("dVleft = " + dVleft + " angle = " + angle);
+                //Debug.Log("dVleft = " + dVleft + " angle = " + angle);
             }
 
             if ( status == PegStatus.TERMINAL_RCS )
@@ -179,13 +179,13 @@ namespace MuMech
                     rot = QuaternionD.AngleAxis(ang, axis);
                 }
 
-                Debug.Log("axis = " + axis);
-                Debug.Log("angle = " + ang);
-                Debug.Log("vf = " +  p.solution.vf());
-                Debug.Log("vf' = " +  rot * p.solution.vf());
-                Debug.Log("rf = " + p.solution.rf());
-                Debug.Log("r = " + vesselState.orbitalPosition);
-                Debug.Log("v = " + vesselState.orbitalVelocity);
+                //Debug.Log("axis = " + axis);
+                //Debug.Log("angle = " + ang);
+                //Debug.Log("vf = " +  p.solution.vf());
+                //Debug.Log("vf' = " +  rot * p.solution.vf());
+                //Debug.Log("rf = " + p.solution.rf());
+                //Debug.Log("r = " + vesselState.orbitalPosition);
+                //Debug.Log("v = " + vesselState.orbitalVelocity);
 
                 Vector3d dVleft = rot * p.solution.vf() - vesselState.orbitalVelocity; // should probably do something here to rotate vf() around in the orbit at least...
                 double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
