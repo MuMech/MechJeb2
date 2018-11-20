@@ -266,7 +266,7 @@ namespace MuMech
         double old_r0m;
         double old_inc;
 
-        public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o)
+        public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o, bool omitCoast)
         {
             if ( status == PegStatus.ENABLED )
                 return;
@@ -291,6 +291,7 @@ namespace MuMech
                 Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
                 lambda = desiredThrustVector;
                 PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
+                solver.omitCoast = omitCoast;
                 QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
                 //Debug.Log("o.h = " + -o.h.xzy);
                 Vector3d pos, vel;
@@ -306,7 +307,7 @@ namespace MuMech
             old_r0m = r0m;
         }
 
-        public void TargetPeInsertMatchInc(double PeA, double ApA, double inc)
+        public void TargetPeInsertMatchInc(double PeA, double ApA, double inc, bool omitCoast)
         {
             if ( status == PegStatus.ENABLED )
                 return;
@@ -339,6 +340,7 @@ namespace MuMech
                 Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
                 lambda = desiredThrustVector;
                 PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
+                solver.omitCoast = omitCoast;
                 solver.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
                 p = solver;
             }

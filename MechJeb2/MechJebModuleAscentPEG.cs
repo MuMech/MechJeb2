@@ -20,6 +20,8 @@ namespace MuMech
         public EditableDouble pitchRate = new EditableDouble(0.50);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(0, 1000);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool omitCoast = false;
 
         private MechJebModuleAscentGuidance ascentGuidance { get { return core.GetComputerModule<MechJebModuleAscentGuidance>(); } }
 
@@ -67,12 +69,12 @@ namespace MuMech
         {
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
-                core.optimizer.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit);
+                core.optimizer.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit, omitCoast);
                 //autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, core.optimizer.iy)) * UtilMath.Rad2Deg;
             }
             else
             {
-                core.optimizer.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination);
+                core.optimizer.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination, omitCoast);
             }
         }
 
