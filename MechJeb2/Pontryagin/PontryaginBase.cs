@@ -930,12 +930,12 @@ namespace MuMech {
 
         public bool runOptimizer(List<Arc> arcs)
         {
-            Debug.Log("arcs in runOptimizer:");
-            for(int i = 0; i < arcs.Count; i++)
-               Debug.Log(arcs[i]);
+            //Debug.Log("arcs in runOptimizer:");
+            //for(int i = 0; i < arcs.Count; i++)
+            //   Debug.Log(arcs[i]);
 
-            for(int i = 0; i < y0.Length; i++)
-                Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
+            //for(int i = 0; i < y0.Length; i++)
+            //    Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
 
             double[] z = new double[arcIndex(arcs,arcs.Count)];
             optimizationFunction(y0, z, arcs);
@@ -945,14 +945,14 @@ namespace MuMech {
             for(int i = 0; i < z.Length; i++)
             {
                 znorm += z[i] * z[i];
-                Debug.Log("zbefore[" + i + "] = " + z[i]);
+                //Debug.Log("zbefore[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
             //Debug.Log("znorm = " + znorm);
 
-            Debug.Log("length = " + arcIndex(arcs,arcs.Count));
-            Debug.Log("y0 length = " + y0.Length);
+            //Debug.Log("length = " + arcIndex(arcs,arcs.Count));
+            //Debug.Log("y0 length = " + y0.Length);
 
             double[] bndl = new double[arcIndex(arcs,arcs.Count)];
             double[] bndu = new double[arcIndex(arcs,arcs.Count)];
@@ -985,8 +985,8 @@ namespace MuMech {
 
             double[] y0_new = new double[y0.Length];
             alglib.minlmresultsbuf(state, ref y0_new, rep);
-            Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
-            Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
+            //Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
+            //Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
 
             optimizationFunction(y0_new, z, arcs);
 
@@ -998,11 +998,11 @@ namespace MuMech {
                 if (z[i] > max_z)
                     max_z = z[i];
                 znorm += z[i] * z[i];
-                Debug.Log("z[" + i + "] = " + z[i]);
+                //Debug.Log("z[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
-            Debug.Log("znorm = " + znorm);
+            //Debug.Log("znorm = " + znorm);
 
             // this comes first because after max-iterations we may still have an acceptable solution
             if (max_z < 1e-5)

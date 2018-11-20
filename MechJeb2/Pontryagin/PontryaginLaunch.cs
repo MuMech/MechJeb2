@@ -114,16 +114,16 @@ namespace MuMech {
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs, initialize: true);
 
-            for(int j = 0; j < y0.Length; j++)
-                Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
+            //for(int j = 0; j < y0.Length; j++)
+            //    Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
 
             //Debug.Log("running optimizer");
 
             if ( !runOptimizer(arcs) )
             {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                Debug.Log("optimizer failed5");
+                //for(int k = 0; k < y0.Length; k++)
+                    //Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                //Debug.Log("optimizer failed5");
                 y0 = null;
                 return;
             }
@@ -142,8 +142,8 @@ namespace MuMech {
                 }
             }
 
-            for(int k = 0; k < y0.Length; k++)
-                Debug.Log("y0[" + k + "] = " + y0[k]);
+            //for(int k = 0; k < y0.Length; k++)
+            //   Debug.Log("y0[" + k + "] = " + y0[k]);
 
             //Debug.Log("arcs.Count = " + arcs.Count);
             //Debug.Log("segments.Count = " + new_sol.segments.Count);
@@ -161,9 +161,9 @@ namespace MuMech {
 
             if ( !runOptimizer(arcs) )
             {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                Debug.Log("optimizer failed6");
+                //for(int k = 0; k < y0.Length; k++)
+                    //Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                //Debug.Log("optimizer failed6");
                 y0 = null;
                 return;
             }
@@ -173,8 +173,8 @@ namespace MuMech {
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs, 10);
 
-            for(int k = 0; k < y0.Length; k++)
-                Debug.Log("y0[" + k + "] = " + y0[k]);
+            //for(int k = 0; k < y0.Length; k++)
+            //    Debug.Log("y0[" + k + "] = " + y0[k]);
 
             if (insertedCoast)
             {
@@ -210,9 +210,9 @@ namespace MuMech {
 
                     if ( !runOptimizer(arcs) )
                     {
-                        for(int k = 0; k < y0.Length; k++)
-                            Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                        Debug.Log("optimizer failed10");
+                        //for(int k = 0; k < y0.Length; k++)
+                        //    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                        //Debug.Log("optimizer failed10");
                         y0 = null;
                         return;
                     }
@@ -223,8 +223,8 @@ namespace MuMech {
                 }
             }
 
-            for(int k = 0; k < y0.Length; k++)
-                Debug.Log("new y0[" + k + "] = " + y0[k]);
+            //for(int k = 0; k < y0.Length; k++)
+                //Debug.Log("new y0[" + k + "] = " + y0[k]);
 
             this.solution = new_sol;
             //Debug.Log("done with bootstrap");
@@ -232,8 +232,8 @@ namespace MuMech {
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs);
 
-            for(int k = 0; k < yf.Length; k++)
-                Debug.Log("new yf[" + k + "] = " + yf[k]);
+            //for(int k = 0; k < yf.Length; k++)
+                //Debug.Log("new yf[" + k + "] = " + yf[k]);
 
             //Debug.Log("optimizer hT = " + hT.magnitude * r_scale * v_scale);
             //Debug.Log("r_scale = " + r_scale);
