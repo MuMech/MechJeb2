@@ -212,6 +212,9 @@ namespace MuMech
                         else
                             GUILayout.Label("Qα limit is recommended to be 1 to 4 kPa-rad", s);
                     }
+                    GUILayout.BeginHorizontal();
+                    pegascent.omitCoast = GUILayout.Toggle(pegascent.omitCoast, "Omit Coast");
+                    GUILayout.EndHorizontal();
                 }
 
                 autopilot.limitQaEnabled = ( ascentPathIdx == 2 );  // this is mandatory for PVG
