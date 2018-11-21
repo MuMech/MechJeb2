@@ -14,6 +14,8 @@ namespace MuMech
         public EditableTime MinDepartureUT = 0;
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime MaxDepartureUT = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool simpleTransfer = false;
 
         private TimeSelector timeSelector;
 
@@ -25,8 +27,12 @@ namespace MuMech
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             intercept_only = GUILayout.Toggle(intercept_only, "intercept only, no capture burn (impact/flyby)");
+            simpleTransfer = GUILayout.Toggle(simpleTransfer, "simple coplanar Hohmann transfer");
             GuiUtils.SimpleTextBox("fractional target period offset:", periodOffset);
-            timeSelector.DoChooseTimeGUI();
+            if (!simpleTransfer)
+            {
+                timeSelector.DoChooseTimeGUI();
+            }
         }
 
         public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -92,13 +98,20 @@ namespace MuMech
                 targetOrbit.MutatedOrbit(periodOffset: periodOffset);
             }
 
-            if (timeSelector.timeReference == TimeReference.COMPUTED)
+            if (simpleTransfer)
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out UT, intercept_only: intercept_only);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, out UT);
             }
             else
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
+                if (timeSelector.timeReference == TimeReference.COMPUTED)
+                {
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out UT, intercept_only: intercept_only);
+                }
+                else
+                {
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
+                }
             }
 
             return new ManeuverParameters(dV, UT);
