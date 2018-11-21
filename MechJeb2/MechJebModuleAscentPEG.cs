@@ -45,6 +45,8 @@ namespace MuMech
 
         public override bool DriveAscent(FlightCtrlState s)
         {
+            // timedLaunch may have disabled the optimizer, so make sure it is still enabled
+            core.optimizer.enabled = true;
             setTarget();
             core.optimizer.AssertStart(allow_execution: true);
             switch (mode)
