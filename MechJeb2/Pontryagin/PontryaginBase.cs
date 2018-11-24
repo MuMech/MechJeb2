@@ -606,6 +606,8 @@ namespace MuMech {
                 y0[y0_index+12] = m0;
         }
 
+        bool overburning = false;
+
         private void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2, bool initialize = false)
         {
             double t = 0;
@@ -613,6 +615,7 @@ namespace MuMech {
             double tgo = y0[0];
             double dV = 0;
 
+            overburning = false;
             for(int i = 0; i < arcs.Count; i++)
             {
                 if (arcs[i].thrust == 0)
@@ -642,6 +645,10 @@ namespace MuMech {
                 {
                     if ( (tgo <= arcs[i].max_bt_bar) || (i == arcs.Count-1) ) // FIXME?: we're still allowing overburning here
                     {
+                        // overburning is handled as an "exception" that the caller needs to check
+                        if (tgo > arcs[i].max_bt_bar && i == arcs.Count - 1)
+                            overburning = true;
+
                         if (yf != null) {
                             // normal integration with no midpoints
                             singleIntegrate(y0, yf, i, ref t, tgo, arcs, ref dV);
@@ -1208,6 +1215,26 @@ namespace MuMech {
                         //Debug.Log("optimizer failed3");
                         y0 = null;
                         return;
+                    }
+
+                    if ( overburning )
+                    {
+                        if ( last_arcs.Count < stages.Count )
+                        {
+                            last_arcs.Add(new Arc(stages[last_arcs.Count]));
+                            double[] y0_new = new double[arcIndex(last_arcs, last_arcs.Count)];
+                            Array.Copy(y0, 0, y0_new, 0, y0.Length);
+                            y0 = y0_new;
+                            yf = new double[last_arcs.Count*13];
+                            multipleIntegrate(y0, yf, last_arcs, initialize: true);
+                            if ( !runOptimizer(last_arcs) )
+                            {
+                                //Debug.Log("optimizer failed3");
+                                y0 = null;
+                                return;
+                            }
+                        }
+                        // else we should switch to suborbital targetting here
                     }
 
                     Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
