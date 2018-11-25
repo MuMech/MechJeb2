@@ -21,10 +21,11 @@ namespace MuMech {
         // 5-constraint PEG with fixed LAN
         public void flightangle5constraint(double rTm, double vTm, double gamma, Vector3d hT)
         {
+            QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             this.rTm = rTm / r_scale;
             this.vTm = vTm / v_scale;
             this.gamma = gamma;
-            this.hT = -hT.xzy / r_scale / v_scale;  // KSP's Orbit class has h swizzled, but not 'inverse rotated', and pointed the wrong direction
+            this.hT = rot * hT / r_scale / v_scale;
             bcfun = flightangle5constraint;
         }
 

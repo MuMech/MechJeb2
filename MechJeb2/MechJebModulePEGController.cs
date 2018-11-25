@@ -292,15 +292,13 @@ namespace MuMech
                 lambda = desiredThrustVector;
                 PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
                 solver.omitCoast = omitCoast;
-                QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
-                //Debug.Log("o.h = " + -o.h.xzy);
                 Vector3d pos, vel;
                 o.GetOrbitalStateVectorsAtUT(vesselState.time, out pos, out vel);
-                //Debug.Log("r x v = " + Vector3d.Cross(rot * pos.xzy, rot * vel.xzy));
+                Vector3d h = Vector3d.Cross(pos.xzy, vel.xzy);
                 double hTm = v0m * r0m; // FIXME: gamma
-                //Debug.Log("hTm = " + hTm + " sma = " + sma);
-                solver.flightangle5constraint(r0m, v0m, 0, o.h.normalized * hTm);
+                solver.flightangle5constraint(r0m, v0m, 0, h.normalized * hTm);
                 p = solver;
+                Debug.Log("created TargetPeInsertMatchOrbitPlane solver");
             }
 
             old_v0m = v0m;
