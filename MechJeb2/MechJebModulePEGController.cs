@@ -131,11 +131,8 @@ namespace MuMech
             if (has_rcs)
                 ticks = 2;
 
-            if (p != null && p.solution != null && tgo < ( ticks * TimeWarp.fixedDeltaTime) )  // FIXME: why do I need 2x here?
+            if (p != null && p.solution != null && tgo < ( ticks * TimeWarp.fixedDeltaTime) )
             {
-                //Debug.Log("has_rcs = " + has_rcs + " up = " + vesselState.rcsThrustAvailable.up);
-                //Debug.Log("kraken = " + Krakensbane.GetFrameVelocity() );
-
                 if (has_rcs)
                 {
                     status = PegStatus.TERMINAL_RCS;
