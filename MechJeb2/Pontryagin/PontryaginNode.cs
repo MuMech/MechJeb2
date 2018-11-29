@@ -132,17 +132,17 @@ namespace MuMech {
             double[] y0_saved = new double[y0.Length];
             Array.Copy(y0, y0_saved, y0.Length);
 
-            for(int j = 0; j < y0.Length; j++)
-                Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
-            Debug.Log("running optimizer");
+            //for(int j = 0; j < y0.Length; j++)
+            //    Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
+            //Debug.Log("running optimizer");
 
             bool success = runOptimizer(arcs);
 
             if ( !success )
             {
-                for(int k = 0; k < y0.Length; k++)
-                    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                Debug.Log("optimizer failed12");
+                //for(int k = 0; k < y0.Length; k++)
+                //    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                //Debug.Log("optimizer failed12");
                 y0 = null;
                 return;
             }
@@ -157,25 +157,25 @@ namespace MuMech {
                 RemoveArc(arcs, 0, new_sol);
                 UpdateY0(arcs); // reset to current starting position
                 multipleIntegrate(y0, yf, arcs, initialize: true);
-                Debug.Log("running optimizer4");
+                //Debug.Log("running optimizer4");
                 bcfun = terminal5constraint;
 
                 if ( !runOptimizer(arcs) )
                 {
-                    for(int k = 0; k < y0.Length; k++)
-                        Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                    Debug.Log("optimizer failed14");
+                    //for(int k = 0; k < y0.Length; k++)
+                    //    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
+                    //Debug.Log("optimizer failed14");
                     y0 = null;
                     return;
                 }
 
-                Debug.Log("optimizer done");
+                //Debug.Log("optimizer done");
                 new_sol = new Solution(t_scale, v_scale, r_scale, t0);
                 multipleIntegrate(y0, new_sol, arcs, 10);
             }
 
-            for(int k = 0; k < y0.Length; k++)
-                Debug.Log("new y0[" + k + "] = " + y0[k]);
+            //for(int k = 0; k < y0.Length; k++)
+                //Debug.Log("new y0[" + k + "] = " + y0[k]);
 
             this.solution = new_sol;
             //Debug.Log("done with bootstrap");
