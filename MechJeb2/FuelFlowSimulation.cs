@@ -142,7 +142,7 @@ namespace MuMech
             //print("Finished stage " + simStage + " after " + step + " steps");
             if (step == maxSteps) throw new Exception("FuelFlowSimulation.SimulateStage reached max step count of " + maxSteps);
 
-            //Debug.Log("thrust = " + stats.startThrust + " ISP = " + stats.isp + " FuelFlow = " + ( stats.startMass - stats.endMass ) / stats.deltaTime * 1000 );
+            //Debug.Log("thrust = " + stats.startThrust + " ISP = " + stats.isp + " FuelFlow = " + ( stats.startMass - stats.endMass ) / stats.deltaTime * 1000 + " num = " + FindActiveEngines(true).value.Count );
 
             return stats;
         }
@@ -935,6 +935,15 @@ namespace MuMech
 
         public bool CanDrawNeededResources(List<FuelNode> vessel)
         {
+            // XXX: this fix is intended to fix SRBs which have burned out but which
+            // still have an amount of fuel over the resourceRequestRemainingThreshold, which
+            // can happen in RealismOverhaul.  this targets specifically "No propellants" because
+            // we do not want flamed out jet engines to trigger this code if they just don't have
+            // enough intake air, and any other causes.
+            ModuleEngines e = part.Modules[0] as ModuleEngines;
+            if (e != null && e.flameout && e.statusL2 == "No propellants")
+                return false;
+
             foreach (int type in resourceConsumptions.KeysList)
             {
                 var resourceFlowMode = propellantFlows[type];
