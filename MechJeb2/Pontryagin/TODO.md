@@ -4,15 +4,10 @@
 # Critical bugs
 
 * launch to plane has a singularity at 90 degrees that needs to be fixed
-* node executor for small burns warps too close to the node.
-* "node executor should not fail back to coasting, should fail back to 5-constraint" (what was the actual bug here though?)
-* test multi-stage node execution
-* test immediate low-dV node execution
-* test launch with 1.13 SLT, pitch start of 35 and pitch rate of 1.0 with 1.41 TWR upper stage -- zero AoA to orbit weirdness
+* fix ascent guidance not disengaging
 
 # Critical items before merging to mainline MechJeb
 
-* button to get back to old node executor behavior (plus porting old behavior on top of the refactor)
 * display optimizer status
 * display optimizer runtime
 * display warning about ISP/thrust in stage stats not matching current situation
@@ -21,6 +16,14 @@
 * Mainline the FFS fixes
 * Track down the pitch wiggles
 * Consider changing Booster Pitch start to m/s instead of s
+
+# Critical node executor bugs
+
+* button to get back to old node executor behavior (plus porting old behavior on top of the refactor)
+* node executor for small burns warps too close to the node.
+* "node executor should not fail back to coasting, should fail back to 5-constraint" (what was the actual bug here though?)
+* test multi-stage node execution
+* test immediate low-dV node execution
 
 # Near Term Minor Features
 
