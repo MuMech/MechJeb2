@@ -15,15 +15,12 @@
 * button to get back to old node executor behavior (plus porting old behavior on top of the refactor)
 * display optimizer status
 * display optimizer runtime
-* display big warning about ISP/thrust in stage stats not matching current stage
+* display warning about ISP/thrust in stage stats not matching current situation
 * capture optimizer exceptions and log them from the main thread
 * Track dV sensed like PEG does rather than counting down tgo
-* Reconsider something about fixing the ISP and thrust of the current stage
-    * need vacuum max thrust, without ISP curve, without spool up, but subject to testflight failures
-    * need accurate mdot based on all consumables (including HTP)
-    * TestFlight directly updates g and minthrust/maxthrust on the moduleengines module
-    * spool up does not affect maxthrust?
-* Debug the fucking fuelflowsimulation for RD-108 / HTP issues
+* Mainline the FFS fixes
+* Track down the pitch wiggles
+* Consider changing Booster Pitch start to m/s instead of s
 
 # Near Term Minor Features
 
