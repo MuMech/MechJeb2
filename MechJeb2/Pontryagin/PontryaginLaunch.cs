@@ -35,19 +35,15 @@ namespace MuMech {
             Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
             Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
             Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
-            Vector3d hTp = hT;
-
-            if (Math.Abs(hTp.normalized[1]) > 1.0/Math.Sqrt(2))
-            {
-                rf = rf.Reorder(231);
-                vf = vf.Reorder(231);
-                prf = prf.Reorder(231);
-                pvf = pvf.Reorder(231);
-                hTp = hTp.Reorder(231);
-            }
-
             Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d hmiss = hf.normalized - hTp.normalized;
+
+            // rot takes hT and rotates it to the north pole ([ 0, 1, 0 ] in xzy)
+            Quaternion rot = Quaternion.FromToRotation(hT, Vector3d.up);
+            // now rotate our projected final vector by the same amount
+            Vector3d hfp = rot * hf;
+
+
+            Vector3d hmiss = hf.normalized - hfp.normalized;
 
             /* 5 constraints */
             z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
