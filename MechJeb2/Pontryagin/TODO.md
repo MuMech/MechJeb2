@@ -3,8 +3,8 @@
 
 # Critical bugs
 
-* launch to plane has a singularity at 90 degrees that needs to be fixed
-* fix ascent guidance not disengaging
+* Luna-1 not disengaging clamps
+* Luna-1 not igniting the third stage properly for 90 degree orbits
 
 # Critical items before merging to mainline MechJeb
 
@@ -16,6 +16,7 @@
 * Mainline the FFS fixes
 * Track down the pitch wiggles
 * Consider changing Booster Pitch start to m/s instead of s
+* Launch to plane isn't autostaging - what?
 
 # Critical node executor bugs
 
