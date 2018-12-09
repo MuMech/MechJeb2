@@ -43,10 +43,14 @@ namespace MuMech
         private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GUIDANCE, EXIT };
         private AscentMode mode;
 
+        public override void timedLaunchHook()
+        {
+            // timedLaunch kills the optimizer so re-enable it here
+            core.optimizer.enabled = true;
+        }
+
         public override bool DriveAscent(FlightCtrlState s)
         {
-            // timedLaunch may have disabled the optimizer, so make sure it is still enabled
-            core.optimizer.enabled = true;
             setTarget();
             core.optimizer.AssertStart(allow_execution: true);
             switch (mode)
