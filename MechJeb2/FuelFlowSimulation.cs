@@ -591,7 +591,7 @@ namespace MuMech
                             inverseStage = StageManager.CurrentStage;
 
                         isEngine = true;
-                        isthrottleLocked = engine.throttleLocked;
+                        isthrottleLocked = e.throttleLocked;
                         // we only do these test for the first ModuleEngines in the Part, could any other ones actually differ?
                         break;
                     }
