@@ -27,8 +27,8 @@ namespace MuMech
 
         public bool RCS_auto = false;
         public bool attitudeRCScontrol = true;
-        
-        
+
+
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
@@ -45,7 +45,7 @@ namespace MuMech
         public List<BaseAttitudeController> controllers = new List<BaseAttitudeController>();
 
         [Persistent(pass = (int)Pass.Global)]
-        public int activeController = 0;
+        public int activeController = 2;
 
 
         public void SetActiveController(int i)
@@ -151,7 +151,7 @@ namespace MuMech
             }
             Controller.OnModuleDisabled();
         }
-        
+
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
@@ -175,7 +175,7 @@ namespace MuMech
                 attitudeController.OnSave(local, type, global);
             }
         }
-        
+
         public void AxisControl(bool pitch, bool yaw, bool roll)
         {
             _axisControl.x = pitch ? 1 : 0;
@@ -394,7 +394,7 @@ namespace MuMech
                 SetFlightCtrlState(act, deltaEuler, s, 1);
 
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
-                
+
                 Controller.DrivePost(s);
 
                 // Feed the control torque to the differential throttle
