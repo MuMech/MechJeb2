@@ -3,20 +3,21 @@
 
 # Critical bugs
 
-* Luna-1 not disengaging clamps
 * Luna-1 not igniting the third stage properly for 90 degree orbits
 
-# Critical items before merging to mainline MechJeb
+# Logging / Status fixes:
 
 * display optimizer status
 * display optimizer runtime
 * display warning about ISP/thrust in stage stats not matching current situation
 * capture optimizer exceptions and log them from the main thread
+
+# Critical items before merging to mainline MechJeb
+
 * Track dV sensed like PEG does rather than counting down tgo
 * Mainline the FFS fixes
 * Track down the pitch wiggles
 * Consider changing Booster Pitch start to m/s instead of s
-* Launch to plane isn't autostaging - what?
 
 # Critical node executor bugs
 
