@@ -182,6 +182,7 @@ namespace MuMech
                 {
                     if (enabled && vesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
+                    ascentPath.timedLaunchHook();  // let ascentPath modules do stuff edge triggered on launch starting
                     timedLaunch = false;
                 }
                 else
@@ -372,6 +373,11 @@ namespace MuMech
         double raiseApoapsisLastApR = 0;
         double raiseApoapsisLastUT = 0;
         MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
+
+        public virtual void timedLaunchHook()
+        {
+            // triggered when timed launches start the actual launch
+        }
 
         public override void OnModuleEnabled()
         {
