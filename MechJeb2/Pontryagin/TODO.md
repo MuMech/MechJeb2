@@ -1,10 +1,6 @@
 
 ### TODO List
 
-# Critical bugs
-
-* Luna-1 not igniting the third stage properly for 90 degree orbits
-
 # Logging / Status fixes:
 
 * display optimizer status
@@ -16,7 +12,6 @@
 
 * Track dV sensed like PEG does rather than counting down tgo
 * Mainline the FFS fixes
-* Track down the pitch wiggles
 * Consider changing Booster Pitch start to m/s instead of s
 
 # Critical node executor bugs
@@ -29,6 +24,8 @@
 
 # Near Term Minor Features
 
+* Force dropping out of warp during terminal guidance (accuracy)
+* Luna-3's upper stage does not work well as an insertion stage (probably more dV stats issues?)
 * Auto-staging fixes to support hot-staging
 * Fairing manager to better support auto-staging of fairings
 * Box to force the number of stages used in ascent guidance
