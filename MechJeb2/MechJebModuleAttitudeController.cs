@@ -76,8 +76,6 @@ namespace MuMech
             }
         }
 
-        protected Quaternion _oldAttitudeTarget = Quaternion.identity;
-        protected Quaternion _lastAttitudeTarget = Quaternion.identity;
         protected Quaternion _attitudeTarget = Quaternion.identity;
         public Quaternion attitudeTarget
         {
@@ -87,10 +85,8 @@ namespace MuMech
             }
             set
             {
-                if (Math.Abs(Vector3d.Angle(_lastAttitudeTarget * Vector3d.forward, value * Vector3d.forward)) > 10)
+                if (Math.Abs(Vector3d.Angle(_attitudeTarget * Vector3d.forward, value * Vector3d.forward)) > 10)
                 {
-                    _oldAttitudeTarget = _attitudeTarget;
-                    _lastAttitudeTarget = value;
                     AxisControl(true, true, true);
                     attitudeChanged = true;
                 }
