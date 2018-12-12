@@ -198,19 +198,19 @@ namespace MuMech
                     GuiUtils.SimpleTextBox("Guidance Interval:", core.optimizer.pegInterval, "s");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "kPa-rad");
+                    GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "Pa-rad");
                     GUILayout.EndHorizontal();
-                    if ( autopilot.limitQa < 1 || autopilot.limitQa > 4 )
+                    if ( autopilot.limitQa < 100 || autopilot.limitQa > 4000 )
                     {
                         GUIStyle s = new GUIStyle(GUI.skin.label);
                         s.normal.textColor = Color.yellow;
 
-                        if ( autopilot.limitQa < 0.1 )
-                            GUILayout.Label("Qα limit cannot be set to lower than 0.1 kPa-rad", s);
-                        else if ( autopilot.limitQa > 10 )
-                            GUILayout.Label("Qα limit cannot be set to higher than 10 kPa-rad", s);
+                        if ( autopilot.limitQa < 100 )
+                            GUILayout.Label("Qα limit cannot be set to lower than 100 Pa-rad", s);
+                        else if ( autopilot.limitQa > 10000 )
+                            GUILayout.Label("Qα limit cannot be set to higher than 10000 Pa-rad", s);
                         else
-                            GUILayout.Label("Qα limit is recommended to be 1 to 4 kPa-rad", s);
+                            GUILayout.Label("Qα limit is recommended to be 1000 to 4000 Pa-rad", s);
                     }
                     GUILayout.BeginHorizontal();
                     pegascent.omitCoast = GUILayout.Toggle(pegascent.omitCoast, "Omit Coast");

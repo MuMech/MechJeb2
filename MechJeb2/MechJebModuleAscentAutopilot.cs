@@ -68,7 +68,7 @@ namespace MuMech
         public bool limitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble limitQa = new EditableDouble(2);
+        public EditableDouble limitQa = new EditableDouble(2000);
         public bool limitQaEnabled = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -486,11 +486,11 @@ namespace MuMech
             /* AoA limiter for PVG */
             if (autopilot.limitQaEnabled)
             {
-                double lim = MuUtils.Clamp(autopilot.limitQa, 0.1, 10);
-                autopilot.limitingAoA = vesselState.dynamicPressure * Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > ( lim * 1000 );
+                double lim = MuUtils.Clamp(autopilot.limitQa, 100, 10000);
+                autopilot.limitingAoA = vesselState.dynamicPressure * Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
                 if (autopilot.limitingAoA)
                 {
-                    autopilot.currentMaxAoA = ( lim * 1000 ) / vesselState.dynamicPressure * UtilMath.Rad2Deg;
+                    autopilot.currentMaxAoA = lim / vesselState.dynamicPressure * UtilMath.Rad2Deg;
                     desiredThrustVector = Vector3.RotateTowards(vesselState.surfaceVelocity, desiredThrustVector, (float)(autopilot.currentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
                 }
             }
