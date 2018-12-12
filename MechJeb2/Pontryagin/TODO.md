@@ -22,7 +22,6 @@
 
 # Near Term Minor Features
 
-* Force dropping out of warp during terminal guidance (accuracy)
 * Luna-3's upper stage does not work well as an insertion stage (probably more dV stats issues?)
 * Auto-staging fixes to support hot-staging
 * Fairing manager to better support auto-staging of fairings

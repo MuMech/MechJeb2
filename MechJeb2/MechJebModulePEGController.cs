@@ -453,6 +453,8 @@ namespace MuMech
                 /* hardcoded 1 second of terminal guidance */
                 if ( tgo < 1 )
                 {
+                    // drop out of warp for terminal guidance (smaller time ticks => more accuracy)
+                    core.warp.MinimumWarp();
                     status = PegStatus.TERMINAL;
                     return;
                 }
