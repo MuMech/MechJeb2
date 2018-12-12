@@ -11,8 +11,6 @@
 # Critical items before merging to mainline MechJeb
 
 * Track dV sensed like PEG does rather than counting down tgo
-* Mainline the FFS fixes
-* Consider changing Booster Pitch start to m/s instead of s
 
 # Critical node executor bugs
 

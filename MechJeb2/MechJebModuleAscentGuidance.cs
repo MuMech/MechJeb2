@@ -189,7 +189,7 @@ namespace MuMech
                 if (autopilot.showGuidanceSettings)
                 {
                     GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartTime, "s");
+                    GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartVelocity, "m/s");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");

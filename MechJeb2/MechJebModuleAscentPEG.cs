@@ -13,9 +13,8 @@ namespace MuMech
     {
         public MechJebModuleAscentPEG(MechJebCore core) : base(core) { }
 
-        /* default pitch program here works decently at SLT of about 1.4 */
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pitchStartTime = new EditableDouble(10);
+        public EditableDouble pitchStartVelocity = new EditableDouble(50);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pitchRate = new EditableDouble(0.50);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -84,6 +83,8 @@ namespace MuMech
             }
         }
 
+        private double pitchStartTime;
+
         private void DriveVerticalAscent(FlightCtrlState s)
         {
 
@@ -97,13 +98,14 @@ namespace MuMech
             }
             else
             {
-                if (autopilot.MET > pitchStartTime)
+                if (vesselState.surfaceVelocity.magnitude > pitchStartVelocity)
                 {
                     mode = AscentMode.INITIATE_TURN;
+                    pitchStartTime = autopilot.MET;
                     return;
                 }
-                double dt = pitchStartTime - autopilot.MET;
-                status = String.Format("Vertical ascent {0:F2} s", dt);
+                double dv = pitchStartVelocity - vesselState.surfaceVelocity.magnitude;
+                status = String.Format("Vertical ascent {0:F2} m/s to go", dv);
             }
         }
 
