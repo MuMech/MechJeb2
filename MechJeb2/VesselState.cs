@@ -567,6 +567,9 @@ namespace MuMech
             double tempAoD = UtilMath.Rad2Deg * Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized), -1, 1));
             displacementAngle.value = double.IsNaN(tempAoD) || speedSurface.value < 0.01 ? 0 : tempAoD;
 
+            // Displacement Angle (combination of AoA + AoS that ignores vehicle asymmetry)
+            displacementAngle.value = UtilMath.Rad2Deg * Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized), -1, 1));
+
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
             vesselRoll.value = (rotationVesselSurface.eulerAngles.z > 180) ? (rotationVesselSurface.eulerAngles.z - 360.0) : rotationVesselSurface.eulerAngles.z;
