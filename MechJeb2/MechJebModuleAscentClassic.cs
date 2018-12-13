@@ -30,11 +30,13 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            base.OnModuleEnabled();
             mode = AscentMode.VERTICAL_ASCENT;
         }
 
         public override void OnModuleDisabled()
         {
+            base.OnModuleDisabled();
         }
 
         public double autoTurnStartAltitude

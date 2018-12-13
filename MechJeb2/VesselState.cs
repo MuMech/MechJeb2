@@ -68,6 +68,7 @@ namespace MuMech
         public Vector3d velocityMainBodySurface;
 
         public Vector3d orbitalVelocity;
+        public Vector3d orbitalPosition;
         public Vector3d surfaceVelocity;
 
         public Vector3d angularVelocity;
@@ -135,6 +136,8 @@ namespace MuMech
         public MovingAverage AoA = new MovingAverage();
         [ValueInfoItem("Angle of Sideslip", InfoItem.Category.Misc, format = "F2", units = "º")]
         public MovingAverage AoS = new MovingAverage();
+        [ValueInfoItem("Displacement Angle", InfoItem.Category.Misc, format = "F2", units = "º")]
+        public MovingAverage displacementAngle = new MovingAverage();
 
         public MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
 
@@ -207,6 +210,8 @@ namespace MuMech
         public double atmosphericDensity;
         [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
         public double atmosphericDensityGrams;
+        [ValueInfoItem("Max dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
+        public double maxDynamicPressure;
         [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
         public double dynamicPressure;
         [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
@@ -280,36 +285,41 @@ namespace MuMech
             FARVesselRefArea = null;
             FARVesselTermVelEst = null;
             FARVesselDynPres = null;
-            isLoadedProceduralFairing = isAssemblyLoaded("ProceduralFairings");
-            isLoadedRealFuels = isAssemblyLoaded("RealFuels");
+            isLoadedProceduralFairing = ReflectionUtils.isAssemblyLoaded("ProceduralFairings");
+            isLoadedRealFuels = ReflectionUtils.isAssemblyLoaded("RealFuels");
             if (isLoadedRealFuels)
             {
-                RFPropStatusField = getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "propellantStatus");
+                Debug.Log("MechJeb: RealFuels Assembly is loaded");
+                RFPropStatusField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "propellantStatus");
                 if (RFPropStatusField == null)
                 {
-                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no propellantStatus field, disabling RF");
+                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no propellantStatus field, disabling RF");
                     isLoadedRealFuels = false;
                 }
-                RFignitionsField = getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignitions");
+                RFignitionsField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignitions");
                 if (RFignitionsField == null)
                 {
-                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
+                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
                     isLoadedRealFuels = false;
                 }
-                RFullageField = getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
+                RFullageField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
                 if (RFullageField == null)
                 {
-                    Debug.Log("BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
+                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
                     isLoadedRealFuels = false;
                 }
+                if (isLoadedRealFuels)
+                {
+                    Debug.Log("MechJeb: RealFuels Assembly is wired up properly");
+                }
             }
-            isLoadedFAR = isAssemblyLoaded("FerramAerospaceResearch");
+            isLoadedFAR = ReflectionUtils.isAssemblyLoaded("FerramAerospaceResearch");
             if (isLoadedFAR)
             {
                 List<string> farNames = new List<string>{ "VesselAoA", "VesselSideslip", "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
                 foreach (var name in farNames)
                 {
-                    var methodInfo = getMethodByReflection(
+                    var methodInfo = ReflectionUtils.getMethodByReflection(
                         "FerramAerospaceResearch",
                         "FerramAerospaceResearch.FARAPI",
                         name,
@@ -327,7 +337,7 @@ namespace MuMech
                     }
                 }
 
-                var FARCalculateVesselAeroForcesMethodInfo = getMethodByReflection(
+                var FARCalculateVesselAeroForcesMethodInfo = ReflectionUtils.getMethodByReflection(
                     "FerramAerospaceResearch",
                     "FerramAerospaceResearch.FARAPI",
                     "CalculateVesselAeroForces",
@@ -344,77 +354,6 @@ namespace MuMech
                 }
             }
         }
-
-        static bool isAssemblyLoaded(string assemblyName)
-        {
-            foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
-            {
-                try
-                {
-                    if (assembly.assembly.GetName().Name == assemblyName)
-                        return true;
-                }
-                catch (InvalidOperationException)
-                {
-                    // Silently drop exception generated by users who manage to put assembly that
-                    // can't load for reasons (missing deps most of the time)
-                }
-            }
-            return false;
-        }
-
-        static FieldInfo getFieldByReflection(String assemblyString, String className, String fieldName) {
-                string assemblyName = "";
-
-                foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
-                {
-                    if (loaded.assembly.GetName().Name == assemblyString)
-                    {
-                        assemblyName = loaded.assembly.FullName;
-                    }
-                }
-
-                if (assemblyName == "")
-                {
-                    return null;
-                }
-
-                Type type = Type.GetType(className + ", " + assemblyName);
-
-                if (type == null)
-                {
-                    return null;
-                }
-
-                return type.GetField(fieldName);
-        }
-
-        static MethodInfo getMethodByReflection(String assemblyString, String className, String methodName, BindingFlags flags, Type[] args)
-        {
-            string assemblyName = "";
-
-            foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
-            {
-                if (loaded.assembly.GetName().Name == assemblyString)
-                {
-                    assemblyName = loaded.assembly.FullName;
-                }
-            }
-
-            if (assemblyName == "")
-            {
-                return null;
-            }
-
-            Type type = Type.GetType(className + ", " + assemblyName);
-
-            if (type == null)
-            {
-                return null;
-            }
-            return type.GetMethod(methodName, flags, null, args, null);
-        }
-
 
         public VesselState()
         {
@@ -572,6 +511,7 @@ namespace MuMech
             mass = vessel.totalMass;
             CoM = vessel.CoMD;
             orbitalVelocity = vessel.obt_velocity;
+            orbitalPosition = CoM - vessel.mainBody.position;
         }
 
         // Calculate a bunch of simple quantities each frame.
@@ -581,7 +521,7 @@ namespace MuMech
             deltaT = TimeWarp.fixedDeltaTime;
 
             //CoM = °;
-            up = (CoM - vessel.mainBody.position).normalized;
+            up = orbitalPosition.normalized;
 
             Rigidbody rigidBody = vessel.rootPart.rb;
             if (rigidBody != null) rootPartPos = rigidBody.position;
@@ -639,6 +579,9 @@ namespace MuMech
                 AoS.value = double.IsNaN(tempAoS) || speedSurface.value < 0.01 ? 0 : tempAoS;
             }
 
+            // Displacement Angle (combination of AoA + AoS that ignores vehicle asymmetry)
+            displacementAngle.value = UtilMath.Rad2Deg * Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized), -1, 1));
+
             vesselHeading.value = rotationVesselSurface.eulerAngles.y;
             vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
             vesselRoll.value = (rotationVesselSurface.eulerAngles.z > 180) ? (rotationVesselSurface.eulerAngles.z - 360.0) : rotationVesselSurface.eulerAngles.z;
@@ -665,6 +608,8 @@ namespace MuMech
             {
                 dynamicPressure = vessel.dynamicPressurekPa * 1000;
             }
+            if (dynamicPressure > maxDynamicPressure)
+                maxDynamicPressure = dynamicPressure;
             freeMolecularAerothermalFlux = 0.5 * atmosphericDensity * speedSurface * speedSurface * speedSurface;
 
 
@@ -706,7 +651,7 @@ namespace MuMech
 
             mainBody = vessel.mainBody;
 
-            radius = (CoM - vessel.mainBody.position).magnitude;
+            radius = orbitalPosition.magnitude;
 
             vesselRef = vessel;
         }
@@ -1408,16 +1353,16 @@ namespace MuMech
                 {
                     ullage = RFullageField.GetValue(e) as bool?;
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e1)
                 {
-                    Debug.Log("ArgumentError thrown while getting ullage from RealFuels, ullage integration disabled");
+                    Debug.Log("MechJeb BUG ArgumentError thrown while getting ullage from RealFuels, ullage integration disabled: " + e1.Message);
                     RFullageField = null;
                     return;
                 }
 
                 if (ullage == null)
                 {
-                    Debug.Log("BUG: getting ullage from RealFuels casted to null, ullage status likely broken");
+                    Debug.Log("MechJeb BUG: getting ullage from RealFuels casted to null, ullage status likely broken");
                     return;
                 }
 
@@ -1432,16 +1377,16 @@ namespace MuMech
                 {
                     ignitions = RFignitionsField.GetValue(e) as int?;
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e2)
                 {
-                    Debug.Log("ArgumentError thrown while getting ignitions from RealFuels, ullage integration disabled");
+                    Debug.Log("MechJeb BUG ArgumentError thrown while getting ignitions from RealFuels, ullage integration disabled: " + e2.Message);
                     RFignitionsField = null;
                     return;
                 }
 
                 if (ignitions == null)
                 {
-                    Debug.Log("BUG: getting ignitions from RealFuels casted to null, ullage status likely broken");
+                    Debug.Log("MechJeb BUG: getting ignitions from RealFuels casted to null, ullage status likely broken");
                     return;
                 }
 
@@ -1458,17 +1403,17 @@ namespace MuMech
                 {
                     propellantStatus = RFPropStatusField.GetValue(e) as String;
                 }
-                catch (ArgumentException)
+                catch (ArgumentException e3)
                 {
                     // This exception happens when users are using RealFuels, but ullage is disabled.
-                    Debug.Log("ArgumentError thrown while getting propellantStatus from RealFuels, ullage integration disabled");
+                    Debug.Log("MechJeb BUG ArgumentError thrown while getting propellantStatus from RealFuels, ullage integration disabled: " + e3.Message);
                     RFPropStatusField = null;
                     return;
                 }
 
                 if (propellantStatus == null)
                 {
-                    Debug.Log("BUG: getting propellantStatus from RealFuels casted to null, ullage status likely broken");
+                    Debug.Log("MechJeb BUG: getting propellantStatus from RealFuels casted to null, ullage status likely broken");
                     return;
                 }
 
@@ -1488,7 +1433,7 @@ namespace MuMech
                     propellantState = UllageState.VeryUnstable;
                 else {
                     propellantState = UllageState.VeryStable;
-                    Debug.Log("BUG: Unknown propellantStatus from RealFuels: " + propellantStatus);
+                    Debug.Log("MechJeb BUG: Unknown propellantStatus from RealFuels: " + propellantStatus);
                 }
 
                 if (propellantState < lowestUllage)
