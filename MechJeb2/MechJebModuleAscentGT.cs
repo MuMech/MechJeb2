@@ -26,12 +26,14 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            base.OnModuleEnabled();
             maxholdAPTime = 0.0F;
             mode = AscentMode.VERTICAL_ASCENT;
         }
 
         public override void OnModuleDisabled()
         {
+            base.OnModuleDisabled();
         }
 
         public bool IsVerticalAscent(double altitude, double velocity)
