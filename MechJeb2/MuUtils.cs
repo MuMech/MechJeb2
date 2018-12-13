@@ -116,6 +116,12 @@ namespace MuMech
             return angle;
         }
 
+        // angle between two headings handling rotation around 360 degrees (angle between 355 and 5 == 10)
+        public static double headingAngle(double angle1, double angle2)
+        {
+            return Math.Min((angle1 - angle2 + 360) % 360, (angle2 - angle1 + 360) % 360);
+        }
+
         public static double IntPow(double val, int exp) {
             double result = val;
             for(int i=1;i<exp;++i)
@@ -453,7 +459,7 @@ namespace MuMech
                 TValue val;
                 if (d.TryGetValue(key, out val))
                     return val;
-                
+
                 return defaultValue;
             }
             set

@@ -130,7 +130,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            
+
             base.WindowGUI(windowID);
         }
 
