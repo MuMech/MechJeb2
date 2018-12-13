@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine;
 
 namespace MuMech
 {
@@ -13,19 +12,18 @@ namespace MuMech
         public EditableDouble leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
 
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble tolerance = 0.1;    // FIXME: ignored
+        public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
-        public double timeToNode = 0.0;
-        public double nodeBurnTime = 0.0;
-        public bool burnTriggered = false;
 
         [ValueInfoItem("Node Burn Length", InfoItem.Category.Thrust)]
         public string NextNodeBurnTime()
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 return "-";
-            // FIXME: wire this up again
-            return GuiUtils.TimeToDHMS(nodeBurnTime);
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
+            double dV = node.GetBurnVector(orbit).magnitude;
+            double halfBurnTIme;
+            return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTIme));
         }
 
         [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
@@ -33,27 +31,32 @@ namespace MuMech
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 return "-";
-            // FIXME: wire this up again
-            return GuiUtils.TimeToDHMS(timeToNode);
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
+            double dV = node.GetBurnVector(orbit).magnitude;
+            double halfBurnTIme;
+            BurnTime(dV, out halfBurnTIme);
+            return GuiUtils.TimeToDHMS(node.UT - halfBurnTIme - vesselState.time);
         }
 
         public void ExecuteOneNode(object controller)
         {
             mode = Mode.ONE_NODE;
-            enabled = true;
+            users.Add(controller);
+            burnTriggered = false;
+            alignedForBurn = false;
         }
 
         public void ExecuteAllNodes(object controller)
         {
-            // FIXME: pull all the future nodes and target orbits and stuff them into a List<> here so we can just target the future orbits.
             mode = Mode.ALL_NODES;
-            enabled = false;
+            users.Add(controller);
+            burnTriggered = false;
+            alignedForBurn = false;
         }
 
         public void Abort()
         {
             core.warp.MinimumWarp();
-            core.optimizer.enabled = false;
             users.Clear();
         }
 
@@ -61,9 +64,6 @@ namespace MuMech
         {
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
-            core.optimizer.enabled = true;
-            state = NodeState.PREGUIDANCE;
-            burnTriggered = false;
         }
 
         public override void OnModuleDisabled()
@@ -71,40 +71,15 @@ namespace MuMech
             core.attitude.attitudeDeactivate();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.optimizer.enabled = false;
-            state = NodeState.PREGUIDANCE;
-            burnTriggered = false;
         }
 
         protected enum Mode { ONE_NODE, ALL_NODES };
         protected Mode mode = Mode.ONE_NODE;
-        private enum NodeState { PREGUIDANCE, GUIDANCE, FINISH };
-        private NodeState state;
 
-        ManeuverNode node;
+        public bool burnTriggered = false;
+        public bool alignedForBurn = false;
 
         public override void OnFixedUpdate()
-        {
-            core.optimizer.autowarp = autowarp;
-
-            switch (state)
-            {
-                case NodeState.PREGUIDANCE:
-                    PreGuidance();
-                    break;
-
-                case NodeState.GUIDANCE:
-                    Guidance();
-                    break;
-            }
-
-            if (state == NodeState.FINISH)
-                Finish();
-        }
-
-        // this is coasting / warping until we're a whole estimated burntime before the burn
-        // (so precoast in the optimizer is roughly burntime / 2)
-        private void PreGuidance()
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
             {
@@ -112,120 +87,161 @@ namespace MuMech
                 return;
             }
 
-            node = vessel.patchedConicSolver.maneuverNodes[0];
+            //check if we've finished a node:
+            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
             double dVLeft = node.GetBurnVector(orbit).magnitude;
 
-            double timeToNode = node.UT - vesselState.time;
-            double timeToGuidance = timeToNode - Math.Max(BurnTime(dVLeft), 30);   /* leave at least 15 seconds for optimizer convergence */
-
-            if (timeToGuidance <= 0)
+            if (dVLeft < tolerance && core.attitude.attitudeAngleFromTarget() > 5)
             {
-                state = NodeState.GUIDANCE;
-                return;
+                burnTriggered = false;
+
+                node.RemoveSelf();
+
+                if (mode == Mode.ONE_NODE)
+                {
+                    Abort();
+                    return;
+                }
+                else if (mode == Mode.ALL_NODES)
+                {
+                    if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
+                    {
+                        Abort();
+                        return;
+                    }
+                    else
+                    {
+                        node = vessel.patchedConicSolver.maneuverNodes[0];
+                    }
+                }
             }
 
+            //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
 
-            if (autowarp)
+            double halfBurnTime;
+            BurnTime(dVLeft, out halfBurnTime);
+
+            double timeToNode = node.UT - vesselState.time;
+            //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
+            if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
             {
-                if ((Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) < 1 && core.vessel.angularVelocity.magnitude < 0.002) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                burnTriggered = true;
+                if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+            }
+
+            //autowarp, but only if we're already aligned with the node
+            if (autowarp && !burnTriggered)
+            {
+                if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                 {
-                    core.warp.WarpToUT(vesselState.time + timeToGuidance);
+                    core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
+                }
+                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 600)
+                {
+                    //realign
+                    core.warp.MinimumWarp();
+                }
+            }
+
+            core.thrust.targetThrottle = 0;
+
+            if (burnTriggered)
+            {
+                if (alignedForBurn)
+                {
+                    if (core.attitude.attitudeAngleFromTarget() < 90)
+                    {
+                        double timeConstant = (dVLeft > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
+                        core.thrust.ThrustForDV(dVLeft + tolerance, timeConstant);
+                    }
+                    else
+                    {
+                        alignedForBurn = false;
+                    }
                 }
                 else
                 {
-                    if (!MuUtils.PhysicsRunning() && Vector3d.Angle(node.GetBurnVector(orbit), vesselState.forward) > 10 && timeToGuidance < 600)
+                    if (core.attitude.attitudeAngleFromTarget() < 2)
                     {
-                        //realign
-                        core.warp.MinimumWarp();
+                        alignedForBurn = true;
                     }
                 }
             }
         }
 
-        private void Finish()
+        private double BurnTime(double dv, out double halfBurnTime)
         {
-            node.RemoveSelf();
+            double dvLeft = dv;
+            double halfDvLeft = dv / 2;
 
-            if (mode == Mode.ONE_NODE)
-            {
-                Abort();
-                return;
-            }
-            else if (mode == Mode.ALL_NODES)
-            {
-                if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
-                {
-                    Abort();
-                    return;
-                }
-                else
-                {
-                    node = vessel.patchedConicSolver.maneuverNodes[0];
-                    state = NodeState.PREGUIDANCE;
-                }
-            }
-        }
-
-        private void Guidance()
-        {
-            double dVLeft = node.GetBurnVector(orbit).magnitude;
-            core.optimizer.TargetNode(node, BurnTime(dVLeft));
-
-            core.optimizer.AssertStart();
-            if (core.optimizer.isStable())
-            {
-                core.attitude.attitudeTo(core.optimizer.iF, AttitudeReference.INERTIAL, this);
-            }
-            else
-            {
-                if (core.optimizer.status == PegStatus.FINISHED)
-                   state = NodeState.FINISH;
-            }
-
-            if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
-        }
-
-        // this is estimated burntime, it doesn't have to be perfectly accurate, but this needs to be
-        // at least within a factor of 2 (if burntime is less than half the burntime coast will be zero)
-        private double BurnTime(double dv)
-        {
             double burnTime = 0;
+            halfBurnTime = 0;
+
+            // Old code:
+            //      burnTime = dv / vesselState.limitedMaxThrustAccel;
 
             var stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this, true);
 
-            for (int i = stats.vacStats.Length - 1; i >= 0 && dv > 0; i--)
+            double lastStageBurnTime = 0;
+            for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
             {
                 var s = stats.vacStats[i];
-
                 if (s.deltaV <= 0 || s.startThrust <= 0)
+                {
+                    if (core.staging.enabled)
+                    {
+                        // We staged again before autostagePreDelay is elapsed.
+                        // Add the remaining wait time
+                        if (burnTime - lastStageBurnTime < core.staging.autostagePreDelay && i != stats.vacStats.Length - 1)
+                            burnTime += core.staging.autostagePreDelay - (burnTime - lastStageBurnTime);
+                        burnTime += core.staging.autostagePreDelay;
+                        lastStageBurnTime = burnTime;
+                    }
                     continue;
+                }
 
-                double stageBurnDv = Math.Min(s.deltaV, dv);
-                dv -= stageBurnDv;
+                double stageBurnDv = Math.Min(s.deltaV, dvLeft);
+                dvLeft -= stageBurnDv;
 
-                double thrust = s.startThrust;
+                double stageBurnFraction = stageBurnDv / s.deltaV;
+
+                // Delta-V is proportional to ln(m0 / m1) (where m0 is initial
+                // mass and m1 is final mass). We need to know the final mass
+                // after this stage burns (m1b):
+                //      ln(m0 / m1) * stageBurnFraction = ln(m0 / m1b)
+                //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
+                //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
+                double stageBurnFinalMass = s.startMass / Math.Exp(Math.Log(s.startMass / s.endMass) * stageBurnFraction);
+                double stageAvgAccel = s.startThrust / ((s.startMass + stageBurnFinalMass) / 2d);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's
                 // close enough for now.
                 // TODO: Be smarter about throttle limits on future stages.
-                // XXX: i almost want to delete this?
-                // TODO: things like g-limiters should go into the optimizer, and we should ask the optimzer
-                if ( i == stats.vacStats.Length - 1)
-                    thrust *= vesselState.throttleFixedLimit;
+                if (i == stats.vacStats.Length - 1)
+                {
+                        stageAvgAccel *= (double)this.vesselState.throttleFixedLimit;
+                }
 
-                double a0 = thrust / s.startMass;
-                double ve = s.isp * 9.80655;
-                double tau = ve / a0;
+                halfBurnTime += Math.Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
+                halfDvLeft = Math.Max(0, halfDvLeft - stageBurnDv);
 
-                burnTime += tau * ( 1.0 - Math.Exp(-stageBurnDv/ve) );
+                burnTime += stageBurnDv / stageAvgAccel;
+
             }
 
             /* infinity means acceleration is zero for some reason, which is dangerous nonsense, so use zero instead */
+            if (double.IsInfinity(halfBurnTime))
+            {
+                halfBurnTime = 0.0;
+            }
+
             if (double.IsInfinity(burnTime))
+            {
                 burnTime = 0.0;
+            }
 
             return burnTime;
         }
