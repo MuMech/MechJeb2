@@ -138,7 +138,6 @@ namespace MuMech
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources, activeModuleEngines))
                 return;
 
-            Debug.Log("LastNonZeroDVStageBurnTime: " + LastNonZeroDVStageBurnTime());
             // prevent staging when the current stage has active engines and the next stage has any engines
             if (hotStaging && InverseStageHasActiveEngines(StageManager.CurrentStage, vessel) && InverseStageHasEngines(StageManager.CurrentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
