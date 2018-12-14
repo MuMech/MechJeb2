@@ -12,6 +12,7 @@
 
 * Track dV sensed like PEG does rather than counting down tgo
    * Bring back g-limiter as a suboptimal hack
+* Revisit forcing of autostaging to be forced on
 
 # Critical node executor bugs
 
@@ -24,7 +25,6 @@
 # Near Term Minor Features
 
 * Luna-3's upper stage does not work well as an insertion stage (probably more dV stats issues?)
-* Auto-staging fixes to support hot-staging
 * Fairing manager to better support auto-staging of fairings
 * Box to force the number of stages used in ascent guidance
 * Get "use RCS for ullage" and "prevent unstable ignitions" and "RSS/RO special handling" into the ascent guidance + node executor menus
