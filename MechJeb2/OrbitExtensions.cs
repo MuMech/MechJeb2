@@ -92,7 +92,6 @@ namespace MuMech
         //returns a new Orbit object that represents the result of applying a given dV to o at UT
         public static Orbit PerturbedOrbit(this Orbit o, double UT, Vector3d dV)
         {
-            //should these in fact be swapped?
             return MuUtils.OrbitFromStateVectors(o.SwappedAbsolutePositionAtUT(UT), o.SwappedOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
         }
 
