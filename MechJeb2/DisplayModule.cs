@@ -12,8 +12,8 @@ namespace MuMech
         {
             get
             {
-                if (!HighLogic.LoadedSceneIsEditor)                
-                    return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w);                
+                if (!HighLogic.LoadedSceneIsEditor)
+                    return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w);
                 else
                     return new Rect(windowVectorEditor.x, windowVectorEditor.y, windowVectorEditor.z, windowVectorEditor.w);
             }
@@ -148,7 +148,7 @@ namespace MuMech
 //            {
 //                locked = !locked;
 //            }
-            
+
             bool allowDrag = !locked;
             if (!locked && !isOverlay && core.settings.useTitlebarDragging)
             {
@@ -185,21 +185,21 @@ namespace MuMech
                 windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), windowOptions);
 
                 //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
-                //                
+                //
                 //                foreach (var w in windows)
                 //                {
                 //                	if (w == this) { continue; }
-                //                	
+                //
                 //                	var diffL = (w.windowPos.x + w.windowPos.width - 2) - windowPos.x;
                 //                	var diffR = w.windowPos.x - (windowPos.x + windowPos.width + 2);
                 //                	var diffT = (w.windowPos.y + w.windowPos.height - 2) - windowPos.y;
                 //                	var diffB = w.windowPos.y - (windowPos.y + windowPos.height + 2);
-                //                	
+                //
                 //                	if (Math.Abs(diffL) <= 8)
                 //                	{
                 //                		SetPos(w.windowPos.x + w.windowPos.width - 2, windowPos.y);
                 //                	}
-                //                	
+                //
                 //                	if (Math.Abs(diffR) <= 8)
                 //                	{
                 //                		SetPos(w.windowPos.x - windowPos.width + 2, windowPos.y);
@@ -218,7 +218,7 @@ namespace MuMech
                     enabledEditor = enabled;
                 if (HighLogic.LoadedSceneIsFlight)
                     enabledFlight = enabled;
-                
+
                 global.AddValue("enabledEditor", enabledEditor);
                 global.AddValue("enabledFlight", enabledFlight);
             }
@@ -267,7 +267,7 @@ namespace MuMech
                 enabledEditor = enabled;
                 enabledFlight = enabled;
             }
-            
+
             //            if (global != null && global.HasValue("locked"))
             //            {
             //                bool loadedLocked;
