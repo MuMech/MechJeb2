@@ -18,7 +18,7 @@ namespace MuMech
         public double interplanetaryWindowUT;
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
-        public MechJebModuleAscentPEG pegascent { get { return core.GetComputerModule<MechJebModuleAscentPEG>(); } }
+        public MechJebModuleAscentPVG pvgascent { get { return core.GetComputerModule<MechJebModuleAscentPVG>(); } }
 
         public MechJebModuleAscentBase path;
         public MechJebModuleAscentMenuBase editor;
@@ -43,7 +43,7 @@ namespace MuMech
             }
             else if ( i == 2 )
             {
-                p = pegascent;
+                p = pvgascent;
                 e = null;
             }
             else
@@ -160,8 +160,8 @@ namespace MuMech
                     {
 
                         GuiUtils.SimpleTextBox("Target Periapsis", autopilot.desiredOrbitAltitude, "km");
-                        GuiUtils.SimpleTextBox("Target Apoapsis:", pegascent.desiredApoapsis, "km");
-                        if ( pegascent.desiredApoapsis >= 0 && pegascent.desiredApoapsis < autopilot.desiredOrbitAltitude )
+                        GuiUtils.SimpleTextBox("Target Apoapsis:", pvgascent.desiredApoapsis, "km");
+                        if ( pvgascent.desiredApoapsis >= 0 && pvgascent.desiredApoapsis < autopilot.desiredOrbitAltitude )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.yellow;
@@ -189,13 +189,13 @@ namespace MuMech
                 if (autopilot.showGuidanceSettings)
                 {
                     GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Booster Pitch start:", pegascent.pitchStartVelocity, "m/s");
+                    GuiUtils.SimpleTextBox("Booster Pitch start:", pvgascent.pitchStartVelocity, "m/s");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
+                    GuiUtils.SimpleTextBox("Booster Pitch rate:", pvgascent.pitchRate, "°/s");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Guidance Interval:", core.guidance.pegInterval, "s");
+                    GuiUtils.SimpleTextBox("Guidance Interval:", core.guidance.pvgInterval, "s");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "Pa-rad");
@@ -213,7 +213,7 @@ namespace MuMech
                             GUILayout.Label("Qα limit is recommended to be 1000 to 4000 Pa-rad", s);
                     }
                     GUILayout.BeginHorizontal();
-                    pegascent.omitCoast = GUILayout.Toggle(pegascent.omitCoast, "Omit Coast");
+                    pvgascent.omitCoast = GUILayout.Toggle(pvgascent.omitCoast, "Omit Coast");
                     GUILayout.EndHorizontal();
                 }
 
@@ -338,7 +338,7 @@ namespace MuMech
                     GUIStyle si = new GUIStyle(GUI.skin.label);
                     if ( core.guidance.isStable() )
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-                    else if ( core.guidance.isInitializing() || core.guidance.status == PegStatus.FINISHED )
+                    else if ( core.guidance.isInitializing() || core.guidance.status == PVGStatus.FINISHED )
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
                     else
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;

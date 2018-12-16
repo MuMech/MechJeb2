@@ -160,11 +160,9 @@
     <Compile Include="MechJebModuleAscentClassic.cs" />
     <Compile Include="MechJebModuleAscentClassicMenu.cs" />
     <Compile Include="MechJebModuleAscentGT.cs" />
-    <Compile Include="MechJebModuleAscentGTMenu.cs" />
     <Compile Include="MechJebModuleAscentGuidance.cs" />
     <Compile Include="MechJebModuleAscentNavBall.cs" />
-    <Compile Include="MechJebModuleAscentPEG.cs" />
-    <Compile Include="MechJebModuleAscentPEGMenu.cs" />
+    <Compile Include="MechJebModuleAscentPVG.cs" />
     <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
     <Compile Include="MechJebModuleAttitudeController.cs" />
     <Compile Include="MechJebModuleCustomInfoWindow.cs" />
@@ -183,7 +181,7 @@
     <Compile Include="MechJebModuleMenu.cs" />
     <Compile Include="MechJebModuleNodeEditor.cs" />
     <Compile Include="MechJebModuleNodeExecutor.cs" />
-    <Compile Include="MechJebModulePEGController.cs" />
+    <Compile Include="MechJebModuleGuidanceController.cs" />
     <Compile Include="MechJebModuleRCSBalancer.cs" />
     <Compile Include="MechJebModuleRCSBalancerWindow.cs" />
     <Compile Include="MechJebModuleRCSController.cs" />

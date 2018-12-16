@@ -9,9 +9,9 @@ using System.Collections.Generic;
 
 namespace MuMech
 {
-    public class MechJebModuleAscentPEG : MechJebModuleAscentBase
+    public class MechJebModuleAscentPVG : MechJebModuleAscentBase
     {
-        public MechJebModuleAscentPEG(MechJebCore core) : base(core) { }
+        public MechJebModuleAscentPVG(MechJebCore core) : base(core) { }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble pitchStartVelocity = new EditableDouble(50);
@@ -28,14 +28,12 @@ namespace MuMech
         {
             base.OnModuleEnabled();
             mode = AscentMode.VERTICAL_ASCENT;
-            Debug.Log("MechJebModuleAscentPEG enabled, optimizer should be enabled now");
             core.guidance.enabled = true;
         }
 
         public override void OnModuleDisabled()
         {
             base.OnModuleDisabled();
-            Debug.Log("MechJebModuleAscentPEG disabled, optimizer should be disabled now");
             core.guidance.enabled = false;
         }
 
@@ -157,7 +155,7 @@ namespace MuMech
 
         private void DriveGuidance(FlightCtrlState s)
         {
-            if ( core.guidance.status == PegStatus.FINISHED )
+            if ( core.guidance.status == PVGStatus.FINISHED )
             {
                 mode = AscentMode.EXIT;
                 return;
