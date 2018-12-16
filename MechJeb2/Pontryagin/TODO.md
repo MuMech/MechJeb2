@@ -12,6 +12,7 @@
 
 * Track dV sensed like PEG does rather than counting down tgo
    * Bring back g-limiter as a suboptimal hack
+* Revisit forcing of autostaging to be forced on
 
 # Critical node executor bugs
 
