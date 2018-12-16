@@ -443,7 +443,7 @@ namespace MuMech
         }
 
         // provides AoA limiting and roll control
-        // provides no ground tracking and should only be called by autopilots like PEG that deeply know what they're doing with yaw control
+        // provides no ground tracking and should only be called by autopilots like PVG that deeply know what they're doing with yaw control
         // (possibly should be moved into the attitude controller, but right now it collaborates too heavily with the ascent autopilot)
         //
         protected void attitudeTo(double desiredPitch, double desiredHeading)

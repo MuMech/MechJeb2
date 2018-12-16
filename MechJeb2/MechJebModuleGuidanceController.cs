@@ -6,14 +6,14 @@ using System.Reflection;
 
 namespace MuMech
 {
-    public enum PegStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, BURNING_STAGING, COASTING_STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
+    public enum PVGStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, BURNING_STAGING, COASTING_STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
 
-    public class MechJebModulePEGController : ComputerModule
+    public class MechJebModuleGuidanceController : ComputerModule
     {
-        public MechJebModulePEGController(MechJebCore core) : base(core) { }
+        public MechJebModuleGuidanceController(MechJebCore core) : base(core) { }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pegInterval = new EditableDouble(0.01);
+        public EditableDouble pvgInterval = new EditableDouble(0.01);
 
         // these variables will persist even if Reset() completely blows away the solution, so that pitch+heading will still be stable
         // until a new solution is found.
@@ -32,8 +32,8 @@ namespace MuMech
         public PontryaginBase.Solution solution { get { return ( p != null ) ? p.solution : null; } }
         public List<PontryaginBase.Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
 
-        public PegStatus status;
-        public PegStatus oldstatus;
+        public PVGStatus status;
+        public PVGStatus oldstatus;
 
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
@@ -60,7 +60,7 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             // coast phases are deliberately not reset in Reset() so we never get a completed coast phase again after whacking Reset()
-            status = PegStatus.ENABLED;
+            status = PVGStatus.ENABLED;
             // core.AddToPostDrawQueue(DrawCSE);
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
@@ -74,7 +74,7 @@ namespace MuMech
                 core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
             core.staging.users.Remove(this);
-            status = PegStatus.FINISHED;
+            status = PVGStatus.FINISHED;
             if (p != null)
                 p.KillThread();
             p = null;
@@ -88,7 +88,7 @@ namespace MuMech
         // FIXME: we don't seem to need allow_execution = false now?
         public void AssertStart(bool allow_execution = true)
         {
-            if (status == PegStatus.ENABLED )
+            if (status == PVGStatus.ENABLED )
                 Reset();
             this.allow_execution = allow_execution;
         }
@@ -97,7 +97,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            pegInterval = MuUtils.Clamp(pegInterval, 1.00, 30.00);
+            pvgInterval = MuUtils.Clamp(pvgInterval, 1.00, 30.00);
 
             update_pitch_and_heading();
 
@@ -108,20 +108,20 @@ namespace MuMech
 
             if ( !HighLogic.LoadedSceneIsFlight )
             {
-                Debug.Log("MechJebModulePEGController [BUG]: PEG enabled in non-flight mode.  How does this happen?");
+                Debug.Log("MechJebModuleGuidanceController [BUG]: PVG enabled in non-flight mode.  How does this happen?");
                 Done();
             }
 
-            if ( !enabled || status == PegStatus.ENABLED )
+            if ( !enabled || status == PVGStatus.ENABLED )
                 return;
 
-            if ( status == PegStatus.FINISHED )
+            if ( status == PVGStatus.FINISHED )
             {
                 Done();
                 return;
             }
 
-            if ( status == PegStatus.FAILED )
+            if ( status == PVGStatus.FAILED )
                 Reset();
 
             bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.up > 0 );
@@ -135,7 +135,7 @@ namespace MuMech
             {
                 if (has_rcs)
                 {
-                    status = PegStatus.TERMINAL_RCS;
+                    status = PVGStatus.TERMINAL_RCS;
                 }
                 else
                 {
@@ -151,7 +151,7 @@ namespace MuMech
                 //Debug.Log("dVleft = " + dVleft + " angle = " + angle);
             }
 
-            if ( status == PegStatus.TERMINAL_RCS )
+            if ( status == PVGStatus.TERMINAL_RCS )
             {
                 if (!vessel.ActionGroups[KSPActionGroup.RCS])  // if someone disables RCS
                 {
@@ -216,7 +216,7 @@ namespace MuMech
 
         public void TargetNode(ManeuverNode node, double burntime)
         {
-            if ( status == PegStatus.ENABLED )
+            if ( status == PVGStatus.ENABLED )
                 return;
 
             if (p == null || isCoasting())
@@ -265,7 +265,7 @@ namespace MuMech
 
         public void TargetPeInsertMatchOrbitPlane(double PeA, double ApA, Orbit o, bool omitCoast)
         {
-            if ( status == PegStatus.ENABLED )
+            if ( status == PVGStatus.ENABLED )
                 return;
 
             bool doupdate = false;
@@ -304,7 +304,7 @@ namespace MuMech
 
         public void TargetPeInsertMatchInc(double PeA, double ApA, double inc, bool omitCoast)
         {
-            if ( status == PegStatus.ENABLED )
+            if ( status == PVGStatus.ENABLED )
                 return;
 
             bool doupdate = false;
@@ -354,28 +354,28 @@ namespace MuMech
         // not TERMINAL guidance or TERMINAL_RCS
         public bool isNormal()
         {
-            return status == PegStatus.CONVERGED || status == PegStatus.BURNING || status == PegStatus.BURNING_STAGING || status == PegStatus.COASTING || status == PegStatus.COASTING_STAGING;
+            return status == PVGStatus.CONVERGED || status == PVGStatus.BURNING || status == PVGStatus.BURNING_STAGING || status == PVGStatus.COASTING || status == PVGStatus.COASTING_STAGING;
         }
 
         public bool isCoasting()
         {
-            return status == PegStatus.COASTING || status == PegStatus.COASTING_STAGING;
+            return status == PVGStatus.COASTING || status == PVGStatus.COASTING_STAGING;
         }
 
         public bool isStaging()
         {
-            return status == PegStatus.BURNING_STAGING || status == PegStatus.COASTING_STAGING;
+            return status == PVGStatus.BURNING_STAGING || status == PVGStatus.COASTING_STAGING;
         }
 
         public bool isTerminalGuidance()
         {
-            return status == PegStatus.TERMINAL || status == PegStatus.TERMINAL_RCS;
+            return status == PVGStatus.TERMINAL || status == PVGStatus.TERMINAL_RCS;
         }
 
         /* normal pre-states but not usefully converged */
         public bool isInitializing()
         {
-            return status == PegStatus.ENABLED || status == PegStatus.INITIALIZING;
+            return status == PVGStatus.ENABLED || status == PVGStatus.INITIALIZING;
         }
 
         private PontryaginBase p;
@@ -435,14 +435,14 @@ namespace MuMech
         {
             if (p == null)
             {
-                status = PegStatus.INITIALIZING;
+                status = PVGStatus.INITIALIZING;
                 return;
             }
 
             if (p.solution == null)
             {
                 /* we have a solver but no solution */
-                status = PegStatus.INITIALIZING;
+                status = PVGStatus.INITIALIZING;
             }
             else
             {
@@ -455,12 +455,12 @@ namespace MuMech
                 {
                     // drop out of warp for terminal guidance (smaller time ticks => more accuracy)
                     core.warp.MinimumWarp();
-                    status = PegStatus.TERMINAL;
+                    status = PVGStatus.TERMINAL;
                     return;
                 }
             }
 
-            if ( (vesselState.time - last_optimizer_time) < pegInterval )
+            if ( (vesselState.time - last_optimizer_time) < pvgInterval )
                 return;
 
             // for last 10 seconds of coast phase don't recompute (FIXME: can this go lower?  it was a workaround for a bug)
@@ -473,8 +473,8 @@ namespace MuMech
             //if ( p.threadStart(vesselState.time) )
                 //Debug.Log("MechJeb: started optimizer thread");
 
-            if (status == PegStatus.INITIALIZING && p.solution != null)
-                status = PegStatus.CONVERGED;
+            if (status == PVGStatus.INITIALIZING && p.solution != null)
+                status = PVGStatus.CONVERGED;
 
             last_optimizer_time = vesselState.time;
         }
@@ -502,7 +502,7 @@ namespace MuMech
             if ( !allow_execution )
                 return;
 
-            if ( status == PegStatus.TERMINAL_RCS )
+            if ( status == PVGStatus.TERMINAL_RCS )
             {
                 RCSOn();
                 return;
@@ -521,9 +521,9 @@ namespace MuMech
                 if ( !isTerminalGuidance() )
                 {
                     if (vesselState.time < last_stage_time + 4)
-                        status = PegStatus.COASTING_STAGING;
+                        status = PVGStatus.COASTING_STAGING;
                     else
-                        status = PegStatus.COASTING;
+                        status = PVGStatus.COASTING;
                 }
                 last_coasting_time = vesselState.time;
 
@@ -535,9 +535,9 @@ namespace MuMech
                 if ( !isTerminalGuidance() )
                 {
                     if ((vesselState.time < last_stage_time + 4) || (vesselState.time < last_coasting_time + 4))
-                        status = PegStatus.BURNING_STAGING;
+                        status = PVGStatus.BURNING_STAGING;
                     else
-                        status = PegStatus.BURNING;
+                        status = PVGStatus.BURNING;
                 }
 
                 if (core.staging.autostageLimitInternal > 0)
@@ -562,7 +562,7 @@ namespace MuMech
             if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
                 p.solution.t0 = vesselState.time;
 
-            if ( status == PegStatus.TERMINAL_RCS )
+            if ( status == PVGStatus.TERMINAL_RCS )
             {
                 /* leave pitch, heading and lambda at the last values, also stop updating vgo/tgo */
                 lambdaDot = Vector3d.zero;
@@ -598,7 +598,7 @@ namespace MuMech
         {
             users.Clear();
             ThrustOff();
-            status = PegStatus.FINISHED;
+            status = PVGStatus.FINISHED;
             enabled = false;
         }
 
@@ -611,7 +611,7 @@ namespace MuMech
                 p.KillThread();
                 p = null;
             }
-            status = PegStatus.INITIALIZING;
+            status = PVGStatus.INITIALIZING;
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;
             last_coasting_time = 0.0;
@@ -623,7 +623,7 @@ namespace MuMech
         public static bool isLoadedPrincipia = false;
         public static MethodInfo principiaEGNPCDOF;
 
-        static MechJebModulePEGController()
+        static MechJebModuleGuidanceController()
         {
             isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("ksp_plugin_adapter");
             if (isLoadedPrincipia)
