@@ -48,50 +48,12 @@ namespace MuMech
                 throw new OperationException("target for bi-impulsive transfer must be in the same sphere of influence.");
             }
 
-            var anExists = o.AscendingNodeExists(target.TargetOrbit);
-            var dnExists = o.DescendingNodeExists(target.TargetOrbit);
-            double anTime = o.TimeOfAscendingNode(target.TargetOrbit, universalTime);
-            double dnTime = o.TimeOfDescendingNode(target.TargetOrbit, universalTime);
-
-            if(timeSelector.timeReference == TimeReference.REL_ASCENDING)
-            {
-                if(!anExists)
-                {
-                    throw new OperationException("ascending node with target doesn't exist.");
-                }
-                UT = anTime;
-            }
-            else if(timeSelector.timeReference == TimeReference.REL_DESCENDING)
-            {
-                if(!dnExists)
-                {
-                    throw new OperationException("descending node with target doesn't exist.");
-                }
-                UT = dnTime;
-            }
-            else if(timeSelector.timeReference == TimeReference.REL_NEAREST_AD)
-            {
-                if(!anExists && !dnExists)
-                {
-                    throw new OperationException("neither ascending nor descending node with target exists.");
-                }
-                if(!dnExists || anTime <= dnTime)
-                {
-                    UT = anTime;
-                }
-                else
-                {
-                    UT = dnTime;
-                }
-            }
-            else if (timeSelector.timeReference != TimeReference.COMPUTED)
-            {
-                UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-            }
-
             Vector3d dV;
 
-            Orbit targetOrbit = new Orbit(target.TargetOrbit);
+            // for some reason the Orbit constructor that takes an Orbit argument doesn't dup the Orbit correctly
+            // so we have to do this instead...
+            Orbit targetOrbit = new Orbit();
+            targetOrbit.UpdateFromOrbitAtUT(target.TargetOrbit, UT, target.TargetOrbit.referenceBody);
 
             if ( periodOffset != 0 )
             {
@@ -110,6 +72,44 @@ namespace MuMech
                 }
                 else
                 {
+                    var anExists = o.AscendingNodeExists(target.TargetOrbit);
+                    var dnExists = o.DescendingNodeExists(target.TargetOrbit);
+                    double anTime = o.TimeOfAscendingNode(target.TargetOrbit, universalTime);
+                    double dnTime = o.TimeOfDescendingNode(target.TargetOrbit, universalTime);
+
+                    if(timeSelector.timeReference == TimeReference.REL_ASCENDING)
+                    {
+                        if(!anExists)
+                        {
+                            throw new OperationException("ascending node with target doesn't exist.");
+                        }
+                        UT = anTime;
+                    }
+                    else if(timeSelector.timeReference == TimeReference.REL_DESCENDING)
+                    {
+                        if(!dnExists)
+                        {
+                            throw new OperationException("descending node with target doesn't exist.");
+                        }
+                        UT = dnTime;
+                    }
+                    else if(timeSelector.timeReference == TimeReference.REL_NEAREST_AD)
+                    {
+                        if(!anExists && !dnExists)
+                        {
+                            throw new OperationException("neither ascending nor descending node with target exists.");
+                        }
+                        if(!dnExists || anTime <= dnTime)
+                        {
+                            UT = anTime;
+                        }
+                        else
+                        {
+                            UT = dnTime;
+                        }
+                    }
+
+                    UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
                     dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
                 }
             }
