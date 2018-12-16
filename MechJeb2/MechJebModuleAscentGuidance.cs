@@ -126,7 +126,7 @@ namespace MuMech
                 if (ascentPathIdx == 2)
                 {
                     if (GUILayout.Button("Reset Guidance (DO NOT PRESS)"))
-                        core.optimizer.Reset();
+                        core.guidance.Reset();
 
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
                     autopilot.showTargeting = GUILayout.Toggle(autopilot.showTargeting, "TARG"); // , EditorStyles.toolbarButton);
@@ -195,7 +195,7 @@ namespace MuMech
                     GuiUtils.SimpleTextBox("Booster Pitch rate:", pegascent.pitchRate, "°/s");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Guidance Interval:", core.optimizer.pegInterval, "s");
+                    GuiUtils.SimpleTextBox("Guidance Interval:", core.guidance.pegInterval, "s");
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "Pa-rad");
@@ -320,32 +320,32 @@ namespace MuMech
                 if (autopilot.showStatus)
                 {
 
-                    if (core.optimizer.solution != null)
+                    if (core.guidance.solution != null)
                     {
-                        for(int i = 0; i < core.optimizer.solution.num_segments; i++)
-                            GUILayout.Label(String.Format("{0}: {1}", i, core.optimizer.solution.ArcString(vesselState.time, i)));
+                        for(int i = 0; i < core.guidance.solution.num_segments; i++)
+                            GUILayout.Label(String.Format("{0}: {1}", i, core.guidance.solution.ArcString(vesselState.time, i)));
                     }
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label(String.Format("vgo: {0:F1}", core.optimizer.vgo), GUILayout.Width(100));
-                    GUILayout.Label(String.Format("heading: {0:F1}", core.optimizer.heading), GUILayout.Width(100));
+                    GUILayout.Label(String.Format("vgo: {0:F1}", core.guidance.vgo), GUILayout.Width(100));
+                    GUILayout.Label(String.Format("heading: {0:F1}", core.guidance.heading), GUILayout.Width(100));
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label(String.Format("tgo: {0:F3}", core.optimizer.tgo), GUILayout.Width(100));
-                    GUILayout.Label(String.Format("pitch: {0:F1}", core.optimizer.pitch), GUILayout.Width(100));
+                    GUILayout.Label(String.Format("tgo: {0:F3}", core.guidance.tgo), GUILayout.Width(100));
+                    GUILayout.Label(String.Format("pitch: {0:F1}", core.guidance.pitch), GUILayout.Width(100));
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GUIStyle si = new GUIStyle(GUI.skin.label);
-                    if ( core.optimizer.isStable() )
+                    if ( core.guidance.isStable() )
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-                    else if ( core.optimizer.isInitializing() || core.optimizer.status == PegStatus.FINISHED )
+                    else if ( core.guidance.isInitializing() || core.guidance.status == PegStatus.FINISHED )
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
                     else
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
-                    GUILayout.Label("Guidance Status: " + core.optimizer.status, si);
+                    GUILayout.Label("Guidance Status: " + core.guidance.status, si);
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("core.optimizer Status: *FIXME*");
+                    GUILayout.Label("Optimzer Status: *FIXME*");
                     GUILayout.EndHorizontal();
                 }
 

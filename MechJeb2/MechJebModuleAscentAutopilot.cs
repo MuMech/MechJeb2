@@ -282,7 +282,7 @@ namespace MuMech
                 Debug.Log("Awaiting Liftoff");
                 status = "Awaiting liftoff";
                 // kill the optimizer if it is running.
-                core.optimizer.enabled = false;
+                core.guidance.enabled = false;
 
                 core.attitude.AxisControl(false, false, false);
                 return;
