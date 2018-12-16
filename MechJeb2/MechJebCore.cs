@@ -29,7 +29,7 @@ namespace MuMech
 
         private bool ready = false;
 
-        public MechJebModulePEGController optimizer;
+        public MechJebModulePEGController guidance;
         public MechJebModuleAttitudeController attitude;
         public MechJebModuleStagingController staging;
         public MechJebModuleThrustController thrust;
@@ -755,7 +755,7 @@ namespace MuMech
             landing = GetComputerModule<MechJebModuleLandingAutopilot>();
             settings = GetComputerModule<MechJebModuleSettings>();
             airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
-            optimizer = GetComputerModule<MechJebModulePEGController>();
+            guidance = GetComputerModule<MechJebModulePEGController>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

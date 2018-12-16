@@ -29,14 +29,14 @@ namespace MuMech
             base.OnModuleEnabled();
             mode = AscentMode.VERTICAL_ASCENT;
             Debug.Log("MechJebModuleAscentPEG enabled, optimizer should be enabled now");
-            core.optimizer.enabled = true;
+            core.guidance.enabled = true;
         }
 
         public override void OnModuleDisabled()
         {
             base.OnModuleDisabled();
             Debug.Log("MechJebModuleAscentPEG disabled, optimizer should be disabled now");
-            core.optimizer.enabled = false;
+            core.guidance.enabled = false;
         }
 
         private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GUIDANCE, EXIT };
@@ -45,13 +45,13 @@ namespace MuMech
         public override void timedLaunchHook()
         {
             // timedLaunch kills the optimizer so re-enable it here
-            core.optimizer.enabled = true;
+            core.guidance.enabled = true;
         }
 
         public override bool DriveAscent(FlightCtrlState s)
         {
             setTarget();
-            core.optimizer.AssertStart(allow_execution: true);
+            core.guidance.AssertStart(allow_execution: true);
             switch (mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -74,12 +74,12 @@ namespace MuMech
         {
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
-                core.optimizer.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit, omitCoast);
-                //autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, core.optimizer.iy)) * UtilMath.Rad2Deg;
+                core.guidance.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit, omitCoast);
+                //autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, core.guidance.iy)) * UtilMath.Rad2Deg;
             }
             else
             {
-                core.optimizer.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination, omitCoast);
+                core.guidance.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination, omitCoast);
             }
         }
 
@@ -89,7 +89,7 @@ namespace MuMech
         {
 
             //during the vertical ascent we just thrust straight up at max throttle
-            attitudeTo(90, core.optimizer.heading);
+            attitudeTo(90, core.guidance.heading);
 
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
 
@@ -125,15 +125,15 @@ namespace MuMech
             if ( pitch_program > srfvelPitch() )
             {
                 pitch = srfvelPitch();
-                status = String.Format("Gravity Turn {0:F}° to guidance", pitch - core.optimizer.pitch);
+                status = String.Format("Gravity Turn {0:F}° to guidance", pitch - core.guidance.pitch);
             }
             else
             {
                 pitch = pitch_program;
-                status = String.Format("Pitch program {0:F}° to guidance", pitch - core.optimizer.pitch);
+                status = String.Format("Pitch program {0:F}° to guidance", pitch - core.guidance.pitch);
             }
 
-            if ( pitch <= core.optimizer.pitch && core.optimizer.isStable() )
+            if ( pitch <= core.guidance.pitch && core.guidance.isStable() )
             {
                 mode = AscentMode.GUIDANCE;
                 return;
@@ -149,21 +149,21 @@ namespace MuMech
             {
                 // from 95% to 90% of dynamic pressure apply a "fade" from the pitch selected above to the guidance pitch
                 double fade = MuUtils.Clamp( (0.95 - vesselState.dynamicPressure / vesselState.maxDynamicPressure) * 20.0, 0.0, 1.0);
-                pitch = fade * core.optimizer.pitch + ( 1.0 - fade ) * pitch;
+                pitch = fade * core.guidance.pitch + ( 1.0 - fade ) * pitch;
             }
 
-            attitudeTo(pitch, core.optimizer.heading);
+            attitudeTo(pitch, core.guidance.heading);
         }
 
         private void DriveGuidance(FlightCtrlState s)
         {
-            if ( core.optimizer.status == PegStatus.FINISHED )
+            if ( core.guidance.status == PegStatus.FINISHED )
             {
                 mode = AscentMode.EXIT;
                 return;
             }
 
-            if ( !core.optimizer.isStable() )
+            if ( !core.guidance.isStable() )
             {
                 double pitch = Math.Min(Math.Min(90, srfvelPitch()), vesselState.vesselPitch);
                 attitudeTo(pitch, srfvelHeading());
@@ -173,7 +173,7 @@ namespace MuMech
             {
 
                 status = "Stable Guidance";
-                attitudeTo(core.optimizer.pitch, core.optimizer.heading);
+                attitudeTo(core.guidance.pitch, core.guidance.heading);
             }
         }
     }
