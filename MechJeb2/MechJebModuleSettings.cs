@@ -29,7 +29,7 @@ namespace MuMech
         [ToggleInfoItem("Use only the titlebar for window dragging", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool useTitlebarDragging = false;
 
-        [ToggleInfoItem("Module disabling does not kill throtle (RSS/RO)", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
+        [ToggleInfoItem("Module disabling does not kill throttle (RSS/RO)", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
         public bool rssMode = false;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
