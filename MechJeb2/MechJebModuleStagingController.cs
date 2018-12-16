@@ -25,16 +25,26 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
         [Persistent(pass = (int)Pass.Type)]
-        public EditableDouble clampAutoStageThrustPct = 0.95;
+        public EditableDouble clampAutoStageThrustPct = 0.99;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMaxAerothermalFlux = new EditableDoubleMult(1135, 1);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool hotStaging = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble hotStagingLeadTime = 1.0;
+
 
         public bool autostagingOnce = false;
 
         public bool waitingForFirstStaging = false;
 
+        // this is for other modules to temporarily disable autostaging (e.g. PVG coast phases)
+        public int autostageLimitInternal = 0;
+
         private readonly List<ModuleEngines> activeModuleEngines = new List<ModuleEngines>();
         private readonly List<int> burnedResources = new List<int>();
+        private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
+        private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -58,6 +68,11 @@ namespace MuMech
         {
             users.Add(user);
             autostagingOnce = true;
+        }
+
+        public override void OnModuleEnabled()
+        {
+            autostageLimitInternal = 0;
         }
 
         public override void OnModuleDisabled()
@@ -86,6 +101,10 @@ namespace MuMech
             GuiUtils.SimpleTextBox("  aerothermal flux <", fairingMaxAerothermalFlux, "W/m²", 50);
 
             GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
+
+            hotStaging = GUILayout.Toggle(hotStaging, "Support hotstaging");
+            if (hotStaging)
+                GuiUtils.SimpleTextBox("  lead time", hotStagingLeadTime, "s");
 
             GUILayout.EndVertical();
         }
@@ -122,7 +141,7 @@ namespace MuMech
 
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (waitingForFirstStaging || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit
+            if (waitingForFirstStaging || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit || StageManager.CurrentStage <= autostageLimitInternal
                || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
 
@@ -130,6 +149,10 @@ namespace MuMech
             UpdateActiveModuleEngines();
             UpdateBurnedResources();
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources, activeModuleEngines))
+                return;
+
+            // prevent staging when the current stage has active engines and the next stage has any engines
+            if (hotStaging && InverseStageHasActiveEngines(StageManager.CurrentStage, vessel) && InverseStageHasEngines(StageManager.CurrentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
@@ -186,6 +209,40 @@ namespace MuMech
                 if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) &&
                     HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
                     return true;
+            }
+            return false;
+        }
+
+        public double LastNonZeroDVStageBurnTime()
+        {
+            for ( int i = vacStats.Length-1; i >= 0; i-- )
+                if ( vacStats[i].deltaTime > 0 )
+                    return vacStats[i].deltaTime;
+            return 0;
+        }
+
+        public static bool InverseStageHasActiveEngines(int inverseStage, Vessel v)
+        {
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if (p.inverseStage == inverseStage && p.IsEngine() && p.EngineHasFuel())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool InverseStageHasEngines(int inverseStage, Vessel v)
+        {
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                if (p.inverseStage == inverseStage && p.IsEngine())
+                {
+                    return true;
+                }
             }
             return false;
         }
