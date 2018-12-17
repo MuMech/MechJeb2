@@ -188,33 +188,40 @@ namespace MuMech
 
                 if (autopilot.showGuidanceSettings)
                 {
-                    GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Booster Pitch start:", pvgascent.pitchStartVelocity, "m/s");
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Booster Pitch rate:", pvgascent.pitchRate, "°/s");
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Guidance Interval:", core.guidance.pvgInterval, "s");
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "Pa-rad");
-                    GUILayout.EndHorizontal();
-                    if ( autopilot.limitQa < 100 || autopilot.limitQa > 4000 )
+                    if (ascentPathIdx == 1)
                     {
-                        GUIStyle s = new GUIStyle(GUI.skin.label);
-                        s.normal.textColor = Color.yellow;
+                        GUILayout.BeginVertical();
 
-                        if ( autopilot.limitQa < 100 )
-                            GUILayout.Label("Qα limit cannot be set to lower than 100 Pa-rad", s);
-                        else if ( autopilot.limitQa > 10000 )
-                            GUILayout.Label("Qα limit cannot be set to higher than 10000 Pa-rad", s);
-                        else
-                            GUILayout.Label("Qα limit is recommended to be 1000 to 4000 Pa-rad", s);
+                        GuiUtils.SimpleTextBox("Turn start altitude:", path.turnStartAltitude, "km");
+                        GuiUtils.SimpleTextBox("Turn start velocity:", path.turnStartVelocity, "m/s");
+                        GuiUtils.SimpleTextBox("Turn start pitch:", path.turnStartPitch, "deg");
+                        GuiUtils.SimpleTextBox("Intermediate altitude:", path.intermediateAltitude, "km");
+                        GuiUtils.SimpleTextBox("Hold AP Time:", path.holdAPTime, "s");
+
+                        GUILayout.EndVertical();
                     }
-                    GUILayout.BeginHorizontal();
-                    pvgascent.omitCoast = GUILayout.Toggle(pvgascent.omitCoast, "Omit Coast");
-                    GUILayout.EndHorizontal();
+                    else if (ascentPathIdx == 2)
+                    {
+                        GUILayout.BeginVertical();
+                        GuiUtils.SimpleTextBox("Booster Pitch start:", pvgascent.pitchStartVelocity, "m/s");
+                        GuiUtils.SimpleTextBox("Booster Pitch rate:", pvgascent.pitchRate, "°/s");
+                        GuiUtils.SimpleTextBox("Guidance Interval:", core.guidance.pvgInterval, "s");
+                        GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "Pa-rad");
+                        if ( autopilot.limitQa < 100 || autopilot.limitQa > 4000 )
+                        {
+                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = Color.yellow;
+
+                            if ( autopilot.limitQa < 100 )
+                                GUILayout.Label("Qα limit cannot be set to lower than 100 Pa-rad", s);
+                            else if ( autopilot.limitQa > 10000 )
+                                GUILayout.Label("Qα limit cannot be set to higher than 10000 Pa-rad", s);
+                            else
+                                GUILayout.Label("Qα limit is recommended to be 1000 to 4000 Pa-rad", s);
+                        }
+                        pvgascent.omitCoast = GUILayout.Toggle(pvgascent.omitCoast, "Omit Coast");
+                        GUILayout.EndVertical();
+                    }
                 }
 
                 autopilot.limitQaEnabled = ( ascentPathIdx == 2 );  // this is mandatory for PVG
