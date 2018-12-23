@@ -226,7 +226,7 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsEngine() && p.EngineHasFuel())
+                if (p.inverseStage == inverseStage && p.IsEngine() && p.EngineHasFuel() && !p.IsSepratron())
                 {
                     return true;
                 }
@@ -239,7 +239,7 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsEngine())
+                if (p.inverseStage == inverseStage && p.IsEngine() && !p.IsSepratron())
                 {
                     return true;
                 }
