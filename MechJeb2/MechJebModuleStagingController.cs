@@ -152,7 +152,7 @@ namespace MuMech
                 return;
 
             // prevent staging when the current stage has active engines and the next stage has any engines
-            if (hotStaging && InverseStageHasActiveEngines(StageManager.CurrentStage, vessel) && InverseStageHasEngines(StageManager.CurrentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
+            if (hotStaging && InverseStageHasActiveEngines(StageManager.CurrentStage, vessel) && InverseStageHasEngines(StageManager.CurrentStage - 1, vessel) &&! InverseStageHasDecouplers(StageManager.CurrentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
@@ -240,6 +240,20 @@ namespace MuMech
             {
                 Part p = v.parts[i];
                 if (p.inverseStage == inverseStage && p.IsEngine() && !p.IsSepratron())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool InverseStageHasDecouplers(int inverseStage, Vessel v)
+        {
+            for (int i = 0; i < v.parts.Count; i++)
+            {
+                Part p = v.parts[i];
+                Part decoupledPart;
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart))
                 {
                     return true;
                 }
