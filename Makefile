@@ -69,6 +69,7 @@ package: build ${MECHJEBFILES}
 	cp -r Icons package/MechJeb2/
 	cp build/MechJeb2.dll package/MechJeb2/Plugins/
 	cp LICENSE.md README.md package/MechJeb2/
+	cp MechJebNoCommandPod.cfg package/MechJeb2/
 
 %.tar.gz:
 	${TAR} zcf $@ package/MechJeb2
@@ -90,6 +91,7 @@ install: build
 	cp -r Parts "${KSPDIR}"/GameData/MechJeb2/
 	cp -r Icons "${KSPDIR}"/GameData/MechJeb2/
 	cp build/MechJeb2.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
+	cp MechJebNoCommandPod.cfg "${KSPDIR}"/GameData/MechJeb2/
 
 uninstall: info
 	rm -rf "${KSPDIR}"/GameData/MechJeb2/Plugins
