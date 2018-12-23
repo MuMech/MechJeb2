@@ -19,6 +19,7 @@ namespace MuMech
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
         public MechJebModuleAscentPVG pvgascent { get { return core.GetComputerModule<MechJebModuleAscentPVG>(); } }
+        public MechJebModuleAscentGT gtascent { get { return core.GetComputerModule<MechJebModuleAscentGT>(); } }
 
         public MechJebModuleAscentBase path;
         public MechJebModuleAscentMenuBase editor;
@@ -38,7 +39,7 @@ namespace MuMech
             }
             else if ( i == 1 )
             {
-                p = core.GetComputerModule<MechJebModuleAscentGT>();
+                p = gtascent;
                 e = null;
             }
             else if ( i == 2 )
@@ -192,11 +193,11 @@ namespace MuMech
                     {
                         GUILayout.BeginVertical();
 
-                        GuiUtils.SimpleTextBox("Turn start altitude:", path.turnStartAltitude, "km");
-                        GuiUtils.SimpleTextBox("Turn start velocity:", path.turnStartVelocity, "m/s");
-                        GuiUtils.SimpleTextBox("Turn start pitch:", path.turnStartPitch, "deg");
-                        GuiUtils.SimpleTextBox("Intermediate altitude:", path.intermediateAltitude, "km");
-                        GuiUtils.SimpleTextBox("Hold AP Time:", path.holdAPTime, "s");
+                        GuiUtils.SimpleTextBox("Turn start altitude:", gtascent.turnStartAltitude, "km");
+                        GuiUtils.SimpleTextBox("Turn start velocity:", gtascent.turnStartVelocity, "m/s");
+                        GuiUtils.SimpleTextBox("Turn start pitch:", gtascent.turnStartPitch, "deg");
+                        GuiUtils.SimpleTextBox("Intermediate altitude:", gtascent.intermediateAltitude, "km");
+                        GuiUtils.SimpleTextBox("Hold AP Time:", gtascent.holdAPTime, "s");
 
                         GUILayout.EndVertical();
                     }
