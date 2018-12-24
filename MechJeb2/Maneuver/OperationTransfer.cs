@@ -50,10 +50,7 @@ namespace MuMech
 
             Vector3d dV;
 
-            // for some reason the Orbit constructor that takes an Orbit argument doesn't dup the Orbit correctly
-            // so we have to do this instead...
-            Orbit targetOrbit = new Orbit();
-            targetOrbit.UpdateFromOrbitAtUT(target.TargetOrbit, UT, target.TargetOrbit.referenceBody);
+            Orbit targetOrbit = target.TargetOrbit.Clone();
 
             if ( periodOffset != 0 )
             {
