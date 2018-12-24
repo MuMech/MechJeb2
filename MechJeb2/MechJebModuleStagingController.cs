@@ -151,8 +151,8 @@ namespace MuMech
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources, activeModuleEngines))
                 return;
 
-            // prevent staging when the current stage has active engines and the next stage has any engines
-            if (hotStaging && InverseStageHasActiveEngines(StageManager.CurrentStage, vessel) && InverseStageHasEngines(StageManager.CurrentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
+            // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
+            if (hotStaging && InverseStageHasActiveEngines(StageManager.CurrentStage, vessel) && InverseStageHasEngines(StageManager.CurrentStage - 1, vessel) && !InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel) && !InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
@@ -226,7 +226,7 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsEngine() && p.EngineHasFuel())
+                if (p.inverseStage == inverseStage && p.IsEngine() && p.EngineHasFuel() && !p.IsSepratron())
                 {
                     return true;
                 }
@@ -239,7 +239,7 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                if (p.inverseStage == inverseStage && p.IsEngine())
+                if (p.inverseStage == inverseStage && p.IsEngine() && !p.IsSepratron())
                 {
                     return true;
                 }
