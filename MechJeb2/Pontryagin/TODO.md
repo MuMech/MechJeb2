@@ -50,4 +50,5 @@
 * Principia Node executor
 * Proper launch-to-rendezvous
 * Deep throttling last tick for stock people
+* Debugging stock terminal guidance wiggles
 
