@@ -235,8 +235,7 @@ namespace MuMech
 
             Color color = GUI.color;
 
-            // Suggestions for future colors:  Green
-            // Blue, Navy, Teal, Magenta, Purple, Maroon all have poor contrast on black or against other colors here
+            // Blue, Navy, Teal, Magenta, Purple all have poor contrast on black or against other colors here
             // Maybe some of them could be lightened up, but many of the lighter variants are already in this list.
 
             //ascentPath = GUILayout.Toggle(ascentPath, "Ascent path", GUILayout.ExpandWidth(false));
@@ -248,7 +247,7 @@ namespace MuMech
             GUI.color = XKCDColors.Grey;
             graphStates[(int)recordType.AltitudeTrue].display = GUILayout.Toggle(graphStates[(int)recordType.AltitudeTrue].display, "True Altitude", GUILayout.ExpandWidth(false));
 
-            GUI.color = XKCDColors.Red;
+            GUI.color = XKCDColors.LightRed;
             graphStates[(int)recordType.Acceleration].display = GUILayout.Toggle(graphStates[(int)recordType.Acceleration].display, "Acceleration", GUILayout.ExpandWidth(false));
 
             GUI.color = XKCDColors.Yellow;
@@ -280,6 +279,15 @@ namespace MuMech
 
             GUI.color = XKCDColors.Beige;
             graphStates[(int)recordType.DeltaVExpended].display = GUILayout.Toggle(graphStates[(int)recordType.DeltaVExpended].display, "∆V", GUILayout.ExpandWidth(false));
+
+            GUI.color = XKCDColors.Green;
+            graphStates[(int)recordType.GravityLosses].display = GUILayout.Toggle(graphStates[(int)recordType.GravityLosses].display, "Gravity Loss", GUILayout.ExpandWidth(false));
+
+            GUI.color = XKCDColors.LightBrown;
+            graphStates[(int)recordType.DragLosses].display = GUILayout.Toggle(graphStates[(int)recordType.DragLosses].display, "Drag Loss", GUILayout.ExpandWidth(false));
+
+            GUI.color = XKCDColors.Cerise;
+            graphStates[(int)recordType.SteeringLosses].display = GUILayout.Toggle(graphStates[(int)recordType.SteeringLosses].display, "Steering Loss", GUILayout.ExpandWidth(false));
 
             GUI.color = color;
 
@@ -331,7 +339,7 @@ namespace MuMech
             }
             if (graphStates[(int)recordType.Acceleration].display)
             {
-                GUI.color = XKCDColors.Red;
+                GUI.color = XKCDColors.LightRed;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.Acceleration, "Acc " + MuUtils.ToSI(graphStates[(int)recordType.Acceleration].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Acceleration].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.Acceleration, "Acc" , GUILayout.ExpandWidth(true)))
                     scaleIdx = (int)recordType.Acceleration;
@@ -399,6 +407,27 @@ namespace MuMech
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.DeltaVExpended, "∆V", GUILayout.ExpandWidth(true)))
                     scaleIdx = (int)recordType.DeltaVExpended;
             }
+            if (graphStates[(int)recordType.GravityLosses].display)
+            {
+                GUI.color = XKCDColors.Green;
+                //if (GUILayout.Toggle(scaleIdx == (int)recordType.GravityLosses, "GravityLosses " + MuUtils.ToSI(graphStates[(int)recordType.GravityLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.GravityLosses].maximum, -1, 3), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Toggle(scaleIdx == (int)recordType.GravityLosses, "Gravity Loss", GUILayout.ExpandWidth(true)))
+                    scaleIdx = (int)recordType.GravityLosses;
+            }
+            if (graphStates[(int)recordType.DragLosses].display)
+            {
+                GUI.color = XKCDColors.LightBrown;
+                //if (GUILayout.Toggle(scaleIdx == (int)recordType.DragLosses, "DragLosses " + MuUtils.ToSI(graphStates[(int)recordType.DragLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.DragLosses].maximum, -1, 3), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Toggle(scaleIdx == (int)recordType.DragLosses, "Drag Loss", GUILayout.ExpandWidth(true)))
+                    scaleIdx = (int)recordType.DragLosses;
+            }
+            if (graphStates[(int)recordType.SteeringLosses].display)
+            {
+                GUI.color = XKCDColors.Cerise;
+                //if (GUILayout.Toggle(scaleIdx == (int)recordType.SteeringLosses, "SteeringLosses " + MuUtils.ToSI(graphStates[(int)recordType.SteeringLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.SteeringLosses].maximum, -1, 3), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Toggle(scaleIdx == (int)recordType.SteeringLosses, "Steering Loss", GUILayout.ExpandWidth(true)))
+                    scaleIdx = (int)recordType.SteeringLosses;
+            }
 
             GUI.color = color;
 
@@ -435,7 +464,7 @@ namespace MuMech
                 if (graphStates[(int)recordType.AltitudeTrue].display)
                     DrawnPath(r, recordType.AltitudeTrue, hPos, scaleX, downrange, XKCDColors.Grey);
                 if (graphStates[(int)recordType.Acceleration].display)
-                    DrawnPath(r, recordType.Acceleration, hPos, scaleX, downrange, XKCDColors.Red);
+                    DrawnPath(r, recordType.Acceleration, hPos, scaleX, downrange, XKCDColors.LightRed);
                 if (graphStates[(int)recordType.SpeedSurface].display)
                     DrawnPath(r, recordType.SpeedSurface, hPos, scaleX, downrange, XKCDColors.Yellow);
                 if (graphStates[(int)recordType.SpeedOrbital].display)
@@ -454,6 +483,12 @@ namespace MuMech
                     DrawnPath(r, recordType.Pitch, hPos, scaleX, downrange, XKCDColors.Mint);
                 if (graphStates[(int)recordType.DeltaVExpended].display)
                     DrawnPath(r, recordType.DeltaVExpended, hPos, scaleX, downrange, XKCDColors.Beige);
+                if (graphStates[(int)recordType.GravityLosses].display)
+                    DrawnPath(r, recordType.GravityLosses, hPos, scaleX, downrange, XKCDColors.Green);
+                if (graphStates[(int)recordType.DragLosses].display)
+                    DrawnPath(r, recordType.DragLosses, hPos, scaleX, downrange, XKCDColors.LightBrown);
+                if (graphStates[(int)recordType.SteeringLosses].display)
+                    DrawnPath(r, recordType.SteeringLosses, hPos, scaleX, downrange, XKCDColors.Cerise);
 
                 // Fix : the scales are different so the result is not useful
                 //if (ascentPath)
@@ -632,10 +667,10 @@ namespace MuMech
             graphStates[(int)recordType.AoD].minimum = 0; // is never negative
             graphStates[(int)recordType.AltitudeTrue].minimum = 0;
             graphStates[(int)recordType.Pitch].minimum = 0;
+            graphStates[(int)recordType.DeltaVExpended].minimum = 0;
             graphStates[(int)recordType.GravityLosses].minimum = 0;
             graphStates[(int)recordType.DragLosses].minimum = 0;
             graphStates[(int)recordType.SteeringLosses].minimum = 0;
-            graphStates[(int)recordType.DeltaVExpended].minimum = 0;
 
             graphStates[(int)recordType.AltitudeASL].maximum = mainBody != null && mainBody.atmosphere ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
             graphStates[(int)recordType.DownRange].maximum = 500;
@@ -649,10 +684,10 @@ namespace MuMech
             graphStates[(int)recordType.AoD].maximum = 5;
             graphStates[(int)recordType.AltitudeTrue].maximum = 100;
             graphStates[(int)recordType.Pitch].maximum = 90;
+            graphStates[(int)recordType.DeltaVExpended].maximum = 100;
             graphStates[(int)recordType.GravityLosses].maximum = 100;
             graphStates[(int)recordType.DragLosses].maximum = 100;
             graphStates[(int)recordType.SteeringLosses].maximum = 100;
-            graphStates[(int)recordType.DeltaVExpended].maximum = 100;
         }
 
         private double heckbertNiceNum(double x, bool round)
