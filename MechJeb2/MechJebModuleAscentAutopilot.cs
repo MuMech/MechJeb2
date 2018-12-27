@@ -248,7 +248,7 @@ namespace MuMech
 
             if (autoThrottle) {
                 Debug.Log("prelaunch killing throttle");
-                core.thrust.targetThrottle = 0.0f;
+                core.thrust.ThrustOff();
             }
 
             core.attitude.AxisControl(false, false, false);
