@@ -257,6 +257,9 @@ namespace MuMech
             GUI.color = XKCDColors.Apricot;
             graphStates[(int)recordType.SpeedOrbital].display = GUILayout.Toggle(graphStates[(int)recordType.SpeedOrbital].display, "Orbital speed", GUILayout.ExpandWidth(false));
 
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+
             GUI.color = XKCDColors.Cyan;
             graphStates[(int)recordType.Q].display = GUILayout.Toggle(graphStates[(int)recordType.Q].display, "Q", GUILayout.ExpandWidth(false));
 
@@ -539,7 +542,7 @@ namespace MuMech
 
                     if (r.Contains(p1))
                     {
-                        Drawing.DrawLine(p1, p2, new Color(0.2f, 0.2f, 0.2f), 1, false);
+                        Drawing.DrawLine(p1, p2, new Color(0.5f, 0.5f, 0.5f), 1, false);
                     }
                 }
                 t++;
