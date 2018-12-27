@@ -48,6 +48,8 @@ namespace MuMech
                             return speedSurface;
                         case recordType.SpeedOrbital:
                             return speedOrbital;
+                        case recordType.Mass:
+                            return mass;
                         case recordType.Acceleration:
                             return acceleration;
                         case recordType.Q:
@@ -62,8 +64,6 @@ namespace MuMech
                             return altitudeTrue;
                         case recordType.Pitch:
                             return pitch;
-                        case recordType.Mass:
-                            return mass;
                         case recordType.GravityLosses:
                             return gravityLosses;
                         case recordType.DragLosses:
@@ -87,6 +87,7 @@ namespace MuMech
             DownRange,
             SpeedSurface,
             SpeedOrbital,
+            Mass,
             Acceleration,
             Q,
             AoA,
@@ -94,7 +95,6 @@ namespace MuMech
             AoD,
             AltitudeTrue,
             Pitch,
-            Mass,
             GravityLosses,
             DragLosses,
             SteeringLosses,

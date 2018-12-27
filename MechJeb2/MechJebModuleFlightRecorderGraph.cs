@@ -235,7 +235,7 @@ namespace MuMech
 
             Color color = GUI.color;
 
-            // Suggestions for future colors:  Beige, Green
+            // Suggestions for future colors:  Green
             // Blue, Navy, Teal, Magenta, Purple, Maroon all have poor contrast on black or against other colors here
             // Maybe some of them could be lightened up, but many of the lighter variants are already in this list.
 
@@ -257,6 +257,9 @@ namespace MuMech
             GUI.color = XKCDColors.Apricot;
             graphStates[(int)recordType.SpeedOrbital].display = GUILayout.Toggle(graphStates[(int)recordType.SpeedOrbital].display, "Orbital speed", GUILayout.ExpandWidth(false));
 
+            GUI.color = XKCDColors.Pink;
+            graphStates[(int)recordType.Mass].display = GUILayout.Toggle(graphStates[(int)recordType.Mass].display, "Mass", GUILayout.ExpandWidth(false));
+
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
 
@@ -275,8 +278,8 @@ namespace MuMech
             GUI.color = XKCDColors.Mint;
             graphStates[(int)recordType.Pitch].display = GUILayout.Toggle(graphStates[(int)recordType.Pitch].display, "Pitch", GUILayout.ExpandWidth(false));
 
-            GUI.color = XKCDColors.Pink;
-            graphStates[(int)recordType.Mass].display = GUILayout.Toggle(graphStates[(int)recordType.Mass].display, "Mass", GUILayout.ExpandWidth(false));
+            GUI.color = XKCDColors.Beige;
+            graphStates[(int)recordType.DeltaVExpended].display = GUILayout.Toggle(graphStates[(int)recordType.DeltaVExpended].display, "∆V", GUILayout.ExpandWidth(false));
 
             GUI.color = color;
 
@@ -347,6 +350,13 @@ namespace MuMech
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.SpeedOrbital, "ObtVel", GUILayout.ExpandWidth(true)))
                     scaleIdx = (int)recordType.SpeedOrbital;
             }
+            if (graphStates[(int)recordType.Mass].display)
+            {
+                GUI.color = XKCDColors.Pink;
+                //if (GUILayout.Toggle(scaleIdx == (int)recordType.Mass, "Mass " + MuUtils.ToSI(graphStates[(int)recordType.Mass].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Mass].maximum, -1, 3), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Toggle(scaleIdx == (int)recordType.Mass, "Mass", GUILayout.ExpandWidth(true)))
+                    scaleIdx = (int)recordType.Mass;
+            }
             if (graphStates[(int)recordType.Q].display)
             {
                 GUI.color = XKCDColors.Cyan;
@@ -382,12 +392,12 @@ namespace MuMech
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.Pitch, "Pitch" , GUILayout.ExpandWidth(true)))
                     scaleIdx = (int)recordType.Pitch;
             }
-            if (graphStates[(int)recordType.Mass].display)
+            if (graphStates[(int)recordType.DeltaVExpended].display)
             {
-                GUI.color = XKCDColors.Pink;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.Mass, "Mass " + MuUtils.ToSI(graphStates[(int)recordType.Mass].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Mass].maximum, -1, 3), GUILayout.ExpandWidth(true)))
-                if (GUILayout.Toggle(scaleIdx == (int)recordType.Mass, "Mass", GUILayout.ExpandWidth(true)))
-                    scaleIdx = (int)recordType.Mass;
+                GUI.color = XKCDColors.Beige;
+                //if (GUILayout.Toggle(scaleIdx == (int)recordType.DeltaVExpended, "DeltaVExpended " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].maximum, -1, 3), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Toggle(scaleIdx == (int)recordType.DeltaVExpended, "∆V", GUILayout.ExpandWidth(true)))
+                    scaleIdx = (int)recordType.DeltaVExpended;
             }
 
             GUI.color = color;
@@ -430,6 +440,8 @@ namespace MuMech
                     DrawnPath(r, recordType.SpeedSurface, hPos, scaleX, downrange, XKCDColors.Yellow);
                 if (graphStates[(int)recordType.SpeedOrbital].display)
                     DrawnPath(r, recordType.SpeedOrbital, hPos, scaleX, downrange, XKCDColors.Apricot);
+                if (graphStates[(int)recordType.Mass].display)
+                    DrawnPath(r, recordType.Mass, hPos, scaleX, downrange, XKCDColors.Pink);
                 if (graphStates[(int)recordType.Q].display)
                     DrawnPath(r, recordType.Q, hPos, scaleX, downrange, XKCDColors.Cyan);
                 if (graphStates[(int)recordType.AoA].display)
@@ -440,8 +452,8 @@ namespace MuMech
                     DrawnPath(r, recordType.AoD, hPos, scaleX, downrange, XKCDColors.Orange);
                 if (graphStates[(int)recordType.Pitch].display)
                     DrawnPath(r, recordType.Pitch, hPos, scaleX, downrange, XKCDColors.Mint);
-                if (graphStates[(int)recordType.Mass].display)
-                    DrawnPath(r, recordType.Mass, hPos, scaleX, downrange, XKCDColors.Pink);
+                if (graphStates[(int)recordType.DeltaVExpended].display)
+                    DrawnPath(r, recordType.DeltaVExpended, hPos, scaleX, downrange, XKCDColors.Beige);
 
                 // Fix : the scales are different so the result is not useful
                 //if (ascentPath)
@@ -611,15 +623,15 @@ namespace MuMech
             graphStates[(int)recordType.AltitudeASL].minimum = 0;
             graphStates[(int)recordType.DownRange].minimum = 0;
             graphStates[(int)recordType.Acceleration].minimum = 0;
-            graphStates[(int)recordType.SpeedOrbital].minimum = 0;
             graphStates[(int)recordType.SpeedSurface].minimum = 0;
+            graphStates[(int)recordType.SpeedOrbital].minimum = 0;
+            graphStates[(int)recordType.Mass].minimum = 0;
             graphStates[(int)recordType.Q].minimum = 0;
             graphStates[(int)recordType.AoA].minimum = -5;
             graphStates[(int)recordType.AoS].minimum = -5;
             graphStates[(int)recordType.AoD].minimum = 0; // is never negative
             graphStates[(int)recordType.AltitudeTrue].minimum = 0;
             graphStates[(int)recordType.Pitch].minimum = 0;
-            graphStates[(int)recordType.Mass].minimum = 0;
             graphStates[(int)recordType.GravityLosses].minimum = 0;
             graphStates[(int)recordType.DragLosses].minimum = 0;
             graphStates[(int)recordType.SteeringLosses].minimum = 0;
@@ -628,15 +640,15 @@ namespace MuMech
             graphStates[(int)recordType.AltitudeASL].maximum = mainBody != null && mainBody.atmosphere ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
             graphStates[(int)recordType.DownRange].maximum = 500;
             graphStates[(int)recordType.Acceleration].maximum = 2;
-            graphStates[(int)recordType.SpeedOrbital].maximum = 300;
             graphStates[(int)recordType.SpeedSurface].maximum = 300;
+            graphStates[(int)recordType.SpeedOrbital].maximum = 300;
+            graphStates[(int)recordType.Mass].maximum = 5;
             graphStates[(int)recordType.Q].maximum = 1000;
             graphStates[(int)recordType.AoA].maximum = 5;
             graphStates[(int)recordType.AoS].maximum = 5;
             graphStates[(int)recordType.AoD].maximum = 5;
             graphStates[(int)recordType.AltitudeTrue].maximum = 100;
             graphStates[(int)recordType.Pitch].maximum = 90;
-            graphStates[(int)recordType.Mass].maximum = 5;
             graphStates[(int)recordType.GravityLosses].maximum = 100;
             graphStates[(int)recordType.DragLosses].maximum = 100;
             graphStates[(int)recordType.SteeringLosses].maximum = 100;
