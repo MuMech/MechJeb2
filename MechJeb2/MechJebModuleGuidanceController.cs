@@ -61,7 +61,6 @@ namespace MuMech
         {
             // coast phases are deliberately not reset in Reset() so we never get a completed coast phase again after whacking Reset()
             status = PVGStatus.ENABLED;
-            // core.AddToPostDrawQueue(DrawCSE);
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
             core.staging.users.Add(this);
