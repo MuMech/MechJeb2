@@ -12,8 +12,8 @@
 
 * Track dV sensed like PEG does rather than counting down tgo
    * Bring back g-limiter as a suboptimal hack
-* Revisit forcing of autostaging to be forced on
-* Debug if "show navball ascent guidance" is causing crashes?
+* Revisit forcing of autostaging to be forced on (actually can be somewhat annoying)
+* Debug if "show navball ascent guidance" is causing crashes? (it is)
 
 # Critical node executor bugs
 
