@@ -259,6 +259,12 @@ namespace MuMech
             GUI.color = Color.green;
             graphStates[(int)recordType.AoA].display = GUILayout.Toggle(graphStates[(int)recordType.AoA].display, "AoA", GUILayout.ExpandWidth(false));
 
+            GUI.color = Color.green;
+            graphStates[(int)recordType.AoS].display = GUILayout.Toggle(graphStates[(int)recordType.AoS].display, "AoS", GUILayout.ExpandWidth(false));
+
+            GUI.color = Color.green;
+            graphStates[(int)recordType.AoD].display = GUILayout.Toggle(graphStates[(int)recordType.AoD].display, "AoD", GUILayout.ExpandWidth(false));
+
             GUI.color = XKCDColors.GreenTeal;
             graphStates[(int)recordType.Pitch].display = GUILayout.Toggle(graphStates[(int)recordType.Pitch].display, "Pitch", GUILayout.ExpandWidth(false));
 
@@ -348,6 +354,20 @@ namespace MuMech
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.AoA, "AoA", GUILayout.ExpandWidth(true)))
                     scaleIdx = (int)recordType.AoA;
             }
+            if (graphStates[(int)recordType.AoS].display)
+            {
+                GUI.color = Color.green;
+                //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoS, "AoS " + MuUtils.ToSI(graphStates[(int)recordType.AoS].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoS].maximum, -1, 3), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Toggle(scaleIdx == (int)recordType.AoS, "AoS", GUILayout.ExpandWidth(true)))
+                    scaleIdx = (int)recordType.AoS;
+            }
+            if (graphStates[(int)recordType.AoD].display)
+            {
+                GUI.color = Color.green;
+                //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoD, "AoD " + MuUtils.ToSI(graphStates[(int)recordType.AoD].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoD].maximum, -1, 3), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Toggle(scaleIdx == (int)recordType.AoD, "AoD", GUILayout.ExpandWidth(true)))
+                    scaleIdx = (int)recordType.AoD;
+            }
             if (graphStates[(int)recordType.Pitch].display)
             {
                 GUI.color = XKCDColors.GreenTeal;
@@ -407,6 +427,10 @@ namespace MuMech
                     DrawnPath(r, recordType.Q, hPos, scaleX, downrange, Color.cyan);
                 if (graphStates[(int)recordType.AoA].display)
                     DrawnPath(r, recordType.AoA, hPos, scaleX, downrange, Color.green);
+                if (graphStates[(int)recordType.AoS].display)
+                    DrawnPath(r, recordType.AoS, hPos, scaleX, downrange, Color.green);
+                if (graphStates[(int)recordType.AoD].display)
+                    DrawnPath(r, recordType.AoD, hPos, scaleX, downrange, Color.green);
                 if (graphStates[(int)recordType.Pitch].display)
                     DrawnPath(r, recordType.Pitch, hPos, scaleX, downrange, XKCDColors.GreenTeal);
                 if (graphStates[(int)recordType.Mass].display)
@@ -584,6 +608,8 @@ namespace MuMech
             graphStates[(int)recordType.SpeedSurface].minimum = 0;
             graphStates[(int)recordType.Q].minimum = 0;
             graphStates[(int)recordType.AoA].minimum = -5;
+            graphStates[(int)recordType.AoS].minimum = -5;
+            graphStates[(int)recordType.AoD].minimum = 0; // is never negative
             graphStates[(int)recordType.AltitudeTrue].minimum = 0;
             graphStates[(int)recordType.Pitch].minimum = 0;
             graphStates[(int)recordType.Mass].minimum = 0;
@@ -599,6 +625,8 @@ namespace MuMech
             graphStates[(int)recordType.SpeedSurface].maximum = 300;
             graphStates[(int)recordType.Q].maximum = 1000;
             graphStates[(int)recordType.AoA].maximum = 5;
+            graphStates[(int)recordType.AoS].maximum = 5;
+            graphStates[(int)recordType.AoD].maximum = 5;
             graphStates[(int)recordType.AltitudeTrue].maximum = 100;
             graphStates[(int)recordType.Pitch].maximum = 90;
             graphStates[(int)recordType.Mass].maximum = 5;

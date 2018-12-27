@@ -20,6 +20,8 @@ namespace MuMech
             public double acceleration;
             public double Q;
             public double AoA;
+            public double AoS;
+            public double AoD;
             public double altitudeTrue;
             public double pitch;
             public double mass;
@@ -52,6 +54,10 @@ namespace MuMech
                             return Q;
                         case recordType.AoA:
                             return AoA;
+                        case recordType.AoS:
+                            return AoS;
+                        case recordType.AoD:
+                            return AoD;
                         case recordType.AltitudeTrue:
                             return altitudeTrue;
                         case recordType.Pitch:
@@ -84,6 +90,8 @@ namespace MuMech
             Acceleration,
             Q,
             AoA,
+            AoS,
+            AoD,
             AltitudeTrue,
             Pitch,
             Mass,
@@ -243,8 +251,7 @@ namespace MuMech
                 return;
             }
 
-            if ( vesselState.currentThrustAccel > 0 )
-                gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.orbitalVelocity.normalized, vesselState.gravityForce);
+            gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.orbitalVelocity.normalized, vesselState.gravityForce);
             dragLosses += vesselState.deltaT * vesselState.drag;
             deltaVExpended += vesselState.deltaT * vesselState.currentThrustAccel;
             steeringLosses += vesselState.deltaT * vesselState.currentThrustAccel * (1 - Vector3d.Dot(vesselState.orbitalVelocity.normalized, vesselState.forward));
@@ -296,13 +303,15 @@ namespace MuMech
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
             {
                 history[idx].currentStage = vessel.currentStage;
-                history[idx].AoA = vesselState.AoA;
             }
             else
             {
                 history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : StageManager.CurrentStage;
-                history[idx].AoA = idx > 0 ? history[idx - 1].AoA : 0;
             }
+
+            history[idx].AoA = vesselState.AoA;
+            history[idx].AoS = vesselState.AoS;
+            history[idx].AoD = vesselState.displacementAngle;
             for (int t = 0; t < typeCount; t++)
             {
                 double current = history[idx][(recordType)t];
