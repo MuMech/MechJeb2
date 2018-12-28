@@ -104,6 +104,24 @@ namespace MuMech
             disable_path_modules();
         }
 
+        [GeneralInfoItem("Toggle Ascent Navball Guidance", InfoItem.Category.Misc, showInEditor = false)]
+            public void ToggleAscentNavballGuidanceInfoItem()
+            {
+                if (navBall != null)
+                {
+                    if (navBall.NavBallGuidance)
+                    {
+                        if (GUILayout.Button("Hide ascent navball guidance"))
+                            navBall.NavBallGuidance = false;
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("Show ascent navball guidance"))
+                            navBall.NavBallGuidance = true;
+                    }
+                }
+            }
+
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
@@ -233,7 +251,7 @@ namespace MuMech
 
                 if (autopilot.showSettings)
                 {
-                    navBall.NavBallGuidance = GUILayout.Toggle(navBall.NavBallGuidance, "Show ascent navball guidance");
+                    ToggleAscentNavballGuidanceInfoItem();
                     if ( ascentPathIdx != 2 )
                     {
                         core.thrust.LimitToPreventOverheatsInfoItem();

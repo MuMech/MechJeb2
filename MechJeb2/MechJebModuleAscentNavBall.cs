@@ -9,7 +9,6 @@ namespace MuMech
             enabled = true;
         }
 
-        [ToggleInfoItem("Show ascent navball guidance", InfoItem.Category.Misc, showInEditor = false), Persistent(pass = (int)Pass.Global)]
         public bool NavBallGuidance
         {
             get
