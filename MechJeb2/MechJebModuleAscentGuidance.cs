@@ -166,7 +166,7 @@ namespace MuMech
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.yellow;
-                            GUILayout.Label("Apoapsis < Periapsis: circularizing orbit at periapsis", s);
+                            GUILayout.Label("Ap < Pe: circularizing orbit", s);
                         }
                     }
                     else
@@ -175,7 +175,7 @@ namespace MuMech
                     }
 
                     GUIStyle si = new GUIStyle(GUI.skin.label);
-                    if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude))
+                    if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Orbit inc.", si, GUILayout.ExpandWidth(true));
@@ -183,6 +183,10 @@ namespace MuMech
                     GUILayout.Label("º", GUILayout.ExpandWidth(false));
                     if (GUILayout.Button("Current"))
                         desiredInclination.val = vesselState.latitude;
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
+                        GUILayout.Label(String.Format("inc {0:F1}º below current latitude", Math.Abs(vesselState.latitude) - Math.Abs(desiredInclination)), si);
                     GUILayout.EndHorizontal();
                     autopilot.desiredInclination = desiredInclination;
                 }
