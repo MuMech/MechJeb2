@@ -63,7 +63,6 @@ namespace MuMech
             status = PVGStatus.ENABLED;
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
-            core.staging.users.Add(this);
         }
 
         public override void OnModuleDisabled()
@@ -72,7 +71,6 @@ namespace MuMech
             if (!core.rssMode)
                 core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.staging.users.Remove(this);
             status = PVGStatus.FINISHED;
             if (p != null)
                 p.KillThread();
