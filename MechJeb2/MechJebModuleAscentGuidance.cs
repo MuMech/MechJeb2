@@ -122,8 +122,25 @@ namespace MuMech
                 }
             }
 
+        public static GUIStyle btNormal, btActive;
+
         protected override void WindowGUI(int windowID)
         {
+            if (btNormal == null)
+            {
+                btNormal = new GUIStyle(GUI.skin.button);
+                btNormal.normal.textColor = btNormal.focused.textColor = Color.white;
+                btNormal.hover.textColor = btNormal.active.textColor = Color.yellow;
+                btNormal.onNormal.textColor = btNormal.onFocused.textColor = btNormal.onHover.textColor = btNormal.onActive.textColor = Color.green;
+                btNormal.padding = new RectOffset(8, 8, 8, 8);
+
+                btActive = new GUIStyle(btNormal);
+                btActive.active = btActive.onActive;
+                btActive.normal = btActive.onNormal;
+                btActive.onFocused = btActive.focused;
+                btActive.hover = btActive.onHover;
+            }
+
             GUILayout.BeginVertical();
 
             if (autopilot != null)
@@ -147,27 +164,38 @@ namespace MuMech
                     if (GUILayout.Button("Reset Guidance (DO NOT PRESS)"))
                         core.guidance.Reset();
 
+
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
-                    autopilot.showTargeting = GUILayout.Toggle(autopilot.showTargeting, "TARG"); // , EditorStyles.toolbarButton);
-                    autopilot.showGuidanceSettings = GUILayout.Toggle(autopilot.showGuidanceSettings, "GUID");
-                    autopilot.showSettings = GUILayout.Toggle(autopilot.showSettings, "OPTS");
-                    autopilot.showStatus = GUILayout.Toggle(autopilot.showStatus, "STATUS");
+
+                    if ( GUILayout.Button("TARG", autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showTargeting = !autopilot.showTargeting;
+                    if ( GUILayout.Button("GUID", autopilot.showGuidanceSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showGuidanceSettings = !autopilot.showGuidanceSettings;
+                    if ( GUILayout.Button("OPTS", autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showSettings = !autopilot.showSettings;
+                    if ( GUILayout.Button("STATUS", autopilot.showStatus ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showStatus = !autopilot.showStatus;
                     GUILayout.EndHorizontal();
                 }
                 else if (ascentPathIdx == 1)
                 {
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
-                    autopilot.showTargeting = GUILayout.Toggle(autopilot.showTargeting, "TARG"); // , EditorStyles.toolbarButton);
-                    autopilot.showGuidanceSettings = GUILayout.Toggle(autopilot.showGuidanceSettings, "GUID");
-                    autopilot.showSettings = GUILayout.Toggle(autopilot.showSettings, "OPTS");
+                    if ( GUILayout.Button("TARG", autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showTargeting = !autopilot.showTargeting;
+                    if ( GUILayout.Button("GUID", autopilot.showGuidanceSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showGuidanceSettings = !autopilot.showGuidanceSettings;
+                    if ( GUILayout.Button("OPTS", autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showSettings = !autopilot.showSettings;
                     GUILayout.EndHorizontal();
                     autopilot.showStatus = false;
                 }
                 else if (ascentPathIdx == 0)
                 {
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
-                    autopilot.showTargeting = GUILayout.Toggle(autopilot.showTargeting, "TARG"); // , EditorStyles.toolbarButton);
-                    autopilot.showSettings = GUILayout.Toggle(autopilot.showSettings, "OPTS");
+                    if ( GUILayout.Button("TARG", autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showTargeting = !autopilot.showTargeting;
+                    if ( GUILayout.Button("OPTS", autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
+                        autopilot.showSettings = !autopilot.showSettings;
                     GUILayout.EndHorizontal();
                     autopilot.showGuidanceSettings = false;
                     autopilot.showStatus = false;
@@ -193,7 +221,7 @@ namespace MuMech
                     }
 
                     GUIStyle si = new GUIStyle(GUI.skin.label);
-                    if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
+                    if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Orbit inc.", si, GUILayout.ExpandWidth(true));
@@ -203,7 +231,7 @@ namespace MuMech
                         desiredInclination.val = vesselState.latitude;
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    if (!autopilot.enabled && Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
+                    if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
                         GUILayout.Label(String.Format("inc {0:F1}º below current latitude", Math.Abs(vesselState.latitude) - Math.Abs(desiredInclination)), si);
                     GUILayout.EndHorizontal();
                     autopilot.desiredInclination = desiredInclination;
