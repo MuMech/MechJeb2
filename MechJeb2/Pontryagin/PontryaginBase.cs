@@ -15,6 +15,7 @@ namespace MuMech {
             public double isp { get { return stage.isp; } }
             public double thrust { get { return stage.thrust; } }
             public double m0 { get { return stage.m0; } }
+            public double avail_dV { get { return stage.dV; } } // dV available in the stage
             public double max_bt { get { return stage.max_bt; } }
             public double c { get { return stage.c; } }
             public double max_bt_bar { get { return stage.max_bt_bar; } }
@@ -56,7 +57,7 @@ namespace MuMech {
         /* these objects track KSP stages */
         public class Stage
         {
-            public double isp, thrust, m0, max_bt;
+            public double isp, thrust, m0, dV, max_bt;
             public double c, max_bt_bar;
             public int ksp_stage;
             public bool staged = false;  /* if this stage has been jettisoned */
@@ -66,16 +67,17 @@ namespace MuMech {
                 return "ksp_stage: "+ ksp_stage + " isp:" + isp + " thrust:" + thrust + " m0: " + m0 + " maxt:" + max_bt + " maxtbar: " + max_bt_bar + " c: " + c;
             }
 
-            public Stage(PontryaginBase p, double m0, double isp = 0, double thrust = 0, double max_bt = 0, int ksp_stage = -1)
+            public Stage(PontryaginBase p, double m0, double isp = 0, double thrust = 0, double dV = 0, double max_bt = 0, int ksp_stage = -1)
             {
-                UpdateStage(p, m0, isp, thrust, max_bt, ksp_stage);
+                UpdateStage(p, m0, isp, thrust, dV, max_bt, ksp_stage);
             }
 
-            public void UpdateStage(PontryaginBase p, double m0, double isp = 0, double thrust = 0, double max_bt = 0, int ksp_stage = -1)
+            public void UpdateStage(PontryaginBase p, double m0, double isp = 0, double thrust = 0, double dV = 0, double max_bt = 0, int ksp_stage = -1)
             {
                 this.isp = isp;
                 this.thrust = thrust;
                 this.m0 = m0;
+                this.dV = dV;
                 this.max_bt = max_bt;
                 this.c = g0 * isp / p.t_scale;
                 this.max_bt_bar = max_bt / p.t_scale;
@@ -145,7 +147,7 @@ namespace MuMech {
                 }
                 else
                 {
-                    return String.Format("burn {0}: {1:F1}s {2:F1} m/s", arc.ksp_stage, tgo(t, n), dV(t, n));
+                    return String.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n), arc.avail_dV - dV(t, n));
                 }
             }
 
@@ -1308,6 +1310,7 @@ namespace MuMech {
                 double m0 = vacStats[ksp_stage].startMass * 1000;
                 double isp = vacStats[ksp_stage].isp;
                 double thrust = vacStats[ksp_stage].startThrust * 1000;
+                double dV = vacStats[ksp_stage].deltaV;
 
                 if ( first_thrusting && solution != null && solution.tgo(time) < 10 )
                 {
@@ -1326,11 +1329,11 @@ namespace MuMech {
                 if (stage_index >= stages.Count)
                 {
                     //Debug.Log("adding a new found stage");
-                    stages.Add(new Stage(this, m0: m0, isp: isp, thrust: thrust, max_bt: max_bt, ksp_stage: ksp_stage));
+                    stages.Add(new Stage(this, m0: m0, isp: isp, thrust: thrust, dV: dV, max_bt: max_bt, ksp_stage: ksp_stage));
                 }
                 else
                 {
-                    stages[stage_index+offset].UpdateStage(this, m0: m0, isp: isp, thrust: thrust, max_bt: max_bt, ksp_stage: ksp_stage);
+                    stages[stage_index+offset].UpdateStage(this, m0: m0, isp: isp, thrust: thrust, dV: dV, max_bt: max_bt, ksp_stage: ksp_stage);
                 }
 
                 first_thrusting = false;
