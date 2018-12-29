@@ -227,7 +227,7 @@ namespace MuMech
                     }
 
                     GUIStyle si = new GUIStyle(GUI.skin.label);
-                    if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
+                    if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2.001)
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Orbit inc.", si, GUILayout.ExpandWidth(true));
@@ -237,7 +237,7 @@ namespace MuMech
                         desiredInclination.val = vesselState.latitude;
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
-                    if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2)
+                    if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2.001)
                         GUILayout.Label(String.Format("inc {0:F1}º below current latitude", Math.Abs(vesselState.latitude) - Math.Abs(desiredInclination)), si);
                     GUILayout.EndHorizontal();
                     autopilot.desiredInclination = desiredInclination;
