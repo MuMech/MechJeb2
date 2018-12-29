@@ -30,6 +30,7 @@ namespace MuMech
 
         private bool ready = false;
 
+        public MechJebModuleGuidanceController guidance;
         public MechJebModuleAttitudeController attitude;
         public MechJebModuleStagingController staging;
         public MechJebModuleThrustController thrust;
@@ -55,7 +56,7 @@ namespace MuMech
         {
             get { return vessel.GetMasterMechJeb(); }
         }
-        
+
         // Allow other mods to kill MJ ability to control vessel (RemoteTech, RO...)
         public bool DeactivateControl
         {
@@ -368,7 +369,7 @@ namespace MuMech
             sortedModules[key] = value = unorderedComputerModules.OfType<T>().Cast<ComputerModule>().OrderBy(m => m).ToList();
             return value;
         }
-        
+
         // Added because the generic version eats memory like candy when casting from ComputerModule to DisplayModule (.Cast<T>())
         public List<DisplayModule> GetDisplayModules(IComparer<DisplayModule> comparer)
         {
@@ -755,6 +756,7 @@ namespace MuMech
             landing = GetComputerModule<MechJebModuleLandingAutopilot>();
             settings = GetComputerModule<MechJebModuleSettings>();
             airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
+            guidance = GetComputerModule<MechJebModuleGuidanceController>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
