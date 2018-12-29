@@ -218,7 +218,7 @@ namespace MuMech
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = XKCDColors.Orange;
-                            GUILayout.Label("Hyperbolic target orbit (neg Ap)");
+                            GUILayout.Label("Hyperbolic target orbit (neg Ap)", s);
                         }
                     }
                     else
