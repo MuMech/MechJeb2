@@ -214,6 +214,12 @@ namespace MuMech
                             s.normal.textColor = Color.yellow;
                             GUILayout.Label("Ap < Pe: circularizing orbit", s);
                         }
+                        if ( pvgascent.desiredApoapsis < 0 )
+                        {
+                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = XKCDColors.Orange;
+                            GUILayout.Label("Hyperbolic target orbit (neg Ap)");
+                        }
                     }
                     else
                     {
