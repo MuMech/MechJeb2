@@ -386,8 +386,8 @@ namespace MuMech
 
                     if (core.guidance.solution != null)
                     {
-                        for(int i = 0; i < core.guidance.solution.num_segments; i++)
-                            GUILayout.Label(String.Format("{0}: {1}", i, core.guidance.solution.ArcString(vesselState.time, i)));
+                        for(int i = core.guidance.solution.num_segments; i > 0; i--)
+                            GUILayout.Label(String.Format("{0}: {1}", i, core.guidance.solution.ArcString(vesselState.time, i-1)));
                     }
 
                     GUILayout.BeginHorizontal();
