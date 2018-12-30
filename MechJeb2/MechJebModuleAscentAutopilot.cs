@@ -26,10 +26,16 @@ namespace MuMech
             }
             set {
                 this.ascentPathIdx = (int) value;
-                ascentPath = ascentPathForType(value);
-                ascentMenu = ascentMenuForType(value);
-                disablePathModulesOtherThan((int)value);
+                doWiring();
             }
+        }
+
+        // after manually loading the private ascentPathIdx (e.g. from a ConfigNode) this needs to be called to force the wiring
+        public void doWiring()
+        {
+            ascentPath = ascentPathForType((ascentType)ascentPathIdx);
+            ascentMenu = ascentMenuForType((ascentType)ascentPathIdx);
+            disablePathModulesOtherThan(ascentPathIdx);
         }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -156,7 +162,7 @@ namespace MuMech
         {
             // since we cannot serialize enums, we serialize ascentPathIdx instead, but this bypasses the code in the property, so on module
             // enabling, we force that value back through the property to enforce sanity.
-            ascentPathIdxPublic = (ascentType) ascentPathIdx;
+            doWiring();
 
             ascentPath.enabled = true;
 
@@ -169,6 +175,8 @@ namespace MuMech
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
             if (autostage) core.staging.users.Add(this);
+
+            status = "Pre Launch";
         }
 
         public override void OnModuleDisabled()

@@ -14,7 +14,6 @@ namespace MuMech
         private ConfigNode ascentPathConfig;
         private ConfigNode stagingConfig;
         private ConfigNode thrustConfig;
-        private ConfigNode nodeConfig; // used for autowarp config
 
         /*
         [Persistent(pass = (int)Pass.Type)]
@@ -40,17 +39,16 @@ namespace MuMech
             ascentPathConfig = ConfigNode.CreateConfigFromObject(ascentPath);
             stagingConfig = ConfigNode.CreateConfigFromObject(core.staging);
             thrustConfig = ConfigNode.CreateConfigFromObject(core.thrust);
-            nodeConfig = ConfigNode.CreateConfigFromObject(core.node);
             // FIXME: missing autowarp
         }
 
         override public void writeModuleConfiguration()
         {
             ConfigNode.LoadObjectFromConfig(autopilot, autopilotConfig);
+            autopilot.doWiring();
             ConfigNode.LoadObjectFromConfig(ascentPath, ascentPathConfig);
             ConfigNode.LoadObjectFromConfig(core.staging, stagingConfig);
             ConfigNode.LoadObjectFromConfig(core.thrust, thrustConfig);
-            ConfigNode.LoadObjectFromConfig(core.node, nodeConfig);
         }
 
         override public void WindowGUI(int windowID)
@@ -90,7 +88,7 @@ namespace MuMech
 
             if (autopilot != null)
             {
-                if (isExecuted() && autopilot.status.CompareTo ("Off") == 0)
+                if (isExecuted() && autopilot.status == "Off")
                 {
                     GUILayout.Label ("Finished Ascent");
                 }
@@ -112,7 +110,7 @@ namespace MuMech
         {
             if (autopilot != null)
             {
-                if (isStarted() && !isExecuted() && autopilot.status.CompareTo("Off") == 0)
+                if (isStarted() && !isExecuted() && autopilot.status == "Off")
                 {
                     endAction();
                 }
@@ -133,6 +131,7 @@ namespace MuMech
             }
             */
             autopilot.users.Add(this);
+            Debug.Log("Autopilot should be engaged!");
         }
 
         override public void endAction()
@@ -147,7 +146,6 @@ namespace MuMech
             ascentPathConfig = node.GetNode("ascentPathConfig");
             stagingConfig = node.GetNode("stagingConfig");
             thrustConfig = node.GetNode("thrustConfig");
-            nodeConfig = node.GetNode("nodeConfig");
         }
 
         override public void postSave(ConfigNode node)
@@ -156,7 +154,6 @@ namespace MuMech
             ascentPathConfig.CopyTo(node.AddNode("ascentPathConfig"));
             stagingConfig.CopyTo(node.AddNode("stagingConfig"));
             thrustConfig.CopyTo(node.AddNode("thrustConfig"));
-            nodeConfig.CopyTo(node.AddNode("nodeConfig"));
         }
 
         override public void onAbord()
