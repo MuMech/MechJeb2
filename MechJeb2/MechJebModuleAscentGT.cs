@@ -80,7 +80,7 @@ namespace MuMech
 
         void DriveVerticalAscent(FlightCtrlState s)
         {
-            if (!IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface)) mode = AscentMode.INITIATE_TURN;
+            if (!IsVerticalAscent(vesselState.altitudeBottom, vesselState.speedSurface)) mode = AscentMode.INITIATE_TURN;
             if (autopilot.autoThrottle && orbit.ApA > intermediateAltitude) mode = AscentMode.GRAVITY_TURN;
 
             //during the vertical ascent we just thrust straight up at max throttle
@@ -116,7 +116,7 @@ namespace MuMech
             }
 
             //if we've fallen below the turn start altitude, go back to vertical ascent
-            if (IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface))
+            if (IsVerticalAscent(vesselState.altitudeBottom, vesselState.speedSurface))
             {
                 mode = AscentMode.VERTICAL_ASCENT;
                 return;
