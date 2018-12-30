@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace MuMech
 {
+    public enum ascentType { CLASSIC, GRAVITYTURN, PVG };
+
     //Todo: -reimplement measurement of LPA
     //      -Figure out exactly how throttle-limiting should work and interact
     //       with the global throttle-limit option
@@ -13,11 +15,23 @@ namespace MuMech
 
         public string status = "";
 
-        //input parameters:
+        // deliberately private, do not bypass
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public int ascentPathIdx;
-        // this is not persisted, the ascentPathIdx controls it very indirectly (via being set from AscentGuidance)
-        public MechJebModuleAscentBase ascentPath;
+        private int ascentPathIdx;
+
+        // this is the public API for ascentPathIdx which is enum type and does wiring
+        public ascentType ascentPathIdxPublic {
+            get {
+                return (ascentType) this.ascentPathIdx;
+            }
+            set {
+                this.ascentPathIdx = (int) value;
+                ascentPath = ascentPathForType(value);
+                ascentMenu = ascentMenuForType(value);
+                disablePathModulesOtherThan((int)value);
+            }
+        }
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -89,6 +103,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Global))]
         public bool showStatus = true;
 
+
         public bool timedLaunch = false;
         public double launchTime = 0;
 
@@ -139,6 +154,10 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            // since we cannot serialize enums, we serialize ascentPathIdx instead, but this bypasses the code in the property, so on module
+            // enabling, we force that value back through the property to enforce sanity.
+            ascentPathIdxPublic = (ascentType) ascentPathIdx;
+
             ascentPath.enabled = true;
 
             mode = AscentMode.PRELAUNCH;
@@ -347,6 +366,55 @@ namespace MuMech
             if (core.node.burnTriggered) status = "Circularizing";
             else status = "Coasting to circularization burn";
         }
+
+        //////////////////////////////////////////////////
+        // wiring for switching the different ascent types
+        //////////////////////////////////////////////////
+
+        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Primer Vector Guidance (RSS/RO)" };
+
+        public MechJebModuleAscentBase ascentPath;
+        public MechJebModuleAscentMenuBase ascentMenu;
+
+        private void disablePathModulesOtherThan(int type)
+        {
+            foreach(int i in Enum.GetValues(typeof(ascentType)))
+            {
+                if (i != (int)type)
+                    enablePathModules((ascentType)i, false);
+            }
+        }
+
+        private void enablePathModules(ascentType type, bool enabled)
+        {
+            ascentPathForType(type).enabled = enabled;
+            var menu = ascentMenuForType(type);
+            if (menu != null)
+                menu.enabled = enabled;
+        }
+
+        private MechJebModuleAscentBase ascentPathForType(ascentType type)
+        {
+            switch (type)
+            {
+                case ascentType.CLASSIC:
+                    return core.GetComputerModule<MechJebModuleAscentClassic>();
+                case ascentType.GRAVITYTURN:
+                    return core.GetComputerModule<MechJebModuleAscentGT>();
+                case ascentType.PVG:
+                    return core.GetComputerModule<MechJebModuleAscentPVG>();
+            }
+            return null;
+        }
+
+        private MechJebModuleAscentMenuBase ascentMenuForType(ascentType type)
+        {
+            if ( type == ascentType.CLASSIC )
+                return core.GetComputerModule<MechJebModuleAscentClassicMenu>();
+            else
+                return null;
+        }
+
     }
 
     public abstract class MechJebModuleAscentMenuBase : DisplayModule

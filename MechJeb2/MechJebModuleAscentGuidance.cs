@@ -21,79 +21,17 @@ namespace MuMech
         public MechJebModuleAscentPVG pvgascent { get { return core.GetComputerModule<MechJebModuleAscentPVG>(); } }
         public MechJebModuleAscentGT gtascent { get { return core.GetComputerModule<MechJebModuleAscentGT>(); } }
 
-        public MechJebModuleAscentBase path;
-        public MechJebModuleAscentMenuBase editor;
+        private ascentType ascentPathIdx { get { return autopilot.ascentPathIdxPublic; } }
 
         MechJebModuleAscentNavBall navBall;
-
-        /* XXX: this is all a bit janky, could rub some reflection on it */
-        public int ascentPathIdx { get { return autopilot.ascentPathIdx; } set { autopilot.ascentPathIdx = value; } }
-        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Primer Vector Guidance (RSS/RO)" };
-
-        private void get_path_and_editor(int i, out MechJebModuleAscentBase p, out MechJebModuleAscentMenuBase e)
-        {
-            if ( i == 0 )
-            {
-                p = core.GetComputerModule<MechJebModuleAscentClassic>();
-                e = core.GetComputerModule<MechJebModuleAscentClassicMenu>();
-            }
-            else if ( i == 1 )
-            {
-                p = gtascent;
-                e = null;
-            }
-            else if ( i == 2 )
-            {
-                p = pvgascent;
-                e = null;
-            }
-            else
-            {
-                p = null;
-                e = null;
-            }
-        }
-
-        private void disable_path_modules(int otherthan = -1)
-        {
-            for(int i = 0; i < ascentPathList.Length; i++)
-            {
-                if ( i == otherthan ) continue;
-
-                MechJebModuleAscentBase p;
-                MechJebModuleAscentMenuBase e;
-
-                get_path_and_editor(i, out p, out e);
-
-                Debug.Log("MechJebModuleAscentGuidance disabling " + i + "th path + editor");
-                if (p != null) p.enabled = false;
-                if (e != null) e.enabled = false;
-            }
-        }
-
-        private void wire_path_and_editor(int index)
-        {
-            disable_path_modules(index);
-
-            get_path_and_editor(index, out path, out editor);
-
-            autopilot.ascentPath = path;
-            editor = editor;
-        }
 
         public override void OnStart(PartModule.StartState state)
         {
             if (autopilot != null)
             {
-                desiredInclination = autopilot.desiredInclination;
+                desiredInclination = autopilot.desiredInclination;  // FIXME: remove this indirection
             }
             navBall = core.GetComputerModule<MechJebModuleAscentNavBall>();
-            wire_path_and_editor(ascentPathIdx);
-        }
-
-        public override void OnModuleEnabled()
-        {
-            wire_path_and_editor(ascentPathIdx);
         }
 
         public override void OnModuleDisabled()
@@ -101,7 +39,6 @@ namespace MuMech
             launchingToInterplanetary = false;
             launchingToPlane = false;
             launchingToRendezvous = false;
-            disable_path_modules();
         }
 
         [GeneralInfoItem("Toggle Ascent Navball Guidance", InfoItem.Category.Misc, showInEditor = false)]
@@ -159,7 +96,7 @@ namespace MuMech
                         autopilot.users.Add(this);
                     }
                 }
-                if (ascentPathIdx == 2)
+                if (ascentPathIdx == ascentType.PVG)
                 {
                     if (GUILayout.Button("Reset Guidance (DO NOT PRESS)"))
                         core.guidance.Reset();
@@ -177,7 +114,7 @@ namespace MuMech
                         autopilot.showStatus = !autopilot.showStatus;
                     GUILayout.EndHorizontal();
                 }
-                else if (ascentPathIdx == 1)
+                else if (ascentPathIdx == ascentType.GRAVITYTURN)
                 {
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
                     if ( GUILayout.Button("TARG", autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
@@ -189,7 +126,7 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                     autopilot.showStatus = false;
                 }
-                else if (ascentPathIdx == 0)
+                else if (ascentPathIdx == ascentType.CLASSIC)
                 {
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
                     if ( GUILayout.Button("TARG", autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
@@ -203,7 +140,7 @@ namespace MuMech
 
                 if (autopilot.showTargeting)
                 {
-                    if (ascentPathIdx == 2)
+                    if (ascentPathIdx == ascentType.PVG)
                     {
 
                         GuiUtils.SimpleTextBox("Target Periapsis", autopilot.desiredOrbitAltitude, "km");
@@ -245,7 +182,7 @@ namespace MuMech
 
                 if (autopilot.showGuidanceSettings)
                 {
-                    if (ascentPathIdx == 1)
+                    if (ascentPathIdx == ascentType.GRAVITYTURN)
                     {
                         GUILayout.BeginVertical();
 
@@ -257,7 +194,7 @@ namespace MuMech
 
                         GUILayout.EndVertical();
                     }
-                    else if (ascentPathIdx == 2)
+                    else if (ascentPathIdx == ascentType.PVG)
                     {
                         GUILayout.BeginVertical();
                         GuiUtils.SimpleTextBox("Booster Pitch start:", pvgascent.pitchStartVelocity, "m/s");
@@ -281,12 +218,12 @@ namespace MuMech
                     }
                 }
 
-                autopilot.limitQaEnabled = ( ascentPathIdx == 2 );  // this is mandatory for PVG
+                autopilot.limitQaEnabled = ( ascentPathIdx == ascentType.PVG );  // this is mandatory for PVG
 
                 if (autopilot.showSettings)
                 {
                     ToggleAscentNavballGuidanceInfoItem();
-                    if ( ascentPathIdx != 2 )
+                    if ( ascentPathIdx != ascentType.PVG )
                     {
                         core.thrust.LimitToPreventOverheatsInfoItem();
                         //core.thrust.LimitToTerminalVelocityInfoItem();
@@ -322,7 +259,7 @@ namespace MuMech
                     }
                     GUILayout.EndHorizontal();
 
-                    if (ascentPathIdx != 2)
+                    if (ascentPathIdx != ascentType.PVG)
                     {
                         GUILayout.BeginHorizontal();
                         GUIStyle s = new GUIStyle(GUI.skin.toggle);
@@ -345,7 +282,7 @@ namespace MuMech
                         autopilot.limitQaEnabled = false; // this is only for PVG
                     }
 
-                    if ( ascentPathIdx == 0 )
+                    if ( ascentPathIdx == ascentType.CLASSIC )
                     {
                         // corrective steering only applies to Classic
                         GUILayout.BeginHorizontal();
@@ -369,7 +306,7 @@ namespace MuMech
 
                     GUILayout.BeginHorizontal();
                     core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
-                    if ( ascentPathIdx != 2 )
+                    if ( ascentPathIdx != ascentType.PVG )
                     {
                         autopilot.skipCircularization = GUILayout.Toggle(autopilot.skipCircularization, "Skip Circularization");
                     }
@@ -429,7 +366,7 @@ namespace MuMech
                             if (!launchingToPlane && !launchingToRendezvous && !launchingToInterplanetary)
                             {
                                 // disable plane/rendezvous/interplanetary for now
-                                if ( ascentPathIdx != 2 )
+                                if ( ascentPathIdx != ascentType.PVG )
                                 {
                                     GUILayout.BeginHorizontal();
                                     if (GUILayout.Button("Launch to rendezvous:", GUILayout.ExpandWidth(false)))
@@ -525,22 +462,16 @@ namespace MuMech
                 }
             }
 
-            if (!vessel.patchedConicsUnlocked() && ascentPathIdx != 2)
+            if (!vessel.patchedConicsUnlocked() && ascentPathIdx != ascentType.PVG)
             {
                 GUILayout.Label("Warning: MechJeb is unable to circularize without an upgraded Tracking Station.");
             }
 
-            int last_idx = ascentPathIdx;
-
             GUILayout.BeginHorizontal();
-            ascentPathIdx = GuiUtils.ComboBox.Box(ascentPathIdx, ascentPathList, this);
+            autopilot.ascentPathIdxPublic = (ascentType)GuiUtils.ComboBox.Box((int)autopilot.ascentPathIdxPublic, autopilot.ascentPathList, this);
             GUILayout.EndHorizontal();
 
-            if (last_idx != ascentPathIdx) {
-                wire_path_and_editor(ascentPathIdx);
-            }
-
-            if (editor != null) editor.enabled = GUILayout.Toggle(editor.enabled, "Edit ascent path");
+            if (autopilot.ascentMenu != null) autopilot.ascentMenu.enabled = GUILayout.Toggle(autopilot.ascentMenu.enabled, "Edit ascent path");
 
             GUILayout.EndVertical();
 
