@@ -4,153 +4,165 @@ using UnityEngine;
 
 namespace MuMech
 {
-	public class MechJebModuleScriptActionAscent : MechJebModuleScriptAction
-	{
-		public static String NAME = "Ascent";
-		private MechJebModuleAscentAutopilot autopilot;
-		private MechJebModuleAscentGuidance ascentModule;
-		[Persistent(pass = (int)Pass.Type)]
-		private int actionType;
-		private List<String> actionTypes = new List<String>();
-		//Module Parameters
-		[Persistent(pass = (int)Pass.Type)]
-		public MechJebModuleAscentBase ascentPath;
-		[Persistent(pass = (int)Pass.Type)]
-		public double desiredOrbitAltitude;
-		[Persistent(pass = (int)Pass.Type)]
-		public double desiredInclination;
-		[Persistent(pass = (int)Pass.Type)]
-		public bool autoThrottle;
-		[Persistent(pass = (int)Pass.Type)]
-		public bool correctiveSteering;
-		[Persistent(pass = (int)Pass.Type)]
-		public bool forceRoll;
-		[Persistent(pass = (int)Pass.Type)]
-		public double verticalRoll;
-		[Persistent(pass = (int)Pass.Type)]
-		public double turnRoll;
-		[Persistent(pass = (int)Pass.Type)]
-		public bool autodeploySolarPanels;
-		[Persistent(pass = (int)Pass.Type)]
-		public bool _autostage;
-		[Persistent(pass = (int)Pass.Type)]
-		public bool launchingToRendezvous = false;
-		[Persistent(pass = (int)Pass.Type)]
-		public CelestialBody mainBody;
-		[Persistent(pass = (int)Pass.Type)]
-		public Orbit targetOrbit;
+    public class MechJebModuleScriptActionAscent : MechJebModuleScriptAction
+    {
+        public static String NAME = "Ascent";
+        private MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
+        private MechJebModuleAscentBase ascentPath { get { return autopilot.ascentPath; } }
 
-		public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
-		{
-			this.autopilot = core.GetComputerModule<MechJebModuleAscentAutopilot>();
-			this.ascentModule = core.GetComputerModule<MechJebModuleAscentGuidance>();
-			this.mainBody = core.target.mainBody;
-			this.targetOrbit = core.target.TargetOrbit;
-			actionTypes.Add("Ascent Guidance");
-			actionTypes.Add("Launching to Rendezvous");
-			this.readModuleConfiguration();
-		}
+        private ConfigNode autopilotConfig;
+        private ConfigNode ascentPathConfig;
+        private ConfigNode stagingConfig;
+        private ConfigNode thrustConfig;
+        private ConfigNode nodeConfig; // used for autowarp config
 
-		override public void readModuleConfiguration()
-		{
-			this.ascentPath = this.autopilot.ascentPath;
-			this.desiredOrbitAltitude = this.autopilot.desiredOrbitAltitude.val;
-			this.desiredInclination = this.autopilot.desiredInclination;
-			this.autoThrottle = this.autopilot.autoThrottle;
-			this.correctiveSteering = this.autopilot.correctiveSteering;
-			this.forceRoll = this.autopilot.forceRoll;
-			this.verticalRoll = this.autopilot.verticalRoll;
-			this.turnRoll = this.autopilot.turnRoll;
-			this.autodeploySolarPanels = this.autopilot.autodeploySolarPanels;
-			this._autostage = this.autopilot._autostage;
-		}
+        /*
+        [Persistent(pass = (int)Pass.Type)]
+            private int actionType;
+        private List<String> actionTypes = new List<String>();
+        //Module Parameters
+        */
 
-		override public void writeModuleConfiguration()
-		{
-			this.autopilot.ascentPath = this.ascentPath;
-			this.autopilot.desiredOrbitAltitude.val = this.desiredOrbitAltitude;
-			this.autopilot.desiredInclination = this.desiredInclination;
-			this.autopilot.autoThrottle = this.autoThrottle;
-			this.autopilot.correctiveSteering = this.correctiveSteering;
-			this.autopilot.forceRoll = this.forceRoll;
-			this.autopilot.verticalRoll = this.verticalRoll;
-			this.autopilot.turnRoll = this.turnRoll;
-			this.autopilot.autodeploySolarPanels = this.autodeploySolarPanels;
-			this.autopilot._autostage = this._autostage;
-		}
+        public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
+        {
+            /*
+            mainBody = core.target.mainBody;
+            targetOrbit = core.target.TargetOrbit;
+            actionTypes.Add("Ascent Guidance");
+            actionTypes.Add("Launching to Rendezvous");
+            */
+            readModuleConfiguration();
+        }
 
-		override public void WindowGUI(int windowID)
-		{
-			base.preWindowGUI(windowID);
-			base.WindowGUI(windowID);
-			actionType = GuiUtils.ComboBox.Box(actionType, actionTypes.ToArray(), actionTypes);
-			if (actionType == 1)
-			{
-				this.launchingToRendezvous = true;
-			}
-			else {
-				this.launchingToRendezvous = false;
-			}
-			if (!this.launchingToRendezvous) {
-				GUILayout.Label ("ASCENT to " + (this.desiredOrbitAltitude / 1000.0) + "km");
-			} else {
-				GUILayout.Label ("Launching to rendezvous");
-			}
+        override public void readModuleConfiguration()
+        {
+            autopilotConfig = ConfigNode.CreateConfigFromObject(autopilot);
+            ascentPathConfig = ConfigNode.CreateConfigFromObject(ascentPath);
+            stagingConfig = ConfigNode.CreateConfigFromObject(core.staging);
+            thrustConfig = ConfigNode.CreateConfigFromObject(core.thrust);
+            nodeConfig = ConfigNode.CreateConfigFromObject(core.node);
+            // FIXME: missing autowarp
+        }
 
-			if (this.autopilot != null)
-			{
-				if (this.isExecuted() && this.autopilot.status.CompareTo ("Off") == 0)
-				{
-					GUILayout.Label ("Finished Ascend");
-				}
-				else
-				{
-					GUILayout.Label (this.autopilot.status);
-				}
-			}
-			else
-			{
-				GUIStyle s = new GUIStyle(GUI.skin.label);
-				s.normal.textColor = Color.yellow;
-				GUILayout.Label ("-- ERROR --", s);
-			}
-			base.postWindowGUI(windowID);
-		}
+        override public void writeModuleConfiguration()
+        {
+            ConfigNode.LoadObjectFromConfig(autopilot, autopilotConfig);
+            ConfigNode.LoadObjectFromConfig(ascentPath, ascentPathConfig);
+            ConfigNode.LoadObjectFromConfig(core.staging, stagingConfig);
+            ConfigNode.LoadObjectFromConfig(core.thrust, thrustConfig);
+            ConfigNode.LoadObjectFromConfig(core.node, nodeConfig);
+        }
 
-		override public void afterOnFixedUpdate()
-		{
-			if (this.autopilot != null)
-			{
-				if (this.isStarted() && !this.isExecuted() && this.autopilot.status.CompareTo("Off") == 0)
-				{
-					this.endAction();
-				}
-			}
-		}
+        override public void WindowGUI(int windowID)
+        {
+            base.preWindowGUI(windowID);
+            base.WindowGUI(windowID);
 
-		override public void activateAction()
-		{
-			base.activateAction();
-			this.writeModuleConfiguration();
-			if (this.launchingToRendezvous)
-			{
-				this.autopilot.StartCountdown(this.scriptModule.vesselState.time +
-					LaunchTiming.TimeToPhaseAngle(this.autopilot.launchPhaseAngle,
-						mainBody, this.scriptModule.vesselState.longitude, targetOrbit));
-			}
-			this.autopilot.users.Add (this.ascentModule);
-		}
+            switch (autopilot.ascentPathIdxPublic)
+            {
+                case ascentType.CLASSIC:
+                    GUILayout.Label("CLASSIC ASCENT to " + (autopilot.desiredOrbitAltitude / 1000.0) + "km");
+                    break;
+                case ascentType.GRAVITYTURN:
+                    GUILayout.Label("GravityTurn™ ASCENT to " + (autopilot.desiredOrbitAltitude / 1000.0) + "km");
+                    break;
+                case ascentType.PVG:
+                    GUILayout.Label("PVG ASCENT to " + (autopilot.desiredOrbitAltitude / 1000.0) + "x" + ((ascentPath as MechJebModuleAscentPVG).desiredApoapsis / 1000.0) + "km");
+                    break;
+            }
 
-		override public void endAction()
-		{
-			base.endAction();
-			this.autopilot.users.Remove(this.ascentModule);
-		}
+            /*
+            actionType = GuiUtils.ComboBox.Box(actionType, actionTypes.ToArray(), actionTypes);
+            if (actionType == 1)
+            {
+                launchingToRendezvous = true;
+            }
+            else {
+                launchingToRendezvous = false;
+            }
+            if (!launchingToRendezvous) {
+                GUILayout.Label ("ASCENT to " + (desiredOrbitAltitude / 1000.0) + "km");
+            } else {
+                GUILayout.Label ("Launching to rendezvous");
+            }
 
-		override public void onAbord()
-		{
-			this.ascentModule.launchingToInterplanetary = this.ascentModule.launchingToPlane = this.ascentModule.launchingToRendezvous = this.autopilot.timedLaunch = false;
-			base.onAbord();
-		}
-	}
+            */
+
+            if (autopilot != null)
+            {
+                if (isExecuted() && autopilot.status.CompareTo ("Off") == 0)
+                {
+                    GUILayout.Label ("Finished Ascent");
+                }
+                else
+                {
+                    GUILayout.Label (autopilot.status);
+                }
+            }
+            else
+            {
+                GUIStyle s = new GUIStyle(GUI.skin.label);
+                s.normal.textColor = Color.yellow;
+                GUILayout.Label ("-- ERROR --", s);
+            }
+            base.postWindowGUI(windowID);
+        }
+
+        override public void afterOnFixedUpdate()
+        {
+            if (autopilot != null)
+            {
+                if (isStarted() && !isExecuted() && autopilot.status.CompareTo("Off") == 0)
+                {
+                    endAction();
+                }
+            }
+        }
+
+        override public void activateAction()
+        {
+            base.activateAction();
+            writeModuleConfiguration();
+
+            /*
+            if (this.launchingToRendezvous)
+            {
+                this.autopilot.StartCountdown(this.scriptModule.vesselState.time +
+                        LaunchTiming.TimeToPhaseAngle(this.autopilot.launchPhaseAngle,
+                            mainBody, this.scriptModule.vesselState.longitude, targetOrbit));
+            }
+            */
+            autopilot.users.Add(this);
+        }
+
+        override public void endAction()
+        {
+            base.endAction();
+            autopilot.users.Remove(this);
+        }
+
+        override public void postLoad(ConfigNode node)
+        {
+            autopilotConfig = node.GetNode("autopilotConfig");
+            ascentPathConfig = node.GetNode("ascentPathConfig");
+            stagingConfig = node.GetNode("stagingConfig");
+            thrustConfig = node.GetNode("thrustConfig");
+            nodeConfig = node.GetNode("nodeConfig");
+        }
+
+        override public void postSave(ConfigNode node)
+        {
+            autopilotConfig.CopyTo(node.AddNode("autopilotConfig"));
+            ascentPathConfig.CopyTo(node.AddNode("ascentPathConfig"));
+            stagingConfig.CopyTo(node.AddNode("stagingConfig"));
+            thrustConfig.CopyTo(node.AddNode("thrustConfig"));
+            nodeConfig.CopyTo(node.AddNode("nodeConfig"));
+        }
+
+        override public void onAbord()
+        {
+            // ascentModule.launchingToInterplanetary = ascentModule.launchingToPlane = ascentModule.launchingToRendezvous = autopilot.timedLaunch = false;
+            base.onAbord();
+        }
+    }
 }
