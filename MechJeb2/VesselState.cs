@@ -245,9 +245,6 @@ namespace MuMech
         // Variable part of torque related to differential throttle
         public Vector3d torqueDiffThrottle;
 
-        // List of parachutes
-        public List<ModuleParachute> parachutes = new List<ModuleParachute>();
-
         public bool parachuteDeployed;
 
         // Resource information keyed by resource Id.
@@ -316,12 +313,12 @@ namespace MuMech
                 foreach (var name in farNames)
                 {
                     var methodInfo = ReflectionUtils.getMethodByReflection(
-                        "FerramAerospaceResearch",
-                        "FerramAerospaceResearch.FARAPI",
-                        name,
-                        BindingFlags.Public | BindingFlags.Static,
-                        new Type[] { typeof(Vessel) }
-                    );
+                            "FerramAerospaceResearch",
+                            "FerramAerospaceResearch.FARAPI",
+                            name,
+                            BindingFlags.Public | BindingFlags.Static,
+                            new Type[] { typeof(Vessel) }
+                            );
                     if (methodInfo == null)
                     {
                         Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no " + name + " method. Disabling FAR");
@@ -334,12 +331,12 @@ namespace MuMech
                 }
 
                 var FARCalculateVesselAeroForcesMethodInfo = ReflectionUtils.getMethodByReflection(
-                    "FerramAerospaceResearch",
-                    "FerramAerospaceResearch.FARAPI",
-                    "CalculateVesselAeroForces",
-                    BindingFlags.Public | BindingFlags.Static,
-                    new Type[] { typeof(Vessel), typeof(Vector3).MakeByRefType(), typeof(Vector3).MakeByRefType(), typeof(Vector3), typeof(double) }
-                );
+                        "FerramAerospaceResearch",
+                        "FerramAerospaceResearch.FARAPI",
+                        "CalculateVesselAeroForces",
+                        BindingFlags.Public | BindingFlags.Static,
+                        new Type[] { typeof(Vessel), typeof(Vector3).MakeByRefType(), typeof(Vector3).MakeByRefType(), typeof(Vector3), typeof(double) }
+                        );
                 if (FARCalculateVesselAeroForcesMethodInfo == null){
                     Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no CalculateVesselAeroForces method, disabling FAR");
                     isLoadedFAR = false;
@@ -378,6 +375,8 @@ namespace MuMech
         {
             if (last_update == Planetarium.GetUniversalTime())
                 return true;
+
+            EnsurePartsListsInitialized(vessel);
 
             if (vessel.rootPart.rb == null) return false; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
@@ -670,7 +669,7 @@ namespace MuMech
                             {
                                 Vector3d force = thrusters[j].GetThrust(dir, rot);
                                 rcsThrustAvailable.Add(
-                                    vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[j], dir)));
+                                        vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[j], dir)));
                                 // Are we missing an rcsTorqueAvailable calculation here?
                             }
                         }
@@ -680,69 +679,61 @@ namespace MuMech
 
             Vector3d movingCoM = vessel.CurrentCoM;
 
-            for (int i = 0; i < vessel.parts.Count; i++)
+            for (int i = 0; i < rcsModulesList.Count; i++)
             {
-                Part p = vessel.parts[i];
-                for (int m = 0; m < p.Modules.Count; m++)
+                ModuleRCS rcs = rcsModulesList[i];
+                //Vector3 pos;
+                //Vector3 neg;
+                //rcs.GetPotentialTorque(out pos, out neg);
+
+                //torqueRcs.Add(pos);
+                //torqueRcs.Add(neg);
+
+                //if (rcsbal.enabled)
+                //    continue;
+
+                if (!rcs.part.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
                 {
-                    ModuleRCS rcs = p.Modules[m] as ModuleRCS;
+                    Vector3 attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
 
-                    if (rcs == null)
-                        continue;
-
-                    //Vector3 pos;
-                    //Vector3 neg;
-                    //rcs.GetPotentialTorque(out pos, out neg);
-
-                    //torqueRcs.Add(pos);
-                    //torqueRcs.Add(neg);
-
-                    //if (rcsbal.enabled)
-                    //    continue;
-
-                    if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
+                    Vector3 translationControl = new Vector3(rcs.enableX ? 1 : 0f, rcs.enableZ ? 1 : 0, rcs.enableY ? 1 : 0);
+                    for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
                     {
-                        Vector3 attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
+                        Transform t = rcs.thrusterTransforms[j];
+                        Vector3d thrusterPosition = t.position - movingCoM;
 
-                        Vector3 translationControl = new Vector3(rcs.enableX ? 1 : 0f, rcs.enableZ ? 1 : 0, rcs.enableY ? 1 : 0);
-                        for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
+                        Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
+
+                        float power = rcs.thrusterPower;
+
+                        if (FlightInputHandler.fetch.precisionMode)
                         {
-                            Transform t = rcs.thrusterTransforms[j];
-                            Vector3d thrusterPosition = t.position - movingCoM;
-
-                            Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
-
-                            float power = rcs.thrusterPower;
-
-                            if (FlightInputHandler.fetch.precisionMode)
+                            if (rcs.useLever)
                             {
-                                if (rcs.useLever)
+                                float lever = rcs.GetLeverDistance(t, thrustDirection, movingCoM);
+                                if (lever > 1)
                                 {
-                                    float lever = rcs.GetLeverDistance(t, thrustDirection, movingCoM);
-                                    if (lever > 1)
-                                    {
-                                        power = power / lever;
-                                    }
-                                }
-                                else
-                                {
-                                    power *= rcs.precisionFactor;
+                                    power = power / lever;
                                 }
                             }
-
-                            Vector3d thrusterThrust = thrustDirection * power;
-
-                            // This is a cheap hack to get rcsTorque with the RCS balancer active.
-                            if (!rcsbal.enabled)
+                            else
                             {
-                                rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
+                                power *= rcs.precisionFactor;
                             }
-                            Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
-
-                            // Convert in vessel local coordinate
-                            rcsTorqueAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
-                            //rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
                         }
+
+                        Vector3d thrusterThrust = thrustDirection * power;
+
+                        // This is a cheap hack to get rcsTorque with the RCS balancer active.
+                        if (!rcsbal.enabled)
+                        {
+                            rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
+                        }
+                        Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
+
+                        // Convert in vessel local coordinate
+                        rcsTorqueAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
+                        //rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust), translationControl));
                     }
                 }
             }
@@ -783,10 +774,142 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
+        // Catalog of Parts and Modules which are maintained to reduce iterating through the entire ship
+        public List<Part> enginePartsList = new List<Part>();
+        public List<ModuleEngines> engineModulesList = new List<ModuleEngines>();
+        public List<Part> rcsPartsList = new List<Part>();
+        public List<ModuleRCS> rcsModulesList = new List<ModuleRCS>();
+        public List<Part> parachutePartsList = new List<Part>();
+        public List<ModuleParachute> parachuteModulesList = new List<ModuleParachute>();
+        public List<Part> gimbalPartsList = new List<Part>();
+        public List<ModuleGimbal> gimbalModulesList = new List<ModuleGimbal>();
+        public List<Part> liftingSurfacePartsList = new List<Part>();
+        public List<ModuleLiftingSurface> liftingSurfaceModulesList = new List<ModuleLiftingSurface>();
+        public List<Part> reactionWheelPartsList = new List<Part>();
+        public List<ModuleReactionWheel> reactionWheelModulesList = new List<ModuleReactionWheel>();
+        public List<Part> resourceIntakePartsList = new List<Part>();
+        public List<ModuleResourceIntake> resourceIntakeModulesList = new List<ModuleResourceIntake>();
+        public List<Part> controlSurfacePartsList = new List<Part>();
+        public List<ModuleControlSurface> controlSurfaceModulesList = new List<ModuleControlSurface>();
+        public List<Part> iTorquePartsList = new List<Part>();
+        public List<ITorqueProvider> iTorqueModulesList = new List<ITorqueProvider>();
+
+        private bool partsListUpdated = false;
+
+        void EnsurePartsListsInitialized(Vessel vessel)
+        {
+            if (!partsListUpdated)
+                UpdatePartsLists(vessel);
+        }
+
+        // ModuleParachute, ModuleGimbal(?), ModuleLiftingSurface, ModuleReactionWheel, ModuleResourceIntake, ModuleControlSurface, ITorqueProvider
+        void UpdatePartsLists(Vessel vessel)
+        {
+            bool isEngine, isRCS, isParachute, isGimbal, isLiftingSurface, isReactionWheel, isResourceIntake, isControlSurface, isITorque;
+
+            enginePartsList.Clear();
+            engineModulesList.Clear();
+            rcsPartsList.Clear();
+            rcsModulesList.Clear();
+            parachutePartsList.Clear();
+            parachuteModulesList.Clear();
+            gimbalPartsList.Clear();
+            gimbalModulesList.Clear();
+            liftingSurfacePartsList.Clear();
+            liftingSurfaceModulesList.Clear();
+            reactionWheelPartsList.Clear();
+            reactionWheelModulesList.Clear();
+            resourceIntakePartsList.Clear();
+            resourceIntakeModulesList.Clear();
+            controlSurfacePartsList.Clear();
+            controlSurfaceModulesList.Clear();
+            iTorquePartsList.Clear();
+            iTorqueModulesList.Clear();
+
+            for (int i = 0; i < vessel.parts.Count; i++)
+            {
+                Part p = vessel.parts[i];
+                isEngine = isRCS = isParachute = isGimbal = isLiftingSurface = isReactionWheel = isResourceIntake = isControlSurface = isITorque = false;
+                for (int m = 0; m < p.Modules.Count; m++)
+                {
+                    PartModule pm = p.Modules[m];
+                    if (pm is ModuleEngines)
+                    {
+                        engineModulesList.Add(pm as ModuleEngines);
+                        if (!isEngine)
+                            enginePartsList.Add(p);
+                        isEngine = true;
+                    }
+                    else if (pm is ModuleRCS)
+                    {
+                        rcsModulesList.Add(pm as ModuleRCS);
+                        if (!isRCS)
+                            rcsPartsList.Add(p);
+                        isRCS = true;
+                    }
+                    else if (pm is ModuleParachute)
+                    {
+                        parachuteModulesList.Add(pm as ModuleParachute);
+                        if (!isParachute)
+                            parachutePartsList.Add(p);
+                        isParachute = true;
+                    }
+                    else if (pm is ModuleGimbal)
+                    {
+                        gimbalModulesList.Add(pm as ModuleGimbal);
+                        if (!isGimbal)
+                            gimbalPartsList.Add(p);
+                        isGimbal = true;
+                    }
+                    else if (pm is ModuleLiftingSurface)
+                    {
+                        liftingSurfaceModulesList.Add(pm as ModuleLiftingSurface);
+                        if (!isLiftingSurface)
+                            liftingSurfacePartsList.Add(p);
+                        isLiftingSurface = true;
+                    }
+                    else if (pm is ModuleReactionWheel)
+                    {
+                        reactionWheelModulesList.Add(pm as ModuleReactionWheel);
+                        if (!isReactionWheel)
+                            reactionWheelPartsList.Add(p);
+                        isReactionWheel = true;
+                    }
+                    else if (pm is ModuleResourceIntake)
+                    {
+                        resourceIntakeModulesList.Add(pm as ModuleResourceIntake);
+                        if (!isResourceIntake)
+                            resourceIntakePartsList.Add(p);
+                        isResourceIntake = true;
+                    }
+                    else if (pm is ModuleControlSurface)
+                    {
+                        controlSurfaceModulesList.Add(pm as ModuleControlSurface);
+                        if (!isControlSurface)
+                            controlSurfacePartsList.Add(p);
+                        isControlSurface = true;
+                    }
+                    else if (pm is ITorqueProvider)
+                    {
+                        iTorqueModulesList.Add(pm as ITorqueProvider);
+                        if (!isITorque)
+                            iTorquePartsList.Add(p);
+                        isITorque = true;
+                    }
+                }
+            }
+
+            partsListUpdated = true;
+        }
+
+        public void OnVesselStandardModification(Vessel vessel)
+        {
+            UpdatePartsLists(vessel);
+        }
+
         // Loop over all the parts in the vessel and calculate some things.
         void AnalyzeParts(Vessel vessel, EngineInfo einfo, IntakeInfo iinfo)
         {
-            parachutes.Clear();
             parachuteDeployed = false;
 
             torqueAvailable = Vector3d.zero;
@@ -889,17 +1012,6 @@ namespace MuMech
                     {
                         iinfo.addIntake(pm as ModuleResourceIntake);
                     }
-                    else if (pm is ModuleParachute)
-                    {
-                        ModuleParachute parachute = pm as ModuleParachute;
-
-                        parachutes.Add(parachute);
-                        if (parachute.deploymentState == ModuleParachute.deploymentStates.DEPLOYED ||
-                            parachute.deploymentState == ModuleParachute.deploymentStates.SEMIDEPLOYED)
-                        {
-                            parachuteDeployed = true;
-                        }
-                    }
                     else if (pm is ModuleControlSurface) // also does ModuleAeroSurface
                     {
                         ModuleControlSurface cs = (pm as ModuleControlSurface);
@@ -991,6 +1103,17 @@ namespace MuMech
                 {
                     CoLScalar += partLiftScalar;
                     CoL += ((Vector3d)p.rb.worldCenterOfMass + (Vector3d)(p.partTransform.rotation * p.CoLOffset)) * partLiftScalar;
+                }
+            }
+
+            for (int i = 0; i < parachuteModulesList.Count; i++)
+            {
+                ModuleParachute parachute = parachuteModulesList[i];
+
+                if (parachute.deploymentState == ModuleParachute.deploymentStates.DEPLOYED ||
+                        parachute.deploymentState == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+                {
+                    parachuteDeployed = true;
                 }
             }
 
@@ -1264,8 +1387,8 @@ namespace MuMech
                 if (p.collider != null)
                 {
                     /*Vector3d bottomPoint = p.collider.ClosestPointOnBounds(vesselmainBody.position);
-                    double partBottomAlt = vesselmainBody.GetAltitude(bottomPoint) - surfaceAltitudeASL;
-                    _altitudeBottom = Math.Max(0, Math.Min(_altitudeBottom, partBottomAlt));*/
+                      double partBottomAlt = vesselmainBody.GetAltitude(bottomPoint) - surfaceAltitudeASL;
+                      _altitudeBottom = Math.Max(0, Math.Min(_altitudeBottom, partBottomAlt));*/
                     Bounds bounds = p.collider.bounds;
                     Vector3 extents = bounds.extents;
                     float partRadius = Mathf.Max(extents[0], Mathf.Max(extents[1], extents[2]));
@@ -1743,25 +1866,25 @@ namespace MuMech
                         Vector3 rot = dT * vessel.angularVelocity;
                         intakeFwd1 = Quaternion.AngleAxis(Mathf.Rad2Deg * rot.magnitude, rot) * intakeFwd0;
                         /*Vector3d cos;
-                        Vector3d sin;
-                        for(int i = 0; i < 3; ++i) {
-                            cos[i] = Math.Cos (rot[i]);
-                            sin[i] = Math.Sin (rot[i]);
-                        }
-                        intakeFwd1[0]
-                            = intakeFwd0[0] * cos[1] * cos[2]
-                            + intakeFwd0[1] * (sin[0]*sin[1]*cos[2] - cos[0]*sin[2])
-                            + intakeFwd0[2] * (sin[0]*sin[2] + cos[0]*sin[1]);
+                          Vector3d sin;
+                          for(int i = 0; i < 3; ++i) {
+                          cos[i] = Math.Cos (rot[i]);
+                          sin[i] = Math.Sin (rot[i]);
+                          }
+                          intakeFwd1[0]
+                          = intakeFwd0[0] * cos[1] * cos[2]
+                          + intakeFwd0[1] * (sin[0]*sin[1]*cos[2] - cos[0]*sin[2])
+                          + intakeFwd0[2] * (sin[0]*sin[2] + cos[0]*sin[1]);
 
-                        intakeFwd1[1]
-                            = intakeFwd0[0] * cos[1] * sin[2]
-                            + intakeFwd0[1] * (cos[0]*cos[1] + sin[0]*sin[1]*sin[2])
-                            + intakeFwd0[2] * (cos[0]*sin[1]*sin[2] - sin[0]*cos[2]);
+                          intakeFwd1[1]
+                          = intakeFwd0[0] * cos[1] * sin[2]
+                          + intakeFwd0[1] * (cos[0]*cos[1] + sin[0]*sin[1]*sin[2])
+                          + intakeFwd0[2] * (cos[0]*sin[1]*sin[2] - sin[0]*cos[2]);
 
-                        intakeFwd1[2]
-                            = intakeFwd0[0] * (-sin[1])
-                            + intakeFwd0[1] * sin[0] * cos[1]
-                            + intakeFwd0[2] * cos[0] * cos[1];*/
+                          intakeFwd1[2]
+                          = intakeFwd0[0] * (-sin[1])
+                          + intakeFwd0[1] * sin[0] * cos[1]
+                          + intakeFwd0[2] * cos[0] * cos[1];*/
                     }
 
                     double mass0 = massProvided(v0mag, v0norm, atmDensity0, staticPressure1, v0mach, intake, intakeFwd0);

@@ -281,7 +281,7 @@ namespace MuMech
                 deltas[i] = landingDelta / perturbationDeltaV; //normalize by the delta-V considered, so that deltas now has units of meters per (meter/second) [i.e., seconds]
             }
 
-            // Now deltas stores the predicted offsets in landing position produced by each of the three perturbations. 
+            // Now deltas stores the predicted offsets in landing position produced by each of the three perturbations.
             // We now figure out the offset we actually want
 
             // First we compute the target landing position. We have to convert the latitude and longitude of the target
@@ -302,7 +302,7 @@ namespace MuMech
             Vector3d downrangeDelta;
             if (allowPrograde)
             {
-                // Construct the linear combination of the prograde and radial+ perturbations 
+                // Construct the linear combination of the prograde and radial+ perturbations
                 // that produces the largest effect on the landing position. The Math.Sign is to
                 // detect and handle the case where radial+ burns actually bring the landing sign closer
                 // (e.g. when we are traveling close to straight up)
@@ -374,9 +374,9 @@ namespace MuMech
         {
             if (vesselState.mainBody.atmosphere && deployChutes)
             {
-                for (int i = 0; i < vesselState.parachutes.Count; i++)
+                for (int i = 0; i < vesselState.parachuteModulesList.Count; i++)
                 {
-                    ModuleParachute p = vesselState.parachutes[i];
+                    ModuleParachute p = vesselState.parachuteModulesList[i];
                     // what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
                     double LandingSiteASL = LandingAltitude;
                     double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * this.parachutePlan.Multiplier;
@@ -399,9 +399,9 @@ namespace MuMech
             if (!vesselState.mainBody.atmosphere) return false;
             if (!deployChutes) return false;
 
-            for (int i = 0; i < vesselState.parachutes.Count; i++)
+            for (int i = 0; i < vesselState.parachuteModulesList.Count; i++)
             {
-                ModuleParachute p = vesselState.parachutes[i];
+                ModuleParachute p = vesselState.parachuteModulesList[i];
                 if (Math.Max(p.part.inverseStage,0) >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
                 {
                     return true;
@@ -475,7 +475,7 @@ namespace MuMech
         //ensure a safe touchdown speed. How do we tell if the atmosphere is thick enough? We check
         //to see if there is an altitude within the atmosphere for which the characteristic distance
         //over which drag slows the ship is smaller than the altitude above the terrain. If so, we can
-        //expect to get slowed to near terminal velocity before impacting the ground. 
+        //expect to get slowed to near terminal velocity before impacting the ground.
         public bool UseAtmosphereToBrake()
         {
             double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
@@ -495,14 +495,14 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part part = vessel.parts[i];
-                if (part.DragCubes.None || part.ShieldedFromAirstream) 
+                if (part.DragCubes.None || part.ShieldedFromAirstream)
                 {
                     continue;
                 }
                 //DragCubeList.CubeData data = part.DragCubes.AddSurfaceDragDirection(Vector3.back, 1);
                 //
                 //dragCoef += data.areaDrag;
-                
+
                 float partAreaDrag = 0;
                 for (int f = 0; f < 6; f++)
                 {
@@ -519,9 +519,9 @@ namespace MuMech
             double addedDragCoef = 0;
             if (vesselState.mainBody.atmosphere && deployChutes)
             {
-                for (int i = 0; i < vesselState.parachutes.Count; i++)
+                for (int i = 0; i < vesselState.parachuteModulesList.Count; i++)
                 {
-                    ModuleParachute p = vesselState.parachutes[i];
+                    ModuleParachute p = vesselState.parachuteModulesList[i];
                     if (p.part.inverseStage >= limitChutesStage)
                     {
                         //addedDragMass += p.part.DragCubes.Cubes.Where(c => c.Name == "DEPLOYED").m
@@ -744,7 +744,7 @@ namespace MuMech
                 }
                 lastResult = newResult;
             }
-            
+
             // What was the overshoot for this new result?
             double overshoot = newResult.GetOvershoot(this.autoPilot.core.target.targetLatitude, this.autoPilot.core.target.targetLongitude);
 
@@ -770,7 +770,7 @@ namespace MuMech
             }
             else
             {
-                // How much data is there? If just one datapoint then we need to slightly vary the multplier to avoid doing exactly the same multiplier again and getting a divide by zero!. If there is just two then we will not update the multiplier as we can't conclude much from two points of data!  
+                // How much data is there? If just one datapoint then we need to slightly vary the multplier to avoid doing exactly the same multiplier again and getting a divide by zero!. If there is just two then we will not update the multiplier as we can't conclude much from two points of data!
                 int dataSetSize = regression.dataSetSize;
                 if (dataSetSize == 1)
                 {
@@ -829,9 +829,9 @@ namespace MuMech
             parachutePresent = false; // First assume that there are no parachutes.
 
             // TODO should we check if each of these parachutes is withing the staging limit?
-            for (int i = 0; i < autoPilot.vesselState.parachutes.Count; i++)
+            for (int i = 0; i < autoPilot.vesselState.parachuteModulesList.Count; i++)
             {
-                ModuleParachute p = autoPilot.vesselState.parachutes[i];
+                ModuleParachute p = autoPilot.vesselState.parachuteModulesList[i];
                 if (p.minAirPressureToOpen > minSemiDeployPressure)
                 // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
                 {
@@ -977,4 +977,3 @@ namespace MuMech
         }
     }
 }
-
