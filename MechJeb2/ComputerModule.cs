@@ -60,7 +60,7 @@ namespace MuMech
         // Has this module config changed and should it be saved
         public bool dirty = false;
 
-        //The UserPool is an alternative way to handle enabling/disabling of a ComputerModule. 
+        //The UserPool is an alternative way to handle enabling/disabling of a ComputerModule.
         //Users can add and remove themselves from the user pool and the ComputerModule will be
         //enabled if and only if there is at least one user. For consistency, it's probably
         //best that a given ComputerModule be controlled either entirely through enabled, or
@@ -118,6 +118,10 @@ namespace MuMech
         }
 
         public virtual void OnUpdate()
+        {
+        }
+
+        public virtual void OnVesselStandardModification(Vessel v)
         {
         }
 
@@ -225,7 +229,7 @@ namespace MuMech
         Global = 4
     }
 
-    //Lets multiple users enable and disable a computer module, such that the 
+    //Lets multiple users enable and disable a computer module, such that the
     //module only gets disabled when all of its users have disabled it.
     public class UserPool : List<object>
     {

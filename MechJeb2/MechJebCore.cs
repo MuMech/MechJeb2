@@ -460,6 +460,7 @@ namespace MuMech
             GameEvents.onShowUI.Add(OnShowGUI);
             GameEvents.onHideUI.Add(OnHideGUI);
             GameEvents.onVesselChange.Add(UnlockControl);
+            GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
 
             lastSettingsSaveTime = Time.time;
 
@@ -980,6 +981,7 @@ namespace MuMech
             GameEvents.onShowUI.Remove(OnShowGUI);
             GameEvents.onHideUI.Remove(OnHideGUI);
             GameEvents.onVesselChange.Remove(UnlockControl);
+            GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
 
             if (weLockedInputs)
             {
@@ -1003,6 +1005,35 @@ namespace MuMech
                 vessel.OnFlyByWire -= OnFlyByWire;
             }
             controlledVessel = null;
+        }
+
+        public void OnVesselStandardModification(Vessel v)
+        {
+            if (v != vessel)
+                return;
+
+            Profiler.BeginSample("vesselState");
+            vesselState.OnVesselStandardModification(vessel);
+            Profiler.EndSample();
+
+            Profiler.BeginSample("MechJebCore.OnVesselStandardModification");
+            if (this == vessel.GetMasterMechJeb())
+            {
+                foreach (ComputerModule module in GetComputerModules<ComputerModule>())
+                {
+                    Profiler.BeginSample("OnVesselStandardModification: " + module.profilerName);
+                    try
+                    {
+                        if (module.enabled) module.OnVesselStandardModification(vessel);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnVesselStandardModification: " + e);
+                    }
+                    Profiler.EndSample();
+                }
+            }
+            Profiler.EndSample();
         }
 
         private void OnFlyByWire(FlightCtrlState s)
