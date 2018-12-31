@@ -124,7 +124,6 @@ namespace MuMech
                     if ( GUILayout.Button("OPTS", autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
                         autopilot.showSettings = !autopilot.showSettings;
                     GUILayout.EndHorizontal();
-                    autopilot.showStatus = false;
                 }
                 else if (ascentPathIdx == ascentType.CLASSIC)
                 {
@@ -134,8 +133,6 @@ namespace MuMech
                     if ( GUILayout.Button("OPTS", autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )
                         autopilot.showSettings = !autopilot.showSettings;
                     GUILayout.EndHorizontal();
-                    autopilot.showGuidanceSettings = false;
-                    autopilot.showStatus = false;
                 }
 
                 if (autopilot.showTargeting)
@@ -320,34 +317,36 @@ namespace MuMech
 
                 if (autopilot.showStatus)
                 {
-
-                    if (core.guidance.solution != null)
+                    if (ascentPathIdx == ascentType.PVG)
                     {
-                        for(int i = core.guidance.solution.num_segments; i > 0; i--)
-                            GUILayout.Label(String.Format("{0}: {1}", i, core.guidance.solution.ArcString(vesselState.time, i-1)));
-                    }
+                        if (core.guidance.solution != null)
+                        {
+                            for(int i = core.guidance.solution.num_segments; i > 0; i--)
+                                GUILayout.Label(String.Format("{0}: {1}", i, core.guidance.solution.ArcString(vesselState.time, i-1)));
+                        }
 
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(String.Format("vgo: {0:F1}", core.guidance.vgo), GUILayout.Width(100));
-                    GUILayout.Label(String.Format("heading: {0:F1}", core.guidance.heading), GUILayout.Width(100));
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(String.Format("tgo: {0:F3}", core.guidance.tgo), GUILayout.Width(100));
-                    GUILayout.Label(String.Format("pitch: {0:F1}", core.guidance.pitch), GUILayout.Width(100));
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    GUIStyle si = new GUIStyle(GUI.skin.label);
-                    if ( core.guidance.isStable() )
-                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-                    else if ( core.guidance.isInitializing() || core.guidance.status == PVGStatus.FINISHED )
-                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
-                    else
-                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
-                    GUILayout.Label("Guidance Status: " + core.guidance.status, si);
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Optimzer Status: *FIXME*");
-                    GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label(String.Format("vgo: {0:F1}", core.guidance.vgo), GUILayout.Width(100));
+                        GUILayout.Label(String.Format("heading: {0:F1}", core.guidance.heading), GUILayout.Width(100));
+                        GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label(String.Format("tgo: {0:F3}", core.guidance.tgo), GUILayout.Width(100));
+                        GUILayout.Label(String.Format("pitch: {0:F1}", core.guidance.pitch), GUILayout.Width(100));
+                        GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUIStyle si = new GUIStyle(GUI.skin.label);
+                        if ( core.guidance.isStable() )
+                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
+                        else if ( core.guidance.isInitializing() || core.guidance.status == PVGStatus.FINISHED )
+                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+                        else
+                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
+                        GUILayout.Label("Guidance Status: " + core.guidance.status, si);
+                        GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("Optimzer Status: *FIXME*");
+                        GUILayout.EndHorizontal();
+                    }
                 }
 
                 if (vessel.LandedOrSplashed)
