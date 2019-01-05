@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace MuMech.AttitudeControllers 
+namespace MuMech.AttitudeControllers
 {
     class HybridController : BaseAttitudeController
     {
@@ -9,8 +9,8 @@ namespace MuMech.AttitudeControllers
         //public Quaternion target { get; set; }
 
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDouble maxStoppingTime = new EditableDouble(10);
-        
+        private EditableDouble maxStoppingTime = new EditableDouble(2);
+
         [Persistent(pass = (int)Pass.Global)]
         private EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
 
@@ -174,7 +174,7 @@ namespace MuMech.AttitudeControllers
             yawRatePI.ResetI();
             rollRatePI.ResetI();
         }
-        
+
 
         private void UpdateControl(FlightCtrlState c) {
             /* TODO: static engine torque and/or differential throttle */
@@ -228,7 +228,7 @@ namespace MuMech.AttitudeControllers
             GUILayout.Label("TargetTorque", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(TargetTorque), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("ControlTorque", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(ControlTorque), GUILayout.ExpandWidth(false));

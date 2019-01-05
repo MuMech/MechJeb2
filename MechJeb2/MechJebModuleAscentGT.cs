@@ -26,12 +26,14 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            base.OnModuleEnabled();
             maxholdAPTime = 0.0F;
             mode = AscentMode.VERTICAL_ASCENT;
         }
 
         public override void OnModuleDisabled()
         {
+            base.OnModuleDisabled();
         }
 
         public bool IsVerticalAscent(double altitude, double velocity)
@@ -78,7 +80,7 @@ namespace MuMech
 
         void DriveVerticalAscent(FlightCtrlState s)
         {
-            if (!IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface)) mode = AscentMode.INITIATE_TURN;
+            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) mode = AscentMode.INITIATE_TURN;
             if (autopilot.autoThrottle && orbit.ApA > intermediateAltitude) mode = AscentMode.GRAVITY_TURN;
 
             //during the vertical ascent we just thrust straight up at max throttle
@@ -114,7 +116,7 @@ namespace MuMech
             }
 
             //if we've fallen below the turn start altitude, go back to vertical ascent
-            if (IsVerticalAscent(vesselState.altitudeASL, vesselState.speedSurface))
+            if (IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface))
             {
                 mode = AscentMode.VERTICAL_ASCENT;
                 return;
