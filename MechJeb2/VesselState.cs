@@ -1735,7 +1735,10 @@ namespace MuMech
                 for (int index = 0; index < modules.Count; index++)
                 {
                     var intake = modules[index];
-                    Vector3d intakeFwd0 = intake.part.FindModelTransform(intake.intakeTransformName).forward; // TODO : replace with the new public field
+                    var intakeTransform = intake.intakeTransform;
+                    if (intakeTransform == null)
+                        continue;
+                    Vector3d intakeFwd0 = intakeTransform.forward; // TODO : replace with the new public field
                     Vector3d intakeFwd1;
                     {
                         // Rotate the intake by the angular velocity for one timestep, in case the ship is spinning.
