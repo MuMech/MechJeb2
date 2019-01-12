@@ -13,7 +13,7 @@ namespace MuMech
         public MechJebModuleGuidanceController(MechJebCore core) : base(core) { }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble pvgInterval = new EditableDouble(0.01);
+        public EditableDouble pvgInterval = new EditableDouble(1.00);
 
         // these variables will persist even if Reset() completely blows away the solution, so that pitch+heading will still be stable
         // until a new solution is found.
@@ -31,6 +31,14 @@ namespace MuMech
 
         public PontryaginBase.Solution solution { get { return ( p != null ) ? p.solution : null; } }
         public List<PontryaginBase.Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
+
+        public int successful_converges { get { return ( p != null ) ? p.successful_converges : 0; } }
+        public int max_lm_iteration_count { get { return ( p != null ) ? p.max_lm_iteration_count : 0; } }
+        public int last_lm_iteration_count { get { return ( p != null ) ? p.last_lm_iteration_count : 0; } }
+        public int last_lm_status { get { return ( p != null ) ? p.last_lm_status : 0; } }
+        public String last_failure_cause { get { return ( p != null ) ? p.last_failure_cause : null; } }
+        public double last_success_time = 0.0;
+        public double staleness { get { return ( last_success_time > 0 ) ? vesselState.time - last_success_time : 0; } }
 
         public PVGStatus status;
         public PVGStatus oldstatus;
@@ -72,6 +80,7 @@ namespace MuMech
                 core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
             status = PVGStatus.FINISHED;
+            last_success_time = 0.0;
             if (p != null)
                 p.KillThread();
             p = null;
@@ -94,8 +103,6 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            pvgInterval = MuUtils.Clamp(pvgInterval, 1.00, 30.00);
-
             update_pitch_and_heading();
 
             if ( isLoadedPrincipia )
@@ -436,6 +443,9 @@ namespace MuMech
                 return;
             }
 
+            if (p.last_success_time > 0)
+                last_success_time = p.last_success_time;
+
             if (p.solution == null)
             {
                 /* we have a solver but no solution */
@@ -457,7 +467,7 @@ namespace MuMech
                 }
             }
 
-            if ( (vesselState.time - last_optimizer_time) < pvgInterval )
+            if ( (vesselState.time - last_optimizer_time) < MuUtils.Clamp(pvgInterval, 1.00, 30.00) )
                 return;
 
             // for last 10 seconds of coast phase don't recompute (FIXME: can this go lower?  it was a workaround for a bug)
@@ -612,6 +622,7 @@ namespace MuMech
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;
             last_coasting_time = 0.0;
+            last_success_time = 0.0;
             last_dVleft = Double.MaxValue;
             autowarp = false;
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();

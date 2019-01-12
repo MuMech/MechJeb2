@@ -384,6 +384,14 @@ namespace MuMech {
             }
         }
 
+        // metrics
+        public int successful_converges = 0;
+        public int max_lm_iteration_count = 0;
+        public int last_lm_iteration_count = 0;
+        public int last_lm_status = 0;
+        public String last_failure_cause = null;
+        public double last_success_time = 0;
+
         public List<Stage> stages = new List<Stage>();
         public double mu;
         public Action<double[], double[]> bcfun;
@@ -994,8 +1002,11 @@ namespace MuMech {
 
             double[] y0_new = new double[y0.Length];
             alglib.minlmresultsbuf(state, ref y0_new, rep);
-            //Debug.Log("MechJeb minlmoptimize termination code: " + rep.terminationtype);
-            //Debug.Log("MechJeb minlmoptimize iterations: " + rep.iterationscount);
+            last_lm_iteration_count = rep.iterationscount;
+            last_lm_status = rep.terminationtype;
+
+            if (last_lm_iteration_count > max_lm_iteration_count)
+                max_lm_iteration_count = last_lm_iteration_count;
 
             optimizationFunction(y0_new, z, arcs);
 
@@ -1169,13 +1180,14 @@ namespace MuMech {
 
                 if (y0 == null)
                 {
+                    successful_converges = 0;
+                    max_lm_iteration_count = 0;
                     Bootstrap(t0);
                 }
                 else
                 {
                     while(last_arcs[0].done)
                     {
-                        //Debug.Log("shrinking y0 array");
                         double[] y0_old = y0;
                         last_arcs.RemoveAt(0);
                         int new_upper_length = arcIndex(last_arcs,last_arcs.Count) - 2;
@@ -1194,9 +1206,7 @@ namespace MuMech {
 
                     if (last_arcs.Count == 0)
                     {
-                        // something in staging went nuts, so re-bootstrap
-                        y0 = null;
-                        Bootstrap(t0);
+                        Fatal("Zero stages after shrinking rocket");
                         return;
                     }
 
@@ -1205,18 +1215,15 @@ namespace MuMech {
                     {
                         if (last_arcs[i].thrust == 0 && last_arcs[i].m0 > 0 && i < last_arcs.Count - 1)
                             last_arcs[i].stage.m0 = last_arcs[i+1].stage.m0;
-                        //FIXME: what about mass continuity for final coasts?
                     }
 
 
                     UpdateY0(last_arcs);
-                    //Debug.Log("normal optimizer run start");
 
                     if ( !runOptimizer(last_arcs) )
                     {
-                        //Debug.Log("optimizer failed3");
+                        Fatal("Converged optimizer iteration failed");
                         y0 = null;
-                        return;
                     }
 
                     if ( overburning )
@@ -1231,12 +1238,11 @@ namespace MuMech {
                             multipleIntegrate(y0, yf, last_arcs, initialize: true);
                             if ( !runOptimizer(last_arcs) )
                             {
-                                //Debug.Log("optimizer failed3");
+                                Fatal("Optimzer failed after adjusting for overburning");
                                 y0 = null;
-                                return;
                             }
                         }
-                        // else we should switch to suborbital targetting here
+                        // else we should do something here
                     }
 
                     Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
@@ -1251,6 +1257,9 @@ namespace MuMech {
                     yf = new double[last_arcs.Count*13];  /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
                     multipleIntegrate(y0, yf, last_arcs);
 
+                    successful_converges += 1;
+                    last_success_time = Planetarium.GetUniversalTime();
+
                     //for(int i = 0; i < yf.Length; i++)
                     //    Debug.Log("yf[" + i + "] = " + yf[i]);
 
@@ -1263,16 +1272,18 @@ namespace MuMech {
             }
             catch (alglib.alglibexception e)
             {
-                Debug.Log("An exception occurred: " + e.GetType().Name);
-                Debug.Log("Message: " + e.Message);
-                Debug.Log("MSG: " + e.msg);
-                Debug.Log("Stack Trace:\n" + e.StackTrace);
+                Fatal("Uncaught Alglib Exception (" + e.GetType().Name + "): " + e.Message + "; " + e.msg);
+                //Debug.Log("An exception occurred: " + e.GetType().Name);
+                //Debug.Log("Message: " + e.Message);
+                //Debug.Log("MSG: " + e.msg);
+                //Debug.Log("Stack Trace:\n" + e.StackTrace);
             }
             catch (Exception e)
             {
-                Debug.Log("An exception occurred: " + e.GetType().Name);
-                Debug.Log("Message: " + e.Message);
-                Debug.Log("Stack Trace:\n" + e.StackTrace);
+                Fatal("Uncaught Exception (" + e.GetType().Name + "): " + e.Message);
+                //Debug.Log("An exception occurred: " + e.GetType().Name);
+                //Debug.Log("Message: " + e.Message);
+                //Debug.Log("Stack Trace:\n" + e.StackTrace);
             }
         }
 
@@ -1369,6 +1380,12 @@ namespace MuMech {
         {
             if (thread != null)
                 thread.Abort();
+        }
+
+        protected void Fatal(string s)
+        {
+            last_failure_cause = s;
+            y0 = null;
         }
     }
 }

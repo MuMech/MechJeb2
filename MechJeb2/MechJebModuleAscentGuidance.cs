@@ -197,6 +197,12 @@ namespace MuMech
                         GuiUtils.SimpleTextBox("Booster Pitch start:", pvgascent.pitchStartVelocity, "m/s");
                         GuiUtils.SimpleTextBox("Booster Pitch rate:", pvgascent.pitchRate, "°/s");
                         GuiUtils.SimpleTextBox("Guidance Interval:", core.guidance.pvgInterval, "s");
+                        if ( core.guidance.pvgInterval < 1 || core.guidance.pvgInterval > 30 )
+                        {
+                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = Color.yellow;
+                            GUILayout.Label("Guidance intervals are limited to between 1s and 30s", s);
+                        }
                         GuiUtils.SimpleTextBox("Qα limit", autopilot.limitQa, "Pa-rad");
                         if ( autopilot.limitQa < 100 || autopilot.limitQa > 4000 )
                         {
@@ -344,8 +350,21 @@ namespace MuMech
                         GUILayout.Label("Guidance Status: " + core.guidance.status, si);
                         GUILayout.EndHorizontal();
                         GUILayout.BeginHorizontal();
-                        GUILayout.Label("Optimzer Status: *FIXME*");
+                        GUILayout.Label("converges: " + core.guidance.successful_converges, GUILayout.Width(100));
+                        GUILayout.Label("status: " + core.guidance.last_lm_status, GUILayout.Width(100));
                         GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label("n: " + core.guidance.last_lm_iteration_count + "(" + core.guidance.max_lm_iteration_count + ")", GUILayout.Width(100));
+                        GUILayout.Label("staleness: " + GuiUtils.TimeToDHMS(core.guidance.staleness));
+                        GUILayout.EndHorizontal();
+                        if ( core.guidance.last_failure_cause != null )
+                        {
+                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = Color.red;
+                            GUILayout.BeginHorizontal();
+                            GUILayout.Label(core.guidance.last_failure_cause, s);
+                            GUILayout.EndHorizontal();
+                        }
                     }
                 }
 
