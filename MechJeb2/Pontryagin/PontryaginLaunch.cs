@@ -137,8 +137,7 @@ namespace MuMech {
             {
                 //for(int k = 0; k < y0.Length; k++)
                     //Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                //Debug.Log("optimizer failed5");
-                y0 = null;
+                Fatal("failed to coverge nocoast/infinite ISP");
                 return;
             }
 
@@ -175,6 +174,7 @@ namespace MuMech {
 
             if ( !runOptimizer(arcs) )
             {
+                Fatal("failed to coverge with normal ISP");
                 //for(int k = 0; k < y0.Length; k++)
                     //Debug.Log("failed - y0[" + k + "] = " + y0[k]);
                 //Debug.Log("optimizer failed6");
@@ -220,18 +220,13 @@ namespace MuMech {
                 {
                     // coast is less than one second, delete it and reconverge
                     RemoveArc(arcs, arcs.Count-2, new_sol);
-                    //Debug.Log("running optimizer4");
 
                     if ( !runOptimizer(arcs) )
                     {
-                        //for(int k = 0; k < y0.Length; k++)
-                        //    Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                        //Debug.Log("optimizer failed10");
-                        y0 = null;
+                        Fatal("failed to converge after removing zero length coast");
                         return;
                     }
 
-                    //Debug.Log("optimizer done");
                     new_sol = new Solution(t_scale, v_scale, r_scale, t0);
                     multipleIntegrate(y0, new_sol, arcs, 10);
                 }
