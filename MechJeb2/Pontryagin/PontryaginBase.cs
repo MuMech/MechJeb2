@@ -389,6 +389,7 @@ namespace MuMech {
         public int max_lm_iteration_count = 0;
         public int last_lm_iteration_count = 0;
         public int last_lm_status = 0;
+        public double last_znorm = 0;
         public String last_failure_cause = null;
         public double last_success_time = 0;
 
@@ -1021,10 +1022,11 @@ namespace MuMech {
                 //Debug.Log("z[" + i + "] = " + z[i]);
             }
 
-            znorm = Math.Sqrt(znorm);
-            //Debug.Log("znorm = " + znorm);
+            last_znorm = Math.Sqrt(znorm);
 
-            // this comes first because after max-iterations we may still have an acceptable solution
+            // this comes first because after max-iterations we may still have an acceptable solution.
+            // we check the largest z-value rather than znorm because for a lot of dimensions several slightly
+            // off z values can add up to failure when they're all acceptable tolerances.
             if (max_z < 1e-5)
             {
                 y0 = y0_new;

@@ -357,6 +357,9 @@ namespace MuMech
                         GUILayout.Label("n: " + core.guidance.last_lm_iteration_count + "(" + core.guidance.max_lm_iteration_count + ")", GUILayout.Width(100));
                         GUILayout.Label("staleness: " + GuiUtils.TimeToDHMS(core.guidance.staleness));
                         GUILayout.EndHorizontal();
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label(String.Format("znorm: {0:G5}", core.guidance.last_znorm));
+                        GUILayout.EndHorizontal();
                         if ( core.guidance.last_failure_cause != null )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);

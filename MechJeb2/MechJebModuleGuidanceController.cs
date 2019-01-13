@@ -36,6 +36,7 @@ namespace MuMech
         public int max_lm_iteration_count { get { return ( p != null ) ? p.max_lm_iteration_count : 0; } }
         public int last_lm_iteration_count { get { return ( p != null ) ? p.last_lm_iteration_count : 0; } }
         public int last_lm_status { get { return ( p != null ) ? p.last_lm_status : 0; } }
+        public double last_znorm { get { return ( p != null ) ? p.last_znorm : 0; } }
         public String last_failure_cause { get { return ( p != null ) ? p.last_failure_cause : null; } }
         public double last_success_time = 0.0;
         public double staleness { get { return ( last_success_time > 0 ) ? vesselState.time - last_success_time : 0; } }
