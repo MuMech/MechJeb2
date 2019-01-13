@@ -37,29 +37,16 @@ namespace MuMech {
             Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
             Vector3d hf = Vector3d.Cross(rf, vf);
 
-            // rot takes hT and rotates it to the south pole ([ 0, -1, 0 ] in xzy coordinates in KSP)
-            Quaternion rot = Quaternion.FromToRotation(hT, Vector3d.down);
-            // now rotate our projected final vector by the same amount
-            Vector3d hfp = rot * hf.normalized;
+            Vector3d hmiss = hf - hT;
 
-            /* 5 constraints */
+            // 5 constraints
             z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
-            z[1] = ( vf.magnitude * vf.magnitude - vTm * vTm ) / 2.0;
-            z[2] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
+            z[1] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
+            z[2] = hmiss[0];
+            z[3] = hmiss[1];
+            z[4] = hmiss[2];
 
-            // stereographic projection onto the Riemann sphere ( hfp[1] is z-axis in KSP )
-            z[3] = hfp[0] / ( 1.0 - hfp[1] );
-            z[4] = hfp[2] / ( 1.0 - hfp[1] );
-
-            // for an almost precisely 180 degree flip of the orbital angular momentum vector remap the infinity to something the
-            // least squares algorithm can digest.
-            if ( !z[3].IsFinite() || !z[4].IsFinite() || Math.Abs(z[3]) > Math.Sqrt(Double.MaxValue) || Math.Abs(z[4]) > Math.Sqrt(Double.MaxValue) )
-            {
-                z[3] = Math.Sqrt(Double.MaxValue);
-                z[4] = Math.Sqrt(Double.MaxValue);
-            }
-
-            /* transversality - free argp */
+            // transversality - free argp
             z[5] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hT);
         }
 
@@ -127,6 +114,12 @@ namespace MuMech {
             // seed continuity initial conditions
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs, initialize: true);
+
+            //Debug.Log("optimizer hT = " + hT.magnitude * r_scale * v_scale);
+            //Debug.Log("r_scale = " + r_scale);
+            //Debug.Log("v_scale = " + v_scale);
+            //Debug.Log("rTm = " + rTm * r_scale + " " + rTm);
+            //Debug.Log("vTm = " + vTm * v_scale + " " + vTm);
 
             //for(int j = 0; j < y0.Length; j++)
             //    Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
@@ -244,11 +237,6 @@ namespace MuMech {
             //for(int k = 0; k < yf.Length; k++)
                 //Debug.Log("new yf[" + k + "] = " + yf[k]);
 
-            //Debug.Log("optimizer hT = " + hT.magnitude * r_scale * v_scale);
-            //Debug.Log("r_scale = " + r_scale);
-            //Debug.Log("v_scale = " + v_scale);
-            //Debug.Log("rTm = " + rTm * r_scale + " " + rTm);
-            //Debug.Log("vTm = " + vTm * v_scale + " " + vTm);
         }
 
         public override void Optimize(double t0)
