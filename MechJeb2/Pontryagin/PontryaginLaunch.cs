@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MuMech {
     public class PontryaginLaunch : PontryaginBase {
-        public PontryaginLaunch(double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV) : base(mu, r0, v0, pv0, pr0, dV)
+        public PontryaginLaunch(MechJebCore core, double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV) : base(core, mu, r0, v0, pv0, pr0, dV)
         {
         }
 
@@ -92,7 +92,7 @@ namespace MuMech {
             {
                 //if (i != 0)
                     //arcs.Add(new Arc(new Stage(this, m0: stages[i].m0, isp: 0, thrust: 0)));
-                arcs.Add(new Arc(stages[i]));
+                arcs.Add(new Arc(this, stages[i]));
             }
 
             arcs[arcs.Count-1].infinite = true;
@@ -102,7 +102,7 @@ namespace MuMech {
 
             // update initial position and guess for first arc
             double ve = g0 * stages[0].isp;
-            tgo = ve * stages[0].m0 / stages[0].thrust * ( 1 - Math.Exp(-dV/ve) );
+            tgo = ve * stages[0].startMass / stages[0].startThrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
 
             // initialize overall burn time

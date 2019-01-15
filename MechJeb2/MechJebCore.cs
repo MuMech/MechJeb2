@@ -45,6 +45,8 @@ namespace MuMech
         public MechJebModuleLandingAutopilot landing;
         public MechJebModuleSettings settings;
         public MechJebModuleAirplaneAutopilot airplane;
+        public MechJebModuleStageStats stageStats;
+        public MechJebModuleLogicalStageTracking stageTracking;
 
         public VesselState vesselState = new VesselState();
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "Disabled", enabledText = "Enabled")]
@@ -757,6 +759,8 @@ namespace MuMech
             settings = GetComputerModule<MechJebModuleSettings>();
             airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
             guidance = GetComputerModule<MechJebModuleGuidanceController>();
+            stageStats = GetComputerModule<MechJebModuleStageStats>();
+            stageTracking = GetComputerModule<MechJebModuleLogicalStageTracking>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

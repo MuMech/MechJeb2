@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MuMech {
     public class PontryaginNode : PontryaginBase {
-        public PontryaginNode(double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV, double bt) : base(mu, r0, v0, pv0, pr0, dV)
+        public PontryaginNode(MechJebCore core, double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV, double bt) : base(core, mu, r0, v0, pv0, pr0, dV)
         {
             tc1 = bt / 2.0;
             tgo = bt;
@@ -98,14 +98,14 @@ namespace MuMech {
             // build arcs off of ksp stages, with coasts
             List<Arc> arcs = new List<Arc>();
 
-            arcs.Add(new Arc(new Stage(this, m0: stages[0].m0, isp: 0, thrust: 0, ksp_stage: stages[0].ksp_stage)));
+            arcs.Add(new Arc(this));
 
             for(int i = 0; i < stages.Count; i++)
             {
-                arcs.Add(new Arc(stages[i]));
+                arcs.Add(new Arc(this, stages[i]));
             }
 
-            arcs.Add(new Arc(new Stage(this, m0: stages[stages.Count-1].m0, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
+            arcs.Add(new Arc(this));
             // arcs.Add(new Arc(new Stage(this, m0: -1, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
 
             arcs[arcs.Count-1].use_fixed_time = true;

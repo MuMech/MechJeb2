@@ -365,7 +365,7 @@ namespace MuMech
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.red;
                             GUILayout.BeginHorizontal();
-                            GUILayout.Label(core.guidance.last_failure_cause, s);
+                            GUILayout.Label("LAST FAILURE: " + core.guidance.last_failure_cause, s);
                             GUILayout.EndHorizontal();
                         }
                     }

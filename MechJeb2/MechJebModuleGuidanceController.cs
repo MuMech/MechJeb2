@@ -44,10 +44,6 @@ namespace MuMech
         public PVGStatus status;
         public PVGStatus oldstatus;
 
-        private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
-        private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
-        private FuelFlowSimulation.Stats[] atmoStats { get { return stats.atmoStats; } }
-
         public double last_stage_time = 0.0;
         public double last_optimizer_time = 0.0;
 
@@ -72,6 +68,7 @@ namespace MuMech
             status = PVGStatus.ENABLED;
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
+            core.stageTracking.users.Add(this);
         }
 
         public override void OnModuleDisabled()
@@ -80,6 +77,7 @@ namespace MuMech
             if (!core.rssMode)
                 core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
+            core.stageTracking.users.Remove(this);
             status = PVGStatus.FINISHED;
             last_success_time = 0.0;
             if (p != null)
@@ -207,9 +205,7 @@ namespace MuMech
             if ( isStaging() )
                 return;
 
-            handle_vacstats(); // must come before handle_staging to mark stages as dropped
-
-            handle_staging();
+            core.stageTracking.Update();
 
             converge();
 
@@ -228,7 +224,7 @@ namespace MuMech
             {
                 PontryaginNode solver = p as PontryaginNode;
                 if (solver == null)
-                    solver = new PontryaginNode(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: node.GetBurnVector(orbit).normalized, pr0: Vector3d.zero, dV: node.GetBurnVector(orbit).magnitude, bt: burntime);
+                    solver = new PontryaginNode(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: node.GetBurnVector(orbit).normalized, pr0: Vector3d.zero, dV: node.GetBurnVector(orbit).magnitude, bt: burntime);
                 solver.intercept(node.nextPatch);
                 p = solver;
             }
@@ -292,7 +288,7 @@ namespace MuMech
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
                 Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
                 lambda = desiredThrustVector;
-                PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
+                PontryaginLaunch solver = new PontryaginLaunch(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
                 solver.omitCoast = omitCoast;
                 Vector3d pos, vel;
                 o.GetOrbitalStateVectorsAtUT(vesselState.time, out pos, out vel);
@@ -339,7 +335,7 @@ namespace MuMech
                 Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
                 Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
                 lambda = desiredThrustVector;
-                PontryaginLaunch solver = new PontryaginLaunch(mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
+                PontryaginLaunch solver = new PontryaginLaunch(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda.normalized, pr0: Vector3d.zero, dV: v0m);
                 solver.omitCoast = omitCoast;
                 solver.flightangle4constraint(r0m, v0m, 0, inc * UtilMath.Deg2Rad);
                 p = solver;
@@ -385,57 +381,6 @@ namespace MuMech
 
         private PontryaginBase p;
 
-        private void handle_staging()
-        {
-            if (p == null || p.solution == null)
-                return;
-
-            if (isStaging())
-                return;
-
-            PontryaginBase.Arc current_arc = null;
-
-            int i;
-
-            for(i = 0; i < p.solution.arcs.Count; i++)
-            {
-                current_arc = p.solution.arcs[i];
-
-                if ( ( current_arc.thrust != 0 && current_arc.ksp_stage > StageManager.CurrentStage) || (p.solution.tgo(vesselState.time, i) <= 0) || current_arc.stage.staged )
-                {
-                    current_arc.done = true;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            /*
-            if (i == p.solution.arcs.Count && current_arc.thrust == 0)
-            {
-                current_arc.done = true;
-            }
-            */
-        }
-
-        private void handle_vacstats()
-        {
-            if (p == null)
-                return;
-
-            stats.RequestUpdate(this, true);
-
-            List<int>kspstages = new List<int>();
-
-            for ( int i = vacStats.Length-1; i >= 0; i-- )
-                if ( vacStats[i].deltaV > 20 ) // FIXME: tweakable
-                    kspstages.Add(i);
-
-            if (p != null)
-                p.SynchStages(kspstages, vacStats, vesselState.mass, vesselState.thrustCurrent, vesselState.time);
-        }
-
         private void converge()
         {
             if (p == null)
@@ -443,6 +388,8 @@ namespace MuMech
                 status = PVGStatus.INITIALIZING;
                 return;
             }
+
+            p.Janitorial();
 
             if (p.last_success_time > 0)
                 last_success_time = p.last_success_time;
@@ -458,8 +405,8 @@ namespace MuMech
                 if ( isTerminalGuidance() )
                     return;
 
-                /* hardcoded 1 second of terminal guidance */
-                if ( tgo < 1 )
+                /* hardcoded 10 seconds of terminal guidance */
+                if ( tgo < 10 )
                 {
                     // drop out of warp for terminal guidance (smaller time ticks => more accuracy)
                     core.warp.MinimumWarp();
