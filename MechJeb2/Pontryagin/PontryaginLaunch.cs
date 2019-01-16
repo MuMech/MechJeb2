@@ -139,7 +139,7 @@ namespace MuMech {
             Solution new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs, 10);
 
-            for(int i = 0; i < arcs.Count; i++)
+            for(int i = arcs.Count - 1; i >= 0; i--)
             {
                 if ( new_sol.tgo(new_sol.t0, i) < 1 )
                 {

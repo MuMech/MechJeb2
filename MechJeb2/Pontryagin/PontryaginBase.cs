@@ -55,7 +55,7 @@ namespace MuMech {
                 if (stage != null)
                 {
                     _isp = stage.isp;
-                    _thrust = stage.startThrust;
+                    _thrust = stage.effectiveThrust;
                     _m0 = stage.startMass;
                     _avail_dV = stage.deltaV;
                     _max_bt = stage.deltaTime;
