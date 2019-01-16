@@ -121,14 +121,18 @@ namespace MuMech
             public double deltaV;
             // burntime left in the stage in secs
             public double deltaTime;
-            // effective isp of the stage
+            // effective isp of the stage (this is derived from the total mass loss and the total ∆v)
             public double isp;
             // effective exhaust velocity of the stage
             public double v_e { get { return isp * 9.80665; } }
             // starting thrust of the stage
             public double startThrust;
-            // starting acceleration of the stage
+            // effective thrust (the "average thrust" derived from the total mdot and the v_e)
+            public double effectiveThrust { get { return v_e * ( startMass - endMass ) / deltaTime; } }
+            // starting mass of the stage
             public double startMass;
+            // ending mass of the stage
+            public double endMass;
             // starting acceleration of the stage
             public double a0 { get { return startThrust / startMass; } }
             // ideal time to consume the rocket completely
@@ -150,6 +154,7 @@ namespace MuMech
                 isp = vacStats.isp;
                 startThrust = vacStats.startThrust * 1000;
                 startMass = vacStats.startMass * 1000;
+                endMass = vacStats.endMass * 1000;
 
                 parts.Clear();
                 for(int i = 0; i < vacStats.parts.Count; i++)
