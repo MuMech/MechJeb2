@@ -189,7 +189,7 @@ namespace MuMech
 		{
 			if (selectedCondition == 0) //Altitude
 			{
-				return MuUtils.ToSI(FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.CoM), -1, 0);
+				return MuUtils.ToSI(core.vesselState.altitudeBottom, -1, 0);
 			}
 			else if (selectedCondition == 1) //Speed
 			{
@@ -299,7 +299,7 @@ namespace MuMech
 			double valueToCompare = 0;
 			if (selectedCondition == 0) //Altitude
 			{
-				valueToCompare = FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.CoM);
+				valueToCompare = core.vesselState.altitudeBottom;
 			}
 			else if (selectedCondition == 1) //Speed
 			{
