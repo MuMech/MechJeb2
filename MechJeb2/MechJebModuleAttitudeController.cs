@@ -459,7 +459,7 @@ namespace MuMech
             else if ((absErr.x > 1.0) || (absErr.y > 1.0) || (absErr.z > 1.0))
             {
                 timeCount = 0;
-                if (RCS_auto && ((absErr.x > 3.0) || (absErr.y > 3.0) || (absErr.z > 3.0)))
+                if (RCS_auto && ((absErr.x > 3.0) || (absErr.y > 3.0) || (absErr.z > 3.0)) && core.thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition)
                 {
                     if (attitudeRCScontrol)
                     {
