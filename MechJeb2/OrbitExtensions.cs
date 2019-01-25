@@ -71,6 +71,18 @@ namespace MuMech
             return Vector3d.Exclude(o.Up(UT), o.Prograde(UT)).normalized;
         }
 
+        //horizontal component of the velocity vector
+        public static Vector3d HorizontalVelocity(this Orbit o, double UT)
+        {
+            return Vector3d.Exclude(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT));
+        }
+
+        //vertical component of the velocity vector
+        public static Vector3d VerticalVelocity(this Orbit o, double UT)
+        {
+            return Vector3d.Dot(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT)) * o.Up(UT);
+        }
+
         //normalized vector parallel to the planet's surface and pointing in the northward direction
         public static Vector3d North(this Orbit o, double UT)
         {
@@ -92,8 +104,24 @@ namespace MuMech
         //returns a new Orbit object that represents the result of applying a given dV to o at UT
         public static Orbit PerturbedOrbit(this Orbit o, double UT, Vector3d dV)
         {
-            //should these in fact be swapped?
             return MuUtils.OrbitFromStateVectors(o.SwappedAbsolutePositionAtUT(UT), o.SwappedOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
+        }
+
+        // returns a new orbit that is identical to the current one (although the epoch will change)
+        // (i tried many different APIs in the orbit class, but the GetOrbitalStateVectors/UpdateFromStateVectors route was the only one that worked)
+        public static Orbit Clone(this Orbit o, double UT = Double.NegativeInfinity)
+        {
+            Vector3d pos, vel;
+
+            // hack up a dynamic default value to the current time
+            if ( UT == Double.NegativeInfinity )
+                UT = Planetarium.GetUniversalTime();
+
+            Orbit newOrbit = new Orbit();
+            o.GetOrbitalStateVectorsAtUT(UT, out pos, out vel);
+            newOrbit.UpdateFromStateVectors(pos, vel, o.referenceBody, UT);
+
+            return newOrbit;
         }
 
         // This does not allocate a new orbit object and the caller should call new Orbit if/when required

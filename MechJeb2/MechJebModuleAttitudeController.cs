@@ -27,8 +27,8 @@ namespace MuMech
 
         public bool RCS_auto = false;
         public bool attitudeRCScontrol = true;
-        
-        
+
+
         [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
         public MovingAverage steeringError = new MovingAverage();
@@ -45,7 +45,7 @@ namespace MuMech
         public List<BaseAttitudeController> controllers = new List<BaseAttitudeController>();
 
         [Persistent(pass = (int)Pass.Global)]
-        public int activeController = 0;
+        public int activeController = 2;
 
 
         public void SetActiveController(int i)
@@ -76,8 +76,6 @@ namespace MuMech
             }
         }
 
-        protected Quaternion _oldAttitudeTarget = Quaternion.identity;
-        protected Quaternion _lastAttitudeTarget = Quaternion.identity;
         protected Quaternion _attitudeTarget = Quaternion.identity;
         public Quaternion attitudeTarget
         {
@@ -87,10 +85,8 @@ namespace MuMech
             }
             set
             {
-                if (Math.Abs(Vector3d.Angle(_lastAttitudeTarget * Vector3d.forward, value * Vector3d.forward)) > 10)
+                if (Math.Abs(Vector3d.Angle(_attitudeTarget * Vector3d.forward, value * Vector3d.forward)) > 10)
                 {
-                    _oldAttitudeTarget = _attitudeTarget;
-                    _lastAttitudeTarget = value;
                     AxisControl(true, true, true);
                     attitudeChanged = true;
                 }
@@ -151,7 +147,7 @@ namespace MuMech
             }
             Controller.OnModuleDisabled();
         }
-        
+
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
@@ -175,7 +171,7 @@ namespace MuMech
                 attitudeController.OnSave(local, type, global);
             }
         }
-        
+
         public void AxisControl(bool pitch, bool yaw, bool roll)
         {
             _axisControl.x = pitch ? 1 : 0;
@@ -394,7 +390,7 @@ namespace MuMech
                 SetFlightCtrlState(act, deltaEuler, s, 1);
 
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
-                
+
                 Controller.DrivePost(s);
 
                 // Feed the control torque to the differential throttle
@@ -463,7 +459,7 @@ namespace MuMech
             else if ((absErr.x > 1.0) || (absErr.y > 1.0) || (absErr.z > 1.0))
             {
                 timeCount = 0;
-                if (RCS_auto && ((absErr.x > 3.0) || (absErr.y > 3.0) || (absErr.z > 3.0)))
+                if (RCS_auto && ((absErr.x > 3.0) || (absErr.y > 3.0) || (absErr.z > 3.0)) && core.thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition)
                 {
                     if (attitudeRCScontrol)
                     {

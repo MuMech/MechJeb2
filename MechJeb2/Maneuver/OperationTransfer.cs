@@ -14,6 +14,8 @@ namespace MuMech
         public EditableTime MinDepartureUT = 0;
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime MaxDepartureUT = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool simpleTransfer = false;
 
         private TimeSelector timeSelector;
 
@@ -25,8 +27,12 @@ namespace MuMech
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             intercept_only = GUILayout.Toggle(intercept_only, "intercept only, no capture burn (impact/flyby)");
+            simpleTransfer = GUILayout.Toggle(simpleTransfer, "simple coplanar Hohmann transfer");
             GuiUtils.SimpleTextBox("fractional target period offset:", periodOffset);
-            timeSelector.DoChooseTimeGUI();
+            if (!simpleTransfer)
+            {
+                timeSelector.DoChooseTimeGUI();
+            }
         }
 
         public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -42,63 +48,67 @@ namespace MuMech
                 throw new OperationException("target for bi-impulsive transfer must be in the same sphere of influence.");
             }
 
-            var anExists = o.AscendingNodeExists(target.TargetOrbit);
-            var dnExists = o.DescendingNodeExists(target.TargetOrbit);
-            double anTime = o.TimeOfAscendingNode(target.TargetOrbit, universalTime);
-            double dnTime = o.TimeOfDescendingNode(target.TargetOrbit, universalTime);
-
-            if(timeSelector.timeReference == TimeReference.REL_ASCENDING)
-            {
-                if(!anExists)
-                {
-                    throw new OperationException("ascending node with target doesn't exist.");
-                }
-                UT = anTime;
-            }
-            else if(timeSelector.timeReference == TimeReference.REL_DESCENDING)
-            {
-                if(!dnExists)
-                {
-                    throw new OperationException("descending node with target doesn't exist.");
-                }
-                UT = dnTime;
-            }
-            else if(timeSelector.timeReference == TimeReference.REL_NEAREST_AD)
-            {
-                if(!anExists && !dnExists)
-                {
-                    throw new OperationException("neither ascending nor descending node with target exists.");
-                }
-                if(!dnExists || anTime <= dnTime)
-                {
-                    UT = anTime;
-                }
-                else
-                {
-                    UT = dnTime;
-                }
-            }
-            else if (timeSelector.timeReference != TimeReference.COMPUTED)
-            {
-                UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-            }
-
             Vector3d dV;
 
-            Orbit targetOrbit = new Orbit(target.TargetOrbit);
+            Orbit targetOrbit = target.TargetOrbit.Clone();
 
             if ( periodOffset != 0 )
             {
                 targetOrbit.MutatedOrbit(periodOffset: periodOffset);
             }
 
-            if (timeSelector.timeReference == TimeReference.COMPUTED)
+            if (simpleTransfer)
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out UT, intercept_only: intercept_only);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, out UT);
             }
             else
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
+                if (timeSelector.timeReference == TimeReference.COMPUTED)
+                {
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out UT, intercept_only: intercept_only);
+                }
+                else
+                {
+                    var anExists = o.AscendingNodeExists(target.TargetOrbit);
+                    var dnExists = o.DescendingNodeExists(target.TargetOrbit);
+                    double anTime = o.TimeOfAscendingNode(target.TargetOrbit, universalTime);
+                    double dnTime = o.TimeOfDescendingNode(target.TargetOrbit, universalTime);
+
+                    if(timeSelector.timeReference == TimeReference.REL_ASCENDING)
+                    {
+                        if(!anExists)
+                        {
+                            throw new OperationException("ascending node with target doesn't exist.");
+                        }
+                        UT = anTime;
+                    }
+                    else if(timeSelector.timeReference == TimeReference.REL_DESCENDING)
+                    {
+                        if(!dnExists)
+                        {
+                            throw new OperationException("descending node with target doesn't exist.");
+                        }
+                        UT = dnTime;
+                    }
+                    else if(timeSelector.timeReference == TimeReference.REL_NEAREST_AD)
+                    {
+                        if(!anExists && !dnExists)
+                        {
+                            throw new OperationException("neither ascending nor descending node with target exists.");
+                        }
+                        if(!dnExists || anTime <= dnTime)
+                        {
+                            UT = anTime;
+                        }
+                        else
+                        {
+                            UT = dnTime;
+                        }
+                    }
+
+                    UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, UT, out UT, intercept_only: intercept_only, fixed_ut: true);
+                }
             }
 
             return new ManeuverParameters(dV, UT);
