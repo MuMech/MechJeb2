@@ -27,7 +27,7 @@ namespace MuMech
             return false;
         }
 
-        public static FieldInfo getFieldByReflection(String assemblyString, String className, String fieldName) {
+        public static FieldInfo getFieldByReflection(String assemblyString, String className, String fieldName, BindingFlags flags = BindingFlags.Public|BindingFlags.Instance|BindingFlags.Static) {
                 string assemblyName = "";
 
                 foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
@@ -40,6 +40,7 @@ namespace MuMech
 
                 if (assemblyName == "")
                 {
+                    Debug.Log("[MechJeb] ReflectionUtils: could not find assembly " + assemblyString);
                     return null;
                 }
 
@@ -47,10 +48,11 @@ namespace MuMech
 
                 if (type == null)
                 {
+                    Debug.Log("[MechJeb] ReflectionUtils: could not find type  " + className + ", " + assemblyName);
                     return null;
                 }
 
-                return type.GetField(fieldName);
+                return type.GetField(fieldName, flags);
         }
 
         public static MethodInfo getMethodByReflection(String assemblyString, String className, String methodName, BindingFlags flags)
@@ -67,6 +69,7 @@ namespace MuMech
 
             if (assemblyName == "")
             {
+                Debug.Log("[MechJeb] ReflectionUtils: could not find assembly " + assemblyString);
                 return null;
             }
 
@@ -74,6 +77,7 @@ namespace MuMech
 
             if (type == null)
             {
+                Debug.Log("[MechJeb] ReflectionUtils: could not find type  " + className + ", " + assemblyName);
                 return null;
             }
             return type.GetMethod(methodName, flags);
@@ -93,6 +97,7 @@ namespace MuMech
 
             if (assemblyName == "")
             {
+                Debug.Log("[MechJeb] ReflectionUtils: could not find assembly " + assemblyString);
                 return null;
             }
 
@@ -100,6 +105,7 @@ namespace MuMech
 
             if (type == null)
             {
+                Debug.Log("[MechJeb] ReflectionUtils: could not find type  " + className + ", " + assemblyName);
                 return null;
             }
             return type.GetMethod(methodName, flags, null, args, null);
