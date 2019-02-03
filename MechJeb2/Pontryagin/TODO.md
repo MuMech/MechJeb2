@@ -1,17 +1,13 @@
 
 ### TODO List
 
-# Logging / Status fixes:
+# Critical bugs
 
-* display optimizer status
-* display optimizer runtime
-* display warning about ISP/thrust in stage stats not matching current situation
-* capture optimizer exceptions and log them from the main thread
+* UpdateY0 throwing on last staging event with Atlas V HLV
 
 # Critical items before merging to mainline MechJeb
 
-* Track dV sensed like PEG does rather than counting down tgo
-   * Bring back g-limiter as a suboptimal hack
+* Bring back g-limiter as a suboptimal hack
 
 # Critical node executor bugs
 
