@@ -55,7 +55,7 @@ namespace MuMech {
                 if (stage != null)
                 {
                     _isp = stage.isp;
-                    _thrust = stage.effectiveThrust;
+                    _thrust = stage.startThrust;
                     _m0 = stage.startMass;
                     _avail_dV = stage.deltaV;
                     _max_bt = stage.deltaTime;
@@ -414,7 +414,7 @@ namespace MuMech {
 
         protected List<MechJebModuleLogicalStageTracking.Stage> stages { get { return core.stageTracking.stages; } }
         public double mu;
-        public Action<double[], double[]> bcfun;
+        public Action<double[], double[], bool> bcfun;
         public const double g0 = 9.80665;
         public Vector3d r0, v0, r0_bar, v0_bar;
         public Vector3d pv0, pr0;
@@ -453,6 +453,8 @@ namespace MuMech {
 
         public void UpdatePosition(Vector3d r0, Vector3d v0, Vector3d lambda, Vector3d lambdaDot, double tgo, double vgo)
         {
+            // this is safe (and must be kept safe) to hammer on every tick and to not update
+            // the current position while a guidance solution thread is currently running.
             if (thread != null && thread.IsAlive)
                 return;
 
@@ -757,6 +759,33 @@ namespace MuMech {
             return index;
         }
 
+        public double znormAtStateVectors(Vector3d r, Vector3d v)
+        {
+            QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
+
+            Vector3d r_bar = rot * r / r_scale;
+            Vector3d v_bar = rot * v / v_scale;
+
+            double[] yT = new double[13];
+            double[] zterm = new double[6];
+
+            yT[0] = r_bar[0];
+            yT[1] = r_bar[1];
+            yT[2] = r_bar[2];
+            yT[3] = v_bar[0];
+            yT[4] = v_bar[1];
+            yT[5] = v_bar[2];
+
+            bcfun(yT, zterm, true);
+
+            double znorm = 0.0;
+            for(int i = 0; i < zterm.Length; i++)
+            {
+                znorm += zterm[i] * zterm[i];
+            }
+            return Math.Sqrt(znorm);
+        }
+
         public double[] yf;
 
         public void optimizationFunction(double[] y0, double[] z, object o)
@@ -781,7 +810,7 @@ namespace MuMech {
             if ( bcfun == null )
                 throw new Exception("No bcfun was provided to the Pontryagin optimizer");
 
-            bcfun(yT, zterm);
+            bcfun(yT, zterm, false);
 
             z[7] = zterm[0];
             z[8] = zterm[1];
@@ -1350,7 +1379,9 @@ namespace MuMech {
         }
 
         // need to call this every tick or so in order to dump exceptions to the log from
-        // the main thread since Debug.Log is not threadsafe in Unity.
+        // the main thread since Debug.Log is not threadsafe in Unity.  (this must also
+        // obviously be kept safe to call every tick and must not update any inputs from
+        // the calling guidance controller while a thread might already be running).
         //
         public void Janitorial()
         {

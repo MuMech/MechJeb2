@@ -36,7 +36,7 @@ namespace MuMech {
             }
         }
 
-        private void intercept(double[] yT, double[] z)
+        private void intercept(double[] yT, double[] z, bool terminal)
         {
             z[0] = yT[0] - rT[0];
             z[1] = yT[1] - rT[1];
@@ -44,9 +44,13 @@ namespace MuMech {
             z[3] = yT[3] - vT[0];
             z[4] = yT[4] - vT[1];
             z[5] = yT[5] - vT[2];
+            if ( terminal )
+                throw new Exception("need to fix this");
+
+            // no transversality for 6-constraint intercept
         }
 
-        private void terminal5constraint(double[] yT, double[] z)
+        private void terminal5constraint(double[] yT, double[] z, bool terminal)
         {
             Vector3d rTp = rT;
             Vector3d vTp = vT;
@@ -76,12 +80,20 @@ namespace MuMech {
             Vector3d emiss = ef - eT;
             double trans = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
 
-            z[0] = hmiss[0];
-            z[1] = hmiss[1];
-            z[2] = hmiss[2];
-            z[3] = emiss[0];
-            z[4] = emiss[2];
-            z[5] = trans;
+            if (!terminal)
+            {
+                z[0] = hmiss[0];
+                z[1] = hmiss[1];
+                z[2] = hmiss[2];
+                z[3] = emiss[0];
+                z[4] = emiss[2];
+                z[5] = trans;
+            }
+            else
+            {
+                z[0] = hmiss.magnitude;
+                z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
+            }
         }
 
         public override void Bootstrap(double t0)
