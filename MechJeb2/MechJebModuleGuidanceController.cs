@@ -98,8 +98,6 @@ namespace MuMech
             this.allow_execution = allow_execution;
         }
 
-        double last_dVleft = Double.MaxValue;
-
         public override void OnFixedUpdate()
         {
             update_pitch_and_heading();
@@ -127,78 +125,55 @@ namespace MuMech
             if ( status == PVGStatus.FAILED )
                 Reset();
 
-            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( vesselState.rcsThrustAvailable.up > 0 );
-
-            // stopping one tick short is more accurate for non-RCS but sometimes we overshoot for RCS
-            int ticks = 1;
-            if (has_rcs)
-                ticks = 2;
-
-            if (p != null && p.solution != null && tgo < ( ticks * TimeWarp.fixedDeltaTime) )
+            if (p != null)
             {
+                // propagate exceptions and debug information out of the solver thread
+                p.Janitorial();
+
+                // update the position (safe to call on every tick, will not update if a thread is running)
+                p.UpdatePosition(vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot, tgo, vgo);
+            }
+
+            if ( p != null && p.solution != null && isTerminalGuidance() )
+            {
+                bool has_rcs = vessel.hasEnabledRCSModules(); // && ( vesselState.rcsThrustAvailable.up > 0 );
+
+                // stopping one tick short is more accurate for rockets without RCS, but sometimes we overshoot with only one tick
+                int ticks = 1;
                 if (has_rcs)
-                {
-                    status = PVGStatus.TERMINAL_RCS;
-                }
-                else
-                {
-                    Done();
-                    return;
-                }
-            }
+                    ticks = 2;
 
-            if ( p != null && p.solution != null && tgo < 1 )
-            {
-                Vector3d dVleft = p.solution.vf() - vesselState.orbitalVelocity;
-                double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
-                //Debug.Log("dVleft = " + dVleft + " angle = " + angle);
-            }
-
-            if ( status == PVGStatus.TERMINAL_RCS )
-            {
-                if (!vessel.ActionGroups[KSPActionGroup.RCS])  // if someone disables RCS
+                if (status == PVGStatus.TERMINAL_RCS && !vessel.ActionGroups[KSPActionGroup.RCS])  // if someone manually disables RCS
                 {
                     Done();
                     return;
                 }
 
-                QuaternionD rot;
+                // bit of a hack to predict velocity + position in the next tick or two
+                // FIXME: what exactly does KSP do to integrate over timesteps?
+                Vector3d a0 = vessel.acceleration_immediate - vessel.graviticAcceleration;
+                double dt = ticks * TimeWarp.fixedDeltaTime;
+                Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
+                Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 1/2 * a0 * dt * dt;
 
-                Vector3d axis = Vector3d.Cross(p.solution.rf().normalized, vesselState.orbitalPosition.normalized);
-                double ang = 0.0;
+                double current = p.znormAtStateVectors(vesselState.orbitalPosition, vesselState.orbitalVelocity);
+                double future = p.znormAtStateVectors(x1, v1);
 
-                if (axis == Vector3d.zero)
+                if ( future > current )
                 {
-                    rot = QuaternionD.identity;
+                    if ( has_rcs && status == PVGStatus.TERMINAL )
+                    {
+                        status = PVGStatus.TERMINAL_RCS;
+                        if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                            vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                    }
+                    else
+                    {
+                        Done();
+                        return;
+                    }
                 }
-                else
-                {
-                    axis = axis.normalized;
-                    ang = Vector3d.Angle(p.solution.rf().normalized, vesselState.orbitalPosition.normalized);
-
-                    rot = QuaternionD.AngleAxis(ang, axis);
-                }
-
-                //Debug.Log("axis = " + axis);
-                //Debug.Log("angle = " + ang);
-                //Debug.Log("vf = " +  p.solution.vf());
-                //Debug.Log("vf' = " +  rot * p.solution.vf());
-                //Debug.Log("rf = " + p.solution.rf());
-                //Debug.Log("r = " + vesselState.orbitalPosition);
-                //Debug.Log("v = " + vesselState.orbitalVelocity);
-
-                Vector3d dVleft = rot * p.solution.vf() - vesselState.orbitalVelocity; // should probably do something here to rotate vf() around in the orbit at least...
-                double angle = Math.Acos(Vector3d.Dot(dVleft/dVleft.magnitude, vesselState.forward))*UtilMath.Rad2Deg;
-
-                if ( dVleft.magnitude > last_dVleft ) // || angle > 90 )
-                {
-                    Done();
-                    return;
-                }
-
-                last_dVleft = dVleft.magnitude;
             }
-
 
             handle_throttle();
 
@@ -389,8 +364,6 @@ namespace MuMech
                 return;
             }
 
-            p.Janitorial();
-
             if (p.last_success_time > 0)
                 last_success_time = p.last_success_time;
 
@@ -421,8 +394,6 @@ namespace MuMech
             // for last 10 seconds of coast phase don't recompute (FIXME: can this go lower?  it was a workaround for a bug)
             if ( p.solution != null && p.solution.arc(vesselState.time).thrust == 0 && p.solution.current_tgo(vesselState.time) < 10 )
                 return;
-
-            p.UpdatePosition(vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot, tgo, vgo);
 
             p.threadStart(vesselState.time);
             //if ( p.threadStart(vesselState.time) )
@@ -473,6 +444,13 @@ namespace MuMech
 
             if ( actuallyCoasting() )
             {
+                // force RCS on at the state transition
+                if ( !isCoasting() )
+                {
+                    if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                        vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                }
+
                 if ( !isTerminalGuidance() )
                 {
                     if (vesselState.time < last_stage_time + 4)
@@ -482,6 +460,7 @@ namespace MuMech
                 }
                 last_coasting_time = vesselState.time;
 
+                // this turns off autostaging during the coast (which currently affects fairing separation)
                 core.staging.autostageLimitInternal = last_burning_stage - 1;
                 ThrustOff();
             }
@@ -571,7 +550,6 @@ namespace MuMech
             last_optimizer_time = 0.0;
             last_coasting_time = 0.0;
             last_success_time = 0.0;
-            last_dVleft = Double.MaxValue;
             autowarp = false;
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }

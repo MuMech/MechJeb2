@@ -29,7 +29,7 @@ namespace MuMech {
             bcfun = flightangle5constraint;
         }
 
-        private void flightangle5constraint(double[] yT, double[] z)
+        private void flightangle5constraint(double[] yT, double[] z, bool terminal)
         {
             Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
             Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
@@ -40,14 +40,22 @@ namespace MuMech {
             Vector3d hmiss = hf - hT;
 
             // 5 constraints
-            z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
-            z[1] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
-            z[2] = hmiss[0];
-            z[3] = hmiss[1];
-            z[4] = hmiss[2];
+            if (!terminal)
+            {
+                z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
+                z[1] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
+                z[2] = hmiss[0];
+                z[3] = hmiss[1];
+                z[4] = hmiss[2];
 
-            // transversality - free argp
-            z[5] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hT);
+                // transversality - free argp
+                z[5] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hT);
+            }
+            else
+            {
+                z[0] = hmiss.magnitude;
+                z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
+            }
         }
 
         // 4-constraint PEG with free LAN
@@ -63,7 +71,7 @@ namespace MuMech {
             bcfun = flightangle4constraint;
         }
 
-        private void flightangle4constraint(double[] yT, double[] z)
+        private void flightangle4constraint(double[] yT, double[] z, bool terminal)
         {
             Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
             Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
@@ -75,13 +83,23 @@ namespace MuMech {
             Vector3d vn = Vector3d.Cross(vf, n);
             Vector3d hf = Vector3d.Cross(rf, vf);
 
-            z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
-            z[1] = ( vf.magnitude * vf.magnitude - vTm * vTm ) / 2.0;
-            z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(inc);
-            z[3] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
-            z[4] = rTm * rTm * ( Vector3d.Dot(vf, prf) - vTm * Math.Sin(gamma) / rTm * Vector3d.Dot(rf, prf) ) -
-                vTm * vTm * ( Vector3d.Dot(rf, pvf) - rTm * Math.Sin(gamma) / vTm * Vector3d.Dot(vf, pvf) );
-            z[5] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, rn) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, vn);
+            if (!terminal)
+            {
+                z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
+                z[1] = ( vf.magnitude * vf.magnitude - vTm * vTm ) / 2.0;
+                z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(inc);
+                z[3] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
+                z[4] = rTm * rTm * ( Vector3d.Dot(vf, prf) - vTm * Math.Sin(gamma) / rTm * Vector3d.Dot(rf, prf) ) -
+                    vTm * vTm * ( Vector3d.Dot(rf, pvf) - rTm * Math.Sin(gamma) / vTm * Vector3d.Dot(vf, pvf) );
+                z[5] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, rn) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, vn);
+            }
+            else
+            {
+                double hTm = rTm * vTm * Math.Cos(gamma);
+
+                z[0] = hf.magnitude - hTm;
+                z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
+            }
         }
 
         public override void Bootstrap(double t0)
