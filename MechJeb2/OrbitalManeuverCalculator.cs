@@ -422,8 +422,12 @@ namespace MuMech
             return  DeltaVToInterceptAtTime(o, UT, target, interceptUT, out finalVelocity, offsetDistance, shortway);
         }
 
-        //Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
-        //course to intercept a target at a specific interceptUT.
+        // Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
+        // course to intercept a target at a specific interceptUT.
+        //
+        // offsetDistance: this is used by the Rendezvous Autopilot and is only going to be valid over very short distances
+        // shortway: the shortway parameter to feed into the Lambert solver
+        //
         public static Vector3d DeltaVToInterceptAtTime(Orbit o, double initialUT, Orbit target, double finalUT, out Vector3d secondDV, double offsetDistance = 0, bool shortway = true)
         {
             Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialUT);
@@ -618,7 +622,7 @@ namespace MuMech
             public Orbit o;
             public Orbit target;
             public bool shortway;
-            public bool intercept_only;
+            public bool intercept_only;  // omit the second burn from the cost
             public double zeroUT;
         }
 
@@ -649,6 +653,8 @@ namespace MuMech
                 // need Sqrt of MaxValue so least-squares can square it without an infinity
                 f[0] = Math.Sqrt(Double.MaxValue);
             }
+            if (!f[0].IsFinite())
+                f[0] = Math.Sqrt(Double.MaxValue);
         }
 
         // Levenburg-Marquardt local optimization of a two burn transfer.  This is used to refine the results of the simulated annealing global
@@ -819,6 +825,8 @@ namespace MuMech
             Debug.Log("MechJeb DeltaVAndTimeForBiImpulsiveAnnealed N = " + n + " time = " + stopwatch.Elapsed);
 
             burnUT = UT + bestUT;
+
+            Debug.Log("Annealing results burnUT = " + burnUT + " zero'd burnUT = " + bestUT + " TT = " + bestTT + " Cost = " + bestCost);
 
             //return DeltaVToInterceptAtTime(o, UT + bestUT, target, UT + bestUT + bestTT, shortway: bestshortway);
 

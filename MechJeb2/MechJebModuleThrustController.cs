@@ -268,8 +268,11 @@ namespace MuMech
             }
         }
 
+        ScreenMessage preventingUnstableIgnitionsMessage;
+
         public override void OnStart(PartModule.StartState state)
         {
+            preventingUnstableIgnitionsMessage = new ScreenMessage("<color=orange>[MechJeb]: Killing throttle to prevent unstable ignition</color>", 2f, ScreenMessageStyle.UPPER_CENTER);
             pid = new PIDController(0.05, 0.000001, 0.05);
             users.Add(this);
 
@@ -540,6 +543,7 @@ namespace MuMech
             {
                 if (vesselState.lowestUllage < VesselState.UllageState.Stable)
                 {
+                    ScreenMessages.PostScreenMessage(preventingUnstableIgnitionsMessage);
                     Debug.Log("MechJeb Unstable Ignitions: preventing ignition in state: " + vesselState.lowestUllage);
                     setTempLimit(0.0F, LimitMode.UnstableIgnition);
                 }

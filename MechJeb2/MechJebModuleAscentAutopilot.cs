@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace MuMech
 {
+    public enum ascentType { CLASSIC, GRAVITYTURN, PVG };
+
     //Todo: -reimplement measurement of LPA
     //      -Figure out exactly how throttle-limiting should work and interact
     //       with the global throttle-limit option
@@ -13,11 +15,29 @@ namespace MuMech
 
         public string status = "";
 
-        //input parameters:
+        // deliberately private, do not bypass
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public int ascentPathIdx;
-        // this is not persisted, the ascentPathIdx controls it very indirectly (via being set from AscentGuidance)
-        public MechJebModuleAscentBase ascentPath;
+        private int ascentPathIdx;
+
+        // this is the public API for ascentPathIdx which is enum type and does wiring
+        public ascentType ascentPathIdxPublic {
+            get {
+                return (ascentType) this.ascentPathIdx;
+            }
+            set {
+                this.ascentPathIdx = (int) value;
+                doWiring();
+            }
+        }
+
+        // after manually loading the private ascentPathIdx (e.g. from a ConfigNode) this needs to be called to force the wiring
+        public void doWiring()
+        {
+            ascentPath = ascentPathForType((ascentType)ascentPathIdx);
+            ascentMenu = ascentMenuForType((ascentType)ascentPathIdx);
+            disablePathModulesOtherThan(ascentPathIdx);
+        }
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -58,14 +78,18 @@ namespace MuMech
         }
 
 
+        /* classic AoA limter */
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool limitAoA = true;
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble maxAoA = 5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(2500);
         public bool limitingAoA = false;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble limitQa = new EditableDouble(2000);
+        public bool limitQaEnabled = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
@@ -75,6 +99,16 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Global))]
         public EditableInt warpCountDown = 11;
+
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showSettings = true;
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showTargeting = true;
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showGuidanceSettings = true;
+        [Persistent(pass = (int)(Pass.Global))]
+        public bool showStatus = true;
+
 
         public bool timedLaunch = false;
         public double launchTime = 0;
@@ -126,6 +160,12 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
+            // since we cannot serialize enums, we serialize ascentPathIdx instead, but this bypasses the code in the property, so on module
+            // enabling, we force that value back through the property to enforce sanity.
+            doWiring();
+
+            ascentPath.enabled = true;
+
             mode = AscentMode.PRELAUNCH;
 
             placedCircularizeNode = false;
@@ -135,10 +175,13 @@ namespace MuMech
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
             if (autostage) core.staging.users.Add(this);
+
+            status = "Pre Launch";
         }
 
         public override void OnModuleDisabled()
         {
+            ascentPath.enabled = false;
             core.attitude.attitudeDeactivate();
             if (!core.rssMode)
                 core.thrust.ThrustOff();
@@ -166,6 +209,7 @@ namespace MuMech
                 {
                     if (enabled && vesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
+                    ascentPath.timedLaunchHook();  // let ascentPath modules do stuff edge triggered on launch starting
                     timedLaunch = false;
                 }
                 else
@@ -231,7 +275,7 @@ namespace MuMech
 
             if (autoThrottle) {
                 Debug.Log("prelaunch killing throttle");
-                core.thrust.targetThrottle = 0.0f;
+                core.thrust.ThrustOff();
             }
 
             core.attitude.AxisControl(false, false, false);
@@ -264,6 +308,9 @@ namespace MuMech
             {
                 Debug.Log("Awaiting Liftoff");
                 status = "Awaiting liftoff";
+                // kill the optimizer if it is running.
+                core.guidance.enabled = false;
+
                 core.attitude.AxisControl(false, false, false);
                 return;
             }
@@ -295,7 +342,7 @@ namespace MuMech
                 {
                     MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
                     if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;
-                    if (core.target != null) launchLANDifference = vesselState.orbitLAN - core.target.orbit.LAN;
+                    if (recorder != null) launchLANDifference = vesselState.orbitLAN - recorder.markLAN;
 
                     //finished circularize
                     this.users.Clear();
@@ -327,6 +374,55 @@ namespace MuMech
             if (core.node.burnTriggered) status = "Circularizing";
             else status = "Coasting to circularization burn";
         }
+
+        //////////////////////////////////////////////////
+        // wiring for switching the different ascent types
+        //////////////////////////////////////////////////
+
+        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Primer Vector Guidance (RSS/RO)" };
+
+        public MechJebModuleAscentBase ascentPath;
+        public MechJebModuleAscentMenuBase ascentMenu;
+
+        private void disablePathModulesOtherThan(int type)
+        {
+            foreach(int i in Enum.GetValues(typeof(ascentType)))
+            {
+                if (i != (int)type)
+                    enablePathModules((ascentType)i, false);
+            }
+        }
+
+        private void enablePathModules(ascentType type, bool enabled)
+        {
+            ascentPathForType(type).enabled = enabled;
+            var menu = ascentMenuForType(type);
+            if (menu != null)
+                menu.enabled = enabled;
+        }
+
+        private MechJebModuleAscentBase ascentPathForType(ascentType type)
+        {
+            switch (type)
+            {
+                case ascentType.CLASSIC:
+                    return core.GetComputerModule<MechJebModuleAscentClassic>();
+                case ascentType.GRAVITYTURN:
+                    return core.GetComputerModule<MechJebModuleAscentGT>();
+                case ascentType.PVG:
+                    return core.GetComputerModule<MechJebModuleAscentPVG>();
+            }
+            return null;
+        }
+
+        private MechJebModuleAscentMenuBase ascentMenuForType(ascentType type)
+        {
+            if ( type == ascentType.CLASSIC )
+                return core.GetComputerModule<MechJebModuleAscentClassicMenu>();
+            else
+                return null;
+        }
+
     }
 
     public abstract class MechJebModuleAscentMenuBase : DisplayModule
@@ -341,6 +437,8 @@ namespace MuMech
         public string status { get; set; }
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
+        private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
+        private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
 
         public abstract bool DriveAscent(FlightCtrlState s);
 
@@ -351,6 +449,27 @@ namespace MuMech
         double raiseApoapsisLastApR = 0;
         double raiseApoapsisLastUT = 0;
         MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
+
+        public virtual void timedLaunchHook()
+        {
+            // triggered when timed launches start the actual launch
+        }
+
+        public override void OnModuleEnabled()
+        {
+            core.attitude.users.Add(this);
+            core.thrust.users.Add(this);
+            if (autopilot.autostage) core.staging.users.Add(this);
+        }
+
+        public override void OnModuleDisabled()
+        {
+            core.attitude.attitudeDeactivate();
+            if (!core.rssMode)
+                core.thrust.ThrustOff();
+            core.thrust.users.Remove(this);
+            core.staging.users.Remove(this);
+        }
 
         //gives a throttle setting that reduces as we approach the desired apoapsis
         //so that we can precisely match the desired apoapsis instead of overshooting it
@@ -388,23 +507,47 @@ namespace MuMech
             return 90.0 - Vector3d.Angle(vesselState.surfaceVelocity, vesselState.up);
         }
 
-        // provides AoA limiting and ground track steering to pitch controllers (possibly should be moved into the attitude controller, but
-        // right now it collaborates too heavily with the ascent autopilot)
-        //
+        protected double srfvelHeading() {
+            return vesselState.HeadingFromDirection(vesselState.surfaceVelocity.ProjectOnPlane(vesselState.up));
+        }
+
+        // this provides ground track heading based on desired inclination and is what most consumers should call
         protected void attitudeTo(double desiredPitch)
         {
             double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination);
+            attitudeTo(desiredPitch, desiredHeading);
+        }
+
+        // provides AoA limiting and roll control
+        // provides no ground tracking and should only be called by autopilots like PVG that deeply know what they're doing with yaw control
+        // (possibly should be moved into the attitude controller, but right now it collaborates too heavily with the ascent autopilot)
+        //
+        protected void attitudeTo(double desiredPitch, double desiredHeading)
+        {
+            /*
+            Vector6 rcs = vesselState.rcsThrustAvailable;
+
+            // FIXME?  should this be up/down and not forward/back?  seems wrong?  why was i using down before for the ullage direction?
+            bool has_rcs = vessel.hasEnabledRCSModules() && vessel.ActionGroups[KSPActionGroup.RCS] && ( rcs.left > 0.01 ) && ( rcs.right > 0.01 ) && ( rcs.forward > 0.01 ) && ( rcs.back > 0.01 );
+
+            if ( (vesselState.thrustCurrent / vesselState.thrustAvailable < 0.50) && !has_rcs )
+            {
+                // if engines are spooled up at less than 50% and we have no RCS in the stage, do not issue any guidance commands yet
+                return;
+            }
+            */
 
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
 
             Vector3d desiredThrustVector = Math.Cos(desiredPitch * UtilMath.Deg2Rad) * desiredHeadingVector
                 + Math.Sin(desiredPitch * UtilMath.Deg2Rad) * vesselState.up;
 
-            thrustVectorForNavball = desiredThrustVector;
-
             desiredThrustVector = desiredThrustVector.normalized;
 
-            if (autopilot.limitAoA)
+            thrustVectorForNavball = desiredThrustVector;
+
+            /* old style AoA limiter */
+            if (autopilot.limitAoA && !autopilot.limitQaEnabled)
             {
                 float fade = vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure ? (float)(autopilot.aoALimitFadeoutPressure / vesselState.dynamicPressure) : 1;
                 autopilot.currentMaxAoA = Math.Min(fade * autopilot.maxAoA, 180d);
@@ -416,7 +559,20 @@ namespace MuMech
                 }
             }
 
+            /* AoA limiter for PVG */
+            if (autopilot.limitQaEnabled)
+            {
+                double lim = MuUtils.Clamp(autopilot.limitQa, 100, 10000);
+                autopilot.limitingAoA = vesselState.dynamicPressure * Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
+                if (autopilot.limitingAoA)
+                {
+                    autopilot.currentMaxAoA = lim / vesselState.dynamicPressure * UtilMath.Rad2Deg;
+                    desiredThrustVector = Vector3.RotateTowards(vesselState.surfaceVelocity, desiredThrustVector, (float)(autopilot.currentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
+                }
+            }
+
             double pitch = 90 - Vector3d.Angle(desiredThrustVector, vesselState.up);
+
             double hdg;
 
             if (pitch > 89.9) {
@@ -427,15 +583,14 @@ namespace MuMech
 
             if (autopilot.forceRoll)
             {
-                core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
-
+                core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 if ( desiredPitch == 90.0)
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this);
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 }
                 else
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this);
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 }
             }
             else

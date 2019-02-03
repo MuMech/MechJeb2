@@ -64,6 +64,8 @@ namespace MuMech
 			conditionsList.Add("Time to equatorial AN");
 			conditionsList.Add("Time to equatorial DN");
 			conditionsList.Add("Circular orbit speed");
+			conditionsList.Add("Apoapsis");
+			conditionsList.Add("Periapsis");
 			modifiersList.Add("Smaller than");
 			modifiersList.Add("Equal to");
 			modifiersList.Add("Greater than");
@@ -189,7 +191,7 @@ namespace MuMech
 		{
 			if (selectedCondition == 0) //Altitude
 			{
-				return MuUtils.ToSI(FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.CoM), -1, 0);
+				return MuUtils.ToSI(core.vesselState.altitudeBottom, -1, 0);
 			}
 			else if (selectedCondition == 1) //Speed
 			{
@@ -291,7 +293,15 @@ namespace MuMech
 			{
 				return MuUtils.ToSI(moduleInfoItems.CircularOrbitSpeed());
 			}
-			return "N/A";
+            else if (selectedCondition == 26) //Apoapsis
+            {
+                return MuUtils.ToSI(core.vesselState.orbitApA);
+            }
+            else if (selectedCondition == 27) //Periapsis
+            {
+                return MuUtils.ToSI(core.vesselState.orbitPeA);
+            }
+            return "N/A";
 		}
 
 		public double getValueToCompare()
@@ -299,7 +309,7 @@ namespace MuMech
 			double valueToCompare = 0;
 			if (selectedCondition == 0) //Altitude
 			{
-				valueToCompare = FlightGlobals.ActiveVessel.mainBody.GetAltitude(FlightGlobals.ActiveVessel.CoM);
+				valueToCompare = core.vesselState.altitudeBottom;
 			}
 			else if (selectedCondition == 1) //Speed
 			{
@@ -401,7 +411,15 @@ namespace MuMech
 			{
 				return moduleInfoItems.CircularOrbitSpeed();
 			}
-			return valueToCompare;
+            else if (selectedCondition == 26) //Apoapsis
+            {
+                return core.vesselState.orbitApA;
+            }
+            else if (selectedCondition == 27) //Periapsis
+            {
+                return core.vesselState.orbitPeA;
+            }
+            return valueToCompare;
 		}
 
 		public double TargetDistance()
