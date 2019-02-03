@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using KSP.UI.Screens;
 
 namespace MuMech
 {
@@ -20,6 +21,8 @@ namespace MuMech
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
         public MechJebModuleAscentPVG pvgascent { get { return core.GetComputerModule<MechJebModuleAscentPVG>(); } }
         public MechJebModuleAscentGT gtascent { get { return core.GetComputerModule<MechJebModuleAscentGT>(); } }
+        private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
+        private FuelFlowSimulation.Stats[] atmoStats { get { return stats.atmoStats; } }
 
         private ascentType ascentPathIdx { get { return autopilot.ascentPathIdxPublic; } }
 
@@ -367,6 +370,30 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             GUILayout.Label("LAST FAILURE: " + core.guidance.last_failure_cause, s);
                             GUILayout.EndHorizontal();
+                        }
+
+                        if ( vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH && vessel.situation != Vessel.Situations.SPLASHED )
+                        {
+                            double m0 = atmoStats[StageManager.CurrentStage].startMass;
+                            double thrust = atmoStats[StageManager.CurrentStage].startThrust;
+
+                            if (Math.Abs(vesselState.mass - m0) / m0 > 0.01)
+                            {
+                                GUIStyle s = new GUIStyle(GUI.skin.label);
+                                s.normal.textColor = Color.yellow;
+                                GUILayout.BeginHorizontal();
+                                GUILayout.Label(String.Format("MASS IS OFF BY {0:F1}%", (vesselState.mass - m0) / m0 * 100.0 ), s);
+                                GUILayout.EndHorizontal();
+                            }
+
+                            if (Math.Abs(vesselState.thrustCurrent - thrust) / thrust > 0.01)
+                            {
+                                GUIStyle s = new GUIStyle(GUI.skin.label);
+                                s.normal.textColor = Color.yellow;
+                                GUILayout.BeginHorizontal();
+                                GUILayout.Label(String.Format("THRUST IS OFF BY {0:F1}%", (vesselState.thrustCurrent - thrust) / thrust * 100.0 ), s);
+                                GUILayout.EndHorizontal();
+                            }
                         }
                     }
                 }
