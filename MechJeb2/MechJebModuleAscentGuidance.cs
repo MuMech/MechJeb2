@@ -374,8 +374,8 @@ namespace MuMech
 
                         if ( vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH && vessel.situation != Vessel.Situations.SPLASHED )
                         {
-                            double m0 = atmoStats[StageManager.CurrentStage].startMass;
-                            double thrust = atmoStats[StageManager.CurrentStage].startThrust;
+                            double m0 = atmoStats[vessel.currentStage].startMass;
+                            double thrust = atmoStats[vessel.currentStage].startThrust;
 
                             if (Math.Abs(vesselState.mass - m0) / m0 > 0.01)
                             {
