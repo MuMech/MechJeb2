@@ -40,11 +40,15 @@ namespace MuMech
 
                 if (p.ShieldedFromAirstream)
                     return;
-
-                var deployable = getModules(p);
-                for (int j = 0; j < deployable.Count; j++)
-                    if (isDeployable(deployable[j]))
-                        deployable[j].Extend();
+                
+                for (int j = 0; j < p.Modules.Count; j++)
+                {
+                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+                    if (mdp != null && isModules(mdp) && isDeployable(mdp))
+                    {
+                        mdp.Extend();
+                    }
+                }
             };
         }
         
@@ -57,10 +61,14 @@ namespace MuMech
                 if (p.ShieldedFromAirstream)
                     return;
 
-                var deployable = getModules(p);
-                for (int j = 0; j < deployable.Count; j++)
-                    if (isDeployable(deployable[j]))
-                        deployable[j].Retract();
+                for (int j = 0; j < p.Modules.Count; j++)
+                {
+                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+                    if (mdp != null && isModules(mdp) && isDeployable(mdp))
+                    {
+                        mdp.Retract();
+                    }
+                }
             }
         }
 
@@ -69,12 +77,10 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part p = vessel.parts[i];
-                var deployable = getModules(p);
-                for (int j = 0; j < deployable.Count; j++)
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    ModuleDeployablePart sa = deployable[j];
-                    
-                    if (isDeployable(sa) && sa.deployState != ModuleDeployablePart.DeployState.RETRACTED)
+                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+                    if (mdp != null && isModules(mdp) && isDeployable(mdp) && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED)
                     {
                         return false;
                     }
@@ -132,24 +138,27 @@ namespace MuMech
                 prev_autoDeploy = false;
             }
 
-            if (AllRetracted())
+            bool allRetracted = AllRetracted();
+            if (allRetracted)
                 buttonText = getButtonText(DeployablePartState.RETRACTED);
             else
                 buttonText = getButtonText(DeployablePartState.EXTENDED);
 
-            extended = !AllRetracted();
+            extended = !allRetracted;
         }
 
         protected bool ExtendingOrRetracting()
         {
-            foreach (Part p in vessel.parts)
+            for (int i = 0; i < vessel.parts.Count; i++)
             {
-                List<ModuleDeployablePart> deployableModules = getModules(p);
-
-                foreach (ModuleDeployablePart deployableModule in deployableModules)
+                Part p = vessel.parts[i];
+                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    if (deployableModule.deployState == ModuleDeployablePart.DeployState.EXTENDING ||
-                        deployableModule.deployState == ModuleDeployablePart.DeployState.RETRACTING)
+                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+
+                    if (mdp != null && isModules(mdp) && isDeployable(mdp)
+                        && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING
+                         || mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
                     {
                         return true;
                     }
@@ -158,7 +167,7 @@ namespace MuMech
             return false;
         }
 
-        protected abstract List<ModuleDeployablePart> getModules(Part p);
+        protected abstract bool isModules(ModuleDeployablePart p);
 
 
         protected enum DeployablePartState

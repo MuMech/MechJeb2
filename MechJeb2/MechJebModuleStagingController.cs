@@ -139,35 +139,35 @@ namespace MuMech
 
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (waitingForFirstStaging || StageManager.CurrentStage <= 0 || StageManager.CurrentStage <= autostageLimit || StageManager.CurrentStage <= autostageLimitInternal
+            if (waitingForFirstStaging || vessel.currentStage <= 0 || vessel.currentStage <= autostageLimit || vessel.currentStage <= autostageLimitInternal
                || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
 
             //don't decouple active or idle engines or tanks
             UpdateActiveModuleEngines();
             UpdateBurnedResources();
-            if (InverseStageDecouplesActiveOrIdleEngineOrTank(StageManager.CurrentStage - 1, vessel, burnedResources, activeModuleEngines))
+            if (InverseStageDecouplesActiveOrIdleEngineOrTank(vessel.currentStage - 1, vessel, burnedResources, activeModuleEngines))
                 return;
 
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
-            if (hotStaging && InverseStageHasActiveEngines(StageManager.CurrentStage, vessel) && InverseStageHasEngines(StageManager.CurrentStage - 1, vessel) && !InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel) && !InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
+            if (hotStaging && InverseStageHasActiveEngines(vessel.currentStage, vessel) && InverseStageHasEngines(vessel.currentStage - 1, vessel) && !InverseStageFiresDecoupler(vessel.currentStage - 1, vessel) && !InverseStageReleasesClamps(vessel.currentStage - 1, vessel) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
-            if (HasStayingChutes(StageManager.CurrentStage - 1, vessel))
+            if (HasStayingChutes(vessel.currentStage - 1, vessel))
                 return;
 
             //Always drop deactivated engines or tanks
-            if (!InverseStageDecouplesDeactivatedEngineOrTank(StageManager.CurrentStage - 1, vessel))
+            if (!InverseStageDecouplesDeactivatedEngineOrTank(vessel.currentStage - 1, vessel))
             {
                 //only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
                 if ((core.vesselState.dynamicPressure > fairingMaxDynamicPressure || core.vesselState.altitudeASL < fairingMinAltitude || core.vesselState.freeMolecularAerothermalFlux > fairingMaxAerothermalFlux) &&
-                    HasFairing(StageManager.CurrentStage - 1, vessel))
+                    HasFairing(vessel.currentStage - 1, vessel))
                     return;
 
                 //only release launch clamps if we're at nearly full thrust
                 if (vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct &&
-                    InverseStageReleasesClamps(StageManager.CurrentStage - 1, vessel))
+                    InverseStageReleasesClamps(vessel.currentStage - 1, vessel))
                     return;
             }
 
@@ -177,7 +177,7 @@ namespace MuMech
             {
                 if (vesselState.time - stageCountdownStart > autostagePreDelay)
                 {
-                    if (InverseStageFiresDecoupler(StageManager.CurrentStage - 1, vessel))
+                    if (InverseStageFiresDecoupler(vessel.currentStage - 1, vessel))
                     {
                         //if we decouple things, delay the next stage a bit to avoid exploding the debris
                         lastStageTime = vesselState.time;
@@ -248,8 +248,8 @@ namespace MuMech
         public void UpdateActiveModuleEngines()
         {
             activeModuleEngines.Clear();
-            var activeEngines = vessel.parts.Slinq().Where(p => p.inverseStage >= StageManager.CurrentStage && p.IsEngine() && !p.IsSepratron() &&
-                                                        !p.IsDecoupledInStage(StageManager.CurrentStage - 1));
+            var activeEngines = vessel.parts.Slinq().Where(p => p.inverseStage >= vessel.currentStage && p.IsEngine() && !p.IsSepratron() &&
+                                                        !p.IsDecoupledInStage(vessel.currentStage - 1));
             // Part Modules lacks of List access shows the limits of slinq...
             while (activeEngines.current.isSome)
             {

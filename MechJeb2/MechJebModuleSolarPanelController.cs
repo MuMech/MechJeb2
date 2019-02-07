@@ -26,9 +26,9 @@ namespace MuMech
             }
         }
 
-        protected override List<ModuleDeployablePart> getModules(Part p)
+        protected override bool isModules(ModuleDeployablePart p)
         {
-            return p.Modules.GetModules<ModuleDeployableSolarPanel>().ConvertAll(x => (ModuleDeployablePart)x);
+            return p is ModuleDeployableSolarPanel;
         }
 
         protected override string getButtonText(DeployablePartState deployablePartState)

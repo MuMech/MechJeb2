@@ -415,7 +415,7 @@ namespace MuMech
         {
             PontryaginBase.Arc current_arc = p.solution.arc(vesselState.time);
 
-            if ( last_burning_stage_complete && last_burning_stage <= StageManager.CurrentStage )
+            if ( last_burning_stage_complete && last_burning_stage <= vessel.currentStage )
                 return false;
             return current_arc.thrust == 0;
         }

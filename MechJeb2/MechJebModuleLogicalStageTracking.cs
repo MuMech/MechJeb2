@@ -51,7 +51,7 @@ namespace MuMech
             if ( !enabled || stages.Count == 0 )
                 return;
 
-            if ( stages[0].ksp_stage > ( StageManager.CurrentStage - 1 ) )
+            if ( stages[0].ksp_stage > ( vessel.currentStage - 1 ) )
             {
                 // we did drop a relevant stage
                 stageCount += 1;
