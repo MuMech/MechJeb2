@@ -309,7 +309,7 @@ namespace MuMech
             }
             else
             {
-                history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : StageManager.CurrentStage;
+                history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : vessel.currentStage;
             }
 
             history[idx].AoA = vesselState.AoA;
