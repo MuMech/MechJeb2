@@ -144,6 +144,8 @@ namespace MuMech
         bool countingDown = false;
         double stageCountdownStart = 0;
         private Guid waitingForStageManagerResumed;
+        private bool remoteStaged;
+        private Vessel currentActiveVessel;
 
         public override void OnUpdate()
         {
@@ -197,12 +199,9 @@ namespace MuMech
                         lastStageTime = vesselState.time;
                     }
 
-
-                    Vessel currentActiveVessel = null;
-
                     if (!this.vessel.isActiveVessel)
                     {
-                        currentActiveVessel = FlightGlobals.ActiveVessel;
+                        this.currentActiveVessel = FlightGlobals.ActiveVessel;
                         Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {this.vessel.name} to stage");
 
                         this.waitingForStageManagerResumed = this.vessel.id;
@@ -215,18 +214,16 @@ namespace MuMech
                         if (this.waitingForStageManagerResumed == default(Guid))
                         {
                             StageManager.ActivateNextStage();
-                        }
-                        else
-                        {
-                            return;
-                        }
+
+                            if (currentActiveVessel != null)
+                            {
+                                FlightGlobals.ForceSetActiveVessel(currentActiveVessel);
+                                Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
+                            }
+
+                        }       
                     }
 
-                    if (currentActiveVessel != null)
-                    {
-                        FlightGlobals.ForceSetActiveVessel(currentActiveVessel);
-                        Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
-                    }
                    
 
                     countingDown = false;

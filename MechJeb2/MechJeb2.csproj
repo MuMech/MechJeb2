@@ -147,6 +147,7 @@
     <Compile Include="MechJebModuleLandingAutopilot.cs" />
     <Compile Include="MechJebModuleLandingGuidance.cs" />
     <Compile Include="MechJebModuleLandingPredictions.cs" />
+    <Compile Include="MechJebModuleLogicalStageTracking.cs" />
     <Compile Include="MechJebModuleManeuverPlanner.cs" />
     <Compile Include="MechJebModuleMenu.cs" />
     <Compile Include="MechJebModuleNodeEditor.cs" />
@@ -270,6 +271,9 @@
   <PropertyGroup>
     <PostBuildEvent Condition=" '$(OS)' == 'Windows_NT' ">call "$(ProjectDir)copy_build.bat" "$(TargetPath)" "$(TargetDir)" "$(TargetName)"</PostBuildEvent>
     <PostBuildEvent Condition=" '$(OS)' != 'Windows_NT' ">sh -c "TARGET_PATH='$(TargetPath)' TARGET_DIR='$(TargetDir)' TARGET_NAME='$(TargetName)' sh '$(ProjectDir)/copy_build.sh'"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent />
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
