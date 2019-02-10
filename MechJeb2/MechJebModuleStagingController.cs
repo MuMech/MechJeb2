@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using KSP.UI.Screens;
 using Smooth.Slinq;
 using UnityEngine;
@@ -52,6 +53,15 @@ namespace MuMech
                 waitingForFirstStaging = true;
 
             GameEvents.onStageActivate.Add(stageActivate);
+            GameEvents.onVesselResumeStaging.Add(VesselResumeStage);
+        }
+
+        private void VesselResumeStage(Vessel data)
+        {
+            if (this.waitingForStageManagerResumed == data.id)
+            {
+                this.waitingForStageManagerResumed = default(Guid);
+            }
         }
 
         public override void OnDestroy()
@@ -133,9 +143,13 @@ namespace MuMech
 
         bool countingDown = false;
         double stageCountdownStart = 0;
+        private Guid waitingForStageManagerResumed;
 
         public override void OnUpdate()
         {
+            //Commenting this because now we support autostaging on non active vessels
+            //if (!vessel.isActiveVessel)
+            //    return;
 
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
@@ -183,7 +197,38 @@ namespace MuMech
                         lastStageTime = vesselState.time;
                     }
 
-                    StageManager.ActivateNextStage();
+
+                    Vessel currentActiveVessel = null;
+
+                    if (!this.vessel.isActiveVessel)
+                    {
+                        currentActiveVessel = FlightGlobals.ActiveVessel;
+                        Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {this.vessel.name} to stage");
+
+                        this.waitingForStageManagerResumed = this.vessel.id;
+                        FlightGlobals.ForceSetActiveVessel(this.vessel);
+                    }
+                    else
+                    {
+                        Debug.Log($"Mechjeb Autostage: Executing next stage on {FlightGlobals.ActiveVessel.name}");
+
+                        if (this.waitingForStageManagerResumed == default(Guid))
+                        {
+                            StageManager.ActivateNextStage();
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+
+                    if (currentActiveVessel != null)
+                    {
+                        FlightGlobals.ForceSetActiveVessel(currentActiveVessel);
+                        Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
+                    }
+                   
+
                     countingDown = false;
 
                     if (autostagingOnce)
@@ -204,7 +249,7 @@ namespace MuMech
             {
                 Part p = v.parts[i];
                 Part decoupledPart;
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) &&
+                if (p?.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) &&
                     HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
                     return true;
             }
@@ -278,6 +323,10 @@ namespace MuMech
         //detect if a part is above an active or idle engine in the part tree
         public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
+            if (p == null)
+            {
+                return false;
+            }
             if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE)
                 && p.IsEngine() && !p.IsSepratron() && p.EngineHasFuel())
             {
