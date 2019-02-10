@@ -89,7 +89,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)Pass.Global)]
-        public bool limitToPreventUnstableIgnition = true;
+        public bool limitToPreventUnstableIgnition = false;
 
         [GeneralInfoItem("Prevent unstable ignition", InfoItem.Category.Thrust)]
         public void LimitToPreventUnstableIgnitionInfoItem()
@@ -102,7 +102,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool autoRCSUllaging = true;
 
-        [GeneralInfoItem("Prevent unstable ignition", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("Use RCS to ulllage", InfoItem.Category.Thrust)]
         public void AutoRCsUllageInfoItem()
         {
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
