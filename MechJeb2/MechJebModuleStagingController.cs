@@ -47,6 +47,15 @@ namespace MuMech
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
 
+        private enum RemoteStagingState
+        {
+            Disabled,
+            WaitingFocus,
+            FocusFinished,
+        }
+
+        private RemoteStagingState remoteStagingStatus = RemoteStagingState.Disabled;
+
         public override void OnStart(PartModule.StartState state)
         {
             if (vessel != null && vessel.situation == Vessel.Situations.PRELAUNCH)
@@ -58,15 +67,16 @@ namespace MuMech
 
         private void VesselResumeStage(Vessel data)
         {
-            if (this.waitingForStageManagerResumed == data.id)
+            if (remoteStagingStatus == RemoteStagingState.WaitingFocus)
             {
-                this.waitingForStageManagerResumed = default(Guid);
+                remoteStagingStatus = RemoteStagingState.FocusFinished;
             }
         }
 
         public override void OnDestroy()
         {
             GameEvents.onStageActivate.Remove(stageActivate);
+            GameEvents.onVesselResumeStaging.Remove(VesselResumeStage);
         }
 
         private void stageActivate(int data)
@@ -143,8 +153,6 @@ namespace MuMech
 
         bool countingDown = false;
         double stageCountdownStart = 0;
-        private Guid waitingForStageManagerResumed;
-        private bool remoteStaged;
         private Vessel currentActiveVessel;
 
         public override void OnUpdate()
@@ -204,28 +212,25 @@ namespace MuMech
                         this.currentActiveVessel = FlightGlobals.ActiveVessel;
                         Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {this.vessel.name} to stage");
 
-                        this.waitingForStageManagerResumed = this.vessel.id;
+                        this.remoteStagingStatus = RemoteStagingState.WaitingFocus;
                         FlightGlobals.ForceSetActiveVessel(this.vessel);
                     }
                     else
                     {
                         Debug.Log($"Mechjeb Autostage: Executing next stage on {FlightGlobals.ActiveVessel.name}");
 
-                        if (this.waitingForStageManagerResumed == default(Guid))
+                        if (remoteStagingStatus == RemoteStagingState.Disabled)
                         {
                             StageManager.ActivateNextStage();
-
-                            if (currentActiveVessel != null)
-                            {
-                                FlightGlobals.ForceSetActiveVessel(currentActiveVessel);
-                                Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
-                            }
-
-                        }       
+                        }
+                        else if(remoteStagingStatus == RemoteStagingState.FocusFinished)
+                        {
+                            StageManager.ActivateNextStage();
+                            FlightGlobals.ForceSetActiveVessel(currentActiveVessel);
+                            Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
+                            this.remoteStagingStatus = RemoteStagingState.Disabled;
+                        }
                     }
-
-                   
-
                     countingDown = false;
 
                     if (autostagingOnce)
