@@ -572,7 +572,7 @@ namespace MuMech
                     freeResources[r.info.id] = true;
                 }
                 // Including the ressource in the CRP.
-                if (r.info.name == "IntakeAir" or r.info.name == "IntakeLqd" or r.info.name == "IntakeAtm")
+                if (r.info.name == "IntakeAir" || r.info.name == "IntakeLqd" || r.info.name == "IntakeAtm")
                     freeResources[r.info.id] = true;
             }
 
