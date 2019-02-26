@@ -567,13 +567,13 @@ namespace MuMech
                         dryMass += (r.amount * r.info.density); // disabled resources are just dead weight
                     }
                 }
-                if (r.info.name == "IntakeAir")
-                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeAir").id] = true;
-                // Those two are in the CRP.
-                if (r.info.name == "IntakeLqd")
-                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeLqd").id] = true;
-                if (r.info.name == "IntakeAtm")
-                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeAtm").id] = true;
+                else 
+                {
+                    freeResources[r.info.id] = true;
+                }
+                // Including the ressource in the CRP.
+                if (r.info.name == "IntakeAir" or r.info.name == "IntakeLqd" or r.info.name == "IntakeAtm")
+                    freeResources[r.info.id] = true;
             }
 
             // determine if we've got at least one useful ModuleEngine
