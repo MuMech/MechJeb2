@@ -459,7 +459,6 @@ namespace MuMech
         {
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
-            if (autopilot.autostage) core.staging.users.Add(this);
         }
 
         public override void OnModuleDisabled()
@@ -468,7 +467,6 @@ namespace MuMech
             if (!core.rssMode)
                 core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.staging.users.Remove(this);
         }
 
         //gives a throttle setting that reduces as we approach the desired apoapsis
