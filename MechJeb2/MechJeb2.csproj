@@ -177,6 +177,7 @@
     <Compile Include="MechJebModuleLandingAutopilot.cs" />
     <Compile Include="MechJebModuleLandingGuidance.cs" />
     <Compile Include="MechJebModuleLandingPredictions.cs" />
+    <Compile Include="MechJebModuleLogicalStageTracking.cs" />
     <Compile Include="MechJebModuleManeuverPlanner.cs" />
     <Compile Include="MechJebModuleMenu.cs" />
     <Compile Include="MechJebModuleNodeEditor.cs" />
