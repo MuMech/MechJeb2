@@ -567,13 +567,13 @@ namespace MuMech
                         dryMass += (r.amount * r.info.density); // disabled resources are just dead weight
                     }
                 }
-                if (r.info.name == "IntakeAir")
-                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeAir").id] = true;
-                // Those two are in the CRP.
-                if (r.info.name == "IntakeLqd")
-                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeLqd").id] = true;
-                if (r.info.name == "IntakeAtm")
-                    freeResources[PartResourceLibrary.Instance.GetDefinition("IntakeAtm").id] = true;
+                else
+                {
+                    freeResources[r.info.id] = true;
+                }
+                // Including the ressource in the CRP.
+                if (r.info.name == "IntakeAir" || r.info.name == "IntakeLqd" || r.info.name == "IntakeAtm")
+                    freeResources[r.info.id] = true;
             }
 
             // determine if we've got at least one useful ModuleEngine
@@ -843,10 +843,16 @@ namespace MuMech
                             var p = e.propellants[j];
                             double density = MuUtils.ResourceDensity(p.id);
 
-                            // hopefully different EngineModules in the same part don't have different flow modes for the same propellant
-                            if (!propellantFlows.ContainsKey(p.id))
-                                propellantFlows.Add(p.id, p.GetFlowMode());
-                            totalDensity += p.ratio * density;
+                            // zero density draws (eC, air intakes, etc) are skipped, we have to assume you open your solar panels or
+                            // air intakes or whatever it is you need for them to function.  they don't affect the mass of the vehicle
+                            // so they do not affect the rocket equation.  they are assumed to be "renewable" or effectively infinite.
+                            if (density > 0)
+                            {
+                                // hopefully different EngineModules in the same part don't have different flow modes for the same propellant
+                                if (!propellantFlows.ContainsKey(p.id))
+                                    propellantFlows.Add(p.id, p.GetFlowMode());
+                                totalDensity += p.ratio * density;
+                            }
                         }
 
                         double volumeFlowRate = massFlowRate / totalDensity;
@@ -855,10 +861,17 @@ namespace MuMech
                         {
                             var p = e.propellants[j];
                             double fracFlowRate = p.ratio * volumeFlowRate;
-                            if (resourceConsumptions.ContainsKey(p.id))
-                                resourceConsumptions[p.id] += fracFlowRate;
-                            else
-                                resourceConsumptions.Add(p.id, fracFlowRate);
+
+                            double density = MuUtils.ResourceDensity(p.id);
+
+                            // same density check here as above
+                            if (density > 0)
+                            {
+                                if (resourceConsumptions.ContainsKey(p.id))
+                                    resourceConsumptions[p.id] += fracFlowRate;
+                                else
+                                    resourceConsumptions.Add(p.id, fracFlowRate);
+                            }
                         }
                     }
                 }

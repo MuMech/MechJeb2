@@ -89,7 +89,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)Pass.Global)]
-        public bool limitToPreventUnstableIgnition = true;
+        public bool limitToPreventUnstableIgnition = false;
 
         [GeneralInfoItem("Prevent unstable ignition", InfoItem.Category.Thrust)]
         public void LimitToPreventUnstableIgnitionInfoItem()
@@ -102,7 +102,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool autoRCSUllaging = true;
 
-        [GeneralInfoItem("Prevent unstable ignition", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("Use RCS to ullage", InfoItem.Category.Thrust)]
         public void AutoRCsUllageInfoItem()
         {
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
@@ -287,9 +287,14 @@ namespace MuMech
             targetThrottle = 0;
             vessel.ctrlState.mainThrottle = 0;
             tmode = TMode.OFF;
+            SetFlightGlobals(0);
+        }
+
+        private void SetFlightGlobals(double throttle)
+        {
             if (FlightGlobals.ActiveVessel != null && vessel == FlightGlobals.ActiveVessel)
             {
-                FlightInputHandler.state.mainThrottle = 0; //so that the on-screen throttle gauge reflects the autopilot throttle
+                FlightInputHandler.state.mainThrottle = (float) throttle; //so that the on-screen throttle gauge reflects the autopilot throttle
             }
         }
 
@@ -549,6 +554,14 @@ namespace MuMech
                 }
             }
 
+            // we have to force the throttle here so that rssMode can work, otherwise we don't get our last throttle command
+            // back on the next tick after disabling.  we save this before applying the throttle limits so that we preserve
+            // the requested throttle, and not the limited throttle.
+            if (core.rssMode)
+            {
+                SetFlightGlobals(s.mainThrottle);
+            }
+
             if (double.IsNaN(throttleLimit)) throttleLimit = 1.0F;
             throttleLimit = Mathf.Clamp01(throttleLimit);
 
@@ -570,7 +583,9 @@ namespace MuMech
             }
 
             if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
+
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
+
 
             if (s.Z == 0 && core.rcs.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 

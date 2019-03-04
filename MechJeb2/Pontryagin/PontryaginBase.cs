@@ -37,12 +37,14 @@ namespace MuMech {
             public bool complete_burn = false;
             public bool _done = false;
             public bool done { get { return (stage != null && stage.staged) || _done; } set { _done = value; } }
+            public bool coast = false;
             public bool coast_after_jettison = false;
             public bool use_fixed_time = false;
             public double fixed_time = 0;
             public double fixed_tbar = 0;
 
-            public bool infinite = false;  /* zero mdot, infinite burntime+isp */
+            // zero mdot, infinite burntime+isp
+            public bool infinite = false;
 
             public override string ToString()
             {
@@ -76,7 +78,7 @@ namespace MuMech {
                 }
             }
 
-            public Arc(PontryaginBase p, MechJebModuleLogicalStageTracking.Stage stage = null, bool done = false, bool coast_after_jettison = false, bool use_fixed_time = false, double fixed_time = 0)
+            public Arc(PontryaginBase p, MechJebModuleLogicalStageTracking.Stage stage = null, bool done = false, bool coast_after_jettison = false, bool use_fixed_time = false, double fixed_time = 0, bool coast = false)
             {
                 this.p = p;
                 this.stage = stage;
@@ -84,6 +86,7 @@ namespace MuMech {
                 this.coast_after_jettison = coast_after_jettison;
                 this.use_fixed_time = use_fixed_time;
                 this.fixed_time = fixed_time;
+                this.coast = coast;
                 UpdateStageInfo();
             }
         }
@@ -143,7 +146,7 @@ namespace MuMech {
                 double tburn = 0.0;
                 for(int i = 0; i < segments.Count; i++)
                 {
-                    if (arcs[i].thrust == 0)
+                    if (arcs[i].coast)
                         continue;
                     tburn += tgo_bar(tbar, i);
                 }
@@ -186,7 +189,7 @@ namespace MuMech {
             public double tmax() // normalized time
             {
                 int last = segments.Count-1;
-                if ( arcs[last].thrust == 0 )
+                if ( arcs[last].coast )
                     // we do not include the time of a final coast in overall tgo/vgo
                     return segments[last].tmin;
                 else
@@ -644,7 +647,7 @@ namespace MuMech {
         private void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2, bool initialize = false)
         {
             if (y0 == null)
-                Debug.Log("internal error - y0 is null");
+                Fatal("internal error - y0 is null");
 
             double t = 0;
 
@@ -654,7 +657,7 @@ namespace MuMech {
             overburning = false;
             for(int i = 0; i < arcs.Count; i++)
             {
-                if (arcs[i].thrust == 0)
+                if (arcs[i].coast)
                 {
                     double coast_time;
 
@@ -731,7 +734,7 @@ namespace MuMech {
             int index = 2;
             for(int i=0; i<n; i++)
             {
-                if (arcs[i].thrust == 0)
+                if (arcs[i].coast)
                 {
                     if (arcs[i].use_fixed_time)
                         index += 13;
@@ -747,7 +750,7 @@ namespace MuMech {
             // set parameters to true to bypass adding that offset and get the index to the parameters instead
             if (!parameters && n != arcs.Count)
             {
-                if (arcs[n].thrust == 0)
+                if (arcs[n].coast)
                 {
                     if (!arcs[n].use_fixed_time)
                     {
@@ -855,7 +858,7 @@ namespace MuMech {
                 // find the last burn arc (uh, this has to be arcs.Count - 1 right?)
                 for(int j = 0; j < arcs.Count; j++)
                 {
-                    if (arcs[j].thrust > 0)
+                    if (!arcs[j].coast)
                         i = j;
                 }
 
@@ -886,7 +889,7 @@ namespace MuMech {
             double total_bt_bar = 0;
             for(int i = 0; i < arcs.Count; i++)
             {
-                if ( arcs[i].thrust == 0 && !arcs[i].use_fixed_time )
+                if ( arcs[i].coast && !arcs[i].use_fixed_time )
                 {
                     int index = arcIndex(arcs, i, parameters: true);
                     if (total_bt_bar > y0[0] || (i == arcs.Count -1))
@@ -980,7 +983,7 @@ namespace MuMech {
                     }
                 }
                 // sum up burntime of burn arcs
-                if ( arcs[i].thrust > 0 )
+                if ( !arcs[i].coast )
                     total_bt_bar += arcs[i].max_bt_bar;
             }
 
@@ -1003,6 +1006,9 @@ namespace MuMech {
             //Debug.Log("arcs in runOptimizer:");
             //for(int i = 0; i < arcs.Count; i++)
             //   Debug.Log(arcs[i]);
+
+            //for(int i = 0; i < stages.Count; i++)
+            //    Debug.Log(stages[i]);
 
             //for(int i = 0; i < y0.Length; i++)
             //    Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
@@ -1088,7 +1094,7 @@ namespace MuMech {
                 return true;
             }
 
-            Debug.Log("runoptimizer failed!");
+            //Debug.Log("runoptimizer failed!");
 
             // lol
             if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
@@ -1121,7 +1127,9 @@ namespace MuMech {
             {
                 arcindex = arcIndex(arcs,i);
                 if (arcs[i].m0 > 0)  // don't update guess if we're not staging (optimizer has to find the terminal mass of prior stage)
+                {
                     y0[arcindex+12] = arcs[i].m0;  // update all stages for the m0 in stage stats (boiloff may update upper stages)
+                }
             }
 
             if (solution != null)
@@ -1141,10 +1149,10 @@ namespace MuMech {
         {
             int bottom = arcIndex(arcs, i, parameters: true);
 
-            if ( arcs[i].thrust == 0 )
+            if ( arcs[i].coast )
                 throw new Exception("adding a coast before a coast");
 
-            arcs.Insert(i, new Arc(this, coast_after_jettison: true));
+            arcs.Insert(i, new Arc(this, coast_after_jettison: true, coast: true));
             double[] y0_new = new double[arcIndex(arcs, arcs.Count)];
 
             double tmin = sol.segments[i].tmin;
@@ -1170,7 +1178,7 @@ namespace MuMech {
         {
             int bottom = arcIndex(arcs, i, parameters: true);
 
-            if ( arcs[i].thrust != 0 )
+            if ( !arcs[i].coast )
                 throw new Exception("trying to update a non-coasting coast");
 
             double tmin = sol.segments[i+1].tmin;
@@ -1215,6 +1223,10 @@ namespace MuMech {
                     Arc arc = solution.arcs[i];
                     arc.UpdateStageInfo(); // FIXME: this has the effect of synch'ing the stage information to the solution
                     last_arcs.Add(solution.arcs[i]);  // shallow copy
+                    if ( solution.tgo(t0, i) <= 0 ) // this is responsible for skipping done coasts and anything else in the past
+                    {
+                        solution.arcs[i].done = true; // this has the side effect of marking the arc done in the existing solution
+                    }
                 }
             }
 
@@ -1263,7 +1275,7 @@ namespace MuMech {
                         Array.Copy(y0_old, 0, y0, 0, 2);
                         Array.Copy(y0_old, start, y0, 2, new_upper_length);
 
-                        if (last_arcs[0].thrust == 0)
+                        if (last_arcs[0].coast)
                             last_arcs[0].coast_after_jettison = false;  /* we can't be after a jettison if we're first */
                     }
 
@@ -1353,6 +1365,7 @@ namespace MuMech {
 
         private Thread thread;
 
+        // FIXME: still not using this, should it just be removed?
         public void forceBootstrap()
         {
             KillThread();

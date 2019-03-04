@@ -148,7 +148,7 @@ namespace MuMech {
             {
                 //for(int k = 0; k < y0.Length; k++)
                     //Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                Fatal("failed to coverge nocoast/infinite ISP");
+                Fatal("Target is unreachable even with infinite ISP");
                 return;
             }
 
@@ -185,7 +185,7 @@ namespace MuMech {
 
             if ( !runOptimizer(arcs) )
             {
-                Fatal("failed to coverge with normal ISP");
+                Fatal("Target is unreachable");
                 //for(int k = 0; k < y0.Length; k++)
                     //Debug.Log("failed - y0[" + k + "] = " + y0[k]);
                 //Debug.Log("optimizer failed6");
@@ -203,30 +203,6 @@ namespace MuMech {
 
             if (insertedCoast)
             {
-
-                /*
-                if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
-                {
-                    // coast is less than one second, try extending it again without infinite
-                    // (FIXME: this is buggy somehow)
-                    RetryCoast(arcs, arcs.Count-2, new_sol);
-                    //Debug.Log("running optimizer4");
-
-                    if ( !runOptimizer(arcs) )
-                    {
-                        for(int k = 0; k < y0.Length; k++)
-                            Debug.Log("failed - y0[" + k + "] = " + y0[k]);
-                        Debug.Log("optimizer failed8");
-                        y0 = null;
-                        return;
-                    }
-
-                    //Debug.Log("optimizer done");
-                    new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-                    multipleIntegrate(y0, new_sol, arcs, 10);
-                }
-                */
-
                 if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
                 {
                     // coast is less than one second, delete it and reconverge

@@ -51,7 +51,7 @@ namespace MuMech
             if ( !enabled || stages.Count == 0 )
                 return;
 
-            if ( stages[0].ksp_stage > ( vessel.currentStage - 1 ) )
+            while ( stages[0].ksp_stage > ( vessel.currentStage - 1 ) )
             {
                 // we did drop a relevant stage
                 stageCount += 1;
@@ -148,6 +148,9 @@ namespace MuMech
 
             public void Sync()
             {
+                if (ksp_stage > parent.core.stageStats.vacStats.Length - 1)
+                    return;
+
                 vacStats = parent.core.stageStats.vacStats[ksp_stage];
                 deltaV = vacStats.deltaV;
                 deltaTime = vacStats.deltaTime;
