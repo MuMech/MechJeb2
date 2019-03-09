@@ -33,6 +33,7 @@ namespace MuMech {
             public int ksp_stage { get { return _ksp_stage; } }
             int _rocket_stage;
             public int rocket_stage { get { return _rocket_stage; } }
+            public double _synch_time;
 
             public bool complete_burn = false;
             public bool _done = false;
@@ -52,7 +53,7 @@ namespace MuMech {
             }
 
             // create a local copy of the information for the optimizer
-            public void UpdateStageInfo()
+            public void UpdateStageInfo(double t0)
             {
                 if (stage != null)
                 {
@@ -76,9 +77,10 @@ namespace MuMech {
                     _ksp_stage = -1;
                     _rocket_stage = -1;
                 }
+                _synch_time = t0;
             }
 
-            public Arc(PontryaginBase p, MechJebModuleLogicalStageTracking.Stage stage = null, bool done = false, bool coast_after_jettison = false, bool use_fixed_time = false, double fixed_time = 0, bool coast = false)
+            public Arc(PontryaginBase p, double t0, MechJebModuleLogicalStageTracking.Stage stage = null, bool done = false, bool coast_after_jettison = false, bool use_fixed_time = false, double fixed_time = 0, bool coast = false)
             {
                 this.p = p;
                 this.stage = stage;
@@ -87,7 +89,7 @@ namespace MuMech {
                 this.use_fixed_time = use_fixed_time;
                 this.fixed_time = fixed_time;
                 this.coast = coast;
-                UpdateStageInfo();
+                UpdateStageInfo(t0);
             }
         }
 
@@ -162,7 +164,7 @@ namespace MuMech {
                 }
                 else
                 {
-                    return String.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n), arc.avail_dV - dV(t, n));
+                    return String.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n), arc.avail_dV - dV(arc._synch_time, n));
                 }
             }
 
@@ -339,10 +341,10 @@ namespace MuMech {
             }
 
             // Synch stats from LogicalStageTracking controller
-            public void UpdateStageInfo()
+            public void UpdateStageInfo(double t0)
             {
                 for(int i = 0; i < arcs.Count; i++)
-                    arcs[i].UpdateStageInfo();
+                    arcs[i].UpdateStageInfo(t0);
             }
 
             public class Segment
@@ -1152,7 +1154,7 @@ namespace MuMech {
             if ( arcs[i].coast )
                 throw new Exception("adding a coast before a coast");
 
-            arcs.Insert(i, new Arc(this, coast_after_jettison: true, coast: true));
+            arcs.Insert(i, new Arc(this, t0: sol.t0, coast_after_jettison: true, coast: true));
             double[] y0_new = new double[arcIndex(arcs, arcs.Count)];
 
             double tmin = sol.segments[i].tmin;
@@ -1221,7 +1223,7 @@ namespace MuMech {
                 for(int i = 0; i < solution.arcs.Count; i++)
                 {
                     Arc arc = solution.arcs[i];
-                    arc.UpdateStageInfo(); // FIXME: this has the effect of synch'ing the stage information to the solution
+                    arc.UpdateStageInfo(t0); // FIXME: this has the effect of synch'ing the stage information to the solution
                     last_arcs.Add(solution.arcs[i]);  // shallow copy
                     if ( solution.tgo(t0, i) <= 0 ) // this is responsible for skipping done coasts and anything else in the past
                     {
@@ -1306,7 +1308,7 @@ namespace MuMech {
                     {
                         if ( last_arcs.Count < stages.Count )
                         {
-                            last_arcs.Add(new Arc(this, stages[last_arcs.Count]));
+                            last_arcs.Add(new Arc(this, stage: stages[last_arcs.Count], t0: t0));
                             double[] y0_new = new double[arcIndex(last_arcs, last_arcs.Count)];
                             Array.Copy(y0, 0, y0_new, 0, y0.Length);
                             y0 = y0_new;
