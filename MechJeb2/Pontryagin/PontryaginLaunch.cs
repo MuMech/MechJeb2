@@ -110,7 +110,7 @@ namespace MuMech {
             {
                 //if (i != 0)
                     //arcs.Add(new Arc(new Stage(this, m0: stages[i].m0, isp: 0, thrust: 0)));
-                arcs.Add(new Arc(this, stages[i]));
+                arcs.Add(new Arc(this, stage: stages[i], t0: t0));
             }
 
             arcs[arcs.Count-1].infinite = true;
