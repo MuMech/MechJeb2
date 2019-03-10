@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using KSP.UI.Screens;
 using Smooth.Slinq;
 using UnityEngine;
@@ -46,17 +47,36 @@ namespace MuMech
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
         private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
 
+        private enum RemoteStagingState
+        {
+            Disabled,
+            WaitingFocus,
+            FocusFinished,
+        }
+
+        private RemoteStagingState remoteStagingStatus = RemoteStagingState.Disabled;
+
         public override void OnStart(PartModule.StartState state)
         {
             if (vessel != null && vessel.situation == Vessel.Situations.PRELAUNCH)
                 waitingForFirstStaging = true;
 
             GameEvents.onStageActivate.Add(stageActivate);
+            GameEvents.onVesselResumeStaging.Add(VesselResumeStage);
+        }
+
+        private void VesselResumeStage(Vessel data)
+        {
+            if (remoteStagingStatus == RemoteStagingState.WaitingFocus)
+            {
+                remoteStagingStatus = RemoteStagingState.FocusFinished;
+            }
         }
 
         public override void OnDestroy()
         {
             GameEvents.onStageActivate.Remove(stageActivate);
+            GameEvents.onVesselResumeStaging.Remove(VesselResumeStage);
         }
 
         private void stageActivate(int data)
@@ -133,11 +153,13 @@ namespace MuMech
 
         bool countingDown = false;
         double stageCountdownStart = 0;
+        private Vessel currentActiveVessel;
 
         public override void OnUpdate()
         {
-            if (!vessel.isActiveVessel)
-                return;
+            //Commenting this because now we support autostaging on non active vessels
+            //if (!vessel.isActiveVessel)
+            //    return;
 
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
@@ -185,7 +207,30 @@ namespace MuMech
                         lastStageTime = vesselState.time;
                     }
 
-                    StageManager.ActivateNextStage();
+                    if (!this.vessel.isActiveVessel)
+                    {
+                        this.currentActiveVessel = FlightGlobals.ActiveVessel;
+                        Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {this.vessel.name} to stage");
+
+                        this.remoteStagingStatus = RemoteStagingState.WaitingFocus;
+                        FlightGlobals.ForceSetActiveVessel(this.vessel);
+                    }
+                    else
+                    {
+                        Debug.Log($"Mechjeb Autostage: Executing next stage on {FlightGlobals.ActiveVessel.name}");
+
+                        if (remoteStagingStatus == RemoteStagingState.Disabled)
+                        {
+                            StageManager.ActivateNextStage();
+                        }
+                        else if(remoteStagingStatus == RemoteStagingState.FocusFinished)
+                        {
+                            StageManager.ActivateNextStage();
+                            FlightGlobals.ForceSetActiveVessel(currentActiveVessel);
+                            Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
+                            this.remoteStagingStatus = RemoteStagingState.Disabled;
+                        }
+                    }
                     countingDown = false;
 
                     if (autostagingOnce)
@@ -206,7 +251,7 @@ namespace MuMech
             {
                 Part p = v.parts[i];
                 Part decoupledPart;
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) &&
+                if (p?.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) &&
                     HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
                     return true;
             }
@@ -280,6 +325,10 @@ namespace MuMech
         //detect if a part is above an active or idle engine in the part tree
         public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
+            if (p == null)
+            {
+                return false;
+            }
             if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE)
                 && p.IsEngine() && !p.IsSepratron() && p.EngineHasFuel())
             {

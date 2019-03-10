@@ -40,9 +40,9 @@ namespace MuMech
         public void Set(ITargetable t)
         {
             target = t;
-            if (vessel != null && vessel.isActiveVessel)
+            if (vessel != null)
             {
-                if (FlightGlobals.fetch != null) FlightGlobals.fetch.SetVesselTarget(target);
+                vessel.targetObject = target;
             }
         }
 
@@ -54,6 +54,7 @@ namespace MuMech
 
             Set(new PositionTarget(String.Format(GetPositionTargetString(), latitude, longitude)));
         }
+
 
         [ValueInfoItem("Target coordinates", InfoItem.Category.Target)]
         public string GetPositionTargetString()
@@ -192,15 +193,15 @@ namespace MuMech
             if (!wasActiveVessel && vessel.isActiveVessel)
             {
                 if (target != null && target.GetVessel() != null)
-                {                    
-                    FlightGlobals.fetch.SetVesselTarget(target);
+                {
+                    vessel.targetObject = target;
                 }
             }
 
             //notice when the user switches targets
-            if (vessel.isActiveVessel && target != FlightGlobals.fetch.VesselTarget)
+            if (target != vessel.targetObject)
             {
-                target = FlightGlobals.fetch.VesselTarget;
+                target = vessel.targetObject;
                 if (target is Vessel && ((Vessel)target).LandedOrSplashed && (((Vessel)target).mainBody == vessel.mainBody))
                 {
                     targetBody = vessel.mainBody;
