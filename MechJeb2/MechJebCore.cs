@@ -146,29 +146,36 @@ namespace MuMech
             LandSomewhere();
         }
 
-        [KSPAction("Land target")]
+        [KSPAction("Land at KSC")]
         public void OnLandTargetAction(KSPActionParam param)
         {
-
             LandTarget();
         }
 
-        [KSPAction("Set target KSC")]
-        public void OnSetTargetKSCAction(KSPActionParam param)
-        {
-            landing.SetTargetKSC(this);
-        }
 
-      
         private void LandTarget()
         {
-            landing.LandAtPositionTarget(this);
-        }
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
 
+            if (masterMechJeb != null)
+            {
+                MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+
+                moduleLandingGuidance?.SetAndLandTargetKSC();
+            }
+
+        }
 
         private void LandSomewhere()
         {
-            landing.LandUntargeted(this);
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+            if (masterMechJeb != null)
+            {
+                MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+
+                moduleLandingGuidance?.LandSomewhere();
+
+            }
         }
 
         private void EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target target)

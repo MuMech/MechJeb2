@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Steamworks;
 using UnityEngine;
 
 namespace MuMech
@@ -158,6 +159,20 @@ namespace MuMech
 
             base.WindowGUI(windowID);
         }
+
+        public void SetAndLandTargetKSC()
+        {
+            var ksc = landingSites.First(x => x.name == "KSC Pad");
+            core.target.SetPositionTarget(mainBody, ksc.latitude, ksc.longitude);
+            core.landing.LandAtPositionTarget(this);
+        }
+
+        public void LandSomewhere()
+        {
+            core.landing.StopLanding();
+            core.landing.LandUntargeted(this);
+        }
+
 
         [GeneralInfoItem("Landing predictions", InfoItem.Category.Misc)]
         void DrawGUITogglePredictions()
