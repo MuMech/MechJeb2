@@ -553,12 +553,6 @@ Three:
                         maxn1 = n1;
                         maxn2 = n2;
                     }
-                    if (diff < diffmin)
-                    {
-                        diffmin = diff;
-                        minn1 = n1;
-                        minn2 = n2;
-                    }
                 }
             }
             //DebugLogList(dlist);
