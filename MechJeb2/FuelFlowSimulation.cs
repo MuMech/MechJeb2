@@ -828,13 +828,34 @@ namespace MuMech
 
                     if (e != null && e.isEnabled)
                     {
+                        // thrust is correct.
                         Vector3d thrust;
+                        // note that isp and massFlowRate do not include ignoreForIsp fuels like HTP and so need to be fixed for effective isp and the
+                        // actual mdot of the rocket needs to be fixed to include HTP.
+                        //
+                        // IMHO: using ignoreForIsp is just wrong.  full stop.  engines should never set this and should set the correct effective isp in
+                        // the config for the engine.  makes everything simpler and fixes the UI to show the correct ISP.  going this direction we are going
+                        // to get bug reports that e.g. mechjeb is reporting 299s for an RD-108 when RF and KSP are displaying 308s everywhere.  which is not
+                        // going to be a bug at all.  as long as the thrust is correct, the effective isp is correct, and the fuel fractions are correct then
+                        // the rocket equation just works and HTP should not be "ignored".   keeping it out of the atmosphereCurve just makes this annoying
+                        // here and screws up the KSP API display of ISP.
+                        //
                         double isp, massFlowRate;
                         e.EngineValuesAtConditions(throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate, cosLoss: dVLinearThrust);
                         partThrust += thrust.magnitude;
 
                         if ( massFlowRate > 0 )
                             isDrawingResources = true;
+
+                        // this is the ratio of the actual propellant flows to the real mdot accounting for ignoreForIsp fuels (better sum up to 1.0 if there are none or we got bigger probs)
+                        double nonIgnoreISPfrac = 0;
+
+                        for(int j = 0; j < e.propellants.Count; j++)
+                        {
+                            var p = e.propellants[j];
+                            if (!p.ignoreForIsp)
+                                nonIgnoreISPfrac += p.ratio;
+                        }
 
                         double totalDensity = 0;
 
@@ -846,36 +867,44 @@ namespace MuMech
                             // zero density draws (eC, air intakes, etc) are skipped, we have to assume you open your solar panels or
                             // air intakes or whatever it is you need for them to function.  they don't affect the mass of the vehicle
                             // so they do not affect the rocket equation.  they are assumed to be "renewable" or effectively infinite.
+                            // (we keep them out of the propellantFlows dict here so they're just ignored by the sim later).
+                            //
                             if (density > 0)
                             {
                                 // hopefully different EngineModules in the same part don't have different flow modes for the same propellant
                                 if (!propellantFlows.ContainsKey(p.id))
                                     propellantFlows.Add(p.id, p.GetFlowMode());
+                            }
+
+                            // have to ignore ignoreForIsp fuels here since we're dealing with the massflowrate of the other fuels
+                            if (!p.ignoreForIsp)
+                            {
                                 totalDensity += p.ratio * density;
                             }
                         }
 
+                        // this is also the volume flow rate of the non-ignoreForIsp fuels.
                         double volumeFlowRate = massFlowRate / totalDensity;
 
                         for(int j = 0; j < e.propellants.Count; j++)
                         {
                             var p = e.propellants[j];
-                            double fracFlowRate = p.ratio * volumeFlowRate;
-
                             double density = MuUtils.ResourceDensity(p.id);
 
-                            // same density check here as above
+                            // this is the individual propellant volume rate -- we apply the fix for ignoreForIsp fuels here.
+                            double propVolumeRate = p.ratio * volumeFlowRate / nonIgnoreISPfrac;
+
+                            // same density check here as above to keep massless propellants out of the ResourceConsumptions dict as well
                             if (density > 0)
                             {
                                 if (resourceConsumptions.ContainsKey(p.id))
-                                    resourceConsumptions[p.id] += fracFlowRate;
+                                    resourceConsumptions[p.id] += propVolumeRate;
                                 else
-                                    resourceConsumptions.Add(p.id, fracFlowRate);
+                                    resourceConsumptions.Add(p.id, propVolumeRate);
                             }
                         }
                     }
                 }
-                //Debug.Log("done with " + partName);
             }
         }
 
