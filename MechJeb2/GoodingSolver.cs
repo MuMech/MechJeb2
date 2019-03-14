@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace MuMech {
     public class GoodingSolver {
@@ -26,9 +27,6 @@ namespace MuMech {
             double VR21, VT21, VR22, VT22;
             int n;
 
-            double r1mag = R1.magnitude;
-            double r2mag = R2.magnitude;
-
             Vector3d ur1xv1 = Vector3d.Cross(R1, V1).normalized;
 
             Vector3d ux1 = R1.normalized;
@@ -38,31 +36,11 @@ namespace MuMech {
 
             /* calculate the minimum transfer angle (radians) */
 
-            double theta = Vector3d.Dot(ux1, ux2);
-
-            if (theta > 1.0) {
-                theta = 1.0;
-            }
-
-            if (theta < -1.0) {
-                theta = -1.0;
-            }
-
-            theta = Math.Acos(theta);
+            double theta = Math.Acos(MuUtils.Clamp(Vector3d.Dot(ux1, ux2), -1.0, 1.0));
 
             /* calculate the angle between the orbit normal of the initial orbit and the fundamental reference plane */
 
-            double angle_to_on = Vector3d.Dot(ur1xv1, uz1);
-
-            if (angle_to_on > 1.0) {
-                angle_to_on = 1.0;
-            }
-
-            if (angle_to_on < -1.0) {
-                angle_to_on = -1.0;
-            }
-
-            angle_to_on = Math.Acos(angle_to_on);
+            double angle_to_on = Math.Acos(MuUtils.Clamp(Vector3d.Dot(ur1xv1, uz1), -1.0, 1.0));
 
             /* if angle to orbit normal is greater than 90 degrees and posigrade orbit, then flip the orbit normal and the transfer angle */
 
@@ -84,14 +62,16 @@ namespace MuMech {
 
             theta = theta + 2.0 * Math.PI * Math.Abs(nrev);
 
-            VLAMB(primary.gravParameter, r1mag, r2mag, theta, tof, out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
+            VLAMB(primary.gravParameter, R1.magnitude, R2.magnitude, theta, tof, out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
 
             if (nrev > 0) {
                 if (n == -1) {
+                    // FIXME: should throw
                     /* no tminimum */
                     Vi = Vector3d.zero;
                     Vf = Vector3d.zero;
                 } else if (n == 0) {
+                    // FIXME: should throw
                     /* no solution time */
                     Vi = Vector3d.zero;
                     Vf = Vector3d.zero;
@@ -371,9 +351,13 @@ Three:
                 if (!LM1) {
                     double G;
                     if (QX * U >= 0.0)
+                    {
                         G = X*Z + Q*U;
+                    }
                     else
+                    {
                         G = ( XSQ - QSQ*U ) / ( X*Z - Q*U );
+                    }
 
                     double F = A * Y;
                     if ( X <= 1.0) {
@@ -401,11 +385,15 @@ Three:
                         double QZ = Q/Z;
                         double QZ2 = QZ*QZ;
                         QZ = QZ*QZ2;
-                        DT = ( 3.0*X*T - 4.0 * ( A + QZ*QSQFM1 ) / Z ) / U;
+                        DT = ( 3.0*X*T - 4.0 * ( A + QX*QSQFM1 ) / Z ) / U;
                         if (L2)
+                        {
                             D2T = ( 3.0*T + 5.0*X*DT + 4.0*QZ*QSQFM1 ) / U;
+                        }
                         if (L3)
-                            D3T = ( 8.0*DT + 7.0*X*D2T - 12.0*QZ*QZ2*Z*QSQFM1 ) / U;
+                        {
+                            D3T = ( 8.0*DT + 7.0*X*D2T - 12.0*QZ*QZ2*X*QSQFM1 ) / U;
+                        }
                     }
                 } else {
                     DT = B;
@@ -470,6 +458,106 @@ Three:
                     DT = -2.0 * X * DT;
                 T = T/XSQ;
             }
+        }
+
+        public static void DebugLogList(List<double> l)
+        {
+            int i = 0;
+            string str = "";
+            for(int n1 = 0; n1 < l.Count; n1++) {
+                str += String.Format("{0:F8}", l[n1]);
+                if (i % 6 == 5)
+                {
+                    Debug.Log(str);
+                    str = "";
+                }
+                else
+                {
+                    str += " ";
+                }
+                i++;
+            }
+        }
+
+        // sma is positive for elliptical, negative for hyperbolic and is the radius of periapsis for parabolic
+        public static void Test(double sma, double ecc) {
+            double k = Math.Sqrt(Math.Abs(1 / (sma*sma*sma)));
+            List<double> Elist = new List<double>(); // eccentric anomaly
+            List<double> tlist = new List<double>(); // time of flight
+            List<double> rlist = new List<double>(); // magnitude of r
+            List<double> vlist = new List<double>(); // mangitude of v
+            List<double> flist = new List<double>(); // true anomaly
+            List<double> dlist = new List<double>(); // list of diffs
+
+            for(double E = 0.0; E < 2 * Math.PI; E += Math.PI / 180.0) {
+                Elist.Add(E);
+                double tof = 0;
+                if (ecc < 1 )
+                    tof = ( E - ecc * Math.Sin(E) ) / k;
+                else if (ecc == 1)
+                    tof = Math.Sqrt(2) * ( E + E * E * E / 3.0 ) / k;
+                else
+                    tof = ( ecc * Math.Sinh(E) - E ) / k;
+
+                tlist.Add( tof );
+
+                double smp = 0;
+                if ( ecc == 1 )
+                    smp = 2 * sma;
+                else
+                    smp = sma * ( 1.0 - ecc * ecc );
+
+                double energy = 0;
+                if (ecc != 1)
+                    energy = -1.0 / ( 2.0 * sma );
+
+                double f = 0;
+                if (ecc < 1)
+                    f = 2.0 * Math.Atan(Math.Sqrt((1 + ecc) / (1 - ecc)) * Math.Tan(E / 2.0));
+                else if (ecc == 1)
+                    f = 2 * Math.Atan(E);
+                else
+                    f = 2.0 * Math.Atan(Math.Sqrt((ecc + 1) / (ecc - 1)) * Math.Tanh(E / 2.0));
+
+                double r = smp / ( 1.0 + ecc * Math.Cos(f));
+
+                double v = Math.Sqrt(2 * (energy + 1.0 / r ) );
+                if ( f < 0 )
+                    f += 2 * Math.PI;
+
+                rlist.Add(r);
+                vlist.Add(v);
+                flist.Add(f);
+            }
+
+            double diffmax = 0.0;
+            int maxn1 = 0;
+            int maxn2 = 0;
+
+            for(int n1 = 0; n1 < Elist.Count; n1++) {
+                for(int n2 = n1+1; n2 < Elist.Count; n2++) {
+                    double VR11, VT11, VR12, VT12;
+                    double VR21, VT21, VR22, VT22;
+                    int n;
+
+                    VLAMB(1.0, rlist[n1], rlist[n2], flist[n2] - flist[n1], tlist[n2] - tlist[n1], out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
+                    double Vi = Math.Sqrt(VR11 * VR11 + VT11 * VT11);
+                    double Vf = Math.Sqrt(VR12 * VR12 + VT12 * VT12);
+                    double diff1 = vlist[n1] - Vi;
+                    double diff2 = vlist[n2] - Vf;
+                    double diff = Math.Sqrt(diff1 * diff1 + diff2 * diff2);
+                    dlist.Add(diff);
+                    if (diff > diffmax)
+                    {
+                        diffmax = diff;
+                        maxn1 = n1;
+                        maxn2 = n2;
+                    }
+                }
+            }
+            //DebugLogList(dlist);
+
+            Debug.Log("diffmax = " + diffmax + " n1 = " + maxn1 + " n2 = " + maxn2);
         }
     }
 }
