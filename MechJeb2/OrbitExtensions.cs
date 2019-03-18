@@ -124,6 +124,24 @@ namespace MuMech
             return newOrbit;
         }
 
+        // calculate the next patch, which makes patchEndTransition be valid
+        //
+        public static Orbit CalculateNextOrbit(this Orbit o, double UT = Double.NegativeInfinity)
+        {
+            PatchedConics.SolverParameters solverParameters = new PatchedConics.SolverParameters();
+
+            // hack up a dynamic default value to the current time
+            if ( UT == Double.NegativeInfinity )
+                UT = Planetarium.GetUniversalTime();
+
+            o.StartUT = UT;
+            o.EndUT = o.eccentricity >= 1.0 ? o.period : UT + o.period;
+            Orbit nextOrbit = new Orbit();
+            PatchedConics.CalculatePatch(o, nextOrbit, UT, solverParameters, null);
+
+            return nextOrbit;
+        }
+
         // This does not allocate a new orbit object and the caller should call new Orbit if/when required
         public static void MutatedOrbit(this Orbit o, double periodOffset = Double.NegativeInfinity)
         {
@@ -575,6 +593,11 @@ namespace MuMech
 
             }
             return result;
+        }
+
+        public static String MuString(this Orbit o)
+        {
+            return "PeA:" + o.PeA +" ApA:" + o.ApA + " SMA:" + o.semiMajorAxis + " ECC:" + o.eccentricity + " INC:" + o.inclination + " LAN:" + o.LAN + " ArgP:" + o.argumentOfPeriapsis + " TA:" + o.trueAnomaly;
         }
 
         public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
