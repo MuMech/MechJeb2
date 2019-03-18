@@ -6,7 +6,7 @@ namespace MuMech
     public class MechJebModuleRendezvousGuidance : DisplayModule
     {
         public MechJebModuleRendezvousGuidance(MechJebCore core) : base(core) { }
-        
+
         EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
         protected override void WindowGUI(int windowID)
@@ -116,8 +116,7 @@ namespace MuMech
             if (GUILayout.Button("Get closer"))
             {
                 double UT = vesselState.time;
-                double interceptUT = UT + 100;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT, 10);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, 100, 10);
                 vessel.RemoveAllManeuverNodes();
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }

@@ -50,10 +50,11 @@ namespace MuMech
 
             Vector3d dV;
 
-            Orbit targetOrbit = target.TargetOrbit.Clone();
+            Orbit targetOrbit = target.TargetOrbit;
 
             if ( periodOffset != 0 )
             {
+                targetOrbit = target.TargetOrbit.Clone();
                 targetOrbit.MutatedOrbit(periodOffset: periodOffset);
             }
 

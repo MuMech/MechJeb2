@@ -10,13 +10,13 @@ namespace MuMech {
          * V1 = velocity at t0
          * R2 = position at t1
          * V2 = velocity at t1
-         * tof  = time of flight (t1 - t0) (+ posigrade, - retrograde)
-         * nrev = number of full revolutions
+         * tof  = time of flight (t1 - t0) (+ posigrade "shortway", - retrograde "longway")
+         * nrev = number of full revolutions (+ left-branch, - right-branch for nrev != 0)
          * Vi = initial velocity vector of transfer orbit (Vi - V1 = deltaV)
          * Vf = final velocity vector of transfer orbit (V2 - Vf = deltaV)
          */
 
-        public static void Solve(Vector3d R1, Vector3d V1, Vector3d R2, Vector3d V2, double tof, CelestialBody primary, int nrev, out Vector3d Vi, out Vector3d Vf) {
+        public static void Solve(double GM, Vector3d R1, Vector3d V1, Vector3d R2, Vector3d V2, double tof, int nrev, out Vector3d Vi, out Vector3d Vf) {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */
 
             // if we don't catch this edge condition, the solver will spin forever (internal state will NaN and produce great sadness)
@@ -26,6 +26,10 @@ namespace MuMech {
             double VR11, VT11, VR12, VT12;
             double VR21, VT21, VR22, VT22;
             int n;
+
+            // initialize in case we throw
+            Vi = Vector3d.zero;
+            Vf = Vector3d.zero;
 
             Vector3d ur1xv1 = Vector3d.Cross(R1, V1).normalized;
 
@@ -62,23 +66,15 @@ namespace MuMech {
 
             theta = theta + 2.0 * Math.PI * Math.Abs(nrev);
 
-            VLAMB(primary.gravParameter, R1.magnitude, R2.magnitude, theta, tof, out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
+            VLAMB(GM, R1.magnitude, R2.magnitude, theta, tof, out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
+
+            //Debug.Log("VLAMBOUT: n= " + n + " VR11= " + VR11 + " VT11= " + VT11 + " VR12= " + VR12 + " VT12= " + VT12 + " VR21= " + VR21 + " VT21= " + VT21 + " VR22= " + VR22 + " VT22= " + VT22);
 
             if (nrev > 0) {
                 if (n == -1) {
-                    // FIXME: should throw
-                    /* no tminimum */
-                    Vi = Vector3d.zero;
-                    Vf = Vector3d.zero;
+                    throw new Exception("Gooding Solver found no tminimum");
                 } else if (n == 0) {
-                    // FIXME: should throw
-                    /* no solution time */
-                    Vi = Vector3d.zero;
-                    Vf = Vector3d.zero;
-                } else if (n == 1) {
-                    /* one solution */
-                } else {
-                    /* two solutions */
+                    throw new Exception("Gooding Solver found no solution time");
                 }
             }
 
@@ -108,6 +104,8 @@ namespace MuMech {
 
         private static void VLAMB(double GM, double R1, double R2, double TH, double TDELT,
                 out int N, out double VR11, out double VT11, out double VR12, out double VT12, out double VR21, out double VT21, out double VR22, out double VT22) {
+
+            //Debug.Log("GM= " + GM + " R1= " + R1 + " R2= " + R2 + " TH= " + TH + " TDELT= " + TDELT);
             VR11 = VT11 = VR12 = VT12 = 0.0;
             VR21 = VT21 = VR22 = VT22 = 0.0;
             int M = Convert.ToInt32(Math.Floor(TH / (2.0 * Math.PI)));
