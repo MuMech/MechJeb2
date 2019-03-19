@@ -847,16 +847,6 @@ namespace MuMech
                         if ( massFlowRate > 0 )
                             isDrawingResources = true;
 
-                        // this is the ratio of the actual propellant flows to the real mdot accounting for ignoreForIsp fuels (better sum up to 1.0 if there are none or we got bigger probs)
-                        double nonIgnoreISPfrac = 0;
-
-                        for(int j = 0; j < e.propellants.Count; j++)
-                        {
-                            var p = e.propellants[j];
-                            if (!p.ignoreForIsp)
-                                nonIgnoreISPfrac += p.ratio;
-                        }
-
                         double totalDensity = 0;
 
                         for(int j = 0; j < e.propellants.Count; j++)
@@ -883,7 +873,9 @@ namespace MuMech
                             }
                         }
 
-                        // this is also the volume flow rate of the non-ignoreForIsp fuels.
+                        // this is also the volume flow rate of the non-ignoreForIsp fuels.  although this is a bit janky since the p.ratios in most
+                        // stock engines sum up to 2, not 1 (1.1 + 0.9), so this is not per-liter but per-summed-ratios (the massflowrate you get out
+                        // of the atmosphere curves (above) are also similarly adjusted by these ratios -- it is a bit of a horror show).
                         double volumeFlowRate = massFlowRate / totalDensity;
 
                         for(int j = 0; j < e.propellants.Count; j++)
@@ -891,8 +883,10 @@ namespace MuMech
                             var p = e.propellants[j];
                             double density = MuUtils.ResourceDensity(p.id);
 
-                            // this is the individual propellant volume rate -- we apply the fix for ignoreForIsp fuels here.
-                            double propVolumeRate = p.ratio * volumeFlowRate / nonIgnoreISPfrac;
+                            // this is the individual propellant volume rate.  we are including the ignoreForIsp fuels in this loop and this will
+                            // correctly calculate the volume rates of all the propellants, in L/sec.  if you sum these it'll be larger than the
+                            // volumeFlowRate by including both the ignoreForIsp fuels and if the ratios sum up to more than one.
+                            double propVolumeRate = p.ratio * volumeFlowRate;
 
                             // same density check here as above to keep massless propellants out of the ResourceConsumptions dict as well
                             if (density > 0)
