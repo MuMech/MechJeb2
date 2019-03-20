@@ -13,18 +13,22 @@ namespace MuMech {
 
         double rTm;
         double vTm;
-        double gamma;
-        double inc;
+        double gammaT;
+        double incT;
         double smaT;
+        double eccT;
+        double LANT;
+        double ArgPT;
         Vector3d hT;
+        int numStages;
 
         // 5-constraint PEG with fixed LAN
-        public void flightangle5constraint(double rTm, double vTm, double gamma, Vector3d hT)
+        public void flightangle5constraint(double rTm, double vTm, double gammaT, Vector3d hT)
         {
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             this.rTm = rTm / r_scale;
             this.vTm = vTm / v_scale;
-            this.gamma = gamma;
+            this.gammaT = gammaT;
             this.hT = rot * hT / r_scale / v_scale;
             bcfun = flightangle5constraint;
         }
@@ -43,7 +47,7 @@ namespace MuMech {
             if (!terminal)
             {
                 z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
-                z[1] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
+                z[1] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gammaT);
                 z[2] = hmiss[0];
                 z[3] = hmiss[1];
                 z[4] = hmiss[2];
@@ -66,8 +70,8 @@ namespace MuMech {
             this.vTm = vTm / v_scale;
             //Debug.Log("4constraint vTm = " + vTm + " v_scale = " + v_scale + " vTm_bar = " + this.vTm );
             //Debug.Log("4constraint rTm = " + rTm + " r_scale = " + r_scale + " rTm_bar = " + this.rTm );
-            this.gamma = gamma;
-            this.inc = inc;
+            this.gammaT = gamma;
+            this.incT = inc;
             bcfun = flightangle4constraint;
         }
 
@@ -87,15 +91,15 @@ namespace MuMech {
             {
                 z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
                 z[1] = ( vf.magnitude * vf.magnitude - vTm * vTm ) / 2.0;
-                z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(inc);
-                z[3] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gamma);
-                z[4] = rTm * rTm * ( Vector3d.Dot(vf, prf) - vTm * Math.Sin(gamma) / rTm * Vector3d.Dot(rf, prf) ) -
-                    vTm * vTm * ( Vector3d.Dot(rf, pvf) - rTm * Math.Sin(gamma) / vTm * Vector3d.Dot(vf, pvf) );
+                z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(incT);
+                z[3] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gammaT);
+                z[4] = rTm * rTm * ( Vector3d.Dot(vf, prf) - vTm * Math.Sin(gammaT) / rTm * Vector3d.Dot(rf, prf) ) -
+                    vTm * vTm * ( Vector3d.Dot(rf, pvf) - rTm * Math.Sin(gammaT) / vTm * Vector3d.Dot(vf, pvf) );
                 z[5] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, rn) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, vn);
             }
             else
             {
-                double hTm = rTm * vTm * Math.Cos(gamma);
+                double hTm = rTm * vTm * Math.Cos(gammaT);
 
                 z[0] = hf.magnitude - hTm;
                 z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
@@ -195,29 +199,34 @@ namespace MuMech {
 
             //Debug.Log("optimizer done");
 
-            new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-            multipleIntegrate(y0, new_sol, arcs, 10);
 
             //for(int k = 0; k < y0.Length; k++)
             //    Debug.Log("y0[" + k + "] = " + y0[k]);
 
             if (insertedCoast)
             {
-                if ( new_sol.tgo(new_sol.t0, arcs.Count-2) < 1 )
+                new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+                multipleIntegrate(y0, new_sol, arcs, 10);
+
+                double coastlen = new_sol.tgo(new_sol.t0, arcs.Count-2); // human seconds
+
+                if ( coastlen < 1 )
                 {
-                    // coast is less than one second, delete it and reconverge
+                    DebugLog("optimum coast of " + coastlen + " seconds was removed from the solution");
+
                     RemoveArc(arcs, arcs.Count-2, new_sol);
 
                     if ( !runOptimizer(arcs) )
                     {
-                        Fatal("failed to converge after removing zero length coast");
+                        Fatal("failed to converge after removing negative length coast after jettison");
                         return;
                     }
 
-                    new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-                    multipleIntegrate(y0, new_sol, arcs, 10);
                 }
             }
+
+            new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+            multipleIntegrate(y0, new_sol, arcs, 10);
 
             //for(int k = 0; k < y0.Length; k++)
                 //Debug.Log("new y0[" + k + "] = " + y0[k]);
