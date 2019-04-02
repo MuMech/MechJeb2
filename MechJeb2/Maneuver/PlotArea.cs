@@ -126,7 +126,46 @@ namespace MuMech
 					);
 						
 					break;
+					case EventType.KeyUp:
+						ProcessKeys();
+						break;
 				}
+			}
+		}
+
+		private void ProcessKeys()
+		{
+			KeyCode code = Event.current.keyCode;
+			int dirX = 0, dirY = 0;
+
+			if (code == KeyCode.W || code == KeyCode.S ||
+				code == KeyCode.UpArrow || code == KeyCode.DownArrow)
+			{
+				dirY = code == KeyCode.W || code == KeyCode.UpArrow ? 1 : -1;
+			}
+			else if (code == KeyCode.A || code == KeyCode.D ||
+					 code == KeyCode.LeftArrow || code == KeyCode.RightArrow)
+			{
+				dirX = code == KeyCode.D || code == KeyCode.RightArrow ? 1 : -1;
+			}
+
+			if (dirX != 0 || dirY != 0)
+			{
+				double dx = maxx - minx;
+				double dy = maxy - miny;
+
+				double moveDx = dx * 0.25 * dirX;
+				double moveDy = dy * 0.25 * dirY;
+
+				double newMinX = minx + moveDx;
+				double newMinY = miny + moveDy;
+
+				callback(
+					newMinX,
+					newMinX + dx,
+					newMinY,
+					newMinY + dy
+				);
 			}
 		}
 	}
