@@ -68,16 +68,58 @@ namespace MuMech
             return (mode != AscentMode.EXIT);
         }
 
+        // convert PeA/ApA values to SMA+ECC
+        private void ConvertToSMAEcc(double PeA, double ApA, out double sma, out double ecc)
+        {
+            double PeR = mainBody.Radius + PeA;
+            double ApR = mainBody.Radius + ApA;
+
+            /* remap nonsense ApAs onto circular orbits */
+            if ( ApA >= 0 && ApA < PeA )
+                ApR = PeR;
+
+            sma = (PeR + ApR) / 2;
+
+            ecc = (ApR - PeR) / (ApR + PeR);
+        }
+
+        private void ConvertToVTRT(double sma, double ecc, double gamma, out double rt, out double vt)
+        {
+            // All this math comes from symbolic algebraic equation solving in Matlab:
+            // f1 = h == cos(gamma) * r * v
+            // f2 = v^2 == -mu*(1/a - 2/r)
+            // f3 = h == sqrt(mu * a * ( 1 - e^ 2 ))
+            // S = solve(f1, f2, f3)
+            // and we pick the higher velocity root closer to the periapsis
+            double h = Math.Sqrt( mainBody.gravParameter * sma * ( 1 - ecc * ecc ) );
+            double cg = Math.Cos( gamma * UtilMath.Deg2Rad );
+            double d1 = sma * ( ecc - 1 ) * ( ecc + 1 );
+            double d2 = d1 * h * cg;
+            double n1 = h * Math.Sqrt( ecc*ecc + cg*cg - 1 ) + h * cg; // FIXME: should check sqrt for imaginary numbers
+            vt = - n1 / d1;
+            rt = 2 * sma + n1 * sma * sma * ( 1 -  ecc * ecc) / d2;
+        }
+
         private void setTarget()
         {
+            double sma = 0;
+            double ecc = 0;
+            double vt = 0;
+            double rt = 0;
+
+            ConvertToSMAEcc(autopilot.desiredOrbitAltitude, desiredApoapsis, out sma, out ecc);
+            ConvertToVTRT(sma, ecc, 0, out rt, out vt);
+            double inclination = autopilot.desiredInclination;
+
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
-                core.guidance.TargetPeInsertMatchOrbitPlane(autopilot.desiredOrbitAltitude, desiredApoapsis, core.target.TargetOrbit, omitCoast);
-                //autopilot.desiredInclination = Math.Acos(-Vector3d.Dot(-Planetarium.up, core.guidance.iy)) * UtilMath.Rad2Deg;
+                double LAN = core.target.TargetOrbit.LAN;;
+                inclination = core.target.TargetOrbit.inclination;
+                core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false);
             }
             else
             {
-                core.guidance.TargetPeInsertMatchInc(autopilot.desiredOrbitAltitude, desiredApoapsis, autopilot.desiredInclination, omitCoast);
+                core.guidance.flightangle4constraint(rt, vt, inclination, 0, sma, omitCoast, false);
             }
         }
 
