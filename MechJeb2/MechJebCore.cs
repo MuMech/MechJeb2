@@ -54,6 +54,7 @@ namespace MuMech
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
         public string version = "";
         private bool deactivateControl = false;
+        private float currentThrottle = 0f;  // To maintain throttle when controls deactivated
         public MechJebCore MasterMechJeb
         {
             get { return vessel.GetMasterMechJeb(); }
@@ -71,7 +72,13 @@ namespace MuMech
             {
                 MechJebCore mj = vessel.GetMasterMechJeb();
                 if (mj != null)
+                {
+                    if (value && !mj.deactivateControl)
+                    {
+                        controlledVessel.ctrlState.mainThrottle = currentThrottle;
+                    }
                     mj.deactivateControl = value;
+                }
             }
         }
 
@@ -1019,6 +1026,9 @@ namespace MuMech
             Drive(s);
 
             CheckFlightCtrlState(s);
+
+            // Update current throttle for control deactivation
+            currentThrottle = s.mainThrottle;
         }
 
         private void Drive(FlightCtrlState s)
