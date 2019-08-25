@@ -21,6 +21,9 @@ namespace MuMech
 
             if (toolbarButtons == null)
                 toolbarButtons = new Dictionary<DisplayModule, Button>();
+
+            if (featureButtons == null)
+                featureButtons = new Dictionary<Action, Button>();
         }
 
         public enum WindowStat
@@ -164,6 +167,7 @@ namespace MuMech
         }
 
         private static Dictionary<DisplayModule, Button> toolbarButtons;
+        private static Dictionary<Action, Button> featureButtons;
         const string Qmark = "MechJeb2/Icons/QMark";
 
         IButton menuButton;
@@ -304,6 +308,111 @@ namespace MuMech
                 button.button.Visible = module.showInCurrentScene;
                 button.button.TexturePath = module.isActive() ? button.texturePathActive : button.texturePath;
             }
+
+            // create toolbar buttons for features
+            if (featureButtons.Count == 0)
+            {
+                var maneuverPlannerModule = core.GetComputerModule<MechJebModuleManeuverPlanner>();
+                if (maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
+                {
+                    CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", (b) =>
+                    {
+                        if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.node != null)
+                        {
+                            if (core.node.enabled)
+                            {
+                                core.node.Abort();
+                            }
+                            else
+                            {
+                                if (vessel.patchedConicSolver.maneuverNodes[0].DeltaV.magnitude > 0.0001)
+                                {
+                                    core.node.ExecuteOneNode(maneuverPlannerModule);
+                                }
+                                else
+                                {
+                                    ScreenMessages.PostScreenMessage("Maneuver burn vector not set", 3f);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ScreenMessages.PostScreenMessage("No maneuver nodes", 2f);
+                        }
+                    }, () => vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.node != null && core.node.enabled);
+
+                    CreateFeatureButton(maneuverPlannerModule, "Autostage_Once", "MechJeb Autostage Once", (b) =>
+                    {
+                        var w = core.GetComputerModule<MechJebModuleThrustWindow>();
+
+                        if (core.staging.enabled && core.staging.autostagingOnce)
+                        {
+                            if (core.staging.users.Contains(w))
+                            {
+                                core.staging.users.Remove(w);
+                                w.autostageSavedState = false;
+                            }
+                        }
+                        else
+                        {
+                            core.staging.AutostageOnce(w);
+                        }
+                    }, () => core.staging.enabled && core.staging.autostagingOnce);
+
+                    CreateFeatureButton(maneuverPlannerModule, "Auto_Warp", "MechJeb Auto-warp", (b) =>
+                    {
+                        core.node.autowarp = !core.node.autowarp;
+                    }, () => core.node.autowarp);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates feature button and puts it to <see cref="featureButtons"/> list.
+        /// </summary>
+        /// <param name="module">Feature related module.</param>
+        /// <param name="nameId">Feature unique name.</param>
+        /// <param name="tooltip">The tooltip for button.</param>
+        /// <param name="onClick">The button click handler.</param>
+        /// <param name="isActive">Super light weight function to check whether the feature is activated at the moment.</param>
+        public void CreateFeatureButton(DisplayModule module, string nameId, string tooltip, ClickHandler onClick, Func<bool> isActive)
+        {
+            var texturePath = "MechJeb2/Icons/" + nameId;
+            var texturePathActive = texturePath + "_active";
+
+            var button = new Button();
+            button.button = ToolbarManager.Instance.add("MechJeb2", nameId);
+
+            if (GameDatabase.Instance.GetTexture(texturePath, false) == null)
+            {
+                button.texturePath = Qmark;
+                print("No icon for " + nameId);
+            }
+            else
+            {
+                button.texturePath = texturePath;
+            }
+
+            if (GameDatabase.Instance.GetTexture(texturePathActive, false) == null)
+            {
+                button.texturePathActive = texturePath;
+            }
+            else
+            {
+                button.texturePathActive = texturePathActive;
+            }
+
+            button.button.ToolTip = tooltip;
+            button.button.OnClick += onClick;
+            featureButtons.Add(() =>
+            {
+                button.button.TexturePath = isActive()
+                    ? button.texturePathActive
+                    : button.texturePath;
+            }, button);
+
+            button.button.Visible = module.showInCurrentScene;
+            button.button.TexturePath = button.texturePath;
         }
 
         public void SetupMainToolbarButton()
@@ -363,6 +472,16 @@ namespace MuMech
                     }
                 }
                 toolbarButtons.Clear();
+
+                foreach (Button b in featureButtons.Values)
+                {
+                    if (b.button != null)
+                    {
+                        b.button.Destroy();
+                    }
+                }
+                featureButtons.Clear();
+
                 if (menuButton != null)
                 {
                     menuButton.Destroy();
@@ -472,6 +591,12 @@ namespace MuMech
             {
                 SetupAppLauncher();
                 SetupToolBarButtons();
+            }
+
+            // update feature buttons
+            foreach (var b in featureButtons)
+            {
+                b.Key();
             }
         }
 
