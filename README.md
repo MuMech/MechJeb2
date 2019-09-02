@@ -2,8 +2,11 @@
 
 Anatid Robotics and Multiversal Mechatronics proudly presents the first flight assistant autopilot: MechJeb
 
-MechJeb2 is a mod for the game Kerbal Space Program. For more info visit:  
-    http://forum.kerbalspaceprogram.com/index.php?/topic/154834-122-anatid-robotics-mumech-mechjeb-autopilot-260-12-dec-2016/
+MechJeb2 is a mod for the game Kerbal Space Program. To learn how to use it, [visit the wiki][wiki]. For more info, [visit this KSP forum post][post].
+    
+
+[wiki]: https://github.com/MuMech/MechJeb2/wiki
+[post]: http://forum.kerbalspaceprogram.com/index.php?/topic/154834-122-anatid-robotics-mumech-mechjeb-autopilot-260-12-dec-2016/
 
 ## Table of Contents
 
