@@ -344,6 +344,12 @@ namespace MuMech
             return vessel.vesselName;
         }
 
+        [ValueInfoItem("Vessel type", InfoItem.Category.Vessel, showInEditor = false)]
+        public string VesselType()
+        {
+            return vessel != null ? vessel.vesselType.displayDescription() : "-";
+        }
+
         [ValueInfoItem("Vessel mass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)]
         public double VesselMass()
         {
