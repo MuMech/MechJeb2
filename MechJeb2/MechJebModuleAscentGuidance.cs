@@ -509,6 +509,12 @@ namespace MuMech
                 {
                     GUILayout.Label("Autopilot status: " + autopilot.status);
                 }
+                if (core.DeactivateControl)
+                {
+                    GUIStyle s = new GUIStyle(GUI.skin.label);
+                    s.normal.textColor = Color.red;
+                    GUILayout.Label("CONTROL DISABLED (AVIONICS)", s);
+                }
             }
 
             if (!vessel.patchedConicsUnlocked() && ascentPathIdx != ascentType.PVG)
