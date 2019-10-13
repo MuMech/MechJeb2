@@ -19,7 +19,7 @@ namespace MuMech
         public EditableDouble autostagePreDelay = 0.5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble autostagePostDelay = 1.0;
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableInt autostageLimit = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
