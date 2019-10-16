@@ -378,7 +378,7 @@ namespace MuMech
         //Returns a list of engines that fire during the current simulated stage.
         private Disposable<List<FuelNode>> FindActiveEngines()
         {
-            var param = new Tuple<int, List<FuelNode>>(simStage, nodes);
+            var param = new Smooth.Algebraics.Tuple<int, List<FuelNode>>(simStage, nodes);
             var activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
             //print("Finding engines in " + nodes.Count + " parts, there are " + nodes.Slinq().Where(n => n.isEngine).Count());
             //nodes.Slinq().Where(n => n.isEngine).ForEach(node => print("  (" + node.partName + " " + node.inverseStage + ">=" + simStage + " " + (node.inverseStage >= simStage) + ")"));
@@ -968,7 +968,7 @@ namespace MuMech
         public double MaxTimeStep()
         {
             //DebugDrainRates();
-            var param = new Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>, DefaultableDictionary<int, bool>>(resources, resourceRequestRemainingThreshold, resourceDrains, freeResources);
+            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>, DefaultableDictionary<int, bool>>(resources, resourceRequestRemainingThreshold, resourceDrains, freeResources);
             if (!resourceDrains.KeysList.Slinq().Any((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param)) return double.MaxValue;
             return resourceDrains.KeysList.Slinq().Where((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param).Select((id, p) => p.Item1[id] / p.Item3[id], param).Min();
         }
@@ -982,7 +982,7 @@ namespace MuMech
         //returns whether this part contains any of the given resources
         public bool ContainsResources(List<int> whichResources)
         {
-            var param = new Tuple<DefaultableDictionary<int, double>, double>(resources, resourceRequestRemainingThreshold);
+            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double>(resources, resourceRequestRemainingThreshold);
             //return whichResources.Any(id => resources[id] > DRAINED);
             return whichResources.Slinq().Any((id, r) => r.Item1[id] > r.Item2, param);
         }
