@@ -110,14 +110,14 @@ namespace MuMech {
             // build arcs off of ksp stages, with coasts
             List<Arc> arcs = new List<Arc>();
 
-            arcs.Add(new Arc(this, coast: true));
+            arcs.Add(new Arc(this, t0: t0, coast: true));
 
             for(int i = 0; i < stages.Count; i++)
             {
-                arcs.Add(new Arc(this, stages[i]));
+                arcs.Add(new Arc(this, stage: stages[i], t0: t0));
             }
 
-            arcs.Add(new Arc(this, coast: true));
+            arcs.Add(new Arc(this, coast: true, t0: t0));
             // arcs.Add(new Arc(new Stage(this, m0: -1, isp: 0, thrust: 0, ksp_stage: stages[stages.Count-1].ksp_stage), done: true));
 
             arcs[arcs.Count-1].use_fixed_time = true;

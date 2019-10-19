@@ -196,7 +196,7 @@ namespace MuMech
         {
             try
             {
-                if (vessel.isActiveVessel && !vessel.LandedOrSplashed)
+                if (!vessel.LandedOrSplashed)
                 {
                     // We should be running simulations periodically. If one is not running right now,
                     // check if enough time has passed since the last one to start a new one:
@@ -234,10 +234,7 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (vessel.isActiveVessel)
-            {
-                MaintainAerobrakeNode();
-            }
+                MaintainAerobrakeNode();     
         }
 
         protected void StartSimulation(bool addParachuteError)
@@ -493,7 +490,7 @@ namespace MuMech
 
         void DoMapView()
         {
-            if ((MapView.MapIsEnabled || camTrajectory) && vessel.isActiveVessel && !vessel.LandedOrSplashed && this.enabled)
+            if ((MapView.MapIsEnabled || camTrajectory) && !vessel.LandedOrSplashed && this.enabled)
             {
                 ReentrySimulation.Result drawnResult = Result;
                 if (drawnResult != null)

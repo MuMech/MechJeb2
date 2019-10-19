@@ -7,10 +7,10 @@ namespace MuMech
     ///////////////////////////////////////////////////////////
 
     //Solves Lambert's problem, namely:
-    //  "What orbit around primary takes you from position R1 to position R2 in a time interval dt?" 
+    //  "What orbit around primary takes you from position R1 to position R2 in a time interval dt?"
     //Output is in the form of two velocity vectors V1 and V2, which respectively give the initial and final velocity
     //of the required orbit segment
-    //There are always two solutions to Lambert's problem, a "short way," which traverses < 180 degrees, 
+    //There are always two solutions to Lambert's problem, a "short way," which traverses < 180 degrees,
     //and a "long way," which traverses > 180 degrees. The shortway input says which of these solutions to find.
     public class LambertSolver
     {
@@ -84,7 +84,7 @@ namespace MuMech
                 //BracketingNthOrderBrentSolver solver = new BracketingNthOrderBrentSolver(relativeAccuracy, absoluteAccuracy, 10);
                 //y = solver.solve(10000, yEqnPoly, -10000, 10000, 0.0, AllowedSolution.ANY_SIDE);
 
-                //replaced Arrowstar's above four commented lines with this solver:  -The_Duck 
+                //replaced Arrowstar's above four commented lines with this solver:  -The_Duck
                 //Use an initial guess of 10; NewtonSolver will get stuck with an initial guess of zero.
                 y = NewtonSolver.Solve(yEqnPoly, 10, 1.0e-12, 50);
 
@@ -169,7 +169,7 @@ namespace MuMech
         }
     }
 
-    //A simple root-finder. We really ought to use some existing root-finder that someone else has put a 
+    //A simple root-finder. We really ought to use some existing root-finder that someone else has put a
     //lot of time and effort into, but this one seems to work
     public static class NewtonSolver
     {
@@ -192,7 +192,7 @@ namespace MuMech
     }
 
     //Represents a polynomial function of one variable, and can evaluate its own
-    //derivative exactly. 
+    //derivative exactly.
     public class PolynomialFunction
     {
         double[] coeffs; //coeffs[i] is the coefficient of x^i

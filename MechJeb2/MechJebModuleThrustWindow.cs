@@ -6,7 +6,7 @@ namespace MuMech
     {
 
         [Persistent(pass = (int)Pass.Local)]
-        private bool autostageSavedState = false;
+        public bool autostageSavedState = false;
 
         public MechJebModuleThrustWindow(MechJebCore core) : base(core) { }
 

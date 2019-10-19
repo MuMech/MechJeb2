@@ -54,6 +54,7 @@ namespace MuMech
         private Vessel controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
         public string version = "";
         private bool deactivateControl = false;
+        private float currentThrottle = 0f;  // To maintain throttle when controls deactivated
         public MechJebCore MasterMechJeb
         {
             get { return vessel.GetMasterMechJeb(); }
@@ -71,7 +72,13 @@ namespace MuMech
             {
                 MechJebCore mj = vessel.GetMasterMechJeb();
                 if (mj != null)
+                {
+                    if (value && !mj.deactivateControl)
+                    {
+                        controlledVessel.ctrlState.mainThrottle = currentThrottle;
+                    }
                     mj.deactivateControl = value;
+                }
             }
         }
 
@@ -137,6 +144,45 @@ namespace MuMech
         public void OnDeactivateSmartASSAction(KSPActionParam param)
         {
             EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
+        }
+
+        [KSPAction("Land somewhere")]
+        public void OnLandsomewhereAction(KSPActionParam param)
+        {
+
+            LandSomewhere();
+        }
+
+        [KSPAction("Land at KSC")]
+        public void OnLandTargetAction(KSPActionParam param)
+        {
+            LandTarget();
+        }
+
+
+        private void LandTarget()
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb != null)
+            {
+                MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+
+                moduleLandingGuidance?.SetAndLandTargetKSC();
+            }
+
+        }
+
+        private void LandSomewhere()
+        {
+            MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+            if (masterMechJeb != null)
+            {
+                MechJebModuleLandingGuidance moduleLandingGuidance = GetComputerModule<MechJebModuleLandingGuidance>();
+
+                moduleLandingGuidance?.LandSomewhere();
+
+            }
         }
 
         private void EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target target)
@@ -1019,6 +1065,9 @@ namespace MuMech
             Drive(s);
 
             CheckFlightCtrlState(s);
+
+            // Update current throttle for control deactivation
+            currentThrottle = s.mainThrottle;
         }
 
         private void Drive(FlightCtrlState s)

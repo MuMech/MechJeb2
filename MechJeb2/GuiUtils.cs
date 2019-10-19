@@ -561,23 +561,9 @@ namespace MuMech
 
             static ComboBox()
             {
-                Texture2D background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-                background.wrapMode = TextureWrapMode.Clamp;
-
-                for (int x = 0; x < background.width; x++)
-                    for (int y = 0; y < background.height; y++)
-                    {
-                        if (x == 0 || x == background.width-1 || y == 0 || y == background.height-1)
-                            background.SetPixel(x, y, new Color(0, 0, 0, 1));
-                        else
-                            background.SetPixel(x, y, new Color(0.05f, 0.05f, 0.05f, 0.95f));
-                    }
-
-                background.Apply();
-
                 style = new GUIStyle(GUI.skin.window);
-                style.normal.background = background;
-                style.onNormal.background = background;
+                style.normal.background = null;
+                style.onNormal.background = null;
                 style.border.top = style.border.bottom;
                 style.padding.top = style.padding.bottom;
             }
@@ -586,6 +572,12 @@ namespace MuMech
             {
                 if (popupOwner == null || rect.height == 0 || ! popupActive)
                     return;
+
+                if (style.normal.background == null)
+                {
+                    style.normal.background = MechJebBundlesManager.comboBoxBackground;
+                    style.onNormal.background = MechJebBundlesManager.comboBoxBackground;
+                }
 
                 // Make sure the rectangle is fully on screen
                 rect.x = Math.Max(0, Math.Min(rect.x, scaledScreenWidth - rect.width));

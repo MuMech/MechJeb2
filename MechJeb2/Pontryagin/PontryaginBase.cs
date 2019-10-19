@@ -33,6 +33,7 @@ namespace MuMech {
             public int ksp_stage { get { return _ksp_stage; } }
             int _rocket_stage;
             public int rocket_stage { get { return _rocket_stage; } }
+            public double _synch_time;
 
             public bool complete_burn = false;
             public bool _done = false;
@@ -52,7 +53,7 @@ namespace MuMech {
             }
 
             // create a local copy of the information for the optimizer
-            public void UpdateStageInfo()
+            public void UpdateStageInfo(double t0)
             {
                 if (stage != null)
                 {
@@ -76,9 +77,10 @@ namespace MuMech {
                     _ksp_stage = -1;
                     _rocket_stage = -1;
                 }
+                _synch_time = t0;
             }
 
-            public Arc(PontryaginBase p, MechJebModuleLogicalStageTracking.Stage stage = null, bool done = false, bool coast_after_jettison = false, bool use_fixed_time = false, double fixed_time = 0, bool coast = false)
+            public Arc(PontryaginBase p, double t0, MechJebModuleLogicalStageTracking.Stage stage = null, bool done = false, bool coast_after_jettison = false, bool use_fixed_time = false, double fixed_time = 0, bool coast = false)
             {
                 this.p = p;
                 this.stage = stage;
@@ -87,7 +89,7 @@ namespace MuMech {
                 this.use_fixed_time = use_fixed_time;
                 this.fixed_time = fixed_time;
                 this.coast = coast;
-                UpdateStageInfo();
+                UpdateStageInfo(t0);
             }
         }
 
@@ -162,7 +164,7 @@ namespace MuMech {
                 }
                 else
                 {
-                    return String.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n), arc.avail_dV - dV(t, n));
+                    return String.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n), arc.avail_dV - dV(arc._synch_time, n));
                 }
             }
 
@@ -339,10 +341,10 @@ namespace MuMech {
             }
 
             // Synch stats from LogicalStageTracking controller
-            public void UpdateStageInfo()
+            public void UpdateStageInfo(double t0)
             {
                 for(int i = 0; i < arcs.Count; i++)
-                    arcs[i].UpdateStageInfo();
+                    arcs[i].UpdateStageInfo(t0);
             }
 
             public class Segment
@@ -433,7 +435,6 @@ namespace MuMech {
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             r0 = rot * r0;
             v0 = rot * v0;
-            //Debug.Log("LAN1 = " + LAN(r0, v0) + " r = " + r0 + " v = " + v0);
             pv0 = rot * pv0;
             pr0 = rot * pr0;
             this.r0 = r0;
@@ -447,9 +448,10 @@ namespace MuMech {
             r_scale = r0m;
             v_scale = Math.Sqrt( r0m * g_bar );
             t_scale = Math.Sqrt( r0m / g_bar );
+
             r0_bar = this.r0 / r_scale;
             v0_bar = this.v0 / v_scale;
-            //Debug.Log("LAN1 = " + LAN(r0_bar, v0_bar) + " r = " + r0_bar + " v = " + v0_bar);
+
             dV_bar = dV / v_scale;
             fixed_final_time = false;
         }
@@ -460,8 +462,6 @@ namespace MuMech {
             // the current position while a guidance solution thread is currently running.
             if (thread != null && thread.IsAlive)
                 return;
-
-            //Debug.Log("r0m = " + r0.magnitude + " v0m = " + v0.magnitude);
 
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             r0 = rot * r0;
@@ -516,7 +516,6 @@ namespace MuMech {
             dy[13] = At;
         }
 
-
         double ckEps = 1e-6;  /* matches Matlab's default 1e-6 ode45 reltol? */
 
         /* used to update y0 to yf without intermediate values */
@@ -525,7 +524,7 @@ namespace MuMech {
             singleIntegrate(y0: y0, yf: yf, sol: null, n: n, t: ref t, dt: dt, arcs: arcs, count: 2, dV: ref dV);
         }
 
-        /* used to pull intermediate values off to do chebyshev polynomial interpolation */
+        /* used to pull intermediate values off to do cubic spline interpolation */
         public void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
         {
             singleIntegrate(y0: y0, yf: null, sol: sol, n: n, t: ref t, dt: dt, arcs: arcs, count: count, dV: ref dV);
@@ -535,36 +534,38 @@ namespace MuMech {
         {
             Arc e = arcs[n];
 
+            // gotta have at least a start and an end
             if ( count < 2)
                 count = 2;
-
-            /*
-            // negative burns or coasts don't work with alglib, need to replace the rkf45 implementation
-            if ( dt < 0 )
-                dt = 0;
-
-            // zero time segments also don't work with alglib either
-            if ( dt < 1e-16 && yf != null)
-            {
-                Array.Copy(y0, arcIndex(arcs,n), yf, 13*n, 13);
-                return;
-            }
-
-            if ( dt < 1e-16 )
-                throw new Exception("dt is zero");
-                */
 
             double[] y = new double[14];
             Array.Copy(y0, arcIndex(arcs,n), y, 0, 13);
             y[13] = dV;
 
+            // fix the starting point to being r0_bar, v0_bar
+            if ( n == 0 )
+            {
+                y[0] = r0_bar[0];
+                y[1] = r0_bar[1];
+                y[2] = r0_bar[2];
+                y[3] = v0_bar[0];
+                y[4] = v0_bar[1];
+                y[5] = v0_bar[2];
+            }
 
-            /* time to burn the entire stage */
-            double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
+            /*
+            if ( e.thrust > 0 )
+            {
+                // time to burn the entire stage
+                double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
 
-            /* clip dt at 99.9% of tau */
-            if ( dt > 0.999 * tau && !e.infinite )
-                dt = 0.999 * tau;
+                if ( dt > tau )
+                    Debug.Log("TAU EXCEEEDED!");
+                // clip dt at 99.9% of tau
+//                if ( dt > 0.999 * tau && !e.infinite )
+//                    dt = 0.999 * tau;
+            }
+            */
 
             // XXX: remove this hack
             bool allvals;
@@ -572,7 +573,6 @@ namespace MuMech {
                 allvals = true;
             else
                 allvals = false;
-            //count = 2;
 
             double[] x = new double[count];
 
@@ -592,7 +592,7 @@ namespace MuMech {
             x[count-1] = t + dt;
             */
 
-            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-6, allvals: allvals);
+            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-15, allvals: allvals);
             ode.RKF45(centralForceThrust, e);
 
             t = t + dt;
@@ -601,10 +601,6 @@ namespace MuMech {
 
             if (sol != null)
             {
-                //Debug.Log("--------------");
-                //for(int i = 0; i < count; i++)
-                //    Debug.Log(x[i]);
-                //Debug.Log("ylist.Count = " + ode.ylist.Count);
                 sol.AddSegment(ode.xlist, ode.ylist, e);
             }
 
@@ -628,7 +624,6 @@ namespace MuMech {
         public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
         {
             multipleIntegrate(y0, null, sol, arcs, count: count);
-            //Debug.Log("DONE: rf = " + sol.rf().xzy.magnitude + "; vf = " + sol.vf().xzy.magnitude + " tmin = " + sol.tmin() + " tmax = " + sol.tmax() + " v_barf = " + sol.v_bar(sol.tmax()).xzy.magnitude + "; r_barf = " + sol.r_bar(sol.tmax()).xzy.magnitude + " vf2 = " + sol.v_bar(sol.tmax()).xzy.magnitude * v_scale + "; rf2 = " + sol.r_bar(sol.tmax()).xzy.magnitude * r_scale );
         }
 
         // copy the nth
@@ -665,9 +660,6 @@ namespace MuMech {
                         coast_time = arcs[i].fixed_tbar - t;
                     else
                         coast_time = y0[arcIndex(arcs, i, parameters: true)];
-
-                    //if (sol != null)
-                    //    Debug.Log("coast_time = " + coast_time + " t = " + t);
 
                     if (yf != null) {
                         // normal integration with no midpoints
@@ -731,7 +723,7 @@ namespace MuMech {
          */
         public int arcIndex(List<Arc> arcs, int n, bool parameters = false)
         {
-            int index = 2;
+            int index = 1;
             for(int i=0; i<n; i++)
             {
                 if (arcs[i].coast)
@@ -739,7 +731,7 @@ namespace MuMech {
                     if (arcs[i].use_fixed_time)
                         index += 13;
                     else
-                        index += 15;
+                        index += 14;
                 }
                 else
                 {
@@ -754,7 +746,7 @@ namespace MuMech {
                 {
                     if (!arcs[n].use_fixed_time)
                     {
-                        index += 2;
+                        index += 1;
                     }
                 }
             }
@@ -876,14 +868,9 @@ namespace MuMech {
             {
                 z[n] = 0.0;
                 for(int i = 0; i < 6; i++)
-                    z[n] = z[n] + yf[i+6+13*(arcs.Count-1)] * yf[i+6+13*(arcs.Count-1)];
+                    z[n] += yf[i+6+13*(arcs.Count-1)] * yf[i+6+13*(arcs.Count-1)];
                 z[n] = Math.Sqrt(z[n]) - 1.0;
             }
-            n++;
-
-            // positive arc time constraint
-            z[n] = y0[1];
-            // z[n] = ( y0[0] < 0 ) ? y0[0] - y0[1] * y0[1] : y0[1];
             n++;
 
             double total_bt_bar = 0;
@@ -891,128 +878,49 @@ namespace MuMech {
             {
                 if ( arcs[i].coast && !arcs[i].use_fixed_time )
                 {
-                    int index = arcIndex(arcs, i, parameters: true);
-                    if (total_bt_bar > y0[0] || (i == arcs.Count -1))
-                    {
-                        if (arcs[i].coast_after_jettison)
-                        {
-                            z[n] = y0[index];
-                            n++;
-                            z[n] = y0[index+1];
-                            n++;
-                        }
-                        else
-                        {
-                            z[n] = y0[index];
-                            n++;
-                            z[n] = y0[index+1];
-                            n++;
-                        }
-                    }
-                    else
-                    {
-                        Vector3d r = new Vector3d(y0[index+2], y0[index+3], y0[index+4]);
-                        Vector3d v = new Vector3d(y0[index+5], y0[index+6], y0[index+7]);
-                        Vector3d pv = new Vector3d(y0[index+8], y0[index+9], y0[index+10]);
-                        Vector3d pr = new Vector3d(y0[index+11], y0[index+12], y0[index+13]);
-                        double rm = r.magnitude;
+                    int index = arcIndex(arcs, i);
 
-                        Vector3d r2 = new Vector3d(yf[i*13+0], yf[i*13+1], yf[i*13+2]);
-                        Vector3d v2 = new Vector3d(yf[i*13+3], yf[i*13+4], yf[i*13+5]);
-                        Vector3d pv2 = new Vector3d(yf[i*13+6], yf[i*13+7], yf[i*13+8]);
-                        Vector3d pr2 = new Vector3d(yf[i*13+9], yf[i*13+10], yf[i*13+11]);
-                        double r2m = r2.magnitude;
+                    Vector3d r = new Vector3d(y0[index+0], y0[index+1], y0[index+2]);
+                    Vector3d v = new Vector3d(y0[index+3], y0[index+4], y0[index+5]);
+                    Vector3d pv = new Vector3d(y0[index+6], y0[index+7], y0[index+8]);
+                    Vector3d pr = new Vector3d(y0[index+9], y0[index+10], y0[index+11]);
+                    double rm = r.magnitude;
 
-                        double H0t1 = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
-                        double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
-                        if (arcs[i].coast_after_jettison)
-                        {
-                            //z[n] = y0[index];
-                            z[n] = ( 1.0 - 1.0 / (y0[index]/1.0e-2 + 1.0) ) * H0t2 * ( 1.0 + 1.0 / ( ( y0[index] - MAX_COAST_TAU ) / 1e-2 - 1.0 ) );
+                    Vector3d r2 = new Vector3d(yf[i*13+0], yf[i*13+1], yf[i*13+2]);
+                    Vector3d v2 = new Vector3d(yf[i*13+3], yf[i*13+4], yf[i*13+5]);
+                    Vector3d pv2 = new Vector3d(yf[i*13+6], yf[i*13+7], yf[i*13+8]);
+                    Vector3d pr2 = new Vector3d(yf[i*13+9], yf[i*13+10], yf[i*13+11]);
+                    double r2m = r2.magnitude;
 
-                            //if (y0[index] <= 0 || y0[index] >= 2)
-                            //    z[n] = 0;
-                            //else
-                            //    z[n] = H0t2;
+                    double H0t1 = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
+                    double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
 
-                            // z[n] = H0t2;
-
-
-                            //z[n] = y0[index];
-                            // z[n] = pv2.magnitude - pv.magnitude;
-                        }
-                        else
-                        {
-                            /* H0 at the end of the coast = 0 */
-                            z[n] = H0t2;
-                        }
-
-                        /*
-                        if (i == 0 || i == arcs.Count - 1)
-                        {
-                            // first or last coast
-                            z[n] = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
-                        }
-                        else
-                        {
-                            // interior coasts
-                            z[n] = pv2.magnitude - pv.magnitude;
-                        }
-                        */
-
-                        n++;
-
-                        if (arcs[i].coast_after_jettison)
-                        {
-                            //z[n] = ( y0[index] < 0 ) ? y0[index] - y0[index+1] * y0[index+1] : y0[index+1] * y0[index+1];
-                            //z[n] = y0[index] - Math.Abs(y0[index+1]); // * y0[index+1];
-                            z[n] = y0[index+1];
-                            //n++;
-                            //z[n] = ( y0[index] > 2 ) ? y0[index] - 2 + y0[index+2] * y0[index+2] : y0[index+2] * y0[index+2];
-                            //z[n] = y0[index] - 2 + Math.Abs(y0[index+2]); // * y0[index+2];
-                            //z[n] = y0[index+2];
-                        }
-                        else
-                        {
-                            //if ( y0[index] < 0 )
-                            //    z[n-1] = 0;
-                            z[n] = y0[index+1];
-                            // z[n] = y0[index] - y0[index+1] * y0[index+1];
-                        }
-                        n++;
-                    }
+                    z[n] = H0t2;
+                    n++;
                 }
                 // sum up burntime of burn arcs
                 if ( !arcs[i].coast )
                     total_bt_bar += arcs[i].max_bt_bar;
             }
 
-            /* construct sum of the squares of the residuals for levenberg marquardt */
-            /*
-            for(int i = 0; i < z.Length; i++)
-                //z[i] = z[i] * z[i];
-                z[i] = Math.Abs(z[i]);
-                */
+            double znorm = 0.0;
+            for(int i = 0; i < n; i++)
+                znorm += z[i] * z[i];
+            znorm = Math.Sqrt(znorm);
+            if (znorm < 1e-9)
+            {
+                alglib.minlmrequesttermination(state);
+            }
         }
 
-        // NOTE TO SELF:  STOP FUCKING WITH THESE NUMBERS
-        double lmEpsx = 0; // 1e-8;  // going to 1e-10 seems to cause the optimizer to flail with 1e-15 or less differences produced in the zero value
-                               // 1e-8 produces plenty accurate numbers, unless the transversality conditions are broken in some way
-        int lmIter = 0; // 20000;    // 20,000 does seem roughly appropriate -- 12,000 has been necessary to find some solutions
-        double lmDiffStep = 1e-6; // 1e-8; // this matching lmEspx probably makes sense
+        double lmEpsx =  1e-10;   // now that we request termination when the znorm gets < 1e-9 this value could be pushed up if necessary
+        int lmIter = 20000;       // should revisit this, 20,000 seems like an awful lot now that the math is more stable, but clearly this is very high
+        double lmDiffStep = 1e-9; // diffstep may be able to be pushed up to 1e-15?
+
+        alglib.minlmstate state;
 
         public bool runOptimizer(List<Arc> arcs)
         {
-            //Debug.Log("arcs in runOptimizer:");
-            //for(int i = 0; i < arcs.Count; i++)
-            //   Debug.Log(arcs[i]);
-
-            //for(int i = 0; i < stages.Count; i++)
-            //    Debug.Log(stages[i]);
-
-            //for(int i = 0; i < y0.Length; i++)
-            //    Debug.Log("runOptimizer before - y0[" + i + "] = " + y0[i]);
-
             double[] z = new double[arcIndex(arcs,arcs.Count)];
             optimizationFunction(y0, z, arcs);
 
@@ -1021,14 +929,9 @@ namespace MuMech {
             for(int i = 0; i < z.Length; i++)
             {
                 znorm += z[i] * z[i];
-                //Debug.Log("zbefore[" + i + "] = " + z[i]);
             }
 
             znorm = Math.Sqrt(znorm);
-            //Debug.Log("znorm = " + znorm);
-
-            //Debug.Log("length = " + arcIndex(arcs,arcs.Count));
-            //Debug.Log("y0 length = " + y0.Length);
 
             double[] bndl = new double[arcIndex(arcs,arcs.Count)];
             double[] bndu = new double[arcIndex(arcs,arcs.Count)];
@@ -1038,19 +941,16 @@ namespace MuMech {
                 bndu[i] = Double.PositiveInfinity;
             }
 
-            bndl[0] = 0;
-
             for(int i = 0; i < arcs.Count; i++)
             {
                 if (arcs[i].coast_after_jettison)
                 {
-                    int j = arcIndex(arcs, i, parameters: true);
-                    bndl[j] = 0.0;
-                    bndu[j] = MAX_COAST_TAU;
+                    int index = arcIndex(arcs, i, parameters: true);
+                    bndl[index] = 0;
                 }
             }
+            bndl[0] = 0;
 
-            alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
             alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);  /* y0.Length must == z.Length returned by the BC function for square problems */
             alglib.minlmsetbc(state, bndl, bndu);
@@ -1075,15 +975,9 @@ namespace MuMech {
                 if (z[i] > max_z)
                     max_z = z[i];
                 znorm += z[i] * z[i];
-                //Debug.Log("z[" + i + "] = " + z[i]);
             }
 
             last_znorm = Math.Sqrt(znorm);
-
-            //Debug.Log("znorm = " + znorm);
-
-            //for(int i = 0; i < y0.Length; i++)
-            //    Debug.Log("y0[" + i + "] = " + y0[i]);
 
             // this comes first because after max-iterations we may still have an acceptable solution.
             // we check the largest z-value rather than znorm because for a lot of dimensions several slightly
@@ -1093,8 +987,6 @@ namespace MuMech {
                 y0 = y0_new;
                 return true;
             }
-
-            //Debug.Log("runoptimizer failed!");
 
             // lol
             if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
@@ -1134,14 +1026,12 @@ namespace MuMech {
 
             if (solution != null)
             {
-                //Debug.Log("tburn_bar = " + solution.tburn_bar(0));
                 y0[0] = solution.tburn_bar(0); // FIXME: need to pass actual t0 here
             }
             else
             {
                 y0[0] = tgo_bar;
             }
-            y0[1] = 0;
         }
 
         /* insert coast before the ith stage */
@@ -1152,7 +1042,7 @@ namespace MuMech {
             if ( arcs[i].coast )
                 throw new Exception("adding a coast before a coast");
 
-            arcs.Insert(i, new Arc(this, coast_after_jettison: true, coast: true));
+            arcs.Insert(i, new Arc(this, t0: sol.t0, coast_after_jettison: true, coast: true));
             double[] y0_new = new double[arcIndex(arcs, arcs.Count)];
 
             double tmin = sol.segments[i].tmin;
@@ -1162,8 +1052,7 @@ namespace MuMech {
             Array.Copy(y0, 0, y0_new, 0, bottom);
             // initialize the coast
             //y0_new[bottom] = Math.Asin(MuUtils.Clamp(0.5 / MAX_COAST_TAU - 1, -1, 1));
-            y0_new[bottom] = dt/2.0;
-            y0_new[bottom+1] = 0.0;
+            y0_new[bottom] = y0[0]; // dt/2.0;
             // keep the burntime of the upper stage constant
             y0_new[0] = y0[0]; // - dt/2.0;
 
@@ -1221,7 +1110,7 @@ namespace MuMech {
                 for(int i = 0; i < solution.arcs.Count; i++)
                 {
                     Arc arc = solution.arcs[i];
-                    arc.UpdateStageInfo(); // FIXME: this has the effect of synch'ing the stage information to the solution
+                    arc.UpdateStageInfo(t0); // FIXME: this has the effect of synch'ing the stage information to the solution
                     last_arcs.Add(solution.arcs[i]);  // shallow copy
                     if ( solution.tgo(t0, i) <= 0 ) // this is responsible for skipping done coasts and anything else in the past
                     {
@@ -1231,13 +1120,6 @@ namespace MuMech {
             }
 
             try {
-                //Debug.Log("starting optimize");
-                if (stages != null)
-                {
-                    //Debug.Log("stages: ");
-                    //for(int i = 0; i < stages.Count; i++)
-                    //    Debug.Log(stages[i]);
-                }
                 if (last_arcs != null)
                 {
                     // since we shift the zero of tbar forwards on every re-optimize we have to do this here
@@ -1248,9 +1130,6 @@ namespace MuMech {
                             last_arcs[i].fixed_tbar = ( last_arcs[i].fixed_time - t0 ) / t_scale;
                         }
                     }
-                    //Debug.Log("arcs: ");
-                    //for(int i = 0; i < last_arcs.Count; i++)
-                    //    Debug.Log(last_arcs[i]);
                 }
 
                 if (y0 == null)
@@ -1306,7 +1185,7 @@ namespace MuMech {
                     {
                         if ( last_arcs.Count < stages.Count )
                         {
-                            last_arcs.Add(new Arc(this, stages[last_arcs.Count]));
+                            last_arcs.Add(new Arc(this, stage: stages[last_arcs.Count], t0: t0));
                             double[] y0_new = new double[arcIndex(last_arcs, last_arcs.Count)];
                             Array.Copy(y0, 0, y0_new, 0, y0.Length);
                             y0 = y0_new;
@@ -1323,9 +1202,6 @@ namespace MuMech {
 
                     Solution sol = new Solution(t_scale, v_scale, r_scale, t0);
 
-                    //for(int i = 0; i < y0.Length; i++)
-                    //    Debug.Log("y0[" + i + "] = " + y0[i]);
-
                     multipleIntegrate(y0, sol, last_arcs, 10);
 
                     this.solution = sol;
@@ -1335,15 +1211,6 @@ namespace MuMech {
 
                     successful_converges += 1;
                     last_success_time = Planetarium.GetUniversalTime();
-
-                    //for(int i = 0; i < yf.Length; i++)
-                    //    Debug.Log("yf[" + i + "] = " + yf[i]);
-
-                    //Debug.Log("r_scale = " + r_scale + " v_scale = " + v_scale);
-
-
-                    //Debug.Log("Optimize done");
-
                 }
             }
             catch (alglib.alglibexception e)
@@ -1391,6 +1258,18 @@ namespace MuMech {
             }
         }
 
+        Queue<string> logQueue = new Queue<string>();
+        Mutex mut = new Mutex();
+
+        // lets us Debug.Log events from the computation thread in a thread-safe fashion
+        //
+        protected void DebugLog(string s)
+        {
+            mut.WaitOne();
+            logQueue.Enqueue(s);
+            mut.ReleaseMutex();
+        }
+
         // need to call this every tick or so in order to dump exceptions to the log from
         // the main thread since Debug.Log is not threadsafe in Unity.  (this must also
         // obviously be kept safe to call every tick and must not update any inputs from
@@ -1401,20 +1280,27 @@ namespace MuMech {
             if ( last_alglib_exception != null )
             {
                 alglib.alglibexception e = last_alglib_exception;
+                last_alglib_exception = null;
                 Debug.Log("An exception occurred: " + e.GetType().Name);
                 Debug.Log("Message: " + e.Message);
                 Debug.Log("MSG: " + e.msg);
                 Debug.Log("Stack Trace:\n" + e.StackTrace);
-                last_alglib_exception = null;
             }
             if ( last_exception != null )
             {
                 Exception e = last_exception;
+                last_exception = null;
                 Debug.Log("An exception occurred: " + e.GetType().Name);
                 Debug.Log("Message: " + e.Message);
                 Debug.Log("Stack Trace:\n" + e.StackTrace);
-                last_exception = null;
             }
+
+            mut.WaitOne();
+            while ( logQueue.Count > 0 )
+            {
+                Debug.Log(logQueue.Dequeue());
+            }
+            mut.ReleaseMutex();
         }
 
         public void KillThread()

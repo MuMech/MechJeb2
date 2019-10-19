@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 
-
 namespace MuMech
 {
     public static class OrbitalManeuverCalculator
@@ -416,10 +415,10 @@ namespace MuMech
             return burnDV;
         }
 
-        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double interceptUT, double offsetDistance = 0, bool shortway = true)
+        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double DT, double offsetDistance = 0, bool shortway = true)
         {
             Vector3d finalVelocity;
-            return  DeltaVToInterceptAtTime(o, UT, target, interceptUT, out finalVelocity, offsetDistance, shortway);
+            return  DeltaVToInterceptAtTime(o, UT, target, DT, out finalVelocity, offsetDistance, shortway);
         }
 
         // Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
@@ -428,24 +427,24 @@ namespace MuMech
         // offsetDistance: this is used by the Rendezvous Autopilot and is only going to be valid over very short distances
         // shortway: the shortway parameter to feed into the Lambert solver
         //
-        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double initialUT, Orbit target, double finalUT, out Vector3d secondDV, double offsetDistance = 0, bool shortway = true)
+        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double initialUT, Orbit target, double DT, out Vector3d secondDV, double offsetDistance = 0, bool shortway = true)
         {
             Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialUT);
-            Vector3d finalRelPos = target.SwappedRelativePositionAtUT(finalUT);
+            Vector3d finalRelPos = target.SwappedRelativePositionAtUT(initialUT + DT);
 
             Vector3d initialVelocity = o.SwappedOrbitalVelocityAtUT(initialUT);
-            Vector3d finalVelocity = target.SwappedOrbitalVelocityAtUT(finalUT);
+            Vector3d finalVelocity = target.SwappedOrbitalVelocityAtUT(initialUT + DT);
 
             Vector3d transferVi, transferVf;
 
-            LambertSolver.Solve(initialRelPos, finalRelPos, finalUT - initialUT, o.referenceBody, shortway, out transferVi, out transferVf);
-            // GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, finalUT - initialUT, o.referenceBody, 0, out transferVi, out transferVf);
+            LambertSolver.Solve(initialRelPos, finalRelPos, DT, o.referenceBody, shortway, out transferVi, out transferVf);
+            //GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, shortway ? DT : -DT, o.referenceBody, 0, out transferVi, out transferVf);
 
             if (offsetDistance != 0)
             {
                 finalRelPos += offsetDistance * Vector3d.Cross(finalVelocity, finalRelPos).normalized;
-                LambertSolver.Solve(initialRelPos, finalRelPos, finalUT - initialUT, o.referenceBody, shortway, out transferVi, out transferVf);
-                //GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, finalUT - initialUT, o.referenceBody, 0, out transferVi, out transferVf);
+                LambertSolver.Solve(initialRelPos, finalRelPos, DT, o.referenceBody, shortway, out transferVi, out transferVf);
+                //GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, shortway ? DT : -DT, o.referenceBody, 0, out transferVi, out transferVf);
             }
 
             secondDV = finalVelocity - transferVf;
@@ -453,6 +452,30 @@ namespace MuMech
             return transferVi - initialVelocity;
         }
 
+        // Takes two (x, v) pairs corresponding to a source and target orbit at a reference time (zero)
+        // - Advances the first pair to time DT to get the (x,v) pair of the initial burn
+        // - Advances the second pair to time DT+TT to get the (x,v) pair of the rendezvous burn
+        // - Uses a Lambert Solver to find the delta-v for the first and second burns
+        //
+        public static Vector3d DeltaVToInterceptAtTime(double GM, Vector3d pos, Vector3d vel, Vector3d tpos, Vector3d tvel, double DT, double TT, out Vector3d secondDV, bool posigrade = true)
+        {
+            Vector3d transferVi, transferVf;
+
+            Vector3d pos1, vel1;
+            Vector3d pos2, vel2;
+
+            // advance the source orbit to x[0]
+            Shepperd.Solve(GM, DT, pos, vel, out pos1, out vel1);
+
+            // advance the target orbit to x[0] + x[1]
+            Shepperd.Solve(GM, DT + TT, tpos, tvel, out pos2, out vel2);
+
+            GoodingSolver.Solve(GM, pos1, vel1, pos2, vel2, posigrade ? TT : -TT, 0, out transferVi, out transferVf);
+
+            secondDV = vel2 - transferVf;
+
+            return transferVi - vel1;
+        }
 
         //First finds the time of closest approach to the target during the next orbit after the
         //time UT. Then returns the delta-V of a burn at UT that will change the separation at
@@ -462,7 +485,7 @@ namespace MuMech
         public static Vector3d DeltaVForCourseCorrection(Orbit o, double UT, Orbit target)
         {
             double closestApproachTime = o.NextClosestApproachTime(target, UT + 1); //+1 so that closestApproachTime is definitely > UT
-            Vector3d dV = DeltaVToInterceptAtTime(o, UT, target, closestApproachTime);
+            Vector3d dV = DeltaVToInterceptAtTime(o, UT, target, closestApproachTime - UT);
             return dV;
         }
 
@@ -471,13 +494,13 @@ namespace MuMech
             double closestApproachTime = o.NextClosestApproachTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
 
             burnUT = UT;
-            Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime);
+            Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime - burnUT);
 
             const int fineness = 20;
             for (double step = 0.5; step < fineness; step += 1.0)
             {
                 double testUT = UT + (closestApproachTime - UT) * step / fineness;
-                Vector3d testDV = DeltaVToInterceptAtTime(o, testUT, target, closestApproachTime);
+                Vector3d testDV = DeltaVToInterceptAtTime(o, testUT, target, closestApproachTime - testUT);
 
                 if (testDV.magnitude < dV.magnitude)
                 {
@@ -619,11 +642,11 @@ namespace MuMech
 
         public struct LambertProblem
         {
-            public Orbit o;
-            public Orbit target;
+            public Vector3d pos, vel;    // position + velocity of source orbit at reference time
+            public Vector3d tpos, tvel;  // position + velocity of target orbit at reference time
+            public double GM;
             public bool shortway;
             public bool intercept_only;  // omit the second burn from the cost
-            public double zeroUT;
         }
 
         // x[0] is the burn time before/after zeroUT
@@ -637,15 +660,13 @@ namespace MuMech
         public static void LambertCost(double []x, double []f, object obj)
         {
             LambertProblem prob = (LambertProblem) obj;
-            double UT1 = x[0] + prob.zeroUT;
-            double UT2 = UT1 + x[1];
-            Vector3d finalVelocity;
+            Vector3d secondBurn;
 
             try {
-                f[0] = DeltaVToInterceptAtTime(prob.o, UT1, prob.target, UT2, out finalVelocity, 0, prob.shortway).magnitude;
+                f[0] = DeltaVToInterceptAtTime(prob.GM, prob.pos, prob.vel, prob.tpos, prob.tvel, x[0], x[1], out secondBurn, prob.shortway).magnitude;
                 if (!prob.intercept_only)
                 {
-                    f[0] += finalVelocity.magnitude;
+                    f[0] += secondBurn.magnitude;
                 }
             }
             catch (Exception e)
@@ -657,49 +678,69 @@ namespace MuMech
                 f[0] = Math.Sqrt(Double.MaxValue);
         }
 
-        // Levenburg-Marquardt local optimization of a two burn transfer.  This is used to refine the results of the simulated annealing global
-        // optimization search.
-        //
-        // NOTE TO SELF: all UT times here are non-zero centered.
-        public static Vector3d DeltaVAndTimeForBiImpulsiveTransfer(Orbit o, Orbit target, double UT, double TT, out double burnUT, double minUT = Double.NegativeInfinity, double maxUT = Double.PositiveInfinity, double maxTT = Double.PositiveInfinity, double maxUTplusT = Double.PositiveInfinity, bool intercept_only = false, double eps = 1e-9, int maxIter = 10000, bool shortway = false)
+        // Levenburg-Marquardt local optimization of a two burn transfer.
+        public static Vector3d DeltaVAndTimeForBiImpulsiveTransfer(double GM, Vector3d pos, Vector3d vel, Vector3d tpos, Vector3d tvel, double DT, double TT, out double burnDT, out double burnTT, out double burnCost, double minDT = Double.NegativeInfinity, double maxDT = Double.PositiveInfinity, double maxTT = Double.PositiveInfinity, double maxDTplusT = Double.PositiveInfinity, bool intercept_only = false, double eps = 1e-9, int maxIter = 100, bool shortway = false)
         {
-            double[] x = { 0, TT };
-            double[] scale = { o.period / 2, TT };
+            double[] x = { DT, TT };
+            double[] scale = new double[2];
+
+            if (maxDT != Double.PositiveInfinity && maxTT != Double.PositiveInfinity )
+            {
+                scale[0] = maxDT;
+                scale[1] = maxTT;
+            }
+            else
+            {
+                scale[0] = DT;
+                scale[1] = TT;
+            }
 
             // absolute final time constraint: x[0] + x[1] <= maxUTplusT
-            double[,] C = { { 1, 1, maxUTplusT } };
+            double[,] C = { { 1, 1, maxDTplusT } };
             int[] CT = { -1 };
 
-            double[] bndl = { minUT - UT, 0 };
-            double[] bndu = { maxUT - UT, maxTT };
+            double[] bndl = { minDT, 0 };
+            double[] bndu = { maxDT, maxTT };
 
             alglib.minlmstate state;
             alglib.minlmreport rep = new alglib.minlmreport();
             alglib.minlmcreatev(1, x, 0.000001, out state);
             alglib.minlmsetscale(state, scale);
             alglib.minlmsetbc(state, bndl, bndu);
-            if ( maxUTplusT != Double.PositiveInfinity )
+            if ( maxDTplusT != Double.PositiveInfinity )
                 alglib.minlmsetlc(state, C, CT);
             alglib.minlmsetcond(state, eps, maxIter);
 
             LambertProblem prob = new LambertProblem();
-            prob.o = o;
-            prob.target = target;
+
+            prob.pos = pos;
+            prob.vel = vel;
+            prob.tpos = tpos;
+            prob.tvel = tvel;
+            prob.GM = GM;
             prob.shortway = shortway;
-            prob.zeroUT = UT;
             prob.intercept_only = intercept_only;
 
-            // solve it the long way
             alglib.minlmoptimize(state, LambertCost, null, prob);
             alglib.minlmresultsbuf(state, ref x, rep);
-            if ( rep.terminationtype != 2 )
+            Debug.Log("iter = " + rep.iterationscount);
+            if ( rep.terminationtype < 0 )
+            {
+                // FIXME: we should not accept this result
                 Debug.Log("MechJeb Lambert Transfer minlmoptimize termination code: " + rep.terminationtype);
+            }
 
-            Debug.Log("DeltaVAndTimeForBiImpulsiveTransfer: x[0] = " + x[0] + " x[1] = " + x[1]);
+            //Debug.Log("DeltaVAndTimeForBiImpulsiveTransfer: x[0] = " + x[0] + " x[1] = " + x[1]);
 
-            burnUT = UT + x[0];
+            double[] fout = new double[1];
+            LambertCost(x, fout, prob);
+            burnCost = fout[0];
 
-            return DeltaVToInterceptAtTime(o, burnUT, target, burnUT + x[1], 0, shortway);
+            burnDT = x[0];
+            burnTT = x[1];
+
+            Vector3d secondBurn; // ignored
+            return DeltaVToInterceptAtTime(prob.GM, prob.pos, prob.vel, prob.tpos, prob.tvel, x[0], x[1], out secondBurn, prob.shortway);
         }
 
         public static double acceptanceProbabilityForBiImpulsive(double currentCost, double newCost, double temp)
@@ -714,68 +755,78 @@ namespace MuMech
         // FIXME: there's some very confusing nomenclature between DeltaVAndTimeForBiImpulsiveTransfer and this
         //        the minUT/maxUT values here are zero-centered on this methods UT.  the minUT/maxUT parameters to
         //        the other method are proper UT times and not zero centered at all.
-        public static Vector3d DeltaVAndTimeForBiImpulsiveAnnealed(Orbit o, Orbit target, double UT, out double burnUT, double minUT = 0.0, double maxUT = Double.PositiveInfinity, bool intercept_only = false, bool fixed_ut = false)
+        public static Vector3d DeltaVAndTimeForBiImpulsiveAnnealed(Orbit o, Orbit target, double UT, out double bestUT, double minDT = 0.0, double maxDT = Double.PositiveInfinity, bool intercept_only = false, bool fixed_ut = false)
         {
+            Debug.Log("origin = " + o.MuString());
+            Debug.Log("target = " + target.MuString());
+
+            Vector3d pos = o.SwappedRelativePositionAtUT(UT);
+            Vector3d vel = o.SwappedOrbitalVelocityAtUT(UT);
+            Vector3d tpos = target.SwappedRelativePositionAtUT(UT);
+            Vector3d tvel = target.SwappedOrbitalVelocityAtUT(UT);
+            double GM = o.referenceBody.gravParameter;
+
             double MAXTEMP = 10000;
             double temp = MAXTEMP;
-            double coolingRate = 0.003;
-            double[] f = new double[1];
-            double[] x = new double[2];
-            double bestUT = 0;
+            double coolingRate = 0.01;
+
             double bestTT = 0;
+            double bestDT = 0;
             double bestCost = Double.MaxValue;
-            double currentCost = Double.MaxValue;
+            Vector3d bestBurnVec = Vector3d.zero;
             bool bestshortway = false;
+
             System.Random random = new System.Random();
 
-            LambertProblem prob = new LambertProblem();
-            prob.o = o;
-            prob.target = target;
-            prob.zeroUT = UT;
-            prob.intercept_only = intercept_only;
-
-            double maxUTplusT = Double.PositiveInfinity;
+            double maxDTplusT = Double.PositiveInfinity;
 
             // min transfer time must be > 0 (no teleportation)
             double minTT = 1e-15;
 
-            if (maxUT == Double.PositiveInfinity)
-                maxUT = 1.5 * o.SynodicPeriod(target);
+            // update the patched conic prediction for hyperbolic orbits (important *not* to do this for mutated planetary orbits, since we will
+            // get encouters, but we need the patchEndTransition for hyperbolic orbits).
+            if (target.eccentricity >= 1.0)
+                target.CalculateNextOrbit();
+
+            if (maxDT == Double.PositiveInfinity)
+                maxDT = 1.5 * o.SynodicPeriod(target);
 
             // figure the max transfer time of a Hohmann orbit using the SMAs of the two orbits instead of the radius (as a guess), multiplied by 2
             double a = ( Math.Abs(o.semiMajorAxis) + Math.Abs(target.semiMajorAxis) ) / 2;
             double maxTT = Math.PI * Math.Sqrt( a * a * a / o.referenceBody.gravParameter );   // FIXME: allow tweaking
 
-            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check1: minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check1: minDT = " + minDT + " maxDT = " + maxDT + " maxTT = " + maxTT + " maxDTplusT = " + maxDTplusT);
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed target.patchEndTransition = " + target.patchEndTransition);
 
             if (target.patchEndTransition != Orbit.PatchTransitionType.FINAL && target.patchEndTransition != Orbit.PatchTransitionType.INITIAL)
             {
-                Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed target.patchEndTransition = " + target.patchEndTransition);
                 // reset the guess to search for start times out to the end of the target orbit
-                maxUT = target.EndUT - UT;
+                maxDT = target.EndUT - UT;
                 // longest possible transfer time would leave now and arrive at the target patch end
                 maxTT = Math.Min(maxTT, target.EndUT - UT);
-                // constraint on UT + TT <= maxUTplusT to arrive before the target orbit ends
-                maxUTplusT = Math.Min(maxUTplusT, target.EndUT - UT);
+                // constraint on DT + TT <= maxDTplusT to arrive before the target orbit ends
+                maxDTplusT = Math.Min(maxDTplusT, target.EndUT - UT);
             }
 
-            // if our orbit ends, search for start times all the way to the end, but don't violate maxUTplusT if its set
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed o.patchEndTransition = " + o.patchEndTransition);
+
+            // if our orbit ends, search for start times all the way to the end, but don't violate maxDTplusT if its set
             if (o.patchEndTransition != Orbit.PatchTransitionType.FINAL && o.patchEndTransition != Orbit.PatchTransitionType.INITIAL)
             {
-                Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed o.patchEndTransition = " + o.patchEndTransition);
-                maxUT = Math.Min(o.EndUT - UT, maxUTplusT);
+                maxDT = Math.Min(o.EndUT - UT, maxDTplusT);
             }
 
             // user requested a burn at a specific time
             if (fixed_ut)
             {
-                maxUT = 0;
-                minUT = 0;
+                maxDT = 0;
+                minDT = 0;
             }
 
-            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check2: minUT = " + minUT + " maxUT = " + maxUT + " maxTT = " + maxTT + " maxUTplusT = " + maxUTplusT);
+            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check2: minDT = " + minDT + " maxDT = " + maxDT + " maxTT = " + maxTT + " maxDTplusT = " + maxDTplusT);
 
-            double currentUT = maxUT / 2;
+            double currentCost = Double.MaxValue;
+            double currentDT = maxDT / 2;
             double currentTT = maxTT / 2;
 
             System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
@@ -783,37 +834,51 @@ namespace MuMech
             int n = 0;
 
             stopwatch.Start();
-            while( temp > 1 )
+            while( temp > 1000 )
             {
+                double burnDT, burnTT, burnCost;
+
                 // shrink the neighborhood based on temp
-                double windowUT = temp / MAXTEMP * maxUT / 4;
-                double windowTT = temp / MAXTEMP * maxTT / 4;
+                double windowDT = temp / MAXTEMP * ( maxDT - minDT );
+                double windowTT = temp / MAXTEMP * ( maxTT - minTT );
+                double windowminDT = currentDT - windowDT;
+                windowminDT = windowminDT < minDT ? minDT : windowminDT;
+                double windowmaxDT = currentDT + windowDT;
+                windowmaxDT = windowmaxDT > maxDT ? maxDT : windowmaxDT;
+                double windowminTT = currentTT - windowTT;
+                windowminTT = windowminTT < minTT ? minTT : windowminTT;
+                double windowmaxTT = currentTT + windowTT;
+                windowmaxTT = windowmaxTT > maxTT ? maxTT : windowmaxTT;
 
                 // compute the neighbor
-                x[0] = MuUtils.Clamp(random.NextGaussian(currentUT, windowUT), minUT, maxUT);
-                x[1] = MuUtils.Clamp(random.NextGaussian(currentTT, windowTT), minTT, maxTT);
-                x[1] = Math.Min(x[1], maxUTplusT - x[0]);
+                double nextDT = random.NextDouble() * (windowmaxDT - windowminDT) + windowminDT;
+                double nextTT = random.NextDouble() * (windowmaxTT - windowminTT) + windowminTT;
+                nextTT = Math.Min(nextTT, maxDTplusT - nextDT);
 
                 // just randomize the shortway
-                prob.shortway = random.NextDouble() > 0.5;
+                bool nextshortway = random.NextDouble() > 0.5;
 
-                LambertCost(x, f, prob);
+                //Debug.Log("nextDT = " + nextDT + " nextTT = " + nextTT);
+                Vector3d burnVec = DeltaVAndTimeForBiImpulsiveTransfer(GM, pos, vel, tpos, tvel, nextDT, nextTT, out burnDT, out burnTT, out burnCost, minDT: minDT, maxDT: maxDT, maxTT: maxTT, maxDTplusT: maxDTplusT, intercept_only: intercept_only, shortway: nextshortway);
 
-                if ( f[0] < bestCost )
+                //Debug.Log("burnDT = " + burnDT + " burnTT = " + burnTT + " cost = " + burnCost + " bestCost = " + bestCost);
+
+                if ( burnCost < bestCost )
                 {
-                    bestUT = x[0];
-                    bestTT = x[1];
-                    bestshortway = prob.shortway;
-                    bestCost = f[0];
-                    currentUT = bestUT;
+                    bestDT = burnDT;
+                    bestTT = burnTT;
+                    bestshortway = nextshortway;
+                    bestCost = burnCost;
+                    bestBurnVec = burnVec;
+                    currentDT = bestDT;
                     currentTT = bestTT;
                     currentCost = bestCost;
                 }
-                else if ( acceptanceProbabilityForBiImpulsive(currentCost, f[0], temp) > random.NextDouble() )
+                else if ( acceptanceProbabilityForBiImpulsive(currentCost, burnCost, temp) > random.NextDouble() )
                 {
-                    currentUT = x[0];
-                    currentTT = x[1];
-                    currentCost = f[0];
+                    currentDT = burnDT;
+                    currentTT = burnTT;
+                    currentCost = burnCost;
                 }
 
                 temp *= 1 - coolingRate;
@@ -824,15 +889,11 @@ namespace MuMech
 
             Debug.Log("MechJeb DeltaVAndTimeForBiImpulsiveAnnealed N = " + n + " time = " + stopwatch.Elapsed);
 
-            burnUT = UT + bestUT;
+            bestUT = UT + bestDT;
 
-            Debug.Log("Annealing results burnUT = " + burnUT + " zero'd burnUT = " + bestUT + " TT = " + bestTT + " Cost = " + bestCost);
+            Debug.Log("Annealing results burnUT = " + bestUT + " zero'd burnUT = " + bestDT + " TT = " + bestTT + " Cost = " + bestCost + " shortway= " + bestshortway);
 
-            //return DeltaVToInterceptAtTime(o, UT + bestUT, target, UT + bestUT + bestTT, shortway: bestshortway);
-
-            // FIXME: srsly this minUT = UT + minUT / maxUT = UT + maxUT / maxUTplusT = maxUTplusT - bestUT rosetta stone here needs to go
-            // and some consistency needs to happen.  this is just breeding bugs.
-            return DeltaVAndTimeForBiImpulsiveTransfer(o, target, UT + bestUT, bestTT, out burnUT, minUT: UT + minUT, maxUT: UT + maxUT, maxTT: maxTT, maxUTplusT: maxUTplusT - bestUT, intercept_only: intercept_only, shortway: bestshortway);
+            return bestBurnVec;
         }
 
         //Like DeltaVAndTimeForHohmannTransfer, but adds an additional step that uses the Lambert
@@ -862,7 +923,7 @@ namespace MuMech
                 Debug.Log("i + " + i + ", trying for intercept at UT = " + interceptUT);
 
                 //Try both short and long way
-                Vector3d interceptBurn = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT, 0, true);
+                Vector3d interceptBurn = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT - burnUT, 0, true);
                 double cost = (interceptBurn - subtractedProgradeDV).magnitude;
                 Debug.Log("short way dV = " + interceptBurn.magnitude + "; subtracted cost = " + cost);
                 if (cost < minCost)

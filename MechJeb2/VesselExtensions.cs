@@ -210,8 +210,20 @@ namespace MuMech
         //Otherwise, returns null
         public static Orbit GetNextPatch(this Vessel vessel, Orbit patch, ManeuverNode ignoreNode = null)
         {
+            if (patch == null)
+            {
+                return null;
+            }
+
             //Determine whether this patch ends in an SOI transition or if it's the final one:
             bool finalPatch = (patch.patchEndTransition == Orbit.PatchTransitionType.FINAL);
+
+
+            if (vessel.patchedConicSolver == null)
+            {
+                vessel.patchedConicSolver = vessel.gameObject.AddComponent<PatchedConicSolver>();
+                vessel.patchedConicSolver.Load(vessel.flightPlanNode);
+            }
 
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it

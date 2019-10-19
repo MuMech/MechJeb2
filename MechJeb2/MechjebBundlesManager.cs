@@ -19,6 +19,7 @@ namespace MuMech
 
         public static Shader diffuseAmbient;
         public static Shader diffuseAmbientIgnoreZ;
+        public static Texture2D comboBoxBackground;
 
         void Awake()
         {
@@ -55,6 +56,20 @@ namespace MuMech
 
             assetBundle.Unload(false);
             MechJebCore.print("Loaded Shaders Bundles");
+
+            comboBoxBackground = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+            comboBoxBackground.wrapMode = TextureWrapMode.Clamp;
+
+            for (int x = 0; x < comboBoxBackground.width; x++)
+            for (int y = 0; y < comboBoxBackground.height; y++)
+            {
+                if (x == 0 || x == comboBoxBackground.width-1 || y == 0 || y == comboBoxBackground.height-1)
+                    comboBoxBackground.SetPixel(x, y, new Color(0, 0, 0, 1));
+                else
+                    comboBoxBackground.SetPixel(x, y, new Color(0.05f, 0.05f, 0.05f, 0.95f));
+            }
+
+            comboBoxBackground.Apply();
         }
     }
 }

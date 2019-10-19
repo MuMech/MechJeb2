@@ -378,7 +378,7 @@ namespace MuMech
         //Returns a list of engines that fire during the current simulated stage.
         private Disposable<List<FuelNode>> FindActiveEngines()
         {
-            var param = new Tuple<int, List<FuelNode>>(simStage, nodes);
+            var param = new Smooth.Algebraics.Tuple<int, List<FuelNode>>(simStage, nodes);
             var activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
             //print("Finding engines in " + nodes.Count + " parts, there are " + nodes.Slinq().Where(n => n.isEngine).Count());
             //nodes.Slinq().Where(n => n.isEngine).ForEach(node => print("  (" + node.partName + " " + node.inverseStage + ">=" + simStage + " " + (node.inverseStage >= simStage) + ")"));
@@ -828,7 +828,18 @@ namespace MuMech
 
                     if (e != null && e.isEnabled)
                     {
+                        // thrust is correct.
                         Vector3d thrust;
+                        // note that isp and massFlowRate do not include ignoreForIsp fuels like HTP and so need to be fixed for effective isp and the
+                        // actual mdot of the rocket needs to be fixed to include HTP.
+                        //
+                        // IMHO: using ignoreForIsp is just wrong.  full stop.  engines should never set this and should set the correct effective isp in
+                        // the config for the engine.  makes everything simpler and fixes the UI to show the correct ISP.  going this direction we are going
+                        // to get bug reports that e.g. mechjeb is reporting 299s for an RD-108 when RF and KSP are displaying 308s everywhere.  which is not
+                        // going to be a bug at all.  as long as the thrust is correct, the effective isp is correct, and the fuel fractions are correct then
+                        // the rocket equation just works and HTP should not be "ignored".   keeping it out of the atmosphereCurve just makes this annoying
+                        // here and screws up the KSP API display of ISP.
+                        //
                         double isp, massFlowRate;
                         e.EngineValuesAtConditions(throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate, cosLoss: dVLinearThrust);
                         partThrust += thrust.magnitude;
@@ -846,36 +857,48 @@ namespace MuMech
                             // zero density draws (eC, air intakes, etc) are skipped, we have to assume you open your solar panels or
                             // air intakes or whatever it is you need for them to function.  they don't affect the mass of the vehicle
                             // so they do not affect the rocket equation.  they are assumed to be "renewable" or effectively infinite.
+                            // (we keep them out of the propellantFlows dict here so they're just ignored by the sim later).
+                            //
                             if (density > 0)
                             {
                                 // hopefully different EngineModules in the same part don't have different flow modes for the same propellant
                                 if (!propellantFlows.ContainsKey(p.id))
                                     propellantFlows.Add(p.id, p.GetFlowMode());
+                            }
+
+                            // have to ignore ignoreForIsp fuels here since we're dealing with the massflowrate of the other fuels
+                            if (!p.ignoreForIsp)
+                            {
                                 totalDensity += p.ratio * density;
                             }
                         }
 
+                        // this is also the volume flow rate of the non-ignoreForIsp fuels.  although this is a bit janky since the p.ratios in most
+                        // stock engines sum up to 2, not 1 (1.1 + 0.9), so this is not per-liter but per-summed-ratios (the massflowrate you get out
+                        // of the atmosphere curves (above) are also similarly adjusted by these ratios -- it is a bit of a horror show).
                         double volumeFlowRate = massFlowRate / totalDensity;
 
                         for(int j = 0; j < e.propellants.Count; j++)
                         {
                             var p = e.propellants[j];
-                            double fracFlowRate = p.ratio * volumeFlowRate;
-
                             double density = MuUtils.ResourceDensity(p.id);
 
-                            // same density check here as above
+                            // this is the individual propellant volume rate.  we are including the ignoreForIsp fuels in this loop and this will
+                            // correctly calculate the volume rates of all the propellants, in L/sec.  if you sum these it'll be larger than the
+                            // volumeFlowRate by including both the ignoreForIsp fuels and if the ratios sum up to more than one.
+                            double propVolumeRate = p.ratio * volumeFlowRate;
+
+                            // same density check here as above to keep massless propellants out of the ResourceConsumptions dict as well
                             if (density > 0)
                             {
                                 if (resourceConsumptions.ContainsKey(p.id))
-                                    resourceConsumptions[p.id] += fracFlowRate;
+                                    resourceConsumptions[p.id] += propVolumeRate;
                                 else
-                                    resourceConsumptions.Add(p.id, fracFlowRate);
+                                    resourceConsumptions.Add(p.id, propVolumeRate);
                             }
                         }
                     }
                 }
-                //Debug.Log("done with " + partName);
             }
         }
 
@@ -945,7 +968,7 @@ namespace MuMech
         public double MaxTimeStep()
         {
             //DebugDrainRates();
-            var param = new Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>, DefaultableDictionary<int, bool>>(resources, resourceRequestRemainingThreshold, resourceDrains, freeResources);
+            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>, DefaultableDictionary<int, bool>>(resources, resourceRequestRemainingThreshold, resourceDrains, freeResources);
             if (!resourceDrains.KeysList.Slinq().Any((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param)) return double.MaxValue;
             return resourceDrains.KeysList.Slinq().Where((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param).Select((id, p) => p.Item1[id] / p.Item3[id], param).Min();
         }
@@ -959,7 +982,7 @@ namespace MuMech
         //returns whether this part contains any of the given resources
         public bool ContainsResources(List<int> whichResources)
         {
-            var param = new Tuple<DefaultableDictionary<int, double>, double>(resources, resourceRequestRemainingThreshold);
+            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double>(resources, resourceRequestRemainingThreshold);
             //return whichResources.Any(id => resources[id] > DRAINED);
             return whichResources.Slinq().Any((id, r) => r.Item1[id] > r.Item2, param);
         }
