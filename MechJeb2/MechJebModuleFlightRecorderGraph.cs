@@ -58,7 +58,7 @@ namespace MuMech
 
         public bool ascentPath = false;
 
-        static Texture2D backgroundTexture = new Texture2D(1, 512);
+        static Texture2D backgroundTexture;
         private CelestialBody oldMainBody;
         private static readonly int typeCount = Enum.GetValues(typeof(recordType)).Length;
 
@@ -104,7 +104,7 @@ namespace MuMech
                 UpdateScale();
                 lastMaximumAltitude = graphStates[(int)recordType.AltitudeASL].maximum;
 
-                if (height != backgroundTexture.height)
+                if (backgroundTexture == null || height != backgroundTexture.height)
                 {
                     Object.Destroy(backgroundTexture);
                     backgroundTexture = new Texture2D(1, height);

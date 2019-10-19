@@ -1333,7 +1333,7 @@ namespace MuMech
         {
             get
             {
-                if (_separatorStyle == null)
+                if (_separatorStyle == null || _separatorStyle.normal.background == null)
                 {
                     Texture2D texture = new Texture2D(1, 1);
                     texture.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f));
