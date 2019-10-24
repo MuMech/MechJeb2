@@ -1,4 +1,4 @@
-# MechJeb2
+# MechJeb2汉化工程
 
 Anatid Robotics and Multiversal Mechatronics proudly presents the first flight assistant autopilot: MechJeb
 
