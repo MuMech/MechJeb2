@@ -1,8 +1,9 @@
-﻿namespace MuMech
+﻿using KSP.Localization;
+namespace MuMech
 {
     public class OperationApoapsis : Operation
     {
-        public override string getName() { return "change apoapsis";}
+        public override string getName() { return Localizer.Format("#MechJeb_Ap_title");}//change apoapsis
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
@@ -15,7 +16,7 @@
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox("New apoapsis:", newApA, "km");
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ap_label1"), newApA, "km");//New apoapsis:
             timeSelector.DoChooseTimeGUI();
         }
 
@@ -25,7 +26,7 @@
             if (o.referenceBody.Radius + newApA < o.Radius(UT))
             {
                 string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
-                throw new OperationException("new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")");
+                throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",burnAltitude));//new apoapsis cannot be lower than the altitude of the burn (<<1>>)
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + o.referenceBody.Radius), UT);

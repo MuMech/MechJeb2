@@ -1,8 +1,9 @@
-﻿namespace MuMech
+﻿using KSP.Localization;
+namespace MuMech
 {
     public class OperationKillRelVel : Operation
     {
-        public override string getName() { return "match velocities with target";}
+        public override string getName() { return Localizer.Format("#MechJeb_match_v_title");}//match velocities with target
 
         private TimeSelector timeSelector;
 
@@ -19,9 +20,9 @@
         public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)
-                throw new OperationException("must select a target to match velocities with.");
+                throw new OperationException(Localizer.Format("#MechJeb_match_v_Exception1"));//must select a target to match velocities with.
             else if (o.referenceBody != target.TargetOrbit.referenceBody)
-                throw new OperationException("target must be in the same sphere of influence.");
+                throw new OperationException(Localizer.Format("#MechJeb_match_v_Exception2"));//target must be in the same sphere of influence.
 
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 

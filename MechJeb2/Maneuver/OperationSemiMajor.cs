@@ -1,8 +1,9 @@
-﻿namespace MuMech
+﻿using KSP.Localization;
+namespace MuMech
 {
     public class OperationSemiMajor : Operation
     {
-        public override string getName() { return "change semi-major axis";}
+        public override string getName() { return Localizer.Format("#MechJeb_Sa_title");}//change semi-major axis
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newSMA = new EditableDoubleMult(800000, 1000);
@@ -15,7 +16,7 @@
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox ("New Semi-Major Axis:", newSMA, "km");
+            GuiUtils.SimpleTextBox (Localizer.Format("#MechJeb_Sa_label"), newSMA, "km");//New Semi-Major Axis:
             timeSelector.DoChooseTimeGUI();
         }
 
@@ -25,12 +26,12 @@
 
             if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence)
             {
-                errorMessage = "Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit";
+                errorMessage = Localizer.Format("#MechJeb_Sa_errormsg");//Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit
             }
 
             if(o.Radius(UT) > 2*newSMA)
             {
-                throw new OperationException("cannot make Semi-Major Axis less than twice the burn altitude plus the radius of " + o.referenceBody.displayName + "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
+                throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception") + o.referenceBody.displayName + "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//cannot make Semi-Major Axis less than twice the burn altitude plus the radius of 
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA), UT);
