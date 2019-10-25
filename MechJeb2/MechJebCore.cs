@@ -10,6 +10,7 @@ using UnityEngine.Profiling;
 using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
+using KSP.Localization;
 
 namespace MuMech
 {

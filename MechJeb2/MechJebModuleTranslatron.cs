@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
+using KSP.Localization;
 
 namespace MuMech
 {
     public class MechJebModuleTranslatron : DisplayModule
     {
-        protected static string[] trans_texts = { "OFF", "KEEP\nOBT", "KEEP\nSURF", "KEEP\nVERT" };
+        protected static string[] trans_texts = { Localizer.Format("#MechJeb_Translatron_off"), Localizer.Format("#MechJeb_Translatron_KEEP_OBT"), Localizer.Format("#MechJeb_Translatron_KEEP_SURF"), Localizer.Format("#MechJeb_Translatron_KEEP_VERT") };
+        //protected static string[] trans_texts = { "OFF", "KEEP\nOBT", "KEEP\nSURF", "KEEP\nVERT" };
 
         public enum AbortStage
         {
@@ -31,7 +33,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Translatron";
+            return Localizer.Format("#MechJeb_Translatron_title");
         }
 
         public override GUILayoutOption[] WindowOptions()
@@ -59,7 +61,7 @@ namespace MuMech
 
                 sty.normal.textColor = Color.red;
                 sty.onActive = sty.onFocused = sty.onHover = sty.onNormal = sty.active = sty.focused = sty.hover = sty.normal;
-                GUILayout.Button("AUTO", sty, GUILayout.ExpandWidth(true));
+                GUILayout.Button(Localizer.Format("#MechJeb_Trans_auto"), sty, GUILayout.ExpandWidth(true));
             }
             else
             {
@@ -74,9 +76,9 @@ namespace MuMech
 
                 float val = (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
 
-                core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, "Kill H/S", GUILayout.ExpandWidth(true));
+                core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, Localizer.Format("#MechJeb_Trans_kill_h"), GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
-                GuiUtils.SimpleTextBox("Speed", trans_spd, "", 37);
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Trans_spd"), trans_spd, "", 37);
                 bool change = false;
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
@@ -95,7 +97,7 @@ namespace MuMech
                 }
                 GUILayout.EndHorizontal();
 
-                if (GUILayout.Button("EXECUTE", sty, GUILayout.ExpandWidth(true)) || change)
+                if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act")+":", sty, GUILayout.ExpandWidth(true)) || change)
                 {
                     core.thrust.trans_spd_act = (float)trans_spd.val;
                     GUIUtility.keyboardControl = 0;
@@ -104,7 +106,7 @@ namespace MuMech
 
             if (core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)
             {
-                GUILayout.Label("Active speed: " + MuMech.MuUtils.ToSI(core.thrust.trans_spd_act) + "m/s", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + MuMech.MuUtils.ToSI(core.thrust.trans_spd_act) + "m/s", GUILayout.ExpandWidth(true));
             }
 
             GUILayout.FlexibleSpace();
@@ -115,7 +117,7 @@ namespace MuMech
 
             sty.normal.textColor = sty.focused.textColor = sty.hover.textColor = sty.active.textColor = sty.onNormal.textColor = sty.onFocused.textColor = sty.onHover.textColor = sty.onActive.textColor = (abort != AbortStage.OFF) ? Color.red : Color.green;
 
-            if (GUILayout.Button((abort != AbortStage.OFF) ? "DON'T PANIC!" : "PANIC!!!", sty, GUILayout.ExpandWidth(true)))
+            if (GUILayout.Button((abort != AbortStage.OFF) ? Localizer.Format("#MechJeb_Trans_NOPANIC") : Localizer.Format("#MechJeb_Trans_PANIC"), sty, GUILayout.ExpandWidth(true)))
             {
                 PanicSwitch();
             }

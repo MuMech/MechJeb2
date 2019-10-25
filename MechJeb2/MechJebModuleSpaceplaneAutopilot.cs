@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -80,19 +81,19 @@ namespace MuMech
                 case AutolandApproachState.START:
                     return "";
                 case AutolandApproachState.IAP:
-                    return "Proceeding to the initial approach point";
+                    return Localizer.Format("#MechJeb_ApproAndLand_approachState1");//Proceeding to the initial approach point
                 case AutolandApproachState.FAP:
-                    return "Proceeding to the final approach point";
+                    return Localizer.Format("#MechJeb_ApproAndLand_approachState2");//Proceeding to the final approach point
                 case AutolandApproachState.GLIDESLOPEINTERCEPT:
-                    return "Intercepting the glide slope";
+                    return Localizer.Format("#MechJeb_ApproAndLand_approachState3");//Intercepting the glide slope
                 case AutolandApproachState.TOUCHDOWN:
-                    return "Proceeding to touchdown point";
+                    return Localizer.Format("#MechJeb_ApproAndLand_approachState4");//Proceeding to touchdown point
                 case AutolandApproachState.WAITINGFORFLARE:
-                    return "Waiting for flare";
+                    return Localizer.Format("#MechJeb_ApproAndLand_approachState5");//Waiting for flare
                 case AutolandApproachState.FLARE:
-                    return "Flaring";
+                    return Localizer.Format("#MechJeb_ApproAndLand_approachState6");//Flaring
                 case AutolandApproachState.ROLLOUT:
-                    return "Rolling out";
+                    return Localizer.Format("#MechJeb_ApproAndLand_approachState7");//Rolling out
             }
 
             return "";

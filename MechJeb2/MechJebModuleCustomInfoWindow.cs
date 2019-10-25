@@ -5,13 +5,14 @@ using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using KSP.Localization;
 
 namespace MuMech
 {
     public class MechJebModuleCustomInfoWindow : DisplayModule
     {
         [Persistent(pass = (int)Pass.Global)]
-        public string title = "Custom Info Window";
+        public string title = Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_title");//Custom Info Window
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.Global)]
         public List<InfoItem> items = new List<InfoItem>();
 
@@ -75,7 +76,7 @@ namespace MuMech
                     GUILayout.Label(item.name);
                 }
             }
-            if (items.Count == 0) GUILayout.Label("Add items to this window with the custom window editor.");
+            if (items.Count == 0) GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Label1"));//Add items to this window with the custom window editor.
             GUILayout.EndVertical();
 
             if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
@@ -91,7 +92,7 @@ namespace MuMech
             if (!IsOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.yellowOnHover))
             {
                 MuUtils.SystemClipboard = ToSharingString();
-                ScreenMessages.PostScreenMessage("Configuration of \"" + GetName() + "\" window copied to clipboard.", 3.0f, ScreenMessageStyle.UPPER_RIGHT);
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg", GetName()), 3.0f, ScreenMessageStyle.UPPER_RIGHT);//
             }
 
             base.WindowGUI(windowID);
@@ -376,13 +377,13 @@ namespace MuMech
 
             if (editedWindow == null)
             {
-                if (GUILayout.Button("New window")) AddNewWindow();
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button1"))) AddNewWindow();//New window
             }
             else
             {
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("New window")) AddNewWindow();
-                if (GUILayout.Button("Delete window")) RemoveCurrentWindow();
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button1"))) AddNewWindow();//New window
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button2"))) RemoveCurrentWindow();//Delete window
                 GUILayout.EndHorizontal();
             }
 
@@ -391,7 +392,7 @@ namespace MuMech
                 List<ComputerModule> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Title:", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_Edtitle"), GUILayout.ExpandWidth(false));//Title:
                 int editedWindowIndex = allWindows.IndexOf(editedWindow);
                 editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
                     {
@@ -407,9 +408,9 @@ namespace MuMech
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Show in:");
-                editedWindow.ShowInFlight = GUILayout.Toggle(editedWindow.ShowInFlight, "Flight", GUILayout.Width(60));
-                editedWindow.ShowInEditor = GUILayout.Toggle(editedWindow.ShowInEditor, "Editor");
+                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label1"));//Show in:
+                editedWindow.ShowInFlight = GUILayout.Toggle(editedWindow.ShowInFlight, Localizer.Format("#MechJeb_WindowEd_checkbox1"), GUILayout.Width(60));//Flight
+                editedWindow.ShowInEditor = GUILayout.Toggle(editedWindow.ShowInEditor, Localizer.Format("#MechJeb_WindowEd_checkbox2"));//Editor
                 GUILayout.EndHorizontal();
 
 
@@ -516,7 +517,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Custom Window Editor";
+            return Localizer.Format("#MechJeb_WindowEd_title");//Custom Window Editor
         }
 
         public MechJebModuleCustomWindowEditor(MechJebCore core)
