@@ -21,7 +21,7 @@ namespace MuMech
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox(Localizer.Format(""), newInc, "º");//New inclination:
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_inclination_label"), newInc, "º");//New inclination:
             timeSelector.DoChooseTimeGUI();
         }
 
