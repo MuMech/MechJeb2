@@ -95,7 +95,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (GUILayout.Button("#MechJeb_Ascent_button2"))//Engage autopilot
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button2")))//Engage autopilot
                     {
                         autopilot.users.Add(this);
                     }
@@ -125,7 +125,7 @@ namespace MuMech
                         autopilot.showTargeting = !autopilot.showTargeting;
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button9"), autopilot.showGuidanceSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//GUID
                         autopilot.showGuidanceSettings = !autopilot.showGuidanceSettings;
-                    if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button10 "), autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//OPTS
+                    if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button10"), autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//OPTS
                         autopilot.showSettings = !autopilot.showSettings;
                     GUILayout.EndHorizontal();
                 }
@@ -199,8 +199,8 @@ namespace MuMech
                     {
                         GUILayout.BeginVertical();
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label13"), pvgascent.pitchStartVelocity, "m/s");//Booster Pitch start:
-                        GuiUtils.SimpleTextBox("#MechJeb_Ascent_label14", pvgascent.pitchRate, "°/s");//Booster Pitch rate:
-                        GuiUtils.SimpleTextBox("#MechJeb_Ascent_label15", core.guidance.pvgInterval, "s");//Guidance Interval:
+                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label14"), pvgascent.pitchRate, "°/s");//Booster Pitch rate:
+                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label15"), core.guidance.pvgInterval, "s");//Guidance Interval:
                         if ( core.guidance.pvgInterval < 1 || core.guidance.pvgInterval > 30 )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);

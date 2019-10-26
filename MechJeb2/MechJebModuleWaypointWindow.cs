@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
-
+using KSP.Localization;
 namespace MuMech
 {
 	public class MechJebWaypoint {
@@ -1044,7 +1044,7 @@ namespace MuMech
 
 		public override string GetName()
 		{
-			return "Waypoint Help";
+            return Localizer.Format("#MechJeb_Waypointhelper_title");//"Waypoint Help"
 		}
 
 		public override void OnStart(PartModule.StartState state)
@@ -1071,7 +1071,7 @@ namespace MuMech
 
 		 	switch (topics[selTopic])
 		 	{
-		 		case "Rover Controller":
+                case "Rover Controller":
 		 			HelpTopic("Holding a set Heading", "To hold a specific heading just tick the box next to 'Heading control' and the autopilot will try to keep going for the entered heading." +
 		 			          "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
 		 			          "'Heading Error' simply shows the error between current heading and target heading.");

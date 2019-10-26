@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -13,14 +14,14 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists)
             {
-                GUILayout.Label("Select a target to rendezvous with.");
+                GUILayout.Label(Localizer.Format("#MechJeb_RZplan_label1"));//"Select a target to rendezvous with."
                 base.WindowGUI(windowID);
                 return;
             }
 
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody)
             {
-                GUILayout.Label("Rendezvous target must be in the same sphere of influence.");
+                GUILayout.Label(Localizer.Format("#MechJeb_RZplan_label2"));//"Rendezvous target must be in the same sphere of influence."
                 base.WindowGUI(windowID);
                 return;
             }
@@ -29,21 +30,21 @@ namespace MuMech
 
             //Information readouts:
 
-            GuiUtils.SimpleLabel("Rendezvous target", core.target.Name);
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label3"), core.target.Name);//"Rendezvous target"
 
             const double leadTime = 30;
-            GuiUtils.SimpleLabel("Target orbit", MuUtils.ToSI(core.target.TargetOrbit.PeA, 3) + "m x " + MuUtils.ToSI(core.target.TargetOrbit.ApA, 3) + "m");
-            GuiUtils.SimpleLabel("Current orbit", MuUtils.ToSI(orbit.PeA, 3) + "m x " + MuUtils.ToSI(orbit.ApA, 3) + "m");
-            GuiUtils.SimpleLabel("Relative inclination", orbit.RelativeInclination(core.target.TargetOrbit).ToString("F2") + "º");
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label4"), MuUtils.ToSI(core.target.TargetOrbit.PeA, 3) + "m x " + MuUtils.ToSI(core.target.TargetOrbit.ApA, 3) + "m");//"Target orbit"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label5"), MuUtils.ToSI(orbit.PeA, 3) + "m x " + MuUtils.ToSI(orbit.ApA, 3) + "m");//"Current orbit"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label6"), orbit.RelativeInclination(core.target.TargetOrbit).ToString("F2") + "º");//"Relative inclination"
 
             double closestApproachTime = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
-            GuiUtils.SimpleLabel("Time until closest approach", GuiUtils.TimeToDHMS(closestApproachTime - vesselState.time));
-            GuiUtils.SimpleLabel("Separation at closest approach", MuUtils.ToSI(orbit.Separation(core.target.TargetOrbit, closestApproachTime), 0) + "m");
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label7"), GuiUtils.TimeToDHMS(closestApproachTime - vesselState.time));//"Time until closest approach"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label8"), MuUtils.ToSI(orbit.Separation(core.target.TargetOrbit, closestApproachTime), 0) + "m");//"Separation at closest approach"
 
 
             //Maneuver planning buttons:
 
-            if (GUILayout.Button("Align Planes"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button1")))//"Align Planes"
             {
                 double UT;
                 Vector3d dV;
@@ -61,7 +62,7 @@ namespace MuMech
 
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Establish new orbit at"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button2")))//"Establish new orbit at"
             {
                 double phasingOrbitRadius = phasingOrbitAltitude + mainBody.Radius;
 
@@ -97,7 +98,7 @@ namespace MuMech
             GUILayout.Label("km", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Intercept with Hohmann transfer"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button3")))//"Intercept with Hohmann transfer"
             {
                 double UT;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out UT);
@@ -105,7 +106,7 @@ namespace MuMech
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 
-            if (GUILayout.Button("Match velocities at closest approach"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button4")))//"Match velocities at closest approach"
             {
                 double UT = closestApproachTime;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
@@ -113,7 +114,7 @@ namespace MuMech
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 
-            if (GUILayout.Button("Get closer"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button5")))//"Get closer"
             {
                 double UT = vesselState.time;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, 100, 10);
@@ -125,14 +126,14 @@ namespace MuMech
             {
                 if (vessel.patchedConicSolver.maneuverNodes.Any() && !core.node.enabled)
                 {
-                    if (GUILayout.Button("Execute next node"))
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button6")))//"Execute next node"
                     {
                         core.node.ExecuteOneNode(this);
                     }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
-                        if (GUILayout.Button("Execute all nodes"))
+                        if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button7")))//"Execute all nodes"
                         {
                             core.node.ExecuteAllNodes(this);
                         }
@@ -140,15 +141,15 @@ namespace MuMech
                 }
                 else if (core.node.enabled)
                 {
-                    if (GUILayout.Button("Abort node execution"))
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button8")))//"Abort node execution"
                     {
                         core.node.Abort();
                     }
                 }
 
                 GUILayout.BeginHorizontal();
-                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp", GUILayout.ExpandWidth(true));
-                GUILayout.Label("Tolerance:", GUILayout.ExpandWidth(false));
+                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_RZplan_checkbox"), GUILayout.ExpandWidth(true));//"Auto-warp"
+                GUILayout.Label(Localizer.Format("#MechJeb_RZplan_label9"), GUILayout.ExpandWidth(false));//"Tolerance:"
                 core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
@@ -178,7 +179,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Rendezvous Planner";
+            return Localizer.Format("#MechJeb_RZplan_title");//"Rendezvous Planner"
         }
 
         public override bool IsSpaceCenterUpgradeUnlocked()

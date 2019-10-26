@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.IO;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -208,7 +209,7 @@ namespace MuMech
 			GUILayout.BeginVertical();
 			if (this.warmingUp)
 			{
-				GUILayout.Label("Warming up. Please wait... " + this.spendTime + "s");
+				GUILayout.Label(Localizer.Format("#MechJeb_ScriptMod_label1", this.spendTime));//"Warming up. Please wait... <<1>> s
 			}
 			else
 			{
@@ -217,21 +218,21 @@ namespace MuMech
 				if (!started && this.actionsList.getActionsCount() > 0)
 				{
 					style2.normal.textColor = Color.green;
-					if (GUILayout.Button("▶ START", style2))
+					if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button1"), style2))//"▶ START"
 					{
 						this.start();
 					}
 					style2.normal.textColor = Color.white;
-					if (GUILayout.Button("☇ Reset", style2))
+					if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button2"), style2))//"☇ Reset"
 					{
 						this.actionsList.recursiveResetStatus();
 					}
-					this.addActionDisabled = GUILayout.Toggle(this.addActionDisabled, "Hide Add Actions");
+					this.addActionDisabled = GUILayout.Toggle(this.addActionDisabled, Localizer.Format("#MechJeb_ScriptMod_checkbox1"));//"Hide Add Actions"
 				}
 				else if (started)
 				{
 					style2.normal.textColor = Color.red;
-					if (GUILayout.Button("■ STOP", style2))
+					if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button3"), style2))//"■ STOP"
 					{
 						this.stop();
 					}
@@ -240,13 +241,13 @@ namespace MuMech
 				{
 					if (minifiedGUI)
 					{
-						if (GUILayout.Button("▼ Full GUI"))
+						if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button4")))//"▼ Full GUI"
 						{
 							this.minifiedGUI = false;
 						}
 					}
 					else {
-						if (GUILayout.Button("△ Compact GUI"))
+						if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button5")))//"△ Compact GUI"
 						{
 							this.minifiedGUI = true;
 						}
@@ -258,7 +259,7 @@ namespace MuMech
 				{
 					GUILayout.BeginHorizontal();
 					style2.normal.textColor = Color.white;
-					if (GUILayout.Button("Clear All", style2))
+					if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button6"), style2))//"Clear All"
 					{
 						this.actionsList.clearAll();
 					}
@@ -327,11 +328,11 @@ namespace MuMech
 						}
 					}
 
-					if (GUILayout.Button("Save", style2))
+					if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button7"), style2))//"Save"
 					{
 						this.SaveConfig(this.selectedSlot, true, false);
 					}
-					if (GUILayout.Button("Load", style2))
+					if (GUILayout.Button(Localizer.Format("#MechJeb_ScriptMod_button8"), style2))//"Load"
 					{
 						this.LoadConfig(this.selectedSlot, true, false);
 					}
@@ -365,7 +366,7 @@ namespace MuMech
 
 		public override string GetName()
 		{
-			return "Scripting Module";
+			return Localizer.Format("#MechJeb_ScriptMod_title");//"Scripting Module"
 		}
 
 		public void start()
@@ -511,10 +512,10 @@ namespace MuMech
 			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
 			if (notify)
 			{
-				string message_label = "current vessel";
+				string message_label = Localizer.Format("#MechJeb_ScriptMod_label2");//"current vessel"
 				if (selectedMemorySlotType == 0 && !forceSlotName)
 				{
-					message_label = "global memory";
+					message_label = Localizer.Format("#MechJeb_ScriptMod_label3");//"global memory"
 				}
 				this.setFlashMessage("Script saved in slot " + (slot + 1) + " on " + message_label, 0);
 			}

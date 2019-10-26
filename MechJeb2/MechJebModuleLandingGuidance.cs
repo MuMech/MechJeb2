@@ -128,7 +128,7 @@ namespace MuMech
 
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label3"), core.landing.touchdownSpeed, "m/s", 35);//Touchdown speed:
 
-                if (core.landing != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "#MechJeb_LandingGuidance_checkbox1");//Auto-warp
+                if (core.landing != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_LandingGuidance_checkbox1"));//Auto-warp
 
                 core.landing.deployGears = GUILayout.Toggle(core.landing.deployGears, Localizer.Format("#MechJeb_LandingGuidance_checkbox2"));//Deploy Landing Gear
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label4"), core.landing.limitGearsStage, "", 35);//"Stage Limit:"
