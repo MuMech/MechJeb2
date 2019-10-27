@@ -1,7 +1,0 @@
-F:\kerbal mods\MechJeb2-dev\MechJeb2\bin\Debug\MechJeb2.dll
-F:\kerbal mods\MechJeb2-dev\MechJeb2\bin\Debug\MechJeb2.pdb
-F:\kerbal mods\MechJeb2-dev\MechJeb2\obj\Debug\MechJeb2.csprojAssemblyReference.cache
-F:\kerbal mods\MechJeb2-dev\MechJeb2\obj\Debug\MuMech.Properties.Resources.resources
-F:\kerbal mods\MechJeb2-dev\MechJeb2\obj\Debug\MechJeb2.csproj.GenerateResource.cache
-F:\kerbal mods\MechJeb2-dev\MechJeb2\obj\Debug\MechJeb2.dll
-F:\kerbal mods\MechJeb2-dev\MechJeb2\obj\Debug\MechJeb2.pdb
