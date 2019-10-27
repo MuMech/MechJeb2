@@ -5,6 +5,7 @@ using KSP.UI.Screens;
 using Smooth.Pools;
 using UnityEngine;
 using UnityEngine.Profiling;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -366,7 +367,7 @@ namespace MuMech
             if(maximumVesselMass < float.MaxValue)
                 return string.Format("{0} t", maximumVesselMass.ToString("F3"));
             else
-                return "Unlimited";
+                return Localizer.Format("#MechJeb_InfoItems_UnlimitedText");//"Unlimited"
         }
 
         [ValueInfoItem("Dry mass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]
@@ -492,7 +493,7 @@ namespace MuMech
             if(maxPartCount < int.MaxValue)
                 return maxPartCount.ToString();
             else
-                return "Unlimited";
+                return Localizer.Format("#MechJeb_InfoItems_UnlimitedText");//"Unlimited"
         }
 
         [ValueInfoItem("Part count / Max parts", InfoItem.Category.Vessel, showInEditor = true)]
@@ -846,7 +847,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
 
-        private static readonly string[] StageDisplayStates = {"Short stats", "Long stats", "Full stats", "Custom"};
+        private static readonly string[] StageDisplayStates = {Localizer.Format("#MechJeb_InfoItems_button1"), Localizer.Format("#MechJeb_InfoItems_button2"), Localizer.Format("#MechJeb_InfoItems_button3"), Localizer.Format("#MechJeb_InfoItems_button4") };//"Short stats""Long stats""Full stats""Custom"
 
         private FuelFlowSimulation.Stats[] vacStats;
         private FuelFlowSimulation.Stats[] atmoStats;
@@ -877,7 +878,7 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Stage stats", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label1"), GUILayout.ExpandWidth(true));//"Stage stats"
 
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
             {
@@ -958,23 +959,23 @@ namespace MuMech
             Profiler.BeginSample("AllStageStats.UI3");
 
             bool noChange = true;
-            if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn("Start Mass", stages.Select(s => atmoStats[s].startMass.ToString("F3") + " t"));
+            if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn1"), stages.Select(s => atmoStats[s].startMass.ToString("F3") + " t"));//"Start Mass"
 
             Profiler.EndSample();
 
             Profiler.BeginSample("AllStageStats.UI4");
 
-            if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn("End mass", stages.Select(s => atmoStats[s].endMass.ToString("F3") + " t"));
-            if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn("Staged Mass", stages.Select(s => atmoStats[s].stagedMass.ToString("F3") + " t"));
-            if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn("Burned Mass", stages.Select(s => atmoStats[s].resourceMass.ToString("F3") + " t"));
-            if (showVacInitialTWR) noChange &= showVacInitialTWR = !DrawStageStatsColumn("TWR", stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));
-            if (showVacMaxTWR) noChange &= showVacMaxTWR = !DrawStageStatsColumn("Max TWR", stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));
-            if (showAtmoInitialTWR) noChange &= showAtmoInitialTWR = !DrawStageStatsColumn("SLT", stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));
-            if (showAtmoMaxTWR) noChange &= showAtmoMaxTWR = !DrawStageStatsColumn("Max SLT", stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));
-            if (showISP) noChange &= showISP = !DrawStageStatsColumn("ISP", stages.Select(s => atmoStats[s].isp.ToString("F2")));
-            if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn("Atmo ΔV", stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn("Vac ΔV", stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn("Time", stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));
+            if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn2"), stages.Select(s => atmoStats[s].endMass.ToString("F3") + " t"));//"End mass"
+            if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn3"), stages.Select(s => atmoStats[s].stagedMass.ToString("F3") + " t"));//"Staged Mass"
+            if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn4"), stages.Select(s => atmoStats[s].resourceMass.ToString("F3") + " t"));//"Burned Mass"
+            if (showVacInitialTWR) noChange &= showVacInitialTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn5"), stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));//"TWR"
+            if (showVacMaxTWR) noChange &= showVacMaxTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn6"), stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));//"Max TWR"
+            if (showAtmoInitialTWR) noChange &= showAtmoInitialTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn7"), stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));//"SLT"
+            if (showAtmoMaxTWR) noChange &= showAtmoMaxTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn8"), stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));//"Max SLT"
+            if (showISP) noChange &= showISP = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn9"), stages.Select(s => atmoStats[s].isp.ToString("F2")));//"ISP"
+            if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn10"), stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));//"Atmo ΔV"
+            if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn11"), stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));//"Vac ΔV"
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));//"Time"
 
             if (!noChange)
                 StageDisplayState = 3;
@@ -1124,7 +1125,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists)
             {
-                GUILayout.Label("Target-relative velocity: (N/A)");
+                GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocityNA"));//"Target-relative velocity: (N/A)"
                 return;
             }
 
@@ -1133,7 +1134,7 @@ namespace MuMech
             double relVelY = Vector3d.Dot(relVel, vessel.GetTransform().forward);
             double relVelZ = Vector3d.Dot(relVel, vessel.GetTransform().up);
             GUILayout.BeginVertical();
-            GUILayout.Label("Target-relative velocity:");
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocity"));//"Target-relative velocity:"
             GUILayout.Label("X: " + MuUtils.PadPositive(relVelX, "F2") + " m/s  [L/J]");
             GUILayout.Label("Y: " + MuUtils.PadPositive(relVelY, "F2") + " m/s  [I/K]");
             GUILayout.Label("Z: " + MuUtils.PadPositive(relVelZ, "F2") + " m/s  [H/N]");
@@ -1276,24 +1277,24 @@ namespace MuMech
                 case Vessel.Situations.FLYING:
                     if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
-                        return "Flying over " + mainBody.displayName + biome;
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation1") + mainBody.displayName + biome;//"Flying over "
                     else
                         //ExperimentSituations.FlyingHigh
-                        return "Upper atmosphere of " + mainBody.displayName + biome;
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation2") + mainBody.displayName + biome;//"Upper atmosphere of "
                 default:
                     if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
                         //ExperimentSituations.InSpaceLow
-                        return "Space just above " + mainBody.displayName + biome;
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation3") + mainBody.displayName + biome;//"Space just above "
                     else
                         // ExperimentSituations.InSpaceHigh
-                        return "Space high over " + mainBody.displayName + biome;
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation4") + mainBody.displayName + biome;//"Space high over "
             }
         }
 
         [GeneralInfoItem("Lat/Lon/Alt Copy to Clipboard", InfoItem.Category.Misc, showInEditor = false)]
         public void LatLonClipbardCopy()
         {
-            if (GUILayout.Button("Copy Lat/Lon/Alt to Clipboard"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_InfoItems_CopytoClipboard")))//"Copy Lat/Lon/Alt to Clipboard"
             {
                 TextEditor te = new TextEditor();
                 string result = "latitude =  " + vesselState.latitude.ToString("F6") + "\nlongitude = " + vesselState.longitude.ToString("F6") +

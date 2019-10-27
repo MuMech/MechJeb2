@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -12,7 +13,7 @@ namespace MuMech
             ZERO_RVEL,
         }
 
-        public static readonly string[] TargetTexts = { "OFF", "ZERO RVEL"};
+        public static readonly string[] TargetTexts = { Localizer.Format("#MechJeb_SmartRcs_button1"), Localizer.Format("#MechJeb_SmartRcs_button2") };//"OFF", "ZERO RVEL"
 
         public Target target;
 
@@ -23,7 +24,7 @@ namespace MuMech
         [GeneralInfoItem("Disable SmartRcs automatically", InfoItem.Category.Misc)]
         public void AutoDisableSmartRCS()
         {
-            autoDisableSmartRCS = GUILayout.Toggle(autoDisableSmartRCS, "Disable SmartRcs automatically");
+            autoDisableSmartRCS = GUILayout.Toggle(autoDisableSmartRCS, Localizer.Format("#MechJeb_SmartRcs_checkbox1 "));//"Disable SmartRcs automatically"
         }
 
         protected void TargetButton(Target bt)
@@ -72,11 +73,11 @@ namespace MuMech
                     if (core.rcs.users.Contains(this))
                         core.rcs.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
-                GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
+                GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GUILayout.ExpandWidth(true));//"AUTO"
             }
             else if (core.target.Target == null)
             {
-                GUILayout.Label("Choose a target");
+                GUILayout.Label(Localizer.Format("#MechJeb_SmartRcs_label1"));//"Choose a target"
             }
             else
             {
@@ -88,8 +89,8 @@ namespace MuMech
 
                 GUILayout.EndVertical();
             }
-            core.rcs.rcsThrottle = GUILayout.Toggle(core.rcs.rcsThrottle, " RCS throttle when engines are offline");
-            core.rcs.rcsForRotation = GUILayout.Toggle(core.rcs.rcsForRotation, " Use RCS for rotation");
+            core.rcs.rcsThrottle = GUILayout.Toggle(core.rcs.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2"));//" RCS throttle when engines are offline"
+            core.rcs.rcsForRotation = GUILayout.Toggle(core.rcs.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3"));// " Use RCS for rotation"
             base.WindowGUI(windowID);
         }
 
@@ -115,7 +116,7 @@ namespace MuMech
         
         public override string GetName()
         {
-            return "SmartRcs";
+            return Localizer.Format("#MechJeb_SmartRcs_title");//"SmartRcs"
         }
 
     }
