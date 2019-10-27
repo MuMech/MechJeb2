@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -23,10 +24,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool dontUseDropDownMenu = false;
 
-        [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
+        [ToggleInfoItem("Hide 'Brake on Eject' in Rover Controller", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]//
         public bool hideBrakeOnEject = false;
 
-        [ToggleInfoItem("Use only the titlebar for window dragging", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
+        [ToggleInfoItem("Use only the titlebar for window dragging", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]//
         public bool useTitlebarDragging = false;
 
         [ToggleInfoItem("Module disabling does not kill throttle (RSS/RO)", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]
@@ -50,7 +51,7 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            if (GUILayout.Button("\nRestore factory default settings\n"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button1")))//"\nRestore factory default settings\n"
             {
                 KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_global.cfg").Delete();
                 if (vessel != null && vessel.vesselName != null)
@@ -59,10 +60,10 @@ namespace MuMech
                 GuiUtils.SetGUIScale(1);
             }
 
-            GUILayout.Label("Current skin: " + (GuiUtils.SkinType)skinId );
+            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label1", (GuiUtils.SkinType)skinId));//"Current skin: <<1>>"
             if (GuiUtils.skin == null || skinId != 1)
             {
-                if (GUILayout.Button("Use MechJeb 1 GUI skin"))
+                if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button2")))//"Use MechJeb 1 GUI skin"
                 {
                     GuiUtils.LoadSkin(GuiUtils.SkinType.MechJeb1);
                     skinId = 1;
@@ -70,7 +71,7 @@ namespace MuMech
             }
             if (GuiUtils.skin == null || skinId != 0)
             {
-                if (GUILayout.Button("Use MechJeb 2 GUI skin"))
+                if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button3")))//"Use MechJeb 2 GUI skin"
                 {
                     GuiUtils.LoadSkin(GuiUtils.SkinType.Default);
                     skinId = 0;
@@ -78,7 +79,7 @@ namespace MuMech
             }
             if (GuiUtils.skin == null || skinId != 2)
             {
-                if (GUILayout.Button("Use MJ2 Compact GUI skin"))
+                if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button4")))//"Use MJ2 Compact GUI skin"
                 {
                     GuiUtils.LoadSkin(GuiUtils.SkinType.Compact);
                     skinId = 2;
@@ -86,13 +87,13 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("UI Scale:", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GUILayout.ExpandWidth(true));//"UI Scale:"
             UIScale.text = GUILayout.TextField(UIScale.text, GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GuiUtils.SetGUIScale(UIScale.val);
 
-            dontUseDropDownMenu = GUILayout.Toggle(dontUseDropDownMenu, "Replace drop down menu with arrow selector");
+            dontUseDropDownMenu = GUILayout.Toggle(dontUseDropDownMenu, Localizer.Format("#MechJeb_Settings_checkbox1"));//"Replace drop down menu with arrow selector"
             GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
 
             MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
@@ -108,7 +109,7 @@ namespace MuMech
 
             ed.registry.Find(i => i.id == "Toggle:Settings.rssMode").DrawItem();
 
-            core.warp.activateSASOnWarp = GUILayout.Toggle(core.warp.activateSASOnWarp, "Activate SAS on Warp");
+            core.warp.activateSASOnWarp = GUILayout.Toggle(core.warp.activateSASOnWarp, Localizer.Format("#MechJeb_Settings_checkbox2"));//"Activate SAS on Warp"
 
             GUILayout.EndVertical();
 
@@ -117,7 +118,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Settings";
+            return Localizer.Format("#MechJeb_Settings_title");//"Settings"
         }
 
         public override GUILayoutOption[] WindowOptions()

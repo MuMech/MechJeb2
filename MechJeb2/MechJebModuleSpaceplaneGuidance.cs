@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -37,33 +38,34 @@ namespace MuMech
 
             if (availableRunways.Any())
             {
-                GUILayout.Label("Landing", s);
+                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label1"), s);//Landing
 
                 runwayIndex = GuiUtils.ComboBox.Box(runwayIndex, availableRunways.Select(p => p.name).ToArray(), this);
                 autoland.runway = availableRunways[runwayIndex];
 
-                GUILayout.Label("Distance to runway: " + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autoland.runway.Start()), 0) + "m");
+                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label2") + MuUtils.ToSI(Vector3d.Distance(vesselState.CoM, autoland.runway.Start()), 0) + "m");//Distance to runway: 
 
-                showLandingTarget = GUILayout.Toggle(showLandingTarget, "Show landing navball guidance");
+                showLandingTarget = GUILayout.Toggle(showLandingTarget, Localizer.Format("#MechJeb_ApproAndLand_label3"));//Show landing navball guidance
 
-                if (GUILayout.Button("Autoland")) autoland.Autoland(this);
-                if (autoland.enabled && GUILayout.Button("Abort"))
+                if (GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button1"))) autoland.Autoland(this);//Autoland
+                if (autoland.enabled && GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button2")))//Abort
                     autoland.AutopilotOff();
                 
-                GuiUtils.SimpleTextBox("Autoland glideslope:", autoland.glideslope);
-                GuiUtils.SimpleTextBox("Approach speed:", autoland.approachSpeed);
-                GuiUtils.SimpleTextBox("Touchdown speed:", autoland.touchdownSpeed);
-                autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, "Reverse thrust upon touchdown");
-                autoland.bBreakAsSoonAsLanded = GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, "Brake as soon as landed");
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label3"), autoland.glideslope);//Autoland glideslope:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label4"), autoland.approachSpeed);//Approach speed:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label5"), autoland.touchdownSpeed);//Touchdown speed:
+                autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, Localizer.Format("#MechJeb_ApproAndLand_label6"));//Reverse thrust upon touchdown
+                autoland.bBreakAsSoonAsLanded = GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, Localizer.Format("#MechJeb_ApproAndLand_label7"));//Brake as soon as landed
 
                 if (autoland.enabled)
                 {
-                    GUILayout.Label("State: " + autoland.AutolandApproachStateToHumanReadableDescription());
-                    GUILayout.Label(string.Format("Distance to waypoint: {0} m", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));
-                    GUILayout.Label(string.Format("Target speed: {0} m/s", Math.Round(autoland.Autopilot.SpeedTarget, 1)));
-                    GUILayout.Label(string.Format("Target altitude: {0} m", Math.Round(autoland.GetAutolandTargetAltitude(autoland.GetAutolandTargetVector()), 0)));
-                    GUILayout.Label(string.Format("Target vertical speed: {0} m/s", Math.Round(autoland.Autopilot.VertSpeedTarget, 1)));
-                    GUILayout.Label(string.Format("Target heading: {0}º", Math.Round(autoland.Autopilot.HeadingTarget, 0)));
+                    GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label8") + autoland.AutolandApproachStateToHumanReadableDescription());//State:
+                    GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label9", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));//Distance to waypoint: {0}m
+                    //GUILayout.Label(string.Format("Distance to waypoint: {0} m", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));
+                    GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label10",Math.Round(autoland.Autopilot.SpeedTarget, 1)));//Target speed: {0} m/s
+                    GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label11", Math.Round(autoland.GetAutolandTargetAltitude(autoland.GetAutolandTargetVector()), 0)));//Target altitude: {0} m
+                    GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label12", Math.Round(autoland.Autopilot.VertSpeedTarget, 1)));//Target vertical speed: {0} m/s
+                    GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label13", Math.Round(autoland.Autopilot.HeadingTarget, 0)));//Target heading: {0}º
                 }
             }
 
@@ -100,7 +102,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Aircraft Approach & Autoland";
+            return Localizer.Format("#MechJeb_ApproAndLand_title");//Aircraft Approach & Autoland
         }
     }
 }

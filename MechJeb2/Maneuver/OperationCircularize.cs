@@ -1,9 +1,10 @@
-﻿namespace MuMech
+﻿using KSP.Localization;
+namespace MuMech
 {
     public class OperationCircularize : Operation
     {
 
-        public override string getName() {return "circularize";}
+        public override string getName() {return Localizer.Format("#MechJeb_Maneu_circularize_title");}//"circularize"
 
         private TimeSelector timeSelector;
 

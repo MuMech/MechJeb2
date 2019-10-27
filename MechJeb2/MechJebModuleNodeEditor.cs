@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -23,7 +24,7 @@ namespace MuMech
         enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING };
         static int numSnaps = Enum.GetNames(typeof(Snap)).Length;
         Snap snap = Snap.PERIAPSIS;
-        string[] snapStrings = new string[] { "periapsis", "apoapsis", "AN with target", "DN with target", "equatorial AN", "equatorial DN" };
+        string[] snapStrings = new string[] { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") };//"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
 
         void GizmoUpdateHandler(Vector3d dV, double UT)
         {
@@ -46,7 +47,7 @@ namespace MuMech
         {
             if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
             {
-                GUILayout.Label("No maneuver nodes to edit.");
+                GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label1"));//"No maneuver nodes to edit."
                 RelativityModeSelectUI();
                 base.WindowGUI(windowID);
                 return;
@@ -70,7 +71,7 @@ namespace MuMech
                 nodeIndex = GuiUtils.ArrowSelector(nodeIndex, numNodes, "Maneuver node #" + (nodeIndex + 1));
 
                 node = vessel.patchedConicSolver.maneuverNodes[nodeIndex];
-                if (nodeIndex < (numNodes-1) && GUILayout.Button("Merge next node")) MergeNext(nodeIndex);
+                if (nodeIndex < (numNodes-1) && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button1"))) MergeNext(nodeIndex);//"Merge next node"
             }
 
             if (node != oldNode)
@@ -89,7 +90,7 @@ namespace MuMech
 
 
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Prograde:", prograde, "m/s", 60);
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_NodeEd_Label2"), prograde, "m/s", 60);//"Prograde:"
             if (LimitedRepeatButtoon("-"))
             {
                 prograde -= progradeDelta;
@@ -105,7 +106,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Radial+:", radialPlus, "m/s", 60);
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_NodeEd_Label3"), radialPlus, "m/s", 60);//"Radial+:"
             if (LimitedRepeatButtoon("-"))
             {
                 radialPlus -= radialPlusDelta;
@@ -121,7 +122,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Normal+:", normalPlus, "m/s", 60);
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_NodeEd_Label4"), normalPlus, "m/s", 60);//"Normal+:"
             if (LimitedRepeatButtoon("-"))
             {
                 normalPlus -= normalPlusDelta;
@@ -137,7 +138,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Set delta to:", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label5"), GUILayout.ExpandWidth(true));//"Set delta to:"
             if (GUILayout.Button("0.01", GUILayout.ExpandWidth(true)))
                 progradeDelta = radialPlusDelta = normalPlusDelta = 0.01;
             if (GUILayout.Button("0.1", GUILayout.ExpandWidth(true)))
@@ -150,10 +151,10 @@ namespace MuMech
                 progradeDelta = radialPlusDelta = normalPlusDelta = 100;
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Update")) node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+            if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button2"))) node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);//"Update"
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Shift time", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label6"), GUILayout.ExpandWidth(true));//"Shift time"
             if (GUILayout.Button("-o", GUILayout.ExpandWidth(false)))
             {
                 node.UpdateNode(node.DeltaV, node.UT - node.patch.period);
@@ -174,7 +175,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Snap node to", GUILayout.ExpandWidth(true)))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button3"), GUILayout.ExpandWidth(true)))//"Snap node to"
             {
                 Orbit o = node.patch;
                 double UT = node.UT;
@@ -224,14 +225,14 @@ namespace MuMech
             {
                 if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && !core.node.enabled)
                 {
-                    if (GUILayout.Button("Execute next node"))
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button4")))//"Execute next node"
                     {
                         core.node.ExecuteOneNode(this);
                     }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
-                        if (GUILayout.Button("Execute all nodes"))
+                        if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button5")))//"Execute all nodes"
                         {
                             core.node.ExecuteAllNodes(this);
                         }
@@ -239,15 +240,15 @@ namespace MuMech
                 }
                 else if (core.node.enabled)
                 {
-                    if (GUILayout.Button("Abort node execution"))
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button6")))//"Abort node execution"
                     {
                         core.node.Abort();
                     }
                 }
 
                 GUILayout.BeginHorizontal();
-                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp", GUILayout.ExpandWidth(true));
-                GUILayout.Label("Tolerance:", GUILayout.ExpandWidth(false));
+                core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_NodeEd_checkbox1"), GUILayout.ExpandWidth(true));//"Auto-warp"
+                GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label7"), GUILayout.ExpandWidth(false));//"Tolerance:"
                 core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
@@ -276,12 +277,12 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Conics mode:", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label8"), GUILayout.ExpandWidth(false));//"Conics mode:"
             int newRelativityMode = GUILayout.SelectionGrid((int)vessel.patchedConicRenderer.relativityMode, relativityModeStrings, 5);
             vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)newRelativityMode;
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("Current mode: " + vessel.patchedConicRenderer.relativityMode.ToString());
+            GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label9", vessel.patchedConicRenderer.relativityMode.ToString()));//"Current mode: <<1>>"
 
             GUILayout.EndVertical();
         }
@@ -293,7 +294,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Maneuver Node Editor";
+            return Localizer.Format("#MechJeb_NodeEd_title");//"Maneuver Node Editor"
         }
 
         public override bool IsSpaceCenterUpgradeUnlocked()

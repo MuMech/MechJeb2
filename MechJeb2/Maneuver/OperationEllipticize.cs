@@ -1,8 +1,9 @@
-﻿namespace MuMech
+﻿using KSP.Localization;
+namespace MuMech
 {
     public class OperationEllipticize : Operation
     {
-        public override string getName() { return "change both Pe and Ap";}
+        public override string getName() { return Localizer.Format("#MechJeb_both_title");}//change both Pe and Ap
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
@@ -18,8 +19,8 @@
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox("New periapsis:", newPeA, "km");
-            GuiUtils.SimpleTextBox("New apoapsis:", newApA, "km");
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_both_label1"), newPeA, "km");//New periapsis:
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_both_label2"), newApA, "km");//New apoapsis:
             timeSelector.DoChooseTimeGUI();
         }
 
@@ -30,15 +31,15 @@
             string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
             if (o.referenceBody.Radius + newPeA > o.Radius(UT))
             {
-                throw new OperationException("new periapsis cannot be higher than the altitude of the burn (" + burnAltitude + ")");
+                throw new OperationException(Localizer.Format("#MechJeb_both_Exception1",burnAltitude));//new periapsis cannot be higher than the altitude of the burn (<<1>>)
             }
             else if (o.referenceBody.Radius + newApA < o.Radius(UT))
             {
-                throw new OperationException("new apoapsis cannot be lower than the altitude of the burn (" + burnAltitude + ")");
+                throw new OperationException(Localizer.Format("#MechJeb_both_Exception2") + "(" + burnAltitude + ")");//new apoapsis cannot be lower than the altitude of the burn
             }
             else if (newPeA < -o.referenceBody.Radius)
             {
-                throw new OperationException("new periapsis cannot be lower than minus the radius of " + o.referenceBody.displayName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");
+                throw new OperationException(Localizer.Format("#MechJeb_both_Exception3") + o.referenceBody.displayName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//"new periapsis cannot be lower than minus the radius of "
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, newPeA + o.referenceBody.Radius, newApA + o.referenceBody.Radius), UT);

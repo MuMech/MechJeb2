@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using UnityEngine;
-
+using KSP.Localization;
 namespace MuMech
 {
     public class MechJebModuleSmartASS : DisplayModule
@@ -42,10 +42,10 @@ namespace MuMech
         }
         public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE };
         public static bool[] TargetIsMode = { true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false };
-        public static string[] ModeTexts = { "OBT", "SURF", "TGT", "ADV", "AUTO" };
-        public static string[] ScriptModeTexts = { "Orbit", "Surface", "Target", "Advanced", "Auto" };
-        public static string[] TargetTexts = { "OFF", "KILL\nROT", "NODE", "SURF", "PRO\nGRAD", "RETR\nGRAD", "NML\n+", "NML\n-", "RAD\n+", "RAD\n-", "RVEL\n+", "RVEL\n-", "TGT\n+", "TGT\n-", "PAR\n+", "PAR\n-", "ADV", "AUTO", "SVEL\n+", "SVEL\n-", "HVEL\n+", "HVEL\n-", "UP" };
-        public static string[] ScriptTargetTexts = { "Off", "Kill Rotation", "Node", "Surface", "Prograde", "Retrograde", "Normal+", "Normal-", "Radial+", "Radial-", "Relative Velocity+", "Relative Velocity-", "Target+", "Target-", "Parallel+", "Parallel-", "Advanced", "Auto", "Surface Velocity+", "Surface Velocity-", "Horizontal Velocity+", "Horizontal Velocity-", "Up" };
+        public static string[] ModeTexts = { Localizer.Format("#MechJeb_SmartASS_button1"), Localizer.Format("#MechJeb_SmartASS_button2"), Localizer.Format("#MechJeb_SmartASS_button3"), Localizer.Format("#MechJeb_SmartASS_button4"),Localizer.Format("#MechJeb_SmartASS_button5")  };//"OBT""SURF""TGT""ADV""AUTO"
+        public static string[] ScriptModeTexts = { Localizer.Format("#MechJeb_SmartASS_button6"), Localizer.Format("#MechJeb_SmartASS_button7"), Localizer.Format("#MechJeb_SmartASS_button8"), Localizer.Format("#MechJeb_SmartASS_button9"), Localizer.Format("#MechJeb_SmartASS_button10") };//"Orbit""Surface""Target""Advanced""Auto"
+        public static string[] TargetTexts = { Localizer.Format("#MechJeb_SmartASS_button11"), Localizer.Format("#MechJeb_SmartASS_button12"), Localizer.Format("#MechJeb_SmartASS_button13"), Localizer.Format("#MechJeb_SmartASS_button14"), Localizer.Format("#MechJeb_SmartASS_button15"), Localizer.Format("#MechJeb_SmartASS_button16"), Localizer.Format("#MechJeb_SmartASS_button17"), Localizer.Format("#MechJeb_SmartASS_button18"), Localizer.Format("#MechJeb_SmartASS_button19"), Localizer.Format("#MechJeb_SmartASS_button20"), Localizer.Format("#MechJeb_SmartASS_button21"), Localizer.Format("#MechJeb_SmartASS_button22"), Localizer.Format("#MechJeb_SmartASS_button23"), Localizer.Format("#MechJeb_SmartASS_button24"), Localizer.Format("#MechJeb_SmartASS_button25"), Localizer.Format("#MechJeb_SmartASS_button26"), Localizer.Format("#MechJeb_SmartASS_button27"), Localizer.Format("#MechJeb_SmartASS_button28"), Localizer.Format("#MechJeb_SmartASS_button29"), Localizer.Format("#MechJeb_SmartASS_button30"), Localizer.Format("#MechJeb_SmartASS_button31"), Localizer.Format("#MechJeb_SmartASS_button32"), Localizer.Format("#MechJeb_SmartASS_button33") };//"OFF""KILL\nROT""NODE""SURF""PRO\nGRAD" "RETR\nGRAD""NML\n+""NML\n-""RAD\n+""RAD\n-""RVEL\n+""RVEL\n-""TGT\n+""TGT\n-""PAR\n+""PAR\n-""ADV""AUTO""SVEL\n+""SVEL\n-""HVEL\n+""HVEL\n-""UP"
+        public static string[] ScriptTargetTexts = { Localizer.Format("#MechJeb_SmartASS_button34"), Localizer.Format("#MechJeb_SmartASS_button35"), Localizer.Format("#MechJeb_SmartASS_button36"), Localizer.Format("#MechJeb_SmartASS_button37"), Localizer.Format("#MechJeb_SmartASS_button38"), Localizer.Format("#MechJeb_SmartASS_button39"), Localizer.Format("#MechJeb_SmartASS_button40"), Localizer.Format("#MechJeb_SmartASS_button41"), Localizer.Format("#MechJeb_SmartASS_button42"), Localizer.Format("#MechJeb_SmartASS_button43"), Localizer.Format("#MechJeb_SmartASS_button44"), Localizer.Format("#MechJeb_SmartASS_button45"), Localizer.Format("#MechJeb_SmartASS_button46"), Localizer.Format("#MechJeb_SmartASS_button47"), Localizer.Format("#MechJeb_SmartASS_button48"), Localizer.Format("#MechJeb_SmartASS_button49"), Localizer.Format("#MechJeb_SmartASS_button50"), Localizer.Format("#MechJeb_SmartASS_button51"), Localizer.Format("#MechJeb_SmartASS_button52"), Localizer.Format("#MechJeb_SmartASS_button53"), Localizer.Format("#MechJeb_SmartASS_button54"), Localizer.Format("#MechJeb_SmartASS_button55"),Localizer.Format("#MechJeb_SmartASS_button56")  };//"Off""Kill Rotation""Node""Surface""Prograde""Retrograde""Normal+""Normal-""Radial+""Radial-""Relative Velocity+""Relative Velocity-""Target+""Target-""Parallel+""Parallel-""Advanced""Auto""Surface Velocity+""Surface Velocity-""Horizontal Velocity+""Horizontal Velocity-""Up"
         public static string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
         public static string[] directionTexts = Enum.GetNames(typeof(Vector6.Direction));
 
@@ -88,7 +88,7 @@ namespace MuMech
         [GeneralInfoItem("Disable SmartACS automatically", InfoItem.Category.Misc)]
         public void AutoDisableSmartASS()
         {
-            autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS, core.eduMode ? "Disable SmartACS automatically" : "Disable SmartASS automatically");
+            autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS, core.eduMode ? Localizer.Format("#MechJeb_SmartASS_checkbox1") :Localizer.Format("#MechJeb_SmartASS_checkbox2") );//"Disable SmartACS automatically":"Disable SmartASS automatically"
         }
 
         public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
@@ -122,7 +122,7 @@ namespace MuMech
         {
             GUILayout.BeginHorizontal();
             bool _forceRol = forceRol;
-            forceRol = GUILayout.Toggle(forceRol, "Force Roll :", GUILayout.ExpandWidth(false));
+            forceRol = GUILayout.Toggle(forceRol, Localizer.Format("#MechJeb_SmartASS_checkbox3"), GUILayout.ExpandWidth(false));//"Force Roll :"
             if (_forceRol != forceRol)
             {
                 Engage();
@@ -169,7 +169,7 @@ namespace MuMech
                     target = Target.OFF;
                     if (core.attitude.users.Contains(this)) core.attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
-                GUILayout.Button("AUTO", btAuto, GUILayout.ExpandWidth(true));
+                GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button57"), btAuto, GUILayout.ExpandWidth(true));//"AUTO"
             }
             else
             {
@@ -188,7 +188,7 @@ namespace MuMech
                 }
                 GUILayout.EndHorizontal();
 
-                GUILayout.Label("Mode:");
+                GUILayout.Label(Localizer.Format("#MechJeb_SmartASS_label1"));//"Mode:"
                 GUILayout.BeginHorizontal();
                 ModeButton(Mode.ORBITAL);
                 ModeButton(Mode.SURFACE);
@@ -288,7 +288,7 @@ namespace MuMech
                                 changed = true;
                             }
                             GUILayout.EndHorizontal();
-                            if (GUILayout.Button("EXECUTE")) {
+                            if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58"))){// "EXECUTE"
                                 Engage();
                             }
                             if (changed)
@@ -359,7 +359,7 @@ namespace MuMech
                                 changed = true;
                             }
                             GUILayout.EndHorizontal();
-                            if (GUILayout.Button("EXECUTE"))
+                            if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58")))//"EXECUTE"
                             {
                                 Engage();
                             }
@@ -388,19 +388,19 @@ namespace MuMech
                         }
                         else
                         {
-                            GUILayout.Label("Please select a target");
+                            GUILayout.Label(Localizer.Format("#MechJeb_SmartASS_label2"));//"Please select a target"
                         }
                         break;
                     case Mode.ADVANCED:
-                        GUILayout.Label("Reference:");
+                        GUILayout.Label(Localizer.Format("#MechJeb_SmartASS_label3"));//"Reference:"
                         advReference = (AttitudeReference)GuiUtils.ComboBox.Box((int)advReference, ReferenceTexts, this);
 
-                        GUILayout.Label("Direction:");
+                        GUILayout.Label(Localizer.Format("#MechJeb_SmartASS_label4"));//"Direction:"
                         advDirection = (Vector6.Direction)GuiUtils.ComboBox.Box((int)advDirection, directionTexts, directionTexts);
 
                         ForceRoll();
 
-                        if (GUILayout.Button("EXECUTE", btNormal, GUILayout.ExpandWidth(true)))
+                        if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58"), btNormal, GUILayout.ExpandWidth(true)))//"EXECUTE"
                         {
                             target = Target.ADVANCED;
                             Engage();
@@ -542,7 +542,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
+            return core.eduMode ?  Localizer.Format("#MechJeb_SmartACS_title") : Localizer.Format("#MechJeb_SmartASS_title");//"Smart A.C.S.":"Smart A.S.S."
         }
     }
 }

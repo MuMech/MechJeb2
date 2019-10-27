@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -10,7 +11,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists)
             {
-                GUILayout.Label("Select a target to rendezvous with.");
+                GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label1"));//"Select a target to rendezvous with."
                 base.WindowGUI(windowID);
                 return;
             }
@@ -19,7 +20,7 @@ namespace MuMech
 
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody)
             {
-                GUILayout.Label("Rendezvous target must be in the same sphere of influence.");
+                GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label2"));//"Rendezvous target must be in the same sphere of influence."
                 if (autopilot.enabled)
                     autopilot.users.Remove(this);
                 base.WindowGUI(windowID);
@@ -30,31 +31,31 @@ namespace MuMech
             
             if (autopilot != null)
             {
-                GuiUtils.SimpleLabel("Rendezvous target", core.target.Name);
+                GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZauto_label3"), core.target.Name);//"Rendezvous target"
                 
                 if (!autopilot.enabled)
                 {
-                    if (GUILayout.Button("Engage autopilot")) autopilot.users.Add(this);
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button1"))) autopilot.users.Add(this);//"Engage autopilot"
                 }
                 else
                 {
-                    if (GUILayout.Button("Disengage autopilot")) autopilot.users.Remove(this);
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button2"))) autopilot.users.Remove(this);//"Disengage autopilot"
                 }
 
-                GuiUtils.SimpleTextBox("Desired final distance:", autopilot.desiredDistance, "m");
-                GuiUtils.SimpleTextBox("Max # of phasing orbits:", autopilot.maxPhasingOrbits);
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RZauto_label4"), autopilot.desiredDistance, "m");//"Desired final distance:"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RZauto_label5"), autopilot.maxPhasingOrbits);//"Max # of phasing orbits:"
 
                 if (autopilot.maxPhasingOrbits < 5)
                 {
                     GUIStyle s = new GUIStyle(GUI.skin.label);
                     s.normal.textColor = Color.yellow;
-                    GUILayout.Label("Max # of phasing orbits must be at least 5.", s);
+                    GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label6"), s);//"Max # of phasing orbits must be at least 5."
                 }
 
-                if (autopilot.enabled) GUILayout.Label("Status: " + autopilot.status);
+                if (autopilot.enabled) GUILayout.Label( Localizer.Format("#MechJeb_RZauto_label7", autopilot.status));//"Status: <<1>>"
             }
             
-            core.node.autowarp = GUILayout.Toggle(core.node.autowarp, "Auto-warp");
+            core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1"));//"Auto-warp"
 
             GUILayout.EndVertical();
 
@@ -68,7 +69,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Rendezvous Autopilot";
+            return Localizer.Format("#MechJeb_RZauto_title");//"Rendezvous Autopilot"
         }
 
         public override bool IsSpaceCenterUpgradeUnlocked()

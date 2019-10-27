@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -37,109 +38,109 @@ namespace MuMech
 		public void populateActionNames()
 		{
 			List<String> actionsGroupsList = new List<String>();
-			actionsGroupsList.Add("Time");
-			actionsGroupsList.Add("Docking");
-			actionsGroupsList.Add("Target");
-			actionsGroupsList.Add("Control");
-			actionsGroupsList.Add("Crew");
-			actionsGroupsList.Add("Trajectory");
-			actionsGroupsList.Add("Staging/Engines");
-			actionsGroupsList.Add("Settings");
-			actionsGroupsList.Add("Modules");
-			actionsGroupsList.Add("Save/Load/Actions");
-			actionsGroupsList.Add("PROGRAM Logic");
-			actionsGroupsList.Add("Plugins");
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1"));//"Time"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2"));//"Docking"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions3"));//"Target"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4"));//"Control"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions5"));//"Crew"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions6"));//"Trajectory"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions7"));//"Staging/Engines"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions8"));//"Settings"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9"));//"Modules"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions10"));//"Save/Load/Actions"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions11"));//"PROGRAM Logic"
+			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions12"));//"Plugins"
 			actionGroups = actionsGroupsList.ToArray();
 
 			actionNames = new String[actionsGroupsList.Count][];
 
 			//Time
 			List<String> actionsNamesList = new List<String>();
-			actionsNamesList.Add("Timer");
-			actionsNamesList.Add("Pause");
-			actionsNamesList.Add("Wait for");
-			actionsNamesList.Add("Warp");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1_1"));//"Timer"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1_2"));//"Pause"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1_3"));//"Wait for"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1_4"));//"Warp"
 			actionNames[0] = actionsNamesList.ToArray();
 
 			//Docking
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Decouple");
-			actionsNamesList.Add("Dock Shield");
-			actionsNamesList.Add("Target Dock");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2_1"));//"Decouple"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2_2"));//"Dock Shield"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2_3"));//"Target Dock"
 			actionNames[1] = actionsNamesList.ToArray();
 
 			//Target
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Target Dock");
-			actionsNamesList.Add("Target Body");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions3_1"));//"Target Dock"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions3_2"));//"Target Body"
 			actionNames[2] = actionsNamesList.ToArray();
 
 			//Control
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Control From");
-			actionsNamesList.Add("RCS");
-			actionsNamesList.Add("SAS");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4_1"));//"Control From"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4_2"));//"RCS"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4_3"));//"SAS"
 			if (depth == 0)
 			{
-				actionsNamesList.Add("Switch Vessel"); //Switch Vessel only available at depth 0 because it can change the focus.
+				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4_4")); //Switch Vessel only available at depth 0 because it can change the focus."Switch Vessel"
 			}
 			actionNames[3] = actionsNamesList.ToArray();
 
 			//Crew
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Crew Transfer");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions5_1"));//"Crew Transfer"
 			actionNames[4] = actionsNamesList.ToArray();
 
 			//Trajectory
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Maneuver");
-			actionsNamesList.Add("Execute node");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions6_1"));//"Maneuver"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions6_2"));//"Execute node"
 			actionNames[5] = actionsNamesList.ToArray();
 
 			//Staging
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Staging");
-			actionsNamesList.Add("Activate Engine");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions7_1"));//"Staging"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions7_2"));//"Activate Engine"
 			actionNames[6] = actionsNamesList.ToArray();
 
 			//Settings
 			actionsNamesList = new List<String>();
-			actionsNamesList.Add("Node tolerance");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions8_1"));//"Node tolerance"
 			actionNames[7] = actionsNamesList.ToArray();
 
 			//Modules
 			actionsNamesList = new List<String>();
-            actionsNamesList.Add("MODULE Smart A.S.S.");
-            actionsNamesList.Add("MODULE Ascent Autopilot");
-			actionsNamesList.Add("MODULE Docking Autopilot");
-			actionsNamesList.Add("MODULE Landing");
-			actionsNamesList.Add("MODULE Rendezvous");
-			actionsNamesList.Add("MODULE Rendezvous Autopilot");
+            actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_1"));//"MODULE Smart A.S.S."
+            actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_2"));//"MODULE Ascent Autopilot"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_3"));//"MODULE Docking Autopilot"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_4"));//"MODULE Landing"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_5"));//"MODULE Rendezvous"
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_6"));//"MODULE Rendezvous Autopilot"
 			actionNames[8] = actionsNamesList.ToArray();
 
 			//Save
 			actionsNamesList = new List<String>();
 			if (depth == 0) //Actions only available at depth 0 because they can change focus
 			{
-				actionsNamesList.Add("Quicksave");
-				actionsNamesList.Add("Load Script");
+				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions10_1"));//"Quicksave"
+				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions10_2"));//"Load Script"
 			}
-			actionsNamesList.Add("Action Group");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions10_3"));//"Action Group"
 			actionNames[9] = actionsNamesList.ToArray();
 
 			//PROGRAM Logic
 			actionsNamesList = new List<String>();
 			if (depth < 4) //Limit program depth to 4 (just to avoid UI mess)
 			{
-				actionsNamesList.Add("PROGRAM - Repeat");
-				actionsNamesList.Add("PROGRAM - If");
-				actionsNamesList.Add("PROGRAM - While");
+				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions11_1"));//"PROGRAM - Repeat"
+				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions11_2"));//"PROGRAM - If"
+				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions11_3"));//"PROGRAM - While"
 				if (depth < 2) //Limit parallel depth to 2
 				{
-					actionsNamesList.Add("PROGRAM - Parallel");
+					actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions11_4"));//"PROGRAM - Parallel"
 				}
 			}
-			actionsNamesList.Add("Wait for");
+			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions11_5"));//"Wait for"
 			actionNames[10] = actionsNamesList.ToArray();
 
 			//Plugins
@@ -191,7 +192,7 @@ namespace MuMech
 			s.normal.textColor = Color.blue;
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(20);
-			GUILayout.Label("Add action", s, GUILayout.ExpandWidth(false));
+			GUILayout.Label(Localizer.Format("#MechJeb_ScriptMod_label4"), s, GUILayout.ExpandWidth(false));//"Add action"
 			selectedGroupIndex = GuiUtils.ComboBox.Box(selectedGroupIndex, actionGroups, actionGroups);
 			if (selectedGroupIndex != old_selectedGroupIndex)
 			{
@@ -202,7 +203,7 @@ namespace MuMech
 			{
 				GUIStyle s2 = new GUIStyle(GUI.skin.label);
 				s2.normal.textColor = Color.red;
-				GUILayout.Label("Program depth is limited to 4", s2, GUILayout.ExpandWidth(false));
+				GUILayout.Label(Localizer.Format("#MechJeb_ScriptMod_label5"), s2, GUILayout.ExpandWidth(false));//"Program depth is limited to 4"
 			}
 			else
 			{
@@ -227,147 +228,147 @@ namespace MuMech
 				if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
 				{
 					String actionName = actionNames[selectedGroupIndex][selectedActionIndex];
-					if (actionName.CompareTo("Timer") == 0)
+					if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions1_1")) == 0)//"Timer"
 					{
 						this.addAction(new MechJebModuleScriptActionTimer(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Decouple") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions2_1")) == 0)//"Decouple"
 					{
 						this.addAction(new MechJebModuleScriptActionUndock(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Dock Shield") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions2_2")) == 0)//"Dock Shield"
 					{
 						this.addAction(new MechJebModuleScriptActionDockingShield(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Staging") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions7_1")) == 0)//"Staging"
 					{
 						this.addAction(new MechJebModuleScriptActionStaging(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Target Dock") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions3_1")) == 0)//"Target Dock"
 					{
 						this.addAction(new MechJebModuleScriptActionTargetDock(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Target Body") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions3_2")) == 0)//"Target Body"
 					{
 						this.addAction(new MechJebModuleScriptActionTarget(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Control From") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions4_1")) == 0)//"Control From"
 					{
 						this.addAction(new MechJebModuleScriptActionControlFrom(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Pause") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions1_2")) == 0)//"Pause"
 					{
 						this.addAction(new MechJebModuleScriptActionPause(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Crew Transfer") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions5_1")) == 0)//"Crew Transfer"
 					{
 						this.addAction(new MechJebModuleScriptActionCrewTransfer(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Quicksave") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions10_1")) == 0)//"Quicksave"
 					{
 						this.addAction(new MechJebModuleScriptActionQuicksave(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("RCS") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions4_2")) == 0)//"RCS"
 					{
 						this.addAction(new MechJebModuleScriptActionRCS(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Switch Vessel") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions4_4")) == 0)//"Switch Vessel"
 					{
 						this.addAction(new MechJebModuleScriptActionActiveVessel(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Activate Engine") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions7_2")) == 0)//"Activate Engine"
 					{
 						this.addAction(new MechJebModuleScriptActionActivateEngine(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("SAS") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions4_3")) == 0)//"SAS"
 					{
 						this.addAction(new MechJebModuleScriptActionSAS(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Execute node") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions6_2")) == 0)//"Execute node"
 					{
 						this.addAction(new MechJebModuleScriptActionExecuteNode(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Maneuver") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions6_1")) == 0)//"Maneuver"
 					{
 						this.addAction(new MechJebModuleScriptActionManoeuver(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Node tolerance") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions8_1")) == 0)//"Node tolerance"
 					{
 						this.addAction(new MechJebModuleScriptActionTolerance(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Warp") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions1_4")) == 0)//"Warp"
 					{
 						this.addAction(new MechJebModuleScriptActionWarp(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Wait for") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions1_3")) == 0)//"Wait for"
 					{
 						this.addAction(new MechJebModuleScriptActionWaitFor(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("PROGRAM - Repeat") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions11_1")) == 0)//"PROGRAM - Repeat"
 					{
 						if (this.checkMaxDepth())
 						{
 							this.addAction(new MechJebModuleScriptActionFor(scriptModule, core, this));
 						}
 					}
-					else if (actionName.CompareTo("PROGRAM - If") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions11_2")) == 0)//"PROGRAM - If"
 					{
 						if (this.checkMaxDepth())
 						{
 							this.addAction(new MechJebModuleScriptActionIf(scriptModule, core, this));
 						}
 					}
-					else if (actionName.CompareTo("PROGRAM - While") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions11_3")) == 0)//"PROGRAM - While"
 					{
 						if (this.checkMaxDepth())
 						{
 							this.addAction(new MechJebModuleScriptActionWhile(scriptModule, core, this));
 						}
 					}
-					else if (actionName.CompareTo("PROGRAM - Parallel") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions11_4")) == 0)//"PROGRAM - Parallel"
 					{
 						if (this.checkMaxDepth())
 						{
 							this.addAction(new MechJebModuleScriptActionParallel(scriptModule, core, this));
 						}
 					}
-					else if (actionName.CompareTo("Action Group") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions10_3")) == 0)//"Action Group"
 					{
 						this.addAction(new MechJebModuleScriptActionActionGroup(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("Load Script") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions10_2")) == 0)//"Load Script"
 					{
 						this.addAction(new MechJebModuleScriptActionLoadScript(scriptModule, core, this));
 					}
-                    else if (actionName.CompareTo("MODULE Smart A.S.S.") == 0)
+                    else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_1")) == 0)//"MODULE Smart A.S.S."
 					{
                         this.addAction(new MechJebModuleScriptActionSmartASS(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("MODULE Ascent Autopilot") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_2")) == 0)//"MODULE Ascent Autopilot"
 					{
 						this.addAction(new MechJebModuleScriptActionAscent(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("MODULE Docking Autopilot") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_3")) == 0)//"MODULE Docking Autopilot"
 					{
 						this.addAction(new MechJebModuleScriptActionDockingAutopilot(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("MODULE Landing") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_4")) == 0)//"MODULE Landing"
 					{
 						this.addAction(new MechJebModuleScriptActionLanding(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("MODULE Rendezvous") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_5")) == 0)//"MODULE Rendezvous"
 					{
 						this.addAction(new MechJebModuleScriptActionRendezvous(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("MODULE Rendezvous Autopilot") == 0)
+					else if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_6")) == 0)//"MODULE Rendezvous Autopilot"
 					{
 						this.addAction(new MechJebModuleScriptActionRendezvousAP(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("[IR Sequencer] Sequence") == 0)
+					else if (actionName.CompareTo("[IR Sequencer] Sequence") == 0)//
 					{
 						this.addAction(new MechJebModuleScriptActionIRSequencer(scriptModule, core, this));
 					}
-					else if (actionName.CompareTo("[kOS] Command") == 0)
+					else if (actionName.CompareTo("[kOS] Command") == 0)//
 					{
 						this.addAction(new MechJebModuleScriptActionKos(scriptModule, core, this));
 					}

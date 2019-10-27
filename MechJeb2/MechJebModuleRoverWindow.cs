@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
-
+using KSP.Localization;
 namespace MuMech
 {
 	public class MechJebModuleRoverWindow : DisplayModule
@@ -16,7 +16,7 @@ namespace MuMech
 
 		public override string GetName()
 		{
-			return "Rover Autopilot";
+			return Localizer.Format("#MechJeb_Rover_title");//"Rover Autopilot"
 		}
 
 		public override GUILayoutOption[] WindowOptions()
@@ -66,12 +66,12 @@ namespace MuMech
 			GUILayout.BeginVertical();
 			
 			GUILayout.BeginHorizontal();
-			GUILayout.Label("Target Speed", GUILayout.ExpandWidth(true));
+			GUILayout.Label(Localizer.Format("#MechJeb_Rover_label1"), GUILayout.ExpandWidth(true));//"Target Speed"
 			GUILayout.Label(autopilot.tgtSpeed.ToString("F1"), GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			GUILayout.Label("Waypoints", GUILayout.ExpandWidth(true));
+			GUILayout.Label(Localizer.Format("#MechJeb_Rover_label2"), GUILayout.ExpandWidth(true));//"Waypoints"
 			GUILayout.Label("Index " + (autopilot.WaypointIndex + 1).ToString() + " of " + autopilot.Waypoints.Count.ToString(), GUILayout.ExpandWidth(false));
 			GUILayout.EndHorizontal();
 			
@@ -82,7 +82,7 @@ namespace MuMech
 			{
 				var vssl = core.target.Target.GetVessel();
 				
-				if (GUILayout.Button("To Target"))
+				if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button1")))//"To Target"
 				{
 					core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex = -1;
 					autopilot.WaypointIndex = 0;
@@ -94,7 +94,7 @@ namespace MuMech
 					autopilot.LoopWaypoints = alt;
 				}
 
-				if (GUILayout.Button("Add Target"))
+				if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button2")))//"Add Target"
 				{
 					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
 					else { autopilot.Waypoints.Add(new MechJebWaypoint(core.target.GetPositionTargetPosition())); }
@@ -106,18 +106,18 @@ namespace MuMech
 			GUILayout.BeginHorizontal();
 			if (autopilot.Waypoints.Count > 0) {
 				if (!autopilot.ControlHeading || !autopilot.ControlSpeed) {
-					if (GUILayout.Button("Drive")) {
+					if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button3"))) {//"Drive"
 						autopilot.WaypointIndex = Mathf.Max(0, (alt ? 0 : autopilot.WaypointIndex));
 						autopilot.ControlHeading = autopilot.ControlSpeed = true;
 						// autopilot.LoopWaypoints = alt;
 					}
 				}
-				else if (GUILayout.Button("Stop")) {
+				else if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button4"))) {//"Stop"
 					// autopilot.WaypointIndex = -1; // more annoying than helpful
 					autopilot.ControlHeading = autopilot.ControlSpeed = autopilot.LoopWaypoints = false;
 				}
 			}
-			if (GUILayout.Button("Waypoints")) {
+			if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button5"))) {//"Waypoints"
 				var waypoints = core.GetComputerModule<MechJebModuleWaypointWindow>();
 				waypoints.enabled = !waypoints.enabled;
 				if (waypoints.enabled) {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -29,17 +30,17 @@ namespace MuMech
 
         public void useQuickWarpInfoItem()
         {
-            useQuickWarp = GUILayout.Toggle(useQuickWarp, "Quick warp");
+            useQuickWarp = GUILayout.Toggle(useQuickWarp, Localizer.Format("#MechJeb_WarpHelper_checkbox1"));//"Quick warp"
         }
 
         [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
         public void ControlWarpButton()
         {
-            if (WarpPaused && GUILayout.Button("Resume MJ Warp"))
+            if (WarpPaused && GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button3")))//"Resume MJ Warp"
             {
                 ResumeWarp();
             }
-            if (!WarpPaused && GUILayout.Button("Pause MJ Warp"))
+            if (!WarpPaused && GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button4")))//"Pause MJ Warp"
             {
                 PauseWarp();
             }
@@ -94,7 +95,7 @@ namespace MuMech
                 lastAskedIndex = rateIndex;
                 if (WarpPaused)
                 {
-                    ScreenMessages.PostScreenMessage("MJ : Warp paused - resume in the Warp Helper menu");
+                    ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WarpHelper_scrmsg"));//"MJ : Warp paused - resume in the Warp Helper menu"
                 }
                 else
                 {

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -25,9 +26,9 @@ namespace MuMech
         {
             if (core.staging.enabled)
             {
-                GUILayout.Label("Autostaging" + (core.staging.autostagingOnce ? " once " : " ") + "Active");
+                GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label1", (core.staging.autostagingOnce ?  Localizer.Format("#MechJeb_Utilities_label1_1") : " ")));//"Autostaging"<<1>>"Active" -------<<1>>" once ":""
             }
-            if (!core.staging.enabled && GUILayout.Button("Autostage once"))
+            if (!core.staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1")))//"Autostage once"
             {
                 core.staging.AutostageOnce(this);
             }
@@ -37,7 +38,7 @@ namespace MuMech
         public void Autostage()
         {
             bool oldAutostage = core.staging.users.Contains(this);
-            bool newAutostage = GUILayout.Toggle(oldAutostage, "Autostage");
+            bool newAutostage = GUILayout.Toggle(oldAutostage, Localizer.Format("#MechJeb_Utilities_checkbox1"));//"Autostage"
             if (newAutostage && !oldAutostage) core.staging.users.Add(this);
             if (!newAutostage && oldAutostage) core.staging.users.Remove(this);
             autostageSavedState = newAutostage;
@@ -62,12 +63,12 @@ namespace MuMech
                 core.thrust.LimitToPreventUnstableIgnitionInfoItem();
                 core.thrust.AutoRCsUllageInfoItem();
             }
-            core.thrust.smoothThrottle = GUILayout.Toggle(core.thrust.smoothThrottle, "Smooth throttle");
-            core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, "Manage air intakes");
+            core.thrust.smoothThrottle = GUILayout.Toggle(core.thrust.smoothThrottle, Localizer.Format("#MechJeb_Utilities_checkbox2"));//"Smooth throttle"
+            core.thrust.manageIntakes = GUILayout.Toggle(core.thrust.manageIntakes, Localizer.Format("#MechJeb_Utilities_checkbox3"));//"Manage air intakes"
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             try
             {
-                GUILayout.Label("Jet safety margin");
+                GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label2"));//"Jet safety margin"
                 core.thrust.flameoutSafetyPct.text = GUILayout.TextField(core.thrust.flameoutSafetyPct.text, 5);
                 GUILayout.Label("%");
             }
@@ -83,13 +84,13 @@ namespace MuMech
 				switch (core.thrust.differentialThrottleSuccess)
 				{
 					case MechJebModuleThrustController.DifferentialThrottleStatus.MoreEnginesRequired:
-						GUILayout.Label("Differential throttle failed\nMore engines required", new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });
+						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label3"), new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });//"Differential throttle failed\nMore engines required"
 						break;
 					case MechJebModuleThrustController.DifferentialThrottleStatus.AllEnginesOff:
-						GUILayout.Label("Differential throttle failed\nNo active engine", new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });
+						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label4"), new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });//"Differential throttle failed\nNo active engine"
 						break;
 					case MechJebModuleThrustController.DifferentialThrottleStatus.SolverFailed:
-						GUILayout.Label("Differential throttle failed\nCannot find solution", new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });
+						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label5"), new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });//"Differential throttle failed\nCannot find solution"
 						break;
 					case MechJebModuleThrustController.DifferentialThrottleStatus.Success:
 						break;
@@ -101,7 +102,7 @@ namespace MuMech
 
             Autostage();
 
-            if (!core.staging.enabled && GUILayout.Button("Autostage once")) core.staging.AutostageOnce(this);
+            if (!core.staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1"))) core.staging.AutostageOnce(this);//"Autostage once"
 
             if (core.staging.enabled) core.staging.AutostageSettingsInfoItem();
 
@@ -125,7 +126,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Utilities";
+            return Localizer.Format("#MechJeb_Utilities_title");//"Utilities"
         }
     }
 }

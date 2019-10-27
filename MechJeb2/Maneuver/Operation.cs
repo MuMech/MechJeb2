@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -55,7 +56,7 @@ namespace MuMech
             catch (Exception e)
             {
                 Debug.LogException(e);
-                errorMessage = "An error occurred while creating the node.";
+                errorMessage = Localizer.Format("#MechJeb_Maneu_errorMessage");//An error occurred while creating the node.
                 return null;
             }
         }

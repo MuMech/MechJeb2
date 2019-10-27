@@ -1,8 +1,9 @@
-﻿namespace MuMech
+﻿using KSP.Localization;
+namespace MuMech
 {
     public class OperationInclination : Operation
     {
-        public override string getName() { return "change inclination";}
+        public override string getName() { return Localizer.Format("#MechJeb_inclination_title");}//change inclination
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newInc = 0;
@@ -20,7 +21,7 @@
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox("New inclination:", newInc, "º");
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_inclination_label"), newInc, "º");//New inclination:
             timeSelector.DoChooseTimeGUI();
         }
 
