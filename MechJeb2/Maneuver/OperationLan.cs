@@ -18,7 +18,7 @@ namespace MuMech
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             timeSelector.DoChooseTimeGUI();
-            GUILayout.Label("#MechJeb_AN_label");//New Longitude of Ascending Node:
+            GUILayout.Label(Localizer.Format("#MechJeb_AN_label"));//New Longitude of Ascending Node:
             target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
         }
 
