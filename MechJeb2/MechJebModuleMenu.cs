@@ -313,7 +313,7 @@ namespace MuMech
             if (featureButtons.Count == 0)
             {
                 var maneuverPlannerModule = core.GetComputerModule<MechJebModuleManeuverPlanner>();
-                if (maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
+                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
                 {
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", (b) =>
                     {
