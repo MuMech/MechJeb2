@@ -123,7 +123,7 @@ namespace MuMech
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label ("Toggle action group");
+			GUILayout.Label ("Toggle action group");//
 			selectedActionId = GuiUtils.ComboBox.Box(selectedActionId, actionGroups.ToArray(), actionGroups);
 			base.postWindowGUI(windowID);
 		}
