@@ -203,12 +203,12 @@ namespace MuMech
                 }
                 else
                 {
-                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                    Debug.LogError(Localizer.Format("#MechJeb_LogError_msg1"));//"MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group."
                 }
             }
             else
             {
-                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+                Debug.LogError(Localizer.Format("#MechJeb_LogError_msg0"));//"MechJeb couldn't find the master MechJeb module for the current vessel."
             }
         }
 
@@ -271,7 +271,7 @@ namespace MuMech
                 }
                 else
                 {
-                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
+                    Debug.LogError(Localizer.Format("#MechJeb_LogError_msg2"));//"MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group."
                 }
             }
             else

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -149,13 +150,13 @@ namespace MuMech
                         latApproachSpeed = 0;
 
                     align = false;
-                    status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s before moving on target side (lat: " + latApproachSpeed.ToString() + " m/s)";
+                    status = Localizer.Format("#MechJeb_Docking_status1", zApproachSpeed.ToString("F2"),latApproachSpeed.ToString());//"Backing up at " <<1>> " m/s before moving on target side (lat: "<<2>> " m/s)"
                     break;
 
                 case DockingStep.WRONG_SIDE_LATERAL:
                     zApproachSpeed = 0;
                     latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, -lateralSep);
-                    status = "Moving away from docking axis at " + latApproachSpeed.ToString("F2") + " m/s to avoid hitting target on backing up";
+                    status = Localizer.Format("#MechJeb_Docking_status2", latApproachSpeed.ToString("F2"));//Moving away from docking axis at <<1>> m/s to avoid hitting target on backing up
                     break;
 
                 case DockingStep.WRONG_SIDE_SWITCHSIDE:
@@ -165,7 +166,7 @@ namespace MuMech
                     else if (lateralSep.magnitude < safeDistance * 2)
                         latApproachSpeed = 0;
                     
-                    status = "Moving at " + zApproachSpeed.ToString("F2") + " m/s to get on the correct side of the target. (lat: " + latApproachSpeed.ToString() + " m/s)";
+                    status = Localizer.Format("#MechJeb_Docking_status3", zApproachSpeed.ToString("F2"),latApproachSpeed.ToString());//"Moving at <<1>> m/s to get on the correct side of the target. (lat: <<2>> m/s)"
                     break;
 
                 case DockingStep.BACKING_UP:
@@ -176,7 +177,7 @@ namespace MuMech
 
                     zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, -zAxis);
                     align = false;
-                    status = "Backing up at " + zApproachSpeed.ToString("F2") + " m/s";
+                    status = Localizer.Format("#MechJeb_Docking_status4",zApproachSpeed.ToString("F2"));//"Backing up at " +  + " m/s"
                     break;
 
                 case DockingStep.MOVING_TO_START:
@@ -186,7 +187,7 @@ namespace MuMech
                     else
                         zApproachSpeed *= 0;
 
-                    status = "Moving toward the starting point at " + zApproachSpeed.ToString("F2") + " m/s.";
+                    status = Localizer.Format("#MechJeb_Docking_status5", zApproachSpeed.ToString("F2"));//"Moving toward the starting point at " +  + " m/s."
                     break;
 
                 case DockingStep.DOCKING:
@@ -198,7 +199,7 @@ namespace MuMech
                         zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
                         latApproachSpeed *= 2;
                     }
-                    status = "Moving forward to dock at " + zApproachSpeed.ToString("F2") + " / " + latApproachSpeed.ToString("F2") + " m/s.";
+                    status = Localizer.Format("#MechJeb_Docking_status6", zApproachSpeed.ToString("F2"),latApproachSpeed.ToString("F2"));//"Moving forward to dock at <<1>> / <<2>> m/s."
                     break;
 
                 default:
