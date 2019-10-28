@@ -233,7 +233,7 @@ namespace MuMech
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label18_1")
-                                      + MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + (mainBody.atmosphere ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2") : Localizer.Format("")));//"Orbit does not reenter:\n""m atmosphere height""m ground"
+                                      + MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + (mainBody.atmosphere ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2") : Localizer.Format("#MechJeb_LandingGuidance_Label18_3")));//"Orbit does not reenter:\n""m atmosphere height""m ground"
                         break;
 
                     case ReentrySimulation.Outcome.TIMED_OUT:

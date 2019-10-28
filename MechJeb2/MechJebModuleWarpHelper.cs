@@ -143,7 +143,7 @@ namespace MuMech
 
             core.warp.useQuickWarpInfoItem();
 
-            if (warping) GUILayout.Label(Localizer.Format("") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");//"Warping to "
+            if (warping) GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");//"Warping to "
 
             core.warp.ControlWarpButton();
 

@@ -217,7 +217,7 @@ namespace MuMech
             }
             else if (ElectricEngineRunning()) s.onHover.textColor = s.onNormal.textColor = Color.green;
 
-            electricThrottle = GUILayout.Toggle(electricThrottle, Localizer.Format(""), s, GUILayout.Width(110));//"Electric limit Lo"
+            electricThrottle = GUILayout.Toggle(electricThrottle, Localizer.Format("#MechJeb_Ascent_checkbox20"), s, GUILayout.Width(110));//"Electric limit Lo"
             electricThrottleLo.text = GUILayout.TextField(electricThrottleLo.text, GUILayout.Width(30));
             GUILayout.Label("% Hi", GUILayout.ExpandWidth(false));
             electricThrottleHi.text = GUILayout.TextField(electricThrottleHi.text, GUILayout.Width(30));
