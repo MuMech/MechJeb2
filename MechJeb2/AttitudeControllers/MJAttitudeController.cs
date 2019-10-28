@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech.AttitudeControllers
 {
@@ -235,12 +236,12 @@ namespace MuMech.AttitudeControllers
 
         public override void GUI()
         {
-            if (GUILayout.Button("Reset"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_adv_reset_button")))//"Reset"
             {
                 ResetConfig();
             }
 
-            Tf_autoTune = GUILayout.Toggle(Tf_autoTune, " Auto-tuning");
+            Tf_autoTune = GUILayout.Toggle(Tf_autoTune, Localizer.Format("#MechJeb_AttitudeController_checkbox1"));//" Auto-tuning"
 
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
@@ -248,15 +249,15 @@ namespace MuMech.AttitudeControllers
 
             if (!Tf_autoTune)
             {
-                GUILayout.Label("Larger ship do better with a larger Tf");
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label1"));//"Larger ship do better with a larger Tf"
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Tf (s)", GUILayout.ExpandWidth(true));
-                GUILayout.Label("P", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label2"), GUILayout.ExpandWidth(true));//"Tf (s)"
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label3"), GUILayout.ExpandWidth(false));//"P"
                 UI_TfX.text = GUILayout.TextField(UI_TfX.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                GUILayout.Label("Y", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label4"), GUILayout.ExpandWidth(false));//"Y"
                 UI_TfY.text = GUILayout.TextField(UI_TfY.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                GUILayout.Label("R", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label5"), GUILayout.ExpandWidth(false));//"R"
                 UI_TfZ.text = GUILayout.TextField(UI_TfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
                 GUILayout.EndHorizontal();
 
@@ -267,22 +268,22 @@ namespace MuMech.AttitudeControllers
             else
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Tf", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label6"), GUILayout.ExpandWidth(true));//"Tf"
                 GUILayout.Label(MuUtils.PrettyPrint(TfV), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Tf range", GUILayout.ExpandWidth(true));
-                GuiUtils.SimpleTextBox("min", UI_TfMin, "", 50);
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label7"), GUILayout.ExpandWidth(true));//"Tf range"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label8"), UI_TfMin, "", 50);//"min"
                 UI_TfMin = Math.Max(UI_TfMin, 0.01);
-                GuiUtils.SimpleTextBox("max", UI_TfMax, "", 50);
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label9"), UI_TfMax, "", 50);//"max"
                 UI_TfMax = Math.Max(UI_TfMax, 0.01);
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            bool newLowPassFilter = GUILayout.Toggle(lowPassFilter, " Low Pass Filter");
+            bool newLowPassFilter = GUILayout.Toggle(lowPassFilter, Localizer.Format("#MechJeb_AttitudeController_checkbox2"));//" Low Pass Filter"
 
             if (lowPassFilter != newLowPassFilter)
             {
@@ -290,17 +291,17 @@ namespace MuMech.AttitudeControllers
                 lowPassFilter = newLowPassFilter;
             }
 
-            GUILayout.Label("PID factors");
-            GuiUtils.SimpleTextBox("Kd = ", UI_kdFactor, " / Tf", 50);
+            GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_PIDF"));//"PID factors"
+            GuiUtils.SimpleTextBox("Kd = ", UI_kdFactor, " / Tf", 50);//
             UI_kdFactor = Math.Max(UI_kdFactor, 0.01);
             GuiUtils.SimpleTextBox("Kp = pid.Kd / (", UI_kpFactor, " * Math.Sqrt(2) * Tf)", 50);
             UI_kpFactor = Math.Max(UI_kpFactor, 0.01);
             GuiUtils.SimpleTextBox("Ki = pid.Kp / (", UI_kiFactor, " * Math.Sqrt(2) * Tf)", 50);
             UI_kiFactor = Math.Max(UI_kiFactor, 0.01);
-            GuiUtils.SimpleTextBox("Deadband = ", UI_deadband, "", 50);
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_PIDFactor1"), UI_deadband, "", 50);//"Deadband = "
             deadband = Math.Max(UI_deadband, 0.0);
             
-            GuiUtils.SimpleTextBox("Maximum Relative Angular Velocity", kWlimit, "%");
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label11"), kWlimit, "%");//"Maximum Relative Angular Velocity"
             double tmp_kWlimit = kWlimit;
             tmp_kWlimit = (EditableDouble)GUILayout.HorizontalSlider((float)tmp_kWlimit, 0.0F, 1.0F);
 
@@ -314,47 +315,47 @@ namespace MuMech.AttitudeControllers
             //if (showInfos)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Kp", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label12"), GUILayout.ExpandWidth(true));//"Kp"
                 GUILayout.Label(MuUtils.PrettyPrint(pid.Kp), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Ki", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label13"), GUILayout.ExpandWidth(true));//"Ki"
                 GUILayout.Label(MuUtils.PrettyPrint(pid.Ki), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Kd", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label14"), GUILayout.ExpandWidth(true));//"Kd"
                 GUILayout.Label(MuUtils.PrettyPrint(pid.Kd), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Error", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label15"), GUILayout.ExpandWidth(true));//"Error"
                 GUILayout.Label(MuUtils.PrettyPrint(error * Mathf.Rad2Deg), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("prop. action.", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label16"), GUILayout.ExpandWidth(true));//"prop. action."
                 GUILayout.Label(MuUtils.PrettyPrint(pid.propAct), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("deriv. action", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label17"), GUILayout.ExpandWidth(true));//"deriv. action"
                 GUILayout.Label(MuUtils.PrettyPrint(pid.derivativeAct), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("integral action.", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label18"), GUILayout.ExpandWidth(true));//"integral action."
                 GUILayout.Label(MuUtils.PrettyPrint(pid.intAccum), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("PID Action", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label19"), GUILayout.ExpandWidth(true));//"PID Action"
                 GUILayout.Label(MuUtils.PrettyPrint(pidAction), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
                 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Inertia", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label20"), GUILayout.ExpandWidth(true));//"Inertia"
                 GUILayout.Label("|" + ac.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(ac.inertia),
                     GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
