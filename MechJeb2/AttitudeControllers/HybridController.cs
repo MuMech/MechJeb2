@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech.AttitudeControllers
 {
@@ -191,15 +192,15 @@ namespace MuMech.AttitudeControllers
 
         public override void GUI()
         {
-            useInertia = GUILayout.Toggle(useInertia, "useInertia");
+            useInertia = GUILayout.Toggle(useInertia, Localizer.Format("#MechJeb_HybridController_checkbox1"));//"useInertia"
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("MaxStoppingTime", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label1"), GUILayout.ExpandWidth(false));//"MaxStoppingTime"
             maxStoppingTime.text = GUILayout.TextField(maxStoppingTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            useControlRange = GUILayout.Toggle(useControlRange, "RollControlRange", GUILayout.ExpandWidth(false));
+            useControlRange = GUILayout.Toggle(useControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"), GUILayout.ExpandWidth(false));//"RollControlRange"
             rollControlRange.text = GUILayout.TextField(rollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
@@ -215,27 +216,27 @@ namespace MuMech.AttitudeControllers
             //}
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Actuation", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label2"), GUILayout.ExpandWidth(true));//"Actuation"
             GUILayout.Label(MuUtils.PrettyPrint(Actuation), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("phiVector", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label3"), GUILayout.ExpandWidth(true));//"phiVector"
             GUILayout.Label(MuUtils.PrettyPrint(phiVector), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("TargetTorque", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label4"), GUILayout.ExpandWidth(true));//"TargetTorque"
             GUILayout.Label(MuUtils.PrettyPrint(TargetTorque), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("ControlTorque", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label5"), GUILayout.ExpandWidth(true));//"ControlTorque"
             GUILayout.Label(MuUtils.PrettyPrint(ControlTorque), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Inertia", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label6"), GUILayout.ExpandWidth(true));//"Inertia"
             GUILayout.Label("|" + ac.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(ac.inertia), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }

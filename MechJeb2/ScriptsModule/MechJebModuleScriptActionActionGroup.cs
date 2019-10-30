@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -123,7 +124,7 @@ namespace MuMech
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label ("Toggle action group");
+			GUILayout.Label (Localizer.Format("#MechJeb_Actiongroup_label1"));//"Toggle action group"
 			selectedActionId = GuiUtils.ComboBox.Box(selectedActionId, actionGroups.ToArray(), actionGroups);
 			base.postWindowGUI(windowID);
 		}

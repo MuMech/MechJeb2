@@ -887,7 +887,7 @@ namespace MuMech
 
             if (!HighLogic.LoadedSceneIsEditor)
             {
-                if (GUILayout.Button(liveSLT ? "Live SLT" : "0Alt SLT", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(liveSLT ?  Localizer.Format("#MechJeb_InfoItems_button5") :Localizer.Format("#MechJeb_InfoItems_button6"), GUILayout.ExpandWidth(false)))//"Live SLT" "0Alt SLT"
                 {
                     liveSLT = !liveSLT;
                 }
@@ -1146,7 +1146,7 @@ namespace MuMech
         {
             if (!(core.target.Target is Vessel))
             {
-                GUILayout.Label("Target-relative Angular velocity: (N/A)");
+                GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label2"));//"Target-relative Angular velocity: (N/A)"
                 return;
             }
 
@@ -1154,7 +1154,7 @@ namespace MuMech
             Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.angularVelocity - vessel.angularVelocity) * Mathf.Rad2Deg;
 
             GUILayout.BeginVertical();
-            GUILayout.Label("Target-relative angular velocity:");
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label3"));//"Target-relative angular velocity:"
             GUILayout.Label("P: " + MuUtils.PadPositive(relw.x, "F2") + " °/s");
             GUILayout.Label("Y: " + MuUtils.PadPositive(relw.z, "F2") + " °/s");
             GUILayout.Label("R: " + MuUtils.PadPositive(relw.y, "F2") + " °/s");
@@ -1166,7 +1166,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists)
             {
-                GUILayout.Label("Separation from target: (N/A)");
+                GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label4"));//"Separation from target: (N/A)"
                 return;
             }
 
@@ -1175,7 +1175,7 @@ namespace MuMech
             double sepY = Vector3d.Dot(sep, vessel.GetTransform().forward);
             double sepZ = Vector3d.Dot(sep, vessel.GetTransform().up);
             GUILayout.BeginVertical();
-            GUILayout.Label("Separation from target:");
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label5"));//"Separation from target:"
             GUILayout.Label("X: " + MuUtils.PadPositive(sepX, "F2") + " m  [L/J]");
             GUILayout.Label("Y: " + MuUtils.PadPositive(sepY, "F2") + " m  [I/K]");
             GUILayout.Label("Z: " + MuUtils.PadPositive(sepZ, "F2") + " m  [H/N]");
@@ -1189,7 +1189,7 @@ namespace MuMech
             while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
             GUILayout.BeginVertical();
-            GUILayout.Label("Planet phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label6"), new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });//"Planet phase angles"
 
             for (int i = 0; i < FlightGlobals.Bodies.Count; i++)
             {
@@ -1220,7 +1220,7 @@ namespace MuMech
         public void AllMoonPhaseAngles()
         {
             GUILayout.BeginVertical();
-            GUILayout.Label("Moon phase angles", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label7"), new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });//"Moon phase angles"
 
             if (orbit.referenceBody != Planetarium.fetch.Sun)
             {
