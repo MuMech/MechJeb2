@@ -848,6 +848,8 @@ namespace MuMech
         public int StageDisplayState = 0;
         [Persistent(pass = (int)Pass.Global)]
         public bool showEmpty = true;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool timeSeconds = false;
 
 
         private static readonly string[] StageDisplayStates = {Localizer.Format("#MechJeb_InfoItems_button1"), Localizer.Format("#MechJeb_InfoItems_button2"), Localizer.Format("#MechJeb_InfoItems_button3"), Localizer.Format("#MechJeb_InfoItems_button4") };//"Short stats""Long stats""Full stats""Custom"
@@ -883,11 +885,15 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label1"), GUILayout.ExpandWidth(true));//"Stage stats"
 
+            if (GUILayout.Button(timeSeconds ? "s" : "dhms", GUILayout.ExpandWidth(false)))
+            {
+                timeSeconds = !timeSeconds;
+            }
+            
             if (GUILayout.Button(showEmpty ?  Localizer.Format("#MechJeb_InfoItems_showEmpty") :Localizer.Format("#MechJeb_InfoItems_hideEmpty"), GUILayout.ExpandWidth(false)))
             {
                 showEmpty = !showEmpty;
             }
-
 
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
             {
@@ -961,7 +967,7 @@ namespace MuMech
             Profiler.BeginSample("AllStageStats.UI2");
 
             GUILayout.BeginHorizontal();
-            DrawStageStatsColumn("Stage", stages.Select(s => s.ToString()));
+            DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn0"), stages.Select(s => s.ToString()));
 
             Profiler.EndSample();
 
@@ -984,7 +990,7 @@ namespace MuMech
             if (showISP) noChange &= showISP = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn9"), stages.Select(s => atmoStats[s].isp.ToString("F2")));//"ISP"
             if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn10"), stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));//"Atmo ΔV"
             if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn11"), stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));//"Vac ΔV"
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));//"Time"
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => timeSeconds ? MuUtils.ToSI(atmoStats[s].deltaTime, 2) + " s": GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));//"Time"
 
             if (!noChange)
                 StageDisplayState = 3;
