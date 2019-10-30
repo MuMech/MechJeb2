@@ -846,6 +846,9 @@ namespace MuMech
         public int TWRBody = 1;
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showEmpty = true;
+
 
         private static readonly string[] StageDisplayStates = {Localizer.Format("#MechJeb_InfoItems_button1"), Localizer.Format("#MechJeb_InfoItems_button2"), Localizer.Format("#MechJeb_InfoItems_button3"), Localizer.Format("#MechJeb_InfoItems_button4") };//"Short stats""Long stats""Full stats""Custom"
 
@@ -873,12 +876,18 @@ namespace MuMech
             Profiler.BeginSample("AllStageStats.UI1");
 
             int numStages = atmoStats.Length;
-            var stages = Enumerable.Range(0, numStages).ToArray();
+            var stages = Enumerable.Range(0, numStages).Where(s => showEmpty || atmoStats[s].deltaV > 0).ToArray();
             
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label1"), GUILayout.ExpandWidth(true));//"Stage stats"
+
+            if (GUILayout.Button(showEmpty ?  Localizer.Format("#MechJeb_InfoItems_showEmpty") :Localizer.Format("#MechJeb_InfoItems_hideEmpty"), GUILayout.ExpandWidth(false)))
+            {
+                showEmpty = !showEmpty;
+            }
+
 
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
             {
