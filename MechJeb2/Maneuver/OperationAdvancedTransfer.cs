@@ -234,7 +234,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + departure);//Departure in 
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4 ") + duration);//Transit duration 
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + duration);//Transit duration 
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -254,7 +254,7 @@ namespace MuMech
             switch (selectionMode)
             {
             case Mode.LimitedTime:
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_adv_label5 "), maxArrivalTime);//Max arrival time
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_adv_label5"), maxArrivalTime);//Max arrival time
                 if (worker != null && !worker.Finished)
                     GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%");
                 break;
