@@ -10,6 +10,7 @@ using UnityEngine.Profiling;
 using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -202,12 +203,12 @@ namespace MuMech
                 }
                 else
                 {
-                    Debug.LogError("MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group.");
+                    Debug.LogError(Localizer.Format("#MechJeb_LogError_msg1"));//"MechJeb couldn't find MechJebModuleSmartASS for orbital control via action group."
                 }
             }
             else
             {
-                Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
+                Debug.LogError(Localizer.Format("#MechJeb_LogError_msg0"));//"MechJeb couldn't find the master MechJeb module for the current vessel."
             }
         }
 
@@ -270,7 +271,7 @@ namespace MuMech
                 }
                 else
                 {
-                    Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
+                    Debug.LogError(Localizer.Format("#MechJeb_LogError_msg2"));//"MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group."
                 }
             }
             else
@@ -931,6 +932,15 @@ namespace MuMech
                 if (generateDefaultWindows)
                 {
                     GetComputerModule<MechJebModuleCustomWindowEditor>().AddDefaultWindows();
+                }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                Debug.LogError("MechJeb caught a ReflectionTypeLoadException. Those DLL are not built for this KSP version:");
+                var brokenAssembly = ex.Types.Where(x => x != null).Select(x => x.Assembly).Distinct();
+                foreach (Assembly assembly in brokenAssembly)
+                {
+                    Debug.LogError(assembly.GetName().Name + " " + assembly.GetName().Version + " " + assembly.Location.Remove(0, Path.GetFullPath(KSPUtil.ApplicationRootPath).Length));
                 }
             }
             catch (Exception e)

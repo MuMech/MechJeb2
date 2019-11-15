@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
-
+using KSP.Localization;
 namespace MuMech
 {
     public class OperationCourseCorrection : Operation
     {
-        public override string getName() { return "fine tune closest approach to target";}
+        public override string getName() { return Localizer.Format("#MechJeb_approach_title");}//fine tune closest approach to target
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult courseCorrectFinalPeA = new EditableDoubleMult(200000, 1000);
@@ -18,16 +18,16 @@ namespace MuMech
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (target.Target is CelestialBody)
-                GuiUtils.SimpleTextBox("Approximate final periapsis", courseCorrectFinalPeA, "km");
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_approach_label1"), courseCorrectFinalPeA, "km");//Approximate final periapsis
             else
-                GuiUtils.SimpleTextBox("Closest approach distance", interceptDistance, "m");
-            GUILayout.Label("Schedule the burn to minimize the required ΔV.");
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_approach_label2"), interceptDistance, "m");//Closest approach distance
+            GUILayout.Label(Localizer.Format("#MechJeb_approach_label3"));//Schedule the burn to minimize the required ΔV.
         }
 
         public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)
-                throw new OperationException("must select a target for the course correction.");
+                throw new OperationException(Localizer.Format("#MechJeb_approach_Exception1"));//must select a target for the course correction.
 
             Orbit correctionPatch = o;
             while (correctionPatch != null)
@@ -42,12 +42,12 @@ namespace MuMech
             }
 
             if (correctionPatch == null || correctionPatch.referenceBody != target.TargetOrbit.referenceBody)
-                throw new OperationException("target for course correction must be in the same sphere of influence");
+                throw new OperationException(Localizer.Format("#MechJeb_approach_Exception2"));//"target for course correction must be in the same sphere of influence"
 
             if (o.NextClosestApproachTime(target.TargetOrbit, UT) < UT + 1 ||
                     o.NextClosestApproachDistance(target.TargetOrbit, UT) > target.TargetOrbit.semiMajorAxis * 0.2)
             {
-                errorMessage = "Warning: orbit before course correction doesn't seem to approach target very closely. Planned course correction may be extreme. Recommend plotting an approximate intercept orbit and then plotting a course correction.";
+                errorMessage = Localizer.Format("#MechJeb_Approach_errormsg");//Warning: orbit before course correction doesn't seem to approach target very closely. Planned course correction may be extreme. Recommend plotting an approximate intercept orbit and then plotting a course correction.
             }
 
             CelestialBody targetBody = target.Target as CelestialBody;

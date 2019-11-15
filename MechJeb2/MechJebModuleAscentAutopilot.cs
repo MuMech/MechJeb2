@@ -1,6 +1,7 @@
 using System;
 using KSP.UI.Screens;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -176,7 +177,7 @@ namespace MuMech
             core.thrust.users.Add(this);
             if (autostage) core.staging.users.Add(this);
 
-            status = "Pre Launch";
+            status = Localizer.Format("#MechJeb_Ascent_status1");//"Pre Launch"
         }
 
         public override void OnModuleDisabled()
@@ -190,7 +191,7 @@ namespace MuMech
 
             if (placedCircularizeNode) core.node.Abort();
 
-            status = "Off";
+            status = Localizer.Format("#MechJeb_Ascent_status2");//"Off"
         }
 
         public void StartCountdown(double time)
@@ -268,7 +269,7 @@ namespace MuMech
         void DrivePrelaunch(FlightCtrlState s)
         {
             if (vessel.LiftedOff() && !vessel.Landed) {
-                status = "Vessel is not landed, skipping pre-launch";
+                status = Localizer.Format("#MechJeb_Ascent_status4");//"Vessel is not landed, skipping pre-launch"
                 mode = AscentMode.ASCEND;
                 return;
             }
@@ -282,7 +283,7 @@ namespace MuMech
 
             if (timedLaunch && tMinus > 10.0)
             {
-                status = "Pre Launch";
+                status = Localizer.Format("#MechJeb_Ascent_status1");//"Pre Launch"
                 return;
             }
 
@@ -295,7 +296,7 @@ namespace MuMech
                 }
                 else
                 {
-                    status = "Retracting solar panels";
+                    status = Localizer.Format("#MechJeb_Ascent_status5");//"Retracting solar panels"
                 }
             } else {
                 mode = AscentMode.ASCEND;
@@ -307,7 +308,7 @@ namespace MuMech
             if (timedLaunch)
             {
                 Debug.Log("Awaiting Liftoff");
-                status = "Awaiting liftoff";
+                status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
                 // kill the optimizer if it is running.
                 core.guidance.enabled = false;
 
@@ -371,15 +372,15 @@ namespace MuMech
                 core.node.ExecuteOneNode(this);
             }
 
-            if (core.node.burnTriggered) status = "Circularizing";
-            else status = "Coasting to circularization burn";
+            if (core.node.burnTriggered) status = Localizer.Format("#MechJeb_Ascent_status7");//"Circularizing"
+            else status = Localizer.Format("#MechJeb_Ascent_status8");//"Coasting to circularization burn"
         }
 
         //////////////////////////////////////////////////
         // wiring for switching the different ascent types
         //////////////////////////////////////////////////
 
-        public string[] ascentPathList = { "Classic Ascent Profile", "Stock-style GravityTurn™", "Primer Vector Guidance (RSS/RO)" };
+        public string[] ascentPathList = {Localizer.Format("#MechJeb_Ascent_ascentPathList1"),Localizer.Format("#MechJeb_Ascent_ascentPathList2"),Localizer.Format("#MechJeb_Ascent_ascentPathList3") };// "Classic Ascent Profile", "Stock-style GravityTurn™", "Primer Vector Guidance (RSS/RO)"
 
         public MechJebModuleAscentBase ascentPath;
         public MechJebModuleAscentMenuBase ascentMenu;

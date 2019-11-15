@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using KSP.UI.Screens;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -209,7 +210,7 @@ namespace MuMech
                 }
             }
 
-            if (GUILayout.Button("Online Manual"))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_OnlineManualbutton")))//"Online Manual"
             {
                 Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki");
             }
@@ -218,7 +219,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (core.someModuleAreLocked)
-                GUILayout.Label("Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station.");
+                GUILayout.Label(Localizer.Format("#MechJeb_ModuleAreLocked"));//"Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station."
         }
 
         public void SetupAppLauncher()
@@ -313,7 +314,7 @@ namespace MuMech
             if (featureButtons.Count == 0)
             {
                 var maneuverPlannerModule = core.GetComputerModule<MechJebModuleManeuverPlanner>();
-                if (maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
+                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
                 {
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", (b) =>
                     {

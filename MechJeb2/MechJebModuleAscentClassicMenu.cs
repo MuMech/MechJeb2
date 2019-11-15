@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -32,7 +33,7 @@ namespace MuMech
         {
             if (path == null)
             {
-                GUILayout.Label("Path is null!!!1!!1!1!1111!11eleven");
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_nopath"));//"Path is null!!!1!!1!1!1111!11eleven"
                 base.WindowGUI(windowID);
                 return;
             }
@@ -47,16 +48,16 @@ namespace MuMech
 
             double oldTurnShapeExponent = path.turnShapeExponent;
 
-            path.autoPath = GUILayout.Toggle(path.autoPath, "Automatic Altitude Turn", GUILayout.ExpandWidth(false));
+            path.autoPath = GUILayout.Toggle(path.autoPath, Localizer.Format("#MechJeb_AscentPathEd_auto"), GUILayout.ExpandWidth(false));//"Automatic Altitude Turn"
             if (path.autoPath)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Altitude: ", GUILayout.Width(60));
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label1"), GUILayout.Width(60));//"Altitude: "
                 // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
                 path.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnPerc * 200f, 1f, 210.5f)) / 200f;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Velocity: ", GUILayout.Width(60));
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label2"), GUILayout.Width(60));//"Velocity: "
                 path.autoTurnSpdFactor = Mathf.Floor(GUILayout.HorizontalSlider(path.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
                 GUILayout.EndHorizontal();
             }
@@ -64,25 +65,25 @@ namespace MuMech
             if (path.autoPath)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Turn start when Altitude is ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label3"), GUILayout.ExpandWidth(false));//"Turn start when Altitude is "
                 GUILayout.Label(MuUtils.ToSI(path.autoTurnStartAltitude, -1, 2) + "m ", GUILayout.ExpandWidth(false));
-                GUILayout.Label("or Velocity reach ", GUILayout.ExpandWidth(false));
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 3) + "m/s", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GUILayout.ExpandWidth(false));//"or Velocity reach "
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnStartVelocity, -1, 3) + "m/s", GUILayout.ExpandWidth(false));//
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Turn end altitude: ");
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label5"));//"Turn end altitude: "
                 GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude, -1, 2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
             else
             {
-                GuiUtils.SimpleTextBox("Turn start altitude:", path.turnStartAltitude, "km");
-                GuiUtils.SimpleTextBox("Turn start velocity:", path.turnStartVelocity, "m/s");
-                GuiUtils.SimpleTextBox("Turn end altitude:", path.turnEndAltitude, "km");
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label6"), path.turnStartAltitude, "km");//"Turn start altitude:"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label7"), path.turnStartVelocity, "m/s");//"Turn start velocity:"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label8"), path.turnEndAltitude, "km");//"Turn end altitude:"
             }
 
-            GuiUtils.SimpleTextBox("Final flight path angle:", path.turnEndAngle, "°");
-            GuiUtils.SimpleTextBox("Turn shape:", path.turnShapeExponent, "%");
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label9"), path.turnEndAngle, "°");//"Final flight path angle:"
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label10"), path.turnShapeExponent, "%");//"Turn shape:"
 
             // Round the slider's value (0..1) to sliderPrecision decimal places.
             const int sliderPrecision = 3;
@@ -209,7 +210,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Ascent Path Editor";
+            return Localizer.Format("#MechJeb_AscentPathEd_title");//"Ascent Path Editor"
         }
     }
 }

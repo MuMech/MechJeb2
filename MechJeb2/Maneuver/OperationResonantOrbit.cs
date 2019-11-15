@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
-
+using KSP.Localization;
 namespace MuMech
 {
     public class OperationResonantOrbit : Operation
     {
-        public override string getName() { return "resonant orbit";}
+        public override string getName() { return Localizer.Format("#MechJeb_resonant_title");}//resonant orbit
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableInt resonanceNumerator = 2;
@@ -19,9 +19,9 @@ namespace MuMech
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GUILayout.Label("Change your orbital period to " + resonanceNumerator.val + "/" + resonanceDenominator.val + " of your current orbital period");
+            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1_1") + resonanceNumerator.val + "/" + resonanceDenominator.val + Localizer.Format("#MechJeb_resonant_label1_2"));//"Change your orbital period to "" of your current orbital period"
             GUILayout.BeginHorizontal();
-            GUILayout.Label("New orbital period ratio :", GUILayout.ExpandWidth(true));
+            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label2"), GUILayout.ExpandWidth(true));//New orbital period ratio :
             resonanceNumerator.text = GUILayout.TextField(resonanceNumerator.text, GUILayout.Width(30));
             GUILayout.Label("/", GUILayout.ExpandWidth(false));
             resonanceDenominator.text = GUILayout.TextField(resonanceDenominator.text, GUILayout.Width(30));

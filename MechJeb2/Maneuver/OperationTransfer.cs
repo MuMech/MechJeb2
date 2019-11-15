@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
-
+using KSP.Localization;
 namespace MuMech
 {
     public class OperationGeneric : Operation
     {
-        public override string getName() { return "bi-impulsive (Hohmann) transfer to target";}
+        public override string getName() { return Localizer.Format("#MechJeb_Hohm_title");}//bi-impulsive (Hohmann) transfer to target
 
         public bool intercept_only = false;
 
@@ -26,9 +26,9 @@ namespace MuMech
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            intercept_only = GUILayout.Toggle(intercept_only, "intercept only, no capture burn (impact/flyby)");
-            simpleTransfer = GUILayout.Toggle(simpleTransfer, "simple coplanar Hohmann transfer");
-            GuiUtils.SimpleTextBox("fractional target period offset:", periodOffset);
+            intercept_only = GUILayout.Toggle(intercept_only, Localizer.Format("#MechJeb_Hohm_intercept_only"));//intercept only, no capture burn (impact/flyby)
+            simpleTransfer = GUILayout.Toggle(simpleTransfer, Localizer.Format("#MechJeb_Hohm_simpleTransfer"));//simple coplanar Hohmann transfer
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), periodOffset);//fractional target period offset
             if (!simpleTransfer)
             {
                 timeSelector.DoChooseTimeGUI();
@@ -41,11 +41,11 @@ namespace MuMech
 
             if (!target.NormalTargetExists)
             {
-                throw new OperationException("must select a target for the bi-impulsive transfer.");
+                throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception1"));//must select a target for the bi-impulsive transfer.
             }
             else if (o.referenceBody != target.TargetOrbit.referenceBody)
             {
-                throw new OperationException("target for bi-impulsive transfer must be in the same sphere of influence.");
+                throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception2"));//target for bi-impulsive transfer must be in the same sphere of influence.
             }
 
             Vector3d dV;
@@ -79,7 +79,7 @@ namespace MuMech
                     {
                         if(!anExists)
                         {
-                            throw new OperationException("ascending node with target doesn't exist.");
+                            throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception3"));//ascending node with target doesn't exist.
                         }
                         UT = anTime;
                     }
@@ -87,7 +87,7 @@ namespace MuMech
                     {
                         if(!dnExists)
                         {
-                            throw new OperationException("descending node with target doesn't exist.");
+                            throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception4"));//descending node with target doesn't exist.
                         }
                         UT = dnTime;
                     }
@@ -95,7 +95,7 @@ namespace MuMech
                     {
                         if(!anExists && !dnExists)
                         {
-                            throw new OperationException("neither ascending nor descending node with target exists.");
+                            throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception5"));//neither ascending nor descending node with target exists.
                         }
                         if(!dnExists || anTime <= dnTime)
                         {

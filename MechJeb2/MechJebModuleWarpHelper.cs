@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
     public class MechJebModuleWarpHelper : DisplayModule
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
-        static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry" };
+        static string[] warpTargetStrings = new string[] { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") };//"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
 
@@ -28,14 +29,14 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Warp to: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GUILayout.ExpandWidth(false));//"Warp to: "
             warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
             GUILayout.EndHorizontal();
 
             if (warpTarget == WarpTarget.Time)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Warp for: ", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GUILayout.ExpandWidth(true));//"Warp for: "
                 timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
                 GUILayout.EndHorizontal();
             }
@@ -43,18 +44,18 @@ namespace MuMech
             {
                 // I wonder if I should check for target that don't make sense
                 if (!core.target.NormalTargetExists)
-                    GUILayout.Label("You need a target");
+                    GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label3"));//"You need a target"
                 else
-                    GuiUtils.SimpleTextBox("Phase Angle:", phaseAngle, "º", 60);
+                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label4"), phaseAngle, "º", 60);//"Phase Angle:"
             }
 
             GUILayout.BeginHorizontal();
 
-            GuiUtils.SimpleTextBox("Lead time: ", leadTime, "");
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label5"), leadTime, "");//"Lead time: "
 
             if (warping)
             {
-                if (GUILayout.Button("Abort"))
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button1")))//"Abort"
                 {
                     warping = false;
                     core.warp.MinimumWarp(true);
@@ -62,7 +63,7 @@ namespace MuMech
             }
             else
             {
-                if (GUILayout.Button("Warp")) 
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button2")))//"Warp"
                 {
                     warping = true;
 
@@ -142,7 +143,7 @@ namespace MuMech
 
             core.warp.useQuickWarpInfoItem();
 
-            if (warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
+            if (warping) GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");//"Warping to "
 
             core.warp.ControlWarpButton();
 
@@ -192,7 +193,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Warp Helper";
+            return Localizer.Format("#MechJeb_WarpHelper_title");//"Warp Helper"
         }
 
         public MechJebModuleWarpHelper(MechJebCore core) : base(core) { }

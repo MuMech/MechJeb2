@@ -1,8 +1,9 @@
-﻿namespace MuMech
+﻿using KSP.Localization;
+namespace MuMech
 {
     public class OperationPlane : Operation
     {
-        public override string getName() { return "match planes with target";}
+        public override string getName() { return Localizer.Format("#MechJeb_match_planes_title");}//match planes with target
 
         private TimeSelector timeSelector;
 
@@ -26,11 +27,11 @@
 
             if (!target.NormalTargetExists)
             {
-                throw new OperationException("must select a target to match planes with.");
+                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception1"));//must select a target to match planes with.
             }
             else if (o.referenceBody != target.TargetOrbit.referenceBody)
             {
-                throw new OperationException("can only match planes with an object in the same sphere of influence.");
+                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception2"));//can only match planes with an object in the same sphere of influence.
             }
 
             var anExists = o.AscendingNodeExists(target.TargetOrbit);
@@ -45,7 +46,7 @@
             {
                 if(!anExists)
                 {
-                    throw new OperationException("ascending node with target doesn't exist.");
+                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception3"));//ascending node with target doesn't exist.
                 }
                 UT = anTime;
                 dV = anDeltaV;
@@ -54,7 +55,7 @@
             {
                 if(!dnExists)
                 {
-                    throw new OperationException("descending node with target doesn't exist.");
+                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception4"));//descending node with target doesn't exist.
                 }
                 UT = dnTime;
                 dV = dnDeltaV;
@@ -63,7 +64,7 @@
             {
                 if(!anExists && !dnExists)
                 {
-                    throw new OperationException("neither ascending nor descending node with target exists.");
+                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception5"));//neither ascending nor descending node with target exists.
                 }
                 if(!dnExists || anTime <= dnTime)
                 {
@@ -80,7 +81,7 @@
             {
                 if(!anExists && !dnExists)
                 {
-                    throw new OperationException("neither ascending nor descending node with target exists.");
+                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception5"));//neither ascending nor descending node with target exists.
                 }
                 if(!dnExists || anDeltaV.magnitude <= dnDeltaV.magnitude)
                 {
@@ -95,7 +96,7 @@
             }
             else
             {
-                throw new OperationException("wrong time reference.");
+                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception6"));//wrong time reference.
             }
 
             return new ManeuverParameters(dV, UT);
