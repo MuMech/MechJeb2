@@ -934,6 +934,15 @@ namespace MuMech
                     GetComputerModule<MechJebModuleCustomWindowEditor>().AddDefaultWindows();
                 }
             }
+            catch (ReflectionTypeLoadException ex)
+            {
+                Debug.LogError("MechJeb caught a ReflectionTypeLoadException. Those DLL are not built for this KSP version:");
+                var brokenAssembly = ex.Types.Where(x => x != null).Select(x => x.Assembly).Distinct();
+                foreach (Assembly assembly in brokenAssembly)
+                {
+                    Debug.LogError(assembly.GetName().Name + " " + assembly.GetName().Version + " " + assembly.Location.Remove(0, Path.GetFullPath(KSPUtil.ApplicationRootPath).Length));
+                }
+            }
             catch (Exception e)
             {
                 Debug.LogError("MechJeb caught exception in core OnLoad: " + e);
