@@ -490,7 +490,7 @@ namespace MuMech
                             }
                             else if (launchingToRendezvous)
                             {
-                                message = "#MechJeb_Ascent_msg3";//Launching to rendezvous
+                                message = Localizer.Format("#MechJeb_Ascent_msg3");//Launching to rendezvous
                             }
 
                             if (autopilot.tMinus > 3*vesselState.deltaT)
