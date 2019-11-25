@@ -68,6 +68,7 @@ package: build ${MECHJEBFILES}
 	cp -r Parts package/MechJeb2/
 	cp -r Icons package/MechJeb2/
 	cp -r Bundles package/MechJeb2/
+	cp -r Localization package/MechJeb2/
 	cp build/MechJeb2.dll package/MechJeb2/Plugins/
 	cp LICENSE.md README.md package/MechJeb2/
 
@@ -90,6 +91,8 @@ install: build
 	mkdir -p "${KSPDIR}"/GameData/MechJeb2/Plugins
 	cp -r Parts "${KSPDIR}"/GameData/MechJeb2/
 	cp -r Icons "${KSPDIR}"/GameData/MechJeb2/
+	cp -r Bundles "${KSPDIR}"/GameData/MechJeb2/
+	cp -r Localization "${KSPDIR}"/GameData/MechJeb2/
 	cp build/MechJeb2.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
 
 uninstall: info
