@@ -31,7 +31,7 @@ namespace MuMech
             }
             else if (newPeA < -o.referenceBody.Radius)
             {
-                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception2") + o.referenceBody.displayName + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//new periapsis cannot be lower than minus the radius of
+                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception2",o.referenceBody.displayName) + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//new periapsis cannot be lower than minus the radius of <<1>>
             }
 
             return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, newPeA + o.referenceBody.Radius), UT);
