@@ -53,7 +53,7 @@ namespace MuMech
                 double relativeInclination = Vector3d.Angle(o.SwappedOrbitNormal(), o.referenceBody.orbit.SwappedOrbitNormal());
                 if (relativeInclination > 10)
                 {
-                    errorMessage = Localizer.Format("#MechJeb_transfer_errormsg2", o.referenceBody.displayName, o.referenceBody.displayName, o.referenceBody.referenceBody.displayName, o.referenceBody.displayName, relativeInclination.ToString("F1"), o.referenceBody.displayName, o.referenceBody.referenceBody.displayName);//Warning: Recommend starting interplanetary transfers from  <<1>>" from an orbit in the same plane as "<<2>>"'s orbit around "<<3>>". Starting orbit around "<<4>>" is inclined "<<5>>"º with respect to "<<6>>"'s orbit around "<<7>> " (recommend < 10º). Planned transfer may not intercept target properly."
+                    errorMessage = Localizer.Format("#MechJeb_transfer_errormsg2", o.referenceBody.displayName, o.referenceBody.displayName, o.referenceBody.referenceBody.displayName, o.referenceBody.displayName, relativeInclination.ToString("F1"), o.referenceBody.displayName, o.referenceBody.referenceBody.displayName);//Warning: Recommend starting interplanetary transfers from  <<1>> from an orbit in the same plane as "<<2>>"'s orbit around "<<3>>". Starting orbit around "<<4>>" is inclined "<<5>>"º with respect to "<<6>>"'s orbit around "<<7>> " (recommend < 10º). Planned transfer may not intercept target properly."
                 }
                 else if (o.eccentricity > 0.2)
                 {
