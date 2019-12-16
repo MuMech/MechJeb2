@@ -2,6 +2,7 @@ using System;
 using KSP.UI.Screens;
 using UnityEngine;
 using System.Collections.Generic;
+using KSP.Localization;
 
 /*
  * Optimized launches for RSS/RO
@@ -134,7 +135,7 @@ namespace MuMech
             core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
 
             if (!vessel.LiftedOff() || vessel.Landed) {
-                status = "Awaiting liftoff";
+                status = Localizer.Format("#MechJeb_Ascent_status12");//"Awaiting liftoff"
             }
             else
             {
@@ -145,7 +146,7 @@ namespace MuMech
                     return;
                 }
                 double dv = pitchStartVelocity - vesselState.surfaceVelocity.magnitude;
-                status = String.Format("Vertical ascent {0:F2} m/s to go", dv);
+                status = Localizer.Format("#MechJeb_Ascent_status13", String.Format("{0:F2}", dv));//Vertical ascent  <<1>>m/s to go
             }
         }
 
@@ -165,12 +166,12 @@ namespace MuMech
             if ( pitch_program > srfvelPitch() )
             {
                 pitch = srfvelPitch();
-                status = String.Format("Gravity Turn {0:F}° to guidance", pitch - core.guidance.pitch);
+                status = Localizer.Format("#MechJeb_Ascent_status14", String.Format("{0:F}", pitch - core.guidance.pitch));//Gravity Turn <<1>>° to guidance
             }
             else
             {
                 pitch = pitch_program;
-                status = String.Format("Pitch program {0:F}° to guidance", pitch - core.guidance.pitch);
+                status = Localizer.Format("#MechJeb_Ascent_status15", String.Format("{0:F}", pitch - core.guidance.pitch));//Pitch program <<1>>° to guidance
             }
 
             if ( pitch <= core.guidance.pitch && core.guidance.isStable() )
@@ -207,12 +208,12 @@ namespace MuMech
             {
                 double pitch = Math.Min(Math.Min(90, srfvelPitch()), vesselState.vesselPitch);
                 attitudeTo(pitch, srfvelHeading());
-                status = "WARNING: Unstable Guidance";
+                status = Localizer.Format("#MechJeb_Ascent_status16");//"WARNING: Unstable Guidance"
             }
             else
             {
 
-                status = "Stable Guidance";
+                status = Localizer.Format("#MechJeb_Ascent_status17");//"Stable Guidance"
                 attitudeTo(core.guidance.pitch, core.guidance.heading);
             }
         }

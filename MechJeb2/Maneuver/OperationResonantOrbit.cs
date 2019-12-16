@@ -19,7 +19,7 @@ namespace MuMech
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1_1") + resonanceNumerator.val + "/" + resonanceDenominator.val + Localizer.Format("#MechJeb_resonant_label1_2"));//"Change your orbital period to "" of your current orbital period"
+            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1",resonanceNumerator.val + "/" + resonanceDenominator.val));//"Change your orbital period to <<1>> of your current orbital period"
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_resonant_label2"), GUILayout.ExpandWidth(true));//New orbital period ratio :
             resonanceNumerator.text = GUILayout.TextField(resonanceNumerator.text, GUILayout.Width(30));
