@@ -843,7 +843,7 @@ namespace MuMech
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname1"),//Orbit Info
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname1")+@"
+Name: Orbit Info
 Show in: flight
 Value:VesselState.speedOrbital
 Value:VesselState.orbitApA
@@ -854,7 +854,7 @@ Value:VesselState.orbitTimeToPe
 Value:VesselState.orbitInclination
 Value:VesselState.orbitEccentricity
 Value:VesselState.angleToPrograde
------------------------------"//Orbit Info
+-----------------------------"
             },
 
             new Preset
@@ -862,7 +862,7 @@ Value:VesselState.angleToPrograde
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname2"),//Surface Info
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname2")+@"
+Name: Surface Info
 Show in: flight
 Value:VesselState.altitudeASL
 Value:VesselState.altitudeTrue
@@ -873,7 +873,7 @@ Value:VesselState.speedSurface
 Value:VesselState.speedVertical
 Value:VesselState.speedSurfaceHorizontal
 Value:InfoItems.GetCoordinateString
------------------------------"//Surface Info
+-----------------------------"
             },
 
             new Preset
@@ -881,7 +881,7 @@ Value:InfoItems.GetCoordinateString
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname3"),//Vessel Info
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname3")+@"
+Name: Vessel Info
 Show in: flight editor
 Value:InfoItems.MaxAcceleration
 Value:InfoItems.CurrentAcceleration
@@ -889,7 +889,7 @@ Value:InfoItems.MaxThrust
 Value:InfoItems.VesselMass
 Value:InfoItems.SurfaceTWR
 Value:InfoItems.CrewCapacity
------------------------------"//Vessel Info
+-----------------------------"
             },
 
             new Preset
@@ -897,13 +897,13 @@ Value:InfoItems.CrewCapacity
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname4"),//Delta-V Stats
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname4")+@"
+Name: Delta-V Stats
 Show in: flight editor
 Toggle:StageStats.dVLinearThrust
 Value:InfoItems.StageDeltaVAtmosphereAndVac
 Value:InfoItems.TotalDeltaVAtmosphereAndVac
 General:InfoItems.AllStageStats
------------------------------"//Delta-V Stats
+-----------------------------"
             },
 
             new Preset 
@@ -911,7 +911,7 @@ General:InfoItems.AllStageStats
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname5"),//Ascent Stats
                 sharingString = 
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname5")+@"
+Name: Ascent Stats
 Show in: flight
 Value:FlightRecorder.timeSinceMark
 Value:FlightRecorder.deltaVExpended
@@ -919,7 +919,7 @@ Value:FlightRecorder.gravityLosses
 Value:FlightRecorder.dragLosses
 Value:FlightRecorder.steeringLosses
 Value:FlightRecorder.phaseAngleFromMark
------------------------------"//Ascent Stats
+-----------------------------"
             },
 
             new Preset
@@ -927,7 +927,7 @@ Value:FlightRecorder.phaseAngleFromMark
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname6"),//Rendezvous Info
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname6")+@"
+Name: Rendezvous Info
 Show in: flight
 Value:InfoItems.TargetTimeToClosestApproach
 Value:InfoItems.TargetClosestApproachDistance
@@ -937,7 +937,7 @@ Value:InfoItems.TargetRelativeVelocity
 Value:InfoItems.RelativeInclinationToTarget
 Value:InfoItems.PhaseAngle
 Value:InfoItems.SynodicPeriod
------------------------------"//Rendezvous Info
+-----------------------------"
             },
 
             new Preset
@@ -945,7 +945,7 @@ Value:InfoItems.SynodicPeriod
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname7"),//Landing Info
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname7")+@"
+Name: Landing Info
 Show in: flight
 Value:VesselState.altitudeTrue
 Value:VesselState.speedVertical
@@ -955,7 +955,7 @@ Value:InfoItems.SuicideBurnCountdown
 Value:InfoItems.SurfaceTWR
 Action:TargetController.PickPositionTargetOnMap
 Value:InfoItems.TargetDistance
------------------------------"//Landing Info
+-----------------------------"
             },
 
 
@@ -964,7 +964,7 @@ Value:InfoItems.TargetDistance
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname8"),//"Target Orbit Info"
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname8")+@"
+Name: Target Orbit Info
 Show in: flight
 Value:InfoItems.TargetOrbitSpeed
 Value:InfoItems.TargetApoapsis
@@ -974,7 +974,7 @@ Value:InfoItems.TargetOrbitTimeToAp
 Value:InfoItems.TargetOrbitTimeToPe
 Value:InfoItems.TargetInclination
 Value:InfoItems.TargetEccentricity
------------------------------"//Target Orbit Info
+-----------------------------"
             },
 
 
@@ -983,12 +983,12 @@ Value:InfoItems.TargetEccentricity
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname9"),//Stopwatch
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname9")+@"
+Name: Stopwatch
 Show in: flight
 Action:FlightRecorder.Mark
 Value:FlightRecorder.timeSinceMark
 Value:VesselState.time
------------------------------"//Stopwatch
+-----------------------------"
             },
 
 
@@ -997,13 +997,13 @@ Value:VesselState.time
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname10"),//"Surface Navigation"
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname10")+@"
+Name: Surface Navigation
 Show in: flight
 Action:TargetController.PickPositionTargetOnMap
 Value:InfoItems.TargetDistance
 Value:InfoItems.HeadingToTarget
 Value:TargetController.GetPositionTargetString
------------------------------"//Surface Navigation
+-----------------------------"
             },
 
 
@@ -1012,13 +1012,13 @@ Value:TargetController.GetPositionTargetString
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname11"),//"Atmosphere Info"
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname11")+@"
+Name: Atmosphere Info
 Show in: flight
 Value:VesselState.atmosphericDensityGrams
 Value:InfoItems.AtmosphericPressure
 Value:InfoItems.AtmosphericDrag
 Value:VesselState.TerminalVelocity
------------------------------"//Atmosphere Info
+-----------------------------"
             },
 
             new Preset
@@ -1026,12 +1026,12 @@ Value:VesselState.TerminalVelocity
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname12"),//"Maneuver Node Info"
                 sharingString =
 @"--- MechJeb Custom Window ---
-Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname12")+@"
+Name: Maneuver Node Info
 Show in: flight
 Value:InfoItems.TimeToManeuverNode
 Value:InfoItems.NextManeuverNodeDeltaV
 Value:InfoItems.NextManeuverNodeBurnTime
------------------------------"//Maneuver Node Info
+-----------------------------"
             }
         };
     }
