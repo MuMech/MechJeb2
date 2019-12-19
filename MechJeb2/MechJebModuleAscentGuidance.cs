@@ -45,7 +45,7 @@ namespace MuMech
             launchingToRendezvous = false;
         }
 
-        [GeneralInfoItem("Toggle Ascent Navball Guidance", InfoItem.Category.Misc, showInEditor = false)]
+        [GeneralInfoItem("#MechJeb_Toggle_Ascent_Navball_Guidance", InfoItem.Category.Misc, showInEditor = false)]//Toggle Ascent Navball Guidance
             public void ToggleAscentNavballGuidanceInfoItem()
             {
                 if (navBall != null)

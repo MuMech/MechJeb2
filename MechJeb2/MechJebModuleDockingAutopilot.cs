@@ -9,14 +9,14 @@ namespace MuMech
         public string status = "";
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")]//Docking speed limit
         public EditableDouble speedLimit = 1;
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble rol = new EditableDouble(0);
         [Persistent(pass = (int)Pass.Local)]
         public Boolean forceRol = false;
 
-        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")]//Docking speed limit
         public EditableDouble overridenSafeDistance = 5;
 
         [Persistent(pass = (int)Pass.Local)]
@@ -24,7 +24,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Local)]
         public Boolean overrideTargetSize = false;
-        [EditableInfoItem("Docking speed limit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")]//Docking speed limit
         public EditableDouble overridenTargetSize = 10;
 
         public float safeDistance = 10;

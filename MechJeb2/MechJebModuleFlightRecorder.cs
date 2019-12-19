@@ -134,60 +134,60 @@ namespace MuMech
         private bool paused = false;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Mark UT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("#MechJeb_MarkUT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]//Mark UT
         public double markUT = 0;
 
-        [ValueInfoItem("Time since mark", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("#MechJeb_TimeSinceMark", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]//Time since mark
         public double timeSinceMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("ΔV expended", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
+        [ValueInfoItem("#MechJeb_DVExpended", InfoItem.Category.Recorder, format = "F1", units = "m/s")]//ΔV expended
         public double deltaVExpended = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Drag losses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
+        [ValueInfoItem("#MechJeb_DragLosses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]//Drag losses
         public double dragLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Gravity losses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
+        [ValueInfoItem("#MechJeb_GravityLosses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]//Gravity losses
         public double gravityLosses = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Steering losses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]
+        [ValueInfoItem("#MechJeb_SteeringLosses", InfoItem.Category.Recorder, format = "F1", units = "m/s")]//Steering losses
         public double steeringLosses = 0;
 
-        [ValueInfoItem("Phase angle from mark", InfoItem.Category.Recorder, format = "F2", units = "º")]
+        [ValueInfoItem("#MechJeb_PhaseAngleFromMark", InfoItem.Category.Recorder, format = "F2", units = "º")]//Phase angle from mark
         public double phaseAngleFromMark = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Mark LAN", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)]
+        [ValueInfoItem("#MechJeb_MarkLAN", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)]//Mark LAN
         public double markLAN = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Mark latitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_NS)]
+        [ValueInfoItem("#MechJeb_MarkLatitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_NS)]//Mark latitude
         public double markLatitude = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Mark longitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)]
+        [ValueInfoItem("#MechJeb_MarkLongitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)]//Mark longitude
         public double markLongitude = 0;
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Mark altitude ASL", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
+        [ValueInfoItem("#MechJeb_MarkAltitudeASL", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]//Mark altitude ASL
         public double markAltitude = 0;
 
         [Persistent(pass = (int)Pass.Local)]
         public int markBodyIndex = 1;
 
-        [ValueInfoItem("Mark body", InfoItem.Category.Recorder)]
+        [ValueInfoItem("#MechJeb_MarkBody", InfoItem.Category.Recorder)]//Mark body
         public string MarkBody() { return FlightGlobals.Bodies[markBodyIndex].bodyName; }
 
-        [ValueInfoItem("Distance from mark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
+        [ValueInfoItem("#MechJeb_DistanceFromMark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]//Distance from mark
         public double DistanceFromMark()
         {
             return Vector3d.Distance(vesselState.CoM, FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude) - FlightGlobals.Bodies[markBodyIndex].position);
         }
 
-        [ValueInfoItem("Downrange distance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
+        [ValueInfoItem("#MechJeb_DownrangeDistance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]//Downrange distance
         public double GroundDistanceFromMark()
         {
             CelestialBody markBody = FlightGlobals.Bodies[markBodyIndex];
@@ -197,7 +197,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)Pass.Local)]
-        [ValueInfoItem("Max drag gees", InfoItem.Category.Recorder, format = "F2")]
+        [ValueInfoItem("#MechJeb_MaxDragGees", InfoItem.Category.Recorder, format = "F2")]//Max drag gees
         public double maxDragGees = 0;
 
         [ActionInfoItem("MARK", InfoItem.Category.Recorder)]

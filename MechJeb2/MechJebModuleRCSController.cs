@@ -23,14 +23,14 @@ namespace MuMech
         ControlType controlType;
 
         [Persistent(pass = (int)(Pass.Global))]
-        [ToggleInfoItem("Conserve RCS fuel", InfoItem.Category.Thrust)]
+        [ToggleInfoItem("#MechJeb_conserveFuel", InfoItem.Category.Thrust)]//Conserve RCS fuel
         public bool conserveFuel = false;
 
-        [EditableInfoItem("Conserve RCS fuel threshold", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")]//Conserve RCS fuel threshold
         public EditableDouble conserveThreshold = 0.05;
 
         [Persistent(pass = (int)(Pass.Local| Pass.Type | Pass.Global))]
-        [EditableInfoItem("RCS Tf", InfoItem.Category.Thrust)]
+        [EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)]//RCS Tf
         public EditableDouble Tf = 1;
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
@@ -46,11 +46,11 @@ namespace MuMech
         public bool rcsManualPID = false;
 
         [Persistent(pass = (int)(Pass.Global))]
-        [ToggleInfoItem("RCS throttle when 0kn thrust", InfoItem.Category.Thrust)]
+        [ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)]//RCS throttle when 0kn thrust
         public bool rcsThrottle = true;
 
         [Persistent(pass = (int)(Pass.Global))]
-        [ToggleInfoItem("Use RCS for rotation", InfoItem.Category.Thrust)]
+        [ToggleInfoItem("#MechJeb_rcsForRotation", InfoItem.Category.Thrust)]//Use RCS for rotation
         public bool rcsForRotation = true;
 
         public MechJebModuleRCSController(MechJebCore core)
@@ -99,7 +99,7 @@ namespace MuMech
             }
         }
 
-        [GeneralInfoItem("RCS Pid", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_RCSPid", InfoItem.Category.Thrust)]//RCS Pid
         public void PIDGUI()
         {
             GUILayout.BeginVertical();

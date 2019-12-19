@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -56,7 +57,7 @@ namespace MuMech
         }
 
 
-        [ValueInfoItem("Target coordinates", InfoItem.Category.Target)]
+        [ValueInfoItem("#MechJeb_Targetcoordinates", InfoItem.Category.Target)]//Target coordinates
         public string GetPositionTargetString()
         {
             if (target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
@@ -76,12 +77,12 @@ namespace MuMech
             Set(new DirectionTarget(name));
         }
 
-        [ActionInfoItem("Pick position target", InfoItem.Category.Target)]
+        [ActionInfoItem("#MechJeb_Pickpositiontarget", InfoItem.Category.Target)]//Pick position target
         public void PickPositionTargetOnMap()
         {
             pickingPositionTarget = true;
             MapView.EnterMapView();
-            string message = "Click to select a target on " + mainBody.displayName + "'s surface.\n(Leave map view to cancel.)";
+            string message = Localizer.Format("#MechJeb_pickingPositionMsg",mainBody.displayName);//"Click to select a target on " +  + "'s surface.\n(Leave map view to cancel.)"
             ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
         }
 

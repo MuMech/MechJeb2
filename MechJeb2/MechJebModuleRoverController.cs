@@ -13,7 +13,7 @@ namespace MuMech
 		public bool LoopWaypoints = false;
 		
 //		protected bool controlHeading;
-		[ToggleInfoItem("Heading control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		[ToggleInfoItem("#MechJeb_ControlHeading", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Heading control
 		public bool ControlHeading;  // TODO: change things back to properties when ConfigNodes can save and load these
 //		{
 //			get { return controlHeading; }
@@ -31,11 +31,11 @@ namespace MuMech
 //			}
 //		}
 
-		[EditableInfoItem("Heading", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]
+		[EditableInfoItem("#MechJeb_Heading", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]//Heading
 		public EditableDouble heading = 0;
 
 //		protected bool controlSpeed = false;
-		[ToggleInfoItem("Speed control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		[ToggleInfoItem("#MechJeb_ControlSpeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Speed control
 		public bool ControlSpeed = false;
 //		{
 //			get { return controlSpeed; }
@@ -53,23 +53,23 @@ namespace MuMech
 //			}
 //		}
 
-		[EditableInfoItem("Speed", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]
+		[EditableInfoItem("#MechJeb_Speed", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]//Speed
 		public EditableDouble speed = 10;
 
-        [ToggleInfoItem("Brake on Pilot Eject", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+        [ToggleInfoItem("#MechJeb_BrakeOnEject", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Brake on Pilot Eject
         public bool BrakeOnEject = false;
 
-        [ToggleInfoItem("Brake on Energy Depletion", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+        [ToggleInfoItem("#MechJeb_BrakeOnEnergyDepletion", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Brake on Energy Depletion
 		public bool BrakeOnEnergyDepletion = false;
 		
-        [ToggleInfoItem("Warp until Day if Depleted", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+        [ToggleInfoItem("#MechJeb_WarpToDaylight", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Warp until Day if Depleted
 		public bool WarpToDaylight = false;
 		public bool waitingForDaylight = false;
 
-		[ToggleInfoItem("Stability Control", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]
+		[ToggleInfoItem("#MechJeb_StabilityControl", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Stability Control
 		public bool StabilityControl = false;
 
-		[ToggleInfoItem("Limit Acceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local | (int)Pass.Type)]
+		[ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local | (int)Pass.Type)]//Limit Acceleration
 		public bool LimitAcceleration = false;
 
 		public PIDController headingPID;
@@ -77,33 +77,33 @@ namespace MuMech
 
 //		private LineRenderer line;
 		
-		[EditableInfoItem("Safe turnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
+		[EditableInfoItem("#MechJeb_SafeTurnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]//Safe turnspeed
 		public EditableDouble turnSpeed = 3;
-		[EditableInfoItem("Terrain Look Ahead", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		[EditableInfoItem("#MechJeb_TerrainLookAhead", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Terrain Look Ahead
 		public EditableDouble terrainLookAhead = 1.0;
-		[EditableInfoItem("Brake Speed Limit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
+		[EditableInfoItem("#MechJeb_BrakeSpeedLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]//Brake Speed Limit
 		public EditableDouble brakeSpeedLimit = 0.7;
 
-		[EditableInfoItem("Heading PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		[EditableInfoItem("#MechJeb_HeadingPIDP", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Heading PID P
 		public EditableDouble hPIDp = 0.03; // 0.01
-		[EditableInfoItem("Heading PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		[EditableInfoItem("#MechJeb_HeadingPIDI", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Heading PID I
 		public EditableDouble hPIDi = 0.002; // 0.001
-		[EditableInfoItem("Heading PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		[EditableInfoItem("#MechJeb_HeadingPIDD", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Heading PID D
 		public EditableDouble hPIDd = 0.005;
 		
-		[EditableInfoItem("Speed PID P", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		[EditableInfoItem("#MechJeb_SpeedPIDP", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Speed PID P
 		public EditableDouble sPIDp = 2.0;
-		[EditableInfoItem("Speed PID I", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		[EditableInfoItem("#MechJeb_SpeedPIDI", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Speed PID I
 		public EditableDouble sPIDi = 0.1;
-		[EditableInfoItem("Speed PID D", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]
+		[EditableInfoItem("#MechJeb_SpeedPIDD", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Speed PID D
 		public EditableDouble sPIDd = 0.001;
 		
-		[ValueInfoItem("Speed Int Acc", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
+		[ValueInfoItem("#MechJeb_SpeedIntAcc", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]//Speed Int Acc
 		public double speedIntAcc = 0;
 
-		[ValueInfoItem("Traction", InfoItem.Category.Rover, format = "F0", units = "%")]
+		[ValueInfoItem("#MechJeb_Traction", InfoItem.Category.Rover, format = "F0", units = "%")]//Traction
 		public float traction = 0;
-		[EditableInfoItem("Traction Brake Limit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]
+		[EditableInfoItem("#MechJeb_TractionBrakeLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]//Traction Brake Limit
 		public EditableDouble tractionLimit = 75;
 		
 		public List<Part> wheels = new List<Part>();
@@ -143,9 +143,9 @@ namespace MuMech
 			catch (Exception) {}
 		}
 		
-		[ValueInfoItem("Heading error", InfoItem.Category.Rover, format = "F1", units = "º")]
+		[ValueInfoItem("#MechJeb_Headingerror", InfoItem.Category.Rover, format = "F1", units = "º")]//Heading error
 		public double headingErr;
-		[ValueInfoItem("Speed error", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]
+		[ValueInfoItem("#MechJeb_Speederror", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]//Speed error
 		public double speedErr;
 		public double tgtSpeed;
 		public MuMech.MovingAverage etaSpeed = new MovingAverage(50);

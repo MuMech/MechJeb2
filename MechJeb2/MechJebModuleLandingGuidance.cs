@@ -174,7 +174,7 @@ namespace MuMech
         }
 
 
-        [GeneralInfoItem("Landing predictions", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_LandingPredictions", InfoItem.Category.Misc)]//Landing predictions
         void DrawGUITogglePredictions()
         {
             GUILayout.BeginVertical();

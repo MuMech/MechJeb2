@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using KSP.UI.Screens;
 using Smooth.Slinq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -100,7 +101,7 @@ namespace MuMech
             autostagingOnce = false;
         }
 
-        [GeneralInfoItem("Autostaging settings", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_AutostagingSettings", InfoItem.Category.Misc)]//Autostaging settings
         public void AutostageSettingsInfoItem()
         {
             GUILayout.BeginVertical();
@@ -115,33 +116,33 @@ namespace MuMech
 
             ClampAutostageThrust();
 
-            GUILayout.Label("Stage fairings when:");
-            GuiUtils.SimpleTextBox("  dynamic pressure <", fairingMaxDynamicPressure, "kPa", 50);
-            GuiUtils.SimpleTextBox("  altitude >", fairingMinAltitude, "km", 50);
-            GuiUtils.SimpleTextBox("  aerothermal flux <", fairingMaxAerothermalFlux, "W/m²", 50);
+            GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label38"));//"Stage fairings when:"
+            GuiUtils.SimpleTextBox("  "+Localizer.Format("#MechJeb_Ascent_label39") +" <", fairingMaxDynamicPressure, "kPa", 50);//"dynamic pressure"
+            GuiUtils.SimpleTextBox("  "+Localizer.Format("#MechJeb_Ascent_label40") +" >", fairingMinAltitude, "km", 50);//altitude
+            GuiUtils.SimpleTextBox("  "+Localizer.Format("#MechJeb_Ascent_label41") +" <", fairingMaxAerothermalFlux, "W/m²", 50);//aerothermal flux
 
-            GuiUtils.SimpleTextBox("Stop at stage #", autostageLimit, "");
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label42"), autostageLimit, "");//"Stop at stage #"
 
-            hotStaging = GUILayout.Toggle(hotStaging, "Support hotstaging");
+            hotStaging = GUILayout.Toggle(hotStaging, Localizer.Format("#MechJeb_Ascent_checkbox21"));//"Support hotstaging"
             if (hotStaging)
-                GuiUtils.SimpleTextBox("  lead time", hotStagingLeadTime, "s");
+                GuiUtils.SimpleTextBox("  "+Localizer.Format("#MechJeb_Ascent_label43"), hotStagingLeadTime, "s");//"lead time"
 
             GUILayout.EndVertical();
         }
 
-        [ValueInfoItem("Autostaging status", InfoItem.Category.Misc)]
+        [ValueInfoItem("#MechJeb_Autostagingstatus", InfoItem.Category.Misc)]//Autostaging status
         public string AutostageStatus()
         {
-            if (!this.enabled) return "Autostaging off";
-            if (autostagingOnce) return "Will autostage next stage only";
-            return "Autostaging until stage #" + (int)autostageLimit;
+            if (!this.enabled) return Localizer.Format("#MechJeb_Ascent_status9");//"Autostaging off"
+            if (autostagingOnce) return Localizer.Format("#MechJeb_Ascent_status10");//"Will autostage next stage only"
+            return Localizer.Format("#MechJeb_Ascent_status11") + (int)autostageLimit;//"Autostaging until stage #"
         }
 
-        [GeneralInfoItem("Clamp Autostage Thrust", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)]//Clamp Autostage Thrust
         public void ClampAutostageThrust()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Clamp AutoStage Thrust ");
+            GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label44"));//"Clamp AutoStage Thrust "
             core.staging.clampAutoStageThrustPct.text = GUILayout.TextField(core.staging.clampAutoStageThrustPct.text, 5);
             GUILayout.Label("%");
             core.staging.clampAutoStageThrustPct = UtilMath.Clamp(core.staging.clampAutoStageThrustPct, 0, 100);

@@ -85,7 +85,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public bool autoDisableSmartASS = true;
-        [GeneralInfoItem("Disable SmartACS automatically", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_DisableSmartACSAutomatically", InfoItem.Category.Misc)]//Disable SmartACS automatically
         public void AutoDisableSmartASS()
         {
             autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS, core.eduMode ? Localizer.Format("#MechJeb_SmartASS_checkbox1") :Localizer.Format("#MechJeb_SmartASS_checkbox2") );//"Disable SmartACS automatically":"Disable SmartASS automatically"

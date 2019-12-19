@@ -21,7 +21,7 @@ namespace MuMech
             }
         }
 
-        [GeneralInfoItem("Autostage Once", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_AutostageOnce", InfoItem.Category.Misc)]//Autostage Once
         public void AutostageOnceItem()
         {
             if (core.staging.enabled)
@@ -34,7 +34,7 @@ namespace MuMech
             }
         }
 
-        [GeneralInfoItem("Autostage", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_Autostage", InfoItem.Category.Misc)]//Autostage
         public void Autostage()
         {
             bool oldAutostage = core.staging.users.Contains(this);

@@ -1,6 +1,7 @@
 using System;
 using KSP.UI.Screens;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -140,8 +141,8 @@ namespace MuMech
 
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
-            if (!vessel.LiftedOff() || vessel.Landed) status = "Awaiting liftoff";
-            else status = "Vertical ascent";
+            if (!vessel.LiftedOff() || vessel.Landed) status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
+            else status = Localizer.Format("#MechJeb_Ascent_status9");//"Vertical ascent"
         }
 
 
@@ -168,7 +169,7 @@ namespace MuMech
                 {
                     // follow surface velocity to reduce flipping
                     attitudeTo(srfvelPitch());
-                    status = "Fine tuning apoapsis";
+                    status = Localizer.Format("#MechJeb_Ascent_status12");//"Fine tuning apoapsis"
                     return;
                 }
             }
@@ -194,7 +195,7 @@ namespace MuMech
 
             attitudeTo(desiredFlightPathAngle);
 
-            status = "Gravity turn";
+            status = Localizer.Format("#MechJeb_Ascent_status13");//"Gravity turn"
         }
 
         void DriveCoastToApoapsis(FlightCtrlState s)
@@ -234,7 +235,7 @@ namespace MuMech
                 core.warp.WarpPhysicsAtRate(2);
             }
 
-            status = "Coasting to edge of atmosphere";
+            status = Localizer.Format("#MechJeb_Ascent_status14");//"Coasting to edge of atmosphere"
         }
     }
 }

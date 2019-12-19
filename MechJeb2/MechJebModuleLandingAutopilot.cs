@@ -1,6 +1,7 @@
 using System;
 using ModuleWheels;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -567,14 +568,14 @@ namespace MuMech
                 vesselState.surfaceVelocity + dt * vesselState.gravityForce);
         }
 
-        [ValueInfoItem("ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)]
+        [ValueInfoItem("#MechJeb_ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)]//ParachuteControlInfo
         public string ParachuteControlInfo()
         {
             if (this.ParachutesDeployable())
             {
-                string retVal = "'Chute Multiplier: " + this.parachutePlan.Multiplier.ToString("F7");
-                retVal += "\nMultiplier Quality: " + this.parachutePlan.MultiplierQuality.ToString("F1") + "%";
-                retVal += "\nUsing " + this.parachutePlan.MultiplierDataAmount + " predictions";
+                string retVal = Localizer.Format("#MechJeb_ChuteMultiplier", this.parachutePlan.Multiplier.ToString("F7"));//"'Chute Multiplier: " + 
+                retVal += Localizer.Format("#MechJeb_MultiplierQuality", this.parachutePlan.MultiplierQuality.ToString("F1"));//"\nMultiplier Quality: " +  + "%"
+                retVal += Localizer.Format("#MechJeb_Usingpredictions", this.parachutePlan.MultiplierDataAmount);//"\nUsing " +  + " predictions"
 
                 return retVal;
             }

@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
     public class MechJebModuleRCSBalancer : ComputerModule
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        [ToggleInfoItem("Smart RCS translation", InfoItem.Category.Thrust)]
+        [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)]//Smart RCS translation
         public bool smartTranslation = false;
 
         // Overdrive
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        [EditableInfoItem("RCS balancer overdrive", InfoItem.Category.Thrust, rightLabel = "%")]
+        [EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")]//RCS balancer overdrive
         public EditableDoubleMult overdrive = new EditableDoubleMult(1, 0.01);
 
         // Advanced options
@@ -40,25 +41,25 @@ namespace MuMech
         private List<RCSSolver.Thruster> thrusters = null;
         private double[] throttles = null;
 
-        [EditableInfoItem("RCS balancer precision", InfoItem.Category.Thrust)]
+        [EditableInfoItem("#MechJeb_RCSBalancerPrecision", InfoItem.Category.Thrust)]//RCS balancer precision
         public EditableInt calcPrecision = 3;
 
-        [GeneralInfoItem("RCS balancer info", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_RCSBalancerInfo", InfoItem.Category.Thrust)]//RCS balancer info
         public void RCSBalancerInfoItem()
         {
             GUILayout.BeginVertical();
-            GuiUtils.SimpleLabel("Calculation time", (solverThread.calculationTime * 1000).ToString("F0") + " ms");
-            GuiUtils.SimpleLabelInt("Pending tasks", solverThread.taskCount);
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label1"), (solverThread.calculationTime * 1000).ToString("F0") + " ms");//"Calculation time"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label2"), solverThread.taskCount);//"Pending tasks"
 
-            GuiUtils.SimpleLabelInt("Cache size",   solverThread.cacheSize);
-            GuiUtils.SimpleLabelInt("Cache hits",   solverThread.cacheHits);
-            GuiUtils.SimpleLabelInt("Cache misses", solverThread.cacheMisses);
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label3"),   solverThread.cacheSize);//"Cache size"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"),   solverThread.cacheHits);//"Cache hits"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label5"), solverThread.cacheMisses);//"Cache misses"
 
-            GuiUtils.SimpleLabel("CoM shift",     MuUtils.ToSI(solverThread.comError) + "m");
-            GuiUtils.SimpleLabel("CoM recalc",    MuUtils.ToSI(solverThread.comErrorThreshold) + "m");
-            GuiUtils.SimpleLabel("Max CoM shift", MuUtils.ToSI(solverThread.maxComError) + "m");
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"),     MuUtils.ToSI(solverThread.comError) + "m");//"CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"),    MuUtils.ToSI(solverThread.comErrorThreshold) + "m");//"CoM recalc"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), MuUtils.ToSI(solverThread.maxComError) + "m");//"Max CoM shift"
 
-            GuiUtils.SimpleLabel("Status", solverThread.statusString);
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.statusString);//"Status"
 
             string error = solverThread.errorString;
             if (!string.IsNullOrEmpty(error))
@@ -69,11 +70,11 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("RCS thruster states", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_RCSThrusterStates", InfoItem.Category.Thrust)]//RCS thruster states
         private void RCSThrusterStateInfoItem()
         {
             GUILayout.BeginVertical();
-            GUILayout.Label("RCS thrusters states (scaled to 0-9)");
+            GUILayout.Label(Localizer.Format("#MechJeb_RCSThrusterStates_Label1"));//"RCS thrusters states (scaled to 0-9)"
 
             bool firstRcsModule = true;
             string thrusterStates = "";
@@ -104,7 +105,7 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("RCS part throttles", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_RCSPartThrottles", InfoItem.Category.Thrust)]//RCS part throttles
         private void RCSPartThrottlesInfoItem()
         {
             GUILayout.BeginVertical();
@@ -130,7 +131,7 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("Control vector", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_ControlVector", InfoItem.Category.Thrust)]//Control vector
         private void ControlVectorInfoItem()
         {
             FlightCtrlState s = FlightInputHandler.state;

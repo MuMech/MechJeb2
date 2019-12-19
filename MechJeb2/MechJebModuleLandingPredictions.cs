@@ -74,19 +74,19 @@ namespace MuMech
             return errorResult;
         }
 
-        [ValueInfoItem("Sim Drag Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        [ValueInfoItem("#MechJeb_SimDragScalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Sim Drag Scalar
         public double simDragScalar;
 
-        [ValueInfoItem("Sim Lift Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        [ValueInfoItem("#MechJeb_SimLiftScalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Sim Lift Scalar
         public double simLiftScalar;
 
-        [ValueInfoItem("Sim DynaPressPa", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "pa")]
+        [ValueInfoItem("#MechJeb_SimDynaPressPa", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "Pa")]//Sim DynaPressPa
         public double simDynamicPressurePa;
 
-        [ValueInfoItem("Sim simMach", InfoItem.Category.Vessel, format = "F2")]
+        [ValueInfoItem("#MechJeb_SimsimMach", InfoItem.Category.Vessel, format = "F2")]//Sim simMach
         public double simMach;
 
-        [ValueInfoItem("Sim SpdOfSnd", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_SimSpdOfSnd", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]//Sim SpdOfSnd
         public double simSpeedOfSound;
 
         //inputs:
@@ -153,7 +153,7 @@ namespace MuMech
         private double lastErrorSimSteps;
 
 
-        [ValueInfoItem("LandingSim ", InfoItem.Category.Misc, showInEditor = false)]
+        [ValueInfoItem("#MechJeb_LandingSim", InfoItem.Category.Misc, showInEditor = false)]//LandingSim 
         public string LandingSimTime()
         {
             return (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastSimTime.ToString("F2") + " (" + lastSimSteps + ")\n"

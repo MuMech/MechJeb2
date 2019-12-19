@@ -21,7 +21,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public bool autoDisableSmartRCS = true;
-        [GeneralInfoItem("Disable SmartRcs automatically", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)]//Disable SmartRcs automatically
         public void AutoDisableSmartRCS()
         {
             autoDisableSmartRCS = GUILayout.Toggle(autoDisableSmartRCS, Localizer.Format("#MechJeb_SmartRcs_checkbox1 "));//"Disable SmartRcs automatically"

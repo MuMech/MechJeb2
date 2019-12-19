@@ -14,7 +14,7 @@ namespace MuMech
     {
         public MechJebModuleStageStats(MechJebCore core) : base(core) { }
 
-        [ToggleInfoItem("ΔV include cosine losses", InfoItem.Category.Thrust, showInEditor = true)]
+        [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)]//ΔV include cosine losses
         public bool dVLinearThrust = true;
 
         public FuelFlowSimulation.Stats[] atmoStats = { };

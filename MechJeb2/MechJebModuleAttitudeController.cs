@@ -30,7 +30,7 @@ namespace MuMech
 
 
         [Persistent(pass = (int)Pass.Global)]
-        [ValueInfoItem("Steering error", InfoItem.Category.Vessel, format = "F1", units = "º")]
+        [ValueInfoItem("#MechJeb_SteeringError", InfoItem.Category.Vessel, format = "F1", units = "º")]//Steering error
         public MovingAverage steeringError = new MovingAverage();
 
         public bool attitudeKILLROT = false;

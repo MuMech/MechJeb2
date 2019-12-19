@@ -15,7 +15,7 @@ namespace MuMech
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
 
-        [ValueInfoItem("Node Burn Length", InfoItem.Category.Thrust)]
+        [ValueInfoItem("#MechJeb_NodeBurnLength", InfoItem.Category.Thrust)]//Node Burn Length
         public string NextNodeBurnTime()
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
@@ -26,7 +26,7 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTIme));
         }
 
-        [ValueInfoItem("Node Burn Countdown", InfoItem.Category.Thrust)]
+        [ValueInfoItem("#MechJeb_NodeBurnCountdown", InfoItem.Category.Thrust)]//Node Burn Countdown
         public string NextNodeCountdown()
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
