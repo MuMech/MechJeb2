@@ -113,11 +113,11 @@ namespace MuMech
 
         bool movingButton = false;
 
-        [ToggleInfoItem("Hide Menu Button", InfoItem.Category.Misc), Persistent(pass = (int) Pass.Global)] public bool hideButton = false;
+        [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc), Persistent(pass = (int) Pass.Global)] public bool hideButton = false;//Hide Menu Button
 
-        [ToggleInfoItem("Use AppLauncher", InfoItem.Category.Misc), Persistent(pass = (int) Pass.Global)] public bool useAppLauncher = true;
+        [ToggleInfoItem("#MechJeb_UseAppLauncher", InfoItem.Category.Misc), Persistent(pass = (int) Pass.Global)] public bool useAppLauncher = true;//Use AppLauncher
 
-        [GeneralInfoItem("Menu Position", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_MenuPosition", InfoItem.Category.Misc)]//Menu Position
         void MenuPosition()
         {
             GUILayout.BeginHorizontal();

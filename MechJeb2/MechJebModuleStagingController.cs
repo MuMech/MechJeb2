@@ -101,7 +101,7 @@ namespace MuMech
             autostagingOnce = false;
         }
 
-        [GeneralInfoItem("Autostaging settings", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_AutostagingSettings", InfoItem.Category.Misc)]//Autostaging settings
         public void AutostageSettingsInfoItem()
         {
             GUILayout.BeginVertical();
@@ -130,7 +130,7 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [ValueInfoItem("Autostaging status", InfoItem.Category.Misc)]
+        [ValueInfoItem("#MechJeb_Autostagingstatus", InfoItem.Category.Misc)]//Autostaging status
         public string AutostageStatus()
         {
             if (!this.enabled) return Localizer.Format("#MechJeb_Ascent_status9");//"Autostaging off"
@@ -138,7 +138,7 @@ namespace MuMech
             return Localizer.Format("#MechJeb_Ascent_status11") + (int)autostageLimit;//"Autostaging until stage #"
         }
 
-        [GeneralInfoItem("Clamp Autostage Thrust", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)]//Clamp Autostage Thrust
         public void ClampAutostageThrust()
         {
             GUILayout.BeginHorizontal();

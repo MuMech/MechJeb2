@@ -33,7 +33,7 @@ namespace MuMech
             useQuickWarp = GUILayout.Toggle(useQuickWarp, Localizer.Format("#MechJeb_WarpHelper_checkbox1"));//"Quick warp"
         }
 
-        [GeneralInfoItem("MJ Warp Control", InfoItem.Category.Misc)]
+        [GeneralInfoItem("#MechJeb_MJWarpControl", InfoItem.Category.Misc)]//MJ Warp Control
         public void ControlWarpButton()
         {
             if (WarpPaused && GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button3")))//"Resume MJ Warp"

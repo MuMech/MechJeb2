@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KSP.Localization;
 
 // FIXME: use a maneuver node
 
@@ -55,8 +56,8 @@ namespace MuMech
                     deorbitBurnTriggered = true;
                 }
 
-                if (deorbitBurnTriggered) status = "Executing low deorbit burn";
-                else status = "Moving to low deorbit burn point";
+                if (deorbitBurnTriggered) status = Localizer.Format("#MechJeb_LandingGuidance_Status11");//"Executing low deorbit burn"
+                else status = Localizer.Format("#MechJeb_LandingGuidance_Status12");//"Moving to low deorbit burn point"
 
                 //Warp toward deorbit burn if it hasn't been triggerd yet:
                 if (!deorbitBurnTriggered && core.node.autowarp && rangeToTarget > 2 * triggerDistance) core.warp.WarpRegularAtRate((float)(orbit.period / 6));
@@ -118,7 +119,7 @@ namespace MuMech
                             else
                             {
                                 lowDeorbitBurnMaxThrottle = 0;
-                                status = "Deorbit burn complete: waiting for the right moment to start braking";
+                                status = Localizer.Format("#MechJeb_LandingGuidance_Status13");//"Deorbit burn complete: waiting for the right moment to start braking"
                             }
                         }
                     }
