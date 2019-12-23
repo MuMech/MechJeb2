@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KSP.Localization;
 
 // FIXME: use a maneuver node
 
@@ -80,14 +81,14 @@ namespace MuMech
                         return new CourseCorrection(core);
                     }
 
-                    status = "Doing high deorbit burn";
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status7");//"Doing high deorbit burn"
                 }
                 else
                 {
                     core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, core.landing);
                     if (core.node.autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 10));
 
-                    status = "Moving to high deorbit burn point";
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status8");//"Moving to high deorbit burn point"
                 }
 
                 return this;

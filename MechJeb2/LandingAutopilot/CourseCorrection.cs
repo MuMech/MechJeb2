@@ -1,3 +1,4 @@
+using KSP.Localization;
 namespace MuMech
 {
     namespace Landing
@@ -56,7 +57,7 @@ namespace MuMech
 
                 Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
 
-                status = "Performing course correction of about " + deltaV.magnitude.ToString("F1") + " m/s";
+                status = Localizer.Format("#MechJeb_LandingGuidance_Status3", deltaV.magnitude.ToString("F1"));//"Performing course correction of about " +  + " m/s"
 
                 core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, core.landing);
 

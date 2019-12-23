@@ -48,7 +48,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxDynamicPressure = 20000;
 
-        [GeneralInfoItem("Limit to Max Q", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_LimittoMaxQ", InfoItem.Category.Thrust)]//Limit to Max Q
         public void LimitToMaxDynamicPressureInfoItem()
         {
             GUILayout.BeginHorizontal();
@@ -63,7 +63,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventOverheats = false;
 
-        [GeneralInfoItem("Prevent engine overheats", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_PreventEngineOverheats", InfoItem.Category.Thrust)]//Prevent engine overheats
         public void LimitToPreventOverheatsInfoItem()
         {
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
@@ -71,7 +71,7 @@ namespace MuMech
             limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, Localizer.Format("#MechJeb_Ascent_checkbox12"), s);//"Prevent engine overheats"
         }
      
-        [ToggleInfoItem("Smooth throttle", InfoItem.Category.Thrust)]//
+        [ToggleInfoItem("#MechJeb_SmoothThrottle", InfoItem.Category.Thrust)]//Smooth throttle
         [Persistent(pass = (int)Pass.Global)]
         public bool smoothThrottle = false;
 
@@ -81,7 +81,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventFlameout = false;
 
-        [GeneralInfoItem("Prevent jet flameout", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_PreventJetFlameout", InfoItem.Category.Thrust)]//Prevent jet flameout
         public void LimitToPreventFlameoutInfoItem()
         {
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
@@ -92,7 +92,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool limitToPreventUnstableIgnition = false;
 
-        [GeneralInfoItem("Prevent unstable ignition", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_PreventUnstableIgnition", InfoItem.Category.Thrust)]//Prevent unstable ignition
         public void LimitToPreventUnstableIgnitionInfoItem()
         {
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
@@ -103,7 +103,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool autoRCSUllaging = true;
 
-        [GeneralInfoItem("Use RCS to ullage", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_UseRCStoullage", InfoItem.Category.Thrust)]//Use RCS to ullage
         public void AutoRCsUllageInfoItem()
         {
             GUIStyle s = new GUIStyle(GUI.skin.toggle);
@@ -115,7 +115,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble flameoutSafetyPct = 5;
 
-        [ToggleInfoItem("Manage air intakes", InfoItem.Category.Thrust)]
+        [ToggleInfoItem("#MechJeb_ManageAirIntakes", InfoItem.Category.Thrust)]//Manage air intakes
         [Persistent(pass = (int)Pass.Global)]
         public bool manageIntakes = false;
 
@@ -125,7 +125,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxAcceleration = 40;
 
-        [GeneralInfoItem("Limit acceleration", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Thrust)]//Limit acceleration
         public void LimitAccelerationInfoItem()
         {
             GUILayout.BeginHorizontal();
@@ -143,7 +143,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public EditableDoubleMult maxThrottle = new EditableDoubleMult(1, 0.01);
 
-        [GeneralInfoItem("Limit throttle", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_LimitThrottle", InfoItem.Category.Thrust)]//Limit throttle
         public void LimitThrottleInfoItem()
         {
             GUILayout.BeginHorizontal();
@@ -161,7 +161,7 @@ namespace MuMech
         [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);
 
-        [GeneralInfoItem("Lower throttle limit", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_LowerThrottleLimit", InfoItem.Category.Thrust)]//Lower throttle limit
         public void LimiterMinThrottleInfoItem()
         {
             GUILayout.BeginHorizontal();
@@ -176,7 +176,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Type)]
         public bool differentialThrottle = false;
 
-        [GeneralInfoItem("Differential throttle", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_DifferentialThrottle", InfoItem.Category.Thrust)]//Differential throttle
         public void  DifferentialThrottle()
         {
             bool oldDifferentialThrottle = core.thrust.differentialThrottle;
@@ -203,7 +203,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public EditableDoubleMult electricThrottleHi = new EditableDoubleMult(0.15, 0.01);
 
-        [GeneralInfoItem("Electric limit", InfoItem.Category.Thrust)]
+        [GeneralInfoItem("#MechJeb_ElectricLimit", InfoItem.Category.Thrust)]//Electric limit
         public void LimitElectricInfoItem()
         {
             GUILayout.BeginHorizontal();

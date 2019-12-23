@@ -73,7 +73,7 @@ namespace MuMech
                 }
                 else
                 {
-                    GUILayout.Label(item.name);
+                    GUILayout.Label(Localizer.Format(item.name));//
                 }
             }
             if (items.Count == 0) GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Label1"));//Add items to this window with the custom window editor.
@@ -446,7 +446,7 @@ namespace MuMech
                     GUIStyle s = new GUIStyle(GUI.skin.label);
                     if (i == selectedItemIndex) s.normal.textColor = Color.yellow;
 
-                    if (GUILayout.Button(editedWindow.items[i].description, s)) selectedItemIndex = i;
+                    if (GUILayout.Button(Localizer.Format(editedWindow.items[i].description), s)) selectedItemIndex = i;//
                 }
                 GUILayout.EndScrollView();
                 GUILayout.EndVertical();
@@ -486,7 +486,7 @@ namespace MuMech
                 scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
                 foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
                 {
-                    if (GUILayout.Button(item.description, GuiUtils.yellowOnHover))
+                    if (GUILayout.Button(Localizer.Format(item.description), GuiUtils.yellowOnHover))//
                     {
                         editedWindow.items.Add(item);
                     }
@@ -668,8 +668,8 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(name, GUILayout.ExpandWidth(true));
-            GUILayout.Label(stringValue, GUILayout.ExpandWidth(false));
+            GUILayout.Label(Localizer.Format(name), GUILayout.ExpandWidth(true));//
+            GUILayout.Label(Localizer.Format(stringValue), GUILayout.ExpandWidth(false));//
             GUILayout.EndHorizontal();
         }
     }
@@ -688,7 +688,7 @@ namespace MuMech
 
         public override void DrawItem()
         {
-            if (GUILayout.Button(name)) action();
+            if (GUILayout.Button(Localizer.Format(name))) action();//
         }
     }
 
@@ -712,7 +712,7 @@ namespace MuMech
             if (member is FieldInfo) currentValue = (bool)(((FieldInfo)member).GetValue(obj));
             else if (member is PropertyInfo) currentValue = (bool)(((PropertyInfo)member).GetValue(obj, new object[] { }));
 
-            bool newValue = GUILayout.Toggle(currentValue, name);
+            bool newValue = GUILayout.Toggle(currentValue,Localizer.Format(name));//
 
             if (newValue != currentValue)
             {
@@ -762,7 +762,7 @@ namespace MuMech
         {
             if (val != null)
             {
-                GuiUtils.SimpleTextBox(name, val, rightLabel, width);
+                GuiUtils.SimpleTextBox(Localizer.Format(name), val, rightLabel, width);//
             }
         }
     }

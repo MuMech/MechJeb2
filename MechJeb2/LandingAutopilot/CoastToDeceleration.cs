@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -57,7 +58,7 @@ namespace MuMech
                     return new DecelerationBurn(core);
                 }
 
-                status = "Coasting toward deceleration burn";
+                status = Localizer.Format("#MechJeb_LandingGuidance_Status1");//"Coasting toward deceleration burn"
 
                 if (core.landing.landAtTarget)
                 {
@@ -75,7 +76,7 @@ namespace MuMech
                     else
                     {
                         Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
-                        status += "\nCourse correction DV: " + deltaV.magnitude.ToString("F3") + " m/s";
+                        status += "\n" + Localizer.Format("#MechJeb_LandingGuidance_Status2",deltaV.magnitude.ToString("F3"));//"Course correction DV: " +  + " m/s"
                     }
                 }
 

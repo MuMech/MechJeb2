@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -9,10 +10,10 @@ namespace MuMech
         public MechJebModuleDeployableAntennaController(MechJebCore core) : base(core)
         { }
         
-        [GeneralInfoItem("Toggle antennas", InfoItem.Category.Misc, showInEditor = false)]
+        [GeneralInfoItem("#MechJeb_ToggleAntennas", InfoItem.Category.Misc, showInEditor = false)]//Toggle antennas
         public void AntennaDeployButton()
         {
-            autoDeploy = GUILayout.Toggle(autoDeploy, "Auto-deploy antennas");
+            autoDeploy = GUILayout.Toggle(autoDeploy, Localizer.Format("#MechJeb_Autodeployantennas"));//"Auto-deploy antennas"
 
             if (GUILayout.Button(buttonText))
             {
@@ -36,11 +37,11 @@ namespace MuMech
             switch (deployablePartState)
             {
                 case DeployablePartState.EXTENDED:
-                    return "Toggle antennas (currently extended)";
+                    return Localizer.Format("#MechJeb_AntennasEXTENDED");//"Toggle antennas (currently extended)"
                 case DeployablePartState.RETRACTED:
-                    return "Toggle antennas (currently retracted)";
+                    return Localizer.Format("#MechJeb_AntennasRETRACTED");//"Toggle antennas (currently retracted)"
                 default:
-                    return "Toggle antennas";
+                    return Localizer.Format("#MechJeb_AntennasToggle");//"Toggle antennas"
             }
         }
     }
