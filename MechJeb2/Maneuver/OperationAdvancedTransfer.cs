@@ -45,19 +45,19 @@ namespace MuMech
                 return Localizer.Format("#MechJeb_adv_Preconditions1");//initial orbit must not be hyperbolic
 
             if (o.ApR >= o.referenceBody.sphereOfInfluence)
-                return Localizer.Format("#MechJeb_adv_Preconditions2",o.referenceBody.displayName);//Localizer.Format("#MechJeb_adv_Preconditions2_2");//"initial orbit must not escape " " sphere of influence."
+                return Localizer.Format("#MechJeb_adv_Preconditions2",o.referenceBody.displayName);//"initial orbit must not escape " " sphere of influence."
 
             if (!target.NormalTargetExists)
                 return (Localizer.Format("#MechJeb_adv_Preconditions3"));//"must select a target for the interplanetary transfer."
 
             if (o.referenceBody.referenceBody == null)
-                return Localizer.Format("#MechJeb_adv_Preconditions4") + o.referenceBody.displayName + ".";//"doesn't make sense to plot an interplanetary transfer from an orbit around "
+                return Localizer.Format("#MechJeb_adv_Preconditions4",o.referenceBody.displayName);//"doesn't make sense to plot an interplanetary transfer from an orbit around <<1>> ."
 
             if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
             {
                 if (o.referenceBody == target.TargetOrbit.referenceBody)
-                    return Localizer.Format("#MechJeb_adv_Preconditions5") + o.referenceBody.displayName + ".";//"use regular Hohmann transfer function to intercept another body orbiting "
-                return Localizer.Format("#MechJeb_adv_Preconditions6",o.referenceBody.displayName,o.referenceBody.displayName,o.referenceBody.referenceBody.displayName);// +  + Localizer.Format("#MechJeb_adv_Preconditions6_2") +  + Localizer.Format("#MechJeb_adv_Preconditions6_3") + + ".";//"an interplanetary transfer from within ""'s sphere of influence must target a body that orbits ""'s parent, "
+                    return Localizer.Format("#MechJeb_adv_Preconditions5", o.referenceBody.displayName) ;//"use regular Hohmann transfer function to intercept another body orbiting <<1>>."
+                return Localizer.Format("#MechJeb_adv_Preconditions6",o.referenceBody.displayName,o.referenceBody.displayName,o.referenceBody.referenceBody.displayName);//"an interplanetary transfer from within <<1>>'s sphere of influence must target a body that orbits <<2>>'s parent,<<3>> "
             }
 
             if (o.referenceBody == Planetarium.fetch.Sun)

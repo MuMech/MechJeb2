@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -9,10 +10,10 @@ namespace MuMech
             : base(core)
         { }
         
-        [GeneralInfoItem("Toggle solar panels", InfoItem.Category.Misc, showInEditor = false)]
+        [GeneralInfoItem("#MechJeb_ToggleSolarPanels", InfoItem.Category.Misc, showInEditor = false)]//Toggle solar panels
         public void SolarPanelDeployButton()
         {
-            autoDeploy = GUILayout.Toggle(autoDeploy, "Auto-deploy solar panels");
+            autoDeploy = GUILayout.Toggle(autoDeploy, Localizer.Format("#MechJeb_SolarPanelDeployButton"));//"Auto-deploy solar panels"
             
             if (GUILayout.Button(buttonText))
             {
@@ -36,11 +37,11 @@ namespace MuMech
             switch (deployablePartState)
             {
                 case DeployablePartState.EXTENDED:
-                    return "Toggle solar panels (currently extended)";
+                    return Localizer.Format("#MechJeb_SolarPanelDeploy");//"Toggle solar panels (currently extended)"
                 case DeployablePartState.RETRACTED:
-                    return "Toggle solar panels (currently retracted)";
+                    return Localizer.Format("#MechJeb_SolarPanelRetracted");//"Toggle solar panels (currently retracted)"
                 default:
-                    return "Toggle solar panels";
+                    return Localizer.Format("#MechJeb_SolarPanelToggle");//"Toggle solar panels"
             }
         }
     }

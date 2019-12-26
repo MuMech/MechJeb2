@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -113,7 +114,7 @@ namespace MuMech
                     }
                 }
 
-                status = "Final descent: " + vesselState.altitudeBottom.ToString("F0") + "m above terrain";
+                status = Localizer.Format("#MechJeb_LandingGuidance_Status9", vesselState.altitudeBottom.ToString("F0"));//"Final descent: " +  + "m above terrain"
 
                 // ComputeCourseCorrection doesn't work close to the ground
                 /* if (core.landing.landAtTarget)

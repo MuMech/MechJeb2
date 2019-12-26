@@ -23,12 +23,12 @@ namespace MuMech
         {
             if (o.eccentricity > 0.2)
             {
-                errorMessage = Localizer.Format("#MechJeb_return_errormsg_1") + o.eccentricity.ToString("F2") + Localizer.Format("#MechJeb_return_errormsg_2");//"Warning: Recommend starting moon returns from a near-circular orbit (eccentricity < 0.2). Planned return is starting from an orbit with eccentricity "" and so may not be accurate."
+                errorMessage = Localizer.Format("#MechJeb_return_errormsg", o.eccentricity.ToString("F2"));//"Warning: Recommend starting moon returns from a near-circular orbit (eccentricity < 0.2). Planned return is starting from an orbit with eccentricity "" and so may not be accurate."
             }
 
             if (o.referenceBody.referenceBody == null)
             {
-                throw new OperationException(o.referenceBody.displayName + Localizer.Format("#MechJeb_return_Exception"));// is not orbiting another body you could return to.
+                throw new OperationException(Localizer.Format("#MechJeb_return_Exception",o.referenceBody.displayName));//<<1>> is not orbiting another body you could return to.
             }
 
             double UT;

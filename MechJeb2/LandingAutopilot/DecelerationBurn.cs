@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -30,7 +31,7 @@ namespace MuMech
                 {
                     core.thrust.targetThrottle = 0;
 
-                    status = "Warping to start of braking burn.";
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status4");//"Warping to start of braking burn."
 
                     //warp to deceleration start
                     Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
@@ -57,7 +58,7 @@ namespace MuMech
                     || Vector3d.Dot(vesselState.forward, desiredThrustVector) < 0.75)
                 {
                     core.thrust.targetThrottle = 0;
-                    status = "Braking";
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status5");//"Braking"
                 }
                 else
                 {
@@ -71,7 +72,7 @@ namespace MuMech
                     double desiredAccel = speedError / speedCorrectionTimeConstant + (desiredSpeedAfterDt - desiredSpeed) / vesselState.deltaT;
                     if (maxAccel - minAccel > 0) core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
                     else core.thrust.targetThrottle = 0;
-                    status = "Braking: target speed = " + Math.Abs(desiredSpeed).ToString("F1") + " m/s";
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status6", Math.Abs(desiredSpeed).ToString("F1"));//"Braking: target speed = " +  + " m/s"
                 }
 
                 core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, core.landing);
