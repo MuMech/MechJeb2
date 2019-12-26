@@ -187,7 +187,7 @@ namespace MuMech
             if (SpeedTargettmp < 0)
                 SpeedTargettmp = 0;
             GUILayout.Label ("m/s", GUILayout.ExpandWidth (true));
-            if (change || GUILayout.Button (Localizer.Format("#Mechjeb_Aircraftauto_btnset7"), autopilot.SpeedTarget == SpeedTargettmp ? btWhite : btGreen)) {//Set
+            if (change || GUILayout.Button (Localizer.Format("#MechJeb_Aircraftauto_btnset7"), autopilot.SpeedTarget == SpeedTargettmp ? btWhite : btGreen)) {//Set
                 autopilot.SpeedTarget = SpeedTargettmp;
             }
             GUILayout.EndHorizontal ();
