@@ -57,7 +57,7 @@ build: build/MechJeb2.dll
 build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
-	${MCS} -t:library -lib:"${MANAGED}" \
+	${MCS} -t:library -unsafe -lib:"${MANAGED}" \
 		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI,,UnityEngine.CoreModule,UnityEngine.IMGUIModule,UnityEngine.VehiclesModule,UnityEngine.PhysicsModule,UnityEngine.AnimationModule,UnityEngine.TextRenderingModule,UnityEngine.InputLegacyModule,UnityEngine.AssetBundleModule \
 		-out:$@ \
 		${MECHJEBFILES} \
