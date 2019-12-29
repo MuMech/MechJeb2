@@ -482,7 +482,7 @@ namespace MuMech {
             v0_bar = this.v0 / v_scale;
         }
 
-        public void centralForceThrust(double[] y, double x, double[] dy, object o)
+        public void centralForceThrust(Span<double> y, double x, Span<double> dy, int n, object o)
         {
             Arc arc = (Arc)o;
             double At = arc.thrust / ( y[12] * g_bar );
@@ -530,7 +530,7 @@ namespace MuMech {
             singleIntegrate(y0: y0, yf: null, sol: sol, n: n, t: ref t, dt: dt, arcs: arcs, count: count, dV: ref dV);
         }
 
-        public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
+        unsafe public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
         {
             Arc e = arcs[n];
 
@@ -538,19 +538,19 @@ namespace MuMech {
             if ( count < 2)
                 count = 2;
 
-            double[] y = new double[14];
-            Array.Copy(y0, arcIndex(arcs,n), y, 0, 13);
-            y[13] = dV;
+            double[] yi = new double[14];
+            Array.Copy(y0, arcIndex(arcs,n), yi, 0, 13);
+            yi[13] = dV;
 
             // fix the starting point to being r0_bar, v0_bar
             if ( n == 0 )
             {
-                y[0] = r0_bar[0];
-                y[1] = r0_bar[1];
-                y[2] = r0_bar[2];
-                y[3] = v0_bar[0];
-                y[4] = v0_bar[1];
-                y[5] = v0_bar[2];
+                yi[0] = r0_bar[0];
+                yi[1] = r0_bar[1];
+                yi[2] = r0_bar[2];
+                yi[3] = v0_bar[0];
+                yi[4] = v0_bar[1];
+                yi[5] = v0_bar[2];
             }
 
             /*
@@ -567,17 +567,10 @@ namespace MuMech {
             }
             */
 
-            // XXX: remove this hack
-            bool allvals;
-            if (sol != null)
-                allvals = true;
-            else
-                allvals = false;
-
-            double[] x = new double[count];
-
+            double* xtblp = stackalloc double[count];
+            Span<double> xtbl = new Span<double>(xtblp, count);
             for(int i = 0; i < count; i++)
-                x[i] = t + dt * i / (count - 1 );
+                xtbl[i] = t + dt * i / (count - 1 );
 
             /*
             // Chebyshev sampling
@@ -586,22 +579,34 @@ namespace MuMech {
                 int l = count - 2;
                 x[k] = t + 0.5 * dt  + 0.5 * dt * Math.Cos(Math.PI*(2*(l-k)+1)/(2*l));
             }
-
             // But also get the endpoints exactly
             x[0] = t;
             x[count-1] = t + dt;
             */
 
-            ODE ode = new ODE(y, 14, x, ckEps, 0, hmin: 1e-15, allvals: allvals);
-            ode.RKF45(centralForceThrust, e);
-
-            t = t + dt;
-            e.dV = ( ode.ytbl[13][count-1] - dV ) * v_scale;
-            dV = ode.ytbl[13][count-1];
+            List<double> xlist = null;
+            List<double []> ylist = null;
 
             if (sol != null)
             {
-                sol.AddSegment(ode.xlist, ode.ylist, e);
+                ylist = new List<double []>();
+                xlist = new List<double>();
+            }
+
+            // FIXME: remove this allocation by using a jagged span
+            double[][] ytbl = new double[14][];
+            for(int i = 0; i < 14; i++)
+                ytbl[i] = new double[count];
+
+            ODE.RKDP547FM(centralForceThrust, e, yi, 14, xtbl, ytbl, ckEps, 0, hmin: 1e-15, xlist: xlist, ylist: ylist);
+
+            t = t + dt;
+            e.dV = ( ytbl[13][count-1] - dV ) * v_scale;
+            dV = ytbl[13][count-1];
+
+            if (sol != null)
+            {
+                sol.AddSegment(xlist, ylist, e);
             }
 
             if (yf != null)
@@ -609,7 +614,7 @@ namespace MuMech {
                 for(int i = 0; i < 13; i++)
                 {
                     int j = 13*n+i;
-                    yf[j] = ode.ytbl[i][1];
+                    yf[j] = ytbl[i][1];
                 }
             }
         }
