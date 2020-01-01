@@ -50,6 +50,7 @@
     <Compile Include="AttitudeControllers\PIDLoop.cs" />
     <Compile Include="AttitudeControllers\TorquePI.cs" />
     <Compile Include="AutopilotModule.cs" />
+    <Compile Include="Brent.cs" />
     <Compile Include="CelestialBodyExtensions.cs" />
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="ComputerModule.cs" />
