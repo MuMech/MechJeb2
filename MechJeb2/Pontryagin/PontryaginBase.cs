@@ -315,6 +315,21 @@ namespace MuMech {
             public List<Segment> segments = new List<Segment>();
             public List<Arc> arcs = new List<Arc>();
 
+            public Arc last_arc()
+            {
+                return arcs[arcs.Count-1];
+            }
+
+            public Arc terminal_burn_arc()
+            {
+                for(int k = arcs.Count-1; k >= 0; k--)
+                {
+                    if ( arcs[k].thrust > 0 )
+                        return arcs[k];
+                }
+                return arcs[0];
+            }
+
             // Arc from index
             public Arc arc(int n)
             {
