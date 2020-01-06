@@ -29,13 +29,16 @@ namespace MuMech
         {
             List<Part> parts;
             if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null) parts = EditorLogic.fetch.ship.parts;
-            else if (vessel == null) return new List<T>();
+            else if (vessel == null || vessel.Parts == null) return new List<T>();
             else parts = vessel.Parts;
 
             List<T> list = new List<T>();
             for (int p = 0; p < parts.Count; p++)
             {
                 Part part = parts[p];
+
+                if (part.Modules == null)
+                    continue;
 
                 int count = part.Modules.Count;
 
