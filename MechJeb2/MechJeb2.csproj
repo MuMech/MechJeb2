@@ -11,6 +11,7 @@
     <RootNamespace>MuMech</RootNamespace>
     <AssemblyName>MechJeb2</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <NoStdLib>true</NoStdLib>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <RunPostBuildEvent>Always</RunPostBuildEvent>
@@ -245,6 +246,8 @@
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="mscorlib">
     </Reference>
     <Reference Include="System">
     </Reference>
