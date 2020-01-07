@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace MuMech
 {
     public delegate void ODEFun(Span<double> y, double x, Span<double> dy, int n, object o);
+    public delegate double EvtFun(Span<double> y, double x, int n, object o);
 
     class ODE
     {
@@ -72,36 +73,26 @@ namespace MuMech
         // hmin    - minimum h step (may be violated on the last step)
         // hmax    - maximum h step
         // maxiter - maximum number of steps
+        // EvtFuns - array of event functions
         //
         // ref: https://github.com/scipy/scipy/blob/master/scipy/integrate/dop/dopri5.f
         //
-        unsafe public static void RKDP547FM(ODEFun f, object o, double[] y0, int n, Span<double> xtbl, Span<double[]> ytbl, double eps, double hstart, List<double> xlist = null, List<double []> ylist = null, double hmin = 0, double hmax = 0, int maxiter = 0)
+        public static void RKDP547FM(ODEFun f, object o, double[] y0, int n, Span<double> xtbl, Span<double[]> ytbl, double eps, double hstart, List<double> xlist = null, List<double []> ylist = null, double hmin = 0, double hmax = 0, int maxiter = 0, EvtFun[] EvtFuns = null)
         {
-            // mono doesn't seem to support the `Span<double> k1 = stackalloc double[n];` C# 7.2 syntax yet, fix this when it does
-            double* k1p      = stackalloc double[n];
-            Span<double> k1  = new Span<double>(k1p, n);
-            double* k2p      = stackalloc double[n];
-            Span<double> k2  = new Span<double>(k2p, n);
-            double* k3p      = stackalloc double[n];
-            Span<double> k3  = new Span<double>(k3p, n);
-            double* k4p      = stackalloc double[n];
-            Span<double> k4  = new Span<double>(k4p, n);
-            double* k5p      = stackalloc double[n];
-            Span<double> k5  = new Span<double>(k5p, n);
-            double* k6p      = stackalloc double[n];
-            Span<double> k6  = new Span<double>(k6p, n);
-            double* k7p      = stackalloc double[n];
-            Span<double> k7  = new Span<double>(k7p, n);
+            Span<double> k1  = stackalloc double[n];
+            Span<double> k2  = stackalloc double[n];
+            Span<double> k3  = stackalloc double[n];
+            Span<double> k4  = stackalloc double[n];
+            Span<double> k5  = stackalloc double[n];
+            Span<double> k6  = stackalloc double[n];
+            Span<double> k7  = stackalloc double[n];
             // accumulator
-            double* ap       = stackalloc double[n];
-            Span<double> a   = new Span<double>(ap, n);
+            Span<double> a   = stackalloc double[n];
             // error
-            double* errp     = stackalloc double[n];
-            Span<double> err = new Span<double>(errp, n);
+            Span<double> err = stackalloc double[n];
             double h         = hstart;
             double x         = xtbl[0];
-            double* yp      = stackalloc double[n];
-            Span<double> y   = new Span<double>(yp, n);
+            Span<double> y   = stackalloc double[n];
 
             if ( ylist != null && xlist != null )
             {
@@ -144,6 +135,7 @@ namespace MuMech
 
             bool fsal = false;
             bool at_hmin;
+            double h_restart = 0;
             double niter = 0;
 
             while(j < xtbl.Length)
@@ -211,20 +203,56 @@ namespace MuMech
                     }
                     double s = 0.84 * Math.Pow(eps / error, 1.0/5.0);
 
-                    if (error < eps || at_hmin)
-                    {
-                        fsal = true; // advancing so use k7 for k1 next time
-                        for(int i = 0; i < n; i++)
-                            y[i] = a[i]; // FSAL
-                        x = x + h;
+                    int evt = -1;
 
-                        if (xlist != null && ylist != null)
+                    if (error < eps || at_hmin || h_restart != 0)
+                    {
+                        int sign = 0;
+
+                        if ( EvtFuns != null )
                         {
-                            double[] ydup = new double[n];
+                            for(int i = 0; i < EvtFuns.Length; i++)
+                            {
+                                EvtFun e = EvtFuns[i];
+                                double e1 = e(y, x, n, o);
+                                double e2 = e(a, x+h, n, o);
+                                if ( e1 * e2 < 0 )
+                                {
+                                    evt = i;
+                                    // sign is passed to Brent to ensure we select a value on the other side of the event
+                                    sign = Math.Sign(e2);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (evt < 0 || h_restart != 0)
+                        {
+                            fsal = true; // advancing so use k7 for k1 next time
                             for(int i = 0; i < n; i++)
-                                ydup[i] = y[i];
-                            ylist.Add(ydup);
-                            xlist.Add(x);
+                                y[i] = a[i]; // FSAL
+                            x = x + h;
+
+                            if (xlist != null && ylist != null)
+                            {
+                                double[] ydup = new double[n];
+                                for(int i = 0; i < n; i++)
+                                    ydup[i] = y[i];
+                                ylist.Add(ydup);
+                                xlist.Add(x);
+                            }
+                            if (h_restart != 0)
+                            {
+                                h = h_restart;
+                                s = 1;
+                                h_restart = 0;
+                            }
+                        } else {
+                            fsal = false;
+                            s = 1;
+                            if (h_restart == 0)
+                                h_restart = h;
+                            Brent.Solve((newh, a1, a2, a3, a4, o2) => EvtWrapper(EvtFuns[evt], newh, x, a1, a2, x+h, a3, a4, n, o2), 0, h, 1e-15, out h, out _, o, y, k1, a, k7, sign: sign);
                         }
                     }
                     else
@@ -249,6 +277,70 @@ namespace MuMech
             }
         }
 
+        private static double EvtWrapper(EvtFun f, double newh, double x1, ReadOnlySpan<double> y1, ReadOnlySpan<double> yp1, double x2, ReadOnlySpan<double> y2, ReadOnlySpan<double> yp2, int n, object o)
+        {
+            Span<double> newy  = stackalloc double[n];
+            ODE.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x1+newh, n, newy);
+            return f(newy, x1+newh, n, o);
+        }
+
+        // with x in the interval [x1,x2] with y1=y(x1), yp1=y'(x1), y2=y(x2), yp2=y'(x2) given at the endpoints, find y(x)
+        private static void CubicHermiteInterpolant(double x1, ReadOnlySpan<double> y1, ReadOnlySpan<double> yp1, double x2, ReadOnlySpan<double> y2, ReadOnlySpan<double> yp2, double x, int n, Span<double> y)
+        {
+            double t = (x - x1) / (x2 - x1);
+            double h00 = 2 * t * t * t - 3 * t * t + 1;
+            double h10 = t * t * t - 2 * t * t + t;
+            double h01 = -2 * t * t * t + 3 * t * t;
+            double h11 = t * t * t - t * t;
+            for(int i = 0; i < n; i++)
+            {
+                y[i] = h00 * y1[i] + h10 * ( x2 - x1 ) * yp1[i] + h01 * y2[i] + h11 * ( x2 - x1 ) * yp2[i];
+            }
+        }
+
+        public static void ball(Span<double> y, double x, Span<double> dy, int n, object o)
+        {
+            dy[0] = y[1];
+            dy[1] = -9.8;
+        }
+
+        public static double ballevent(Span<double> y, double x, int n, object o)
+        {
+            return y[0];
+        }
+
+        static void Main(string[] args)
+        {
+            List<double []> ylist = new List<double []>();
+            List<double> xlist    = new List<double>();
+            double[] y0 = { 0, 20 };
+            double[] x = { 0, 5 };
+            double[][] y = new double[][]
+            {
+                new double[2],
+                new double[2],
+            };
+            EvtFun[] EvtFuns = { ballevent };
+            ODE.RKDP547FM(ball, null, y0, 2, x, y, 1e-9, 0, hmin: 1e-8, xlist: xlist, ylist: ylist, EvtFuns: EvtFuns);
+            for(int i = 0; i < xlist.Count; i++)
+            {
+                Console.Write(xlist[i]);
+                if (i != xlist.Count - 1)
+                    Console.Write(", ");
+            }
+            Console.Write("\n");
+            for(int i = 0; i < ylist.Count; i++)
+            {
+                for(int j = 0; j < 2; j++)
+                {
+                    Console.Write(ylist[i][j]);
+                    if (j != 1)
+                        Console.Write(", ");
+                }
+                Console.Write("\n");
+            }
+        }
+
         public static void centralForce(Span<double> y, double x, Span<double> dy, int n, object o)
         {
             double r2 = y[0] * y[0] + y[1] * y[1] + y[2] * y[2];
@@ -265,7 +357,7 @@ namespace MuMech
             dy[5] = - y[2] / r3;
         }
 
-        static void Main(string[] args)
+        static void Main2(string[] args)
         {
             List<double []> ylist = new List<double []>();
             List<double> xlist    = new List<double>();

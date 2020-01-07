@@ -518,6 +518,11 @@ namespace MuMech
             return status == PVGStatus.COASTING || status == PVGStatus.COASTING_STAGING;
         }
 
+        public bool isBurning()
+        {
+            return status == PVGStatus.BURNING || status == PVGStatus.BURNING_STAGING;
+        }
+
         public bool isStaging()
         {
             return status == PVGStatus.BURNING_STAGING || status == PVGStatus.COASTING_STAGING;
@@ -646,6 +651,9 @@ namespace MuMech
             }
             else
             {
+                if ( !isBurning() )
+                    ThrustOn();
+
                 if ( !isTerminalGuidance() )
                 {
                     if ((vesselState.time < last_stage_time + 4) || (vesselState.time < last_coasting_time + 4))
@@ -654,14 +662,7 @@ namespace MuMech
                         status = PVGStatus.BURNING;
                 }
 
-                if (core.staging.autostageLimitInternal > 0)
-                {
-                    core.staging.autostageLimitInternal = 0;
-                }
-                else
-                {
-                    ThrustOn();
-                }
+                core.staging.autostageLimitInternal = p.solution.terminal_burn_arc().ksp_stage;
             }
         }
 

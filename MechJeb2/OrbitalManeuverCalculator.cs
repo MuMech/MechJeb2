@@ -78,23 +78,11 @@ namespace MuMech
                 maxDeltaV = Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
             }
 
-            //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.01)
-            {
-                double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
-                double testPeriapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR;
+            BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR;  };
+            double dV;
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null);
 
-                if ((testPeriapsis > newPeR && raising) || (testPeriapsis < newPeR && !raising))
-                {
-                    maxDeltaV = testDeltaV;
-                }
-                else
-                {
-                    minDeltaV = testDeltaV;
-                }
-            }
-
-            return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
+            return dV * burnDirection;
         }
 
         public static bool ApoapsisIsHigher(double ApR, double than)
@@ -141,25 +129,11 @@ namespace MuMech
                 maxDeltaV = o.SwappedOrbitalVelocityAtUT(UT).magnitude;
             }
 
-            //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.01)
-            {
-                double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
-                double testApoapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR;
+            BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - newApR;  };
+            double dV;
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null);
 
-                bool above = ApoapsisIsHigher(testApoapsis, newApR);
-
-                if ((raising && above) || (!raising && !above))
-                {
-                    maxDeltaV = testDeltaV;
-                }
-                else
-                {
-                    minDeltaV = testDeltaV;
-                }
-            }
-
-            return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
+            return dV * burnDirection;
         }
 
         //Computes the heading of the ground track of an orbit with a given inclination at a given latitude.
@@ -388,29 +362,14 @@ namespace MuMech
                 }
             }
 
-            int minTimeApsisPhaseAngleSign = Math.Sign(lastApsisPhaseAngle);
-
-            //then do a binary search
-            while (maxTime - minTime > 0.01)
-            {
-                double testTime = (maxTime + minTime) / 2;
-
+            BrentFun f = delegate(double testTime, object ign) {
                 double testApsisPhaseAngle;
                 DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, testTime, out testApsisPhaseAngle);
+                return testApsisPhaseAngle;
+            };
+            Brent.Solve(f, maxTime, minTime, 1e-4, out burnUT, out _, null);
 
-                if (Math.Sign(testApsisPhaseAngle) == minTimeApsisPhaseAngleSign)
-                {
-                    minTime = testTime;
-                }
-                else
-                {
-                    maxTime = testTime;
-                }
-            }
-
-            burnUT = (minTime + maxTime) / 2;
-            double finalApsisPhaseAngle;
-            Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out finalApsisPhaseAngle);
+            Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out _);
 
             return burnDV;
         }
@@ -1185,26 +1144,12 @@ namespace MuMech
                 //when lowering the SMA, we burn horizontally, and max possible deltaV is the deltaV required to kill all horizontal velocity
                 maxDeltaV = Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
             }
-            // Debug.Log (String.Format ("We are {0} SMA to {1}", raising ? "raising" : "lowering", newSMA));
-            // Debug.Log (String.Format ("Starting SMA iteration with maxDeltaV of {0}", maxDeltaV));
-            //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.01)
-            {
-                double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
-                double testSMA = o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis;
-                // Debug.Log (String.Format ("Testing dV of {0} gave an SMA of {1}", testDeltaV, testSMA));
 
-                if ((testSMA < 0) || (testSMA > newSMA && raising) || (testSMA < newSMA && !raising))
-                {
-                    maxDeltaV = testDeltaV;
-                }
-                else
-                {
-                    minDeltaV = testDeltaV;
-                }
-            }
+            BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - newSMA;  };
+            double dV;
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null);
 
-            return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
+            return dV * burnDirection;
         }
 
         public static Vector3d DeltaVToShiftNodeLongitude(Orbit o, double UT, double newNodeLong)
