@@ -545,7 +545,7 @@ namespace MuMech {
             singleIntegrate(y0: y0, yf: null, sol: sol, n: n, t: ref t, dt: dt, arcs: arcs, count: count, dV: ref dV);
         }
 
-        unsafe public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
+        public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
         {
             Arc e = arcs[n];
 
@@ -582,8 +582,7 @@ namespace MuMech {
             }
             */
 
-            double* xtblp = stackalloc double[count];
-            Span<double> xtbl = new Span<double>(xtblp, count);
+            Span<double> xtbl = stackalloc double[count];
             for(int i = 0; i < count; i++)
                 xtbl[i] = t + dt * i / (count - 1 );
 
