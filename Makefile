@@ -21,18 +21,12 @@ else
 		MANAGED := ${KSPDIR}/KSP.app/Contents/Resources/Data/Managed/
 		endif
 	endif
-
-	# Check if mcs exists (Mono 2.11+) and fall back to gmcs (before Mono 2.11) for backwards compatibility
-	MCS_PATH := $(shell command -v mcs 2> /dev/null)
-	ifndef MCS_PATH
-		MCS ?= gmcs
-	endif
 endif
 
 MECHJEBFILES := $(shell find MechJeb2 -name "*.cs")
 
 RESGEN2 := resgen2
-MCS     ?= mcs
+CSC     := csc
 GIT     := git
 TAR     := tar
 ZIP     := zip
@@ -44,7 +38,7 @@ all: build
 info:
 	@echo "== MechJeb2 Build Information =="
 	@echo "  resgen2: ${RESGEN2}"
-	@echo "  mcs:     ${MCS}"
+	@echo "  csc:     ${CSC}"
 	@echo "  git:     ${GIT}"
 	@echo "  tar:     ${TAR}"
 	@echo "  zip:     ${ZIP}"
@@ -57,8 +51,8 @@ build: build/MechJeb2.dll
 build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
-	${MCS} -t:library -unsafe -lib:"${MANAGED}" \
-		-r:Assembly-CSharp,Assembly-CSharp-firstpass,UnityEngine,UnityEngine.UI,,UnityEngine.CoreModule,UnityEngine.IMGUIModule,UnityEngine.VehiclesModule,UnityEngine.PhysicsModule,UnityEngine.AnimationModule,UnityEngine.TextRenderingModule,UnityEngine.InputLegacyModule,UnityEngine.AssetBundleModule \
+	${CSC} -t:library -langversion:8.0 -lib:"${MANAGED}" \
+		-r:Assembly-CSharp.dll,Assembly-CSharp-firstpass.dll,UnityEngine.dll,UnityEngine.UI.dll,UnityEngine.CoreModule.dll,UnityEngine.IMGUIModule.dll,UnityEngine.VehiclesModule.dll,UnityEngine.PhysicsModule.dll,UnityEngine.AnimationModule.dll,UnityEngine.TextRenderingModule.dll,UnityEngine.InputLegacyModule.dll,UnityEngine.AssetBundleModule.dll \
 		-out:$@ \
 		${MECHJEBFILES} \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources
