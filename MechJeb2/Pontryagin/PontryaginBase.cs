@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -1277,7 +1278,7 @@ namespace MuMech {
             }
         }
 
-        Queue<string> logQueue = new Queue<string>();
+        Queue logQueue = new Queue();
         Mutex mut = new Mutex();
 
         // lets us Debug.Log events from the computation thread in a thread-safe fashion
@@ -1317,7 +1318,7 @@ namespace MuMech {
             mut.WaitOne();
             while ( logQueue.Count > 0 )
             {
-                Debug.Log(logQueue.Dequeue());
+                Debug.Log((string)logQueue.Dequeue());
             }
             mut.ReleaseMutex();
         }
