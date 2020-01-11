@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -19,7 +20,7 @@ namespace UnityToolbag
 
         private static Thread _mainThread;
         private static object _lockObject = new object();
-        private static readonly Queue<Action> _actions = new Queue<Action>();
+        private static readonly Queue _actions = new Queue();
 
         /// <summary>
         /// Gets a value indicating whether or not the current thread is the game's main thread.
@@ -105,7 +106,7 @@ namespace UnityToolbag
         {
             lock (_lockObject) {
                 while (_actions.Count > 0) {
-                    _actions.Dequeue()();
+                    ((Action)_actions.Dequeue())();
                 }
             }
         }
