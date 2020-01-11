@@ -108,28 +108,12 @@ namespace MuMech
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
 
             double minDeltaV = 0;
-            double maxDeltaV;
-            if (raising)
-            {
-                //put an upper bound on the required deltaV:
-                maxDeltaV = 0.25;
+            // 10000 dV is a safety factor, max burn when lowering ApR would be to null out our current velocity
+            double maxDeltaV = raising ? 10000 : o.SwappedOrbitalVelocityAtUT(UT).magnitude;
 
-                double ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
-                while (ApoapsisIsHigher(newApR, ap))
-                {
-                    minDeltaV = maxDeltaV; //narrow the range
-                    maxDeltaV *= 2;
-                    ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
-                    if (maxDeltaV > 100000) break; //a safety precaution
-                }
-            }
-            else
-            {
-                //when lowering apoapsis, we burn retrograde, and max possible deltaV is total velocity
-                maxDeltaV = o.SwappedOrbitalVelocityAtUT(UT).magnitude;
-            }
-
-            BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - newApR;  };
+            // solve for the reciprocal of the ApR which is a continuous function that avoids the parabolic singularity and
+            // change of sign for hyperbolic orbits.
+            BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0/newApR;  };
             double dV;
             Brent.Solve(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null);
 
@@ -1127,25 +1111,11 @@ namespace MuMech
             bool raising = o.semiMajorAxis < newSMA;
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
             double minDeltaV = 0;
-            double maxDeltaV;
-            if (raising)
-            {
-                //put an upper bound on the required deltaV:
-                maxDeltaV = 0.25;
-                while (o.PerturbedOrbit(UT, maxDeltaV * burnDirection).semiMajorAxis < newSMA)
-                {
-                    maxDeltaV *= 2;
-                    if (maxDeltaV > 100000)
-                        break; //a safety precaution
-                }
-            }
-            else
-            {
-                //when lowering the SMA, we burn horizontally, and max possible deltaV is the deltaV required to kill all horizontal velocity
-                maxDeltaV = Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
-            }
+            double maxDeltaV = raising ? 10000 :  Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
 
-            BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - newSMA;  };
+            // solve for the reciprocal of the SMA which is a continuous function that avoids the parabolic singularity and
+            // change of sign for hyperbolic orbits.
+            BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - 1.0/newSMA;  };
             double dV;
             Brent.Solve(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null);
 
