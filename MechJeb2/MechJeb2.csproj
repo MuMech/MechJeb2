@@ -63,7 +63,6 @@
     <Compile Include="GoodingSolver.cs" />
     <Compile Include="GuiUtils.cs" />
     <Compile Include="InstallChecker.cs" />
-    <Compile Include="LambertSolver.cs" />
     <Compile Include="LandingAutopilot\CoastToDeceleration.cs" />
     <Compile Include="LandingAutopilot\CourseCorrection.cs" />
     <Compile Include="LandingAutopilot\DecelerationBurn.cs" />

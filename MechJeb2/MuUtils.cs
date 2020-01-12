@@ -7,6 +7,9 @@ namespace MuMech
 {
     public static class MuUtils
     {
+
+        public const double DBL_EPSILON = 2.2204460492503131e-16;
+
 		public static float ResourceDensity(int type)
         {
             return PartResourceLibrary.Instance.GetDefinition(type).density;
