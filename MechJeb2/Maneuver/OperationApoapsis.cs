@@ -1,4 +1,6 @@
 ﻿using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationApoapsis : Operation
@@ -20,7 +22,7 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
             if (o.referenceBody.Radius + newApA < o.Radius(UT))
@@ -29,13 +31,15 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",burnAltitude));//new apoapsis cannot be lower than the altitude of the burn (<<1>>)
             }
 
-            return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + o.referenceBody.Radius), UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + o.referenceBody.Radius), UT));
+
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

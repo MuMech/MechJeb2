@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationInterplanetaryTransfer : Operation
@@ -26,7 +28,7 @@ namespace MuMech
             }
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double UT, MechJebModuleTargetController target)
         {
 
             // Check preconditions
@@ -62,8 +64,9 @@ namespace MuMech
             }
 
             var dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, target.TargetOrbit, waitForPhaseAngle, out UT);
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add( new ManeuverParameters(dV, UT) );
+            return NodeList;
         }
     }
 }
-

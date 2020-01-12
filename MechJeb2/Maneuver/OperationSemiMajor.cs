@@ -1,4 +1,6 @@
 ﻿using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationSemiMajor : Operation
@@ -20,7 +22,7 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
@@ -34,13 +36,15 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception",o.referenceBody.displayName) +  "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
             }
 
-            return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA), UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA), UT));
+
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-
