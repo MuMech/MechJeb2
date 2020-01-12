@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using KSP.Localization;
+using System.Collections.Generic;
 namespace MuMech
 {
     public class OperationCourseCorrection : Operation
@@ -24,7 +25,7 @@ namespace MuMech
             GUILayout.Label(Localizer.Format("#MechJeb_approach_label3"));//Schedule the burn to minimize the required ΔV.
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double UT, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)
                 throw new OperationException(Localizer.Format("#MechJeb_approach_Exception1"));//must select a target for the course correction.
@@ -56,8 +57,9 @@ namespace MuMech
                 OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, UT, target.TargetOrbit, interceptDistance, out UT);
 
 
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add( new ManeuverParameters(dV, UT) );
+            return NodeList;
         }
     }
 }
-

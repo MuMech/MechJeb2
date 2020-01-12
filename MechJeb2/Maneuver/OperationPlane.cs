@@ -1,4 +1,6 @@
 ﻿using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationPlane : Operation
@@ -10,10 +12,10 @@ namespace MuMech
         public OperationPlane ()
         {
             timeSelector = new TimeSelector(new TimeReference[]
-            {
-                TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD,
-                TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
-            });
+                    {
+                    TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD,
+                    TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
+                    });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -21,7 +23,7 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
@@ -99,13 +101,14 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception6"));//wrong time reference.
             }
 
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(dV, UT));
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

@@ -1,4 +1,6 @@
 ﻿using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationEllipticize : Operation
@@ -24,7 +26,7 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
@@ -42,13 +44,14 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_both_Exception3",o.referenceBody.displayName) + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//"new periapsis cannot be lower than minus the radius of <<1>>"
             }
 
-            return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, newPeA + o.referenceBody.Radius, newApA + o.referenceBody.Radius), UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add( new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToEllipticize(o, UT, newPeA + o.referenceBody.Radius, newApA + o.referenceBody.Radius), UT));
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

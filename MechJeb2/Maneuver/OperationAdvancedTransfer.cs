@@ -3,6 +3,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using KSP.Localization;
 using System.Collections;
+using System.Collections.Generic;
 namespace MuMech
 {
     public class OperationAdvancedTransfer : Operation
@@ -200,7 +201,7 @@ namespace MuMech
                     normal = {textColor = GuiUtils.skin.label.normal.textColor}
                 };
 
-                GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth), GUILayout.Height(porkchop_Height));//"Computing:" 
+                GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth), GUILayout.Height(porkchop_Height));//"Computing:"
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("ΔV: " + dv);
@@ -233,8 +234,8 @@ namespace MuMech
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + departure);//Departure in 
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + duration);//Transit duration 
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + departure);//Departure in
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + duration);//Transit duration
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -270,7 +271,7 @@ namespace MuMech
                 ComputeStuff(o, universalTime, target);
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double UT, MechJebModuleTargetController target)
         {
             // Check preconditions
             string message = CheckPreconditions(o, target);
@@ -286,6 +287,8 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception2"));//Started computation
             }
 
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+
             if (worker.arrivalDate < 0 )
             {
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception3"));//Computation failed
@@ -294,18 +297,22 @@ namespace MuMech
             {
                 if (plot == null || plot.selectedPoint == null)
                     throw new OperationException(Localizer.Format("#MechJeb_adv_Exception4"));//Invalid point selected.
-                return worker.OptimizeEjection(
+                NodeList.Add( worker.OptimizeEjection(
                     worker.DateFromIndex(plot.selectedPoint[0]),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(plot.selectedPoint[0]) + worker.DurationFromIndex(plot.selectedPoint[1]),
-                    UT);
+                    UT)
+                        );
+                return NodeList;
             }
 
-            return worker.OptimizeEjection(
+            NodeList.Add( worker.OptimizeEjection(
                     worker.DateFromIndex(worker.bestDate),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(worker.bestDate) + worker.DurationFromIndex(worker.bestDuration),
-                    UT);
+                    UT)
+                    );
+            return NodeList;
         }
     }
 }
