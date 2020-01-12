@@ -397,7 +397,7 @@ namespace MuMech
         //
         // This uses Shepperd's method instead of using KSP's Orbit class.
         //
-        // The referene time is usually 'now' or the first time the burn can start.
+        // The reference time is usually 'now' or the first time the burn can start.
         //
         // GM       - grav parameter of the celestial
         // pos      - position of the source orbit at a reference time
