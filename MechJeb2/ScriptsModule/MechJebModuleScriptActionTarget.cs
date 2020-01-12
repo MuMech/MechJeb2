@@ -12,10 +12,12 @@ namespace MuMech
         private EditableInt targetType = 0;
         [Persistent(pass = (int)Pass.Type)]
         private EditableInt selectedCelestialBodyIndex = 0;
+        /*
         [Persistent(pass = (int)Pass.Type)]
         private EditableAngle targetLatitude;
         [Persistent(pass = (int)Pass.Type)]
         private EditableAngle targetLongitude;
+        */
         private List<String> bodiesNamesList = new List<String>();
         private List<String> targetTypes = new List<String>();
 
@@ -57,7 +59,7 @@ namespace MuMech
                 CelestialBody body = this.getBodyFromIndex (this.selectedCelestialBodyIndex);
                 if (body != null)
                 {
-                    this.core.target.SetPositionTarget (body, this.targetLatitude, this.targetLongitude);
+                    // this.core.target.SetPositionTarget (body, this.targetLatitude, this.targetLongitude);
                 }
             }
             this.endAction ();
