@@ -282,7 +282,7 @@ namespace MuMech
                 deltas[i] = landingDelta / perturbationDeltaV; //normalize by the delta-V considered, so that deltas now has units of meters per (meter/second) [i.e., seconds]
             }
 
-            // Now deltas stores the predicted offsets in landing position produced by each of the three perturbations. 
+            // Now deltas stores the predicted offsets in landing position produced by each of the three perturbations.
             // We now figure out the offset we actually want
 
             // First we compute the target landing position. We have to convert the latitude and longitude of the target
@@ -303,7 +303,7 @@ namespace MuMech
             Vector3d downrangeDelta;
             if (allowPrograde)
             {
-                // Construct the linear combination of the prograde and radial+ perturbations 
+                // Construct the linear combination of the prograde and radial+ perturbations
                 // that produces the largest effect on the landing position. The Math.Sign is to
                 // detect and handle the case where radial+ burns actually bring the landing sign closer
                 // (e.g. when we are traveling close to straight up)
@@ -456,7 +456,7 @@ namespace MuMech
             {
                 // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
                 // should end a safe height above the landing site in order to allow braking from terminal velocity
-#warning Drag Length is quite large now without parachutes, check this better
+                // FIXME: Drag Length is quite large now without parachutes, check this better
                 double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
 
                 //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
@@ -476,7 +476,7 @@ namespace MuMech
         //ensure a safe touchdown speed. How do we tell if the atmosphere is thick enough? We check
         //to see if there is an altitude within the atmosphere for which the characteristic distance
         //over which drag slows the ship is smaller than the altitude above the terrain. If so, we can
-        //expect to get slowed to near terminal velocity before impacting the ground. 
+        //expect to get slowed to near terminal velocity before impacting the ground.
         public bool UseAtmosphereToBrake()
         {
             double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
@@ -496,14 +496,14 @@ namespace MuMech
             for (int i = 0; i < vessel.parts.Count; i++)
             {
                 Part part = vessel.parts[i];
-                if (part.DragCubes.None || part.ShieldedFromAirstream) 
+                if (part.DragCubes.None || part.ShieldedFromAirstream)
                 {
                     continue;
                 }
                 //DragCubeList.CubeData data = part.DragCubes.AddSurfaceDragDirection(Vector3.back, 1);
                 //
                 //dragCoef += data.areaDrag;
-                
+
                 float partAreaDrag = 0;
                 for (int f = 0; f < 6; f++)
                 {
@@ -573,7 +573,7 @@ namespace MuMech
         {
             if (this.ParachutesDeployable())
             {
-                string retVal = Localizer.Format("#MechJeb_ChuteMultiplier", this.parachutePlan.Multiplier.ToString("F7"));//"'Chute Multiplier: " + 
+                string retVal = Localizer.Format("#MechJeb_ChuteMultiplier", this.parachutePlan.Multiplier.ToString("F7"));//"'Chute Multiplier: " +
                 retVal += Localizer.Format("#MechJeb_MultiplierQuality", this.parachutePlan.MultiplierQuality.ToString("F1"));//"\nMultiplier Quality: " +  + "%"
                 retVal += Localizer.Format("#MechJeb_Usingpredictions", this.parachutePlan.MultiplierDataAmount);//"\nUsing " +  + " predictions"
 
@@ -751,7 +751,7 @@ namespace MuMech
                 }
                 lastResult = newResult;
             }
-            
+
             // What was the overshoot for this new result?
             double overshoot = newResult.GetOvershoot(this.autoPilot.core.target.targetLatitude, this.autoPilot.core.target.targetLongitude);
 
@@ -777,7 +777,7 @@ namespace MuMech
             }
             else
             {
-                // How much data is there? If just one datapoint then we need to slightly vary the multplier to avoid doing exactly the same multiplier again and getting a divide by zero!. If there is just two then we will not update the multiplier as we can't conclude much from two points of data!  
+                // How much data is there? If just one datapoint then we need to slightly vary the multplier to avoid doing exactly the same multiplier again and getting a divide by zero!. If there is just two then we will not update the multiplier as we can't conclude much from two points of data!
                 int dataSetSize = regression.dataSetSize;
                 if (dataSetSize == 1)
                 {
@@ -984,4 +984,3 @@ namespace MuMech
         }
     }
 }
-

@@ -615,7 +615,7 @@ namespace MuMech
                     f[0] += secondBurn.magnitude;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // need Sqrt of MaxValue so least-squares can square it without an infinity
                 f[0] = Math.Sqrt(Double.MaxValue);
