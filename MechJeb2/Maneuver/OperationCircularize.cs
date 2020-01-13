@@ -1,4 +1,6 @@
 ﻿using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationCircularize : Operation
@@ -18,16 +20,17 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-            return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, UT), UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add( new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, UT), UT) );
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

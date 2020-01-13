@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using KSP.Localization;
+using System.Collections.Generic;
 namespace MuMech
 {
     public class OperationGeneric : Operation
@@ -35,7 +36,7 @@ namespace MuMech
             }
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = 0;
 
@@ -112,7 +113,9 @@ namespace MuMech
                 }
             }
 
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add( new ManeuverParameters(dV, UT) );
+            return NodeList;
         }
 
         public TimeSelector getTimeSelector() //Required for scripts to save configuration

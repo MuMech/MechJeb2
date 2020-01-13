@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Smooth.Pools;
@@ -1397,7 +1398,7 @@ namespace MuMech
             private Vector3d CoM;
             private float atmP0; // pressure now
             private float atmP1; // pressure after one timestep
-            private Queue<Quaternion> rotSave = new Queue<Quaternion>();
+            private Queue rotSave = new Queue();
 
             public void Update(Vector3d c, Vessel vessel)
             {
@@ -1638,7 +1639,7 @@ namespace MuMech
                     {
                         for (int i = 0; i < gimbal.gimbalTransforms.Count; i++)
                         {
-                            gimbal.gimbalTransforms[i].localRotation = rotSave.Dequeue();
+                            gimbal.gimbalTransforms[i].localRotation = (Quaternion) rotSave.Dequeue();
                         }
                     }
 

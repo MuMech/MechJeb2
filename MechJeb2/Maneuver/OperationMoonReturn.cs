@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
-using KSP.Localization; 
+using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationMoonReturn : Operation
@@ -7,7 +9,7 @@ namespace MuMech
         public override string getName() { return Localizer.Format("#MechJeb_return_title");}//return from a moon
 
         [Persistent(pass = (int)Pass.Global)]
-            public EditableDoubleMult moonReturnAltitude = new EditableDoubleMult(100000, 1000);
+        public EditableDoubleMult moonReturnAltitude = new EditableDoubleMult(100000, 1000);
 
         public OperationMoonReturn ()
         {
@@ -19,7 +21,7 @@ namespace MuMech
             GUILayout.Label(Localizer.Format("#MechJeb_return_label2"));//Schedule the burn at the next return window.
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (o.eccentricity > 0.2)
             {
@@ -34,8 +36,9 @@ namespace MuMech
             double UT;
             Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, universalTime, o.referenceBody.referenceBody.Radius + moonReturnAltitude, out UT);
 
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(dV, UT));
+            return NodeList;
         }
     }
 }
-

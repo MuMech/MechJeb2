@@ -136,19 +136,19 @@ namespace MuMech
         {
             return orbit.orbitalEnergy;
         }
-        
+
         [ValueInfoItem("#MechJeb_PotentialEnergy", InfoItem.Category.Orbit, description = "#MechJeb_PotentialEnergy_desc", format = ValueInfoItem.SI, units = "J/kg")]//Potential energy||Specific potential energy
         public double PotentialEnergy()
         {
             return -orbit.referenceBody.gravParameter / orbit.radius;
         }
-        
+
         [ValueInfoItem("#MechJeb_KineticEnergy", InfoItem.Category.Orbit, description = "#MechJeb_KineticEnergy_desc", format = ValueInfoItem.SI, units = "J/kg")]//Kinetic energy||Specific kinetic energy
         public double KineticEnergy()
         {
             return orbit.orbitalEnergy + orbit.referenceBody.gravParameter / orbit.radius;
         }
-        
+
         //TODO: consider turning this into a binary search
         [ValueInfoItem("#MechJeb_TimeToImpact", InfoItem.Category.Misc)]//Time to impact
         public string TimeToImpact()
@@ -300,13 +300,13 @@ namespace MuMech
             double isp = totalIsp / numThrusters;
             return isp * gForRCS * Math.Log(m0 / m1);
         }
-        
+
         [ValueInfoItem("#MechJeb_AngularVelocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]//Angular Velocity
         public string angularVelocity()
         {
             return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg, "F3") + "°/s" ;
         }
-        
+
         [ValueInfoItem("#MechJeb_CurrentAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Current acceleration
         public double CurrentAcceleration()
         {
@@ -474,7 +474,6 @@ namespace MuMech
             }
             else
             {
-#warning Check that ....
                 return vesselState.dragCoef;
             }
         }
@@ -501,7 +500,7 @@ namespace MuMech
         {
             return string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
         }
-        
+
         [ValueInfoItem("#MechJeb_StrutCount", InfoItem.Category.Vessel, showInEditor = true)]//Strut count
         public int StrutCount()
         {
@@ -879,7 +878,7 @@ namespace MuMech
 
             int numStages = atmoStats.Length;
             var stages = Enumerable.Range(0, numStages).Where(s => showEmpty || atmoStats[s].deltaV > 0).ToArray();
-            
+
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
@@ -889,7 +888,7 @@ namespace MuMech
             {
                 timeSeconds = !timeSeconds;
             }
-            
+
             if (GUILayout.Button(showEmpty ?  Localizer.Format("#MechJeb_InfoItems_showEmpty") :Localizer.Format("#MechJeb_InfoItems_hideEmpty"), GUILayout.ExpandWidth(false)))
             {
                 showEmpty = !showEmpty;
@@ -1319,7 +1318,7 @@ namespace MuMech
                 te.Copy();
             }
         }
-        
+
         [GeneralInfoItem("#MechJeb_PoolsStatus", InfoItem.Category.Misc, showInEditor = true)]//Pools Status
         public void DebugString()
         {
