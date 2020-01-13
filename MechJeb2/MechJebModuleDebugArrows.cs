@@ -53,7 +53,7 @@ namespace MuMech
         // Not used since I did not write the code for that one yet.
         //[Persistent(pass = (int)Pass.Global)]
         //public bool avgForwardArrowActive;
-        public static DebugArrow avgForwardArrow;
+        //public static DebugArrow avgForwardArrow;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool requestedAttitudeArrowActive;
@@ -104,8 +104,8 @@ namespace MuMech
 
             forwardArrow.Destroy();
             forwardArrow = null;
-            avgForwardArrow.Destroy();
-            avgForwardArrow = null;
+            //avgForwardArrow.Destroy();
+            //avgForwardArrow = null;
 
             requestedAttitudeArrow.Destroy();
             requestedAttitudeArrow = null;
@@ -136,7 +136,7 @@ namespace MuMech
                 dotArrow        = new DebugArrow(XKCDColors.PurplePink);
 
                 forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
-                avgForwardArrow = new DebugArrow(Color.blue);
+                //avgForwardArrow = new DebugArrow(Color.blue);
 
                 requestedAttitudeArrow = new DebugArrow(Color.gray);
 
