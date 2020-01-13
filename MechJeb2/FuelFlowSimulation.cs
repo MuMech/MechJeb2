@@ -442,6 +442,22 @@ namespace MuMech
     //A FuelNode is a compact summary of a Part, containing only the information needed to run the fuel flow simulation.
     public class FuelNode
     {
+        private readonly struct EngineInfo
+        {
+            public readonly ModuleEngines engineModule;
+            public readonly Vector3d thrustVector;
+
+            public EngineInfo(ModuleEngines engineModule)
+            {
+                this.engineModule = engineModule;
+                
+                thrustVector = Vector3d.zero;
+
+                for (int i = 0; i < engineModule.thrustTransforms.Count; i++)
+                    thrustVector -= engineModule.thrustTransforms[i].forward * engineModule.thrustTransformMultipliers[i];
+            }
+        }
+
         readonly DefaultableDictionary<int, double> resources = new DefaultableDictionary<int, double>(0);       //the resources contained in the part
         readonly KeyableDictionary<int, double> resourceConsumptions = new KeyableDictionary<int, double>();     //the resources this part consumes per unit time when active at full throttle
         readonly DefaultableDictionary<int, double> resourceDrains = new DefaultableDictionary<int, double>(0);  //the resources being drained from this part per unit time at the current simulation time
@@ -476,6 +492,8 @@ namespace MuMech
 
         Part part;
         bool dVLinearThrust;
+
+        readonly List<EngineInfo> engineInfos = new List<EngineInfo>();
 
         private static readonly Pool<FuelNode> pool = new Pool<FuelNode>(Create, Reset);
 
@@ -576,6 +594,8 @@ namespace MuMech
                     freeResources[r.info.id] = true;
             }
 
+            engineInfos.Clear();
+
             // determine if we've got at least one useful ModuleEngine
             // we only do these test for the first ModuleEngines in the Part, could any other ones actually differ?
             for (int i = 0; i < part.Modules.Count; i++)
@@ -592,6 +612,8 @@ namespace MuMech
                     isEngine = true;
                     isthrottleLocked = e.throttleLocked;
                 }
+
+                engineInfos.Add(new EngineInfo(e));
             }
         }
 
@@ -817,10 +839,9 @@ namespace MuMech
 
                 isDrawingResources = false;
 
-                for (int i = 0; i < part.Modules.Count; i++)
+                foreach (EngineInfo engineInfo in engineInfos)
                 {
-                    if (!(part.Modules[i] is ModuleEngines e) || !e.isEnabled) continue;
-
+                    ModuleEngines e = engineInfo.engineModule;
                     // thrust is correct.
                     Vector3d thrust;
                     // note that isp and massFlowRate do not include ignoreForIsp fuels like HTP and so need to be fixed for effective isp and the
@@ -834,7 +855,7 @@ namespace MuMech
                     // here and screws up the KSP API display of ISP.
                     //
                     double isp, massFlowRate;
-                    EngineValuesAtConditions(e, throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate, cosLoss: dVLinearThrust);
+                    EngineValuesAtConditions(engineInfo, throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate, cosLoss: dVLinearThrust);
                     partThrust += thrust.magnitude;
 
                     if ( massFlowRate > 0 )
@@ -1108,33 +1129,30 @@ namespace MuMech
         }
 
         // for a single EngineModule, get thrust + isp + massFlowRate
-        private void EngineValuesAtConditions(ModuleEngines e, double throttle, double atmPressure, double atmDensity, double machNumber, out Vector3d thrust, out double isp, out double massFlowRate, bool cosLoss = true)
+        private void EngineValuesAtConditions(EngineInfo engineInfo, double throttle, double atmPressure, double atmDensity, double machNumber, out Vector3d thrust, out double isp, out double massFlowRate, bool cosLoss = true)
         {
-            isp = e.ISPAtConditions(throttle, atmPressure, atmDensity, machNumber);
-            double flowMultiplier = e.FlowMultiplierAtConditions(atmDensity, machNumber);
-            massFlowRate = e.FlowRateAtConditions(throttle, flowMultiplier);
-            thrust = ThrustAtConditions(e, massFlowRate, isp, cosLoss);
+            isp = engineInfo.engineModule.ISPAtConditions(throttle, atmPressure, atmDensity, machNumber);
+            double flowMultiplier = engineInfo.engineModule.FlowMultiplierAtConditions(atmDensity, machNumber);
+            massFlowRate = engineInfo.engineModule.FlowRateAtConditions(throttle, flowMultiplier);
+            thrust = ThrustAtConditions(engineInfo, massFlowRate, isp, cosLoss);
             //Debug.Log("thrust = " + thrust + " isp = " + isp + " massFlowRate = " + massFlowRate);
         }
 
         // for a single EngineModule, get its thrust vector (use EngineModuleFlowMultiplier and EngineModuleISP below)
-        private Vector3d ThrustAtConditions(ModuleEngines e, double massFlowRate, double isp, bool cosLoss = true)
+        private Vector3d ThrustAtConditions(EngineInfo engineInfo, double massFlowRate, double isp, bool cosLoss = true)
         {
             if (massFlowRate <= 0)
                 return Vector3d.zero;
 
-            Vector3d thrustVector = Vector3d.zero;
-
-            for (int i = 0; i < e.thrustTransforms.Count; i++)
-                thrustVector -= e.thrustTransforms[i].forward * e.thrustTransformMultipliers[i];
+            Vector3d thrustVector = engineInfo.thrustVector;
 
             if (cosLoss)
             {
-                Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : e.part.vessel.GetTransform().up;
+                Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engineInfo.engineModule.part.vessel.GetTransform().up;
                 thrustVector = Vector3.Dot(fwd, thrustVector) * thrustVector.normalized;
             }
 
-            return thrustVector * massFlowRate * e.g * e.multIsp * isp;
+            return thrustVector * massFlowRate * engineInfo.engineModule.g * engineInfo.engineModule.multIsp * isp;
         }
     }
 }
