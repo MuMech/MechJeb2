@@ -54,16 +54,6 @@ namespace MuMech
             return false;
         }
 
-        // for a single EngineModule, get thrust + isp + massFlowRate
-        public static void EngineValuesAtConditions(this ModuleEngines e, double throttle, double atmPressure, double atmDensity, double machNumber, out Vector3d thrust, out double isp, out double massFlowRate, bool cosLoss = true)
-        {
-            isp = e.ISPAtConditions(throttle, atmPressure, atmDensity, machNumber);
-            double flowMultiplier = e.FlowMultiplierAtConditions(atmDensity, machNumber);
-            massFlowRate = e.FlowRateAtConditions(throttle, flowMultiplier);
-            thrust = e.ThrustAtConditions(massFlowRate, isp, cosLoss);
-            //Debug.Log("thrust = " + thrust + " isp = " + isp + " massFlowRate = " + massFlowRate);
-        }
-
         public static double FlowRateAtConditions(this ModuleEngines e, double throttle, double flowMultiplier)
         {
             double minFuelFlow = e.minFuelFlow;
@@ -81,26 +71,6 @@ namespace MuMech
             }
 
             return Mathf.Lerp(e.minFuelFlow, e.maxFuelFlow, (float)throttle * 0.01f * e.thrustPercentage) * flowMultiplier;
-        }
-
-        // for a single EngineModule, get its thrust vector (use EngineModuleFlowMultiplier and EngineModuleISP below)
-        public static Vector3d ThrustAtConditions(this ModuleEngines e, double massFlowRate, double isp, bool cosLoss = true)
-        {
-            if (massFlowRate <= 0)
-                return Vector3d.zero;
-
-            Vector3d thrustVector = Vector3d.zero;
-
-            for (int i = 0; i < e.thrustTransforms.Count; i++)
-                thrustVector -= e.thrustTransforms[i].forward * e.thrustTransformMultipliers[i];
-
-            if (cosLoss)
-            {
-                Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : e.part.vessel.GetTransform().up;
-                thrustVector = Vector3.Dot(fwd, thrustVector) * thrustVector.normalized;
-            }
-
-            return thrustVector * massFlowRate * e.g * e.multIsp * isp;
         }
 
         // for a single EngineModule, determine its flowMultiplier, subject to atmDensity + machNumber

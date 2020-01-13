@@ -841,7 +841,7 @@ namespace MuMech
                         // here and screws up the KSP API display of ISP.
                         //
                         double isp, massFlowRate;
-                        e.EngineValuesAtConditions(throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate, cosLoss: dVLinearThrust);
+                        EngineValuesAtConditions(e, throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate, cosLoss: dVLinearThrust);
                         partThrust += thrust.magnitude;
 
                         if ( massFlowRate > 0 )
@@ -1113,6 +1113,36 @@ namespace MuMech
                         sources[i].resourceDrains[type] += amount / sources.Count;
                 }
             }
+        }
+
+        // for a single EngineModule, get thrust + isp + massFlowRate
+        private void EngineValuesAtConditions(ModuleEngines e, double throttle, double atmPressure, double atmDensity, double machNumber, out Vector3d thrust, out double isp, out double massFlowRate, bool cosLoss = true)
+        {
+            isp = e.ISPAtConditions(throttle, atmPressure, atmDensity, machNumber);
+            double flowMultiplier = e.FlowMultiplierAtConditions(atmDensity, machNumber);
+            massFlowRate = e.FlowRateAtConditions(throttle, flowMultiplier);
+            thrust = ThrustAtConditions(e, massFlowRate, isp, cosLoss);
+            //Debug.Log("thrust = " + thrust + " isp = " + isp + " massFlowRate = " + massFlowRate);
+        }
+
+        // for a single EngineModule, get its thrust vector (use EngineModuleFlowMultiplier and EngineModuleISP below)
+        private Vector3d ThrustAtConditions(ModuleEngines e, double massFlowRate, double isp, bool cosLoss = true)
+        {
+            if (massFlowRate <= 0)
+                return Vector3d.zero;
+
+            Vector3d thrustVector = Vector3d.zero;
+
+            for (int i = 0; i < e.thrustTransforms.Count; i++)
+                thrustVector -= e.thrustTransforms[i].forward * e.thrustTransformMultipliers[i];
+
+            if (cosLoss)
+            {
+                Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : e.part.vessel.GetTransform().up;
+                thrustVector = Vector3.Dot(fwd, thrustVector) * thrustVector.normalized;
+            }
+
+            return thrustVector * massFlowRate * e.g * e.multIsp * isp;
         }
     }
 }
