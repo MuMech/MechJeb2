@@ -492,6 +492,7 @@ namespace MuMech
 
         Part part;
         bool dVLinearThrust;
+        Vector3d vesselOrientation;
 
         readonly List<EngineInfo> engineInfos = new List<EngineInfo>();
 
@@ -543,6 +544,8 @@ namespace MuMech
             modulesStagedMass = 0;
 
             decoupledInStage = int.MinValue;
+
+            vesselOrientation = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : part.vessel.GetTransform().up;
 
             modulesUnstagedMass = 0;
             if (!isLaunchClamp)
@@ -1148,8 +1151,7 @@ namespace MuMech
 
             if (cosLoss)
             {
-                Vector3d fwd = HighLogic.LoadedScene == GameScenes.EDITOR ? EditorLogic.VesselRotation * Vector3d.up : engineInfo.engineModule.part.vessel.GetTransform().up;
-                thrustVector = Vector3.Dot(fwd, thrustVector) * thrustVector.normalized;
+                thrustVector = Vector3.Dot(vesselOrientation, thrustVector) * thrustVector.normalized;
             }
 
             return thrustVector * massFlowRate * engineInfo.engineModule.g * engineInfo.engineModule.multIsp * isp;
