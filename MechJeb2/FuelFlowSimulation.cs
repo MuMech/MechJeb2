@@ -579,22 +579,19 @@ namespace MuMech
             // determine if we've got at least one useful ModuleEngine
             for (int i = 0; i < part.Modules.Count; i++)
             {
-                PartModule pm = part.Modules[i];
-                ModuleEngines e = pm as ModuleEngines;
-                if (e != null && e.isEnabled)
-                {
-                    // Only count engines that either are ignited or will ignite in the future:
-                    if ((HighLogic.LoadedSceneIsEditor || inverseStage < StageManager.CurrentStage || e.getIgnitionState) && (e.thrustPercentage > 0 || e.minThrust > 0))
-                    {
-                        // if an engine has been activated early, pretend it is in the current stage:
-                        if (e.getIgnitionState && inverseStage < StageManager.CurrentStage)
-                            inverseStage = StageManager.CurrentStage;
+                if (!(part.Modules[i] is ModuleEngines e) || !e.isEnabled) continue;
 
-                        isEngine = true;
-                        isthrottleLocked = e.throttleLocked;
-                        // we only do these test for the first ModuleEngines in the Part, could any other ones actually differ?
-                        break;
-                    }
+                // Only count engines that either are ignited or will ignite in the future:
+                if ((HighLogic.LoadedSceneIsEditor || inverseStage < StageManager.CurrentStage || e.getIgnitionState) && (e.thrustPercentage > 0 || e.minThrust > 0))
+                {
+                    // if an engine has been activated early, pretend it is in the current stage:
+                    if (e.getIgnitionState && inverseStage < StageManager.CurrentStage)
+                        inverseStage = StageManager.CurrentStage;
+
+                    isEngine = true;
+                    isthrottleLocked = e.throttleLocked;
+                    // we only do these test for the first ModuleEngines in the Part, could any other ones actually differ?
+                    break;
                 }
             }
         }
