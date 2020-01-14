@@ -80,7 +80,7 @@ namespace MuMech
 
             BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR;  };
             double dV;
-            Brent.Solve(f, minDeltaV, maxDeltaV, MuUtils.DBL_EPSILON, out dV, out _, null);
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null);
 
             return dV * burnDirection;
         }
@@ -115,7 +115,7 @@ namespace MuMech
             // change of sign for hyperbolic orbits.
             BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0/newApR;  };
             double dV;
-            Brent.Solve(f, minDeltaV, maxDeltaV, MuUtils.DBL_EPSILON, out dV, out _, null);
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null);
 
             return dV * burnDirection;
         }
@@ -351,7 +351,7 @@ namespace MuMech
                 DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, testTime, out testApsisPhaseAngle);
                 return testApsisPhaseAngle;
             };
-            Brent.Solve(f, maxTime, minTime, MuUtils.DBL_EPSILON, out burnUT, out _, null);
+            Brent.Solve(f, maxTime, minTime, 1e-8, out burnUT, out _, null);
 
             Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out _);
 
