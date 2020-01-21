@@ -51,10 +51,25 @@ build: build/MechJeb2.dll
 build/%.dll: ${MECHJEBFILES}
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
-	${CSC} -t:library -langversion:8.0 -lib:"${MANAGED}" \
-		-r:Assembly-CSharp.dll,Assembly-CSharp-firstpass.dll,UnityEngine.dll,UnityEngine.UI.dll,UnityEngine.CoreModule.dll,UnityEngine.IMGUIModule.dll,UnityEngine.VehiclesModule.dll,UnityEngine.PhysicsModule.dll,UnityEngine.AnimationModule.dll,UnityEngine.TextRenderingModule.dll,UnityEngine.InputLegacyModule.dll,UnityEngine.AssetBundleModule.dll \
+	${CSC} /noconfig /target:library /checked- /nowarn:1701,1702,2008 /langversion:8.0 /nostdlib+ /platform:AnyCPU /warn:4 /errorendlocation /highentropyva- /optimize+ /debug- /filealign:512 \
+		/reference:${MANAGED}/Assembly-CSharp.dll \
+		/reference:${MANAGED}/Assembly-CSharp-firstpass.dll \
+		/reference:${MANAGED}/mscorlib.dll \
+		/reference:${MANAGED}/System.Core.dll \
+		/reference:${MANAGED}/System.dll \
+		/reference:${MANAGED}/UnityEngine.dll \
+		/reference:${MANAGED}/UnityEngine.AnimationModule.dll \
+		/reference:${MANAGED}/UnityEngine.AssetBundleModule.dll \
+		/reference:${MANAGED}/UnityEngine.CoreModule.dll \
+		/reference:${MANAGED}/UnityEngine.ImageConversionModule.dll \
+		/reference:${MANAGED}/UnityEngine.IMGUIModule.dll \
+		/reference:${MANAGED}/UnityEngine.InputLegacyModule.dll \
+		/reference:${MANAGED}/UnityEngine.PhysicsModule.dll \
+		/reference:${MANAGED}/UnityEngine.TextRenderingModule.dll \
+		/reference:${MANAGED}/UnityEngine.UI.dll \
+		/reference:${MANAGED}/UnityEngine.VehiclesModule.dll \
+		/recurse:"MechJeb2/*.cs" \
 		-out:$@ \
-		${MECHJEBFILES} \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources
 
 package: build ${MECHJEBFILES}
