@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationInterplanetaryTransfer : Operation
@@ -26,7 +28,7 @@ namespace MuMech
             }
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double UT, MechJebModuleTargetController target)
         {
 
             // Check preconditions
@@ -53,7 +55,7 @@ namespace MuMech
                 double relativeInclination = Vector3d.Angle(o.SwappedOrbitNormal(), o.referenceBody.orbit.SwappedOrbitNormal());
                 if (relativeInclination > 10)
                 {
-                    errorMessage = Localizer.Format("#MechJeb_transfer_errormsg2", o.referenceBody.displayName, o.referenceBody.displayName, o.referenceBody.referenceBody.displayName, o.referenceBody.displayName, relativeInclination.ToString("F1"), o.referenceBody.displayName, o.referenceBody.referenceBody.displayName);//Warning: Recommend starting interplanetary transfers from  <<1>>" from an orbit in the same plane as "<<2>>"'s orbit around "<<3>>". Starting orbit around "<<4>>" is inclined "<<5>>"º with respect to "<<6>>"'s orbit around "<<7>> " (recommend < 10º). Planned transfer may not intercept target properly."
+                    errorMessage = Localizer.Format("#MechJeb_transfer_errormsg2", o.referenceBody.displayName, o.referenceBody.displayName, o.referenceBody.referenceBody.displayName, o.referenceBody.displayName, relativeInclination.ToString("F1"), o.referenceBody.displayName, o.referenceBody.referenceBody.displayName);//Warning: Recommend starting interplanetary transfers from  <<1>> from an orbit in the same plane as "<<2>>"'s orbit around "<<3>>". Starting orbit around "<<4>>" is inclined "<<5>>"º with respect to "<<6>>"'s orbit around "<<7>> " (recommend < 10º). Planned transfer may not intercept target properly."
                 }
                 else if (o.eccentricity > 0.2)
                 {
@@ -62,8 +64,9 @@ namespace MuMech
             }
 
             var dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, target.TargetOrbit, waitForPhaseAngle, out UT);
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add( new ManeuverParameters(dV, UT) );
+            return NodeList;
         }
     }
 }
-

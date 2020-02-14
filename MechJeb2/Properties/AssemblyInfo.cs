@@ -32,7 +32,7 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.5.1.0")]     // We should not change it anymore. It break mods that links MJ ( cf http://support.microsoft.com/kb/556041 )
-[assembly: AssemblyFileVersion("2.9.1.0")] // this one we can change all we want
+[assembly: AssemblyFileVersion("2.9.2.0")] // this one we can change all we want
 [assembly: AssemblyInformationalVersion("")] // Displayed in the window title if not empty (used to display dev #)
 
 [assembly: KSPAssembly("MechJeb2", 2, 5)]

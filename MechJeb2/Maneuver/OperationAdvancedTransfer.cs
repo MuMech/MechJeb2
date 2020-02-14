@@ -3,6 +3,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using KSP.Localization;
 using System.Collections;
+using System.Collections.Generic;
 namespace MuMech
 {
     public class OperationAdvancedTransfer : Operation
@@ -45,19 +46,19 @@ namespace MuMech
                 return Localizer.Format("#MechJeb_adv_Preconditions1");//initial orbit must not be hyperbolic
 
             if (o.ApR >= o.referenceBody.sphereOfInfluence)
-                return Localizer.Format("#MechJeb_adv_Preconditions2",o.referenceBody.displayName);//Localizer.Format("#MechJeb_adv_Preconditions2_2");//"initial orbit must not escape " " sphere of influence."
+                return Localizer.Format("#MechJeb_adv_Preconditions2",o.referenceBody.displayName);//"initial orbit must not escape " " sphere of influence."
 
             if (!target.NormalTargetExists)
                 return (Localizer.Format("#MechJeb_adv_Preconditions3"));//"must select a target for the interplanetary transfer."
 
             if (o.referenceBody.referenceBody == null)
-                return Localizer.Format("#MechJeb_adv_Preconditions4") + o.referenceBody.displayName + ".";//"doesn't make sense to plot an interplanetary transfer from an orbit around "
+                return Localizer.Format("#MechJeb_adv_Preconditions4",o.referenceBody.displayName);//"doesn't make sense to plot an interplanetary transfer from an orbit around <<1>> ."
 
             if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
             {
                 if (o.referenceBody == target.TargetOrbit.referenceBody)
-                    return Localizer.Format("#MechJeb_adv_Preconditions5") + o.referenceBody.displayName + ".";//"use regular Hohmann transfer function to intercept another body orbiting "
-                return Localizer.Format("#MechJeb_adv_Preconditions6",o.referenceBody.displayName,o.referenceBody.displayName,o.referenceBody.referenceBody.displayName);// +  + Localizer.Format("#MechJeb_adv_Preconditions6_2") +  + Localizer.Format("#MechJeb_adv_Preconditions6_3") + + ".";//"an interplanetary transfer from within ""'s sphere of influence must target a body that orbits ""'s parent, "
+                    return Localizer.Format("#MechJeb_adv_Preconditions5", o.referenceBody.displayName) ;//"use regular Hohmann transfer function to intercept another body orbiting <<1>>."
+                return Localizer.Format("#MechJeb_adv_Preconditions6",o.referenceBody.displayName,o.referenceBody.displayName,o.referenceBody.referenceBody.displayName);//"an interplanetary transfer from within <<1>>'s sphere of influence must target a body that orbits <<2>>'s parent,<<3>> "
             }
 
             if (o.referenceBody == Planetarium.fetch.Sun)
@@ -200,7 +201,7 @@ namespace MuMech
                     normal = {textColor = GuiUtils.skin.label.normal.textColor}
                 };
 
-                GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth), GUILayout.Height(porkchop_Height));//"Computing:" 
+                GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth), GUILayout.Height(porkchop_Height));//"Computing:"
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("ΔV: " + dv);
@@ -233,8 +234,8 @@ namespace MuMech
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + departure);//Departure in 
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + duration);//Transit duration 
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + departure);//Departure in
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + duration);//Transit duration
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -270,7 +271,7 @@ namespace MuMech
                 ComputeStuff(o, universalTime, target);
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double UT, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double UT, MechJebModuleTargetController target)
         {
             // Check preconditions
             string message = CheckPreconditions(o, target);
@@ -286,6 +287,8 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception2"));//Started computation
             }
 
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+
             if (worker.arrivalDate < 0 )
             {
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception3"));//Computation failed
@@ -294,18 +297,22 @@ namespace MuMech
             {
                 if (plot == null || plot.selectedPoint == null)
                     throw new OperationException(Localizer.Format("#MechJeb_adv_Exception4"));//Invalid point selected.
-                return worker.OptimizeEjection(
+                NodeList.Add( worker.OptimizeEjection(
                     worker.DateFromIndex(plot.selectedPoint[0]),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(plot.selectedPoint[0]) + worker.DurationFromIndex(plot.selectedPoint[1]),
-                    UT);
+                    UT)
+                        );
+                return NodeList;
             }
 
-            return worker.OptimizeEjection(
+            NodeList.Add( worker.OptimizeEjection(
                     worker.DateFromIndex(worker.bestDate),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(worker.bestDate) + worker.DurationFromIndex(worker.bestDuration),
-                    UT);
+                    UT)
+                    );
+            return NodeList;
         }
     }
 }

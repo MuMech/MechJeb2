@@ -1,4 +1,5 @@
 using UnityEngine;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -46,7 +47,7 @@ namespace MuMech
 
                 core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, core.landing);
 
-                status = "Killing horizontal velocity before final descent";
+                status = Localizer.Format("#MechJeb_LandingGuidance_Status10");//"Killing horizontal velocity before final descent"
 
                 return this;
             }

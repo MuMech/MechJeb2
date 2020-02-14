@@ -45,7 +45,7 @@ namespace MuMech
             launchingToRendezvous = false;
         }
 
-        [GeneralInfoItem("Toggle Ascent Navball Guidance", InfoItem.Category.Misc, showInEditor = false)]
+        [GeneralInfoItem("#MechJeb_Toggle_Ascent_Navball_Guidance", InfoItem.Category.Misc, showInEditor = false)]//Toggle Ascent Navball Guidance
             public void ToggleAscentNavballGuidanceInfoItem()
             {
                 if (navBall != null)
@@ -490,7 +490,7 @@ namespace MuMech
                             }
                             else if (launchingToRendezvous)
                             {
-                                message = "#MechJeb_Ascent_msg3";//Launching to rendezvous
+                                message = Localizer.Format("#MechJeb_Ascent_msg3");//Launching to rendezvous
                             }
 
                             if (autopilot.tMinus > 3*vesselState.deltaT)

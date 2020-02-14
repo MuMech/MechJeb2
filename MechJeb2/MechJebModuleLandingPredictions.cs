@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -33,7 +34,7 @@ namespace MuMech
                 //
                 //        if (result.debugLog != "")
                 //        {
-                //        
+                //
                 //            MechJebCore.print("Now".PadLeft(8)
                 //                       + " Alt:" + vesselState.altitudeASL.ToString("F0").PadLeft(6)
                 //                       + " Vel:" + vesselState.speedOrbital.ToString("F2").PadLeft(8)
@@ -43,26 +44,26 @@ namespace MuMech
                 //                       + " dynP:" + (vesselState.dynamicPressure / 1000).ToString("F5").PadLeft(9)
                 //                       + " Temp:" + vessel.atmosphericTemperature.ToString("F2").PadLeft(8)
                 //                       + " Lat:" + vesselState.latitude.ToString("F2").PadLeft(6));
-                //        
-                //        
+                //
+                //
                 //            MechJebCore.print(result.debugLog);
                 //            result.debugLog = "";
-                //        
+                //
                 //            Vector3 scaledPos = ScaledSpace.LocalToScaledSpace(vessel.transform.position);
                 //            Vector3 sunVector = (FlightGlobals.Bodies[0].scaledBody.transform.position - scaledPos).normalized;
-                //        
+                //
                 //            float sunDot = Vector3.Dot(sunVector, vessel.upAxis);
                 //            float sunAxialDot = Vector3.Dot(sunVector, vessel.mainBody.bodyTransform.up);
                 //            MechJebCore.print("sunDot " + sunDot.ToString("F3") + " sunAxialDot " + sunAxialDot.ToString("F3") + " " + PhysicsGlobals.DragUsesAcceleration);
-                //        
+                //
                 //        }
                 //    }
                 //}
                 return result;
             }
         }
-        
-        public ReentrySimulation.Result GetErrorResult() 
+
+        public ReentrySimulation.Result GetErrorResult()
         {
             if (null != errorResult)
             {
@@ -74,19 +75,19 @@ namespace MuMech
             return errorResult;
         }
 
-        [ValueInfoItem("Sim Drag Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        [ValueInfoItem("#MechJeb_SimDragScalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Sim Drag Scalar
         public double simDragScalar;
 
-        [ValueInfoItem("Sim Lift Scalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        [ValueInfoItem("#MechJeb_SimLiftScalar", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Sim Lift Scalar
         public double simLiftScalar;
 
-        [ValueInfoItem("Sim DynaPressPa", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "pa")]
+        [ValueInfoItem("#MechJeb_SimDynaPressPa", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "Pa")]//Sim DynaPressPa
         public double simDynamicPressurePa;
 
-        [ValueInfoItem("Sim simMach", InfoItem.Category.Vessel, format = "F2")]
+        [ValueInfoItem("#MechJeb_SimsimMach", InfoItem.Category.Vessel, format = "F2")]//Sim simMach
         public double simMach;
 
-        [ValueInfoItem("Sim SpdOfSnd", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_SimSpdOfSnd", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]//Sim SpdOfSnd
         public double simSpeedOfSound;
 
         //inputs:
@@ -102,7 +103,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool camTrajectory = false;
 
-        public bool deployChutes = false;        
+        public bool deployChutes = false;
         public int limitChutesStage = 0;
 
         //simulation inputs:
@@ -112,7 +113,7 @@ namespace MuMech
         public bool runErrorSimulations = false; // This will be set by the autopilot to turn error simulations on or off.
 
         //internal data:
-      
+
         protected bool errorSimulationRunning = false; // the predictor can run two types of simulation - 1) simulations of the current situation. 2) simulations of the current situation with deliberate error introduced into the parachute multiplier to aid the statistical analysis of these results.
         protected System.Diagnostics.Stopwatch errorStopwatch = new System.Diagnostics.Stopwatch();
         protected long millisecondsBetweenErrorSimulations;
@@ -133,7 +134,7 @@ namespace MuMech
         protected ReentrySimulation.Result errorResult = null;
 
         public ManeuverNode aerobrakeNode = null;
-        
+
         protected const int interationsPerSecond = 5; // the number of times that we want to try to run the simulation each second.
         protected double dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run if variabledt is active
 
@@ -141,8 +142,8 @@ namespace MuMech
         protected bool variabledt = false; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
 
         public bool noSkipToFreefall = false;
-        
-        private readonly Queue<ReentrySimulation.Result> readyResults = new Queue<ReentrySimulation.Result>();
+
+        private readonly Queue readyResults = new Queue();
 
         private Random random;
         public double maxOrbits = 1;
@@ -153,7 +154,7 @@ namespace MuMech
         private double lastErrorSimSteps;
 
 
-        [ValueInfoItem("LandingSim ", InfoItem.Category.Misc, showInEditor = false)]
+        [ValueInfoItem("#MechJeb_LandingSim", InfoItem.Category.Misc, showInEditor = false)]//LandingSim
         public string LandingSimTime()
         {
             return (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastSimTime.ToString("F2") + " (" + lastSimSteps + ")\n"
@@ -205,7 +206,7 @@ namespace MuMech
                         // variabledt generate too much instability of the landing site with atmo.
                         // variabledt = !(mainBody.atmosphere && core.landing.enabled);
                         // the altitude may induce some instability but allow for greater precision of the display in manual flight
-                        
+
                         //variabledt = !mainBody.atmosphere || vessel.terrainAltitude < 1000 ;
                         //if (!variabledt)
                         //    dt = 0.5;
@@ -234,7 +235,7 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-                MaintainAerobrakeNode();     
+                MaintainAerobrakeNode();
         }
 
         protected void StartSimulation(bool addParachuteError)
@@ -319,7 +320,7 @@ namespace MuMech
                     millisecondsBetweenSimulations = Math.Min(Math.Max(2 * millisecondsToCompletion, 200), 5);
                     lastSimTime = millisecondsToCompletion * 0.001;
                     lastSimSteps = newResult.steps;
-                    // Do not wait for too long before running another simulation, but also give the processor a rest. 
+                    // Do not wait for too long before running another simulation, but also give the processor a rest.
 
                     // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
                     if (newResult.outcome == ReentrySimulation.Outcome.AEROBRAKED ||
@@ -334,7 +335,7 @@ namespace MuMech
                             dt = Math.Min(dt, 10);
                         }
                     }
-                    
+
                     //Debug.Log("Result:" + this.result.outcome + " Time to run: " + millisecondsToCompletion + " millisecondsBetweenSimulations: " + millisecondsBetweenSimulations + " new dt: " + dt + " Time.fixedDeltaTime " + Time.fixedDeltaTime + "\n" + this.result.ToString()); // Note the endASL will be zero as it has not yet been calculated, and we are not allowed to calculate it from this thread :(
 
                     //start the stopwatch that will count off this delay
@@ -360,14 +361,14 @@ namespace MuMech
             {
                 while (readyResults.Count > 0)
                 {
-                    ReentrySimulation.Result newResult = readyResults.Dequeue();
-                    
+                    ReentrySimulation.Result newResult = (ReentrySimulation.Result) readyResults.Dequeue();
+
                     // If running the simulation resulted in an error then just ignore it.
                     if (newResult.outcome != ReentrySimulation.Outcome.ERROR)
                     {
                         if (newResult.body != null)
                             newResult.endASL = newResult.body.TerrainAltitude(newResult.endPosition.latitude, newResult.endPosition.longitude);
-                        
+
                         if (newResult.multiplierHasError)
                         {
                             if (errorResult != null)

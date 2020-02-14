@@ -1,4 +1,5 @@
 ﻿using KSP.Localization;
+using System.Collections.Generic;
 namespace MuMech
 {
     public class OperationLambert : Operation
@@ -20,7 +21,7 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)
                 throw new OperationException(Localizer.Format("#MechJeb_intercept_Exception1"));//must select a target to intercept.
@@ -30,13 +31,15 @@ namespace MuMech
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             var dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, target.TargetOrbit, UT + interceptInterval);
-            return new ManeuverParameters(dV, UT);
+
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(dV, UT));
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

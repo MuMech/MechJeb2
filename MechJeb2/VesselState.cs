@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Smooth.Pools;
 using UnityEngine;
 using System.Reflection;
+using KSP.Localization;
 
 namespace MuMech
 {
@@ -53,7 +55,7 @@ namespace MuMech
         private IntakeInfo iinfo = new IntakeInfo();
         public readonly List<EngineWrapper> enginesWrappers = new List<EngineWrapper>();
 
-        [ValueInfoItem("Universal Time", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]
+        [ValueInfoItem("#MechJeb_UniversalTime", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]//Universal Time
         public double time;            //planetarium time
         public double deltaT;          //TimeWarp.fixedDeltaTime
 
@@ -86,63 +88,63 @@ namespace MuMech
         public Vector3d normalPlusSurface;  //unit vector perpendicular to up and velocityVesselSurface
 
         public Vector3d gravityForce;
-        [ValueInfoItem("Local gravity", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "m/s²")]
+        [ValueInfoItem("#MechJeb_LocalGravity", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "m/s²")]//Local gravity
         public double localg;             //magnitude of gravityForce
 
         //How about changing these so we store the instantaneous values and *also*
         //the smoothed MovingAverages? Sometimes we need the instantaneous value.
-        [ValueInfoItem("Orbital speed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_OrbitalSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]//Orbital speed
         public MovingAverage speedOrbital = new MovingAverage();
-        [ValueInfoItem("Surface speed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_SurfaceSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")]//Surface speed
         public MovingAverage speedSurface = new MovingAverage();
-        [ValueInfoItem("Vertical speed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_VerticalSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")]//Vertical speed
         public MovingAverage speedVertical = new MovingAverage();
-        [ValueInfoItem("Surface horizontal speed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_SurfaceHorizontalSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")]//Surface horizontal speed
         public MovingAverage speedSurfaceHorizontal = new MovingAverage();
-        [ValueInfoItem("Orbit horizontal speed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_OrbitHorizontalSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")]//Orbit horizontal speed
         public double speedOrbitHorizontal;
-        [ValueInfoItem("Heading", InfoItem.Category.Surface, format = "F1", units = "º")]
+        [ValueInfoItem("#MechJeb_Heading", InfoItem.Category.Surface, format = "F1", units = "º")]//Heading
         public MovingAverage vesselHeading = new MovingAverage();
-        [ValueInfoItem("Pitch", InfoItem.Category.Surface, format = "F1", units = "º")]
+        [ValueInfoItem("#MechJeb_Pitch", InfoItem.Category.Surface, format = "F1", units = "º")]//Pitch
         public MovingAverage vesselPitch = new MovingAverage();
-        [ValueInfoItem("Roll", InfoItem.Category.Surface, format = "F1", units = "º")]
+        [ValueInfoItem("#MechJeb_Roll", InfoItem.Category.Surface, format = "F1", units = "º")]//Roll
         public MovingAverage vesselRoll = new MovingAverage();
-        [ValueInfoItem("Altitude (ASL)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]
+        [ValueInfoItem("#MechJeb_Altitude_ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]//Altitude (ASL)
         public MovingAverage altitudeASL = new MovingAverage();
-        [ValueInfoItem("Altitude (true)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]
+        [ValueInfoItem("#MechJeb_Altitude_true", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]//Altitude (true)
         public MovingAverage altitudeTrue = new MovingAverage();
-        [ValueInfoItem("Surface altitude ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4, siMaxPrecision = -1, units = "m")]
+        [ValueInfoItem("#MechJeb_SurfaceAltitudeASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4, siMaxPrecision = -1, units = "m")]//Surface altitude ASL
         public double surfaceAltitudeASL;
 
-        [ValueInfoItem("Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]
+        [ValueInfoItem("#MechJeb_Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]//Apoapsis
         public MovingAverage orbitApA = new MovingAverage();
-        [ValueInfoItem("Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]
+        [ValueInfoItem("#MechJeb_Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]//Periapsis
         public MovingAverage orbitPeA = new MovingAverage();
-        [ValueInfoItem("Orbital period", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 2, category = InfoItem.Category.Orbit)]
+        [ValueInfoItem("#MechJeb_OrbitalPeriod", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 2, category = InfoItem.Category.Orbit)]//Orbital period
         public MovingAverage orbitPeriod = new MovingAverage();
-        [ValueInfoItem("Time to apoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
+        [ValueInfoItem("#MechJeb_TimeToApoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]//Time to apoapsis
         public MovingAverage orbitTimeToAp = new MovingAverage();
-        [ValueInfoItem("Time to periapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
+        [ValueInfoItem("#MechJeb_TimeToPeriapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]//Time to periapsis
         public MovingAverage orbitTimeToPe = new MovingAverage();
-        [ValueInfoItem("LAN", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]
+        [ValueInfoItem("#MechJeb_LAN", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)]//LAN
         public MovingAverage orbitLAN = new MovingAverage();
-        [ValueInfoItem("Argument of periapsis", InfoItem.Category.Orbit, format = "F1", units = "º")]
+        [ValueInfoItem("#MechJeb_ArgumentOfPeriapsis", InfoItem.Category.Orbit, format = "F1", units = "º")]//Argument of periapsis
         public MovingAverage orbitArgumentOfPeriapsis = new MovingAverage();
-        [ValueInfoItem("Inclination", InfoItem.Category.Orbit, format = "F3", units = "º")]
+        [ValueInfoItem("#MechJeb_Inclination", InfoItem.Category.Orbit, format = "F3", units = "º")]//Inclination
         public MovingAverage orbitInclination = new MovingAverage();
-        [ValueInfoItem("Eccentricity", InfoItem.Category.Orbit, format = "F3")]
+        [ValueInfoItem("#MechJeb_Eccentricity", InfoItem.Category.Orbit, format = "F3")]//Eccentricity
         public MovingAverage orbitEccentricity = new MovingAverage();
-        [ValueInfoItem("Semi-major axis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
+        [ValueInfoItem("#MechJeb_SemiMajorAxis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]//Semi-major axis
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
-        [ValueInfoItem("Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]
+        [ValueInfoItem("#MechJeb_Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]//Latitude
         public MovingAverage latitude = new MovingAverage();
-        [ValueInfoItem("Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]
+        [ValueInfoItem("#MechJeb_Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]//Longitude
         public MovingAverage longitude = new MovingAverage();
-        [ValueInfoItem("Angle of Attack", InfoItem.Category.Misc, format = "F2", units = "º")]
+        [ValueInfoItem("#MechJeb_AngleOfAttack", InfoItem.Category.Misc, format = "F2", units = "º")]//Angle of Attack
         public MovingAverage AoA = new MovingAverage();
-        [ValueInfoItem("Angle of Sideslip", InfoItem.Category.Misc, format = "F2", units = "º")]
+        [ValueInfoItem("#MechJeb_AngleOfSideslip", InfoItem.Category.Misc, format = "F2", units = "º")]//Angle of Sideslip
         public MovingAverage AoS = new MovingAverage();
-        [ValueInfoItem("Displacement Angle", InfoItem.Category.Misc, format = "F2", units = "º")]
+        [ValueInfoItem("#MechJeb_DisplacementAngle", InfoItem.Category.Misc, format = "F2", units = "º")]//Displacement Angle
         public MovingAverage displacementAngle = new MovingAverage();
 
         public MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
@@ -181,11 +183,11 @@ namespace MuMech
 
 
         public Vector3d pureDragV;
-        [ValueInfoItem("Pure Drag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        [ValueInfoItem("#MechJeb_PureDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Pure Drag
         public double pureDrag;
 
         public Vector3d pureLiftV;
-        [ValueInfoItem("Pure Lift", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]
+        [ValueInfoItem("#MechJeb_PureLift", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Pure Lift
         public double pureLift;
 
         // Drag is the force (pureDrag + PureLift) applied opposite of the surface vel
@@ -201,36 +203,36 @@ namespace MuMech
         public double CoLScalar;
 
 
-        [ValueInfoItem("Mach", InfoItem.Category.Vessel, format = "F2")]
+        [ValueInfoItem("#MechJeb_Mach", InfoItem.Category.Vessel, format = "F2")]//Mach
         public double mach;
 
-        [ValueInfoItem("Speed of sound", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_SpeedOfSound", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]//Speed of sound
         public double speedOfSound;
 
-        [ValueInfoItem("Drag Coefficient", InfoItem.Category.Vessel, format = "F2")]
+        [ValueInfoItem("#MechJeb_DragCoefficient", InfoItem.Category.Vessel, format = "F2")]//Drag Coefficient
         public double dragCoef;
 
         // Product of the drag surface area, drag coefficient and the physic multiplers
         public double areaDrag;
 
         public double atmosphericDensity;
-        [ValueInfoItem("Atmosphere density", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]
+        [ValueInfoItem("#MechJeb_AtmosphereDensity", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "g/m³")]//Atmosphere density
         public double atmosphericDensityGrams;
-        [ValueInfoItem("Max dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
+        [ValueInfoItem("#MechJeb_MaxDynamicPressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]//Max dynamic pressure
         public double maxDynamicPressure;
-        [ValueInfoItem("Dynamic pressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]
+        [ValueInfoItem("#MechJeb_DynamicPressure", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")]//Dynamic pressure
         public double dynamicPressure;
-        [ValueInfoItem("Intake air", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
+        [ValueInfoItem("#MechJeb_IntakeAir", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]//Intake air
         public double intakeAir;
-        [ValueInfoItem("Intake air (all intakes open)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
+        [ValueInfoItem("#MechJeb_IntakeAirAllIntakes", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]//Intake air (all intakes open)
         public double intakeAirAllIntakes;
-        [ValueInfoItem("Intake air needed", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
+        [ValueInfoItem("#MechJeb_IntakeAirNeeded", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]//Intake air needed
         public double intakeAirNeeded;
-        [ValueInfoItem("Intake air needed (max)", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]
+        [ValueInfoItem("#MechJeb_intakeAirAtMax", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")]//Intake air needed (max)
         public double intakeAirAtMax;
-        [ValueInfoItem("Angle to prograde", InfoItem.Category.Orbit, format = "F2", units = "º")]
+        [ValueInfoItem("#MechJeb_AngleToPrograde", InfoItem.Category.Orbit, format = "F2", units = "º")]//Angle to prograde
         public double angleToPrograde;
-        [ValueInfoItem("Aerothermal flux", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "W/m²")]
+        [ValueInfoItem("#MechJeb_AerothermalFlux", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "W/m²")]//Aerothermal flux
         public double freeMolecularAerothermalFlux;
 
         public Vector6 rcsThrustAvailable = new Vector6(); // thrust available from RCS thrusters
@@ -265,7 +267,7 @@ namespace MuMech
 
         // A convenient debug message to display in the UI
         public static string message;
-        [GeneralInfoItem("Debug String", InfoItem.Category.Misc, showInEditor = true)]
+        [GeneralInfoItem("#MechJeb_DebugString", InfoItem.Category.Misc, showInEditor = true)]//Debug String
         public void DebugString()
         {
             GUILayout.BeginVertical();
@@ -843,27 +845,27 @@ namespace MuMech
         }
 
 
-        [GeneralInfoItem("RCS Translation", InfoItem.Category.Vessel, showInEditor = true)]
+        [GeneralInfoItem("#MechJeb_RCSTranslation", InfoItem.Category.Vessel, showInEditor = true)]//RCS Translation
         public void RCSTranslation()
         {
             GUILayout.BeginVertical();
-            GUILayout.Label("RCS Translation");
+            GUILayout.Label(Localizer.Format("#MechJeb_RCSTranslation"));//"RCS Translation"
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
+            GUILayout.Label("Pos", GUILayout.ExpandWidth(true));//
             GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.positive), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
+            GUILayout.Label("Neg", GUILayout.ExpandWidth(true));//
             GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.negative), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("RCS Torque", InfoItem.Category.Vessel, showInEditor = true)]
+        [GeneralInfoItem("#MechJeb_RCSTorque", InfoItem.Category.Vessel, showInEditor = true)]//RCS Torque
         public void RCSTorque()
         {
             GUILayout.BeginVertical();
-            GUILayout.Label("RCS Torque");
+            GUILayout.Label(Localizer.Format("#MechJeb_RCSTorque"));//"RCS Torque"
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.positive), GUILayout.ExpandWidth(false));
@@ -1167,7 +1169,7 @@ namespace MuMech
             maxEngineResponseTime = einfo.maxResponseTime;
         }
 
-        [GeneralInfoItem("Torque", InfoItem.Category.Vessel, showInEditor = true)]
+        [GeneralInfoItem("#MechJeb_Torque", InfoItem.Category.Vessel, showInEditor = true)]//Torque
         public void TorqueCompare()
         {
             var reactionTorque = Vector3d.Max(torqueReactionWheel.positive, torqueReactionWheel.negative);
@@ -1301,7 +1303,7 @@ namespace MuMech
             angularVelocityAvg.value = angularVelocity;
         }
 
-        [ValueInfoItem("Terminal velocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]
+        [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")]//Terminal velocity
         public double TerminalVelocity()
         {
             return TerminalVelocityCall();
@@ -1334,7 +1336,7 @@ namespace MuMech
         // Altitude of bottom of craft, only calculated when requested because it is a bit expensive
         private bool altitudeBottomIsCurrent = false;
         private double _altitudeBottom;
-        [ValueInfoItem("Altitude (bottom)", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]
+        [ValueInfoItem("#MechJeb_Altitude_bottom", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]//Altitude (bottom)
         public double altitudeBottom
         {
             get
@@ -1396,7 +1398,7 @@ namespace MuMech
             private Vector3d CoM;
             private float atmP0; // pressure now
             private float atmP1; // pressure after one timestep
-            private Queue<Quaternion> rotSave = new Queue<Quaternion>();
+            private Queue rotSave = new Queue();
 
             public void Update(Vector3d c, Vessel vessel)
             {
@@ -1637,7 +1639,7 @@ namespace MuMech
                     {
                         for (int i = 0; i < gimbal.gimbalTransforms.Count; i++)
                         {
-                            gimbal.gimbalTransforms[i].localRotation = rotSave.Dequeue();
+                            gimbal.gimbalTransforms[i].localRotation = (Quaternion) rotSave.Dequeue();
                         }
                     }
 

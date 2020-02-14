@@ -29,7 +29,7 @@ namespace MuMech
         {
             List<Part> parts;
             if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null) parts = EditorLogic.fetch.ship.parts;
-            else if (vessel == null) return new List<T>();
+            else if (vessel == null || vessel.Parts == null) return new List<T>();
             else parts = vessel.Parts;
 
             List<T> list = new List<T>();
@@ -37,17 +37,45 @@ namespace MuMech
             {
                 Part part = parts[p];
 
-                int count = part.Modules.Count;
+                if (part.Modules == null)
+                    continue;
 
+                int count = part.Modules.Count;
                 for (int m = 0; m < count; m++)
                 {
-                    T mod = part.Modules[m] as T;
-
-                    if (mod != null)
-                        list.Add(mod);
+                    if (part.Modules[m] is T mod)
+                    {  
+                        list.Add(mod);;
+                    }
                 }
             }
             return list;
+        }
+
+        public static T GetModule<T>(this Vessel vessel, Predicate<T> predicate) where T : PartModule
+        {
+            List<Part> parts;
+            if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null) parts = EditorLogic.fetch.ship.parts;
+            else if (vessel == null || vessel.Parts == null) return default;
+            else parts = vessel.Parts;
+
+            for (int p = 0; p < parts.Count; p++)
+            {
+                Part part = parts[p];
+
+                if (part.Modules == null)
+                    continue;
+
+                int count = part.Modules.Count;
+                for (int m = 0; m < count; m++)
+                {
+                    if (part.Modules[m] is T mod && predicate(mod))
+                    {
+                        return mod;
+                    }
+                }
+            }
+            return default;
         }
 
         private static float lastFixedTime = 0;
@@ -62,10 +90,9 @@ namespace MuMech
             }
             Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
 
-            MechJebCore mj;
-            if (!masterMechJeb.TryGetValue(vesselKey, out mj))
+            if (!masterMechJeb.TryGetValue(vesselKey, out MechJebCore mj))
             {
-                mj = vessel.GetModules<MechJebCore>().Slinq().FirstOrDefault(p => p.running);
+                mj = vessel.GetModule<MechJebCore>(p => p.running);
                 if (mj != null)
                     masterMechJeb.Add(vesselKey, mj);
                 return mj;

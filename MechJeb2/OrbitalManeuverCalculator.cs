@@ -78,23 +78,11 @@ namespace MuMech
                 maxDeltaV = Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
             }
 
-            //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.01)
-            {
-                double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
-                double testPeriapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR;
+            BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR;  };
+            double dV;
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null);
 
-                if ((testPeriapsis > newPeR && raising) || (testPeriapsis < newPeR && !raising))
-                {
-                    maxDeltaV = testDeltaV;
-                }
-                else
-                {
-                    minDeltaV = testDeltaV;
-                }
-            }
-
-            return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
+            return dV * burnDirection;
         }
 
         public static bool ApoapsisIsHigher(double ApR, double than)
@@ -120,46 +108,16 @@ namespace MuMech
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
 
             double minDeltaV = 0;
-            double maxDeltaV;
-            if (raising)
-            {
-                //put an upper bound on the required deltaV:
-                maxDeltaV = 0.25;
+            // 10000 dV is a safety factor, max burn when lowering ApR would be to null out our current velocity
+            double maxDeltaV = raising ? 10000 : o.SwappedOrbitalVelocityAtUT(UT).magnitude;
 
-                double ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
-                while (ApoapsisIsHigher(newApR, ap))
-                {
-                    minDeltaV = maxDeltaV; //narrow the range
-                    maxDeltaV *= 2;
-                    ap = o.PerturbedOrbit(UT, maxDeltaV * burnDirection).ApR;
-                    if (maxDeltaV > 100000) break; //a safety precaution
-                }
-            }
-            else
-            {
-                //when lowering apoapsis, we burn retrograde, and max possible deltaV is total velocity
-                maxDeltaV = o.SwappedOrbitalVelocityAtUT(UT).magnitude;
-            }
+            // solve for the reciprocal of the ApR which is a continuous function that avoids the parabolic singularity and
+            // change of sign for hyperbolic orbits.
+            BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0/newApR;  };
+            double dV;
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null);
 
-            //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.01)
-            {
-                double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
-                double testApoapsis = o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR;
-
-                bool above = ApoapsisIsHigher(testApoapsis, newApR);
-
-                if ((raising && above) || (!raising && !above))
-                {
-                    maxDeltaV = testDeltaV;
-                }
-                else
-                {
-                    minDeltaV = testDeltaV;
-                }
-            }
-
-            return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
+            return dV * burnDirection;
         }
 
         //Computes the heading of the ground track of an orbit with a given inclination at a given latitude.
@@ -388,29 +346,14 @@ namespace MuMech
                 }
             }
 
-            int minTimeApsisPhaseAngleSign = Math.Sign(lastApsisPhaseAngle);
-
-            //then do a binary search
-            while (maxTime - minTime > 0.01)
-            {
-                double testTime = (maxTime + minTime) / 2;
-
+            BrentFun f = delegate(double testTime, object ign) {
                 double testApsisPhaseAngle;
                 DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, testTime, out testApsisPhaseAngle);
+                return testApsisPhaseAngle;
+            };
+            Brent.Solve(f, maxTime, minTime, 1e-8, out burnUT, out _, null);
 
-                if (Math.Sign(testApsisPhaseAngle) == minTimeApsisPhaseAngleSign)
-                {
-                    minTime = testTime;
-                }
-                else
-                {
-                    maxTime = testTime;
-                }
-            }
-
-            burnUT = (minTime + maxTime) / 2;
-            double finalApsisPhaseAngle;
-            Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out finalApsisPhaseAngle);
+            Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out _);
 
             return burnDV;
         }
@@ -437,14 +380,12 @@ namespace MuMech
 
             Vector3d transferVi, transferVf;
 
-            LambertSolver.Solve(initialRelPos, finalRelPos, DT, o.referenceBody, shortway, out transferVi, out transferVf);
-            //GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, shortway ? DT : -DT, o.referenceBody, 0, out transferVi, out transferVf);
+            GoodingSolver.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos, finalVelocity, shortway ? DT : -DT, 0, out transferVi, out transferVf);
 
             if (offsetDistance != 0)
             {
                 finalRelPos += offsetDistance * Vector3d.Cross(finalVelocity, finalRelPos).normalized;
-                LambertSolver.Solve(initialRelPos, finalRelPos, DT, o.referenceBody, shortway, out transferVi, out transferVf);
-                //GoodingSolver.Solve(initialRelPos, initialVelocity, finalRelPos, finalVelocity, shortway ? DT : -DT, o.referenceBody, 0, out transferVi, out transferVf);
+                GoodingSolver.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos, finalVelocity, shortway ? DT : -DT, 0, out transferVi, out transferVf);
             }
 
             secondDV = finalVelocity - transferVf;
@@ -452,10 +393,21 @@ namespace MuMech
             return transferVi - initialVelocity;
         }
 
-        // Takes two (x, v) pairs corresponding to a source and target orbit at a reference time (zero)
-        // - Advances the first pair to time DT to get the (x,v) pair of the initial burn
-        // - Advances the second pair to time DT+TT to get the (x,v) pair of the rendezvous burn
-        // - Uses a Lambert Solver to find the delta-v for the first and second burns
+        // Lambert Solver Driver function.
+        //
+        // This uses Shepperd's method instead of using KSP's Orbit class.
+        //
+        // The reference time is usually 'now' or the first time the burn can start.
+        //
+        // GM       - grav parameter of the celestial
+        // pos      - position of the source orbit at a reference time
+        // vel      - velocity of the source orbit at a reference time
+        // tpos     - position of the target orbit at a reference time
+        // tvel     - velocity of the target orbit at a reference time
+        // DT       - time of the burn in seconds after the reference time
+        // TT       - transfer time of the burn in seconds after the burn time
+        // secondDV - the second burn dV
+        // returns  - the first burn dV
         //
         public static Vector3d DeltaVToInterceptAtTime(double GM, Vector3d pos, Vector3d vel, Vector3d tpos, Vector3d tvel, double DT, double TT, out Vector3d secondDV, bool posigrade = true)
         {
@@ -464,10 +416,10 @@ namespace MuMech
             Vector3d pos1, vel1;
             Vector3d pos2, vel2;
 
-            // advance the source orbit to x[0]
+            // advance the source orbit to ref + DT
             Shepperd.Solve(GM, DT, pos, vel, out pos1, out vel1);
 
-            // advance the target orbit to x[0] + x[1]
+            // advance the target orbit to ref + DT + TT
             Shepperd.Solve(GM, DT + TT, tpos, tvel, out pos2, out vel2);
 
             GoodingSolver.Solve(GM, pos1, vel1, pos2, vel2, posigrade ? TT : -TT, 0, out transferVi, out transferVf);
@@ -477,18 +429,7 @@ namespace MuMech
             return transferVi - vel1;
         }
 
-        //First finds the time of closest approach to the target during the next orbit after the
-        //time UT. Then returns the delta-V of a burn at UT that will change the separation at
-        //that closest approach time to zero.
-        //This will likely only return sensible results when the given orbit is already an
-        //approximate intercept trajectory.
-        public static Vector3d DeltaVForCourseCorrection(Orbit o, double UT, Orbit target)
-        {
-            double closestApproachTime = o.NextClosestApproachTime(target, UT + 1); //+1 so that closestApproachTime is definitely > UT
-            Vector3d dV = DeltaVToInterceptAtTime(o, UT, target, closestApproachTime - UT);
-            return dV;
-        }
-
+        // This does a line-search to find the burnUT for the cheapest course correction that will intercept exactly
         public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, out double burnUT)
         {
             double closestApproachTime = o.NextClosestApproachTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
@@ -496,6 +437,7 @@ namespace MuMech
             burnUT = UT;
             Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime - burnUT);
 
+            // FIXME: replace with Brent's 1-d minimization algorithm
             const int fineness = 20;
             for (double step = 0.5; step < fineness; step += 1.0)
             {
@@ -512,6 +454,7 @@ namespace MuMech
             return dV;
         }
 
+        // This is the entry point for the course-correction to a target orbit which is a celestial
         public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, CelestialBody targetBody, double finalPeR, out double burnUT)
         {
             Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
@@ -532,17 +475,19 @@ namespace MuMech
 
             Vector3d velAfterBurn;
             Vector3d arrivalVel;
-            LambertSolver.Solve(o.SwappedRelativePositionAtUT(burnUT), interceptTarget - o.referenceBody.position, collisionUT - burnUT, o.referenceBody, true, out velAfterBurn, out arrivalVel);
+            GoodingSolver.Solve(o.referenceBody.gravParameter, o.SwappedRelativePositionAtUT(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT), interceptTarget - o.referenceBody.position, collisionRelVel,  collisionUT - burnUT, 0, out velAfterBurn, out arrivalVel);
 
             Vector3d deltaV = velAfterBurn - o.SwappedOrbitalVelocityAtUT(burnUT);
             return deltaV;
         }
 
+        // This is the entry point for the course-correction to a target orbit which is not a celestial
         public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, double caDistance, out double burnUT)
         {
             Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
             Orbit collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
             double collisionUT = collisionOrbit.NextClosestApproachTime(target, burnUT);
+            Vector3d collisionRelVel = collisionOrbit.SwappedOrbitalVelocityAtUT(collisionUT) - target.SwappedOrbitalVelocityAtUT(collisionUT);
             Vector3d position = o.SwappedAbsolutePositionAtUT(collisionUT);
             Vector3d targetPos = target.SwappedAbsolutePositionAtUT(collisionUT);
             Vector3d direction = targetPos - position;
@@ -551,7 +496,8 @@ namespace MuMech
 
             Vector3d velAfterBurn;
             Vector3d arrivalVel;
-            LambertSolver.Solve(o.SwappedRelativePositionAtUT(burnUT), interceptTarget - o.referenceBody.position, collisionUT - burnUT, o.referenceBody, true, out velAfterBurn, out arrivalVel);
+
+            GoodingSolver.Solve(o.referenceBody.gravParameter, o.SwappedRelativePositionAtUT(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT), interceptTarget - o.referenceBody.position, collisionRelVel, collisionUT - burnUT, 0, out velAfterBurn, out arrivalVel);
 
             Vector3d deltaV = velAfterBurn - o.SwappedOrbitalVelocityAtUT(burnUT);
             return deltaV;
@@ -562,7 +508,7 @@ namespace MuMech
         //is in the same plane as the orbit of the first planet around the sun. It's also assumed that
         //the target planet has a fairly low relative inclination with respect to the first planet. If the
         //inclination change is nonzero you should also do a mid-course correction burn, as computed by
-        //DeltaVForCourseCorrection.
+        //DeltaVForCourseCorrection (a function that has been removed due to being unused).
         public static Vector3d DeltaVAndTimeForInterplanetaryTransferEjection(Orbit o, double UT, Orbit target, bool syncPhaseAngle, out double burnUT)
         {
             Orbit planetOrbit = o.referenceBody.orbit;
@@ -669,7 +615,7 @@ namespace MuMech
                     f[0] += secondBurn.magnitude;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // need Sqrt of MaxValue so least-squares can square it without an infinity
                 f[0] = Math.Sqrt(Double.MaxValue);
@@ -750,7 +696,7 @@ namespace MuMech
             return Math.Exp( (currentCost - newCost) / temp );
         }
 
-        // Simulated Annealing global search for a two burn transfer.
+        // Basin-Hopping algorithm global search for a two burn transfer (Note this says "Annealing" but it was converted to Basin-Hopping)
         //
         // FIXME: there's some very confusing nomenclature between DeltaVAndTimeForBiImpulsiveTransfer and this
         //        the minUT/maxUT values here are zero-centered on this methods UT.  the minUT/maxUT parameters to
@@ -950,7 +896,7 @@ namespace MuMech
         //is in the same plane as the orbit of the first planet around the sun. It's also assumed that
         //the target planet has a fairly low relative inclination with respect to the first planet. If the
         //inclination change is nonzero you should also do a mid-course correction burn, as computed by
-        //DeltaVForCourseCorrection.
+        //DeltaVForCourseCorrection (a function that has been removed due to being unused).
         public static Vector3d DeltaVAndTimeForInterplanetaryLambertTransferEjection(Orbit o, double UT, Orbit target, out double burnUT)
         {
             Orbit planetOrbit = o.referenceBody.orbit;
@@ -1168,43 +1114,15 @@ namespace MuMech
             bool raising = o.semiMajorAxis < newSMA;
             Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
             double minDeltaV = 0;
-            double maxDeltaV;
-            if (raising)
-            {
-                //put an upper bound on the required deltaV:
-                maxDeltaV = 0.25;
-                while (o.PerturbedOrbit(UT, maxDeltaV * burnDirection).semiMajorAxis < newSMA)
-                {
-                    maxDeltaV *= 2;
-                    if (maxDeltaV > 100000)
-                        break; //a safety precaution
-                }
-            }
-            else
-            {
-                //when lowering the SMA, we burn horizontally, and max possible deltaV is the deltaV required to kill all horizontal velocity
-                maxDeltaV = Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
-            }
-            // Debug.Log (String.Format ("We are {0} SMA to {1}", raising ? "raising" : "lowering", newSMA));
-            // Debug.Log (String.Format ("Starting SMA iteration with maxDeltaV of {0}", maxDeltaV));
-            //now do a binary search to find the needed delta-v
-            while (maxDeltaV - minDeltaV > 0.01)
-            {
-                double testDeltaV = (maxDeltaV + minDeltaV) / 2.0;
-                double testSMA = o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis;
-                // Debug.Log (String.Format ("Testing dV of {0} gave an SMA of {1}", testDeltaV, testSMA));
+            double maxDeltaV = raising ? 10000 :  Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
 
-                if ((testSMA < 0) || (testSMA > newSMA && raising) || (testSMA < newSMA && !raising))
-                {
-                    maxDeltaV = testDeltaV;
-                }
-                else
-                {
-                    minDeltaV = testDeltaV;
-                }
-            }
+            // solve for the reciprocal of the SMA which is a continuous function that avoids the parabolic singularity and
+            // change of sign for hyperbolic orbits.
+            BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - 1.0/newSMA;  };
+            double dV;
+            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null);
 
-            return ((maxDeltaV + minDeltaV) / 2) * burnDirection;
+            return dV * burnDirection;
         }
 
         public static Vector3d DeltaVToShiftNodeLongitude(Orbit o, double UT, double newNodeLong)

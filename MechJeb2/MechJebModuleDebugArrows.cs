@@ -26,7 +26,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool colSphereActive;
         public static DebugIcoSphere colSphere;
-        
+
         [Persistent(pass = (int)Pass.Global)]
         public bool cotSphereActive;
         public static DebugIcoSphere cotSphere;
@@ -37,7 +37,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool srfVelocityArrowActive;
         public static DebugArrow srfVelocityArrow;
-        
+
         [Persistent(pass = (int)Pass.Global)]
         public bool obtVelocityArrowActive;
         public static DebugArrow obtVelocityArrow;
@@ -52,8 +52,8 @@ namespace MuMech
 
         // Not used since I did not write the code for that one yet.
         //[Persistent(pass = (int)Pass.Global)]
-        public bool avgForwardArrowActive;
-        public static DebugArrow avgForwardArrow;
+        //public bool avgForwardArrowActive;
+        //public static DebugArrow avgForwardArrow;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool requestedAttitudeArrowActive;
@@ -101,11 +101,11 @@ namespace MuMech
 
             dotArrow.Destroy();
             dotArrow = null;
-            
+
             forwardArrow.Destroy();
             forwardArrow = null;
-            avgForwardArrow.Destroy();
-            avgForwardArrow = null;
+            //avgForwardArrow.Destroy();
+            //avgForwardArrow = null;
 
             requestedAttitudeArrow.Destroy();
             requestedAttitudeArrow = null;
@@ -136,7 +136,7 @@ namespace MuMech
                 dotArrow        = new DebugArrow(XKCDColors.PurplePink);
 
                 forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
-                avgForwardArrow = new DebugArrow(Color.blue);
+                //avgForwardArrow = new DebugArrow(Color.blue);
 
                 requestedAttitudeArrow = new DebugArrow(Color.gray);
 
@@ -188,7 +188,7 @@ namespace MuMech
                 obtVelocityArrow.SetLength((float)arrowsLength.val);
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
-            
+
             dotArrow.State(dotArrowActive && vesselState.thrustCurrent > 0 && core.ShowGui);
             if (dotArrowActive)
             {
@@ -196,7 +196,7 @@ namespace MuMech
                 dotArrow.SetLength((float)Math.Log10(vesselState.thrustCurrent + 1));
                 dotArrow.SeeThrough(seeThrough);
             }
-            
+
             forwardArrow.State(forwardArrowActive && core.ShowGui);
             if (forwardArrowActive)
             {
@@ -205,6 +205,7 @@ namespace MuMech
                 forwardArrow.SeeThrough(seeThrough);
             }
 
+            /*
             avgForwardArrow.State(avgForwardArrowActive && core.ShowGui);
             if (avgForwardArrowActive)
             {
@@ -212,6 +213,7 @@ namespace MuMech
                 avgForwardArrow.SetLength((float)arrowsLength.val);
                 avgForwardArrow.SeeThrough(seeThrough);
             }
+            */
 
             requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.attitude.enabled && core.ShowGui);
             if (requestedAttitudeArrowActive && core.attitude.enabled)
@@ -262,7 +264,7 @@ namespace MuMech
         private readonly MeshRenderer _haftMeshRenderer;
         private readonly MeshRenderer _coneMeshRenderer;
 
-        
+
         public DebugArrow(Color color, bool seeThrough = false)
         {
             gameObject = new GameObject("DebugArrow");
@@ -365,7 +367,7 @@ namespace MuMech
 
             int nbVerticesCap = nbSides + 1;
 
-            #region Vertices
+#region Vertices
 
             // bottom + top + sides
             Vector3[] vertices = new Vector3[nbVerticesCap + nbVerticesCap + nbSides * 2 + 2];
@@ -403,9 +405,9 @@ namespace MuMech
             vertices[vert] = vertices[nbSides * 2 + 2];
             vertices[vert + 1] = vertices[nbSides * 2 + 3];
 
-            #endregion
+#endregion
 
-            #region Normales
+#region Normales
 
             // bottom + top + sides
             Vector3[] normales = new Vector3[vertices.Length];
@@ -440,9 +442,9 @@ namespace MuMech
             normales[vert] = normales[nbSides * 2 + 2];
             normales[vert + 1] = normales[nbSides * 2 + 3];
 
-            #endregion
+#endregion
 
-            #region UVs
+#region UVs
 
             Vector2[] uvs = new Vector2[vertices.Length];
 
@@ -478,9 +480,9 @@ namespace MuMech
             uvs[u] = new Vector2(1f, 1f);
             uvs[u + 1] = new Vector2(1f, 0f);
 
-            #endregion
+#endregion
 
-            #region Triangles
+#region Triangles
 
             int nbTriangles = nbSides + nbSides + nbSides * 2;
             int[] triangles = new int[nbTriangles * 3 + 3];
@@ -536,7 +538,7 @@ namespace MuMech
                 i += 3;
             }
 
-            #endregion
+#endregion
 
             mesh.vertices = vertices;
             mesh.normals = normales;
@@ -544,7 +546,7 @@ namespace MuMech
             mesh.triangles = triangles;
 
             mesh.RecalculateBounds();
-            
+
             return cone;
         }
 
@@ -574,7 +576,7 @@ namespace MuMech
             SetRadius(0.09f);
             SeeThrough(seeThrough);
         }
-        
+
         public void Destroy()
         {
             Object.Destroy(gameObject);
@@ -649,7 +651,7 @@ namespace MuMech
             faces.Add(new TriangleIndices(0, 7, 10));
             faces.Add(new TriangleIndices(0, 10, 11));
 
-            // 5 adjacent faces 
+            // 5 adjacent faces
             faces.Add(new TriangleIndices(1, 5, 9));
             faces.Add(new TriangleIndices(5, 11, 4));
             faces.Add(new TriangleIndices(11, 10, 2));
@@ -663,7 +665,7 @@ namespace MuMech
             faces.Add(new TriangleIndices(3, 6, 8));
             faces.Add(new TriangleIndices(3, 8, 9));
 
-            // 5 adjacent faces 
+            // 5 adjacent faces
             faces.Add(new TriangleIndices(4, 9, 5));
             faces.Add(new TriangleIndices(2, 4, 11));
             faces.Add(new TriangleIndices(6, 2, 10));
@@ -751,11 +753,11 @@ namespace MuMech
             Vector3 point1 = vertices[p1];
             Vector3 point2 = vertices[p2];
             Vector3 middle = new Vector3
-            (
-                (point1.x + point2.x) / 2f,
-                (point1.y + point2.y) / 2f,
-                (point1.z + point2.z) / 2f
-            );
+                (
+                 (point1.x + point2.x) / 2f,
+                 (point1.y + point2.y) / 2f,
+                 (point1.z + point2.z) / 2f
+                );
 
             // add vertex makes sure point is on unit sphere
             int i = vertices.Count;

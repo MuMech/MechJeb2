@@ -1,4 +1,6 @@
 ﻿using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationInclination : Operation
@@ -12,11 +14,11 @@ namespace MuMech
         public OperationInclination ()
         {
             timeSelector = new TimeSelector(new TimeReference[]
-            {
-                TimeReference.EQ_HIGHEST_AD, TimeReference.EQ_NEAREST_AD,
-                TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING,
-                TimeReference.X_FROM_NOW
-            });
+                    {
+                    TimeReference.EQ_HIGHEST_AD, TimeReference.EQ_NEAREST_AD,
+                    TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING,
+                    TimeReference.X_FROM_NOW
+                    });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -25,17 +27,19 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            return new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeInclination(o, UT, newInc), UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeInclination(o, UT, newInc), UT));
+
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

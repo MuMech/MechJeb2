@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KSP.Localization;
 
 // FIXME: use a maneuver node
 
@@ -67,7 +68,7 @@ namespace MuMech
                     Vector3d burnDir = Vector3d.Exclude(vesselState.up, Vector3d.Exclude(vesselState.orbitalVelocity, deltaV));
                     planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, vesselState.orbitalVelocity) * vesselState.speedOrbitHorizontal;
                     core.attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, core.landing);
-                    status = "Executing low orbit plane change of about " + planeChangeDVLeft.ToString("F0") + " m/s";
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status14", planeChangeDVLeft.ToString("F0"));//"Executing low orbit plane change of about " +  + " m/s"
 
                     if (planeChangeDVLeft < 0.1F)
                     {
@@ -77,7 +78,7 @@ namespace MuMech
                 else
                 {
                     if (core.node.autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 6));
-                    status = "Moving to low orbit plane change burn point";
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status15");//"Moving to low orbit plane change burn point"
                 }
 
                 return this;

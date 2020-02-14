@@ -95,12 +95,13 @@ namespace MuMech
 
             if (makingNode)
             {
-                var computedNode = operation[operationId].MakeNode(o, UT, core.target);
-                if (computedNode != null)
+                var nodeList = operation[operationId].MakeNodes(o, UT, core.target);
+                if (nodeList != null)
                 {
                     if (!createNode)
                         maneuverNodes.Last().RemoveSelf();
-                    vessel.PlaceManeuverNode(o, computedNode.dV, computedNode.UT);
+                    for (var i = 0; i < nodeList.Count; i++)
+                        vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
                 }
 
                 if (executingNode && core.node != null)

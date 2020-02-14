@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationResonantOrbit : Operation
@@ -19,7 +21,7 @@ namespace MuMech
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1_1") + resonanceNumerator.val + "/" + resonanceDenominator.val + Localizer.Format("#MechJeb_resonant_label1_2"));//"Change your orbital period to "" of your current orbital period"
+            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1",resonanceNumerator.val + "/" + resonanceDenominator.val));//"Change your orbital period to <<1>> of your current orbital period"
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_resonant_label2"), GUILayout.ExpandWidth(true));//New orbital period ratio :
             resonanceNumerator.text = GUILayout.TextField(resonanceNumerator.text, GUILayout.Width(30));
@@ -29,18 +31,20 @@ namespace MuMech
             timeSelector.DoChooseTimeGUI();
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
             var dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, UT, (double)resonanceNumerator.val / resonanceDenominator.val);
 
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(dV, UT));
+
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-

@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using KSP.Localization;
+using System.Collections.Generic;
+
 namespace MuMech
 {
     public class OperationLan : Operation
@@ -22,7 +24,7 @@ namespace MuMech
             target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
         }
 
-        public override ManeuverParameters MakeNodeImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (o.inclination < 10)
                 errorMessage = Localizer.Format("#MechJeb_AN_error",o.inclination);//"Warning: orbital plane has a low inclination of <<1>>º (recommend > 10º) and so maneuver may not be accurate"
@@ -31,13 +33,14 @@ namespace MuMech
 
             var dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, UT, target.targetLongitude);
 
-            return new ManeuverParameters(dV, UT);
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            NodeList.Add(new ManeuverParameters(dV, UT));
+            return NodeList;
         }
 
-		public TimeSelector getTimeSelector() //Required for scripts to save configuration
-		{
-			return this.timeSelector;
-		}
+        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        {
+            return this.timeSelector;
+        }
     }
 }
-
