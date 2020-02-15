@@ -10,7 +10,7 @@ namespace MuMech
 
         public const double DBL_EPSILON = 2.2204460492503131e-16;
 
-		public static float ResourceDensity(int type)
+        public static float ResourceDensity(int type)
         {
             return PartResourceLibrary.Instance.GetDefinition(type).density;
         }
@@ -187,12 +187,12 @@ namespace MuMech
             }
         }
 
-		public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
-		{
-			T tmp = list[indexA];
-			list[indexA] = list[indexB];
-			list[indexB] = tmp;
-			return list;
+        public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
+        {
+            T tmp = list[indexA];
+            list[indexA] = list[indexB];
+            list[indexB] = tmp;
+            return list;
         }
 
         public static void DrawLine(Texture2D tex, int x1, int y1, int x2, int y2, Color col)
@@ -536,17 +536,17 @@ namespace MuMech
         }
 
         public Matrix3x3f transpose()
-		{
-			Matrix3x3f ret = new Matrix3x3f();
-			for (int i = 0; i < 3; i++)
-			{
-				for (int j = 0; j < 3; j++)
-				{
-					ret.e[i, j] = e[j, i];
-				}
-			}
-			return ret;
-		}
+        {
+            Matrix3x3f ret = new Matrix3x3f();
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    ret.e[i, j] = e[j, i];
+                }
+            }
+            return ret;
+        }
 
         public static Vector3d operator *(Matrix3x3f M, Vector3 v)
         {
