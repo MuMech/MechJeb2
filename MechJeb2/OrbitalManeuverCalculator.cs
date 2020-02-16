@@ -82,7 +82,7 @@ namespace MuMech
             BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR;  };
             double dV = 0;
             try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null); }
-            catch (TimeoutException) { Debug.Log("Brents method threw a timeout error (supressed)"); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
         }
@@ -118,7 +118,7 @@ namespace MuMech
             BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0/newApR;  };
             double dV = 0;
             try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null); }
-            catch (TimeoutException) { Debug.Log("Brents method threw a timeout error (supressed)"); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
         }
@@ -356,7 +356,7 @@ namespace MuMech
                 return testApsisPhaseAngle;
             };
             try { Brent.Root(f, maxTime, minTime, 1e-8, out burnUT, out _, null); }
-            catch (TimeoutException) { Debug.Log("Brents method threw a timeout error (supressed)"); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out _);
 
@@ -1126,7 +1126,7 @@ namespace MuMech
             BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - 1.0/newSMA;  };
             double dV = 0;
             try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null); }
-            catch (TimeoutException) { Debug.Log("Brents method threw a timeout error (supressed)"); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
         }
@@ -1225,7 +1225,7 @@ namespace MuMech
             BrentFun f = delegate(double UT, object ign) { return ( transfer.getRelativePositionAtUT(UT) - target.orbit.getRelativePositionAtUT(UT) ).magnitude - target.sphereOfInfluence;  };
             UT = 0;
             try { Brent.Root(f, UT1, UT2, 1e-4, out UT, out _, null); }
-            catch (TimeoutException) { Debug.Log("Brents method threw a timeout error (supressed)"); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
         }
     }
 }
