@@ -3,6 +3,7 @@
 using System;
 using System.Threading;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace MuMech
 {
@@ -300,13 +301,12 @@ namespace MuMech
                 return new ManeuverParameters((vpos - vneg).xzy, UT_0 + dt);
         }
 
-        void zeroMissObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_arrival)
+        void zeroMissObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_transfer, double UT_arrival)
         {
-            double t = x[3];
             Vector3d DV = new Vector3d(x[0], x[1], x[2]);
 
             Orbit orbit;
-            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, t, UT_arrival, out orbit);
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, UT_transfer, UT_arrival, out orbit);
 
             Vector3d err = orbit.getTruePositionAtUT(UT_arrival) - target.orbit.getTruePositionAtUT(UT_arrival);
 
@@ -315,18 +315,17 @@ namespace MuMech
             fi[2] = err.z;
         }
 
-        void periapsisObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_arrival, double target_PeR, ref bool failed)
+        void periapsisObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_transfer, double UT_arrival, double target_PeR, ref bool failed)
         {
-            double t = x[3];
             Vector3d DV = new Vector3d(x[0], x[1], x[2]);
 
             Orbit orbit;
-            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, t, UT_arrival, out orbit);
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, UT_transfer, UT_arrival, out orbit);
 
             if (orbit.referenceBody == target)
             {
                 fi[0]  = ( orbit.PeR - target_PeR );
-                failed = false;  // we intersected at some point with the target body SOI
+                failed = false;  // we intersected at some point with the target body SOIt
             }
             else
             {
@@ -335,9 +334,11 @@ namespace MuMech
             }
         }
 
-        public ManeuverParameters OptimizeEjection(double UT_transfer, Orbit initial_orbit, Orbit target, CelestialBody target_body, double UT_arrival, double earliest_UT)
+        public List<ManeuverParameters> OptimizeEjection(double UT_transfer, Orbit initial_orbit, Orbit target, CelestialBody target_body, double UT_arrival, double earliest_UT, double target_PeR, bool includeCaptureBurn)
         {
             int N = 0;
+
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
 
             while(true)
             {
@@ -348,8 +349,8 @@ namespace MuMech
                 alglib.minlmstate state;
                 alglib.minlmreport rep;
 
-                double[] x = new double[4];
-                double[] scale = new double[4];
+                double[] x = new double[3];
+                double[] scale = new double[3];
 
                 Vector3d exitDV, captureDV;
                 CalcLambertDVs(UT_transfer, UT_arrival - UT_transfer, out exitDV, out captureDV);
@@ -376,10 +377,9 @@ namespace MuMech
                 x[0] = maneuver.dV.x;
                 x[1] = maneuver.dV.y;
                 x[2] = maneuver.dV.z;
-                x[3] = maneuver.UT;
+                UT_transfer = maneuver.UT;
 
                 scale[0] = scale[1] = scale[2] = 1000.0f;
-                scale[3] = initial_orbit.period;
 
                 //
                 // initial patched conic shooting to precisely hit the target
@@ -388,17 +388,17 @@ namespace MuMech
                 const int ZEROMISSCONS = 3;
                 double[] fi = new double[ZEROMISSCONS];
 
-                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_arrival);
-                Debug.Log("zero miss phase before optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m");
+                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_transfer, UT_arrival);
+                Debug.Log("zero miss phase before optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
 
-                alglib.minlmcreatev(4, ZEROMISSCONS, x, DIFFSTEP, out state);
+                alglib.minlmcreatev(3, ZEROMISSCONS, x, DIFFSTEP, out state);
                 alglib.minlmsetcond(state, EPSX, MAXITS);
                 alglib.minlmsetscale(state, scale);
-                alglib.minlmoptimize(state, (x, fi, obj) => zeroMissObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_arrival), null, null);
+                alglib.minlmoptimize(state, (x, fi, obj) => zeroMissObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_transfer, UT_arrival), null, null);
                 alglib.minlmresults(state, out x, out rep);
 
-                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_arrival);
-                Debug.Log("zero miss phase after optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m");
+                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_transfer, UT_arrival);
+                Debug.Log("zero miss phase after optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
 
                 Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
                 Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
@@ -408,25 +408,31 @@ namespace MuMech
                 //
 
                 bool failed = false;
-                double target_PeR = 350000;
 
-                const int PERIAPSISCONS = 1;
-                double[] fi2 = new double[PERIAPSISCONS];
+                if (target_PeR > 0)
+                {
+                    const int PERIAPSISCONS = 1;
+                    double[] fi2 = new double[PERIAPSISCONS];
 
-                periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_arrival, target_PeR, ref failed);
-                Debug.Log("periapsis phase before optimization = " + x[0] + " m");
+                    periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed);
+                    Debug.Log("periapsis phase before optimization = " + fi2[0] + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
 
-                alglib.minlmcreatev(4, PERIAPSISCONS, x, DIFFSTEP, out state);
-                alglib.minlmsetcond(state, EPSX, MAXITS);
-                alglib.minlmsetscale(state, scale);
-                alglib.minlmoptimize(state, (x, fi, obj) => periapsisObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_arrival, target_PeR, ref failed), null, null);
-                alglib.minlmresults(state, out x, out rep);
+                    alglib.minlmcreatev(3, PERIAPSISCONS, x, DIFFSTEP, out state);
+                    alglib.minlmsetcond(state, EPSX, MAXITS);
+                    alglib.minlmsetscale(state, scale);
+                    alglib.minlmoptimize(state, (x, fi, obj) => periapsisObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed), null, null);
+                    alglib.minlmresults(state, out x, out rep);
 
-                periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_arrival, target_PeR, ref failed);
-                Debug.Log("periapsis phase after optimization = " + x[0] + " m");
+                    periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed);
+                    Debug.Log("periapsis phase after optimization = " + fi2[0] + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
 
-                Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
-                Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+                    Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
+                    Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+                }
+
+                maneuver.dV.x = x[0];
+                maneuver.dV.y = x[1];
+                maneuver.dV.z = x[2];
 
                 //
                 // exit conditions and error handling
@@ -436,24 +442,32 @@ namespace MuMech
                 if ( failed )
                 {
                     Debug.Log("Failed to intersect target orbit");
-                    N++;
                 }
                 // try again in one orbit if the maneuver node is in the past
-                else if (x[3] < earliest_UT || failed)
+                else if (maneuver.UT < earliest_UT || failed)
                 {
-                    Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - x[3]) + " s too early, trying again in " + initial_orbit.period + " s");
-                    N++;
+                    Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - maneuver.UT) + " s too early, trying again in " + initial_orbit.period + " s");
+                    UT_transfer += initial_orbit.period;
                 }
                 else {
-                    Debug.Log("from optimizer DV = " + new Vector3d(x[0], x[1], x[2]) + " t = " + x[3] + " original arrival = " + UT_arrival);
-                    return new ManeuverParameters(new Vector3d(x[0], x[1], x[2]), x[3]);
+                    Debug.Log("from optimizer DV = " + maneuver.dV + " t = " + maneuver.UT + " original arrival = " + UT_arrival);
+                    NodeList.Add(maneuver);
+                    break;
                 }
-                if (N > 10)
+                if (N++ > 10)
                 {
                     throw new OperationException("Ejection Optimization failed; try manual selection");
                 }
-                UT_transfer += initial_orbit.period;
             }
+            if (NodeList.Count > 0 && target_PeR > 0 && includeCaptureBurn)
+            {
+                // calculate the incoming orbit
+                Orbit incoming_orbit;
+                OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target_body, NodeList[0].dV, NodeList[0].UT, UT_arrival, out incoming_orbit);
+                double burnUT = incoming_orbit.NextPeriapsisTime(incoming_orbit.StartUT);
+                NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(incoming_orbit, burnUT), burnUT));
+            }
+            return NodeList;
         }
     }
 
