@@ -101,7 +101,9 @@ namespace MuMech
                     if (!createNode)
                         maneuverNodes.Last().RemoveSelf();
                     for (var i = 0; i < nodeList.Count; i++)
+                    {
                         vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
+                    }
                 }
 
                 if (executingNode && core.node != null)
