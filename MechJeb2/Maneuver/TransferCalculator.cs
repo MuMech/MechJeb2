@@ -3,6 +3,7 @@
 using System;
 using System.Threading;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace MuMech
 {
@@ -38,8 +39,6 @@ namespace MuMech
         bool includeCaptureBurn;
 
         public double minDV;
-
-        private static readonly PatchedConics.SolverParameters solverParameters = new PatchedConics.SolverParameters();
 
         public TransferCalculator(
                 Orbit o, Orbit target,
@@ -125,7 +124,7 @@ namespace MuMech
 
             exitDV = V1 - V1_0;
             captureDV = V2_1 - V2;
-       }
+        }
 
         void ComputeDeltaV(object args)
         {
@@ -275,7 +274,7 @@ namespace MuMech
         }
 
         double AngleAboutAxis(Vector3d v1, Vector3d v2, Vector3d axis)
-        {
+                    {
             axis.Normalize();
 
             v1 = (v1 - Vector3d.Dot(axis, v1) * axis).normalized;
@@ -286,228 +285,189 @@ namespace MuMech
 
         public ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0)
         {
-            double GM = initial_orbit.referenceBody.gravParameter;
-            double C3 = exit_velocity.sqrMagnitude;
-            double Mh = initial_orbit.referenceBody.sphereOfInfluence;
-            double Rpe = initial_orbit.semiMajorAxis;
+                Vector3d r0;
+                Vector3d v0;
+                Vector3d vneg = new Vector3d();
+                Vector3d vpos = new Vector3d();
+                Vector3d r = new Vector3d();
+                double dt = 0;
 
-            double isma = 2 / Mh - C3 / GM; //inverted Semi-major Axis, will work for parabolic orbit
-            double ecc = 1.0 - Rpe * isma;
+                // get our reference position on the orbit
+                initial_orbit.GetOrbitalStateVectorsAtUT(UT_0, out r0, out v0);
 
-            //double vstart = Math.Sqrt(GM * (2 / Rpe - isma)); //{ total start boost}
-            //double slat = Rpe * Rpe * vstart * vstart / GM;
+                // analytic solution for paring orbit ejection to hyperbolic v-infinity
+                SpaceMath.singleImpulseHyperbolicBurn(initial_orbit.referenceBody.gravParameter, r0, v0, exit_velocity, ref vneg, ref vpos, ref r, ref dt);
 
-            //the problem here should be R for circular orbit instead of Rpe
-            double slat = 2 * Rpe - isma * Rpe * Rpe; //but we don't know start point (yet) in elliptic orbit
-
-            double theta = Math.Acos((slat / Mh - 1) / ecc);
-
-
-            /*
-            //old way infinity hyperbolic:
-            //problems: it's not necessary hyperbolic (in case of low speed exit_velocity),
-            //and exit_velocity appears not infinite far from celestial body, but only sphereOfInfluence far
-            //i.e. Mh in previous statements(theta, isma) is not infinity!
-
-            double sma = -GM / C3;
-
-            double ecc = 1 - Rpe / sma;
-            double theta = Math.Acos(-1 / ecc);
-
-*/
-            Vector3d intersect_1;
-            Vector3d intersect_2;
-
-            // intersect_1 is the optimal position on the orbit assuming the orbit is circular and the sphere of influence is infinite
-            IntersectConePlane(exit_velocity, theta, initial_orbit.h, out intersect_1, out intersect_2);
-
-            Vector3d eccvec = initial_orbit.GetEccVector();
-
-            double true_anomaly = AngleAboutAxis(eccvec, intersect_1, initial_orbit.h);
-            // GetMeanAnomalyAtTrueAnomaly expects degrees and returns radians
-            double mean_anomaly = initial_orbit.GetMeanAnomalyAtTrueAnomaly(true_anomaly * UtilMath.Rad2Deg);
-
-            double delta_mean_anomaly = MuUtils.ClampRadiansPi(mean_anomaly - initial_orbit.MeanAnomalyAtUT(UT_0));
-
-            double UT = UT_0 + delta_mean_anomaly / initial_orbit.MeanMotion();
-
-            Vector3d V_0 = initial_orbit.getOrbitalVelocityAtUT(UT);
-            Vector3d pos = initial_orbit.getRelativePositionAtUT(UT);
-
-            double final_vel = Math.Sqrt(C3 + 2 * GM / pos.magnitude);
-
-            Vector3d x = pos.normalized;
-            Vector3d z = Vector3d.Cross(x, exit_velocity).normalized;
-            Vector3d y = Vector3d.Cross(z, x);
-
-            theta = Math.PI / 2;
-            double dtheta = 0.001;
-            Orbit sample = new Orbit();
-
-            double theta_err = double.MaxValue;
-
-            for (int iteration = 0 ; iteration < 50 ; ++iteration)
-            {
-                Vector3d V_1 = final_vel * (Math.Cos(theta) * x + Math.Sin(theta) * y);
-                sample.UpdateFromStateVectors(pos, V_1, initial_orbit.referenceBody, UT);
-                theta_err = AngleAboutAxis(exit_velocity, sample.getOrbitalVelocityAtUT(OrbitExtensions.NextTimeOfRadius(sample, UT, sample.referenceBody.sphereOfInfluence)), z);
-                if (double.IsNaN(theta_err))
-                    return null;
-                if (Math.Abs(theta_err) <= 0.1 * UtilMath.Deg2Rad)
-                    return new ManeuverParameters((V_1 - V_0).xzy, UT);
-
-                V_1 = final_vel * (Math.Cos(theta + dtheta) * x + Math.Sin(theta + dtheta) * y);
-                sample.UpdateFromStateVectors(pos, V_1, initial_orbit.referenceBody, UT);
-                double theta_err_2 = AngleAboutAxis(exit_velocity, sample.getOrbitalVelocityAtUT(OrbitExtensions.NextTimeOfRadius(sample, UT, sample.referenceBody.sphereOfInfluence)), z);
-
-                V_1 = final_vel * (Math.Cos(theta - dtheta) * x + Math.Sin(theta - dtheta) * y);
-                sample.UpdateFromStateVectors(pos, V_1, initial_orbit.referenceBody, UT);
-                double theta_err_3 = AngleAboutAxis(exit_velocity, sample.getOrbitalVelocityAtUT(OrbitExtensions.NextTimeOfRadius(sample, UT, sample.referenceBody.sphereOfInfluence)), z);
-
-                double derr = MuUtils.ClampRadiansPi(theta_err_2 - theta_err_3) / (2 * dtheta);
-
-                theta = MuUtils.ClampRadiansTwoPi(theta - theta_err / derr);
-
-                // if theta > pi, replace with 2pi - theta, the function ejection_angle=f(theta) is symmetrc wrt theta=pi
-                if (theta > Math.PI)
-                    theta = 2 * Math.PI - theta;
-            }
-
-            return null;
+                return new ManeuverParameters((vpos - vneg).xzy, UT_0 + dt);
         }
 
-        class OptimizerData
+        void zeroMissObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_transfer, double UT_arrival)
         {
-            public CelestialBody target_body;
-            public Orbit initial_orbit;
-            public Orbit target_orbit;
-            public double UT_arrival;
-            public bool failed;
-        }
-
-        void DistanceToTarget(double[] x, double[] fi, object obj)
-        {
-            OptimizerData data = (OptimizerData)obj;
-
-            double t = x[3];
             Vector3d DV = new Vector3d(x[0], x[1], x[2]);
 
-            Orbit orbit = new Orbit();
-            orbit.UpdateFromStateVectors(data.initial_orbit.getRelativePositionAtUT(t), data.initial_orbit.getOrbitalVelocityAtUT(t) + DV.xzy, data.initial_orbit.referenceBody, t);
-            orbit.StartUT = t;
-            orbit.EndUT = orbit.eccentricity >= 1.0 ? orbit.period : t + orbit.period;
-            Orbit next_orbit = new Orbit();
-            PatchedConics.CalculatePatch(orbit, next_orbit, t, solverParameters, null);
+            Orbit orbit;
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, UT_transfer, UT_arrival, out orbit);
 
-            while(true)
+            Vector3d err = orbit.getTruePositionAtUT(UT_arrival) - target.orbit.getTruePositionAtUT(UT_arrival);
+
+            fi[0] = err.x;
+            fi[1] = err.y;
+            fi[2] = err.z;
+        }
+
+        void periapsisObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_transfer, double UT_arrival, double target_PeR, ref bool failed)
+        {
+            Vector3d DV = new Vector3d(x[0], x[1], x[2]);
+
+            Orbit orbit;
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, UT_transfer, UT_arrival, out orbit);
+
+            if (orbit.referenceBody == target)
             {
-                if (orbit.referenceBody == data.target_body)
-                {
-                    if ( orbit.PeR < 100000 )
-                    {
-                        fi[0] = DV.x;
-                        fi[1] = DV.y;
-                        fi[2] = DV.z;
-                    }
-                    else
-                    {
-                        Vector3d err = orbit.getRelativePositionFromTrueAnomaly(0);
-                        fi[0] = err.x;
-                        fi[1] = err.y;
-                        fi[2] = err.z;
-                    }
-                    data.failed = false;  /* we intersected at some point with the target body SOI */
-
-                    return;
-                }
-                else if (orbit.EndUT > data.UT_arrival)
-                {
-                    Vector3d err;
-                    if ( orbit.referenceBody == data.target_orbit.referenceBody )
-                    {
-                        err = orbit.getRelativePositionAtUT(data.UT_arrival) - data.target_orbit.getRelativePositionAtUT(data.UT_arrival);
-                    }
-                    else
-                    {
-                        err = orbit.getTruePositionAtUT(data.UT_arrival) - data.target_orbit.getTruePositionAtUT(data.UT_arrival);
-                    }
-
-                    fi[0] = err.x;
-                    fi[1] = err.y;
-                    fi[2] = err.z;
-
-                    return;
-                }
-
-                Orbit temp = orbit;
-                orbit = next_orbit;
-                next_orbit = temp;
-                PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, solverParameters, null);
+                fi[0]  = ( orbit.PeR - target_PeR );
+                failed = false;  // we intersected at some point with the target body SOIt
+            }
+            else
+            {
+                fi[0] = ( orbit.getTruePositionAtUT(UT_arrival) - target.orbit.getTruePositionAtUT(UT_arrival) ).magnitude;
+                failed = true;  // we did not intersect the target body SOI
             }
         }
 
-        public ManeuverParameters OptimizeEjection(double UT_transfer, Orbit initial_orbit, Orbit target, CelestialBody target_body, double UT_arrival, double earliest_UT)
+        public List<ManeuverParameters> OptimizeEjection(double UT_transfer, Orbit initial_orbit, Orbit target, CelestialBody target_body, double UT_arrival, double earliest_UT, double target_PeR, bool includeCaptureBurn)
         {
             int N = 0;
 
+            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+
             while(true)
             {
+                const double DIFFSTEP = 1e-6;
+                const double EPSX = 1e-9;
+                const int MAXITS = 100;
+
                 alglib.minlmstate state;
                 alglib.minlmreport rep;
 
-                double[] x = new double[5];
-                double[] scale = new double[5];
+                double[] x = new double[3];
+                double[] scale = new double[3];
 
                 Vector3d exitDV, captureDV;
                 CalcLambertDVs(UT_transfer, UT_arrival - UT_transfer, out exitDV, out captureDV);
 
-                var maneuver = ComputeEjectionManeuver(exitDV, origin, UT_transfer);
+                Orbit source = initial_orbit.referenceBody.orbit; // helicentric orbit of the source planet
+
+                // helicentric transfer orbit
+                Orbit transfer_orbit = new Orbit();
+                transfer_orbit.UpdateFromStateVectors(source.getRelativePositionAtUT(UT_transfer), source.getOrbitalVelocityAtUT(UT_transfer) + exitDV, source.referenceBody, UT_transfer);
+
+                double UT_SOI_exit;
+                OrbitalManeuverCalculator.SOI_intercept(transfer_orbit, initial_orbit.referenceBody, UT_transfer, UT_arrival, out UT_SOI_exit);
+
+                // convert from heliocentric to body centered velocity
+                Vector3d Vsoi = transfer_orbit.getOrbitalVelocityAtUT(UT_SOI_exit) - initial_orbit.referenceBody.orbit.getOrbitalVelocityAtUT(UT_SOI_exit);
+
+                // using Vsoi works a better here than the Vinf from the heliocentric computation at UT_Transfer
+                ManeuverParameters maneuver = ComputeEjectionManeuver(Vsoi, initial_orbit, UT_transfer);
+
+                //
+                // common setup for the optimization problems
+                //
 
                 x[0] = maneuver.dV.x;
                 x[1] = maneuver.dV.y;
                 x[2] = maneuver.dV.z;
-                x[3] = maneuver.UT + N * initial_orbit.period;
+                UT_transfer = maneuver.UT;
 
-                scale[0] = scale[1] = scale[2] = maneuver.dV.magnitude;
-                scale[3] = initial_orbit.period;
+                scale[0] = scale[1] = scale[2] = 1000.0f;
 
-                OptimizerData data = new OptimizerData();
-                data.initial_orbit = initial_orbit;
-                data.target_orbit = target;
-                data.target_body = target_body;
-                data.UT_arrival = UT_arrival;
-                data.failed = true;
+                //
+                // initial patched conic shooting to precisely hit the target
+                //
 
-                alglib.minlmcreatev(4, 3, x, 0.001, out state);
-                alglib.minlmsetcond(state, 0, 0);
+                const int ZEROMISSCONS = 3;
+                double[] fi = new double[ZEROMISSCONS];
+
+                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_transfer, UT_arrival);
+                Debug.Log("zero miss phase before optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
+
+                alglib.minlmcreatev(3, ZEROMISSCONS, x, DIFFSTEP, out state);
+                alglib.minlmsetcond(state, EPSX, MAXITS);
                 alglib.minlmsetscale(state, scale);
-                alglib.minlmoptimize(state, DistanceToTarget, null, data);
+                alglib.minlmoptimize(state, (x, fi, obj) => zeroMissObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_transfer, UT_arrival), null, null);
                 alglib.minlmresults(state, out x, out rep);
+
+                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_transfer, UT_arrival);
+                Debug.Log("zero miss phase after optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
 
                 Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
                 Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
 
+                //
+                // Fine tuning of the periapsis
+                //
+
+                bool failed = false;
+
+                if (target_PeR > 0)
+                {
+                    const int PERIAPSISCONS = 1;
+                    double[] fi2 = new double[PERIAPSISCONS];
+
+                    periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed);
+                    Debug.Log("periapsis phase before optimization = " + fi2[0] + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
+
+                    alglib.minlmcreatev(3, PERIAPSISCONS, x, DIFFSTEP, out state);
+                    alglib.minlmsetcond(state, EPSX, MAXITS);
+                    alglib.minlmsetscale(state, scale);
+                    alglib.minlmoptimize(state, (x, fi, obj) => periapsisObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed), null, null);
+                    alglib.minlmresults(state, out x, out rep);
+
+                    periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed);
+                    Debug.Log("periapsis phase after optimization = " + fi2[0] + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
+
+                    Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
+                    Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+                }
+
+                maneuver.dV.x = x[0];
+                maneuver.dV.y = x[1];
+                maneuver.dV.z = x[2];
+
+                //
+                // exit conditions and error handling
+                //
+
                 // try again if we failed to intersect the target orbit
-                if ( data.failed )
+                if ( failed )
                 {
                     Debug.Log("Failed to intersect target orbit");
-                    N++;
                 }
                 // try again in one orbit if the maneuver node is in the past
-                else if (x[3] < earliest_UT || data.failed)
+                else if (maneuver.UT < earliest_UT || failed)
                 {
-                    Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - x[3]) + " s too early, trying again in " + initial_orbit.period + " s");
-                    N++;
+                    Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - maneuver.UT) + " s too early, trying again in " + initial_orbit.period + " s");
+                    UT_transfer += initial_orbit.period;
                 }
                 else {
-                    Debug.Log("from optimizer DV = " + new Vector3d(x[0], x[1], x[2]) + " t = " + x[3] + " original arrival = " + UT_arrival);
-                    return new ManeuverParameters(new Vector3d(x[0], x[1], x[2]), x[3]);
+                    Debug.Log("from optimizer DV = " + maneuver.dV + " t = " + maneuver.UT + " original arrival = " + UT_arrival);
+                    NodeList.Add(maneuver);
+                    break;
                 }
-                if (N > 10)
+                if (N++ > 10)
                 {
                     throw new OperationException("Ejection Optimization failed; try manual selection");
                 }
             }
+            if (NodeList.Count > 0 && target_PeR > 0 && includeCaptureBurn)
+            {
+                // calculate the incoming orbit
+                Orbit incoming_orbit;
+                OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target_body, NodeList[0].dV, NodeList[0].UT, UT_arrival, out incoming_orbit);
+                double burnUT = incoming_orbit.NextPeriapsisTime(incoming_orbit.StartUT);
+                NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(incoming_orbit, burnUT), burnUT));
+            }
+            return NodeList;
         }
     }
 

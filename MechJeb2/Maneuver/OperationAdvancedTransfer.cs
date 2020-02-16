@@ -25,10 +25,14 @@ namespace MuMech
 
         bool includeCaptureBurn = false;
 
+        EditableDouble periapsisHeight = new EditableDouble(0);
+
         const double minSamplingStep = 12 * 3600;
 
         private Mode selectionMode = Mode.Porkchop;
         int windowWidth;
+
+        private CelestialBody lastTargetCelestial;
 
         TransferCalculator worker;
         private PlotArea plot;
@@ -113,14 +117,16 @@ namespace MuMech
             minTransferTime = 3600;
 
             maxDepartureTime = minDepartureTime + synodic_period * 1.5;
-            maxTransferTime = hohmann_transfer_time * 1.5;
-            maxArrivalTime.val = (synodic_period + hohmann_transfer_time) * 1.5;
+            maxTransferTime = hohmann_transfer_time * 2.0;
+            maxArrivalTime.val = synodic_period * 1.5 + hohmann_transfer_time * 2.0;
         }
 
         private bool layoutSkipped = false;
 
         private void DoPorkchopGui(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
+            CelestialBody targetCelestial = target.Target as CelestialBody;
+
             // That mess is why you should not compute anything inside a GUI call
             // TODO : rewrite all that...
             if (worker == null)
@@ -212,6 +218,21 @@ namespace MuMech
 
             includeCaptureBurn = GUILayout.Toggle(includeCaptureBurn, Localizer.Format("#MechJeb_adv_captureburn"));//"include capture burn"
 
+            // fixup the default value of the periapsis if the target changes
+            if (targetCelestial != null && lastTargetCelestial != targetCelestial)
+            {
+                if (targetCelestial.atmosphere)
+                {
+                    periapsisHeight = targetCelestial.atmosphereDepth/1000 + 10;
+                }
+                else
+                {
+                    periapsisHeight = 100;
+                }
+            }
+
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_adv_periapsis"), periapsisHeight, "km");
+
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_adv_label2"));//"Select: "
             GUILayout.FlexibleSpace();
@@ -234,8 +255,10 @@ namespace MuMech
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + departure);//Departure in
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + duration);//Transit duration
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + " " + departure);//Departure in
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + " " + duration);//Transit duration
+
+            lastTargetCelestial = targetCelestial;
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -287,32 +310,29 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception2"));//Started computation
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
-
             if (worker.arrivalDate < 0 )
             {
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception3"));//Computation failed
             }
+
+            double target_PeR = lastTargetCelestial.Radius + periapsisHeight * 1000;
+
             if (selectionMode == Mode.Porkchop)
             {
                 if (plot == null || plot.selectedPoint == null)
                     throw new OperationException(Localizer.Format("#MechJeb_adv_Exception4"));//Invalid point selected.
-                NodeList.Add( worker.OptimizeEjection(
+                return worker.OptimizeEjection(
                     worker.DateFromIndex(plot.selectedPoint[0]),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(plot.selectedPoint[0]) + worker.DurationFromIndex(plot.selectedPoint[1]),
-                    UT)
-                        );
-                return NodeList;
+                    UT, target_PeR, includeCaptureBurn);
             }
 
-            NodeList.Add( worker.OptimizeEjection(
+            return worker.OptimizeEjection(
                     worker.DateFromIndex(worker.bestDate),
                     o, worker.destinationOrbit, target.Target as CelestialBody,
                     worker.DateFromIndex(worker.bestDate) + worker.DurationFromIndex(worker.bestDuration),
-                    UT)
-                    );
-            return NodeList;
+                    UT, target_PeR, includeCaptureBurn);
         }
     }
 }

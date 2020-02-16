@@ -208,6 +208,7 @@
     <Compile Include="ScriptsModule\MechJebModuleScriptActionsList.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptCondition.cs" />
     <Compile Include="Shepperd.cs" />
+    <Compile Include="SpaceMath.cs" />
     <Compile Include="ToolbarWrapper.cs" />
     <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
     <Compile Include="UnityToolbag\Future\Future.cs" />
