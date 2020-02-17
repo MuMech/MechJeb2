@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace MuMech {
     public delegate double BrentFun(double x, object o);
@@ -54,12 +55,16 @@ namespace MuMech {
             while ((!(fb==0) && (Math.Abs(a-b) > rtol)) || ((sign!=0) && (Math.Sign(fb)!=sign)))
             {
                 if ((fa != fc) && (fb != fc))
+                {
                     // inverse quadratic interpolation
                     s = a * fb * fc / (fa - fb) / (fa - fc) + b * fa * fc / (fb - fa) /
                         (fb - fc) + c * fa * fb / (fc - fa) / (fc - fb);
+                }
                 else
+                {
                     // secant
                     s = b - fb * (b - a) / (fb - fa);
+                }
 
                 double tmp2 = (3 * a + b) / 4;
                 if ((!(((s > tmp2) && (s < b)) || ((s < tmp2) && (s > b)))) ||
@@ -110,7 +115,11 @@ namespace MuMech {
                 }
 
                 if (i++ >= maxiter)
+                {
+                    x = b;
+                    y = fb;
                     throw new TimeoutException("Brent's rootfinding method: maximum iterations exceeded");
+                }
             }
 
             x = b;
@@ -155,12 +164,16 @@ namespace MuMech {
             while ((!(fb==0) && (Math.Abs(a-b) > rtol)) || ((sign!=0) && (Math.Sign(fb)!=sign)))
             {
                 if ((fa != fc) && (fb != fc))
+                {
                     // inverse quadratic interpolation
                     s = a * fb * fc / (fa - fb) / (fa - fc) + b * fa * fc / (fb - fa) /
                         (fb - fc) + c * fa * fb / (fc - fa) / (fc - fb);
+                }
                 else
+                {
                     // secant
                     s = b - fb * (b - a) / (fb - fa);
+                }
 
                 double tmp2 = (3 * a + b) / 4;
                 if ((!(((s > tmp2) && (s < b)) || ((s < tmp2) && (s > b)))) ||
@@ -211,7 +224,11 @@ namespace MuMech {
                 }
 
                 if (i++ >= maxiter)
+                {
+                    x = b;
+                    y = fb;
                     throw new TimeoutException("Brent's rootfinding method: maximum iterations exceeded");
+                }
             }
 
             x = b;
