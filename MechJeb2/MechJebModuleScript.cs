@@ -369,6 +369,11 @@ namespace MuMech
 			return Localizer.Format("#MechJeb_ScriptMod_title");//"Scripting Module"
 		}
 
+		public override string IconName()
+		{
+			return "Scripting Module";
+		}
+
 		public void start()
 		{
 			if (actionsList.getActionsCount() > 0)

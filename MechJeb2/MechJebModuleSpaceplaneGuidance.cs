@@ -104,5 +104,10 @@ namespace MuMech
         {
             return Localizer.Format("#MechJeb_ApproAndLand_title");//Aircraft Approach & Autoland
         }
+
+        public override string IconName()
+        {
+            return "Aircraft Approach & Autoland";
+        }
     }
 }

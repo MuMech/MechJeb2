@@ -19,6 +19,11 @@ namespace MuMech
 			return Localizer.Format("#MechJeb_Rover_title");//"Rover Autopilot"
 		}
 
+		public override string IconName()
+		{
+			return "Rover Autopilot";
+		}
+
 		public override GUILayoutOption[] WindowOptions()
 		{
 			return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(50) };

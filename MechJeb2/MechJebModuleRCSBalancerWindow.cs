@@ -122,6 +122,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_RCSBalancer_title");//"RCS Balancer"
         }
 
+        public override string IconName()
+        {
+            return "RCS Balancer";
+        }
+
         public MechJebModuleRCSBalancerWindow(MechJebCore core) : base(core) { }
     }
 }

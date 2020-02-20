@@ -182,6 +182,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_RZplan_title");//"Rendezvous Planner"
         }
 
+        public override string IconName()
+        {
+            return "Rendezvous Planner";
+        }
+
         public override bool IsSpaceCenterUpgradeUnlocked()
         {
             return vessel.patchedConicsUnlocked();

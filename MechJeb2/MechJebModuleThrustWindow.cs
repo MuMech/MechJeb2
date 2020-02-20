@@ -128,5 +128,10 @@ namespace MuMech
         {
             return Localizer.Format("#MechJeb_Utilities_title");//"Utilities"
         }
+
+        public override string IconName()
+        {
+            return "Utilities";
+        }
     }
 }

@@ -261,7 +261,7 @@ namespace MuMech
                 {
                     Debug.Log("Create button for module " + module.GetName());
 
-                    String name = GetCleanName(module.GetName());
+                    String name = GetCleanName(module.IconName());
 
                     String TexturePath = "MechJeb2/Icons/" + name;
                     String TexturePathActive = TexturePath + "_active";

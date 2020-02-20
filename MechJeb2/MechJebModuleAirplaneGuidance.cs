@@ -262,5 +262,10 @@ namespace MuMech
             return Localizer.Format("#MechJeb_Aircraftauto_title");//Aircraft Autopilot
         }
 
+        public override string IconName ()
+        {
+            return "Aircraft Autopilot";
+        }
+
     }
 }
