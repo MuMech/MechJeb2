@@ -16,7 +16,7 @@ namespace MuMech
         public bool useOldSkin = false;
 
         [Persistent(pass = (int)Pass.Global)]
-        public int skinId = 0;
+        public int skinId = 2;
 
         [Persistent(pass = (int)(Pass.Global))]
         public EditableDouble UIScale = 1.0;
