@@ -520,6 +520,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_WindowEd_title");//Custom Window Editor
         }
 
+        public override string IconName()
+        {
+            return "Custom Window Editor";
+        }
+
         public MechJebModuleCustomWindowEditor(MechJebCore core)
             : base(core)
         {

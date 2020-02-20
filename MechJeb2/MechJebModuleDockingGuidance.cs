@@ -150,5 +150,10 @@ namespace MuMech
         {
             return Localizer.Format("#MechJeb_Docking_title");//"Docking Autopilot"
         }
+
+        public override string IconName()
+        {
+            return "Docking Autopilot";
+        }
     }
 }

@@ -121,6 +121,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_Settings_title");//"Settings"
         }
 
+        public override string IconName()
+        {
+            return "Settings";
+        }
+
         public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(100) };

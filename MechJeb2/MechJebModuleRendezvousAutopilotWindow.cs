@@ -72,6 +72,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_RZauto_title");//"Rendezvous Autopilot"
         }
 
+        public override string IconName()
+        {
+            return "Rendezvous Autopilot";
+        }
+
         public override bool IsSpaceCenterUpgradeUnlocked()
         {
             return vessel.patchedConicsUnlocked();

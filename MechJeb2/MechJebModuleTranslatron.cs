@@ -36,6 +36,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_Translatron_title");
         }
 
+        public override string IconName()
+        {
+            return "Translatron";
+        }
+
         public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(130) };

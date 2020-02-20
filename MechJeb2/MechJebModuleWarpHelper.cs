@@ -196,6 +196,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_WarpHelper_title");//"Warp Helper"
         }
 
+        public override string IconName()
+        {
+            return "Warp Helper";
+        }
+
         public MechJebModuleWarpHelper(MechJebCore core) : base(core) { }
     }
 }

@@ -372,6 +372,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_LandingGuidance_title");//Landing Guidance
         }
 
+        public override string IconName()
+        {
+            return "Landing Guidance";
+        }
+
         public override bool IsSpaceCenterUpgradeUnlocked()
         {
             return vessel.patchedConicsUnlocked();

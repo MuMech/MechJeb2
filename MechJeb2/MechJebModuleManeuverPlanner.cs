@@ -213,6 +213,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_Maneuver_Planner_title");//Maneuver Planner
         }
 
+        public override string IconName()
+        {
+            return "Maneuver Planner";
+        }
+
         public override bool IsSpaceCenterUpgradeUnlocked()
         {
             return vessel.patchedConicsUnlocked();

@@ -543,5 +543,10 @@ namespace MuMech
         {
             return Localizer.Format("#MechJeb_Ascent_title");//"Ascent Guidance"
         }
+
+        public override string IconName()
+        {
+            return "Ascent Guidance";
+        }
     }
 }

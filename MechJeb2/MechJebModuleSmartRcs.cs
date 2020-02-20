@@ -119,5 +119,10 @@ namespace MuMech
             return Localizer.Format("#MechJeb_SmartRcs_title");//"SmartRcs"
         }
 
+        public override string IconName()
+        {
+            return "SmartRcs";
+        }
+
     }
 }

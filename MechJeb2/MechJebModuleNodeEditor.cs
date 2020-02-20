@@ -297,6 +297,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_NodeEd_title");//"Maneuver Node Editor"
         }
 
+        public override string IconName()
+        {
+            return "Maneuver Node Editor";
+        }
+
         public override bool IsSpaceCenterUpgradeUnlocked()
         {
             return vessel.patchedConicsUnlocked();

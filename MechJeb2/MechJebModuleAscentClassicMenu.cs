@@ -212,5 +212,10 @@ namespace MuMech
         {
             return Localizer.Format("#MechJeb_AscentPathEd_title");//"Ascent Path Editor"
         }
+
+        public override string IconName()
+        {
+            return "Ascent Path Editor";
+        }
     }
 }
