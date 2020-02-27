@@ -61,6 +61,7 @@ namespace MuMech
             if (Math.Abs(selectedPoint[0] - hoveredPoint[0]) > 5 &&
                     Math.Abs(selectedPoint[1] - hoveredPoint[1]) > 5)
             {
+                Debug.Log("[MechJeb] porkchop plotter, zooming plotarea");
                 callback(
                         x(Math.Min(selectedPoint[0], hoveredPoint[0])),
                         x(Math.Max(selectedPoint[0], hoveredPoint[0])),

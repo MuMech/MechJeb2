@@ -95,8 +95,8 @@ namespace MuMech
             for (int job = 0; job < pendingJobs; job++)
                 ThreadPool.QueueUserWorkItem(ComputeDeltaV);
 
-            //			pending_jobs = 1;
-            //			ComputeDeltaV(this);
+            //pending_jobs = 1;
+            //ComputeDeltaV(this);
         }
 
         private bool IsBetter(int date_index1, int duration_index1, int date_index2, int duration_index2)
@@ -222,83 +222,28 @@ namespace MuMech
             return minDepartureTime + index * (maxDepartureTime - minDepartureTime) / dateSamples;
         }
 
-        // Compute the two intersecting lines of a cone with a corner at (0,0,0) with a plane passing by (0,0,0)
-        // If there is no intersection, return the line on the plane closest to the cone (assumes cone_angle > pi/2)
-        void IntersectConePlane(Vector3d cone_direction, double cone_angle, Vector3d plane_normal, out Vector3d intersect_1, out Vector3d intersect_2)
+
+        public ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0, bool debug = false)
         {
-            intersect_1 = Vector3d.zero;
-            intersect_2 = Vector3d.zero;
+            Vector3d r0;
+            Vector3d v0;
+            Vector3d vneg = new Vector3d();
+            Vector3d vpos = new Vector3d();
+            Vector3d r = new Vector3d();
+            double dt = 0;
 
-            cone_direction.Normalize();
-            plane_normal.Normalize();
+            // get our reference position on the orbit
+            initial_orbit.GetOrbitalStateVectorsAtUT(UT_0, out r0, out v0);
 
-            // Change the frame of reference:
-            // x = cone_direction
-            // y = plane_normal projected on the plane normal to cone_direction
-            // z = x * y
-            Vector3d x = cone_direction;
-            Vector3d z = Vector3d.Cross(x, plane_normal).normalized;
-            Vector3d y = Vector3d.Cross(z, x);
+            // analytic solution for paring orbit ejection to hyperbolic v-infinity
+            SpaceMath.singleImpulseHyperbolicBurn(initial_orbit.referenceBody.gravParameter, r0, v0, exit_velocity, ref vneg, ref vpos, ref r, ref dt, debug);
 
-            // transition matrix from the temporary frame to the global frame
-            Matrix3x3f M_i_tmp = new Matrix3x3f();
-            for (int i = 0; i < 3; i++)
+            if (!dt.IsFinite() || !r.magnitude.IsFinite() || !vpos.magnitude.IsFinite() || !vneg.magnitude.IsFinite())
             {
-                M_i_tmp[i, 0] = (float)x[i];
-                M_i_tmp[i, 1] = (float)y[i];
-                M_i_tmp[i, 2] = (float)z[i];
+                Debug.Log("mu = " + initial_orbit.referenceBody.gravParameter + " r0 = " + r0 + " v0 = " + v0 + " vinf = " + exit_velocity );
             }
 
-            Vector3d n = M_i_tmp.transpose() * plane_normal;
-            double cos_phi = -n.x / (n.y * Math.Tan(cone_angle));
-
-            if (Math.Abs(cos_phi) <= 1.0f)
-            {
-                intersect_1.x = Math.Cos(cone_angle);
-                intersect_1.y = Math.Sin(cone_angle) * cos_phi;
-                intersect_1.z = Math.Sin(cone_angle) * Math.Sqrt(1 - cos_phi * cos_phi);
-            }
-            else
-            {
-                intersect_1.x = -n.y;
-                intersect_1.y = n.x;
-                intersect_1.z = 0.0;
-            }
-
-            intersect_2.x = intersect_1.x;
-            intersect_2.y = intersect_1.y;
-            intersect_2.z = -intersect_1.z;
-
-            intersect_1 = M_i_tmp * intersect_1;
-            intersect_2 = M_i_tmp * intersect_2;
-        }
-
-        double AngleAboutAxis(Vector3d v1, Vector3d v2, Vector3d axis)
-                    {
-            axis.Normalize();
-
-            v1 = (v1 - Vector3d.Dot(axis, v1) * axis).normalized;
-            v2 = (v2 - Vector3d.Dot(axis, v2) * axis).normalized;
-
-            return Math.Atan2(Vector3d.Dot(axis, Vector3d.Cross(v1, v2)), Vector3d.Dot(v1, v2));
-        }
-
-        public ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0)
-        {
-                Vector3d r0;
-                Vector3d v0;
-                Vector3d vneg = new Vector3d();
-                Vector3d vpos = new Vector3d();
-                Vector3d r = new Vector3d();
-                double dt = 0;
-
-                // get our reference position on the orbit
-                initial_orbit.GetOrbitalStateVectorsAtUT(UT_0, out r0, out v0);
-
-                // analytic solution for paring orbit ejection to hyperbolic v-infinity
-                SpaceMath.singleImpulseHyperbolicBurn(initial_orbit.referenceBody.gravParameter, r0, v0, exit_velocity, ref vneg, ref vpos, ref r, ref dt);
-
-                return new ManeuverParameters((vpos - vneg).xzy, UT_0 + dt);
+            return new ManeuverParameters((vpos - vneg).xzy, UT_0 + dt);
         }
 
         void zeroMissObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_transfer, double UT_arrival)
@@ -367,8 +312,17 @@ namespace MuMech
                 // convert from heliocentric to body centered velocity
                 Vector3d Vsoi = transfer_orbit.getOrbitalVelocityAtUT(UT_SOI_exit) - initial_orbit.referenceBody.orbit.getOrbitalVelocityAtUT(UT_SOI_exit);
 
-                // using Vsoi works a better here than the Vinf from the heliocentric computation at UT_Transfer
-                ManeuverParameters maneuver = ComputeEjectionManeuver(Vsoi, initial_orbit, UT_transfer);
+                // find the magnitude of Vinf from energy
+                double Vsoi_mag = Vsoi.magnitude;
+                double E_h = Vsoi_mag * Vsoi_mag / 2 - initial_orbit.referenceBody.gravParameter / initial_orbit.referenceBody.sphereOfInfluence;
+                double Vinf_mag = Math.Sqrt(2 * E_h);
+
+                // scale Vsoi by the Vinf magnitude (this is now the Vinf target that will yield Vsoi at the SOI interface, but in the Vsoi direction)
+                Vector3d Vinf = Vsoi / Vsoi.magnitude * Vinf_mag;
+
+                // using Vsoi seems to work slightly better here than the Vinf from the heliocentric computation at UT_Transfer
+                //ManeuverParameters maneuver = ComputeEjectionManeuver(Vsoi, initial_orbit, UT_transfer, true);
+                ManeuverParameters maneuver = ComputeEjectionManeuver(Vinf, initial_orbit, UT_transfer, true);
 
                 //
                 // common setup for the optimization problems
