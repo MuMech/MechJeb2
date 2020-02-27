@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace MuMech
@@ -24,8 +22,46 @@ namespace MuMech
         /// <param name="dt">Coasting time on the parking orbit from the reference to the burn.</param>
         ///
         public static void singleImpulseHyperbolicBurn(double mu, Vector3d r0, Vector3d v0, Vector3d v_inf,
-                ref Vector3d vneg, ref Vector3d vpos, ref Vector3d r, ref double dt)
+                ref Vector3d vneg, ref Vector3d vpos, ref Vector3d r, ref double dt, bool debug = false)
         {
+            double rot, dv;
+            BrentFun f = delegate(double testrot, object ign) {
+                double dt = 0;
+                Vector3d vneg = new Vector3d();
+                Vector3d vpos = new Vector3d();
+                Vector3d r = new Vector3d();
+                singleImpulseHyperbolicBurn(mu, r0, v0, v_inf, ref vneg, ref vpos, ref r, ref dt, (float)testrot, debug);
+                return (vpos - vneg).magnitude;
+            };
+            Brent.Minimize(f, -30, 30, 1e-6, out rot, out dv, null);
+            singleImpulseHyperbolicBurn(mu, r0, v0, v_inf, ref vneg, ref vpos, ref r, ref dt, (float)rot, debug);
+        }
+
+        /// <summary>
+        /// This is the implementation function of the single impulse transfer from an elliptical, non-coplanar parking orbit.
+        ///
+        /// It could be called directly with e.g. rotation of zero to bypass the line search for the rotation which wil be nearly
+        /// optimal in many cases, but fails in the kinds of nearly coplanar conditions which are common in KSP.
+        /// </summary>
+        ///
+        /// <param name="mu">Gravitational parameter of central body.</param>
+        /// <param name="r0">Reference position on the parking orbit.</param>
+        /// <param name="v0">Reference velocity on the parking orbit.</param>
+        /// <param name="v_inf">Target hyperbolic v-infinity vector.</param>
+        /// <param name="vneg">Velocity on the parking orbit before the burn.</param>
+        /// <param name="vpos">Velocity on the hyperboliic ejection orbit after the burn.</param>
+        /// <param name="r">Position of the burn.</param>
+        /// <param name="dt">Coasting time on the parking orbit from the reference to the burn.</param>
+        /// <param name="rot">Rotation of hf_hat around v_inf_hat (or r1_hat around h0_hat) [degrees].</param>
+        ///
+        public static void singleImpulseHyperbolicBurn(double mu, Vector3d r0, Vector3d v0, Vector3d v_inf,
+                ref Vector3d vneg, ref Vector3d vpos, ref Vector3d r, ref double dt, float rot, bool debug = false)
+        {
+            if (debug)
+            {
+                Debug.Log("[MechJeb] singleImpulseHyperbolicBurn mu = " + mu + " r0 = " + r0 + " v0 = " + v0 + " v_inf = " + v_inf);
+            }
+
             // angular momentum of the parking orbit
             Vector3d h0 = Vector3d.Cross(r0, v0);
 
@@ -55,36 +91,42 @@ namespace MuMech
                 rp0_hat = r0/r0.magnitude;
 
             // parking orbit periapsis velocity unit vector
-            Vector3d vp0_hat = Vector3d.Cross(h0, rp0_hat);
-            vp0_hat = vp0_hat/vp0_hat.magnitude;
+            Vector3d vp0_hat = Vector3d.Cross(h0, rp0_hat).normalized;
 
             // direction of hyperbolic v-infinity vector
-            Vector3d v_inf_hat = v_inf/v_inf.magnitude;
+            Vector3d v_inf_hat = v_inf.normalized;
 
-            // 3 cases for finding hf_hat
-            double dotp = Vector3d.Dot(h0_hat, v_inf_hat);
+            // 2 cases for finding hf_hat
             Vector3d hf_hat;
-            if ( dotp == 0 )
-            {
-                // zero plane change case
-                hf_hat = h0_hat;
-            }
-            else if ( Math.Abs(dotp) == 1 )
+            if ( Math.Abs(Vector3d.Dot(h0_hat, v_inf_hat)) == 1 )
             {
                 // 90 degree plane change case
                 hf_hat = Vector3d.Cross(rp0_hat, v_inf_hat);
-                hf_hat = hf_hat / hf_hat.magnitude;
+                hf_hat = hf_hat.normalized;
             }
             else
             {
-                // general case (also works for dotp = 0)
+                // general case
                 hf_hat = Vector3d.Cross(v_inf_hat, Vector3d.Cross(h0_hat, v_inf_hat));
-                hf_hat = hf_hat / hf_hat.magnitude;
+                hf_hat = hf_hat.normalized;
             }
 
-            // unit vector pointing at the position of the burn on the parking orbit
-            Vector3d r1_hat = Vector3d.Cross(v_inf_hat, hf_hat);
-            r1_hat = r1_hat/r1_hat.magnitude;
+            Vector3d r1_hat;
+
+            if ( Math.Abs(Vector3d.Dot(h0_hat, v_inf_hat)) > 2.22044604925031e-16 )
+            {
+                // if the planes are not coincident, rotate hf_hat by applying rodriguez formula around v_inf_hat
+                hf_hat = Quaternion.AngleAxis(rot, v_inf_hat) * hf_hat;
+                // unit vector pointing at the position of the burn on the parking orbit
+                r1_hat = Math.Sign(Vector3d.Dot(h0_hat, v_inf_hat)) * Vector3d.Cross(h0_hat, hf_hat).normalized;
+            }
+            else
+            {
+                // unit vector pointing at the position of the burn on the parking orbit
+                r1_hat = Vector3d.Cross(v_inf_hat, hf_hat).normalized;
+                // if the planes are coincident, rotate r1_hat by applying rodriguez formula around h0_hat
+                r1_hat = Quaternion.AngleAxis(rot, h0_hat) * r1_hat;
+            }
 
             // true anomaly of r1 on the parking orbit
             double nu_10 = Math.Sign(Vector3d.Dot(h0_hat, Vector3d.Cross(rp0_hat, r1_hat))) * Math.Acos(Vector3d.Dot(rp0_hat,r1_hat));
@@ -98,8 +140,14 @@ namespace MuMech
             // constant
             double k = - af / r1;
 
+            // angle between v_inf and the r1 burn
+            double delta_nu = Math.Acos(MuUtils.Clamp(Vector3d.Dot(r1_hat, v_inf_hat), -1, 1));
+
             // eccentricity of the hyperbolic ejection orbit
-            double ef = Math.Sqrt(1 + 2*k*k + 2*k + Math.Sqrt(1 + 4*k))/(Math.Sqrt(2)*k);
+            double sindnu  = Math.Sin(delta_nu);
+            double sin2dnu = sindnu * sindnu;
+            double cosdnu  = Math.Cos(delta_nu);
+            double ef = Math.Max(Math.Sqrt(sin2dnu + 2*k*k + 2*k*(1-cosdnu) + sindnu*Math.Sqrt(sin2dnu + 4*k*(1-cosdnu)))/(Math.Sqrt(2)*k), 1 + MuUtils.DBL_EPSILON);
 
             // semilatus rectum of hyperbolic ejection orbit
             double pf = af * ( 1 - ef*ef );
@@ -108,7 +156,7 @@ namespace MuMech
             double nu_inf = Math.Acos(-1/ef);
 
             // true anomaly of the burn on the hyperbolic ejection orbit
-            double nu_1f = nu_inf - Math.PI/2;
+            double nu_1f = Math.Acos(MuUtils.Clamp(-1/ef * cosdnu + Math.Sqrt(ef*ef-1)/ef * sindnu, -1, 1));
 
             // turning angle of the hyperbolic orbit
             double delta = 2 * Math.Asin(1/ef);
@@ -146,6 +194,11 @@ namespace MuMech
             if ( dt < 0 )
             {
                 dt += 2 * Math.PI / n;
+            }
+
+            if (debug)
+            {
+                Debug.Log("[MechJeb] singleImpulseHyperbolicBurn vneg = " + vneg + " vpos = " + vpos + " r = " + r + " dt = " + dt);
             }
         }
     }

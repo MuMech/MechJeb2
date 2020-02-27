@@ -240,8 +240,8 @@ namespace MuMech {
         // Uses golden section search and successive parabolic interpolation.
         //
         // f - 1-dimensional BrentFun function to find the minimum of
-        // a - first guess of x value
-        // b - second guess of x value
+        // a - lower endpoint of the interval
+        // b - upper endpoint of the interval
         // rtol - tolerance to solve to (1e-4 or something like that)
         // x - output of solved value
         // y - output of the function at the solved value

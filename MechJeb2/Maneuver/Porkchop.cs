@@ -41,15 +41,16 @@ namespace MuMech
             {
                 for (int j = 0; j < height; j++)
                 {
-                    double DVsqr = nodes[i, j] * nodes[i, j];
-                    if (DVsqr < DVminsqr)
-                    {
-                        DVminsqr = DVsqr;
-                    }
+                    if ( !nodes[i,j].IsFinite() )
+                        continue;
 
-                    DVmaxsqr = Math.Max(DVmaxsqr, nodes[i, j] * nodes[i, j]);
+                    double DVsqr = nodes[i, j] * nodes[i, j];
+                    DVminsqr = Math.Min(DVminsqr, DVsqr);
+                    DVmaxsqr = Math.Max(DVmaxsqr, DVsqr);
                 }
             }
+
+            Debug.Log("[MechJeb] porkchop scanning found DVminsqr = " + DVminsqr + " DVmaxsqr = " + DVmaxsqr);
 
             double logDVminsqr = Math.Log(DVminsqr);
             double logDVmaxsqr = Math.Min(Math.Log(DVmaxsqr), logDVminsqr + 4);
