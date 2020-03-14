@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace MuMech
 {
@@ -139,9 +140,24 @@ namespace MuMech
         {
             try
             {
-                if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, null).CopyTo(global);
-                if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null).CopyTo(type);
-                if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, null).CopyTo(local);
+                if (global != null)
+                {
+                    Profiler.BeginSample("ComputerModule.OnSave.global");
+                    ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, global);
+                    Profiler.EndSample();
+                }
+                if (type != null)
+                {
+                    Profiler.BeginSample("ComputerModule.OnSave.type");
+                    ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, type);
+                    Profiler.EndSample();
+                }
+                if (local != null)
+                {
+                    Profiler.BeginSample("ComputerModule.OnSave.local");
+                    ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, local);
+                    Profiler.EndSample();
+                }
                 dirty = false;
             }
             catch (Exception e)
