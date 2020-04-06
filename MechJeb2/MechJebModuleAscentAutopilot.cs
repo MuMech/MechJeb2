@@ -640,28 +640,82 @@ namespace MuMech
         //Computes the time required for the given launch location to rotate under the target orbital plane.
         //If the latitude is too high for the launch location to ever actually rotate under the target plane,
         //returns the time of closest approach to the target plane.
-        //I have a wonderful proof of this formula which this comment is too short to contain.
         public static double TimeToPlane(double LANDifference, CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
         {
-            double inc = Math.Abs(Vector3d.Angle(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity));
-            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.GetOrbitNormal().Reorder(132).normalized).normalized; // I don't understand the sign here, but this seems to work
-            b *= launchBody.Radius * Math.Sin(UtilMath.Deg2Rad * launchLatitude) / Math.Tan(UtilMath.Deg2Rad * inc);
-            Vector3d c = Vector3d.Cross(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity).normalized;
-            double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(UtilMath.Deg2Rad * launchLatitude), 2) - b.sqrMagnitude;
-            if (cMagnitudeSquared < 0) cMagnitudeSquared = 0;
-            c *= Math.Sqrt(cMagnitudeSquared);
-            Vector3d a1 = b + c;
-            Vector3d a2 = b - c;
+            // Consider a coordinate system where the origin is at the center of the launch body,
+            // the y-axis points toward the north pole of the launch body, and the orbit normal has
+            // zero z-component and positive x-component. (Note that, due to KSP's left-handed
+            // coordinate convention, the y-component of a low-inclination orbit's normal is
+            // negative.) Then the plane containing the target orbit is defined by
+            //
+            //     y = tan(inc) x,
+            //
+            // where inc is the orbit's inclination. Meanwhile, the points that have the given
+            // latitude are defined, up to scale, by
+            //
+            //     (cos(theta) cos(lat), sin(lat), sin(theta) cos(lat)),
+            //
+            // where lat is the latitude and theta is free to vary. We want to find the
+            // intersections of these two sets of points; that is, we want
+            //
+            //     cos(theta) cos(lat) tan(inc) = sin(lat)
+            //
+            //     cos(theta) = tan(lat) / tan(inc)
+            //
+            //     theta = +/- acos(tan(lat) / tan(inc)).
+            //
+            // More broadly, when there are two solutions, they will be at an angle of acos(tan(lat)
+            // / tan(inc)) on either side of the projection of the inclination vector into the x-z
+            // (equatorial) plane.
+            //
+            // If, however, the latitude is too far from zero (i.e., |tan(lat)| > |tan(inc)|), there
+            // is no solution; then we want to find the single point that is closest to the orbital
+            // plane. If the latitude is too far toward the same pole that the orbit normal is
+            // closer to, the closest point is opposite the orbit normal; if it's too far toward the
+            // other pole, it's in the same direction as the normal.
+            //
+            // Both cases can be handled neatly in the same way as the two-solution case by setting
+            // theta = pi or theta = 0, respectively (then the two "solutions" collapse to one
+            // point). That is equivalent to clamping the ratio of the tangents to the range [-1, 1]
+            // in the last equation above.
 
-            Vector3d longitudeVector = launchBody.GetSurfaceNVector(0, launchLongitude);
+            // Because of KSP's left-handed coordinate convention, the angular velocity vector
+            // points to the south, as does the orbit normal for prograde orbits.
+            Vector3d south = launchBody.angularVelocity.normalized;
+            Vector3d orbitNormal = target.SwappedOrbitNormal().normalized;
+            double inclination = Vector3d.Angle(orbitNormal, south);
 
-            double angle1 = Math.Abs(Vector3d.Angle(longitudeVector, a1));
-            if (Vector3d.Dot(Vector3d.Cross(longitudeVector, a1), launchBody.angularVelocity) < 0) angle1 = 360 - angle1;
-            double angle2 = Math.Abs(Vector3d.Angle(longitudeVector, a2));
-            if (Vector3d.Dot(Vector3d.Cross(longitudeVector, a2), launchBody.angularVelocity) < 0) angle2 = 360 - angle2;
+            // For nearly equatorial orbits (whether prograde or retrograde), the launch time makes
+            // a negligible difference, so always say to launch right now. This also helps avoid odd
+            // results when the projection of the orbit normal into the equatorial plane is
+            // basically just noise.
+            if (inclination < 0.01 || inclination > 179.99) {
+                return 0;
+            }
 
-            double angle = Math.Min(angle1, angle2) - LANDifference;
-            return (angle / 360) * launchBody.rotationPeriod;
+            // Compute the angle between the opposite of the orbit normal and each intersection
+            // point (when everything is projected onto the equatorial plane). Because low
+            // inclinations lead to an orbit normal pointing near the south pole, while latitude
+            // increases toward the north, tanRatio > 0 means that the latitude and normal are on
+            // opposite sides of the equator.
+            double tanRatio = Math.Tan(UtilMath.Deg2Rad * launchLatitude) / Math.Tan(UtilMath.Deg2Rad * inclination);
+            double separation = Math.Acos(MuUtils.Clamp(tanRatio, -1, 1));
+
+            // Compute the signed angle from the launch point to the orbit normal within the
+            // equatorial plane. Positive is following the rotation of the body. The formula relies
+            // on one of v1 and v2 being orthogonal to south (v1, in this case) but not both.
+            Vector3d v1 = launchBody.GetSurfaceNVector(0, launchLongitude).normalized;
+            Vector3d v2 = orbitNormal;
+            double centerAngle = Math.Atan2(Vector3d.Dot(Vector3d.Cross(v1, v2), south), Vector3.Dot(v1, v2)) - LANDifference * UtilMath.Deg2Rad;
+
+            // Compute the angle from the launch point to each solution point. Here, we don't want a
+            // signed angle; we want a result between 0 and 2pi, since that will tell us how much
+            // the planet has to rotate.
+            double angle1 = MuUtils.ClampRadiansTwoPi(centerAngle - separation);
+            double angle2 = MuUtils.ClampRadiansTwoPi(centerAngle + separation);
+
+            // Finally, the remaining time is the shorter angular distance over the angular speed.
+            return Math.Min(angle1, angle2) / launchBody.angularVelocity.magnitude;
         }
     }
 }
