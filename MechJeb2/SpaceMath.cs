@@ -3,8 +3,55 @@ using UnityEngine;
 
 namespace MuMech
 {
+    // The purpose of this module is to collect pure-math functions with minimal coupling to MechJeb and/or KSP.  Chunks of the OrbitalManeuverCalculator
+    // class should probably be moved here, where that class should be more tightly coupled to the maneuver node planner.
+    //
     public static class SpaceMath
     {
+        /// <summary>
+        /// Find the time to a target plane defined by the LAN and inc for a rocket on the ground.  Wrapper which handles picking
+        /// the soonest of the northgoing and southgoing ground tracks.
+        /// </summary>
+        ///
+        /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
+        /// <param name="longitude">Longitude of the launchsite (degrees).</param>
+        /// <param name="latitude">Latitude of the launchite (degrees).</param>
+        /// <param name="celestialLongitude">Celestial longitude of the current position of the launchsite.</param>
+        /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
+        /// <param name="inc">Inclination of the target plane (degrees).</param>
+        ///
+        public static double MinimumTimeToPlane(double rotationPeriod, double longitude, double latitude, double celestialLongitude, double LAN, double inc)
+        {
+            double one = TimeToPlane(rotationPeriod, longitude, latitude, celestialLongitude, LAN, inc);
+            double two = TimeToPlane(rotationPeriod, longitude, latitude, celestialLongitude, LAN, -inc);
+            return Math.Min(one, two);
+        }
+
+        /// <summary>
+        /// Find the time to a target plane defined by the LAN and inc for a rocket on the ground.
+        /// </summary>
+        ///
+        /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
+        /// <param name="longitude">Longitude of the launchsite (degrees).</param>
+        /// <param name="latitude">Latitude of the launchite (degrees).</param>
+        /// <param name="celestialLongitude">Celestial longitude of the current position of the launchsite.</param>
+        /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
+        /// <param name="inc">Inclination of the target plane (degrees).</param>
+        ///
+        public static double TimeToPlane(double rotationPeriod, double longitude, double latitude, double celestialLongitude, double LAN, double inc)
+        {
+            // alpha is the 90 degree angle between the line of longitude and the equator and omitted
+            double beta = OrbitalManeuverCalculator.HeadingForInclination(inc, latitude) * UtilMath.Deg2Rad;
+            double c = latitude * UtilMath.Deg2Rad;
+            //double gamma = Math.Acos(Math.Sin(beta) * Math.Cos(c)); // law of cosines
+            // b is how many radians to the west of the launch site (-180, 180] that the LAN is
+            double b = Math.Atan2( 2 * Math.Sin(beta), Math.Cos(beta) / Math.Tan(c/2) + Math.Tan(c/2) * Math.Cos(beta) ); // napier's analogies
+            // LAN if we launched now
+            double LANnow = celestialLongitude - b * UtilMath.Rad2Deg; // FIXME: still tightly coupled to vesselState
+
+            return MuUtils.ClampDegrees360( LAN - LANnow ) / 360 * rotationPeriod;
+        }
+
         /// <summary>
         /// Single impulse transfer from an ellipitical, non-coplanar parking orbit to an arbitrary hyperbolic v-infinity target.
         ///

@@ -9,16 +9,16 @@ namespace MuMech
     public class ReentrySimulation
     {
         // Input values
-         Orbit input_initialOrbit;
-         double input_UT; 
-         //double input_mass;
-         IDescentSpeedPolicy input_descentSpeedPolicy; 
-         double input_decelEndAltitudeASL; 
-         double input_maxThrustAccel; 
-         double input_parachuteSemiDeployMultiplier; 
-         double input_probableLandingSiteASL; 
-         bool input_multiplierHasError;
-         double input_dt;
+        Orbit input_initialOrbit;
+        double input_UT;
+        //double input_mass;
+        IDescentSpeedPolicy input_descentSpeedPolicy;
+        double input_decelEndAltitudeASL;
+        double input_maxThrustAccel;
+        double input_parachuteSemiDeployMultiplier;
+        double input_probableLandingSiteASL;
+        bool input_multiplierHasError;
+        double input_dt;
 
         //parameters of the problem:
         Orbit initialOrbit = new Orbit();
@@ -27,7 +27,7 @@ namespace MuMech
         //double scaleHeight;
         double bodyRadius;
         double gravParameter;
-        
+
         //double mass;
         SimulatedVessel vessel;
         Vector3d bodyAngularVelocity;
@@ -44,7 +44,7 @@ namespace MuMech
         bool orbitReenters;
 
         ReferenceFrame referenceFrame = new ReferenceFrame();
-        
+
         double dt;
         double max_dt;
         //private const double min_dt = 0.01; //in seconds
@@ -58,7 +58,7 @@ namespace MuMech
         double parachuteSemiDeployMultiplier;
         bool multiplierHasError;
 
-        //Dynamical variables 
+        //Dynamical variables
         Vector3d x; //coordinate system used is centered on main body
         Vector3d startX; //start position
         Vector3d v;
@@ -117,7 +117,7 @@ namespace MuMech
             // Store all the input values as they were given
             input_initialOrbit = _initialOrbit;
             input_UT = _UT;
-            
+
             vessel = _vessel;
             input_descentSpeedPolicy = _descentSpeedPolicy;
             input_decelEndAltitudeASL = _decelEndAltitudeASL;
@@ -152,7 +152,7 @@ namespace MuMech
 
             bodyAngularVelocity = body.angularVelocity;
             this.descentSpeedPolicy = _descentSpeedPolicy;
-            decelRadius = bodyRadius + _decelEndAltitudeASL; 
+            decelRadius = bodyRadius + _decelEndAltitudeASL;
             aerobrakedRadius = bodyRadius + body.RealMaxAtmosphereAltitude();
             mainBody = body;
             this.maxThrustAccel = _maxThrustAccel;
@@ -199,7 +199,7 @@ namespace MuMech
                 result.input_dt = this.input_dt;
 
                 //MechJebCore.print("Sim Start");
-                
+
                 if (!orbitReenters)
                 {
                     result.outcome = Outcome.NO_REENTRY;
@@ -354,8 +354,8 @@ namespace MuMech
             if (descentSpeedPolicy != null && surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
             return false;
         }
-        
-        // one time step of RK4: There is logic to reduce the dt and repeat if a larger dt results in very large accelerations. Also the parachute opening logic is called from in order to allow the dt to be reduced BEFORE deploying parachutes to give more precision over the point of deployment.  
+
+        // one time step of RK4: There is logic to reduce the dt and repeat if a larger dt results in very large accelerations. Also the parachute opening logic is called from in order to allow the dt to be reduced BEFORE deploying parachutes to give more precision over the point of deployment.
         void RK4Step()
         {
             bool repeatWithSmallerStep = false;
@@ -406,7 +406,7 @@ namespace MuMech
                     double altASL = xForChuteSim.magnitude - bodyRadius;
                     double altAGL = altASL - probableLandingSiteASL;
                     double pressure = Pressure(xForChuteSim);
-                    
+
                     bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, vForChuteSim, t, parachuteSemiDeployMultiplier);
                     maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
 
@@ -427,8 +427,8 @@ namespace MuMech
             x += dx;
             v += dv;
             t += dt;
-           
-            // decide what the dt needs to be for the next iteration 
+
+            // decide what the dt needs to be for the next iteration
             // Is there a parachute in the process of opening? If so then we follow special rules - fix the dt at the physics frame rate. This is because the rate for deployment depends on the frame rate for stock parachutes.
             // If parachutes are part way through deploying then we need to use the physics frame rate for the next step of the simulation
             if (parachutesDeploying)
@@ -551,7 +551,7 @@ namespace MuMech
                     else
                     {
                         // If a parachute is opening we need to lower dt to make sure we capture the opening sequence properly
-                        dt = next_dt; 
+                        dt = next_dt;
                     }
                 }
             }
@@ -583,7 +583,7 @@ namespace MuMech
         {
             Vector3d airVel = SurfaceVelocity(pos, vel);
             double altitude = pos.magnitude - bodyRadius;
-            
+
             double airDensity = AirDensity(pos, altitude);
             double pressure = Pressure(pos);
             double speedOfSound = mainBody.GetSpeedOfSound(pressure, airDensity);
@@ -593,7 +593,7 @@ namespace MuMech
 
             double pseudoReynolds = airDensity * airVel.magnitude;
             double pseudoReDragMult = (double)simCurves.DragCurvePseudoReynolds.Evaluate((float)pseudoReynolds);
-            
+
             if (once)
             {
                 result.prediction.firstDrag = DragForce(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
@@ -606,12 +606,12 @@ namespace MuMech
 
             if (record)
                 lastRecordedDrag = dragAccel;
-            
+
             Vector3d gravAccel = GravAccel(pos);
             Vector3d liftAccel = LiftForce(pos, vel, dynamicPressurekPa, mach) / vessel.totalMass;
 
             Vector3d totalAccel = gravAccel + dragAccel + liftAccel;
-            
+
             if (once)
                 once = false;
 
@@ -626,7 +626,7 @@ namespace MuMech
         Vector3d DragForce(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
             if (!bodyHasAtmosphere) return Vector3d.zero;
-            
+
             Vector3d airVel = SurfaceVelocity(pos, vel);
 
             Vector3d localVel = attitude * Vector3d.up * airVel.magnitude;
@@ -654,10 +654,10 @@ namespace MuMech
             //    msg += "\n " + temp.ToString("F3") + " " + vessel.parts[0].oPart.vessel.atmosphericTemperature.ToString("F3");
             //
             //
-            //    //this.atmosphericTemperature = 
+            //    //this.atmosphericTemperature =
             //    //    this.currentMainBody.GetTemperature(this.altitude) +
-            //    //    (double)this.currentMainBody.atmosphereTemperatureSunMultCurve.Evaluate((float)this.altitude) * 
-            //    //        ((double)this.currentMainBody.latitudeTemperatureBiasCurve.Evaluate((float)(num1 * 57.2957801818848)) + 
+            //    //    (double)this.currentMainBody.atmosphereTemperatureSunMultCurve.Evaluate((float)this.altitude) *
+            //    //        ((double)this.currentMainBody.latitudeTemperatureBiasCurve.Evaluate((float)(num1 * 57.2957801818848)) +
             //    //         (double)this.currentMainBody.latitudeTemperatureSunMultCurve.Evaluate((float)(num1 * 57.2957801818848)) * (1 + this.sunDot) * 0.5
             //    //          + (double)this.currentMainBody.axialTemperatureSunMultCurve.Evaluate(this.sunAxialDot));
             //    //
@@ -674,7 +674,7 @@ namespace MuMech
         private Vector3d LiftForce(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
             if (!bodyHasAtmosphere) return Vector3d.zero;
-            
+
             Vector3d airVel = SurfaceVelocity(pos, vel);
 
             Vector3d localVel = attitude * Vector3d.up * airVel.magnitude;
@@ -685,7 +685,7 @@ namespace MuMech
 
             return vesselToWorld * localLift;
         }
-        
+
         double Pressure(Vector3d pos)
         {
             double altitude = pos.magnitude - bodyRadius;
@@ -702,7 +702,7 @@ namespace MuMech
         {
             double pressure = StaticPressure(altitude);
             double temp = GetTemperature(pos, altitude);
-               
+
             return FlightGlobals.getAtmDensity(pressure, temp, mainBody);
         }
 
@@ -727,7 +727,7 @@ namespace MuMech
             }
             return Mathf.Lerp(0f, (float)mainBody.atmospherePressureSeaLevel, simCurves.AtmospherePressureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
         }
-        
+
         // Lifted from the Trajectories mod.
         private double GetTemperature(Vector3d position, double altitude)
         {
@@ -754,7 +754,7 @@ namespace MuMech
             float sunDotCorrected = (1.0f + Vector3.Dot(sunVector, Quaternion.AngleAxis(45f * Mathf.Sign((float)mainBody.rotationPeriod), mainBody.bodyTransform.up) * up)) * 0.5f;
             float sunDotNormalized = (sunDotCorrected - sunBodyMinDot) / (sunBodyMaxDot - sunBodyMinDot);
             double atmosphereTemperatureOffset = (double)simCurves.LatitudeTemperatureBiasCurve.Evaluate(time) + (double)simCurves.LatitudeTemperatureSunMultCurve.Evaluate(time) * sunDotNormalized + (double)simCurves.AxialTemperatureSunMultCurve.Evaluate(sunAxialDot);
-            
+
             double temperature;
             if (!mainBody.atmosphereUseTemperatureCurve)
             {
@@ -766,12 +766,12 @@ namespace MuMech
                     simCurves.AtmosphereTemperatureCurve.Evaluate((float)altitude) :
                     UtilMath.Lerp(simCurves.SpaceTemperature, mainBody.atmosphereTemperatureSeaLevel, simCurves.AtmosphereTemperatureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
             }
-            
+
             temperature += (double)simCurves.AtmosphereTemperatureSunMultCurve.Evaluate((float)altitude) * atmosphereTemperatureOffset;
 
             return temperature;
         }
-        
+
         private double ShockTemperature(double velocity, double mach)
         {
             double newtonianTemperatureFactor = velocity * PhysicsGlobals.NewtonianTemperatureFactor;
@@ -805,15 +805,15 @@ namespace MuMech
 
 
                 result.debugLog += "\n "
-                                   + (t - startUT).ToString("F2").PadLeft(8)
-                                   + " Alt:" + altitude.ToString("F0").PadLeft(6)
-                                   + " Vel:" + vel.magnitude.ToString("F2").PadLeft(8)
-                                   + " AirVel:" + airVel.magnitude.ToString("F2").PadLeft(8)
-                                   + " SoS:" + speedOfSound.ToString("F2").PadLeft(6)
-                                   + " mach:" + mach.ToString("F2").PadLeft(6)
-                                   + " dynP:" + dynamicPressurekPa.ToString("F5").PadLeft(9)
-                                   + " Temp:" + atmosphericTemperature.ToString("F2").PadLeft(8)
-                                   + " Lat:" + referenceFrame.Latitude(pos).ToString("F2").PadLeft(6);
+                    + (t - startUT).ToString("F2").PadLeft(8)
+                    + " Alt:" + altitude.ToString("F0").PadLeft(6)
+                    + " Vel:" + vel.magnitude.ToString("F2").PadLeft(8)
+                    + " AirVel:" + airVel.magnitude.ToString("F2").PadLeft(8)
+                    + " SoS:" + speedOfSound.ToString("F2").PadLeft(6)
+                    + " mach:" + mach.ToString("F2").PadLeft(6)
+                    + " dynP:" + dynamicPressurekPa.ToString("F5").PadLeft(9)
+                    + " Temp:" + atmosphericTemperature.ToString("F2").PadLeft(8)
+                    + " Lat:" + referenceFrame.Latitude(pos).ToString("F2").PadLeft(6);
             }
         }
 
@@ -916,11 +916,11 @@ namespace MuMech
             private FloatCurve axialTemperatureSunMultCurve;
 
             private FloatCurve atmosphereTemperatureCurve;
-            
+
             private FloatCurve dragCurvePseudoReynolds;
 
             private double spaceTemperature;
-            
+
             public FloatCurve LiftCurve
             {
                 get { return liftCurve; }
@@ -1071,7 +1071,7 @@ namespace MuMech
             public double input_probableLandingSiteASL;
             public bool input_multiplierHasError;
             public double input_dt;
-            
+
             public string debugLog;
 
             private static readonly Pool<Result> pool = new Pool<Result>(Create, Reset);
@@ -1173,24 +1173,24 @@ namespace MuMech
             public double GetOvershoot(EditableAngle targetLatitude,EditableAngle targetLongitude)
             {
                 // Get the start, end and target positions as a set of 3d vectors that we can work with
-                Vector3 end = this.body.GetWorldSurfacePosition(endPosition.latitude, endPosition.longitude, 0) - body.position;
-                Vector3 target = this.body.GetWorldSurfacePosition(targetLatitude, targetLongitude, 0) - body.position; 
-                Vector3 start = this.body.GetWorldSurfacePosition(startPosition.latitude, startPosition.longitude, 0) - body.position;
+                Vector3d end = this.body.GetWorldSurfacePosition(endPosition.latitude, endPosition.longitude, 0) - body.position;
+                Vector3d target = this.body.GetWorldSurfacePosition(targetLatitude, targetLongitude, 0) - body.position;
+                Vector3d start = this.body.GetWorldSurfacePosition(startPosition.latitude, startPosition.longitude, 0) - body.position;
 
-                // First we need to get two vectors that are non orthogonal to each other and to the vector from the start to the target. TODO can we simplify this code by using Vector3.Exclude?
-                Vector3 start2Target = target - start;
-                Vector3 orthog1 = Vector3.Cross(start2Target,Vector3.up);
+                // First we need to get two vectors that are non orthogonal to each other and to the vector from the start to the target. TODO can we simplify this code by using Vector3d.Exclude?
+                Vector3d start2Target = target - start;
+                Vector3d orthog1 = Vector3d.Cross(start2Target,Vector3d.up);
                 // check for the spaecial case where start2target is parrallel to up. If it is then the result will be zero,and we need to try again
-                if(orthog1 == Vector3.up)
+                if(orthog1 == Vector3d.up)
                 {
-                    orthog1 = Vector3.Cross(start2Target,Vector3.forward);
+                    orthog1 = Vector3d.Cross(start2Target,Vector3d.forward);
                 }
-                Vector3 orthog2 = Vector3.Cross(start2Target,orthog1);
+                Vector3d orthog2 = Vector3d.Cross(start2Target,orthog1);
 
                 // Now that we have those two orthogonal vectors, we can project any vector onto the two planes defined by them to give us the vector component that is parallel to start2Target.
-                Vector3 target2end = end - target;
+                Vector3d target2end = end - target;
 
-                Vector3 overshoot = target2end.ProjectIntoPlane(orthog1).ProjectIntoPlane(orthog2);
+                Vector3d overshoot = target2end.ProjectOnPlane(orthog1).ProjectOnPlane(orthog2);
 
                 // finally how long is it? We know it is parrallel to start2target, so if we add it to start2target, and then get the difference of the lengths, that should give us a positive or negative
                 double overshootLength = (start2Target+overshoot).magnitude - start2Target.magnitude;
@@ -1216,14 +1216,14 @@ namespace MuMech
                 resultText += "\n input_dt: " + input_dt;
                 resultText += "\n}";
                 resultText += "\nid: " + id;
-                resultText += "\noutcome: " + outcome; 
+                resultText += "\noutcome: " + outcome;
                 resultText += "\nmaxdt: " + maxdt;
                 resultText += "\ntimeToComplete: " + timeToComplete;
                 resultText += "\nendUT: " + endUT;
                 if (null != referenceFrame) { resultText += "\nstartPosition: " + referenceFrame.WorldPositionAtCurrentTime(startPosition); }
                 if (null != referenceFrame) { resultText += "\nendPosition: " + referenceFrame.WorldPositionAtCurrentTime(endPosition); }
                 resultText += "\nendASL: " + endASL;
-                resultText += "\nendVelocity: " + endVelocity.longitude + "," + endVelocity.latitude + "," + endVelocity.radius; 
+                resultText += "\nendVelocity: " + endVelocity.longitude + "," + endVelocity.latitude + "," + endVelocity.radius;
                 resultText += "\nmaxDragGees: " + maxDragGees;
                 resultText += "\ndeltaVExpended: " + deltaVExpended;
                 resultText += "\nmultiplierHasError: " + multiplierHasError;
@@ -1238,7 +1238,7 @@ namespace MuMech
 
     //An IDescentSpeedPolicy describes a strategy for doing the braking burn.
     //while landing. The function MaxAllowedSpeed is supposed to compute the maximum allowed speed
-    //as a function of body-relative position and rotating frame, surface-relative velocity. 
+    //as a function of body-relative position and rotating frame, surface-relative velocity.
     //This lets the ReentrySimulator simulate the descent of a vessel following this policy.
     //
     //Note: the IDescentSpeedPolicy object passed into the simulation will be used in the separate simulation
@@ -1271,7 +1271,7 @@ namespace MuMech
     //be provided in some unambiguous format, so that we can interpret these positions and velocities correctly at a later
     //time, regardless of what sort of origin shifts and axis rotations have occurred.
     //
-    //Now, it doesn't particularly matter what unambiguous format we use, as long as it is in fact unambiguous. We choose to 
+    //Now, it doesn't particularly matter what unambiguous format we use, as long as it is in fact unambiguous. We choose to
     //represent positions unambiguously via a latitude, a longitude, a radius, and a time. If we record these four data points
     //for an event, we can unambiguously reconstruct the position of the event at a later time. We just have to account for the
     //fact that the rotation of the planet means that the same position will have a different longitude.
@@ -1351,5 +1351,5 @@ namespace MuMech
 
     }
 
-    
+
 }
