@@ -355,7 +355,7 @@ namespace MuMech
                         GUILayout.EndHorizontal();
                         GUILayout.BeginHorizontal();
                         GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label27") + core.guidance.successful_converges, GUILayout.Width(100));//converges:
-                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label28") + core.guidance.last_lm_status, GUILayout.Width(100));//status: 
+                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label28") + core.guidance.last_lm_status, GUILayout.Width(100));//status:
                         GUILayout.EndHorizontal();
                         GUILayout.BeginHorizontal();
                         GUILayout.Label("n: " + core.guidance.last_lm_iteration_count + "(" + core.guidance.max_lm_iteration_count + ")", GUILayout.Width(100));
@@ -369,7 +369,7 @@ namespace MuMech
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.red;
                             GUILayout.BeginHorizontal();
-                            GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label30") + core.guidance.last_failure_cause, s);//LAST FAILURE: 
+                            GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label30") + core.guidance.last_failure_cause, s);//LAST FAILURE:
                             GUILayout.EndHorizontal();
                         }
 
@@ -383,7 +383,7 @@ namespace MuMech
                                 GUIStyle s = new GUIStyle(GUI.skin.label);
                                 s.normal.textColor = Color.yellow;
                                 GUILayout.BeginHorizontal();
-                                GUILayout.Label(String.Format(Localizer.Format("#MechJeb_Ascent_label31") +"{0:F1}%", (vesselState.mass - m0) / m0 * 100.0 ), s);//MASS IS OFF BY 
+                                GUILayout.Label(String.Format(Localizer.Format("#MechJeb_Ascent_label31") +"{0:F1}%", (vesselState.mass - m0) / m0 * 100.0 ), s);//MASS IS OFF BY
                                 GUILayout.EndHorizontal();
                             }
 
@@ -437,9 +437,15 @@ namespace MuMech
                                     launchingToPlane = true;
 
                                     autopilot.StartCountdown(vesselState.time +
-                                            LaunchTiming.TimeToPlane(autopilot.launchLANDifference,
-                                                mainBody, vesselState.latitude, vesselState.longitude,
-                                                core.target.TargetOrbit));
+                                            SpaceMath.MinimumTimeToPlane(
+                                                mainBody.rotationPeriod,
+                                                vesselState.latitude,
+                                                vesselState.longitude,
+                                                vesselState.celestialLongitude,
+                                                core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
+                                                core.target.TargetOrbit.inclination
+                                                )
+                                            );
                                 }
                                 autopilot.launchLANDifference.text = GUILayout.TextField(
                                         autopilot.launchLANDifference.text, GUILayout.Width(60));

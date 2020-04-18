@@ -95,7 +95,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type))]
         public EditableDouble launchLANDifference = 0;
 
         [Persistent(pass = (int)(Pass.Global))]
@@ -635,33 +635,6 @@ namespace MuMech
 
 
             return phaseAngleDifference / phaseAngleRate;
-        }
-
-        //Computes the time required for the given launch location to rotate under the target orbital plane.
-        //If the latitude is too high for the launch location to ever actually rotate under the target plane,
-        //returns the time of closest approach to the target plane.
-        //I have a wonderful proof of this formula which this comment is too short to contain.
-        public static double TimeToPlane(double LANDifference, CelestialBody launchBody, double launchLatitude, double launchLongitude, Orbit target)
-        {
-            double inc = Math.Abs(Vector3d.Angle(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity));
-            Vector3d b = Vector3d.Exclude(launchBody.angularVelocity, -target.GetOrbitNormal().Reorder(132).normalized).normalized; // I don't understand the sign here, but this seems to work
-            b *= launchBody.Radius * Math.Sin(UtilMath.Deg2Rad * launchLatitude) / Math.Tan(UtilMath.Deg2Rad * inc);
-            Vector3d c = Vector3d.Cross(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity).normalized;
-            double cMagnitudeSquared = Math.Pow(launchBody.Radius * Math.Cos(UtilMath.Deg2Rad * launchLatitude), 2) - b.sqrMagnitude;
-            if (cMagnitudeSquared < 0) cMagnitudeSquared = 0;
-            c *= Math.Sqrt(cMagnitudeSquared);
-            Vector3d a1 = b + c;
-            Vector3d a2 = b - c;
-
-            Vector3d longitudeVector = launchBody.GetSurfaceNVector(0, launchLongitude);
-
-            double angle1 = Math.Abs(Vector3d.Angle(longitudeVector, a1));
-            if (Vector3d.Dot(Vector3d.Cross(longitudeVector, a1), launchBody.angularVelocity) < 0) angle1 = 360 - angle1;
-            double angle2 = Math.Abs(Vector3d.Angle(longitudeVector, a2));
-            if (Vector3d.Dot(Vector3d.Cross(longitudeVector, a2), launchBody.angularVelocity) < 0) angle2 = 360 - angle2;
-
-            double angle = Math.Min(angle1, angle2) - LANDifference;
-            return (angle / 360) * launchBody.rotationPeriod;
         }
     }
 }

@@ -136,6 +136,8 @@ namespace MuMech
         public MovingAverage orbitEccentricity = new MovingAverage();
         [ValueInfoItem("#MechJeb_SemiMajorAxis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]//Semi-major axis
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
+        [ValueInfoItem("Celestial Longitude", InfoItem.Category.Orbit, format = "F3")]
+        public MovingAverage celestialLongitude = new MovingAverage();
         [ValueInfoItem("#MechJeb_Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]//Latitude
         public MovingAverage latitude = new MovingAverage();
         [ValueInfoItem("#MechJeb_Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]//Longitude
@@ -702,28 +704,21 @@ namespace MuMech
             orbitTimeToAp.value = vessel.orbit.timeToAp;
             orbitTimeToPe.value = vessel.orbit.timeToPe;
 
-            if (!vessel.LandedOrSplashed)
-            {
-                orbitLAN.value = vessel.orbit.LAN;
-            }
-            else
-            {
-                orbitLAN.value = -(vessel.transform.position - vessel.mainBody.transform.position).AngleInPlane(Planetarium.Zup.Z, Planetarium.Zup.X);
-                orbitTimeToAp.value = 0;
-            }
+            orbitLAN.value = vessel.orbit.LAN;
 
             orbitArgumentOfPeriapsis.value = vessel.orbit.argumentOfPeriapsis;
             orbitInclination.value = vessel.orbit.inclination;
             orbitEccentricity.value = vessel.orbit.eccentricity;
             orbitSemiMajorAxis.value = vessel.orbit.semiMajorAxis;
+            celestialLongitude.value = Planetarium.right.AngleInPlane(-Planetarium.up, orbitalPosition);
             latitude.value = vessel.mainBody.GetLatitude(CoM);
             longitude.value = MuUtils.ClampDegrees180(vessel.mainBody.GetLongitude(CoM));
 
             if (vessel.mainBody != Planetarium.fetch.Sun)
             {
-                Vector3d delta = vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime() + 1) - vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime() - 1);
-                Vector3d plUp = Vector3d.Cross(vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime()) - vessel.mainBody.referenceBody.getPositionAtUT(Planetarium.GetUniversalTime()), vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime() + vessel.mainBody.orbit.period / 4) - vessel.mainBody.referenceBody.getPositionAtUT(Planetarium.GetUniversalTime() + vessel.mainBody.orbit.period / 4)).normalized;
-                angleToPrograde = MuUtils.ClampDegrees360((((vessel.orbit.inclination > 90) || (vessel.orbit.inclination < -90)) ? 1 : -1) * ((Vector3)up).AngleInPlane(plUp, delta));
+                Vector3d prograde = vessel.mainBody.orbit.getOrbitalVelocityAtUT(time).xzy;
+                Vector3d normal = vessel.mainBody.orbit.GetOrbitNormal().xzy;
+                angleToPrograde = MuUtils.ClampDegrees360( (((vessel.orbit.inclination > 90) || (vessel.orbit.inclination < -90)) ? 1 : -1) * orbitalPosition.AngleInPlane(normal, prograde) );
             }
             else
             {

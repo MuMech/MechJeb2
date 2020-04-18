@@ -50,27 +50,27 @@ namespace MuMech
             return new Vector3d(vector.x != 0 ? 1 / vector.x : 0, vector.y != 0 ? 1 / vector.y: 0, vector.z != 0 ? 1 / vector.z: 0);
         }
 
-        public static Vector3 ProjectIntoPlane(this Vector3 vector, Vector3 planeNormal)
+        public static Vector3d ProjectOnPlane(this Vector3d vector, Vector3d planeNormal)
         {
-            return vector - Vector3.Project(vector, planeNormal);
+            return vector - Vector3d.Project(vector, planeNormal);
         }
 
         public static Vector3d DeltaEuler(this Quaternion delta)
         {
             return new Vector3d(
-                (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
-                -((delta.eulerAngles.y > 180) ? (delta.eulerAngles.y - 360.0F) : delta.eulerAngles.y),
-                (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
-                );
+                    (delta.eulerAngles.x > 180) ? (delta.eulerAngles.x - 360.0F) : delta.eulerAngles.x,
+                    -((delta.eulerAngles.y > 180) ? (delta.eulerAngles.y - 360.0F) : delta.eulerAngles.y),
+                    (delta.eulerAngles.z > 180) ? (delta.eulerAngles.z - 360.0F) : delta.eulerAngles.z
+                    );
         }
 
         public static Vector3d Clamp(this Vector3d value, double min, double max)
         {
             return new Vector3d(
-                Clamp(value.x, min, max),
-                Clamp(value.y, min, max),
-                Clamp(value.z, min, max)
-                );
+                    Clamp(value.x, min, max),
+                    Clamp(value.y, min, max),
+                    Clamp(value.z, min, max)
+                    );
         }
 
         public static double Clamp(double val, double min, double max)
@@ -82,63 +82,53 @@ namespace MuMech
             return val;
         }
 
-        public static float AngleInPlane(this Vector3 vector, Vector3 planeNormal, Vector3 other)
+        // projects the two vectors onto the normal plane and computes the 0 to 360 angle
+        public static double AngleInPlane(this Vector3d vector, Vector3d planeNormal, Vector3d other)
         {
-            Vector3 v1 = vector.ProjectIntoPlane(planeNormal);
-            Vector3 v2 = other.ProjectIntoPlane(planeNormal);
+            Vector3d v1 = vector.ProjectOnPlane(planeNormal);
+            Vector3d v2 = other.ProjectOnPlane(planeNormal);
 
             if ((v1.magnitude == 0) || (v2.magnitude == 0))
-            {
-                return float.NaN;
-            }
+                return double.NaN;
 
-            v1.Normalize();
-            v2.Normalize();
-
-            Quaternion rot = Quaternion.FromToRotation(planeNormal, new Vector3(0, 0, 1));
-
-            Vector3 r1 = rot * v1;
-            Vector3 r2 = rot * v2;
-
-            return (float)((Math.Atan2(r1.y, r1.x) - Math.Atan2(r2.y, r2.x)) * UtilMath.Rad2Deg);
+            double angle = MuUtils.ClampDegrees360(Math.Acos( Vector3d.Dot(v1.normalized, v2.normalized) ) * UtilMath.Rad2Deg);
+            if ( Vector3d.Dot(Vector3d.Cross(v1, v2), planeNormal) < 0 )
+                return -angle;
+            else
+                return angle;
         }
 
-		public static Quaternion Add(this Quaternion left, Quaternion right)
-		{
-			return new Quaternion(
-				left.x + right.x,
-				left.y + right.y,
-				left.z + right.z,
-				left.w + right.w);
-		}
+        public static Quaternion Add(this Quaternion left, Quaternion right)
+        {
+            return new Quaternion(
+                    left.x + right.x,
+                    left.y + right.y,
+                    left.z + right.z,
+                    left.w + right.w);
+        }
 
-		public static Quaternion Mult(this Quaternion left, float lambda)
-		{
-			return new Quaternion(
-				left.x * lambda,
-				left.y * lambda,
-				left.z * lambda,
-				left.w * lambda);
-		}
+        public static Quaternion Mult(this Quaternion left, float lambda)
+        {
+            return new Quaternion(
+                    left.x * lambda,
+                    left.y * lambda,
+                    left.z * lambda,
+                    left.w * lambda);
+        }
 
-		public static Quaternion Conj(this Quaternion left)
-		{
-			return new Quaternion(
-				-left.x,
-				-left.y,
-				-left.z,
-				left.w);
-		}
+        public static Quaternion Conj(this Quaternion left)
+        {
+            return new Quaternion(
+                    -left.x,
+                    -left.y,
+                    -left.z,
+                    left.w);
+        }
 
         public static Vector3d Project(this Vector3d vector, Vector3d onNormal)
         {
             Vector3d normal = onNormal.normalized;
             return normal * Vector3d.Dot(vector, normal);
-        }
-
-        public static Vector3d ProjectOnPlane(this Vector3d vector, Vector3d planeNormal)
-        {
-            return vector - Vector3d.Project(vector, planeNormal);
         }
 
         // +/- infinity is not a finite number (not finite)
