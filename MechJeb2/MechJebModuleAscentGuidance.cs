@@ -436,7 +436,16 @@ namespace MuMech
                                 {
                                     launchingToPlane = true;
 
-                                    autopilot.StartCountdown(vesselState.time + SpaceMath.MinimumTimeToPlane(mainBody.rotationPeriod, vesselState.latitude, vesselState.longitude, vesselState.celestialLongitude, core.target.TargetOrbit.LAN - autopilot.launchLANDifference, core.target.TargetOrbit.inclination));
+                                    autopilot.StartCountdown(vesselState.time +
+                                            SpaceMath.MinimumTimeToPlane(
+                                                mainBody.rotationPeriod,
+                                                vesselState.latitude,
+                                                vesselState.longitude,
+                                                vesselState.celestialLongitude,
+                                                core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
+                                                core.target.TargetOrbit.inclination
+                                                )
+                                            );
                                 }
                                 autopilot.launchLANDifference.text = GUILayout.TextField(
                                         autopilot.launchLANDifference.text, GUILayout.Width(60));
