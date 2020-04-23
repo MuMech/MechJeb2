@@ -446,7 +446,7 @@ namespace MuMech
             return (vessel != null) ? vessel.geeForce : 0;
         }
 
-        [ValueInfoItem("#MechJeb_DragCoefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]//Drag coefficient
+        [ValueInfoItem("#MechJeb_DragCoefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)]//Drag Coefficient
         public double DragCoefficient()
         {
             if (HighLogic.LoadedSceneIsEditor)
