@@ -92,7 +92,7 @@ namespace MuMech
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
             if (!vessel.LiftedOff() || vessel.Landed) status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
-            else status = Localizer.Format("#MechJeb_Ascent_status9");//"Vertical ascent"
+            else status = Localizer.Format("#MechJeb_Ascent_status18");//"Vertical ascent"
         }
 
         void DriveInitiateTurn(FlightCtrlState s)
@@ -130,12 +130,12 @@ namespace MuMech
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, intermediateAltitude + mainBody.Radius);
                 if (core.thrust.targetThrottle < 1.0F)
                 {
-                    status = Localizer.Format("#MechJeb_Ascent_status10");//"Fine tuning intermediate altitude"
+                    status = Localizer.Format("#MechJeb_Ascent_status19");//"Fine tuning intermediate altitude"
                     return;
                 }
             }
 
-            status = Localizer.Format("#MechJeb_Ascent_status11");//"Initiate gravity turn"
+            status = Localizer.Format("#MechJeb_Ascent_status20");//"Initiate gravity turn"
         }
 
         double fixedTimeToAp()
@@ -177,12 +177,12 @@ namespace MuMech
                 core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, intermediateAltitude + mainBody.Radius);
                 if (core.thrust.targetThrottle < 1.0F)
                 {
-                    status = Localizer.Format("#MechJeb_Ascent_status10");//"Fine tuning intermediate altitude"
+                    status = Localizer.Format("#MechJeb_Ascent_status19");//"Fine tuning intermediate altitude"
                     return;
                 }
             }
 
-            status = Localizer.Format("#MechJeb_Ascent_status13");//"Gravity turn"
+            status = Localizer.Format("#MechJeb_Ascent_status22");//"Gravity turn"
         }
 
         void DriveHoldAP(FlightCtrlState s)
@@ -212,7 +212,7 @@ namespace MuMech
             {
                 core.thrust.targetThrottle = 0.1F;
             }
-            status = Localizer.Format("#MechJeb_Ascent_status15");//"Holding AP"
+            status = Localizer.Format("#MechJeb_Ascent_status24");//"Holding AP"
         }
 
         void DriveCoastToApoapsis(FlightCtrlState s)
@@ -255,7 +255,7 @@ namespace MuMech
                 }
             }
 
-            status = Localizer.Format("#MechJeb_Ascent_status14");//"Coasting to edge of atmosphere"
+            status = Localizer.Format("#MechJeb_Ascent_status23");//"Coasting to edge of atmosphere"
         }
     }
 }
