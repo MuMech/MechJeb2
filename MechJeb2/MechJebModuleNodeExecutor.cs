@@ -124,7 +124,7 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
-            if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
+            if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode <= 0) || timeToNode < 0)
             {
                 burnTriggered = true;
                 if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -137,7 +137,7 @@ namespace MuMech
                 {
                     core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                 }
-                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 600)
+                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < halfBurnTime + 30)
                 {
                     //realign
                     core.warp.MinimumWarp();
