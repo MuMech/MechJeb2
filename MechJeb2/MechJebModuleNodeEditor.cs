@@ -229,6 +229,11 @@ namespace MuMech
                     {
                         core.node.ExecuteOneNode(this);
                     }
+					
+					if (GUILayout.Button(Localizer.Format("Execute next Principia node")))
+					{
+                        core.node.ExecuteOnePNode(this);
+                    }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
