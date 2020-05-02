@@ -95,7 +95,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble launchPhaseAngle = 0;
 
-        [Persistent(pass = (int)(Pass.Type))]
         public EditableDouble launchLANDifference = 0;
 
         [Persistent(pass = (int)(Pass.Global))]
