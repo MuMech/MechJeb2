@@ -132,22 +132,22 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
-			if (mode == Mode.ONE_NODE)
-			{
-				if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
-				{
-					burnTriggered = true;
-					if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
-				}
-			}
-			else if (mode == Mode.ONE_PNODE)
-			{
-				if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode <= 0.0225) || timeToNode < 0)
-				{
-					burnTriggered = true;
-					if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
-				}
-			}
+            if (mode == Mode.ONE_NODE)
+            {
+                if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
+                {
+                    burnTriggered = true;
+                    if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                }
+            }
+            else if (mode == Mode.ONE_PNODE)
+            {
+                if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode <= 0.0225) || timeToNode < 0)
+                {
+                    burnTriggered = true;
+                    if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                }
+            }
 
             //autowarp, but only if we're already aligned with the node
             if (autowarp && !burnTriggered)
