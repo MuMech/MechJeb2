@@ -740,13 +740,13 @@ namespace MuMech
 
         static MechJebModuleGuidanceController()
         {
-            isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("ksp_plugin_adapter");
+            isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("principia.ksp_plugin_adapter");
             if (isLoadedPrincipia)
             {
-                principiaEGNPCDOF = ReflectionUtils.getMethodByReflection("ksp_plugin_adapter", "principia.ksp_plugin_adapter.Interface", "ExternalGetNearestPlannedCoastDegreesOfFreedom", BindingFlags.NonPublic | BindingFlags.Static);
+                principiaEGNPCDOF = ReflectionUtils.getMethodByReflection("principia.ksp_plugin_adapter", "principia.ksp_plugin_adapter.Interface", "ExternalGetNearestPlannedCoastDegreesOfFreedom", BindingFlags.NonPublic | BindingFlags.Static);
                 if (principiaEGNPCDOF == null)
                 {
-                    // Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
+                    Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
                     isLoadedPrincipia = false;
                     return;
                 }
