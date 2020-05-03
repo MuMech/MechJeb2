@@ -46,7 +46,7 @@ namespace MuMech
             alignedForBurn = false;
         }
 		
-        public void ExecuteOnePNode(object controller)
+        public void ExecuteOnePNode(object controller) //Principia Node
         {
             mode = Mode.ONE_PNODE;
             users.Add(controller);
