@@ -440,7 +440,6 @@ namespace MuMech
                                             SpaceMath.MinimumTimeToPlane(
                                                 mainBody.rotationPeriod,
                                                 vesselState.latitude,
-                                                vesselState.longitude,
                                                 vesselState.celestialLongitude,
                                                 core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
                                                 core.target.TargetOrbit.inclination
