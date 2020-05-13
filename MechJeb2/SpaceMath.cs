@@ -14,16 +14,15 @@ namespace MuMech
         /// </summary>
         ///
         /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
-        /// <param name="longitude">Longitude of the launchsite (degrees).</param>
         /// <param name="latitude">Latitude of the launchite (degrees).</param>
         /// <param name="celestialLongitude">Celestial longitude of the current position of the launchsite.</param>
         /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
         ///
-        public static double MinimumTimeToPlane(double rotationPeriod, double longitude, double latitude, double celestialLongitude, double LAN, double inc)
+        public static double MinimumTimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double LAN, double inc)
         {
-            double one = TimeToPlane(rotationPeriod, longitude, latitude, celestialLongitude, LAN, inc);
-            double two = TimeToPlane(rotationPeriod, longitude, latitude, celestialLongitude, LAN, -inc);
+            double one = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, inc);
+            double two = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, -inc);
             return Math.Min(one, two);
         }
 
@@ -32,22 +31,21 @@ namespace MuMech
         /// </summary>
         ///
         /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
-        /// <param name="longitude">Longitude of the launchsite (degrees).</param>
         /// <param name="latitude">Latitude of the launchite (degrees).</param>
         /// <param name="celestialLongitude">Celestial longitude of the current position of the launchsite.</param>
         /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
         ///
-        public static double TimeToPlane(double rotationPeriod, double longitude, double latitude, double celestialLongitude, double LAN, double inc)
+        public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double LAN, double inc)
         {
             // alpha is the 90 degree angle between the line of longitude and the equator and omitted
             double beta = OrbitalManeuverCalculator.HeadingForInclination(inc, latitude) * UtilMath.Deg2Rad;
-            double c = latitude * UtilMath.Deg2Rad;
-            //double gamma = Math.Acos(Math.Sin(beta) * Math.Cos(c)); // law of cosines
-            // b is how many radians to the west of the launch site (-180, 180] that the LAN is
+            double c = Math.Abs(latitude) * UtilMath.Deg2Rad; // Abs for south hemisphere launch sites
+            // b is how many radians to the west of the launch site that the LAN is (east in south hemisphere)
             double b = Math.Atan2( 2 * Math.Sin(beta), Math.Cos(beta) / Math.Tan(c/2) + Math.Tan(c/2) * Math.Cos(beta) ); // napier's analogies
             // LAN if we launched now
-            double LANnow = celestialLongitude - b * UtilMath.Rad2Deg; // FIXME: still tightly coupled to vesselState
+            double LANnow = celestialLongitude - Math.Sign(latitude) * b * UtilMath.Rad2Deg;
+
 
             return MuUtils.ClampDegrees360( LAN - LANnow ) / 360 * rotationPeriod;
         }
