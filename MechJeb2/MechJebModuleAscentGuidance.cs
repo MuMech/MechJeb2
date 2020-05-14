@@ -373,7 +373,7 @@ namespace MuMech
                             GUILayout.EndHorizontal();
                         }
 
-                        if ( vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH && vessel.situation != Vessel.Situations.SPLASHED )
+                        if ( vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH && vessel.situation != Vessel.Situations.SPLASHED && atmoStats.Length > vessel.currentStage)
                         {
                             double m0 = atmoStats[vessel.currentStage].startMass;
                             double thrust = atmoStats[vessel.currentStage].startThrust;
