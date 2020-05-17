@@ -245,13 +245,12 @@ namespace MuMech
                         core.thrust.LimitToPreventOverheatsInfoItem();
                         //core.thrust.LimitToTerminalVelocityInfoItem();
                         core.thrust.LimitToMaxDynamicPressureInfoItem();
-                        //core.thrust.LimitAccelerationInfoItem();
+                        core.thrust.LimitAccelerationInfoItem();
                         //core.thrust.LimitThrottleInfoItem();
                         core.thrust.LimiterMinThrottleInfoItem();
                         //core.thrust.LimitElectricInfoItem();
 
-                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label21")) ;//FIXME: g-limiter is down for maintenance
-                        core.thrust.limitAcceleration = false;
+                        // GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label21")) ;//FIXME: g-limiter is down for maintenance
                         core.thrust.limitThrottle = false;
                         core.thrust.limitToTerminalVelocity = false;
                         core.thrust.electricThrottle = false;
