@@ -450,6 +450,8 @@ namespace MuMech
                                 GUILayout.Label("º", GUILayout.ExpandWidth(false));
                                 GUILayout.EndHorizontal();
 
+                                launchingToInterplanetary = false
+                                /*
                                 if (core.target.TargetOrbit.referenceBody == orbit.referenceBody.referenceBody)
                                 {
                                     if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button16")))//Launch at interplanetary window
@@ -469,6 +471,7 @@ namespace MuMech
                                         autopilot.StartCountdown(interplanetaryWindowUT);
                                     }
                                 }
+                                */
                             }
                         }
                         else
@@ -505,8 +508,7 @@ namespace MuMech
                             GUILayout.Label(message);
 
                         if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button17")))//Abort
-                                launchingToInterplanetary =
-                                    launchingToPlane = launchingToRendezvous = autopilot.timedLaunch = false;
+                                launchingToInterplanetary = launchingToPlane = launchingToRendezvous = autopilot.timedLaunch = false;
                         }
                 }
 
