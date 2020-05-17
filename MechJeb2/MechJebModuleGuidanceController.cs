@@ -582,7 +582,7 @@ namespace MuMech
 
             p.threadStart(vesselState.time);
             //if ( p.threadStart(vesselState.time) )
-                //Debug.Log("MechJeb: started optimizer thread");
+            //Debug.Log("MechJeb: started optimizer thread");
 
             if (status == PVGStatus.INITIALIZING && p.solution != null)
                 status = PVGStatus.CONVERGED;

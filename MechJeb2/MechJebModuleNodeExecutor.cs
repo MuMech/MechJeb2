@@ -45,14 +45,14 @@ namespace MuMech
             burnTriggered = false;
             alignedForBurn = false;
         }
-		
+
         public void ExecuteOnePNode(object controller) //Principia Node
         {
             mode = Mode.ONE_PNODE;
             users.Add(controller);
             burnTriggered = false;
             alignedForBurn = false;
-        }		
+        }
 
         public void ExecuteAllNodes(object controller)
         {
@@ -156,7 +156,7 @@ namespace MuMech
                 {
                     core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                 }
-                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < halfBurnTime + 30)
+                else if (!MuUtils.PhysicsRunning() && core.attitude.attitudeAngleFromTarget() > 10 && timeToNode < 600)
                 {
                     //realign
                     core.warp.MinimumWarp();

@@ -229,9 +229,9 @@ namespace MuMech
                     {
                         core.node.ExecuteOneNode(this);
                     }
-					
-		    if (MechJebModuleGuidanceController.isLoadedPrincipia && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7")))//Execute next Principia node
-		    {
+
+                    if (MechJebModuleGuidanceController.isLoadedPrincipia && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7")))//Execute next Principia node
+                    {
                         core.node.ExecuteOnePNode(this);
                     }
 
