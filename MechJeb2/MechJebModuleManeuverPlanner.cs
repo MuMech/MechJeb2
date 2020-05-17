@@ -131,6 +131,11 @@ namespace MuMech
                         core.node.ExecuteOneNode(this);
                     }
 
+                    if (MechJebModuleGuidanceController.isLoadedPrincipia && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7")))//Execute next Principia node
+                    {
+                        core.node.ExecuteOnePNode(this);
+                    }
+
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button5")))//Execute all nodes
