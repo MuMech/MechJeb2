@@ -116,7 +116,12 @@ namespace MuMech
             {
                 double LAN = core.target.TargetOrbit.LAN;;
                 inclination = core.target.TargetOrbit.inclination;
-                core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false);
+                core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, true, true);
+            }
+            else if ( ascentGuidance.launchingToMatchLAN && core.target.NormalTargetExists )
+            {
+                double LAN = core.target.TargetOrbit.LAN;;
+                core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false, true);
             }
             else
             {
