@@ -218,7 +218,7 @@ namespace MuMech
         double old_numStages;
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle4constraint(double rT, double vT, double inc, double gamma, double sma, bool omitCoast, bool currentInc)
+        public void flightangle4constraint(double rT, double vT, double inc, double gamma, double sma, bool omitCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -228,8 +228,8 @@ namespace MuMech
             if (rT != old_rT || vT != old_vT || gamma != old_gamma)
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -251,18 +251,22 @@ namespace MuMech
         }
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle5constraint(double rT, double vT, double inc, double gamma, double LAN, double sma, bool omitCoast, bool currentInc)
+        public void flightangle5constraint(double rT, double vT, double inc, double gamma, double LAN, double sma, bool omitCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
 
             bool doupdate = false;
 
-            if (rT != old_rT || vT != old_vT || gamma != old_gamma || LAN != old_LAN)
+            if (rT != old_rT || vT != old_vT || gamma != old_gamma)
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target LAN, don't reset
+            if (LAN != old_LAN && !targetLAN)
+                doupdate = true;
+
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
                 doupdate = true;
 
             if (p == null || doupdate)
