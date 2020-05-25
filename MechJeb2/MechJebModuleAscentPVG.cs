@@ -114,18 +114,27 @@ namespace MuMech
 
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
-                double LAN = core.target.TargetOrbit.LAN;;
+                double LAN = core.target.TargetOrbit.LAN;
                 inclination = core.target.TargetOrbit.inclination;
-                core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, true, true);
+                if (ecc < 0.03)
+                    core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, true, true);
+                else
+                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, true, true);
             }
             else if ( ascentGuidance.launchingToMatchLAN && core.target.NormalTargetExists )
             {
-                double LAN = core.target.TargetOrbit.LAN;;
-                core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false, true);
+                double LAN = core.target.TargetOrbit.LAN;
+                if (ecc < 0.03)
+                    core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false, true);
+                else
+                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, false, true);
             }
             else
             {
-                core.guidance.flightangle4constraint(rt, vt, inclination, 0, sma, omitCoast, false);
+                if (ecc < 0.03)
+                    core.guidance.flightangle4constraint(rt, vt, inclination, 0, sma, omitCoast, false);
+                else
+                    core.guidance.keplerian3constraint(sma, ecc, inclination, omitCoast, false);
             }
         }
 
