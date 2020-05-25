@@ -152,7 +152,7 @@ namespace MuMech
 
                 // bit of a hack to predict velocity + position in the next tick or two
                 // FIXME: what exactly does KSP do to integrate over timesteps?
-                Vector3d a0 = vessel.acceleration_immediate - vessel.graviticAcceleration;
+                Vector3d a0 = vessel.acceleration_immediate;
                 double dt = ticks * TimeWarp.fixedDeltaTime;
                 Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
                 Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 1/2 * a0 * dt * dt;
@@ -160,7 +160,10 @@ namespace MuMech
                 double current = p.znormAtStateVectors(vesselState.orbitalPosition, vesselState.orbitalVelocity);
                 double future = p.znormAtStateVectors(x1, v1);
 
-                if ( future > current )
+                // ensure that we're burning in a roughly forward direction -- no idea why, but we can get a few ticks of backwards "thrust" due to staging during terminal guidance
+                double costhrustangle = Vector3d.Dot(vesselState.forward, (vessel.acceleration_immediate - vessel.graviticAcceleration).normalized );
+
+                if ( future > current && costhrustangle > 0.5 )
                 {
                     if ( has_rcs && status == PVGStatus.TERMINAL )
                     {
@@ -310,7 +313,7 @@ namespace MuMech
             return new PontryaginLaunch(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda, dV: approximateDeltaV(sma));
         }
 
-        public void keplerian3constraint(double sma, double ecc, double inc, bool omitCoast, bool currentInc)
+        public void keplerian3constraint(double sma, double ecc, double inc, bool omitCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -320,8 +323,8 @@ namespace MuMech
             if (sma != old_sma || ecc != old_ecc)
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -341,18 +344,22 @@ namespace MuMech
             old_inc = inc;
         }
 
-        public void keplerian4constraintArgPfree(double sma, double ecc, double inc, double LAN, bool omitCoast, bool currentInc)
+        public void keplerian4constraintArgPfree(double sma, double ecc, double inc, double LAN, bool omitCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
 
             bool doupdate = false;
 
-            if (sma != old_sma || ecc != old_ecc || LAN != old_LAN)
+            if (sma != old_sma || ecc != old_ecc )
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target LAN, don't reset
+            if (LAN != old_LAN && !targetLAN)
+                doupdate = true;
+
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
                 doupdate = true;
 
             if (p == null || doupdate)
