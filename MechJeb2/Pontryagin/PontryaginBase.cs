@@ -907,9 +907,12 @@ namespace MuMech {
                         z[n] = y0[index] - arcs[i].fixed_tbar;
                         n++;
                     }
-                    else if  (!arcs[i].use_fixed_time )
+                    else if (arcs[i].coast_after_jettison)
                     {
-                        int index = arcIndex(arcs, i);
+                        // H0 should be zero throughout the entire coast and by continuity
+                        // be zero at the start of the subsequent burn, per Lu, 2008 we use
+                        // the start of the subsequent burn.
+                        int index = arcIndex(arcs, i+1);
 
                         Vector3d r = new Vector3d(y0[index+0], y0[index+1], y0[index+2]);
                         Vector3d v = new Vector3d(y0[index+3], y0[index+4], y0[index+5]);
@@ -917,16 +920,9 @@ namespace MuMech {
                         Vector3d pr = new Vector3d(y0[index+9], y0[index+10], y0[index+11]);
                         double rm = r.magnitude;
 
-                        Vector3d r2 = new Vector3d(yf[i*13+0], yf[i*13+1], yf[i*13+2]);
-                        Vector3d v2 = new Vector3d(yf[i*13+3], yf[i*13+4], yf[i*13+5]);
-                        Vector3d pv2 = new Vector3d(yf[i*13+6], yf[i*13+7], yf[i*13+8]);
-                        Vector3d pr2 = new Vector3d(yf[i*13+9], yf[i*13+10], yf[i*13+11]);
-                        double r2m = r2.magnitude;
-
                         double H0t1 = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
-                        double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
 
-                        z[n] = H0t2;
+                        z[n] = H0t1;
                         n++;
                     }
                 }
@@ -970,6 +966,7 @@ namespace MuMech {
 
             znorm = Math.Sqrt(znorm);
 
+            /*
             double[] bndl = new double[arcIndex(arcs,arcs.Count)];
             double[] bndu = new double[arcIndex(arcs,arcs.Count)];
             for(int i = 0; i < bndl.Length; i++)
@@ -987,10 +984,11 @@ namespace MuMech {
                 }
             }
             bndl[0] = 0;
+            */
 
             alglib.minlmreport rep = new alglib.minlmreport();
             alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);  /* y0.Length must == z.Length returned by the BC function for square problems */
-            alglib.minlmsetbc(state, bndl, bndu);
+            // alglib.minlmsetbc(state, bndl, bndu);
             alglib.minlmsetcond(state, lmEpsx, lmIter);
             alglib.minlmoptimize(state, optimizationFunction, null, arcs);
 
@@ -1032,9 +1030,10 @@ namespace MuMech {
                 return true;
             }
 
-            // lol
+            /*
             if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
                 return false;
+                */
 
             return false;
         }
@@ -1199,7 +1198,10 @@ namespace MuMech {
                         Array.Copy(y0_old, start, y0, 2, new_upper_length);
 
                         if (last_arcs[0].coast)
+                        {
                             last_arcs[0].coast_after_jettison = false;  /* we can't be after a jettison if we're first */
+                            last_arcs[0].use_fixed_time2 = false;  /* also can't have a fixed time when we're in the coast */
+                        }
                     }
 
                     if (last_arcs.Count == 0)
