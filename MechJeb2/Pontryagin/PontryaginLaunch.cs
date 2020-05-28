@@ -549,6 +549,7 @@ namespace MuMech {
 
                 double coastlen = new_sol.tgo(new_sol.t0, arcs.Count-2); // human seconds
                 double coast_time = y0[arcIndex(arcs, arcs.Count-2, parameters: true)]; // normalized units
+                double max_coast_time = Math.PI / 5.0; // 36 degrees
 
                 if ( coastlen < 1 )
                 {
@@ -562,14 +563,14 @@ namespace MuMech {
                         return;
                     }
                 }
-                /*
-                else if ( coast_time > Math.PI / 3.0 ) // 60 degrees
+                else if ( coast_time > max_coast_time )
                 {
-                    DebugLog("optimium coast exceeded maximum normalized time (roughly 1/4 of an arc around the planet) and was truncated.  maybe whack that RESET button to try again later (but thrust must be ON).");
+                    DebugLog("optimium coast exceeded maximum normalized time (roughly 1/4 of an arc around the planet) and was truncated.");
                     arcs[arcs.Count-2].use_fixed_time2 = true;
-                    arcs[arcs.Count-2].fixed_time = Math.PI / 3.0 * t_scale;
-                    arcs[arcs.Count-2].fixed_tbar = Math.PI / 3.0;
-                    y0[arcIndex(arcs, arcs.Count-2, parameters: true)] = Math.PI / 3.0;
+                    arcs[arcs.Count-2].fixed_time = max_coast_time * t_scale;
+                    arcs[arcs.Count-2].fixed_tbar = max_coast_time;
+                    y0[arcIndex(arcs, arcs.Count-2, parameters: true)] = max_coast_time;
+                    multipleIntegrate(y0, yf, arcs, initialize: true);
                     if ( !runOptimizer(arcs) )
                     {
                         Fatal("Optimizer exploded after truncating long coast (weird)");
@@ -577,7 +578,6 @@ namespace MuMech {
                         return;
                     }
                 }
-                */
             }
 
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);

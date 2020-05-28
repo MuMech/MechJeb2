@@ -39,6 +39,7 @@ namespace MuMech
         public int last_lm_status { get { return ( p != null ) ? p.last_lm_status : 0; } }
         public double last_znorm { get { return ( p != null ) ? p.last_znorm : 0; } }
         public String last_failure_cause { get { return ( p != null ) ? p.last_failure_cause : null; } }
+        public double last_stale_kill_time = 0.0;
         public double last_success_time = 0.0;
         public double staleness { get { return ( last_success_time > 0 ) ? vesselState.time - last_success_time : 0; } }
 
@@ -67,6 +68,7 @@ namespace MuMech
         {
             // coast phases are deliberately not reset in Reset() so we never get a completed coast phase again after whacking Reset()
             status = PVGStatus.ENABLED;
+            last_stale_kill_time = vesselState.time;
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
             core.stageTracking.users.Add(this);
@@ -80,6 +82,7 @@ namespace MuMech
             core.thrust.users.Remove(this);
             core.stageTracking.users.Remove(this);
             status = PVGStatus.FINISHED;
+            last_stale_kill_time = 0.0;
             last_success_time = 0.0;
             if (p != null)
                 p.KillThread();
@@ -563,6 +566,16 @@ namespace MuMech
             if (p.last_success_time > 0)
                 last_success_time = p.last_success_time;
 
+            if ( ( vesselState.time - last_success_time ) < 60 )
+                last_stale_kill_time = 0; // reset the stale kill timer
+
+            if ( ( vesselState.time - last_success_time ) > 60 && ( vesselState.time - last_stale_kill_time) > 60 )
+            {
+                p.KillThread();
+                p.last_failure_cause = "Optimizer watchdog timeout"; // bit dirty poking other people's data
+                last_stale_kill_time = vesselState.time;
+            }
+
             if (p.solution == null)
             {
                 /* we have a solver but no solution */
@@ -742,6 +755,7 @@ namespace MuMech
             last_optimizer_time = 0.0;
             last_coasting_time = 0.0;
             last_success_time = 0.0;
+            last_stale_kill_time = vesselState.time;
             autowarp = false;
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }
