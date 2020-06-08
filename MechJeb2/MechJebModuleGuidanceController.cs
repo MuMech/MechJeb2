@@ -601,7 +601,7 @@ namespace MuMech
 
                 // Also if we just triggered a KSP stage separation or just started coasting, then wait for 4 seconds for
                 // stats to settle before running the optimizer again.
-                if ((vesselState.time < last_stage_time + 4) || (vesselState.time < last_coasting_time + 4))
+                if ( vesselState.time < last_stage_time + 4 )
                     return;
             }
 
@@ -617,7 +617,6 @@ namespace MuMech
 
         private int last_burning_stage;
         private bool last_burning_stage_complete;
-        private double last_coasting_time = 0.0;
 
         // if we're transitioning from a complete thrust phase to a coast, wait for staging, otherwise
         // just go off of whatever the solution says for the current time.
@@ -665,7 +664,6 @@ namespace MuMech
                 {
                     status = PVGStatus.COASTING;
                 }
-                last_coasting_time = vesselState.time;
 
                 // this turns off autostaging during the coast (which currently affects fairing separation)
                 core.staging.autostageLimitInternal = last_burning_stage - 1;
@@ -748,7 +746,6 @@ namespace MuMech
             status = PVGStatus.INITIALIZING;
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;
-            last_coasting_time = 0.0;
             last_success_time = 0.0;
             last_stale_kill_time = vesselState.time;
             autowarp = false;
