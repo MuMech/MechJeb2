@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace MuMech
 {
-    public enum PVGStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, BURNING_STAGING, COASTING_STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
+    public enum PVGStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
 
     public class MechJebModuleGuidanceController : ComputerModule
     {
@@ -183,9 +183,6 @@ namespace MuMech
             }
 
             handle_throttle();
-
-            if ( isStaging() )
-                return;
 
             core.stageTracking.Update();
 
@@ -524,22 +521,17 @@ namespace MuMech
         // not TERMINAL guidance or TERMINAL_RCS
         public bool isNormal()
         {
-            return status == PVGStatus.CONVERGED || status == PVGStatus.BURNING || status == PVGStatus.BURNING_STAGING || status == PVGStatus.COASTING || status == PVGStatus.COASTING_STAGING;
+            return status == PVGStatus.CONVERGED || status == PVGStatus.BURNING || status == PVGStatus.COASTING;
         }
 
         public bool isCoasting()
         {
-            return status == PVGStatus.COASTING || status == PVGStatus.COASTING_STAGING;
+            return status == PVGStatus.COASTING;
         }
 
         public bool isBurning()
         {
-            return status == PVGStatus.BURNING || status == PVGStatus.BURNING_STAGING;
-        }
-
-        public bool isStaging()
-        {
-            return status == PVGStatus.BURNING_STAGING || status == PVGStatus.COASTING_STAGING;
+            return status == PVGStatus.BURNING;
         }
 
         public bool isTerminalGuidance()
@@ -600,9 +592,18 @@ namespace MuMech
             if ( (vesselState.time - last_optimizer_time) < MuUtils.Clamp(pvgInterval, 1.00, 30.00) )
                 return;
 
-            // for last 10 seconds of coast phase don't recompute (FIXME: can this go lower?  it was a workaround for a bug)
-            if ( p.solution != null && p.solution.arc(vesselState.time).thrust == 0 && p.solution.current_tgo(vesselState.time) < 10 )
-                return;
+            if ( p.solution != null )
+            {
+                // The current_tgo is the "booster" stage of the solution, it is allowed to go negative, for staging freeze
+                // running the optimizer for 4 seconds on either side of staging.
+                if ( Math.Abs(p.solution.current_tgo(vesselState.time)) < 4 )
+                    return;
+
+                // Also if we just triggered a KSP stage separation or just started coasting, then wait for 4 seconds for
+                // stats to settle before running the optimizer again.
+                if ((vesselState.time < last_stage_time + 4) || (vesselState.time < last_coasting_time + 4))
+                    return;
+            }
 
             p.threadStart(vesselState.time);
             //if ( p.threadStart(vesselState.time) )
@@ -662,10 +663,7 @@ namespace MuMech
 
                 if ( !isTerminalGuidance() )
                 {
-                    if (vesselState.time < last_stage_time + 4)
-                        status = PVGStatus.COASTING_STAGING;
-                    else
-                        status = PVGStatus.COASTING;
+                    status = PVGStatus.COASTING;
                 }
                 last_coasting_time = vesselState.time;
 
@@ -680,10 +678,7 @@ namespace MuMech
 
                 if ( !isTerminalGuidance() )
                 {
-                    if ((vesselState.time < last_stage_time + 4) || (vesselState.time < last_coasting_time + 4))
-                        status = PVGStatus.BURNING_STAGING;
-                    else
-                        status = PVGStatus.BURNING;
+                    status = PVGStatus.BURNING;
                 }
 
                 core.staging.autostageLimitInternal = p.solution.terminal_burn_arc().ksp_stage;
