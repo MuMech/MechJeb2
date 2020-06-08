@@ -150,7 +150,8 @@ namespace MuMech {
             if (!terminal)
             {
                 z[0] = hf.sqrMagnitude / 2.0 - hTm * hTm / 2.0; // angular momentum constraint
-                z[1] = 1 / (2 * smaf) - 1 / (2 * smaT); // energy constraint
+                z[1] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf ) ); // PeA constraint
+                //z[1] = 1 / (2 * smaf) - 1 / (2 * smaT); // energy constraint
                 z[2] = Vector3d.Dot(n, hf.normalized) - Math.Cos(incT); // inclination constraint
                 // transversality
                 z[3] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hf);
