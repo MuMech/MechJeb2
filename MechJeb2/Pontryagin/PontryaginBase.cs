@@ -131,10 +131,13 @@ namespace MuMech {
                 return tgo_bar(tbar, n) * t_scale;
             }
 
+            // this is the tgo of the "booster" stage, this is deliberately allowed to go negative if
+            // we're staging so "current" may be a misnomer.
+            //
             public double current_tgo(double t)
             {
-                int n = segment(t);
-                return tgo(t, n);
+                double tbar = ( t - t0 ) / t_scale;
+                return ( segments[0].tmax - tbar ) * t_scale;
             }
 
             public double tgo_bar(double tbar, int n) // tgo for each segment/arc in the solution
