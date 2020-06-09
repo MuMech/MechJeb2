@@ -558,10 +558,10 @@ namespace MuMech
             if (p.last_success_time > 0)
                 last_success_time = p.last_success_time;
 
-            if ( ( vesselState.time - last_success_time ) < 10 )
+            if ( ( vesselState.time - last_success_time ) < 20 )
                 last_stale_kill_time = 0; // reset the stale kill timer
 
-            if ( ( vesselState.time - last_success_time ) > 10 && ( vesselState.time - last_stale_kill_time) > 10 )
+            if ( ( vesselState.time - last_success_time ) > 20 && ( vesselState.time - last_stale_kill_time) > 20 )
             {
                 p.KillThread();
                 p.last_failure_cause = "Optimizer watchdog timeout"; // bit dirty poking other people's data
