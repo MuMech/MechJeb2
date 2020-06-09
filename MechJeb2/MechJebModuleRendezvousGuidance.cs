@@ -122,6 +122,11 @@ namespace MuMech
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
 
+            if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button9")))//Remove ALL nodes
+            {
+                vessel.RemoveAllManeuverNodes();
+            }
+
             if (core.node != null)
             {
                 if (vessel.patchedConicSolver.maneuverNodes.Any() && !core.node.enabled)
