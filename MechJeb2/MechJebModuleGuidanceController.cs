@@ -39,7 +39,6 @@ namespace MuMech
         public int last_lm_status { get { return ( p != null ) ? p.last_lm_status : 0; } }
         public double last_znorm { get { return ( p != null ) ? p.last_znorm : 0; } }
         public String last_failure_cause { get { return ( p != null ) ? p.last_failure_cause : null; } }
-        public double last_stale_kill_time = 0.0;
         public double last_success_time = 0.0;
         public double staleness { get { return ( last_success_time > 0 ) ? vesselState.time - last_success_time : 0; } }
 
@@ -68,7 +67,6 @@ namespace MuMech
         {
             // coast phases are deliberately not reset in Reset() so we never get a completed coast phase again after whacking Reset()
             status = PVGStatus.ENABLED;
-            last_stale_kill_time = vesselState.time;
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
             core.stageTracking.users.Add(this);
@@ -82,7 +80,6 @@ namespace MuMech
             core.thrust.users.Remove(this);
             core.stageTracking.users.Remove(this);
             status = PVGStatus.FINISHED;
-            last_stale_kill_time = 0.0;
             last_success_time = 0.0;
             if (p != null)
                 p.KillThread();
@@ -558,14 +555,13 @@ namespace MuMech
             if (p.last_success_time > 0)
                 last_success_time = p.last_success_time;
 
-            if ( ( vesselState.time - last_success_time ) < 20 )
-                last_stale_kill_time = 0; // reset the stale kill timer
-
-            if ( ( vesselState.time - last_success_time ) > 20 && ( vesselState.time - last_stale_kill_time) > 20 )
+            // FIXME: should make this use wall clock time rather than simulation time and drop it down to
+            // 10 seconds or so (phys warp means that this timeout could be 1/4 of the wall time and the
+            // optimizer may commonly take 3-4 seconds to reconverge in a suboptimal setting -- TF failure case, etc)
+            if ( p.running_time(vesselState.time) > 30 )
             {
                 p.KillThread();
                 p.last_failure_cause = "Optimizer watchdog timeout"; // bit dirty poking other people's data
-                last_stale_kill_time = vesselState.time;
             }
 
             if (p.solution == null)
@@ -591,6 +587,12 @@ namespace MuMech
 
             if ( (vesselState.time - last_optimizer_time) < MuUtils.Clamp(pvgInterval, 1.00, 30.00) )
                 return;
+
+            // if we have unstable ullage then continuously update the "staging" timer until we are not
+            if ( ( vesselState.lowestUllage < VesselState.UllageState.Stable ) && !isCoasting() )
+            {
+                last_stage_time = vesselState.time;
+            }
 
             if ( p.solution != null )
             {
@@ -747,7 +749,6 @@ namespace MuMech
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;
             last_success_time = 0.0;
-            last_stale_kill_time = vesselState.time;
             autowarp = false;
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }

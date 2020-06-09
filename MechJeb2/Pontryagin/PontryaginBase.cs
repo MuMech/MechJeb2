@@ -1289,6 +1289,16 @@ namespace MuMech {
             y0 = null;
         }
 
+        public double start_time;
+
+        public double running_time(double t0)
+        {
+            if (thread != null)
+                return t0 - start_time;
+            else
+                return 0;
+        }
+
         public bool threadStart(double t0)
         {
             if (thread != null && thread.IsAlive)
@@ -1302,6 +1312,7 @@ namespace MuMech {
                     thread.Abort();
                 }
 
+                start_time = t0;
                 thread = new Thread(() => Optimize(t0));
                 thread.Start();
                 return true;
