@@ -12,6 +12,8 @@ namespace MuMech
         public EditableDouble desiredDistance = 100;
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxPhasingOrbits = 5;
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble maxClosingSpeed = 100;
 
         public string status = "";
 
@@ -95,7 +97,7 @@ namespace MuMech
                 {
                     //We're not far from the target. Close the distance
                     double closingSpeed = core.target.Distance / 100;
-                    if (closingSpeed > 100) closingSpeed = 100;
+                    if (closingSpeed > maxClosingSpeed) closingSpeed = maxClosingSpeed;
                     double closingTime = core.target.Distance / closingSpeed;
 
                     double UT = vesselState.time + 15;
