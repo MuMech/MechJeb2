@@ -155,6 +155,13 @@ namespace MuMech
             }
         }
 
+        public static Orbit IncreaseOrbit(this Orbit o, double offsetInKM)
+        {
+            double UT = Planetarium.GetUniversalTime();
+
+            return new Orbit(o.inclination, o.eccentricity, o.semiMajorAxis + offsetInKM * 1000, o.LAN, o.argumentOfPeriapsis, o.meanAnomaly, UT, o.referenceBody);
+        }
+
         //mean motion is rate of increase of the mean anomaly
         public static double MeanMotion(this Orbit o)
         {

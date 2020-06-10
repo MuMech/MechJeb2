@@ -12,6 +12,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble periodOffset = 0;
         [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble distanceOffset = 0;
+        [Persistent(pass = (int)Pass.Global)]
         public EditableTime MinDepartureUT = 0;
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime MaxDepartureUT = 0;
@@ -30,6 +32,8 @@ namespace MuMech
             intercept_only = GUILayout.Toggle(intercept_only, Localizer.Format("#MechJeb_Hohm_intercept_only"));//intercept only, no capture burn (impact/flyby)
             simpleTransfer = GUILayout.Toggle(simpleTransfer, Localizer.Format("#MechJeb_Hohm_simpleTransfer"));//simple coplanar Hohmann transfer
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), periodOffset);//fractional target period offset
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label2"), distanceOffset, "km");//offset behind the target
+
             if (!simpleTransfer)
             {
                 timeSelector.DoChooseTimeGUI();
@@ -53,10 +57,15 @@ namespace MuMech
 
             Orbit targetOrbit = target.TargetOrbit;
 
-            if ( periodOffset != 0 )
+            if (periodOffset != 0)
             {
                 targetOrbit = target.TargetOrbit.Clone();
                 targetOrbit.MutatedOrbit(periodOffset: periodOffset);
+            }
+
+            if (distanceOffset != 0)
+            {
+                targetOrbit = targetOrbit.IncreaseOrbit(distanceOffset);
             }
 
             if (simpleTransfer)
