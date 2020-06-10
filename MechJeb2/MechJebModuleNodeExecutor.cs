@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -13,7 +14,6 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
-
 
         [ValueInfoItem("#MechJeb_NodeBurnLength", InfoItem.Category.Thrust)]//Node Burn Length
         public string NextNodeBurnTime()
@@ -132,7 +132,7 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
-            if (mode == Mode.ONE_NODE)
+            if (mode == Mode.ONE_NODE || mode == Mode.ALL_NODES)
             {
                 if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
                 {
