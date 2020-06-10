@@ -132,7 +132,7 @@ namespace MuMech
 
             double timeToNode = node.UT - vesselState.time;
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
-            if (mode == Mode.ONE_NODE)
+            if (mode == Mode.ONE_NODE || mode == Mode.ALL_NODES)
             {
                 if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
                 {
