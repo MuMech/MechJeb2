@@ -102,7 +102,6 @@ namespace MuMech
         {
             if (speedLimit != 0)
             {
-                
                 if (s >  speedLimit) s =  speedLimit;
                 if (s < -speedLimit) s = -speedLimit;
             }
@@ -129,11 +128,11 @@ namespace MuMech
 
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
-            
+
             Vector3d targetVel = core.target.TargetOrbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
-			double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
+            double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
 
             bool align = true;
 
@@ -181,24 +180,24 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-
                     if (zSep < safeDistance)
                         zApproachSpeed *= -1;
                     else
-                        zApproachSpeed *= 0;
+                        zApproachSpeed = 0;
 
                     status = Localizer.Format("#MechJeb_Docking_status5", zApproachSpeed.ToString("F2"));//"Moving toward the starting point at " +  + " m/s."
                     break;
 
                 case DockingStep.DOCKING:
-                    timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed );
-                    timeToTargetSize = Math.Abs((zSep) / zApproachSpeed);                                               
-                    
-                    if (((zSep <= lateralSep.magnitude * 10) || (timeToTargetSize <= timeToAxis * 10)) && (timeToAxis > 0 && timeToTargetSize > 0))
+                    timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed);
+                    timeToTargetSize = Math.Abs(zSep / zApproachSpeed);
+
+                    if ((zSep <= lateralSep.magnitude * 10 || timeToTargetSize <= timeToAxis * 10) && timeToAxis > 0 && timeToTargetSize > 0)
                     {
                         zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
-                        latApproachSpeed *= 2;
+                        latApproachSpeed = FixSpeed(latApproachSpeed*2);
                     }
+
                     status = Localizer.Format("#MechJeb_Docking_status6", zApproachSpeed.ToString("F2"),latApproachSpeed.ToString("F2"));//"Moving forward to dock at <<1>> / <<2>> m/s."
                     break;
 
@@ -286,17 +285,17 @@ namespace MuMech
                     {
                         EndDocking();
                     }
-				// Added checks to make sure we're still good to dock.
-					else if (lateralSep.magnitude > dockingcorridorRadius) // far from docking axis
-					{
-						if (zSep < 0)  //we're behind the target
-							dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
-						else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
+                // Added checks to make sure we're still good to dock.
+                    else if (lateralSep.magnitude > dockingcorridorRadius) // far from docking axis
+                    {
+                        if (zSep < 0)  //we're behind the target
+                            dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
+                        else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
                         {
-							if (zSep < 1) 
-								dockingStep = DockingStep.MOVING_TO_START;
+                            if (zSep < 1)
+                                dockingStep = DockingStep.MOVING_TO_START;
                         }
-					}
+                    }
 
                     break;
 
