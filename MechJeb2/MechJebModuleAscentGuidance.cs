@@ -35,7 +35,7 @@ namespace MuMech
             if (autopilot != null)
             {
                 desiredInclination = autopilot.desiredInclination;  // FIXME: remove this indirection
-                desiredInclination = autopilot.desiredLAN;  // FIXME: remove this indirection
+                desiredLAN = autopilot.desiredLAN;  // FIXME: remove this indirection
             }
             navBall = core.GetComputerModule<MechJebModuleAscentNavBall>();
         }
