@@ -44,6 +44,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public double desiredInclination = 0.0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public double desiredLAN = 0.0;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool autoThrottle = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = false;

@@ -129,6 +129,14 @@ namespace MuMech
                 else
                     core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, false, true);
             }
+            else if ( ascentGuidance.launchingToLAN )
+            {
+                double LAN = autopilot.desiredLAN;
+                if (ecc < 0.030)
+                    core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false, true);
+                else
+                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, false, true);
+            }
             else
             {
                 if (ecc < 0.030)

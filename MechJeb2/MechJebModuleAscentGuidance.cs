@@ -13,12 +13,12 @@ namespace MuMech
         public MechJebModuleAscentGuidance(MechJebCore core) : base(core) { }
 
         public EditableDouble desiredInclination = 0;
+        public EditableDouble desiredLAN = 0;
 
         public bool launchingToPlane = false;
         public bool launchingToRendezvous = false;
-        public bool launchingToInterplanetary = false;
         public bool launchingToMatchLAN = false;
-        public double interplanetaryWindowUT;
+        public bool launchingToLAN = false;
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
         public MechJebModuleAscentPVG pvgascent { get { return core.GetComputerModule<MechJebModuleAscentPVG>(); } }
@@ -35,13 +35,13 @@ namespace MuMech
             if (autopilot != null)
             {
                 desiredInclination = autopilot.desiredInclination;  // FIXME: remove this indirection
+                desiredInclination = autopilot.desiredLAN;  // FIXME: remove this indirection
             }
             navBall = core.GetComputerModule<MechJebModuleAscentNavBall>();
         }
 
         public override void OnModuleDisabled()
         {
-            launchingToInterplanetary = false;
             launchingToPlane = false;
             launchingToRendezvous = false;
             launchingToMatchLAN = false;
@@ -402,18 +402,18 @@ namespace MuMech
 
                 if (vessel.LandedOrSplashed)
                 {
+                    if (core.node.autowarp)
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label33"), GUILayout.ExpandWidth(true));//Launch countdown:
+                        autopilot.warpCountDown.text = GUILayout.TextField(autopilot.warpCountDown.text,
+                                GUILayout.Width(60));
+                        GUILayout.Label("s", GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
+                    }
                     if (core.target.NormalTargetExists)
                     {
-                        if (core.node.autowarp)
-                        {
-                            GUILayout.BeginHorizontal();
-                            GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label33"), GUILayout.ExpandWidth(true));//Launch countdown:
-                            autopilot.warpCountDown.text = GUILayout.TextField(autopilot.warpCountDown.text,
-                                    GUILayout.Width(60));
-                            GUILayout.Label("s", GUILayout.ExpandWidth(false));
-                            GUILayout.EndHorizontal();
-                        }
-                        if (!launchingToPlane && !launchingToRendezvous && !launchingToInterplanetary && !launchingToMatchLAN)
+                        if (!launchingToPlane && !launchingToRendezvous && !launchingToMatchLAN && !launchingToLAN)
                         {
                             // disable rendezvous in PVG for now
                             if ( ascentPathIdx != ascentType.PVG )
@@ -455,7 +455,7 @@ namespace MuMech
                             if ( ascentPathIdx == ascentType.PVG )
                             {
                                 GUILayout.BeginHorizontal();
-                                if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_LaunchToLan"), GUILayout.ExpandWidth(false)))//Launch to target LAN
+                                if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_LaunchToTargetLan"), GUILayout.ExpandWidth(false)))//Launch to target LAN
                                 {
                                     launchingToMatchLAN = true;
 
@@ -474,46 +474,45 @@ namespace MuMech
                                 GUILayout.Label("º", GUILayout.ExpandWidth(false));
                                 GUILayout.EndHorizontal();
                             }
-
-                            launchingToInterplanetary = false;
-
-                            /*
-                            if (core.target.TargetOrbit.referenceBody == orbit.referenceBody.referenceBody)
-                            {
-                                if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button16")))//Launch at interplanetary window
-                                {
-                                    launchingToInterplanetary = true;
-                                    //compute the desired launch date
-                                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(mainBody.orbit,
-                                            core.target.TargetOrbit, vesselState.time, out interplanetaryWindowUT);
-                                    double desiredOrbitPeriod = 2 * Math.PI *
-                                        Math.Sqrt(
-                                                Math.Pow( mainBody.Radius + autopilot.desiredOrbitAltitude, 3)
-                                                / mainBody.gravParameter);
-                                    //launch just before the window, but don't try to launch in the past
-                                    interplanetaryWindowUT -= 3*desiredOrbitPeriod;
-                                    interplanetaryWindowUT = Math.Max(vesselState.time + autopilot.warpCountDown,
-                                            interplanetaryWindowUT);
-                                    autopilot.StartCountdown(interplanetaryWindowUT);
-                                }
-                            }
-                            */
                         }
                     }
                     else
                     {
-                        launchingToInterplanetary = launchingToPlane = launchingToRendezvous = launchingToMatchLAN = false;
+                        launchingToPlane = launchingToRendezvous = launchingToMatchLAN = false;
                         GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label34"));//Select a target for a timed launch.
                     }
 
-                    if (launchingToInterplanetary || launchingToPlane || launchingToRendezvous || launchingToMatchLAN)
+                    if ( ascentPathIdx == ascentType.PVG )
+                    {
+                        if (!launchingToPlane && !launchingToRendezvous && !launchingToMatchLAN && !launchingToLAN)
+                        {
+                            GUILayout.BeginHorizontal();
+                            if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_LaunchToLan"), GUILayout.ExpandWidth(false)))//Launch to LAN
+                            {
+                                launchingToLAN = true;
+
+                                autopilot.StartCountdown(vesselState.time +
+                                        SpaceMath.MinimumTimeToPlane(
+                                            mainBody.rotationPeriod,
+                                            vesselState.latitude,
+                                            vesselState.celestialLongitude,
+                                            desiredLAN,
+                                            desiredInclination
+                                            )
+                                        );
+                            }
+
+                            desiredLAN.text = GUILayout.TextField(desiredLAN.text, GUILayout.Width(60));
+                            autopilot.desiredLAN = desiredLAN;
+                            GUILayout.Label("º", GUILayout.ExpandWidth(false));
+                            GUILayout.EndHorizontal();
+                        }
+                    }
+
+                    if (launchingToPlane || launchingToRendezvous || launchingToMatchLAN || launchingToLAN)
                     {
                         string message = "";
-                        if (launchingToInterplanetary)
-                        {
-                            message = Localizer.Format("#MechJeb_Ascent_msg1");//Launching at interplanetary window
-                        }
-                        else if (launchingToPlane)
+                        if (launchingToPlane)
                         {
                             desiredInclination = MuUtils.Clamp(core.target.TargetOrbit.inclination, Math.Abs(vesselState.latitude), 180 - Math.Abs(vesselState.latitude));
                             desiredInclination *=
@@ -527,7 +526,11 @@ namespace MuMech
                         }
                         else if (launchingToMatchLAN)
                         {
-                            message = Localizer.Format("#MechJeb_Ascent_LaunchingToLAN");//Launching to rendezvous
+                            message = Localizer.Format("#MechJeb_Ascent_LaunchingToTargetLAN");//Launching to target LAN
+                        }
+                        else if (launchingToLAN)
+                        {
+                            message = Localizer.Format("#MechJeb_Ascent_LaunchingToManualLAN");//Launching to manual LAN
                         }
 
                         if (autopilot.tMinus > 3*vesselState.deltaT)
@@ -538,7 +541,7 @@ namespace MuMech
                         GUILayout.Label(message);
 
                         if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button17")))//Abort
-                            launchingToInterplanetary = launchingToPlane = launchingToRendezvous = launchingToMatchLAN = autopilot.timedLaunch = false;
+                            launchingToPlane = launchingToRendezvous = launchingToMatchLAN = launchingToLAN = autopilot.timedLaunch = false;
                     }
                 }
 
