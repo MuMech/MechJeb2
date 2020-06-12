@@ -34,6 +34,10 @@ namespace MuMech
         public bool hotStaging = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble hotStagingLeadTime = 1.0;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool dropSolids = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble dropSolidsLeadTime = 1.0;
 
 
         public bool autostagingOnce = false;
@@ -123,9 +127,13 @@ namespace MuMech
 
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label42"), autostageLimit, "");//"Stop at stage #"
 
-            hotStaging = GUILayout.Toggle(hotStaging, Localizer.Format("#MechJeb_Ascent_checkbox21"));//"Support hotstaging"
+            hotStaging = GUILayout.Toggle(hotStaging, Localizer.Format("#MechJeb_Ascent_hotStaging"));//"Support hotstaging"
             if (hotStaging)
-                GuiUtils.SimpleTextBox("  "+Localizer.Format("#MechJeb_Ascent_label43"), hotStagingLeadTime, "s");//"lead time"
+                GuiUtils.SimpleTextBox("  "+Localizer.Format("#MechJeb_Ascent_leadTime"), hotStagingLeadTime, "s");//"lead time"
+
+            dropSolids = GUILayout.Toggle(dropSolids, Localizer.Format("#MechJeb_Ascent_dropSolids"));//"Drop solids early"
+            if (dropSolids)
+                GuiUtils.SimpleTextBox("  "+Localizer.Format("#MechJeb_Ascent_leadTime"), dropSolidsLeadTime, "s");//"lead time"
 
             GUILayout.EndVertical();
         }
@@ -246,7 +254,7 @@ namespace MuMech
         }
 
         //determine whether it's safe to activate inverseStage
-        public static bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
+        public bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, Vessel v, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             for (int i = 0; i < v.parts.Count; i++)
             {
@@ -323,20 +331,26 @@ namespace MuMech
             activeModuleEngines.Slinq().SelectMany(eng => eng.propellants.Slinq()).Select(prop => prop.id).AddTo(burnedResources);
         }
 
+        // detect if this part is an SRB, will be dropped in the next stage, and we are below the enabled dropSolidsLeadTime
+        public bool isBurnedOutSRBDecoupledInNextStage(Part p)
+        {
+            return dropSolids && p.IsEngine() && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < dropSolidsLeadTime && p.IsDecoupledInStage(vessel.currentStage - 1);
+        }
+
         //detect if a part is above an active or idle engine in the part tree
-        public static bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
+        public bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             if (p == null)
             {
                 return false;
             }
-            if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE)
-                && p.IsEngine() && !p.IsSepratron() && p.EngineHasFuel())
+
+            if (!p.IsSepratron() && !isBurnedOutSRBDecoupledInNextStage(p))
             {
-                return true; // TODO: properly check if ModuleEngines is active
-            }
-            if (!p.IsSepratron())
-            {
+                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.IsEngine() && p.EngineHasFuel())
+                {
+                    return true; // TODO: properly check if ModuleEngines is active
+                }
                 for (int i = 0; i < p.Resources.Count; i++)
                 {
                     PartResource r = p.Resources[i];

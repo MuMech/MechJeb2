@@ -165,6 +165,9 @@ namespace MuMech
         public double thrustMinimum { get { return Vector3d.Dot(thrustVectorMinThrottle, forward); } }
         public double thrustCurrent { get { return Vector3d.Dot(thrustVectorLastFrame, forward); } }
 
+        // Forward direction of thrust (CoT-CoM).normalized
+        public Vector3d thrustForward;
+
         // Acceleration in the forward direction, for when dividing by mass is too complicated.
         public double maxThrustAccel { get { return thrustAvailable / mass; } }
         public double minThrustAccel { get { return thrustMinimum / mass; } }
@@ -909,6 +912,7 @@ namespace MuMech
             CoT = Vector3d.zero;
             DoT = Vector3d.zero;
             CoTScalar = 0;
+            thrustForward = Vector3d.zero;
 
             for (int i = 0; i < vessel.parts.Count; i++)
             {
@@ -1115,7 +1119,11 @@ namespace MuMech
             thrustVectorLastFrame = einfo.thrustCurrent;
 
             if (CoTScalar > 0)
+            {
                 CoT = CoT / CoTScalar;
+                thrustForward = ( CoM - CoT ).normalized;
+            }
+
             DoT = DoT.normalized;
 
             if (CoLScalar > 0)

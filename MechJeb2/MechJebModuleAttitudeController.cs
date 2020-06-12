@@ -8,14 +8,17 @@ namespace MuMech
     public enum AttitudeReference
     {
         INERTIAL,          //world coordinate system.
+        INERTIAL_COT,      //world coordinate system fixed for CoT offset.
         ORBIT,             //forward = prograde, left = normal plus, up = radial plus
         ORBIT_HORIZONTAL,  //forward = surface projection of orbit velocity, up = surface normal
         SURFACE_NORTH,     //forward = north, left = west, up = surface normal
+        SURFACE_NORTH_COT, //forward = north, left = west, up = surface normal, fixed for CoT offset
         SURFACE_VELOCITY,  //forward = surface frame vessel velocity, up = perpendicular component of surface normal
         TARGET,            //forward = toward target, up = perpendicular component of vessel heading
         RELATIVE_VELOCITY, //forward = toward relative velocity direction, up = tbd
         TARGET_ORIENTATION,//forward = direction target is facing, up = target up
         MANEUVER_NODE,     //forward = next maneuver node direction, up = tbd
+        MANEUVER_NODE_COT, //forward = next maneuver node direction, up = tbd, fixed for CoT offset
         SUN,               //forward = orbit velocity of the parent body orbiting the sun, up = radial plus of that orbit
         SURFACE_HORIZONTAL,//forward = surface velocity horizontal component, up = surface normal
     }
@@ -198,6 +201,9 @@ namespace MuMech
 
             switch (reference)
             {
+                case AttitudeReference.INERTIAL_COT:
+                    rotRef = Quaternion.FromToRotation(vesselState.thrustForward, vesselState.forward) * rotRef;
+                    break;
                 case AttitudeReference.ORBIT:
                     rotRef = Quaternion.LookRotation(vesselState.orbitalVelocity.normalized, vesselState.up);
                     break;
@@ -206,6 +212,10 @@ namespace MuMech
                     break;
                 case AttitudeReference.SURFACE_NORTH:
                     rotRef = vesselState.rotationSurface;
+                    break;
+                case AttitudeReference.SURFACE_NORTH_COT:
+                    rotRef = vesselState.rotationSurface;
+                    rotRef = Quaternion.FromToRotation(vesselState.thrustForward, vesselState.forward) * rotRef;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
                     rotRef = Quaternion.LookRotation(vesselState.surfaceVelocity.normalized, vesselState.up);
@@ -239,6 +249,13 @@ namespace MuMech
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
+                case AttitudeReference.MANEUVER_NODE_COT:
+                    fwd = vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit);
+                    up = Vector3d.Cross(fwd, vesselState.normalPlus);
+                    Vector3.OrthoNormalize(ref fwd, ref up);
+                    rotRef = Quaternion.LookRotation(fwd, up);
+                    rotRef = Quaternion.FromToRotation(vesselState.thrustForward, vesselState.forward) * rotRef;
+                    break;
                 case AttitudeReference.SUN:
                     Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
                     up = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
@@ -249,6 +266,7 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(Vector3d.Exclude(vesselState.up, vesselState.surfaceVelocity.normalized), vesselState.up);
                     break;
             }
+
             return rotRef;
         }
 
@@ -291,10 +309,13 @@ namespace MuMech
             return true;
         }
 
-        public bool attitudeTo(double heading, double pitch, double roll, object controller, bool AxisCtrlPitch=true, bool AxisCtrlYaw=true, bool AxisCtrlRoll=true)
+        public bool attitudeTo(double heading, double pitch, double roll, object controller, bool AxisCtrlPitch=true, bool AxisCtrlYaw=true, bool AxisCtrlRoll=true, bool fixCOT=false)
         {
             Quaternion attitude = Quaternion.AngleAxis((float)heading, Vector3.up) * Quaternion.AngleAxis(-(float)pitch, Vector3.right) * Quaternion.AngleAxis(-(float)roll, Vector3.forward);
-            return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH, controller, AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
+            if (fixCOT)
+                return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH_COT, controller, AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
+            else
+                return attitudeTo(attitude, AttitudeReference.SURFACE_NORTH, controller, AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
         }
 
         public bool attitudeDeactivate()
@@ -339,7 +360,7 @@ namespace MuMech
         {
             if (attitudeChanged)
             {
-                if (attitudeReference != AttitudeReference.INERTIAL)
+                if (attitudeReference != AttitudeReference.INERTIAL && attitudeReference != AttitudeReference.INERTIAL_COT)
                 {
                     attitudeKILLROT = false;
                 }
