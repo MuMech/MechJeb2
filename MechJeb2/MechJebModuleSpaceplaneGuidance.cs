@@ -47,13 +47,14 @@ namespace MuMech
 
                 showLandingTarget = GUILayout.Toggle(showLandingTarget, Localizer.Format("#MechJeb_ApproAndLand_label3"));//Show landing navball guidance
 
-                if (GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button1"))) autoland.Autoland(this);//Autoland
+                if (GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button1")))//Autoland
+                    autoland.Autoland(this);
                 if (autoland.enabled && GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button2")))//Abort
                     autoland.AutopilotOff();
                 
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label3"), autoland.glideslope);//Autoland glideslope:
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label4"), autoland.approachSpeed);//Approach speed:
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label5"), autoland.touchdownSpeed);//Touchdown speed:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label14"), autoland.glideslope,"°");//Autoland glideslope:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label4"), autoland.approachSpeed, "m/s");//Approach speed:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label5"), autoland.touchdownSpeed, "m/s");//Touchdown speed:
                 autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, Localizer.Format("#MechJeb_ApproAndLand_label6"));//Reverse thrust upon touchdown
                 autoland.bBreakAsSoonAsLanded = GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, Localizer.Format("#MechJeb_ApproAndLand_label7"));//Brake as soon as landed
 

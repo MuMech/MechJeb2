@@ -277,7 +277,7 @@ namespace MuMech
         public EditableDouble maximumSafeBankAngle = 25.0;
 
         /// <summary>
-        /// Maximum allowed vertical speed.
+        /// Maximum allowed vertical speed in m/s
         /// </summary>
         public const double maximumSafeVerticalSpeed = 15.0;
 
