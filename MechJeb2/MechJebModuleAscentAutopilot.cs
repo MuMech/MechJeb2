@@ -586,16 +586,16 @@ namespace MuMech
                 core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 if ( desiredPitch == 90.0)
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50), true);
                 }
                 else
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50), true);
                 }
             }
             else
             {
-                core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, this);
+                core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
             }
         }
 

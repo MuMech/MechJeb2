@@ -125,7 +125,7 @@ namespace MuMech
             }
 
             //aim along the node
-            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
+            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
 
             double halfBurnTime;
             BurnTime(dVLeft, out halfBurnTime);
