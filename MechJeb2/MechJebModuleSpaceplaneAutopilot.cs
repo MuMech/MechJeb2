@@ -237,7 +237,7 @@ namespace MuMech
         /// should be aligned with the runway and only minor adjustments should
         /// be required.
         /// </summary>
-        private const double lateralDistanceFromTouchdownToFinalApproach = 3700;
+        private const double lateralDistanceFromTouchdownToFinalApproach = 5000;
 
         /// <summary>
         /// Approach intercept angle; the angle at which the aircraft will
@@ -271,15 +271,16 @@ namespace MuMech
         public EditableDouble touchdownSpeed = 60.0;
 
         /// <summary>
-        /// Maximum allowed bank angle.
+        /// Maximum allowed bank angle in degree.
         /// </summary>
         [Persistent(pass = (int)(Pass.Global | Pass.Local))]
         public EditableDouble maximumSafeBankAngle = 25.0;
 
         /// <summary>
-        /// Maximum allowed vertical speed in m/s
+        /// Maximum allowed vertical speed in m/s.
         /// </summary>
-        public const double maximumSafeVerticalSpeed = 15.0;
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public EditableDouble maximumSafeVerticalSpeed = 15.0;
 
         /// <summary>
         /// Angle of attack at the start of flare state.
@@ -303,6 +304,12 @@ namespace MuMech
         /// Threshold in seconds to move on to the next waypoint.
         /// </summary>
         private double secondsThresholdToNextWaypoint = 5.0;
+
+        /// <summary>
+        /// The lowest altitude which may be used which will provide a minimum
+        /// clearence above all objects in the area.
+        /// </summary>
+        private double minimumSectorAltitude = 1500;
 
         public double GetAutolandTargetAltitude(Vector3d vectorToWaypoint)
         {
@@ -456,8 +463,8 @@ namespace MuMech
             Vector3d runwayEnd = runway.End();
 
             // get the initial and final approach vectors
-            Vector3d initialApproachVector = runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
-            Vector3d finalApproachVector = runway.GetPointOnGlideslope(glideslope, lateralDistanceFromTouchdownToFinalApproach - runway.touchdownPoint);
+            Vector3d initialApproachVector = GetInitialApproachPoint();
+            Vector3d finalApproachVector = GetFinalApproachPoint();
 
             // determine whether the vessel is within the approach cone or not
             Vector3d finalApproachVectorProjectedOnGroundPlane = finalApproachVector.ProjectOnPlane(runway.Up());
@@ -580,6 +587,47 @@ namespace MuMech
         }
 
         /// <summary>
+        /// Returns the final approach point (FAP/FAF)
+        /// </summary>
+        /// <returns></returns>
+        public Vector3d GetFinalApproachPoint()
+        {
+            return runway.GetPointOnGlideslope(glideslope, lateralDistanceFromTouchdownToFinalApproach - runway.touchdownPoint);
+        }
+
+        /// <summary>
+        /// Returns the initial approach point (IAP/IAF)
+        /// </summary>
+        /// <returns></returns>
+        public Vector3d GetInitialApproachPoint()
+        {
+            Vector3d iap = runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
+
+            return PreventClimbingIntoGlideslope(iap);
+        }
+
+        /// <summary>
+        /// Stops the vessel from climbing into the glideslope. If the vessel is below the glideslope maintain
+        /// the current altitude until we intercept the glide slope.
+        /// If the vessel is very low, we have to maintain a minimal altitude to prevent the vessel from crashing.
+        /// </summary>
+        /// <returns></returns>
+        private Vector3d PreventClimbingIntoGlideslope(Vector3d v)
+        {
+            double lat, lon, alt;
+
+            runway.body.GetLatLonAlt(v, out lat, out lon, out alt);
+
+            if (alt <= vesselState.altitudeASL)
+                return v;
+
+            // don't climb unless it's absolutely necessary
+            double optimalAlt = UtilMath.Max(vesselState.altitudeASL, minimumSectorAltitude);
+
+            return runway.body.GetRelSurfacePosition(lat, lon, optimalAlt);
+        }
+
+        /// <summary>
         /// Finds a point on the glide slope intercept where the angle between
         /// vessel and the point is lateralInterceptAngle degrees.
         /// </summary>
@@ -603,10 +651,12 @@ namespace MuMech
             if (dist < lateralDistanceFromTouchdownToFinalApproach)
             {
                 approachState = AutolandApproachState.IAP;
-                return runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
+                return GetInitialApproachPoint();
             }
 
-            return runway.GetPointOnGlideslope(glideslope, dist + lateralDistanceFromTouchdownToFinalApproach);
+            Vector3d pointOnLocalizer = runway.GetPointOnGlideslope(glideslope, dist + lateralDistanceFromTouchdownToFinalApproach);
+
+            return PreventClimbingIntoGlideslope(pointOnLocalizer);
         }
 
         private double LateralDistance(Vector3d v1, Vector3d v2)

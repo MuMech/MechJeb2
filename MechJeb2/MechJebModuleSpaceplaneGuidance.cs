@@ -55,6 +55,7 @@ namespace MuMech
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label14"), autoland.glideslope,"°");//Autoland glideslope:
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label4"), autoland.approachSpeed, "m/s");//Approach speed:
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label5"), autoland.touchdownSpeed, "m/s");//Touchdown speed:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_MaxRateOfDescent"), autoland.maximumSafeVerticalSpeed, "m/s");//Max rate of descent:
                 autoland.bEngageReverseIfAvailable = GUILayout.Toggle(autoland.bEngageReverseIfAvailable, Localizer.Format("#MechJeb_ApproAndLand_label6"));//Reverse thrust upon touchdown
                 autoland.bBreakAsSoonAsLanded = GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, Localizer.Format("#MechJeb_ApproAndLand_label7"));//Brake as soon as landed
 
