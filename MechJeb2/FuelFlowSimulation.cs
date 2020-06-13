@@ -31,6 +31,8 @@ namespace MuMech
             nodeLookup.Clear();
             partLookup.Clear();
 
+            Part negOnePart = parts[0];
+
             for (int index = 0; index < parts.Count; index++)
             {
                 Part part = parts[index];
@@ -38,10 +40,15 @@ namespace MuMech
                 nodeLookup[part] = node;
                 partLookup[node] = part;
                 nodes.Add(node);
+                if ( part.inverseStage < 0 && negOnePart == null )
+                    negOnePart = part;
             }
+
+            if ( negOnePart == null )
+                negOnePart = parts[0];
+
             // Determine when each part will be decoupled
-            Part rootPart = parts[0]; // hopefully always correct
-            nodeLookup[rootPart].AssignDecoupledInStage(rootPart, nodeLookup, -1);
+            nodeLookup[negOnePart].AssignDecoupledInStage(negOnePart, null, nodeLookup, -1);
 
             simStage = StageManager.LastStage;
 
@@ -450,7 +457,7 @@ namespace MuMech
             public EngineInfo(ModuleEngines engineModule)
             {
                 this.engineModule = engineModule;
-                
+
                 thrustVector = Vector3d.zero;
 
                 for (int i = 0; i < engineModule.thrustTransforms.Count; i++)
@@ -620,15 +627,28 @@ namespace MuMech
             }
         }
 
+        // We are not necessarily traversing from the root part but from any interior part, so that p.parent is just another potential child node
+        // in our traversal.  This is a helper to loop over all the children in our traversal.
+        private void AssignChildrenDecoupledInStage(Part p, Part traversalParent, Dictionary<Part, FuelNode> nodeLookup, int parentDecoupledInStage)
+        {
+            for (int i = 0; i < p.children.Count; i++)
+            {
+                Part child = p.children[i];
+                if ( child != null && child != traversalParent )
+                    nodeLookup[child].AssignDecoupledInStage(child, p, nodeLookup, parentDecoupledInStage);
+            }
+            if ( p.parent != null && p.parent != traversalParent )
+                nodeLookup[p.parent].AssignDecoupledInStage(p.parent, p, nodeLookup, parentDecoupledInStage);
+        }
+
         // Determine when this part will be decoupled given when its parent will be decoupled.
         // Then recurse to all of this part's children.
-        public void AssignDecoupledInStage(Part p, Dictionary<Part, FuelNode> nodeLookup, int parentDecoupledInStage)
+        public void AssignDecoupledInStage(Part p, Part traversalParent, Dictionary<Part, FuelNode> nodeLookup, int parentDecoupledInStage)
         {
-            // Already processed
+            // Already processed (this gets used where we assign the attached part, then loop over all the children and expect the
+            // one we already hit to be skipped by this)
             if (decoupledInStage != int.MinValue)
                 return;
-
-            //print(partName + " AssignDecoupledInStage");
 
             bool isDecoupler = false;
             decoupledInStage = parentDecoupledInStage;
@@ -644,19 +664,10 @@ namespace MuMech
                     {
                         if (mDecouple.isOmniDecoupler)
                         {
+                            // We are decoupling our parent. The part and its children are not part of the ship when we decouple
                             isDecoupler = true;
-                            // We are decoupling our parent
-                            // The part and its children are not part of the ship when we decouple
                             decoupledInStage = p.inverseStage;
-
-                            // The parent should already have its info assigned at this point
-                            //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
-
-                            // The part children are decoupled when we decouple
-                            foreach (Part child in p.children)
-                            {
-                                nodeLookup[child].AssignDecoupledInStage(child, nodeLookup, p.inverseStage);
-                            }
+                            AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
                         }
                         else
                         {
@@ -664,13 +675,9 @@ namespace MuMech
                             if (HighLogic.LoadedSceneIsEditor)
                             {
                                 if (mDecouple.explosiveNodeID != "srf")
-                                {
                                     attach = p.FindAttachNode(mDecouple.explosiveNodeID);
-                                }
                                 else
-                                {
                                     attach = p.srfAttachNode;
-                                }
                             }
                             else
                             {
@@ -679,28 +686,20 @@ namespace MuMech
 
                             if (attach != null && attach.attachedPart != null)
                             {
-                                if (attach.attachedPart == p.parent && mDecouple.staged)
+                                if (attach.attachedPart == traversalParent && mDecouple.staged)
                                 {
+                                    // We are decoupling our parent. The part and its children are not part of the ship when we decouple
                                     isDecoupler = true;
-                                    // We are decoupling our parent
-                                    // The part and its children are not part of the ship when we decouple
                                     decoupledInStage = p.inverseStage;
-                                    //print("AssignDecoupledInStage ModuleDecouple          " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). parent " + decoupledInStage);
-
-                                    // The parent should already have its info assigned at this point
-                                    //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
+                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
                                 }
                                 else
                                 {
+                                    // We are still attached to our parent.  The part we decouple is dropped when we decouple.  The part and other children are dropped with the parent.
                                     isDecoupler = true;
-                                    // We are still attached to our parent
-                                    // The part and it's children are dropped when the parent is
                                     decoupledInStage = parentDecoupledInStage;
-
-                                    //print("AssignDecoupledInStage ModuleDecouple          " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). not the parent " + decoupledInStage);
-                                    // The part we decouple is dropped when we decouple
-                                    nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, nodeLookup, p.inverseStage);
-
+                                    nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, p, nodeLookup, p.inverseStage);
+                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
                                 }
                             }
                         }
@@ -717,13 +716,9 @@ namespace MuMech
                         if (HighLogic.LoadedSceneIsEditor)
                         {
                             if (mAnchoredDecoupler.explosiveNodeID != "srf")
-                            {
                                 attach = p.FindAttachNode(mAnchoredDecoupler.explosiveNodeID);
-                            }
                             else
-                            {
                                 attach = p.srfAttachNode;
-                            }
                         }
                         else
                         {
@@ -731,27 +726,20 @@ namespace MuMech
                         }
                         if (attach != null && attach.attachedPart != null)
                         {
-                            if (attach.attachedPart == p.parent && mAnchoredDecoupler.staged)
+                            if (attach.attachedPart == traversalParent && mAnchoredDecoupler.staged)
                             {
+                                // We are decoupling our parent. The part and its children are not part of the ship when we decouple
                                 isDecoupler = true;
-                                // We are decoupling our parent
-                                // The part and its children are not part of the ship when we decouple
                                 decoupledInStage = p.inverseStage;
-                                //print("AssignDecoupledInStage ModuleAnchoredDecoupler " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). parent " + decoupledInStage);
-
-                                // The parent should already have its info assigned at this point
-                                //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
+                                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
                             }
                             else
                             {
+                                // We are still attached to our parent.  The part we decouple is dropped when we decouple.  The part and other children are dropped with the parent.
                                 isDecoupler = true;
-                                // We are still attached to our parent
-                                // The part and it's children are dropped when the parent is
                                 decoupledInStage = parentDecoupledInStage;
-
-                                //print("AssignDecoupledInStage ModuleAnchoredDecoupler " + p.partInfo.name + "(" + p.inverseStage + ") decoupling " + attach.attachedPart + "(" + attach.attachedPart.inverseStage + "). not the parent " + decoupledInStage);
-                                // The part we decouple is dropped when we decouple
-                                nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, nodeLookup, p.inverseStage);
+                                nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, p, nodeLookup, p.inverseStage);
+                                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
                             }
                         }
                         break;
@@ -766,22 +754,21 @@ namespace MuMech
                         Part attachedPart = mDockingNode.referenceNode.attachedPart;
                         if (attachedPart != null)
                         {
-                            if (attachedPart == p.parent)
+                            if (attachedPart == traversalParent)
                             {
+                                // We are decoupling our parent. The part and its children are not part of the ship when we decouple
                                 isDecoupler = true;
-                                // We are decoupling our parent
-                                // The part and its children are not part of the ship when we decouple
                                 decoupledInStage = p.inverseStage;
-
-                                // The parent should already have its info assigned at this point
-                                //nodeLookup[p.parent].AssignDecoupledInStage(p.parent, nodeLookup, p.inverseStage);
+                                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                isDecoupler = true;
                             }
                             else
                             {
+                                // We are still attached to our parent.  The part we decouple is dropped when we decouple.  The part and other children are dropped with the parent.
                                 isDecoupler = true;
                                 decoupledInStage = parentDecoupledInStage;
-                                //childDecoupledInStage = parentDecoupledInStage;
-                                nodeLookup[attachedPart].AssignDecoupledInStage(attachedPart, nodeLookup, p.inverseStage);
+                                nodeLookup[attachedPart].AssignDecoupledInStage(attachedPart, p, nodeLookup, p.inverseStage);
+                                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
                             }
                         }
                     }
@@ -792,10 +779,11 @@ namespace MuMech
                 {
                     if (!m.Fields["decoupled"].GetValue<bool>(m) && m.stagingEnabled && p.stagingOn)
                     {
+                        // We are decoupling our parent. The part and its children are not part of the ship when we decouple
                         isDecoupler = true;
-                        // We are decoupling our parent
-                        // The part and its children are not part of the ship when we decouple
                         decoupledInStage = p.inverseStage;
+                        AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                        isDecoupler = true;
                         break;
                     }
                 }
@@ -804,23 +792,15 @@ namespace MuMech
             if (isLaunchClamp)
             {
                 decoupledInStage = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
-                //print("AssignDecoupledInStage D " + p.partInfo.name + " " + parentDecoupledInStage);
-
             }
             else if (!isDecoupler)
             {
                 decoupledInStage = parentDecoupledInStage;
-                //print("AssignDecoupledInStage                         " + p.partInfo.name + "(" + p.inverseStage + ")" + decoupledInStage);
             }
 
             isSepratron = isEngine && isthrottleLocked && activatesEvenIfDisconnected && (inverseStage == decoupledInStage);
-            //print(partName + " decoupledInStage=" + decoupledInStage + " isSepratron=" + isSepratron);
 
-            for (int i = 0; i < p.children.Count; i++)
-            {
-                Part child = p.children[i];
-                nodeLookup[child].AssignDecoupledInStage(child, nodeLookup, decoupledInStage);
-            }
+            AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
         }
 
         public static void print(object message)
