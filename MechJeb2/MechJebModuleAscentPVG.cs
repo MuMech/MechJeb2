@@ -116,7 +116,7 @@ namespace MuMech
             {
                 double LAN = core.target.TargetOrbit.LAN;
                 inclination = core.target.TargetOrbit.inclination;
-                if (ecc < 0.030)
+                if (ecc < 1e-4)
                     core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, true, true);
                 else
                     core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, true, true);
@@ -124,7 +124,7 @@ namespace MuMech
             else if ( ascentGuidance.launchingToMatchLAN && core.target.NormalTargetExists )
             {
                 double LAN = core.target.TargetOrbit.LAN;
-                if (ecc < 0.030)
+                if (ecc < 1e-4)
                     core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false, true);
                 else
                     core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, false, true);
@@ -132,14 +132,14 @@ namespace MuMech
             else if ( ascentGuidance.launchingToLAN )
             {
                 double LAN = autopilot.desiredLAN;
-                if (ecc < 0.030)
+                if (ecc < 1e-4)
                     core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false, true);
                 else
                     core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, false, true);
             }
             else
             {
-                if (ecc < 0.030)
+                if (ecc < 1e-4)
                     core.guidance.flightangle4constraint(rt, vt, inclination, 0, sma, omitCoast, false);
                 else
                     core.guidance.keplerian3constraint(sma, ecc, inclination, omitCoast, false);
