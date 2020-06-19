@@ -148,17 +148,45 @@ namespace MuMech
 
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label1"), autopilot.desiredOrbitAltitude, "km");//Target Periapsis
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label2"), pvgascent.desiredApoapsis, "km");//Target Apoapsis:
+
+                        GUILayout.BeginHorizontal();
+                        pvgascent.attachAltFlag = GUILayout.Toggle(pvgascent.attachAltFlag, Localizer.Format("#MechJeb_Ascent_attachAlt"));//Attach Altitude:
+                        pvgascent.desiredAttachAlt.text = GUILayout.TextField(pvgascent.desiredAttachAlt.text);
+                        GUILayout.Label("km", GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
+
                         if ( pvgascent.desiredApoapsis >= 0 && pvgascent.desiredApoapsis < autopilot.desiredOrbitAltitude )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.yellow;
                             GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label3"), s);//Ap < Pe: circularizing orbit
                         }
+                        else
+                        {
+                            if ( pvgascent.attachAltFlag )
+                            {
+                                if ( pvgascent.desiredAttachAlt > pvgascent.desiredApoapsis )
+                                {
+                                    GUIStyle s = new GUIStyle(GUI.skin.label);
+                                    s.normal.textColor = XKCDColors.Orange;
+                                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh"), s);//Attach > Ap: apoapsis insertion
+                                }
+                            }
+                        }
                         if ( pvgascent.desiredApoapsis < 0 )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = XKCDColors.Orange;
                             GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label4"), s);//Hyperbolic target orbit (neg Ap)
+                        }
+                        if ( pvgascent.attachAltFlag )
+                        {
+                            if ( pvgascent.desiredAttachAlt < autopilot.desiredOrbitAltitude )
+                            {
+                                GUIStyle s = new GUIStyle(GUI.skin.label);
+                                s.normal.textColor = XKCDColors.Orange;
+                                GUILayout.Label(Localizer.Format("#MechJeb_Ascent_warnAttachAltLow"), s);//Attach < Pe: periapsis insertion
+                            }
                         }
                     }
                     else

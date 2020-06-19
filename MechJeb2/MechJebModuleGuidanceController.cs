@@ -232,6 +232,9 @@ namespace MuMech
             if (inc != old_inc && !targetInc)
                 doupdate = true;
 
+            if (p != null && p.bctype != BCType.FLIGHTANGLE4)
+                doupdate = true;
+
             if (p == null || doupdate)
             {
                 if (p != null)
@@ -267,6 +270,9 @@ namespace MuMech
 
             // if we are tracking a target inc, don't reset
             if (inc != old_inc && !targetInc)
+                doupdate = true;
+
+            if (p != null && p.bctype != BCType.FLIGHTANGLE5)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -324,6 +330,9 @@ namespace MuMech
             if (inc != old_inc && !targetInc)
                 doupdate = true;
 
+            if (p != null && p.bctype != BCType.KEPLER3)
+                doupdate = true;
+
             if (p == null || doupdate)
             {
                 if (p != null)
@@ -359,6 +368,9 @@ namespace MuMech
             if (inc != old_inc && !targetInc)
                 doupdate = true;
 
+            if (p != null && p.bctype != BCType.KEPLER4)
+                doupdate = true;
+
             if (p == null || doupdate)
             {
                 if (p != null)
@@ -377,38 +389,6 @@ namespace MuMech
             old_LAN = LAN;
         }
 
-        public void keplerian4constraintLANfree(double sma, double ecc, double inc, double ArgP, bool omitCoast, bool currentInc)
-        {
-            if ( status == PVGStatus.ENABLED )
-                return;
-
-            bool doupdate = false;
-
-            if (sma != old_sma || ecc != old_ecc || ArgP != old_ArgP)
-                doupdate = true;
-
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
-                doupdate = true;
-
-            if (p == null || doupdate)
-            {
-                if (p != null)
-                    p.KillThread();
-
-                Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian4constraintLANfree");
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
-                solver.keplerian4constraintLANfree(sma, ecc, inc * UtilMath.Deg2Rad, ArgP * UtilMath.Deg2Rad);
-                p = solver;
-            }
-
-            old_sma = sma;
-            old_ecc = ecc;
-            old_inc = inc;
-            old_ArgP = ArgP;
-        }
-
         public void keplerian5constraint(double sma, double ecc, double inc, double LAN, double ArgP, bool omitCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
@@ -421,6 +401,9 @@ namespace MuMech
 
             // avoid slight drift in the current inclination from resetting guidance constantly
             if (inc != old_inc && !currentInc)
+                doupdate = true;
+
+            if (p != null && p.bctype != BCType.KEPLER5)
                 doupdate = true;
 
             if (p == null || doupdate)
