@@ -131,7 +131,6 @@ namespace MuMech
             Autopilot.SpeedTarget = GetAutolandTargetSpeed();
             Autopilot.HeadingTarget = RoverPilot.heading = GetAutolandTargetHeading(vectorToWaypoint);
             Autopilot.VertSpeedTarget = GetAutolandTargetVerticalSpeed(vectorToWaypoint);
-            Autopilot.RollMax = GetAutolandTargetBankAngle();
 
             if (approachState == AutolandApproachState.FLARE)
             {
@@ -277,9 +276,9 @@ namespace MuMech
         public EditableDouble maximumSafeBankAngle = 25.0;
 
         /// <summary>
-        /// Maximum allowed vertical speed in m/s
+        /// Maximum allowed vertical speed to bring the vessel on the glideslope in m/s
         /// </summary>
-        public const double maximumSafeVerticalSpeed = 15.0;
+        public const double maximumVerticalSpeedCorrection = 10.0;
 
         /// <summary>
         /// Angle of attack at the start of flare state.
@@ -329,15 +328,12 @@ namespace MuMech
 
                 Debug.Assert(vertSpeed < 0);
 
-                if (!UtilMath.Approximately(deltaAlt, 0))
-                {
-                    double remainingVertSpeedRange = maximumSafeVerticalSpeed - (deltaAlt > 0 ? vertSpeed : -1 * vertSpeed);
-                    double expPerMeter = (Math.Log(remainingVertSpeedRange + 1) - Math.Log(1)) / desiredAlt;
+                double expPerMeter = (Math.Log(maximumVerticalSpeedCorrection + 1) - Math.Log(1)) / desiredAlt;
+                double adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
 
-                    double adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
+        //        print("adjustment: " + adjustment);
 
-                    vertSpeed += deltaToCorrectAlt > 0 ? adjustment : -1 * adjustment;
-                }
+                vertSpeed += deltaToCorrectAlt > 0 ? adjustment : -1 * adjustment;
             }
 
             if (approachState == AutolandApproachState.FLARE)
@@ -346,7 +342,7 @@ namespace MuMech
                 vertSpeed = UtilMath.Clamp(vertSpeed, -4, 4);
             }
 
-            return UtilMath.Clamp(vertSpeed, -maximumSafeVerticalSpeed, maximumSafeVerticalSpeed);
+            return vertSpeed;
         }
 
         public double GetAutolandAlignmentError(Vector3d vectorToWaypoint)
@@ -410,6 +406,7 @@ namespace MuMech
 
         public double GetAutolandTargetBankAngle()
         {
+            // TODO: return Autopilot.RollLimit;
             // Formula is Bank = atan((v * t) / (g * (180/pi)))
             return Math.Min(Math.Atan((vesselState.speedSurfaceHorizontal * targetRateOfTurn) / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) * UtilMath.Rad2Deg, GetAutolandMaxBankAngle());
         }

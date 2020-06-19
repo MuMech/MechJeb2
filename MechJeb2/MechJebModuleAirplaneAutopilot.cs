@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using MuMech.AttitudeControllers;
 using UnityEngine;
@@ -9,13 +10,16 @@ namespace MuMech
         public bool HeadingHoldEnabled = false, AltitudeHoldEnabled = false, VertSpeedHoldEnabled = false, RollHoldEnabled = false, SpeedHoldEnabled = false;
 
         [Persistent (pass = (int)Pass.Global)]
-        public double AltitudeTarget = 0, HeadingTarget = 90, RollTarget = 0, SpeedTarget = 0, VertSpeedTarget = 0, VertSpeedMax = 10, RollMax = 5;
+        public double AltitudeTarget = 0, HeadingTarget = 90, RollTarget = 0, SpeedTarget = 0, VertSpeedTarget = 0;
 
         [Persistent (pass = (int)Pass.Global)]
         public EditableDouble AccKp = 0.5, AccKi = 0.5, AccKd = 0.005;
 
         [Persistent (pass = (int)Pass.Global)]
         public EditableDouble VerKp = 1, VerKi = 0.1, VerKd = 0.01;
+
+        [Persistent(pass = (int)Pass.Global)]
+        public EditableDouble PitKp = 2, PitKi = 0.5, PitKd = 0.001;
 
         private double VerPIDScale = 1;
 
@@ -27,9 +31,9 @@ namespace MuMech
         public EditableDouble YawKp = 2, YawKi = 0.01, YawKd = 0.001;
 
         [Persistent (pass = (int)Pass.Global)]
-        public EditableDouble YawLimit = 0.5;
+        public EditableDouble YawLimit = 45, RollLimit = 5, PitchDownLimit = 10, PitchUpLimit = 25;
 
-        public PIDController AccelerationPIDController, VertSpeedPIDController, RollPIDController, YawPIDController;
+        public PIDController AccelerationPIDController, VertSpeedPIDController, PitchPIDController, RollPIDController, YawPIDController;
 
         public MechJebModuleAirplaneAutopilot (MechJebCore core) : base (core)
         {
@@ -40,6 +44,7 @@ namespace MuMech
         {
             AccelerationPIDController = new PIDController (AccKp, AccKi, AccKd);
             VertSpeedPIDController = new PIDController (VerKp, VerKi, VerKd);
+            PitchPIDController = new PIDController(PitKp, PitKi, PitKd);
             RollPIDController = new PIDController (RolKp, RolKi, RolKd);
             YawPIDController = new PIDController (YawKp, YawKi, YawKd);
         }
@@ -98,6 +103,7 @@ namespace MuMech
                 return;
             VertSpeedHoldEnabled = true;
             VertSpeedPIDController.Reset ();
+            PitchPIDController.Reset();
         }
 
         public void DisableVertSpeedHold ()
@@ -114,6 +120,7 @@ namespace MuMech
             AltitudeHoldEnabled = true;
             if (VertSpeedHoldEnabled) {
                 VertSpeedPIDController.Reset ();
+                PitchPIDController.Reset();
             } else {
                 EnableVertSpeedHold ();
             }
@@ -159,6 +166,9 @@ namespace MuMech
             AccelerationPIDController.Kp = AccKp;
             AccelerationPIDController.Ki = AccKi;
             AccelerationPIDController.Kd = AccKd;
+            PitchPIDController.Kp = PitKp;
+            PitchPIDController.Ki = PitKi;
+            PitchPIDController.Kd = PitKd;
             RollPIDController.Kp = RolKp;
             RollPIDController.Ki = RolKi;
             RollPIDController.Kd = RolKd;
@@ -167,7 +177,7 @@ namespace MuMech
             YawPIDController.Kd = YawKd;
         }
 
-        public double a_err, v_err, cur_acc, _spd;
+        public double a_err, cur_acc, _spd;
         public double RealVertSpeedTarget, RealRollTarget, RealAccelerationTarget;
 
         public override void Drive (FlightCtrlState s)
@@ -193,21 +203,55 @@ namespace MuMech
 
             //AltitudeHold (set VertSpeed automatically to hold altitude)
             if (AltitudeHoldEnabled)
-                RealVertSpeedTarget = MuUtils.Clamp (fixVertSpeed (AltitudeTarget - vesselState.altitudeASL), -VertSpeedMax, VertSpeedMax);
+                RealVertSpeedTarget = fixVertSpeed(AltitudeTarget - vesselState.altitudeASL);
             else
                 RealVertSpeedTarget = VertSpeedTarget;
 
             //VertSpeedHold
             if (VertSpeedHoldEnabled) {
-                double vertspd = vesselState.speedVertical;
-                v_err = RealVertSpeedTarget - vertspd;
-                VertSpeedPIDController.intAccum = MuUtils.Clamp (VertSpeedPIDController.intAccum, -1 / (VerKi * VerPIDScale), 1 / (VerKi * VerPIDScale));
-                double p_act = VertSpeedPIDController.Compute (v_err);
+                double pitch_err = 0;
+                double deltaVertSpeed = RealVertSpeedTarget - vesselState.speedVertical;
+
+                if (deltaVertSpeed > 0)
+                {
+                    double remainingPitchRange = (PitchUpLimit - vesselState.vesselPitch) * .9;
+
+                    if (remainingPitchRange > 0)
+                    {
+                        double sc = UtilMath.Clamp(Math.Abs(deltaVertSpeed / RealVertSpeedTarget), 0, 1);
+                        double exp = (Math.Log(remainingPitchRange + 1) - Math.Log(1)) * sc;
+                        pitch_err = Math.Exp(exp) - 1;
+                    }
+                }
+                else
+                {
+                    double remainingPitchRange = (vesselState.vesselPitch - -PitchDownLimit) * .9;
+
+                    if (remainingPitchRange > 0)
+                    {
+                        double sc = UtilMath.Clamp(Math.Abs(deltaVertSpeed / RealVertSpeedTarget), 0, 1);
+                        double exp = (Math.Log(remainingPitchRange + 1) - Math.Log(1)) * sc;
+                        pitch_err = -(Math.Exp(exp) - 1);
+                    }
+                }
+
+                // above pitch up limit
+                if (PitchUpLimit < vesselState.vesselPitch)
+                    pitch_err = UtilMath.Min(pitch_err, PitchUpLimit - vesselState.vesselPitch);
+                // below pitch down limit
+                else if (-PitchDownLimit > vesselState.vesselPitch)
+                    pitch_err = UtilMath.Max(pitch_err, -PitchDownLimit - vesselState.vesselPitch);
+
+                //PitchPIDController.intAccum = MuUtils.Clamp (PitchPIDController.intAccum, -1 / (VerKi * VerPIDScale), 1 / (VerKi * VerPIDScale));
+                PitchPIDController.intAccum = UtilMath.Clamp(PitchPIDController.intAccum, -100 / PitKi , 100 / PitKi);
+                double p_act = PitchPIDController.Compute (pitch_err);
+
+                print("init: " + PitchPIDController.intAccum + " err: " + pitch_err + " act: " + p_act / 100);
                 //Debug.Log (p_act);
                 if (double.IsNaN (p_act)) {
-                    VertSpeedPIDController.Reset ();
+                    PitchPIDController.Reset ();
                 } else {
-                    s.pitch = Mathf.Clamp ((float)p_act, -1, 1);
+                    s.pitch = Mathf.Clamp ((float)p_act / 100, -1, 1);
                 }
             }
 
@@ -215,24 +259,52 @@ namespace MuMech
             double curHeading = vesselState.HeadingFromDirection (vesselState.forward);
             if (HeadingHoldEnabled) {
                 double toturn = MuUtils.ClampDegrees180 (HeadingTarget - curHeading);
-                RealRollTarget = MuUtils.Clamp (toturn * 2, -RollMax, RollMax);
+                RealRollTarget = MuUtils.Clamp (toturn * 2, -RollLimit, RollLimit);
             } else {
                 RealRollTarget = RollTarget;
             }
 
             if (RollHoldEnabled) {
                 double roll_err = MuUtils.ClampDegrees180 (vesselState.vesselRoll + RealRollTarget);
-                RollPIDController.intAccum = MuUtils.Clamp (RollPIDController.intAccum, -100 / AccKi, 100 / AccKi);
+                RollPIDController.intAccum = MuUtils.Clamp (RollPIDController.intAccum, -100 / RolKi, 100 / RolKi);
                 double roll_act = RollPIDController.Compute (roll_err);
                 s.roll = Mathf.Clamp ((float)roll_act / 100, -1, 1);
             }
 
             if (HeadingHoldEnabled) {
+                float YawActLimit = 0.5f;
                 double yaw_err = MuUtils.ClampDegrees180 (HeadingTarget - curHeading);
-                YawPIDController.intAccum = MuUtils.Clamp (YawPIDController.intAccum, -YawLimit * 100 / AccKi, YawLimit * 100 / AccKi);
+                yaw_err = UtilMath.Clamp(yaw_err, -YawLimit, YawLimit);
+                YawPIDController.intAccum = MuUtils.Clamp (YawPIDController.intAccum, -YawActLimit * 100 / YawKi, YawActLimit * 100 / YawKi);
                 double yaw_act = YawPIDController.Compute (yaw_err);
-                s.yaw = (float)MuUtils.Clamp (yaw_act / 100, -YawLimit, +YawLimit);
+                s.yaw = Mathf.Clamp((float)yaw_act / 100, -YawActLimit, +YawActLimit);
             }
+        }
+
+        private double calculateSteeringError(double current, double target, double minLimit, double maxLimit)
+        {
+            double margin = 0.1;
+            double error = 0;
+            double delta = target - current;
+            double remainingRange = delta > 0 ? (maxLimit - current) * (1 - margin) : (current - minLimit) * (1 - margin);
+
+            if (remainingRange > 0)
+            {
+                double sc = UtilMath.Clamp(Math.Abs(delta / target), 0, 1);
+                double exp = (Math.Log(remainingRange + 1) - Math.Log(1)) * sc;
+                error = Math.Exp(exp) - 1;
+
+                if (delta < 0)
+                    error = -error;
+            }
+
+            // corrective steering back into operational limits [minLimit, maxLimit]
+            if (current > maxLimit)
+                error = UtilMath.Min(error, (maxLimit - current) * (1 + margin));
+            else if (current < minLimit)
+                error = UtilMath.Max(error, minLimit - current);
+
+            return error;
         }
     }
 }
