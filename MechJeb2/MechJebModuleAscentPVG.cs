@@ -117,11 +117,14 @@ namespace MuMech
 
         private void setTarget()
         {
+            bool lanflag = false;
+
             double sma = 0;
             double ecc = 0;
             double vT = 0;
             double rT = 0;
             double gammaT = 0;
+            double LAN = 0;
 
             ConvertToSMAEcc(autopilot.desiredOrbitAltitude, desiredApoapsis, out sma, out ecc);
             ConvertToVTRT(sma, ecc, attachAltFlag ? desiredAttachAlt : autopilot.desiredOrbitAltitude, out gammaT, out rT, out vT);
@@ -129,24 +132,24 @@ namespace MuMech
 
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
-                double LAN = core.target.TargetOrbit.LAN;
+                LAN = core.target.TargetOrbit.LAN;
                 inclination = core.target.TargetOrbit.inclination;
-                if (ecc < 1e-4 || attachAltFlag)
-                    core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, omitCoast, true, true);
-                else
-                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, true, true);
+                lanflag = true;
             }
             else if ( ascentGuidance.launchingToMatchLAN && core.target.NormalTargetExists )
             {
-                double LAN = core.target.TargetOrbit.LAN;
-                if (ecc < 1e-4 || attachAltFlag)
-                    core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, omitCoast, false, true);
-                else
-                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, false, true);
+                LAN = core.target.TargetOrbit.LAN;
+                lanflag = true;
+
             }
             else if ( ascentGuidance.launchingToLAN )
             {
-                double LAN = autopilot.desiredLAN;
+                LAN = autopilot.desiredLAN;
+                lanflag = true;
+            }
+
+            if ( lanflag )
+            {
                 if (ecc < 1e-4 || attachAltFlag)
                     core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, omitCoast, false, true);
                 else
