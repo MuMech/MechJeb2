@@ -31,6 +31,7 @@ namespace MuMech {
             this.incT = incT;
             this.LANT = LANT;
             bcfun = flightangle5constraint;
+            bctype = BCType.FLIGHTANGLE5;
         }
 
         private void flightangle5constraint(double[] yT, double[] z, bool terminal)
@@ -73,6 +74,7 @@ namespace MuMech {
             this.gammaT = gammaT;
             this.incT = incT;
             bcfun = flightangle4constraint;
+            bctype = BCType.FLIGHTANGLE4;
         }
 
         private void flightangle4constraint(double[] yT, double[] z, bool terminal)
@@ -112,6 +114,7 @@ namespace MuMech {
             this.eccT = ecc;
             this.incT = inc;
             bcfun = keplerian3constraint;
+            bctype = BCType.KEPLER3;
         }
 
         // Ping Lu, "ASSESSMENT OF ADAPTIVE GUIDANCE FOR RE6PONSIVE LAUNCH VEHICLES AND SPACECRAFT", AFRL-RV-PSTR-2009-1023
@@ -234,6 +237,7 @@ namespace MuMech {
             this.incT = inc;
             this.LANT = LAN;
             bcfun = keplerian4constraintArgPfree;
+            bctype = BCType.KEPLER4;
         }
 
         private void keplerian4constraintArgPfree(double[] yT, double[] z, bool terminal)
@@ -269,45 +273,6 @@ namespace MuMech {
             }
         }
 
-        public void keplerian4constraintLANfree(double sma, double ecc, double inc, double ArgP)
-        {
-            this.smaT = sma / r_scale;
-            this.eccT = ecc;
-            this.incT = inc;
-            this.ArgPT = ArgP;
-            bcfun = keplerian4constraintLANfree;
-        }
-
-        private void keplerian4constraintLANfree(double[] yT, double[] z, bool terminal)
-        {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
-
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d n = new Vector3d(0, -1, 0); // angular momentum vectors point south in KSP and we're in xzy coords
-
-            Vector3d eccf = Vector3d.Cross(vf, hf) - rf / rf.magnitude; // ecc vector
-            double smaf = 1.0 / ( 2.0 / rf.magnitude - vf.sqrMagnitude );
-            double hTm = Math.Sqrt( smaT * ( 1 - eccT * eccT ) );
-
-            if (!terminal)
-            {
-                z[0] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf.magnitude ) ); // PeA constraint
-                z[1] = vf.sqrMagnitude / 2.0 - 1.0 / rf.magnitude + 1.0 / ( 2.0 * smaT ); // E constraint
-                z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(incT);
-                z[3] = Vector3d.Dot(eccf, Vector3d.Cross(n, hf)) / eccf.magnitude / hf.magnitude - Math.Sin(incT) * Math.Cos(ArgPT);
-                z[4] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), n);
-                z[5] = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
-            }
-            else
-            {
-                z[0] = hf.magnitude - hTm;
-                z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
-            }
-        }
-
         public void keplerian5constraint(double sma, double ecc, double inc, double LAN, double ArgP)
         {
             this.smaT = sma / r_scale;
@@ -316,6 +281,7 @@ namespace MuMech {
             this.LANT = LAN;
             this.ArgPT = ArgP;
             bcfun = keplerian5constraint;
+            bctype = BCType.KEPLER5;
         }
 
         private void keplerian5constraint(double[] yT, double[] z, bool terminal)

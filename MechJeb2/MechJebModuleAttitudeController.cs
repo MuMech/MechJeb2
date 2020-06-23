@@ -199,10 +199,16 @@ namespace MuMech
                 return rotRef;
             }
 
+            Vector3d thrustForward = vesselState.thrustForward;
+
+            // the off-axis thrust modifications get into a fight with the differential throttle so do not use them when diffthrottle is used
+            if (core.thrust.differentialThrottle)
+                thrustForward = vesselState.forward;
+
             switch (reference)
             {
                 case AttitudeReference.INERTIAL_COT:
-                    rotRef = Quaternion.FromToRotation(vesselState.thrustForward, vesselState.forward) * rotRef;
+                    rotRef = Quaternion.FromToRotation(thrustForward, vesselState.forward) * rotRef;
                     break;
                 case AttitudeReference.ORBIT:
                     rotRef = Quaternion.LookRotation(vesselState.orbitalVelocity.normalized, vesselState.up);
@@ -215,7 +221,7 @@ namespace MuMech
                     break;
                 case AttitudeReference.SURFACE_NORTH_COT:
                     rotRef = vesselState.rotationSurface;
-                    rotRef = Quaternion.FromToRotation(vesselState.thrustForward, vesselState.forward) * rotRef;
+                    rotRef = Quaternion.FromToRotation(thrustForward, vesselState.forward) * rotRef;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
                     rotRef = Quaternion.LookRotation(vesselState.surfaceVelocity.normalized, vesselState.up);
@@ -254,7 +260,7 @@ namespace MuMech
                     up = Vector3d.Cross(fwd, vesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
-                    rotRef = Quaternion.FromToRotation(vesselState.thrustForward, vesselState.forward) * rotRef;
+                    rotRef = Quaternion.FromToRotation(thrustForward, vesselState.forward) * rotRef;
                     break;
                 case AttitudeReference.SUN:
                     Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();

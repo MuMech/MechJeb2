@@ -5,6 +5,8 @@ using System.Threading;
 using UnityEngine;
 
 namespace MuMech {
+    public enum BCType { KEPLER5, KEPLER4, KEPLER3, FLIGHTANGLE4, FLIGHTANGLE5 };
+
     public abstract class PontryaginBase {
         //const double MAX_COAST_TAU = 1.5;
 
@@ -439,6 +441,7 @@ namespace MuMech {
 
         protected List<MechJebModuleLogicalStageTracking.Stage> stages { get { return core.stageTracking.stages; } }
         public double mu;
+        public BCType bctype;
         public Action<double[], double[], bool> bcfun;
         public const double g0 = 9.80665;
         public Vector3d r0, v0, r0_bar, v0_bar;
