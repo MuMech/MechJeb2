@@ -20,13 +20,13 @@ namespace MuMech
         public EditableDouble AccKp = 0.5, AccKi = 0.5, AccKd = 0.005;
 
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble PitKp = 2, PitKi = 0.5, PitKd = 0.001;
+        public EditableDouble PitKp = 2.0, PitKi = 0.5, PitKd = 0.5;
 
         [Persistent (pass = (int)Pass.Global)]
-        public EditableDouble RolKp = 0.5, RolKi = 0.08, RolKd = 0.75;
+        public EditableDouble RolKp = 0.5, RolKi = 0.02, RolKd = 0.5;
 
         [Persistent (pass = (int)Pass.Global)]
-        public EditableDouble YawKp = 0.25, YawKi = 0.3, YawKd = 0.75;
+        public EditableDouble YawKp = 4.0, YawKi = 0.01, YawKd = 0.02;
 
         [Persistent (pass = (int)Pass.Local)]
         public EditableDouble YawLimit = 10, RollLimit = 45, PitchDownLimit = 15, PitchUpLimit = 25;
