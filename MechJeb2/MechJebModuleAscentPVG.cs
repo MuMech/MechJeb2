@@ -126,8 +126,10 @@ namespace MuMech
             double gammaT = 0;
             double LAN = 0;
 
+            double attachAlt = MuUtils.Clamp(desiredAttachAlt, autopilot.desiredOrbitAltitude, desiredApoapsis);
+
             ConvertToSMAEcc(autopilot.desiredOrbitAltitude, desiredApoapsis, out sma, out ecc);
-            ConvertToVTRT(sma, ecc, attachAltFlag ? desiredAttachAlt : autopilot.desiredOrbitAltitude, out gammaT, out rT, out vT);
+            ConvertToVTRT(sma, ecc, attachAltFlag ? attachAlt : autopilot.desiredOrbitAltitude, out gammaT, out rT, out vT);
             double inclination = autopilot.desiredInclination;
 
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
