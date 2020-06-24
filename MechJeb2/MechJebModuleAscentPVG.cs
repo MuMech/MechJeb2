@@ -126,7 +126,11 @@ namespace MuMech
             double gammaT = 0;
             double LAN = 0;
 
-            double attachAlt = MuUtils.Clamp(desiredAttachAlt, autopilot.desiredOrbitAltitude, desiredApoapsis);
+            double attachAlt = desiredAttachAlt;
+            if (attachAlt < autopilot.desiredOrbitAltitude)
+                attachAlt = autopilot.desiredOrbitAltitude;
+            if (attachAlt > desiredApoapsis && desiredApoapsis > autopilot.desiredOrbitAltitude)
+                attachAlt = desiredApoapsis;
 
             ConvertToSMAEcc(autopilot.desiredOrbitAltitude, desiredApoapsis, out sma, out ecc);
             ConvertToVTRT(sma, ecc, attachAltFlag ? attachAlt : autopilot.desiredOrbitAltitude, out gammaT, out rT, out vT);
