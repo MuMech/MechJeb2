@@ -163,9 +163,6 @@ namespace MuMech
                 if (GUILayout.Button("+", GUILayout.Width(18))) { RollMaxtmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 RollMaxtmp = MuUtils.Clamp (RollMaxtmp, -60, 60);
                 GUILayout.Label ("°", GUILayout.ExpandWidth (true));
-
-                print("GUI: " + autopilot.BankAngle + " vs " + RollMaxtmp);
-
                 if (change || GUILayout.Button (Localizer.Format("#MechJeb_Aircraftauto_btnset6"), autopilot.BankAngle == RollMaxtmp ? btWhite : btGreen)) {
                     autopilot.BankAngle = RollMaxtmp;
                 }
