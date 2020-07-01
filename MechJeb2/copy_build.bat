@@ -13,8 +13,8 @@ IF NOT EXIST "%MONO%" (
 	exit 0
 )
 
-IF EXIST %PDB2MDB% ( 
-	"%MONO%" %PDB2MDB% %TargetPath%
+IF EXIST %PDB2MDB% (
+	"%MONO%" "%PDB2MDB%" %TargetPath%
 ) ELSE (
 	echo Unable to find %PDB2MDB%
 )
