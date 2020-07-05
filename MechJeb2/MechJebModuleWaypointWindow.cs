@@ -1047,6 +1047,11 @@ namespace MuMech
             return Localizer.Format("#MechJeb_Waypointhelper_title");//"Waypoint Help"
 		}
 
+		public override string IconName()
+		{
+			return "Waypoint Help";
+		}
+
 		public override void OnStart(PartModule.StartState state)
 		{
 			hidden = true;

@@ -5,8 +5,10 @@ using System.Threading;
 using UnityEngine;
 
 namespace MuMech {
+    public enum BCType { KEPLER5, KEPLER4, KEPLER3, FLIGHTANGLE4, FLIGHTANGLE5 };
+
     public abstract class PontryaginBase {
-        const double MAX_COAST_TAU = 1.5;
+        //const double MAX_COAST_TAU = 1.5;
 
         public class Arc
         {
@@ -41,7 +43,8 @@ namespace MuMech {
             public bool done { get { return (stage != null && stage.staged) || _done; } set { _done = value; } }
             public bool coast = false;
             public bool coast_after_jettison = false;
-            public bool use_fixed_time = false;
+            public bool use_fixed_time = false; // confusingly, this is fixed end-time for terminal coasts to rendezvous
+            public bool use_fixed_time2 = false; // this is a fixed time segment, but the constant appears in the y0 vector with a trivial constraint
             public double fixed_time = 0;
             public double fixed_tbar = 0;
 
@@ -130,10 +133,13 @@ namespace MuMech {
                 return tgo_bar(tbar, n) * t_scale;
             }
 
+            // this is the tgo of the "booster" stage, this is deliberately allowed to go negative if
+            // we're staging so "current" may be a misnomer.
+            //
             public double current_tgo(double t)
             {
-                int n = segment(t);
-                return tgo(t, n);
+                double tbar = ( t - t0 ) / t_scale;
+                return ( segments[0].tmax - tbar ) * t_scale;
             }
 
             public double tgo_bar(double tbar, int n) // tgo for each segment/arc in the solution
@@ -435,6 +441,7 @@ namespace MuMech {
 
         protected List<MechJebModuleLogicalStageTracking.Stage> stages { get { return core.stageTracking.stages; } }
         public double mu;
+        public BCType bctype;
         public Action<double[], double[], bool> bcfun;
         public const double g0 = 9.80665;
         public Vector3d r0, v0, r0_bar, v0_bar;
@@ -678,6 +685,8 @@ namespace MuMech {
 
                     if (arcs[i].use_fixed_time)
                         coast_time = arcs[i].fixed_tbar - t;
+                    else if (arcs[i].use_fixed_time2)
+                        coast_time = arcs[i].fixed_tbar;
                     else
                         coast_time = y0[arcIndex(arcs, i, parameters: true)];
 
@@ -896,27 +905,32 @@ namespace MuMech {
             double total_bt_bar = 0;
             for(int i = 0; i < arcs.Count; i++)
             {
-                if ( arcs[i].coast && !arcs[i].use_fixed_time )
+                if ( arcs[i].coast )
                 {
-                    int index = arcIndex(arcs, i);
+                    if (arcs[i].use_fixed_time2)
+                    {
+                        int index = arcIndex(arcs, i, parameters: true);
+                        z[n] = y0[index] - arcs[i].fixed_tbar;
+                        n++;
+                    }
+                    else if (arcs[i].coast_after_jettison)
+                    {
+                        // H0 should be zero throughout the entire coast and by continuity
+                        // be zero at the start of the subsequent burn, per Lu, 2008 we use
+                        // the start of the subsequent burn.
+                        int index = arcIndex(arcs, i+1);
 
-                    Vector3d r = new Vector3d(y0[index+0], y0[index+1], y0[index+2]);
-                    Vector3d v = new Vector3d(y0[index+3], y0[index+4], y0[index+5]);
-                    Vector3d pv = new Vector3d(y0[index+6], y0[index+7], y0[index+8]);
-                    Vector3d pr = new Vector3d(y0[index+9], y0[index+10], y0[index+11]);
-                    double rm = r.magnitude;
+                        Vector3d r = new Vector3d(y0[index+0], y0[index+1], y0[index+2]);
+                        Vector3d v = new Vector3d(y0[index+3], y0[index+4], y0[index+5]);
+                        Vector3d pv = new Vector3d(y0[index+6], y0[index+7], y0[index+8]);
+                        Vector3d pr = new Vector3d(y0[index+9], y0[index+10], y0[index+11]);
+                        double rm = r.magnitude;
 
-                    Vector3d r2 = new Vector3d(yf[i*13+0], yf[i*13+1], yf[i*13+2]);
-                    Vector3d v2 = new Vector3d(yf[i*13+3], yf[i*13+4], yf[i*13+5]);
-                    Vector3d pv2 = new Vector3d(yf[i*13+6], yf[i*13+7], yf[i*13+8]);
-                    Vector3d pr2 = new Vector3d(yf[i*13+9], yf[i*13+10], yf[i*13+11]);
-                    double r2m = r2.magnitude;
+                        double H0t1 = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
 
-                    double H0t1 = Vector3d.Dot(pr, v) - Vector3d.Dot(pv, r) / (rm * rm * rm);
-                    double H0t2 = Vector3d.Dot(pr2, v2) - Vector3d.Dot(pv2, r2) / (r2m * r2m * r2m);
-
-                    z[n] = H0t2;
-                    n++;
+                        z[n] = H0t1;
+                        n++;
+                    }
                 }
                 // sum up burntime of burn arcs
                 if ( !arcs[i].coast )
@@ -941,6 +955,11 @@ namespace MuMech {
 
         public bool runOptimizer(List<Arc> arcs)
         {
+            for(int i = 0; i < y0.Length; i++)
+            {
+                //DebugLog("y0["+i+"]=" + y0[i]);
+            }
+
             double[] z = new double[arcIndex(arcs,arcs.Count)];
             optimizationFunction(y0, z, arcs);
 
@@ -953,6 +972,7 @@ namespace MuMech {
 
             znorm = Math.Sqrt(znorm);
 
+            /*
             double[] bndl = new double[arcIndex(arcs,arcs.Count)];
             double[] bndu = new double[arcIndex(arcs,arcs.Count)];
             for(int i = 0; i < bndl.Length; i++)
@@ -970,10 +990,11 @@ namespace MuMech {
                 }
             }
             bndl[0] = 0;
+            */
 
             alglib.minlmreport rep = new alglib.minlmreport();
             alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);  /* y0.Length must == z.Length returned by the BC function for square problems */
-            alglib.minlmsetbc(state, bndl, bndu);
+            // alglib.minlmsetbc(state, bndl, bndu);
             alglib.minlmsetcond(state, lmEpsx, lmIter);
             alglib.minlmoptimize(state, optimizationFunction, null, arcs);
 
@@ -985,6 +1006,11 @@ namespace MuMech {
             if (last_lm_iteration_count > max_lm_iteration_count)
                 max_lm_iteration_count = last_lm_iteration_count;
 
+            for(int i = 0; i < y0.Length; i++)
+            {
+                //DebugLog("y0_new["+i+"]=" + y0_new[i]);
+            }
+
             optimizationFunction(y0_new, z, arcs);
 
             znorm = 0.0;
@@ -995,7 +1021,9 @@ namespace MuMech {
                 if (z[i] > max_z)
                     max_z = z[i];
                 znorm += z[i] * z[i];
+                //DebugLog("z["+i+"]=" + z[i]);
             }
+            //DebugLog("znorm = " + Math.Sqrt(znorm));
 
             last_znorm = Math.Sqrt(znorm);
 
@@ -1008,9 +1036,10 @@ namespace MuMech {
                 return true;
             }
 
-            // lol
+            /*
             if ( (rep.terminationtype != 2) && (rep.terminationtype != 7) )
                 return false;
+                */
 
             return false;
         }
@@ -1175,7 +1204,10 @@ namespace MuMech {
                         Array.Copy(y0_old, start, y0, 2, new_upper_length);
 
                         if (last_arcs[0].coast)
+                        {
                             last_arcs[0].coast_after_jettison = false;  /* we can't be after a jettison if we're first */
+                            last_arcs[0].use_fixed_time2 = false;  /* also can't have a fixed time when we're in the coast */
+                        }
                     }
 
                     if (last_arcs.Count == 0)
@@ -1205,6 +1237,7 @@ namespace MuMech {
                     {
                         if ( last_arcs.Count < stages.Count )
                         {
+                            DebugLog("Overburning: adding another available stage to the solution");
                             last_arcs.Add(new Arc(this, stage: stages[last_arcs.Count], t0: t0));
                             double[] y0_new = new double[arcIndex(last_arcs, last_arcs.Count)];
                             Array.Copy(y0, 0, y0_new, 0, y0.Length);
@@ -1259,6 +1292,16 @@ namespace MuMech {
             y0 = null;
         }
 
+        public double start_time;
+
+        public double running_time(double t0)
+        {
+            if (thread != null)
+                return t0 - start_time;
+            else
+                return 0;
+        }
+
         public bool threadStart(double t0)
         {
             if (thread != null && thread.IsAlive)
@@ -1272,22 +1315,38 @@ namespace MuMech {
                     thread.Abort();
                 }
 
+                start_time = t0;
                 thread = new Thread(() => Optimize(t0));
                 thread.Start();
                 return true;
             }
         }
 
+        // FIXME: use the thread safe Debug.Log that is kicking around the MJ sources, didn't need to write this
+
+        // Minimum viable message Queue
         Queue logQueue = new Queue();
         Mutex mut = new Mutex();
 
-        // lets us Debug.Log events from the computation thread in a thread-safe fashion
+        // NOTE: The Debug.Log() method is NOT THREADSAFE IN UNITY and causes CTD.
+        //
+        // All functions in the optimizer which runs in a separate thread (nearly every single one
+        // of them) must call DebugLog() and not Debug.Log().
         //
         protected void DebugLog(string s)
         {
             mut.WaitOne();
             logQueue.Enqueue(s);
             mut.ReleaseMutex();
+        }
+
+        // Similarly we can't log fatal stacktraces to the log from the thread, so we have to save state
+        // here in order for the Janitorial() task to Debug.Log them properly.
+        //
+        protected void Fatal(string s)
+        {
+            last_failure_cause = s;
+            y0 = null;
         }
 
         // need to call this every tick or so in order to dump exceptions to the log from
@@ -1323,16 +1382,12 @@ namespace MuMech {
             mut.ReleaseMutex();
         }
 
+        // Does what it says on the tin.
+        //
         public void KillThread()
         {
             if (thread != null)
                 thread.Abort();
-        }
-
-        protected void Fatal(string s)
-        {
-            last_failure_cause = s;
-            y0 = null;
         }
     }
 }

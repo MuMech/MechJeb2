@@ -144,5 +144,10 @@ namespace MuMech
         {
             return Localizer.Format("#MechJeb_AttitudeAdjust_title");//Attitude Adjustment
         }
+
+        public override string IconName()
+        {
+            return "Attitude Adjustment";
+        }
     }
 }

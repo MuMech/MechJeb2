@@ -31,6 +31,7 @@ namespace MuMech {
             this.incT = incT;
             this.LANT = LANT;
             bcfun = flightangle5constraint;
+            bctype = BCType.FLIGHTANGLE5;
         }
 
         private void flightangle5constraint(double[] yT, double[] z, bool terminal)
@@ -73,6 +74,7 @@ namespace MuMech {
             this.gammaT = gammaT;
             this.incT = incT;
             bcfun = flightangle4constraint;
+            bctype = BCType.FLIGHTANGLE4;
         }
 
         private void flightangle4constraint(double[] yT, double[] z, bool terminal)
@@ -112,10 +114,24 @@ namespace MuMech {
             this.eccT = ecc;
             this.incT = inc;
             bcfun = keplerian3constraint;
+            bctype = BCType.KEPLER3;
         }
 
-        // has a singularity for e == 0 which is only fixable by going to flightangle4constraint
-        // FIXME: singularity for i == 0, rot coordinates?
+        // Ping Lu, "ASSESSMENT OF ADAPTIVE GUIDANCE FOR RE6PONSIVE LAUNCH VEHICLES AND SPACECRAFT", AFRL-RV-PSTR-2009-1023
+        // https://pdfs.semanticscholar.org/72b3/589f49ad653813a1121fbabccf938df20b48.pdf
+        // Section 9.1 Mode 31
+        //
+        // https://pdfs.semanticscholar.org/2836/c4200719146ccc9ca6c3cd239e6367dfddaa.pdf
+        // Section 8.2 Mode 31
+        //
+        // Those algorithms failed to converge with any stability, so the transversality conditions for free LAN, ArgP and
+        // attachment were added from:
+        //
+        // Beinfeng Pan, "Reduced Transversality Conditions in Optimal Space Trajectories"
+        // https://www.researchgate.net/publication/260671510_Reduced_Transversality_Conditions_in_Optimal_Space_Trajectories
+        //
+        // In addition, dividing the inclination constraint by the angular momentum produced significantly better convergence.
+        //
         private void keplerian3constraint(double[] yT, double[] z, bool terminal)
         {
             Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
@@ -125,21 +141,87 @@ namespace MuMech {
 
             Vector3d hf = Vector3d.Cross(rf, vf);
             Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
+            Vector3d rn = Vector3d.Cross(rf, n);
+            Vector3d vn = Vector3d.Cross(vf, n);
+
+            double hTm = Math.Sqrt( smaT * ( 1 - eccT * eccT ) );
+
+            double smaf = 1.0 / ( 2.0 / rf.magnitude - vf.sqrMagnitude );
+            double eccf = Math.Sqrt(1.0 - hf.sqrMagnitude / smaf);
+            double rf3 = rf.magnitude * rf.sqrMagnitude;
+
+            if (!terminal)
+            {
+                z[0] = hf.sqrMagnitude / 2.0 - hTm * hTm / 2.0; // angular momentum constraint
+                z[1] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf ) ); // PeA constraint
+                //z[1] = 1 / (2 * smaf) - 1 / (2 * smaT); // energy constraint
+                z[2] = Vector3d.Dot(n, hf.normalized) - Math.Cos(incT); // inclination constraint
+                // transversality
+                z[3] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hf);
+                z[4] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), n);
+                z[5] = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
+                //z[3] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, Vector3d.Cross(rf, n)) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, Vector3d.Cross(vf, n));
+                //z[4] = rf3 * Vector3.Dot(vf, prf) - Vector3d.Dot(rf, pvf);
+                //z[5] = Vector3d.Dot(prf, Vector3d.Cross(rf, vn)) * Vector3d.Dot(Vector3d.Cross(rf, hf), Vector3d.Cross(vf, rn)) +
+                //    Vector3d.Dot(pvf, Vector3d.Cross(vf, rn)) * Vector3d.Dot(Vector3d.Cross(vf, hf), Vector3d.Cross(rf, vn));
+            }
+            else
+            {
+                z[0] = hf.magnitude - hTm;
+                z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
+            }
+        }
+
+        // From https://convexoptimization.com/TOOLS/PeterHistos.pdf
+        // 3.4.4 Boundary Conditions for Elliptical Orbits with a Fixed Inclination
+        //
+        private void keplerian3constraintBAD(double[] yT, double[] z, bool terminal)
+        {
+            //DebugLog("smaT = " + smaT + " / " + smaT * r_scale);
+            //DebugLog("eccT = " + eccT);
+            //DebugLog("incT = " + incT + " / " + incT * UtilMath.Rad2Deg);
+
+            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
+            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
+            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+
+            Vector3d hf = Vector3d.Cross(rf, vf);
+            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
+            //Vector3d n = new Vector3d(0, 0, 1);
+
+            Vector3d ir = rf.normalized;
+            Vector3d iv = vf.normalized;
+            Vector3d ih = hf.normalized;
 
             double hTm = Math.Sqrt( smaT * ( 1 - eccT * eccT ) );
 
             double smaf = 1.0 / ( 2.0 / rf.magnitude - vf.sqrMagnitude );
             double eccf = Math.Sqrt(1.0 - hf.sqrMagnitude / smaf);
 
+            double ar = Vector3d.Dot(ih, Vector3d.Cross(n, vf));
+            double av = Vector3d.Dot(ih, Vector3d.Cross(n, rf));
+
+            double c2vs = 2 * smaf * smaf * vf.magnitude * eccf * ( 1 - eccf ) - smaf * hf.sqrMagnitude * vf.magnitude; // c2v-sqiggle
+            double c2rs = 2 * smaf * smaf * eccf * ( 1 - eccf ) / rf.sqrMagnitude - smaf * hf.sqrMagnitude / rf.sqrMagnitude; // c2r-sqiggle
+
+            double As = c2vs * Vector3d.Dot(iv, iv+ir) - Vector3d.Dot(Vector3d.Cross(rf, Vector3d.Cross(rf, vf)), iv + ir);
+            double Bs = c2rs * Vector3d.Dot(ir, iv+ir) - Vector3d.Dot(Vector3d.Cross(vf, Vector3d.Cross(vf, rf)), iv + ir);
+
+            // double A = As / eccf;
+
+            double v2s = ( Vector3d.Dot(pvf, iv+ir) / rf.sqrMagnitude - vf.magnitude * Vector3d.Dot(prf, iv + ir) ) / ( As / rf.sqrMagnitude - vf.magnitude * Bs );
+            double v3s = ( Vector3d.Dot(pvf, iv+ir) - v2s * As ) / ( Vector3d.Dot(ir, iv) + 1 );
+
             if (!terminal)
             {
                 z[0] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf ) ); // PeA constraint
                 z[1] = vf.sqrMagnitude / 2.0 - 1.0 / rf.magnitude + 1.0 / ( 2.0 * smaT ); // E constraint
-                z[2] = Vector3d.Dot(n, hf.normalized) - Math.Cos(incT); // inc constraint
+                z[2] = Vector3d.Dot(n, ih) - Math.Cos(incT); // inc constraint
                 // transversality
-                z[3] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hf);
-                z[4] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), n);
-                z[5] = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
+                z[3] = Vector3d.Dot(ar/av * pvf + prf, ih);
+                z[4] = Vector3d.Dot(pvf, ir) - v2s * c2vs * Vector3d.Dot(iv, ir) - v3s * Vector3d.Dot(iv, ir);
+                z[5] = Vector3d.Dot(prf, ir) - v2s * c2rs * Vector3d.Dot(iv, ir) - v3s / (vf.magnitude * rf.sqrMagnitude) * Vector3d.Dot(iv, ir);
             }
             else
             {
@@ -155,6 +237,7 @@ namespace MuMech {
             this.incT = inc;
             this.LANT = LAN;
             bcfun = keplerian4constraintArgPfree;
+            bctype = BCType.KEPLER4;
         }
 
         private void keplerian4constraintArgPfree(double[] yT, double[] z, bool terminal)
@@ -176,7 +259,7 @@ namespace MuMech {
             if (!terminal)
             {
                 z[0] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf ) ); // PeA constraint
-                z[2] = hmiss[0];
+                z[1] = hmiss[0];
                 z[2] = hmiss[1];
                 z[3] = hmiss[2];
                 // transversality
@@ -190,45 +273,6 @@ namespace MuMech {
             }
         }
 
-        public void keplerian4constraintLANfree(double sma, double ecc, double inc, double ArgP)
-        {
-            this.smaT = sma / r_scale;
-            this.eccT = ecc;
-            this.incT = inc;
-            this.ArgPT = ArgP;
-            bcfun = keplerian4constraintLANfree;
-        }
-
-        private void keplerian4constraintLANfree(double[] yT, double[] z, bool terminal)
-        {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
-
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d n = new Vector3d(0, -1, 0); // angular momentum vectors point south in KSP and we're in xzy coords
-
-            Vector3d eccf = Vector3d.Cross(vf, hf) - rf / rf.magnitude; // ecc vector
-            double smaf = 1.0 / ( 2.0 / rf.magnitude - vf.sqrMagnitude );
-            double hTm = Math.Sqrt( smaT * ( 1 - eccT * eccT ) );
-
-            if (!terminal)
-            {
-                z[0] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf.magnitude ) ); // PeA constraint
-                z[1] = vf.sqrMagnitude / 2.0 - 1.0 / rf.magnitude + 1.0 / ( 2.0 * smaT ); // E constraint
-                z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(incT);
-                z[3] = Vector3d.Dot(eccf, Vector3d.Cross(n, hf)) / eccf.magnitude / hf.magnitude - Math.Sin(incT) * Math.Cos(ArgPT);
-                z[4] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), n);
-                z[5] = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
-            }
-            else
-            {
-                z[0] = hf.magnitude - hTm;
-                z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
-            }
-        }
-
         public void keplerian5constraint(double sma, double ecc, double inc, double LAN, double ArgP)
         {
             this.smaT = sma / r_scale;
@@ -237,6 +281,7 @@ namespace MuMech {
             this.LANT = LAN;
             this.ArgPT = ArgP;
             bcfun = keplerian5constraint;
+            bctype = BCType.KEPLER5;
         }
 
         private void keplerian5constraint(double[] yT, double[] z, bool terminal)
@@ -249,10 +294,16 @@ namespace MuMech {
             Vector3d hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) ) * Math.Sqrt(smaT * (1 - eccT*eccT));
             hT = -hT.xzy; // left handed coordinate system
             // FIXME: Vector3d.cross(n, hf) is the node vector pointing in LAN dir, another ArgPT rot around hT would give eT direction
-            Vector3d right = new Vector3d(1, 0, 0);
-            Vector3d eT = Quaternion.Euler((float)LANT, (float)incT, (float)ArgPT) * right * (float) eccT;
+            //Vector3d eT = QuaternionD.AngleAxis(-ArgPT * UtilMath.Rad2Deg, hf) * -Vector3d.cross(n, hf);
 
-            if (Math.Abs(hT[1]) <= 1e-6) // handle singularity
+            // This is the ZXZ intrinsic rotation, converting Vector3d.right (pointing at the periapsis) from the perifocal system.  Thus, the
+            // order of applying the angles is backwards.  However, the negative sign for the rotation angle is cancelled out by AngleAxis being
+            // a left-handed rotation, so the angles here are positive.  Argh.
+            //
+            Vector3d eT = QuaternionD.AngleAxis(LANT * UtilMath.Rad2Deg, Vector3d.forward) * QuaternionD.AngleAxis(incT * UtilMath.Rad2Deg, Vector3d.right) * QuaternionD.AngleAxis(ArgPT * UtilMath.Rad2Deg, Vector3d.forward) * Vector3d.right * eccT;
+            eT = eT.xzy;
+
+            if (Math.Abs(hT[1]) <= 1e-6) // handle 90 degree singularity
             {
                 rf = rf.Reorder(231);
                 vf = vf.Reorder(231);
@@ -263,7 +314,7 @@ namespace MuMech {
             }
 
             Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d ef = - ( rf.normalized + Vector3d.Cross(hf, vf) );
+            Vector3d ef = Vector3d.Cross(vf, hf) - rf.normalized;
             Vector3d hmiss = hf - hT;
             Vector3d emiss = ef - eT;
             double trans = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
@@ -464,6 +515,8 @@ namespace MuMech {
                 multipleIntegrate(y0, new_sol, arcs, 10);
 
                 double coastlen = new_sol.tgo(new_sol.t0, arcs.Count-2); // human seconds
+                double coast_time = y0[arcIndex(arcs, arcs.Count-2, parameters: true)]; // normalized units
+                double max_coast_time = Math.PI / 5.0; // 36 degrees
 
                 if ( coastlen < 1 )
                 {
@@ -473,10 +526,24 @@ namespace MuMech {
 
                     if ( !runOptimizer(arcs) )
                     {
-                        Fatal("failed to converge after removing negative length coast after jettison");
+                        Fatal("Optimizer exploded after removing negative coast (weird)");
                         return;
                     }
-
+                }
+                else if ( coast_time > max_coast_time )
+                {
+                    DebugLog("optimium coast exceeded maximum normalized time (roughly 1/4 of an arc around the planet) and was truncated.");
+                    arcs[arcs.Count-2].use_fixed_time2 = true;
+                    arcs[arcs.Count-2].fixed_time = max_coast_time * t_scale;
+                    arcs[arcs.Count-2].fixed_tbar = max_coast_time;
+                    y0[arcIndex(arcs, arcs.Count-2, parameters: true)] = max_coast_time;
+                    multipleIntegrate(y0, yf, arcs, initialize: true);
+                    if ( !runOptimizer(arcs) )
+                    {
+                        Fatal("Optimizer exploded after truncating long coast (weird)");
+                        y0 = null;
+                        return;
+                    }
                 }
             }
 

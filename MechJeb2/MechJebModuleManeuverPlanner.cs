@@ -101,7 +101,9 @@ namespace MuMech
                     if (!createNode)
                         maneuverNodes.Last().RemoveSelf();
                     for (var i = 0; i < nodeList.Count; i++)
+                    {
                         vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
+                    }
                 }
 
                 if (executingNode && core.node != null)
@@ -127,6 +129,11 @@ namespace MuMech
                     if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button4")))//Execute next node
                     {
                         core.node.ExecuteOneNode(this);
+                    }
+
+                    if (MechJebModuleGuidanceController.isLoadedPrincipia && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7")))//Execute next Principia node
+                    {
+                        core.node.ExecuteOnePNode(this);
                     }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
@@ -209,6 +216,11 @@ namespace MuMech
         public override string GetName()
         {
             return Localizer.Format("#MechJeb_Maneuver_Planner_title");//Maneuver Planner
+        }
+
+        public override string IconName()
+        {
+            return "Maneuver Planner";
         }
 
         public override bool IsSpaceCenterUpgradeUnlocked()

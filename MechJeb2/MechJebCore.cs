@@ -975,9 +975,12 @@ namespace MuMech
                 // base.OnSave(sfsNode); //is this necessary?
                 Profiler.EndSample();
                 Profiler.BeginSample("MechJebCore.OnSave.ConfigNode");
-                ConfigNode local = new ConfigNode("MechJebLocalSettings");
-                ConfigNode type = new ConfigNode("MechJebTypeSettings");
-                ConfigNode global = new ConfigNode("MechJebGlobalSettings");
+                // We have 2 type of saves:
+                // - stock module save where sfsNode is provided and where we save the module inside the ship
+                // - MechJeb global/type save where we do not save the module but save MJ global/type configs
+                ConfigNode local  = sfsNode == null ? null : new ConfigNode("MechJebLocalSettings");
+                ConfigNode type   = sfsNode != null ? null : new ConfigNode("MechJebTypeSettings");
+                ConfigNode global = sfsNode != null ? null : new ConfigNode("MechJebGlobalSettings");
                 Profiler.EndSample();
                 Profiler.BeginSample("MechJebCore.OnSave.loop");
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
@@ -986,7 +989,7 @@ namespace MuMech
                     try
                     {
                         string name = module.GetType().Name;
-                        module.OnSave(local.AddNode(name), type.AddNode(name), global.AddNode(name));
+                        module.OnSave(local?.AddNode(name), type?.AddNode(name), global?.AddNode(name));
                     }
                     catch (Exception e)
                     {
@@ -1006,10 +1009,10 @@ namespace MuMech
                 Profiler.BeginSample("MechJebCore.OnSave.sfsNode");
                 if (sfsNode != null) sfsNode.nodes.Add(local);
                 Profiler.EndSample();
-                Profiler.BeginSample("MechJebCore.OnSave.vesselName");
+                Profiler.BeginSample("MechJebCore.OnSave.type");
                 // The EDITOR => FLIGHT transition is annoying to handle. OnDestroy is called when HighLogic.LoadedSceneIsEditor is already false
                 // So we don't save in that case, which is not that bad since nearly nothing use vessel settings in the editor.
-                if (vessel != null || (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null))
+                if (type != null && (vessel != null || (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null)))
                 {
                     string vesselName = (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
                     vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
@@ -1017,7 +1020,7 @@ namespace MuMech
                 }
                 Profiler.EndSample();
                 Profiler.BeginSample("MechJebCore.OnSave.global");
-                if (lastFocus == vessel)
+                if (global != null && lastFocus == vessel)
                 {
                     global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
                 }

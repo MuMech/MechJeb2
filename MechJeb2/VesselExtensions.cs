@@ -44,7 +44,7 @@ namespace MuMech
                 for (int m = 0; m < count; m++)
                 {
                     if (part.Modules[m] is T mod)
-                    {  
+                    {
                         list.Add(mod);;
                     }
                 }
@@ -266,8 +266,11 @@ namespace MuMech
 
 
         //input dV should be in world coordinates
-        public static ManeuverNode PlaceManeuverNode(this Vessel vessel, Orbit patch, Vector3d dV, double UT)
+        public static ManeuverNode PlaceManeuverNode(this Vessel vessel, Orbit ignoredParameterThatNeedsDeleting, Vector3d dV, double UT)
         {
+            // get the right for the time
+            Orbit patch = vessel.GetPatchAtUT(UT);
+
             //placing a maneuver node with bad dV values can really mess up the game, so try to protect against that
             //and log an exception if we get a bad dV vector:
             for (int i = 0; i < 3; i++)

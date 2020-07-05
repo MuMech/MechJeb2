@@ -252,7 +252,7 @@ namespace MuMech
                             s = 1;
                             if (h_restart == 0)
                                 h_restart = h;
-                            Brent.Solve((newh, a1, a2, a3, a4, o2) => EvtWrapper(EvtFuns[evt], newh, x, a1, a2, x+h, a3, a4, n, o2), 0, h, 1e-15, out h, out _, o, y, k1, a, k7, sign: sign);
+                            Brent.Root((newh, a1, a2, a3, a4, o2) => EvtWrapper(EvtFuns[evt], newh, x, a1, a2, x+h, a3, a4, n, o2), 0, h, 1e-15, out h, out _, o, y, k1, a, k7, sign: sign);
                         }
                     }
                     else

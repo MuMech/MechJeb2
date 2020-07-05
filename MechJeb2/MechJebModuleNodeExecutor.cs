@@ -46,6 +46,14 @@ namespace MuMech
             alignedForBurn = false;
         }
 
+        public void ExecuteOnePNode(object controller) //Principia Node
+        {
+            mode = Mode.ONE_PNODE;
+            users.Add(controller);
+            burnTriggered = false;
+            alignedForBurn = false;
+        }
+
         public void ExecuteAllNodes(object controller)
         {
             mode = Mode.ALL_NODES;
@@ -73,7 +81,7 @@ namespace MuMech
             core.thrust.users.Remove(this);
         }
 
-        protected enum Mode { ONE_NODE, ALL_NODES };
+        protected enum Mode { ONE_NODE,ONE_PNODE, ALL_NODES };
         protected Mode mode = Mode.ONE_NODE;
 
         public bool burnTriggered = false;
@@ -117,17 +125,28 @@ namespace MuMech
             }
 
             //aim along the node
-            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE, this);
+            core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
 
             double halfBurnTime;
             BurnTime(dVLeft, out halfBurnTime);
 
             double timeToNode = node.UT - vesselState.time;
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
-            if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
+            if (mode == Mode.ONE_NODE || mode == Mode.ALL_NODES)
             {
-                burnTriggered = true;
-                if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
+                {
+                    burnTriggered = true;
+                    if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                }
+            }
+            else if (mode == Mode.ONE_PNODE)
+            {
+                if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode <= 0.0225) || timeToNode < 0)
+                {
+                    burnTriggered = true;
+                    if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                }
             }
 
             //autowarp, but only if we're already aligned with the node

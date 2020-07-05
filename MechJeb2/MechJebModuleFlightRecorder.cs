@@ -335,7 +335,8 @@ namespace MuMech
 
             string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
-            using (StreamWriter writer = new StreamWriter(exportPath + vesselName + "_" + timestamp + ".csv"))
+            string path = exportPath + vesselName + "_" + timestamp + ".csv";
+            using (StreamWriter writer = new StreamWriter(path))
             {
                 writer.WriteLine(string.Join(",", Enum.GetNames(typeof(recordType))));
 
@@ -351,14 +352,8 @@ namespace MuMech
                     writer.WriteLine();
                 }
             }
+
+            ScreenMessages.PostScreenMessage("Exported as\n" + path, 5);
         }
-
-
-
-
-
-
-
-
     }
 }

@@ -16,7 +16,7 @@ namespace MuMech
         public bool useOldSkin = false;
 
         [Persistent(pass = (int)Pass.Global)]
-        public int skinId = 0;
+        public int skinId = 2;
 
         [Persistent(pass = (int)(Pass.Global))]
         public EditableDouble UIScale = 1.0;
@@ -119,6 +119,11 @@ namespace MuMech
         public override string GetName()
         {
             return Localizer.Format("#MechJeb_Settings_title");//"Settings"
+        }
+
+        public override string IconName()
+        {
+            return "Settings";
         }
 
         public override GUILayoutOption[] WindowOptions()

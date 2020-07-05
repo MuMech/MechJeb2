@@ -136,6 +136,8 @@ namespace MuMech
         public MovingAverage orbitEccentricity = new MovingAverage();
         [ValueInfoItem("#MechJeb_SemiMajorAxis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]//Semi-major axis
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
+        [ValueInfoItem("Celestial Longitude", InfoItem.Category.Orbit, format = "F3")]
+        public MovingAverage celestialLongitude = new MovingAverage();
         [ValueInfoItem("#MechJeb_Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)]//Latitude
         public MovingAverage latitude = new MovingAverage();
         [ValueInfoItem("#MechJeb_Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)]//Longitude
@@ -148,6 +150,31 @@ namespace MuMech
         public MovingAverage displacementAngle = new MovingAverage();
 
         public MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
+
+        // instantaneous values
+        public double currentPitch
+        {
+            get
+            {
+                return (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
+            }
+        }
+
+        public double currentRoll
+        {
+            get
+            {
+                return (rotationVesselSurface.eulerAngles.z > 180) ? (rotationVesselSurface.eulerAngles.z - 360.0) : rotationVesselSurface.eulerAngles.z;
+            }
+        }
+
+        public double currentHeading
+        {
+            get
+            {
+                return rotationVesselSurface.eulerAngles.y;
+            }
+        }
 
         public double radius;  //distance from planet center
 
@@ -162,6 +189,9 @@ namespace MuMech
         public double thrustAvailable { get { return Vector3d.Dot(thrustVectorMaxThrottle, forward); } }
         public double thrustMinimum { get { return Vector3d.Dot(thrustVectorMinThrottle, forward); } }
         public double thrustCurrent { get { return Vector3d.Dot(thrustVectorLastFrame, forward); } }
+
+        // Forward direction of thrust (CoT-CoM).normalized
+        public Vector3d thrustForward;
 
         // Acceleration in the forward direction, for when dividing by mass is too complicated.
         public double maxThrustAccel { get { return thrustAvailable / mass; } }
@@ -663,9 +693,9 @@ namespace MuMech
             double tempAoD = UtilMath.Rad2Deg * Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized), -1, 1));
             displacementAngle.value = double.IsNaN(tempAoD) || speedSurface.value < 0.01 ? 0 : tempAoD;
 
-            vesselHeading.value = rotationVesselSurface.eulerAngles.y;
-            vesselPitch.value = (rotationVesselSurface.eulerAngles.x > 180) ? (360.0 - rotationVesselSurface.eulerAngles.x) : -rotationVesselSurface.eulerAngles.x;
-            vesselRoll.value = (rotationVesselSurface.eulerAngles.z > 180) ? (rotationVesselSurface.eulerAngles.z - 360.0) : rotationVesselSurface.eulerAngles.z;
+            vesselHeading.value = currentHeading;
+            vesselPitch.value = currentPitch;
+            vesselRoll.value = currentRoll;
 
             altitudeASL.value = vessel.mainBody.GetAltitude(CoM);
 
@@ -702,28 +732,21 @@ namespace MuMech
             orbitTimeToAp.value = vessel.orbit.timeToAp;
             orbitTimeToPe.value = vessel.orbit.timeToPe;
 
-            if (!vessel.LandedOrSplashed)
-            {
-                orbitLAN.value = vessel.orbit.LAN;
-            }
-            else
-            {
-                orbitLAN.value = -(vessel.transform.position - vessel.mainBody.transform.position).AngleInPlane(Planetarium.Zup.Z, Planetarium.Zup.X);
-                orbitTimeToAp.value = 0;
-            }
+            orbitLAN.value = vessel.orbit.LAN;
 
             orbitArgumentOfPeriapsis.value = vessel.orbit.argumentOfPeriapsis;
             orbitInclination.value = vessel.orbit.inclination;
             orbitEccentricity.value = vessel.orbit.eccentricity;
             orbitSemiMajorAxis.value = vessel.orbit.semiMajorAxis;
+            celestialLongitude.value = Planetarium.right.AngleInPlane(-Planetarium.up, orbitalPosition);
             latitude.value = vessel.mainBody.GetLatitude(CoM);
             longitude.value = MuUtils.ClampDegrees180(vessel.mainBody.GetLongitude(CoM));
 
             if (vessel.mainBody != Planetarium.fetch.Sun)
             {
-                Vector3d delta = vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime() + 1) - vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime() - 1);
-                Vector3d plUp = Vector3d.Cross(vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime()) - vessel.mainBody.referenceBody.getPositionAtUT(Planetarium.GetUniversalTime()), vessel.mainBody.getPositionAtUT(Planetarium.GetUniversalTime() + vessel.mainBody.orbit.period / 4) - vessel.mainBody.referenceBody.getPositionAtUT(Planetarium.GetUniversalTime() + vessel.mainBody.orbit.period / 4)).normalized;
-                angleToPrograde = MuUtils.ClampDegrees360((((vessel.orbit.inclination > 90) || (vessel.orbit.inclination < -90)) ? 1 : -1) * ((Vector3)up).AngleInPlane(plUp, delta));
+                Vector3d prograde = vessel.mainBody.orbit.getOrbitalVelocityAtUT(time).xzy;
+                Vector3d normal = vessel.mainBody.orbit.GetOrbitNormal().xzy;
+                angleToPrograde = MuUtils.ClampDegrees360( (((vessel.orbit.inclination > 90) || (vessel.orbit.inclination < -90)) ? 1 : -1) * orbitalPosition.AngleInPlane(normal, prograde) );
             }
             else
             {
@@ -914,6 +937,7 @@ namespace MuMech
             CoT = Vector3d.zero;
             DoT = Vector3d.zero;
             CoTScalar = 0;
+            thrustForward = Vector3d.zero;
 
             for (int i = 0; i < vessel.parts.Count; i++)
             {
@@ -1120,7 +1144,11 @@ namespace MuMech
             thrustVectorLastFrame = einfo.thrustCurrent;
 
             if (CoTScalar > 0)
+            {
                 CoT = CoT / CoTScalar;
+                thrustForward = ( CoM - CoT ).normalized;
+            }
+
             DoT = DoT.normalized;
 
             if (CoLScalar > 0)

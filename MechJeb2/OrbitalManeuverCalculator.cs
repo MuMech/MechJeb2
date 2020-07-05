@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Smooth.Pools;
 
 namespace MuMech
 {
@@ -79,8 +80,9 @@ namespace MuMech
             }
 
             BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR;  };
-            double dV;
-            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null);
+            double dV = 0;
+            try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
         }
@@ -114,8 +116,9 @@ namespace MuMech
             // solve for the reciprocal of the ApR which is a continuous function that avoids the parabolic singularity and
             // change of sign for hyperbolic orbits.
             BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0/newApR;  };
-            double dV;
-            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null);
+            double dV = 0;
+            try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
         }
@@ -182,23 +185,23 @@ namespace MuMech
             Vector3d deltaHorizontalVelocity;
 
             if ( vesselState.speedSurfaceHorizontal < 200 ) {
-              // at initial launch we have to head the direction the user specifies (90 north instead of -90 south).
-              // 200 m/s of surface velocity also defines a 'grace period' where someone can catch a rocket that they meant
-              // to launch at -90 and typed 90 into the inclination box fast after it started to initiate the turn.
-              // if the rocket gets outside of the 200 m/s surface velocity envelope, then there is no way to tell MJ to
-              // take a south travelling rocket and turn north or vice versa.
-              desiredHorizontalVelocity = desiredHorizontalVelocityOne;
-              deltaHorizontalVelocity = deltaHorizontalVelocityOne;
-            } else {
-              // now in order to get great circle tracks correct we pick the side which gives the lowest delta-V, which will get
-              // ground tracks that cross the maximum (or minimum) latitude of a great circle correct.
-              if ( deltaHorizontalVelocityOne.magnitude < deltaHorizontalVelocityTwo.magnitude ) {
+                // at initial launch we have to head the direction the user specifies (90 north instead of -90 south).
+                // 200 m/s of surface velocity also defines a 'grace period' where someone can catch a rocket that they meant
+                // to launch at -90 and typed 90 into the inclination box fast after it started to initiate the turn.
+                // if the rocket gets outside of the 200 m/s surface velocity envelope, then there is no way to tell MJ to
+                // take a south travelling rocket and turn north or vice versa.
                 desiredHorizontalVelocity = desiredHorizontalVelocityOne;
                 deltaHorizontalVelocity = deltaHorizontalVelocityOne;
-              }  else {
-                desiredHorizontalVelocity = desiredHorizontalVelocityTwo;
-                deltaHorizontalVelocity = deltaHorizontalVelocityTwo;
-              }
+            } else {
+                // now in order to get great circle tracks correct we pick the side which gives the lowest delta-V, which will get
+                // ground tracks that cross the maximum (or minimum) latitude of a great circle correct.
+                if ( deltaHorizontalVelocityOne.magnitude < deltaHorizontalVelocityTwo.magnitude ) {
+                    desiredHorizontalVelocity = desiredHorizontalVelocityOne;
+                    deltaHorizontalVelocity = deltaHorizontalVelocityOne;
+                }  else {
+                    desiredHorizontalVelocity = desiredHorizontalVelocityTwo;
+                    deltaHorizontalVelocity = deltaHorizontalVelocityTwo;
+                }
             }
 
             // if you circularize in one burn, towards the end deltaHorizontalVelocity will whip around, but we want to
@@ -346,12 +349,14 @@ namespace MuMech
                 }
             }
 
+            burnUT = 0;
             BrentFun f = delegate(double testTime, object ign) {
                 double testApsisPhaseAngle;
                 DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, testTime, out testApsisPhaseAngle);
                 return testApsisPhaseAngle;
             };
-            Brent.Solve(f, maxTime, minTime, 1e-8, out burnUT, out _, null);
+            try { Brent.Root(f, maxTime, minTime, 1e-8, out burnUT, out _, null); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out _);
 
@@ -1038,8 +1043,8 @@ namespace MuMech
             double long_diff_rad = UtilMath.Deg2Rad * (long_b - long_a);
 
             return UtilMath.Rad2Deg * Math.Atan2(Math.Sqrt(Math.Pow(Math.Cos(lat_b_rad) * Math.Sin(long_diff_rad), 2) +
-                Math.Pow(Math.Cos(lat_a_rad) * Math.Sin(lat_b_rad) - Math.Sin(lat_a_rad) * Math.Cos(lat_b_rad) * Math.Cos(long_diff_rad), 2)),
-                Math.Sin(lat_a_rad) * Math.Sin(lat_b_rad) + Math.Cos(lat_a_rad) * Math.Cos(lat_b_rad) * Math.Cos(long_diff_rad));
+                        Math.Pow(Math.Cos(lat_a_rad) * Math.Sin(lat_b_rad) - Math.Sin(lat_a_rad) * Math.Cos(lat_b_rad) * Math.Cos(long_diff_rad), 2)),
+                    Math.Sin(lat_a_rad) * Math.Sin(lat_b_rad) + Math.Cos(lat_a_rad) * Math.Cos(lat_b_rad) * Math.Cos(long_diff_rad));
         }
 
         // Compute an angular heading from point a to point b on a unit sphere
@@ -1053,8 +1058,8 @@ namespace MuMech
             double long_diff_rad = UtilMath.Deg2Rad * (long_b - long_a);
 
             return MuUtils.ClampDegrees360(180.0 / Math.PI * Math.Atan2(
-                Math.Sin(long_diff_rad),
-                Math.Cos(lat_a_rad) * Math.Tan(lat_b_rad) - Math.Sin(lat_a_rad) * Math.Cos(long_diff_rad)));
+                        Math.Sin(long_diff_rad),
+                        Math.Cos(lat_a_rad) * Math.Tan(lat_b_rad) - Math.Sin(lat_a_rad) * Math.Cos(long_diff_rad)));
         }
 
         //Computes the deltaV of the burn needed to set a given LAN at a given UT.
@@ -1119,8 +1124,9 @@ namespace MuMech
             // solve for the reciprocal of the SMA which is a continuous function that avoids the parabolic singularity and
             // change of sign for hyperbolic orbits.
             BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - 1.0/newSMA;  };
-            double dV;
-            Brent.Solve(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null);
+            double dV = 0;
+            try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
         }
@@ -1153,12 +1159,73 @@ namespace MuMech
             double target_sma = 0;
 
             while (oppositeRadius-o.referenceBody.Radius < o.referenceBody.timeWarpAltitudeLimits [4] && N < 20) {
-                    N++;
-                    double target_period = o.referenceBody.rotationPeriod * (LongitudeOffset / 360 + N);
-                    target_sma = Math.Pow ((o.referenceBody.gravParameter * target_period * target_period) / (4 * Math.PI * Math.PI), 1.0 / 3.0); // cube roo
-                    oppositeRadius = 2 * (target_sma) - burnRadius;
-                }
+                N++;
+                double target_period = o.referenceBody.rotationPeriod * (LongitudeOffset / 360 + N);
+                target_sma = Math.Pow ((o.referenceBody.gravParameter * target_period * target_period) / (4 * Math.PI * Math.PI), 1.0 / 3.0); // cube roo
+                oppositeRadius = 2 * (target_sma) - burnRadius;
+            }
             return DeltaVForSemiMajorAxis (o, UT, target_sma);
+        }
+
+        //
+        // Global OrbitPool for re-using Orbit objects
+        //
+
+        private static readonly Pool<Orbit> OrbitPool = new Pool<Orbit>(createOrbit, resetOrbit);
+        private static Orbit createOrbit() { return new Orbit(); }
+        private static void resetOrbit(Orbit o) { }
+
+        private static readonly PatchedConics.SolverParameters solverParameters = new PatchedConics.SolverParameters();
+
+        // Runs the PatchedConicSolver to do initial value "shooting" given an initial orbit, a maneuver dV and UT to execute, to a target Celestial's SOI
+        //
+        // initial   : initial parkig orbit
+        // target    : the Body whose SOI we are shooting towards
+        // dV        : the dV of the manuever off of the parking orbit
+        // burnUT    : the time of the maneuver off of the parking orbit
+        // arrivalUT : this is really more of an upper clamp on the simulation so that if we miss and never hit the body SOI it stops
+        // intercept : this is the final computed intercept orbit, it should be in the SOI of the target body, but if it never hits it then the
+        //             e.g. heliocentric orbit is returned instead, so the caller needs to check.
+        //
+        // FIXME: NREs when there's no next patch
+        // FIXME: duplicates code with OrbitExtensions.CalculateNextOrbit()
+        //
+        public static void PatchedConicInterceptBody(Orbit initial, CelestialBody target, Vector3d dV, double burnUT, double arrivalUT, out Orbit intercept)
+        {
+            Orbit orbit = OrbitPool.Borrow();
+            orbit.UpdateFromStateVectors(initial.getRelativePositionAtUT(burnUT), initial.getOrbitalVelocityAtUT(burnUT) + dV.xzy, initial.referenceBody, burnUT);
+            orbit.StartUT = burnUT;
+            orbit.EndUT = orbit.eccentricity >= 1.0 ? orbit.period : burnUT + orbit.period;
+            Orbit next_orbit = OrbitPool.Borrow();
+
+            PatchedConics.CalculatePatch(orbit, next_orbit, burnUT, solverParameters, null);
+
+            while( (orbit.referenceBody!=target) && (orbit.EndUT < arrivalUT) )
+            {
+                OrbitPool.Release(orbit);
+                orbit = next_orbit;
+                next_orbit = OrbitPool.Borrow();
+
+                PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, solverParameters, null);
+            }
+            intercept = orbit;
+            intercept.UpdateFromOrbitAtUT(orbit, arrivalUT, orbit.referenceBody);
+            OrbitPool.Release(orbit);
+            OrbitPool.Release(next_orbit);
+        }
+
+        // Takes an e.g. heliocentric orbit and a target planet celestial and finds the time of the SOI intercept.
+        //
+        //
+        //
+        public static void SOI_intercept(Orbit transfer, CelestialBody target, double UT1, double UT2, out double UT)
+        {
+            if ( transfer.referenceBody != target.orbit.referenceBody )
+                throw new ArgumentException("[MechJeb] SOI_intercept: transfer orbit must be in the same SOI as the target celestial");
+            BrentFun f = delegate(double UT, object ign) { return ( transfer.getRelativePositionAtUT(UT) - target.orbit.getRelativePositionAtUT(UT) ).magnitude - target.sphereOfInfluence;  };
+            UT = 0;
+            try { Brent.Root(f, UT1, UT2, 1e-4, out UT, out _, null); }
+            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
         }
     }
 }

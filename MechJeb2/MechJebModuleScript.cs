@@ -168,13 +168,14 @@ namespace MuMech
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
 			base.OnSave(local, type, global);
-			this.SaveScriptModuleConfig();
+            if (global != null)
+			    this.SaveScriptModuleConfig();
 		}
 
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
 			base.OnLoad(local, type, global);
-			this.LoadScriptModuleConfig();
+            this.LoadScriptModuleConfig();
 		}
 
 		public void SaveScriptModuleConfig()
@@ -367,6 +368,11 @@ namespace MuMech
 		public override string GetName()
 		{
 			return Localizer.Format("#MechJeb_ScriptMod_title");//"Scripting Module"
+		}
+
+		public override string IconName()
+		{
+			return "Scripting Module";
 		}
 
 		public void start()

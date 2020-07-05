@@ -70,7 +70,7 @@ namespace MuMech
             if (limiter == LimitMode.Temperature) s.onHover.textColor = s.onNormal.textColor = Color.green;
             limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, Localizer.Format("#MechJeb_Ascent_checkbox12"), s);//"Prevent engine overheats"
         }
-     
+
         [ToggleInfoItem("#MechJeb_SmoothThrottle", InfoItem.Category.Thrust)]//Smooth throttle
         [Persistent(pass = (int)Pass.Global)]
         public bool smoothThrottle = false;
@@ -125,7 +125,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxAcceleration = 40;
 
-        [GeneralInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Thrust)]//Limit acceleration
+        [GeneralInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Thrust)]//Limit Acceleration
         public void LimitAccelerationInfoItem()
         {
             GUILayout.BeginHorizontal();

@@ -26,6 +26,118 @@ namespace MuMech
             }
         }
 
+        /// <summary>
+        /// Set to true if reverse thrusters are engaged.
+        /// </summary>
+        private bool bEngagedReverseThrusters = false;
+
+        /// <summary>
+        /// Set to true if user wants reverse thrust upon touchdown.
+        /// </summary>
+        public bool bEngageReverseIfAvailable = true;
+
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public bool bBreakAsSoonAsLanded = false;
+
+        /// <summary>
+        /// The runway to land at.
+        /// </summary>
+        public Runway runway;
+
+        /// <summary>
+        /// Glide slope angle for approach (3-5 seems to work best).
+        /// </summary>
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public EditableDouble glideslope = 2.5;
+
+        /// <summary>
+        /// The angle between the runway centerline and an intercept to that
+        /// line where the lines intersect at the final approach point, on
+        /// both sides. This forms an approach where if the vessel is within
+        /// the cone, it will align with the final approach point. Otherwise,
+        /// it will fly towards the initial approach point and then turn
+        /// around and intercept the glide slope for final approach.
+        /// </summary>
+        private const double lateralApproachConeAngle = 30.0;
+
+        /// <summary>
+        /// Final approach distance in meters, at which point the aircraft
+        /// should be aligned with the runway and only minor adjustments should
+        /// be required.
+        /// </summary>
+        private const double lateralDistanceFromTouchdownToFinalApproach = 3700;
+
+        /// <summary>
+        /// Approach intercept angle; the angle at which the aircraft will
+        /// intercept the glide slope laterally.
+        /// </summary>
+        private const double lateralInterceptAngle = 30.0;
+
+        /// <summary>
+        /// Target angle of attack during flare.
+        /// </summary>
+        private const double targetFlareAoA = 15.0;
+
+        /// <summary>
+        /// Altitude in meters when flare will start.
+        /// </summary>
+        private const double startFlareAtAltitude = 20.0;
+
+        /// <summary>
+        /// Rate of turn in degrees per second.
+        /// </summary>
+        public const double targetRateOfTurn = 3.0;
+
+        /// <summary>
+        /// Minimum approach speed in meters per second. Stall + 10 seems to
+        /// result in a decent approach and landing.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public EditableDouble approachSpeed = 80.0;
+
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public EditableDouble touchdownSpeed = 60.0;
+
+        /// <summary>
+        /// Maximum allowed bank angle.
+        /// </summary>
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public EditableDouble maximumSafeBankAngle = 25.0;
+
+        /// <summary>
+        /// Maximum allowed vertical speed to bring the vessel on the glideslope in m/s
+        /// </summary>
+        public const double maximumVerticalSpeedCorrection = 10.0;
+
+        /// <summary>
+        /// Angle of attack at the start of flare state.
+        /// </summary>
+        private double flareStartAoA = 0.0;
+
+        /// <summary>
+        /// Angle between centerline and aircraft at the point where
+        /// the aircraft is perpendicular to the initial approach point
+        /// at a distance of turn diameter.
+        /// </summary>
+        private double angleToFinalApproachPointTurnDiameter = 20.0;
+
+        /// <summary>
+        /// Touchdown AoA and speed recorded for smooth main gear touchdown.
+        /// </summary>
+        private double touchdownMomentAoA = 0.0;
+        private double touchdownMomentSpeed = 0.0;
+
+        /// <summary>
+        /// Threshold in seconds to move on to the next waypoint.
+        /// </summary>
+        private double secondsThresholdToNextWaypoint = 5.0;
+
+        /// <summary>
+        /// The lowest altitude which may be used which will provide a minimum
+        /// clearence above all objects in the area.
+        /// </summary>
+        private double minimumSectorAltitude = 1500;
+
         public void Autoland(object controller)
         {
             users.Add(controller);
@@ -131,7 +243,6 @@ namespace MuMech
             Autopilot.SpeedTarget = GetAutolandTargetSpeed();
             Autopilot.HeadingTarget = RoverPilot.heading = GetAutolandTargetHeading(vectorToWaypoint);
             Autopilot.VertSpeedTarget = GetAutolandTargetVerticalSpeed(vectorToWaypoint);
-            Autopilot.RollMax = GetAutolandTargetBankAngle();
 
             if (approachState == AutolandApproachState.FLARE)
             {
@@ -198,112 +309,6 @@ namespace MuMech
             }
         }
 
-        /// <summary>
-        /// Set to true if reverse thrusters are engaged.
-        /// </summary>
-        private bool bEngagedReverseThrusters = false;
-
-        /// <summary>
-        /// Set to true if user wants reverse thrust upon touchdown.
-        /// </summary>
-        public bool bEngageReverseIfAvailable = true;
-
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
-        public bool bBreakAsSoonAsLanded = false;
-
-        /// <summary>
-        /// The runway to land at.
-        /// </summary>
-        public Runway runway;
-
-        /// <summary>
-        /// Glide slope angle for approach (3-5 seems to work best).
-        /// </summary>
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
-        public EditableDouble glideslope = 3.0;
-
-        /// <summary>
-        /// The angle between the runway centerline and an intercept to that
-        /// line where the lines intersect at the final approach point, on
-        /// both sides. This forms an approach where if the vessel is within
-        /// the cone, it will align with the final approach point. Otherwise,
-        /// it will fly towards the initial approach point and then turn
-        /// around and intercept the glide slope for final approach.
-        /// </summary>
-        private const double lateralApproachConeAngle = 30.0;
-
-        /// <summary>
-        /// Final approach distance in meters, at which point the aircraft
-        /// should be aligned with the runway and only minor adjustments should
-        /// be required.
-        /// </summary>
-        private const double lateralDistanceFromTouchdownToFinalApproach = 3700;
-
-        /// <summary>
-        /// Approach intercept angle; the angle at which the aircraft will
-        /// intercept the glide slope laterally.
-        /// </summary>
-        private const double lateralInterceptAngle = 30.0;
-
-        /// <summary>
-        /// Target angle of attack during flare.
-        /// </summary>
-        private const double targetFlareAoA = 15.0;
-
-        /// <summary>
-        /// Altitude in meters when flare will start.
-        /// </summary>
-        private const double startFlareAtAltitude = 20.0;
-
-        /// <summary>
-        /// Rate of turn in degrees per second.
-        /// </summary>
-        public const double targetRateOfTurn = 3.0;
-
-        /// <summary>
-        /// Minimum approach speed in meters per second. Stall + 10 seems to
-        /// result in a decent approach and landing.
-        /// </summary>
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
-        public EditableDouble approachSpeed = 80.0;
-
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
-        public EditableDouble touchdownSpeed = 60.0;
-
-        /// <summary>
-        /// Maximum allowed bank angle.
-        /// </summary>
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
-        public EditableDouble maximumSafeBankAngle = 25.0;
-
-        /// <summary>
-        /// Maximum allowed vertical speed.
-        /// </summary>
-        public const double maximumSafeVerticalSpeed = 15.0;
-
-        /// <summary>
-        /// Angle of attack at the start of flare state.
-        /// </summary>
-        private double flareStartAoA = 0.0;
-
-        /// <summary>
-        /// Angle between centerline and aircraft at the point where
-        /// the aircraft is perpendicular to the initial approach point
-        /// at a distance of turn diameter.
-        /// </summary>
-        private double angleToFinalApproachPointTurnDiameter = 20.0;
-
-        /// <summary>
-        /// Touchdown AoA and speed recorded for smooth main gear touchdown.
-        /// </summary>
-        private double touchdownMomentAoA = 0.0;
-        private double touchdownMomentSpeed = 0.0;
-
-        /// <summary>
-        /// Threshold in seconds to move on to the next waypoint.
-        /// </summary>
-        private double secondsThresholdToNextWaypoint = 5.0;
-
         public double GetAutolandTargetAltitude(Vector3d vectorToWaypoint)
         {
             double lat, lon, alt;
@@ -323,30 +328,24 @@ namespace MuMech
             // possible so that we don't overshoot or undershoot the runway.
             if (approachState == AutolandApproachState.TOUCHDOWN || approachState == AutolandApproachState.FAP)
             {
+                Debug.Assert(vertSpeed < 0);
+
                 Vector3d vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()));
                 double desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope) - 10;
                 double deltaToCorrectAlt = desiredAlt - vesselState.altitudeTrue;
+                double expPerMeter = (Math.Log(maximumVerticalSpeedCorrection + 1) - Math.Log(1)) / desiredAlt;
+                double adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
 
-                Debug.Assert(vertSpeed < 0);
-
-                if (!UtilMath.Approximately(deltaAlt, 0))
-                {
-                    double remainingVertSpeedRange = maximumSafeVerticalSpeed - (deltaAlt > 0 ? vertSpeed : -1 * vertSpeed);
-                    double expPerMeter = (Math.Log(remainingVertSpeedRange + 1) - Math.Log(1)) / desiredAlt;
-
-                    double adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
-
-                    vertSpeed += deltaToCorrectAlt > 0 ? adjustment : -1 * adjustment;
-                }
+                vertSpeed += deltaToCorrectAlt > 0 ? adjustment : -adjustment;
             }
 
             if (approachState == AutolandApproachState.FLARE)
             {
                 vertSpeed = deltaAlt / 8 - 0.2f;
-                vertSpeed = UtilMath.Clamp(vertSpeed, -4, 4);
+                vertSpeed = UtilMath.Clamp(vertSpeed, -2, 2);
             }
 
-            return UtilMath.Clamp(vertSpeed, -maximumSafeVerticalSpeed, maximumSafeVerticalSpeed);
+            return vertSpeed;
         }
 
         public double GetAutolandAlignmentError(Vector3d vectorToWaypoint)
@@ -410,6 +409,7 @@ namespace MuMech
 
         public double GetAutolandTargetBankAngle()
         {
+            // TODO: return Autopilot.RollLimit;
             // Formula is Bank = atan((v * t) / (g * (180/pi)))
             return Math.Min(Math.Atan((vesselState.speedSurfaceHorizontal * targetRateOfTurn) / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) * UtilMath.Rad2Deg, GetAutolandMaxBankAngle());
         }
@@ -421,20 +421,14 @@ namespace MuMech
 
             switch (approachState)
             {
-                case AutolandApproachState.ROLLOUT:
-                    return 0;
-            }
-
-            switch (approachState)
-            {
                 case AutolandApproachState.WAITINGFORFLARE:
                 case AutolandApproachState.TOUCHDOWN:
                 case AutolandApproachState.FLARE:
                     return touchdownSpeed;
-            }
-
-            if (approachState == AutolandApproachState.FAP){
-                return (touchdownSpeed + approachSpeed) / 2;
+                case AutolandApproachState.FAP:
+                    return (touchdownSpeed + approachSpeed) / 2;
+                case AutolandApproachState.ROLLOUT:
+                    return 0;
             }
 
             return approachSpeed;
@@ -456,8 +450,8 @@ namespace MuMech
             Vector3d runwayEnd = runway.End();
 
             // get the initial and final approach vectors
-            Vector3d initialApproachVector = runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
-            Vector3d finalApproachVector = runway.GetPointOnGlideslope(glideslope, lateralDistanceFromTouchdownToFinalApproach - runway.touchdownPoint);
+            Vector3d initialApproachVector = GetInitialApproachPoint();
+            Vector3d finalApproachVector = GetFinalApproachPoint();
 
             // determine whether the vessel is within the approach cone or not
             Vector3d finalApproachVectorProjectedOnGroundPlane = finalApproachVector.ProjectOnPlane(runway.Up());
@@ -570,13 +564,58 @@ namespace MuMech
             else if (approachState == AutolandApproachState.ROLLOUT)
             {
                 if (vesselState.speedSurface < 1.0)
+                {
                     AutopilotOff();
+                    // disable the actual autopilot so we dont takeoff again after we landed
+                    Autopilot.enabled = false;
+                }
 
                 return runway.End();
             }
 
             Debug.Assert(false);
             return runway.Start();
+        }
+
+        /// <summary>
+        /// Returns the final approach point (FAP/FAF)
+        /// </summary>
+        /// <returns></returns>
+        public Vector3d GetFinalApproachPoint()
+        {
+            return runway.GetPointOnGlideslope(glideslope, lateralDistanceFromTouchdownToFinalApproach - runway.touchdownPoint);
+        }
+
+        /// <summary>
+        /// Returns the initial approach point (IAP/IAF)
+        /// </summary>
+        /// <returns></returns>
+        public Vector3d GetInitialApproachPoint()
+        {
+            Vector3d iap = runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
+
+            return PreventClimbingIntoGlideslope(iap);
+        }
+
+        /// <summary>
+        /// Stops the vessel from climbing into the glideslope. If the vessel is below the glideslope maintain
+        /// the current altitude until we intercept the glide slope.
+        /// If the vessel is very low, we have to maintain a minimal altitude to prevent the vessel from crashing.
+        /// </summary>
+        /// <returns></returns>
+        private Vector3d PreventClimbingIntoGlideslope(Vector3d v)
+        {
+            double lat, lon, alt;
+
+            runway.body.GetLatLonAlt(v, out lat, out lon, out alt);
+
+            if (alt <= vesselState.altitudeASL)
+                return v;
+
+            // don't climb unless it's absolutely necessary
+            double optimalAlt = UtilMath.Max(vesselState.altitudeASL, minimumSectorAltitude);
+
+            return runway.body.GetRelSurfacePosition(lat, lon, optimalAlt);
         }
 
         /// <summary>
@@ -603,10 +642,12 @@ namespace MuMech
             if (dist < lateralDistanceFromTouchdownToFinalApproach)
             {
                 approachState = AutolandApproachState.IAP;
-                return runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
+                return GetInitialApproachPoint();
             }
 
-            return runway.GetPointOnGlideslope(glideslope, dist + lateralDistanceFromTouchdownToFinalApproach);
+            Vector3d pointOnLocalizer = runway.GetPointOnGlideslope(glideslope, dist + lateralDistanceFromTouchdownToFinalApproach);
+
+            return PreventClimbingIntoGlideslope(pointOnLocalizer);
         }
 
         private double LateralDistance(Vector3d v1, Vector3d v2)

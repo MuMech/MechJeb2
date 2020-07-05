@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace MuMech
 {
-    public enum PVGStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, BURNING_STAGING, COASTING_STAGING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
+    public enum PVGStatus { ENABLED, INITIALIZING, CONVERGED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, FINISHED, FAILED };
 
     public class MechJebModuleGuidanceController : ComputerModule
     {
@@ -152,7 +152,7 @@ namespace MuMech
 
                 // bit of a hack to predict velocity + position in the next tick or two
                 // FIXME: what exactly does KSP do to integrate over timesteps?
-                Vector3d a0 = vessel.acceleration_immediate - vessel.graviticAcceleration;
+                Vector3d a0 = vessel.acceleration_immediate;
                 double dt = ticks * TimeWarp.fixedDeltaTime;
                 Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
                 Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 1/2 * a0 * dt * dt;
@@ -160,7 +160,10 @@ namespace MuMech
                 double current = p.znormAtStateVectors(vesselState.orbitalPosition, vesselState.orbitalVelocity);
                 double future = p.znormAtStateVectors(x1, v1);
 
-                if ( future > current )
+                // ensure that we're burning in a roughly forward direction -- no idea why, but we can get a few ticks of backwards "thrust" due to staging during terminal guidance
+                double costhrustangle = Vector3d.Dot(vesselState.forward, (vessel.acceleration_immediate - vessel.graviticAcceleration).normalized );
+
+                if ( future > current && costhrustangle > 0.5 )
                 {
                     if ( has_rcs && status == PVGStatus.TERMINAL )
                     {
@@ -177,9 +180,6 @@ namespace MuMech
             }
 
             handle_throttle();
-
-            if ( isStaging() )
-                return;
 
             core.stageTracking.Update();
 
@@ -218,7 +218,7 @@ namespace MuMech
         double old_numStages;
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle4constraint(double rT, double vT, double inc, double gamma, double sma, bool omitCoast, bool currentInc)
+        public void flightangle4constraint(double rT, double vT, double inc, double gamma, double sma, bool omitCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -228,8 +228,11 @@ namespace MuMech
             if (rT != old_rT || vT != old_vT || gamma != old_gamma)
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
+                doupdate = true;
+
+            if (p != null && p.bctype != BCType.FLIGHTANGLE4)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -251,18 +254,25 @@ namespace MuMech
         }
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle5constraint(double rT, double vT, double inc, double gamma, double LAN, double sma, bool omitCoast, bool currentInc)
+        public void flightangle5constraint(double rT, double vT, double inc, double gamma, double LAN, double sma, bool omitCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
 
             bool doupdate = false;
 
-            if (rT != old_rT || vT != old_vT || gamma != old_gamma || LAN != old_LAN)
+            if (rT != old_rT || vT != old_vT || gamma != old_gamma)
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target LAN, don't reset
+            if (LAN != old_LAN && !targetLAN)
+                doupdate = true;
+
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
+                doupdate = true;
+
+            if (p != null && p.bctype != BCType.FLIGHTANGLE5)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -306,7 +316,7 @@ namespace MuMech
             return new PontryaginLaunch(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda, dV: approximateDeltaV(sma));
         }
 
-        public void keplerian3constraint(double sma, double ecc, double inc, bool omitCoast, bool currentInc)
+        public void keplerian3constraint(double sma, double ecc, double inc, bool omitCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -316,8 +326,11 @@ namespace MuMech
             if (sma != old_sma || ecc != old_ecc)
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
+                doupdate = true;
+
+            if (p != null && p.bctype != BCType.KEPLER3)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -337,18 +350,25 @@ namespace MuMech
             old_inc = inc;
         }
 
-        public void keplerian4constraintArgPfree(double sma, double ecc, double inc, double LAN, bool omitCoast, bool currentInc)
+        public void keplerian4constraintArgPfree(double sma, double ecc, double inc, double LAN, bool omitCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
 
             bool doupdate = false;
 
-            if (sma != old_sma || ecc != old_ecc || LAN != old_LAN)
+            if (sma != old_sma || ecc != old_ecc )
                 doupdate = true;
 
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
+            // if we are tracking a target LAN, don't reset
+            if (LAN != old_LAN && !targetLAN)
+                doupdate = true;
+
+            // if we are tracking a target inc, don't reset
+            if (inc != old_inc && !targetInc)
+                doupdate = true;
+
+            if (p != null && p.bctype != BCType.KEPLER4)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -369,38 +389,6 @@ namespace MuMech
             old_LAN = LAN;
         }
 
-        public void keplerian4constraintLANfree(double sma, double ecc, double inc, double ArgP, bool omitCoast, bool currentInc)
-        {
-            if ( status == PVGStatus.ENABLED )
-                return;
-
-            bool doupdate = false;
-
-            if (sma != old_sma || ecc != old_ecc || ArgP != old_ArgP)
-                doupdate = true;
-
-            // avoid slight drift in the current inclination from resetting guidance constantly
-            if (inc != old_inc && !currentInc)
-                doupdate = true;
-
-            if (p == null || doupdate)
-            {
-                if (p != null)
-                    p.KillThread();
-
-                Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian4constraintLANfree");
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
-                solver.keplerian4constraintLANfree(sma, ecc, inc * UtilMath.Deg2Rad, ArgP * UtilMath.Deg2Rad);
-                p = solver;
-            }
-
-            old_sma = sma;
-            old_ecc = ecc;
-            old_inc = inc;
-            old_ArgP = ArgP;
-        }
-
         public void keplerian5constraint(double sma, double ecc, double inc, double LAN, double ArgP, bool omitCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
@@ -413,6 +401,9 @@ namespace MuMech
 
             // avoid slight drift in the current inclination from resetting guidance constantly
             if (inc != old_inc && !currentInc)
+                doupdate = true;
+
+            if (p != null && p.bctype != BCType.KEPLER5)
                 doupdate = true;
 
             if (p == null || doupdate)
@@ -510,22 +501,17 @@ namespace MuMech
         // not TERMINAL guidance or TERMINAL_RCS
         public bool isNormal()
         {
-            return status == PVGStatus.CONVERGED || status == PVGStatus.BURNING || status == PVGStatus.BURNING_STAGING || status == PVGStatus.COASTING || status == PVGStatus.COASTING_STAGING;
+            return status == PVGStatus.CONVERGED || status == PVGStatus.BURNING || status == PVGStatus.COASTING;
         }
 
         public bool isCoasting()
         {
-            return status == PVGStatus.COASTING || status == PVGStatus.COASTING_STAGING;
+            return status == PVGStatus.COASTING;
         }
 
         public bool isBurning()
         {
-            return status == PVGStatus.BURNING || status == PVGStatus.BURNING_STAGING;
-        }
-
-        public bool isStaging()
-        {
-            return status == PVGStatus.BURNING_STAGING || status == PVGStatus.COASTING_STAGING;
+            return status == PVGStatus.BURNING;
         }
 
         public bool isTerminalGuidance()
@@ -552,6 +538,15 @@ namespace MuMech
             if (p.last_success_time > 0)
                 last_success_time = p.last_success_time;
 
+            // FIXME: should make this use wall clock time rather than simulation time and drop it down to
+            // 10 seconds or so (phys warp means that this timeout could be 1/4 of the wall time and the
+            // optimizer may commonly take 3-4 seconds to reconverge in a suboptimal setting -- TF failure case, etc)
+            if ( p.running_time(vesselState.time) > 30 )
+            {
+                p.KillThread();
+                p.last_failure_cause = "Optimizer watchdog timeout"; // bit dirty poking other people's data
+            }
+
             if (p.solution == null)
             {
                 /* we have a solver but no solution */
@@ -576,13 +571,28 @@ namespace MuMech
             if ( (vesselState.time - last_optimizer_time) < MuUtils.Clamp(pvgInterval, 1.00, 30.00) )
                 return;
 
-            // for last 10 seconds of coast phase don't recompute (FIXME: can this go lower?  it was a workaround for a bug)
-            if ( p.solution != null && p.solution.arc(vesselState.time).thrust == 0 && p.solution.current_tgo(vesselState.time) < 10 )
-                return;
+            // if we have unstable ullage then continuously update the "staging" timer until we are not
+            if ( ( vesselState.lowestUllage < VesselState.UllageState.Stable ) && !isCoasting() )
+            {
+                last_stage_time = vesselState.time;
+            }
+
+            if ( p.solution != null )
+            {
+                // The current_tgo is the "booster" stage of the solution, it is allowed to go negative, for staging freeze
+                // running the optimizer for 4 seconds on either side of staging.
+                if ( Math.Abs(p.solution.current_tgo(vesselState.time)) < 4 )
+                    return;
+
+                // Also if we just triggered a KSP stage separation or just started coasting, then wait for 4 seconds for
+                // stats to settle before running the optimizer again.
+                if ( vesselState.time < last_stage_time + 4 )
+                    return;
+            }
 
             p.threadStart(vesselState.time);
             //if ( p.threadStart(vesselState.time) )
-                //Debug.Log("MechJeb: started optimizer thread");
+            //Debug.Log("MechJeb: started optimizer thread");
 
             if (status == PVGStatus.INITIALIZING && p.solution != null)
                 status = PVGStatus.CONVERGED;
@@ -592,7 +602,6 @@ namespace MuMech
 
         private int last_burning_stage;
         private bool last_burning_stage_complete;
-        private double last_coasting_time = 0.0;
 
         // if we're transitioning from a complete thrust phase to a coast, wait for staging, otherwise
         // just go off of whatever the solution says for the current time.
@@ -638,12 +647,8 @@ namespace MuMech
 
                 if ( !isTerminalGuidance() )
                 {
-                    if (vesselState.time < last_stage_time + 4)
-                        status = PVGStatus.COASTING_STAGING;
-                    else
-                        status = PVGStatus.COASTING;
+                    status = PVGStatus.COASTING;
                 }
-                last_coasting_time = vesselState.time;
 
                 // this turns off autostaging during the coast (which currently affects fairing separation)
                 core.staging.autostageLimitInternal = last_burning_stage - 1;
@@ -656,10 +661,7 @@ namespace MuMech
 
                 if ( !isTerminalGuidance() )
                 {
-                    if ((vesselState.time < last_stage_time + 4) || (vesselState.time < last_coasting_time + 4))
-                        status = PVGStatus.BURNING_STAGING;
-                    else
-                        status = PVGStatus.BURNING;
+                    status = PVGStatus.BURNING;
                 }
 
                 core.staging.autostageLimitInternal = p.solution.terminal_burn_arc().ksp_stage;
@@ -729,7 +731,6 @@ namespace MuMech
             status = PVGStatus.INITIALIZING;
             last_stage_time = 0.0;
             last_optimizer_time = 0.0;
-            last_coasting_time = 0.0;
             last_success_time = 0.0;
             autowarp = false;
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -740,13 +741,13 @@ namespace MuMech
 
         static MechJebModuleGuidanceController()
         {
-            isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("ksp_plugin_adapter");
+            isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("principia.ksp_plugin_adapter");
             if (isLoadedPrincipia)
             {
-                principiaEGNPCDOF = ReflectionUtils.getMethodByReflection("ksp_plugin_adapter", "principia.ksp_plugin_adapter.Interface", "ExternalGetNearestPlannedCoastDegreesOfFreedom", BindingFlags.NonPublic | BindingFlags.Static);
+                principiaEGNPCDOF = ReflectionUtils.getMethodByReflection("principia.ksp_plugin_adapter", "principia.ksp_plugin_adapter.Interface", "ExternalGetNearestPlannedCoastDegreesOfFreedom", BindingFlags.NonPublic | BindingFlags.Static);
                 if (principiaEGNPCDOF == null)
                 {
-                    // Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
+                    Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
                     isLoadedPrincipia = false;
                     return;
                 }

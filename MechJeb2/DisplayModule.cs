@@ -318,5 +318,10 @@ namespace MuMech
         {
             return "Display Module";
         }
+
+        public virtual string IconName()
+        {
+            return "Display Module Icon";
+        }
     }
 }

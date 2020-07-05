@@ -44,6 +44,7 @@ namespace MuMech
 
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RZauto_label4"), autopilot.desiredDistance, "m");//"Desired final distance:"
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RZauto_label5"), autopilot.maxPhasingOrbits);//"Max # of phasing orbits:"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RZauto_label8"), autopilot.maxClosingSpeed, "m/s");//"Max closing velocity:"
 
                 if (autopilot.maxPhasingOrbits < 5)
                 {
@@ -70,6 +71,11 @@ namespace MuMech
         public override string GetName()
         {
             return Localizer.Format("#MechJeb_RZauto_title");//"Rendezvous Autopilot"
+        }
+
+        public override string IconName()
+        {
+            return "Rendezvous Autopilot";
         }
 
         public override bool IsSpaceCenterUpgradeUnlocked()

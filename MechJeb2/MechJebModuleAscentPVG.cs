@@ -21,7 +21,11 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredApoapsis = new EditableDoubleMult(0, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDoubleMult desiredAttachAlt = new EditableDoubleMult(0, 1000);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool omitCoast = false;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool attachAltFlag = false;
 
         private MechJebModuleAscentGuidance ascentGuidance { get { return core.GetComputerModule<MechJebModuleAscentGuidance>(); } }
 
@@ -84,6 +88,7 @@ namespace MuMech
             ecc = (ApR - PeR) / (ApR + PeR);
         }
 
+        /*
         private void ConvertToVTRT(double sma, double ecc, double gamma, out double rt, out double vt)
         {
             // All this math comes from symbolic algebraic equation solving in Matlab:
@@ -100,27 +105,68 @@ namespace MuMech
             vt = - n1 / d1;
             rt = 2 * sma + n1 * sma * sma * ( 1 -  ecc * ecc) / d2;
         }
+        */
+
+        private void ConvertToVTRT(double sma, double ecc, double attachAlt, out double gammaT, out double rT, out double vT)
+        {
+            rT = mainBody.Radius + attachAlt;
+            double h = Math.Sqrt( mainBody.gravParameter * sma * ( 1 - ecc * ecc ) );
+            vT = Math.Sqrt( mainBody.gravParameter * ( 2 / rT - 1 / sma ) );
+            gammaT = Math.Acos( MuUtils.Clamp( h / ( rT * vT ), -1, 1 ) ) * UtilMath.Rad2Deg;
+        }
 
         private void setTarget()
         {
+            bool lanflag = false;
+
             double sma = 0;
             double ecc = 0;
-            double vt = 0;
-            double rt = 0;
+            double vT = 0;
+            double rT = 0;
+            double gammaT = 0;
+            double LAN = 0;
+
+            double attachAlt = desiredAttachAlt;
+            if (attachAlt < autopilot.desiredOrbitAltitude)
+                attachAlt = autopilot.desiredOrbitAltitude;
+            if (attachAlt > desiredApoapsis && desiredApoapsis > autopilot.desiredOrbitAltitude)
+                attachAlt = desiredApoapsis;
 
             ConvertToSMAEcc(autopilot.desiredOrbitAltitude, desiredApoapsis, out sma, out ecc);
-            ConvertToVTRT(sma, ecc, 0, out rt, out vt);
+            ConvertToVTRT(sma, ecc, attachAltFlag ? attachAlt : autopilot.desiredOrbitAltitude, out gammaT, out rT, out vT);
             double inclination = autopilot.desiredInclination;
 
             if ( ascentGuidance.launchingToPlane && core.target.NormalTargetExists )
             {
-                double LAN = core.target.TargetOrbit.LAN;;
+                LAN = core.target.TargetOrbit.LAN;
                 inclination = core.target.TargetOrbit.inclination;
-                core.guidance.flightangle5constraint(rt, vt, inclination, 0, LAN, sma, omitCoast, false);
+                lanflag = true;
+            }
+            else if ( ascentGuidance.launchingToMatchLAN && core.target.NormalTargetExists )
+            {
+                LAN = core.target.TargetOrbit.LAN;
+                lanflag = true;
+
+            }
+            else if ( ascentGuidance.launchingToLAN )
+            {
+                LAN = autopilot.desiredLAN;
+                lanflag = true;
+            }
+
+            if ( lanflag )
+            {
+                if (ecc < 1e-4 || attachAltFlag)
+                    core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, omitCoast, false, true);
+                else
+                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, omitCoast, false, true);
             }
             else
             {
-                core.guidance.flightangle4constraint(rt, vt, inclination, 0, sma, omitCoast, false);
+                if (ecc < 1e-4 || attachAltFlag)
+                    core.guidance.flightangle4constraint(rT, vT, inclination, gammaT, sma, omitCoast, false);
+                else
+                    core.guidance.keplerian3constraint(sma, ecc, inclination, omitCoast, false);
             }
         }
 

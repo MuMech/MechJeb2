@@ -731,5 +731,10 @@ namespace MuMech
         {
             return Localizer.Format("#MechJeb_Flightrecord_title");//"Flight Recorder"
         }
+
+        public override string IconName()
+        {
+            return "Flight Recorder";
+        }
     }
 }

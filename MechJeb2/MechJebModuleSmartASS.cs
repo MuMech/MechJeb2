@@ -544,5 +544,10 @@ namespace MuMech
         {
             return core.eduMode ?  Localizer.Format("#MechJeb_SmartACS_title") : Localizer.Format("#MechJeb_SmartASS_title");//"Smart A.C.S.":"Smart A.S.S."
         }
+
+        public override string IconName()
+        {
+            return core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
+        }
     }
 }
