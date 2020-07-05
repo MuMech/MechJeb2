@@ -19,6 +19,11 @@ if [ -z "${TARGET_NAME}" ] ; then
   exit 1
 fi
 
+if [ -z "${PROJECT_DIR}" ] ; then
+  echo 'Expected PROJECT_DIR to be defined but it is not' >&2
+  exit 1
+fi
+
 if [ -z "${PDB2MDB}" ] ; then
   echo '$PDB2MDB not found'
 else
@@ -34,11 +39,14 @@ else
     exit 1
   fi
   if ! [ -d "${KSPDIR}/GameData/MechJeb2/Plugins" ] ; then
-    echo 'Expected $KSPDIR to contain a GameData/MechJeb2/Plugins subdirectory but it does not' >&2
-    exit 1
+    mkdir -p "${KSPDIR}/GameData/MechJeb2/Plugins/"
   fi
   echo "Copying to '${KSPDIR}'"
   cp "${TARGET_PATH}" "${KSPDIR}/GameData/MechJeb2/Plugins/"
   test -f "${TARGET_DIR}/${TARGET_NAME}.pdb" && cp "${TARGET_DIR}/${TARGET_NAME}.pdb" "${KSPDIR}/GameData/MechJeb2/Plugins/"
   test -f "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" && cp "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" "${KSPDIR}/GameData/MechJeb2/Plugins/"
+  cp -r ${PROJECT_DIR}/../Bundles "${KSPDIR}/GameData/MechJeb2/"
+  cp -r ${PROJECT_DIR}/../Icons "${KSPDIR}/GameData/MechJeb2/"
+  cp -r ${PROJECT_DIR}/../Localization "${KSPDIR}/GameData/MechJeb2/"
+  cp -r ${PROJECT_DIR}/../Parts "${KSPDIR}/GameData/MechJeb2/"
 fi
