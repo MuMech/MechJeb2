@@ -114,8 +114,8 @@ Licensed under the [GNU General Public License, Version 3](LICENSE.md).
 
 3. Why is some Mechjeb function not available?
 
-    Science and career mode require requires to unlock some specific node in the Research and Development tree. 
-    Some other also require to upgrade the tracking station to level 2 (game code restriction we can't do much about).
+    Science and career mode requires you to unlock some specific node in the Research and Development tree. 
+    You also may need to upgrade the tracking station to level 2 (game code restriction we can't do much about).
 
 4. How do I report a bug?
 
