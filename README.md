@@ -35,7 +35,9 @@ Unzip the zip in KSP GameData directory. You should have something that looks li
     Kerbal Space Program
     -- GameData
        -- MechJeb2
+          -- Bundles
           -- Icons
+          -- Localization
           -- Parts
           -- Plugins
 
@@ -56,6 +58,7 @@ If you want the unstable dev version of MechJeb then :
 
 ## Build
 
+### Linux   
 The project uses Mono and Make to build the addon, make sure you have both installed.
 
 1. (optional) Set your KSP directory
@@ -76,10 +79,21 @@ The project uses Mono and Make to build the addon, make sure you have both insta
     make install
     ```
 
+### Windows
+
+1. Install the version of Unity that KSP uses ( Currently 2019.2.2f1 )
+2. Configure your system environement variables and add:
+  - KSPDIR set to where your KSP install is ( usually C:\Program Files\Steam (x86)\SteamApps\Common\Kerbal Space Program )
+  - MONO set to the path of Unity current mono.exe ( usually C:\Program Files\Unity\Hub\Editor\2019.2.2f1\Editor\Data\MonoBleedingEdge\bin\mono.exe )
+  - PDB2MDB set to the path of pdb2mdb.exe ( usually C:\Program Files\Unity\Hub\Editor\2019.2.2f1\Editor\Data\MonoBleedingEdge\lib\mono\4.5\pdb2mdb.exe ) 
+3. Load MechJeb2.sln and open the properties of the MechJeb2 project (Right-Click=>properties). In the "Reference Path" section add the KSP libs folder to the list ( usually C:\Program Files\Steam (x86)\SteamApps\Common\Kerbal Space Program\KSP_x64_Data\Managed\ )
 
 ## Maintainer
 
 [@sarbian](https://github.com/sarbian)
+
+[@lamont-granquist](https://github.com/lamont-granquist)
+
 
 
 ## License
@@ -100,8 +114,8 @@ Licensed under the [GNU General Public License, Version 3](LICENSE.md).
 
 3. Why is some Mechjeb function not available?
 
-    Science and career mode require requires to unlock some specific node in the Research and Development tree. 
-    Some other also require to upgrade the tracking station to level 2 (game code restriction we can't do much about).
+    Science and career mode requires you to unlock some specific node in the Research and Development tree. 
+    You also may need to upgrade the tracking station to level 2 (game code restriction we can't do much about).
 
 4. How do I report a bug?
 
