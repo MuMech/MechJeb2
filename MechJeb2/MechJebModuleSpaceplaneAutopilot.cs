@@ -285,9 +285,16 @@ namespace MuMech
                 {
                     // Apply brakes under 30 (if there are no reversers) otherwise under 10 m/s.
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, bEngagedReverseThrusters ? vesselState.speedSurfaceHorizontal < 10 : vesselState.speedSurfaceHorizontal < 30);
-
                 }
 
+                if (vesselState.speedSurface < 1.0)
+                {
+                    print("Disengaging autopilot!");
+                    AutopilotOff();
+                    // disable the autopilot if it was manually engaged by the user
+                    Autopilot.enabled = false;
+                    core.thrust.ThrustOff();
+                }
             }
         }
 
@@ -554,6 +561,7 @@ namespace MuMech
             {
                 if (vessel.Landed)
                 {
+                    print("Vessel landed!");
                     touchdownMomentAoA = vesselState.AoA;
                     touchdownMomentSpeed = vesselState.speedSurfaceHorizontal;
                     approachState = AutolandApproachState.ROLLOUT;
@@ -563,13 +571,6 @@ namespace MuMech
             }
             else if (approachState == AutolandApproachState.ROLLOUT)
             {
-                if (vesselState.speedSurface < 1.0)
-                {
-                    AutopilotOff();
-                    // disable the actual autopilot so we dont takeoff again after we landed
-                    Autopilot.enabled = false;
-                }
-
                 return runway.End();
             }
 
