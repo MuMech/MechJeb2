@@ -616,7 +616,7 @@ namespace MuMech
             // don't climb unless it's absolutely necessary
             double optimalAlt = UtilMath.Max(vesselState.altitudeASL, minimumSectorAltitude);
 
-            return runway.body.GetRelSurfacePosition(lat, lon, optimalAlt);
+            return runway.body.GetWorldSurfacePosition(lat, lon, optimalAlt);
         }
 
         /// <summary>
