@@ -177,7 +177,7 @@ namespace MuMech
 		{
 			if (wheels.Count == 0 && colliders.Count == 0) { OnVesselModified(vessel); }
 			RaycastHit hit;
-			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15);
+			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
 			norm = hit.normal;
 			traction = 0;
 //			foreach (var c in colliders) {

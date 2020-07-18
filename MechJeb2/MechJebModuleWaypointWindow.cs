@@ -97,7 +97,7 @@ namespace MuMech
 					var rayPos = Body.position + dir * (Body.Radius + 50000);
 					dir = (Vector3d)(Body.position - rayPos).normalized;
 					RaycastHit hit;
-					var raycast = Physics.Raycast(rayPos, dir, out hit, (float)Body.Radius, 1 << 15);
+					var raycast = Physics.Raycast(rayPos, dir, out hit, (float)Body.Radius, 1 << 15, QueryTriggerInteraction.Ignore);
 					if (raycast) {
 						dir = (hit.point - Body.position);
 						Position = Body.position + dir.normalized * (dir.magnitude + 0.5);
@@ -355,7 +355,7 @@ namespace MuMech
 //			mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
 			Vector3d relOrigin = mouseRay.origin - body.position;
 			Vector3d relSurfacePosition;
-			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 4f, 1 << 15))
+			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 4f, 1 << 15, QueryTriggerInteraction.Ignore))
 			{
 				return new Coordinates(body.GetLatitude(raycast.point), MuUtils.ClampDegrees180(body.GetLongitude(raycast.point)));
 			}
