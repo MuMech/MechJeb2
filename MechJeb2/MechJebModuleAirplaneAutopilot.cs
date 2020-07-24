@@ -20,7 +20,7 @@ namespace MuMech
         public EditableDouble AccKp = 0.5, AccKi = 0.5, AccKd = 0.005;
 
         [Persistent(pass = (int)Pass.Local)]
-        public EditableDouble PitKp = 2.0, PitKi = 0.5, PitKd = 0.5;
+        public EditableDouble PitKp = 2.0, PitKi = 0.6, PitKd = 0.65;
 
         [Persistent (pass = (int)Pass.Local)]
         public EditableDouble RolKp = 0.5, RolKi = 0.02, RolKd = 0.5;
