@@ -3,9 +3,9 @@ about:  Do NOT submit issues about Localization
 labels:  "User cannot follow instructions"
 ---
 
-ANY LOCALIZATION ISSUES WILL BE CLOSED.
+Any localization issues will be closed.
 
-ANY LOCALIZATION PRs WILL BE MERGED.
+Any localization PRs will be MERGED.
 
-PLEASE JUST SUBMIT A PR.
+Please, just submit a PR.
 
