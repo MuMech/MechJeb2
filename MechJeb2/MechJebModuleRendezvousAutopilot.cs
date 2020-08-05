@@ -101,6 +101,12 @@ namespace MuMech
                     double closingTime = core.target.Distance / closingSpeed;
 
                     double UT = vesselState.time + 15;
+                    if (double.IsInfinity(UT) || double.IsInfinity(closingTime))
+                    {
+                        print("Unable to find an intercept with closingTime=" + closingTime + " closingSpeed=" + closingSpeed + " Distance=" + core.target.Distance + " UT=" + UT);
+                        return;
+                    }
+
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, closingTime);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
