@@ -112,7 +112,7 @@ namespace MuMech
                 if (GUILayout.Button("-", GUILayout.Width(18))) { VertSpeedTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
                 VertSpeedTargettmp.text = GUILayout.TextField(VertSpeedTargettmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
                 if (GUILayout.Button("+", GUILayout.Width(18))) { VertSpeedTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
-                GUILayout.Label("°", GUILayout.ExpandWidth(true));
+                GUILayout.Label("m/s", GUILayout.ExpandWidth(true));
                 if (change || GUILayout.Button(Localizer.Format("#MechJeb_Aircraftauto_btnset6"), autopilot.VertSpeedTarget == VertSpeedTargettmp ? btWhite : btGreen)) {
                     autopilot.VertSpeedTarget = VertSpeedTargettmp;
                 }
