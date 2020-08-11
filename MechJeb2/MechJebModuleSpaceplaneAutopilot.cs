@@ -340,7 +340,7 @@ namespace MuMech
                 Debug.Assert(vertSpeed < 0);
 
                 double latDist = LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown());
-                Vector3d vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown()));
+                Vector3d vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, latDist);
                 double desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope);
                 double deltaToCorrectAlt = desiredAlt - vesselState.altitudeASL;
                 double expPerMeter = (Math.Log(maximumVerticalSpeedCorrection + 1) - Math.Log(1)) / desiredAlt;
