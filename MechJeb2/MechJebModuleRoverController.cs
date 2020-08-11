@@ -107,6 +107,7 @@ namespace MuMech
 		public EditableDouble tractionLimit = 75;
 		
 		public List<Part> wheels = new List<Part>();
+		public List<ModuleWheelBase> wheelbases = new List<ModuleWheelBase>();
 		public List<WheelCollider> colliders = new List<WheelCollider>();
 		public Vector3 norm = Vector3.zero;
 		
@@ -139,6 +140,13 @@ namespace MuMech
 				wheels.AddRange(vessel.Parts.FindAll(p => p.HasModule<ModuleWheelBase>() /*&& p.FindModelComponent<WheelCollider>() != null*/ && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG));
 				colliders.Clear();
 				wheels.ForEach(p => colliders.AddRange(p.FindModelComponents<WheelCollider>()));
+
+				wheelbases.Clear();
+				wheelbases.AddRange(vessel.Parts.Where(
+					p => p.HasModule<ModuleWheelBase>()
+					&& p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG
+//					&& (p.GetModule<ModuleWheels.ModuleWheelSteering>()?.steeringEnabled == true || p.GetModule<ModuleWheels.ModuleWheelMotorSteering>()?.steeringEnabled == true)
+				).Select(p => p.GetModule<ModuleWheelBase>()));
 			}
 			catch (Exception) {}
 		}
@@ -188,6 +196,7 @@ namespace MuMech
 //				}
 //			}
 
+/*
 		    for (int i = 0; i < wheels.Count; i++)
 		    {
 		        var w = wheels[i];
@@ -196,6 +205,7 @@ namespace MuMech
 		            traction += 100;
 		        }
 		    }
+*/
 
 //		    for (int i = 0; i < colliders.Count; i++)
 //		    {
@@ -206,7 +216,16 @@ namespace MuMech
 //		        }
 //		    }
 
-			traction /= wheels.Count;
+		    for (int i = 0; i < wheelbases.Count; i++)
+		    {
+		        var w = wheelbases[i];
+		        if (w.isGrounded)
+		        {
+		            traction += 100;
+		        }
+		    }
+
+			traction /= wheelbases.Count;
 		}
 		
 		public override void OnModuleDisabled()
