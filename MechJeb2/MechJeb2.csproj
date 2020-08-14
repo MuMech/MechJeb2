@@ -95,6 +95,7 @@
     <Compile Include="Maneuver\TimeSelector.cs" />
     <Compile Include="Maneuver\TransferCalculator.cs" />
     <Compile Include="MathExtensions.cs" />
+    <Compile Include="Matrix3x3d.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
