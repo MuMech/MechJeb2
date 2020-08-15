@@ -15,7 +15,7 @@ namespace MuMech
             else if (vessel == null) return new List<ITargetable>();
             else parts = vessel.Parts;
 
-            return (parts.SelectMany(part => part.Modules.OfType<ITargetable>())).ToList();
+            return parts.SelectMany(part => part.Modules.OfType<ITargetable>()).ToList();
         }
 
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
