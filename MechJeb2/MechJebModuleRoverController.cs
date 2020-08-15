@@ -12,32 +12,32 @@ namespace MuMech
 		private CelestialBody lastBody = null;
 		public bool LoopWaypoints = false;
 		
-		[ToggleInfoItem("#MechJeb_ControlHeading", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Heading control
+		[ToggleInfoItem("#MechJeb_ControlHeading", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)] // Heading control
 		public bool ControlHeading;
 
-		[EditableInfoItem("#MechJeb_Heading", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]//Heading
+		[EditableInfoItem("#MechJeb_Heading", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)] // Heading
 		public EditableDouble heading = 0;
 
-		[ToggleInfoItem("#MechJeb_ControlSpeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Speed control
+		[ToggleInfoItem("#MechJeb_ControlSpeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)] // Speed control
 		public bool ControlSpeed = false;
 
-		[EditableInfoItem("#MechJeb_Speed", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]//Speed
+		[EditableInfoItem("#MechJeb_Speed", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)] // Speed
 		public EditableDouble speed = 10;
 
-        [ToggleInfoItem("#MechJeb_BrakeOnEject", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Brake on Pilot Eject
-        public bool BrakeOnEject = false;
+		[ToggleInfoItem("#MechJeb_BrakeOnEject", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)] // Brake on Pilot Eject
+		public bool BrakeOnEject = false;
 
-        [ToggleInfoItem("#MechJeb_BrakeOnEnergyDepletion", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Brake on Energy Depletion
+		[ToggleInfoItem("#MechJeb_BrakeOnEnergyDepletion", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)] // Brake on Energy Depletion
 		public bool BrakeOnEnergyDepletion = false;
-		
-        [ToggleInfoItem("#MechJeb_WarpToDaylight", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Warp until Day if Depleted
+
+		[ToggleInfoItem("#MechJeb_WarpToDaylight", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)] // Warp until Day if Depleted
 		public bool WarpToDaylight = false;
 		public bool waitingForDaylight = false;
 
-		[ToggleInfoItem("#MechJeb_StabilityControl", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Stability Control
+		[ToggleInfoItem("#MechJeb_StabilityControl", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)] // Stability Control
 		public bool StabilityControl = false;
 
-		[ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local | (int)Pass.Type)]//Limit Acceleration
+		[ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local | (int)Pass.Type)] // Limit Acceleration
 		public bool LimitAcceleration = false;
 
 		public PIDController headingPID;
@@ -45,33 +45,33 @@ namespace MuMech
 
 //		private LineRenderer line;
 		
-		[EditableInfoItem("#MechJeb_SafeTurnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]//Safe turnspeed
+		[EditableInfoItem("#MechJeb_SafeTurnspeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)] // Safe turnspeed
 		public EditableDouble turnSpeed = 3;
-		[EditableInfoItem("#MechJeb_TerrainLookAhead", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Terrain Look Ahead
+		[EditableInfoItem("#MechJeb_TerrainLookAhead", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Terrain Look Ahead
 		public EditableDouble terrainLookAhead = 1.0;
-		[EditableInfoItem("#MechJeb_BrakeSpeedLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]//Brake Speed Limit
+		[EditableInfoItem("#MechJeb_BrakeSpeedLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)] // Brake Speed Limit
 		public EditableDouble brakeSpeedLimit = 0.7;
 
-		[EditableInfoItem("#MechJeb_HeadingPIDP", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Heading PID P
+		[EditableInfoItem("#MechJeb_HeadingPIDP", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Heading PID P
 		public EditableDouble hPIDp = 0.03; // 0.01
-		[EditableInfoItem("#MechJeb_HeadingPIDI", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Heading PID I
+		[EditableInfoItem("#MechJeb_HeadingPIDI", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Heading PID I
 		public EditableDouble hPIDi = 0.002; // 0.001
-		[EditableInfoItem("#MechJeb_HeadingPIDD", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Heading PID D
+		[EditableInfoItem("#MechJeb_HeadingPIDD", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Heading PID D
 		public EditableDouble hPIDd = 0.005;
 		
-		[EditableInfoItem("#MechJeb_SpeedPIDP", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Speed PID P
+		[EditableInfoItem("#MechJeb_SpeedPIDP", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Speed PID P
 		public EditableDouble sPIDp = 2.0;
-		[EditableInfoItem("#MechJeb_SpeedPIDI", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Speed PID I
+		[EditableInfoItem("#MechJeb_SpeedPIDI", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Speed PID I
 		public EditableDouble sPIDi = 0.1;
-		[EditableInfoItem("#MechJeb_SpeedPIDD", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Speed PID D
+		[EditableInfoItem("#MechJeb_SpeedPIDD", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Speed PID D
 		public EditableDouble sPIDd = 0.001;
 		
-		[ValueInfoItem("#MechJeb_SpeedIntAcc", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]//Speed Int Acc
+		[ValueInfoItem("#MechJeb_SpeedIntAcc", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed Int Acc
 		public double speedIntAcc = 0;
 
-		[ValueInfoItem("#MechJeb_Traction", InfoItem.Category.Rover, format = "F0", units = "%")]//Traction
+		[ValueInfoItem("#MechJeb_Traction", InfoItem.Category.Rover, format = "F0", units = "%")] // Traction
 		public float traction = 0;
-		[EditableInfoItem("#MechJeb_TractionBrakeLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)]//Traction Brake Limit
+		[EditableInfoItem("#MechJeb_TractionBrakeLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)] // Traction Brake Limit
 		public EditableDouble tractionLimit = 75;
 		
 		public List<Part> wheels = new List<Part>();
@@ -100,10 +100,10 @@ namespace MuMech
 		public void OnVesselModified(Vessel v)
 		{
 
-            //TODO : need to look into the new ModuleWheelSteering ModuleWheelMotor ModuleWheelBrakes ModuleWheelBase ModuleWheelSuspension and see what they could bring
+			// TODO : need to look into the new ModuleWheelSteering ModuleWheelMotor ModuleWheelBrakes ModuleWheelBase ModuleWheelSuspension and see what they could bring
 
-            try
-            {
+			try
+			{
 				wheels.Clear();
 				wheels.AddRange(vessel.Parts.FindAll(p => p.HasModule<ModuleWheelBase>() /*&& p.FindModelComponent<WheelCollider>() != null*/ && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG));
 				colliders.Clear();
@@ -118,9 +118,9 @@ namespace MuMech
 			catch (Exception) {}
 		}
 		
-		[ValueInfoItem("#MechJeb_Headingerror", InfoItem.Category.Rover, format = "F1", units = "º")]//Heading error
+		[ValueInfoItem("#MechJeb_Headingerror", InfoItem.Category.Rover, format = "F1", units = "º")] // Heading error
 		public double headingErr;
-		[ValueInfoItem("#MechJeb_Speederror", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")]//Speed error
+		[ValueInfoItem("#MechJeb_Speederror", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed error
 		public double speedErr;
 		public double tgtSpeed;
 		public MuMech.MovingAverage etaSpeed = new MovingAverage(50);
@@ -137,10 +137,10 @@ namespace MuMech
 			var diff = toLon - fromLon;
 			if (diff < -180) { diff += 360; }
 			if (diff >  180) { diff -= 360; }
-			Vector3 myPos  = fromPos - body.transform.position;
+			Vector3 myPos = fromPos - body.transform.position;
 			Vector3 north = body.transform.position + ((float)body.Radius * body.transform.up) - fromPos;
 			Vector3 tgtPos = toPos - fromPos;
-            return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.ProjectOnPlane(tgtPos.normalized, myPos.normalized));
+			return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.ProjectOnPlane(tgtPos.normalized, myPos.normalized));
 		}
 
 		public float TurningSpeed(double speed, double error)
@@ -156,14 +156,14 @@ namespace MuMech
 			norm = hit.normal;
 			traction = 0;
 
-		    for (int i = 0; i < wheelbases.Count; i++)
-		    {
-		        var w = wheelbases[i];
-		        if (w.isGrounded)
-		        {
-		            traction += 100;
-		        }
-		    }
+			for (int i = 0; i < wheelbases.Count; i++)
+			{
+				var w = wheelbases[i];
+				if (w.isGrounded)
+				{
+					traction += 100;
+				}
+			}
 
 			traction /= wheelbases.Count;
 		}
@@ -208,8 +208,8 @@ namespace MuMech
 					// var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
-					               (nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
-					               (distance - wp.Radius > 50 ? turnSpeed.val : 1)));
+								(nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
+								(distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					minSpeed = (wp.Quicksave ? 1 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
@@ -324,13 +324,13 @@ namespace MuMech
 				}
 				var fSpeed = (float)curSpeed;
 				Vector3 fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
-				                        vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
-				                        vesselState.surfaceVelocity); // in the air so follow velocity
+							vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
+							vesselState.surfaceVelocity); // in the air so follow velocity
 				Vector3.OrthoNormalize(ref norm, ref fwd);
 				var quat = Quaternion.LookRotation(fwd, norm);
-				
-                if (vesselState.torqueAvailable.sqrMagnitude > 0)
-				    core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+
+				if (vesselState.torqueAvailable.sqrMagnitude > 0)
+					core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
 			}
 			
 			if (BrakeOnEnergyDepletion)
@@ -339,12 +339,12 @@ namespace MuMech
 				var energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) / batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount); 
 				var openSolars = vessel.mainBody.atmosphere && // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
 					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable && p.deployState != ModuleDeployablePart.DeployState.BROKEN &&
-					                                                                         p.deployState != ModuleDeployablePart.DeployState.RETRACTED).Count > 0;
+									p.deployState != ModuleDeployablePart.DeployState.RETRACTED).Count > 0;
 				
 				if (openSolars && energyLeft > 0.99)
 				{
 					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
-					                                                                         p.deployState == ModuleDeployablePart.DeployState.EXTENDED).ForEach(p => p.Retract());
+									p.deployState == ModuleDeployablePart.DeployState.EXTENDED).ForEach(p => p.Retract());
 				}
 				
 				if (energyLeft < 0.05 && Math.Sign(s.wheelThrottle) + Math.Sign(curSpeed) != 0) { s.wheelThrottle = 0; } // save remaining energy by not using it for acceleration
@@ -356,7 +356,7 @@ namespace MuMech
 				}
 
 				if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight &&
-				    vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count > 0)
+					vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count > 0)
 				{
 					waitingForDaylight = true;
 				}
@@ -454,30 +454,31 @@ namespace MuMech
 		
 		public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
-            base.OnLoad(local, type, global);
+			base.OnLoad(local, type, global);
 
-            if (local != null)
-            {
-                var wps = local.GetNode("Waypoints");
-                if (wps != null && wps.HasNode("Waypoint"))
-                {
-                    int.TryParse(wps.GetValue("Index"), out WaypointIndex);
-                    Waypoints.Clear();
-                    foreach (ConfigNode cn in wps.GetNodes("Waypoint"))
-                    {
-                        Waypoints.Add(new MechJebWaypoint(cn));
-                    }
-                }
-            }
+			if (local != null)
+			{
+				var wps = local.GetNode("Waypoints");
+				if (wps != null && wps.HasNode("Waypoint"))
+				{
+					int.TryParse(wps.GetValue("Index"), out WaypointIndex);
+					Waypoints.Clear();
+					foreach (ConfigNode cn in wps.GetNodes("Waypoint"))
+					{
+						Waypoints.Add(new MechJebWaypoint(cn));
+					}
+				}
+			}
 		}
 		
 		public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
 		{
-            base.OnSave(local, type, global);
+			base.OnSave(local, type, global);
 
-            if (local == null) return;
+			if (local == null) return;
 
 			if (local.HasNode("Waypoints")) { local.RemoveNode("Waypoints"); }
+
 			if (Waypoints.Count > 0) {
 				ConfigNode cn = local.AddNode("Waypoints");
 				cn.AddValue("Index", WaypointIndex);
