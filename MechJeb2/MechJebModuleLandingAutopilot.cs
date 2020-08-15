@@ -5,6 +5,11 @@ using KSP.Localization;
 
 namespace MuMech
 {
+    // Landing AP TODO / BUG list
+    // - Add a parameter to define how steep the descent will be ( fraction of Orbit ? )
+    // - Fix the auto wrap stop start dance
+    // - Replace the openGL code with a LineRenderer
+    // - 
     public class MechJebModuleLandingAutopilot : AutopilotModule
     {
         bool deployedGears;
@@ -31,19 +36,20 @@ namespace MuMech
 
         //Landing prediction data:
         MechJebModuleLandingPredictions predictor;
-        public ReentrySimulation.Result prediction;
-        ReentrySimulation.Result errorPrediction;
+        public ReentrySimulation.Result Prediction => predictor.Result;
+
+        ReentrySimulation.Result ErrorPrediction => predictor.GetErrorResult();
 
         public bool PredictionReady //We shouldn't do any autopilot stuff until this is true
         {
             get
             {
                 // Check that there is a prediction and that it is a landing prediction.
-                if (prediction == null)
+                if (Prediction == null)
                 {
                     return false;
                 }
-                else if (prediction.outcome != ReentrySimulation.Outcome.LANDED)
+                else if (Prediction.outcome != ReentrySimulation.Outcome.LANDED)
                 {
                     return false;
                 }
@@ -57,8 +63,8 @@ namespace MuMech
         {
             get
             {
-                return (errorPrediction != null) &&
-                    (errorPrediction.outcome == ReentrySimulation.Outcome.LANDED);
+                return (ErrorPrediction != null) &&
+                    (ErrorPrediction.outcome == ReentrySimulation.Outcome.LANDED);
             }
         }
         public double LandingAltitude // The altitude above sea level of the terrain at the landing site
@@ -77,16 +83,16 @@ namespace MuMech
                     // object are made. I suspect a bug or some sort - for now this hack improves
                     // the landing results.
                     {
-                        double checkASL = prediction.body.TerrainAltitude(prediction.endPosition.latitude, prediction.endPosition.longitude);
-                        if (checkASL != prediction.endASL)
+                        double checkASL = Prediction.body.TerrainAltitude(Prediction.endPosition.latitude, Prediction.endPosition.longitude);
+                        if (checkASL != Prediction.endASL)
                         {
                             // I know that this check is not required as we might as well always make
                             // the asignment. However this allows for some debug monitoring of how often this is occuring.
-                            prediction.endASL = checkASL;
+                            Prediction.endASL = checkASL;
                         }
                     }
 
-                    return prediction.endASL;
+                    return Prediction.endASL;
                 }
                 else
                 {
@@ -99,14 +105,14 @@ namespace MuMech
         {
             get
             {
-                return mainBody.GetWorldSurfacePosition(prediction.endPosition.latitude,
-                    prediction.endPosition.longitude, LandingAltitude) - mainBody.position;
+                return mainBody.GetWorldSurfacePosition(Prediction.endPosition.latitude,
+                    Prediction.endPosition.longitude, LandingAltitude) - mainBody.position;
             }
         }
 
         Vector3d RotatedLandingSite // The position where the landing site will be when we land at it
         {
-            get { return prediction.WorldEndPosition(); }
+            get { return Prediction.WorldEndPosition(); }
         }
 
         public IDescentSpeedPolicy descentSpeedPolicy;
@@ -173,30 +179,7 @@ namespace MuMech
         {
             if (!active)
                 return;
-
-            // If the latest prediction is a landing, aerobrake or no-reentry prediciton then keep it.
-            // However if it is any other sort or result it is not much use to us, so do not bother!
-            {
-                ReentrySimulation.Result result = predictor.Result;
-                if (null != result)
-                {
-                    if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)
-                    {
-                        this.prediction = result;
-                    }
-                }
-            }
-            {
-                ReentrySimulation.Result result = predictor.GetErrorResult();
-                if (null != result)
-                {
-                    if (result.outcome != ReentrySimulation.Outcome.ERROR && result.outcome != ReentrySimulation.Outcome.TIMED_OUT)
-                    {
-                        this.errorPrediction = result;
-                    }
-                }
-            }
-
+            
             descentSpeedPolicy = PickDescentSpeedPolicy();
 
             predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
@@ -289,7 +272,7 @@ namespace MuMech
             // into a position. We can't just get the current position of those coordinates, because the planet will
             // rotate during the descent, so we have to account for that.
             Vector3d desiredLandingPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
-            float bodyRotationAngleDuringDescent = (float)(360 * (prediction.endUT - vesselState.time) / mainBody.rotationPeriod);
+            float bodyRotationAngleDuringDescent = (float)(360 * (Prediction.endUT - vesselState.time) / mainBody.rotationPeriod);
             Quaternion bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;
 
@@ -359,15 +342,15 @@ namespace MuMech
             }
 
             // Is there an error prediction available? If so add that into the mix
-            if (ErrorPredictionReady && !double.IsNaN(errorPrediction.parachuteMultiplier))
+            if (ErrorPredictionReady && !double.IsNaN(ErrorPrediction.parachuteMultiplier))
             {
-                parachutePlan.AddResult(errorPrediction);
+                parachutePlan.AddResult(ErrorPrediction);
             }
 
             // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
-            if (PredictionReady && !double.IsNaN(prediction.parachuteMultiplier))
+            if (PredictionReady && !double.IsNaN(Prediction.parachuteMultiplier))
             {
-                parachutePlan.AddResult(prediction);
+                parachutePlan.AddResult(Prediction);
             }
         }
 
@@ -500,9 +483,7 @@ namespace MuMech
                 {
                     continue;
                 }
-                //DragCubeList.CubeData data = part.DragCubes.AddSurfaceDragDirection(Vector3.back, 1);
-                //
-                //dragCoef += data.areaDrag;
+                //part.DragCubes.SetDrag( -part.partTransform.InverseTransformDirection( vessel.ReferenceTransform.up ) , 1 );
 
                 float partAreaDrag = 0;
                 for (int f = 0; f < 6; f++)
@@ -697,7 +678,7 @@ namespace MuMech
     // Class to hold all the information about the planned deployment of parachutes.
     class ParachutePlan
     {
-        // We use a linear regresion to calculate the best place to deploy based on previous predictions
+        // We use a linear regression to calculate the best place to deploy based on previous predictions
         LinearRegression regression;
         ReentrySimulation.Result lastResult; //  store the last result so that we can check if any new result is actually a new one, or the same one again.
         ReentrySimulation.Result lastErrorResult; //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
@@ -708,7 +689,7 @@ namespace MuMech
         double minSemiDeployHeight;
         double maxMultiplier;
         double currentMultiplier;  // This is multiplied with the parachutes fulldeploy height to give the height at which the parachutes will be semideployed.
-        double correlation; // This is the correlation coefficent of the dataset, and is used to tell if the data set is providing helpful information or not. It is exposed outside the class as a "quality percentage" where -1 -> 100% and 0 or more -> 0%
+        double correlation; // This is the correlation coefficient of the dataset, and is used to tell if the data set is providing helpful information or not. It is exposed outside the class as a "quality percentage" where -1 -> 100% and 0 or more -> 0%
         const int dataSetSize = 40;
 
         public double Multiplier
@@ -761,7 +742,7 @@ namespace MuMech
             regression.Add(overshoot, newResult.parachuteMultiplier);
 
             // What is the correlation coefficent of the data. If it is weak a correlation then we will dismiss the dataset and use it to change the current multiplier
-            correlation = regression.CorrelationCoefficent;
+            correlation = regression.CorrelationCoefficient;
             if (correlation > -0.2) // TODO this is the best value to test for non-correlation?
             {
                 // If the correlation is less that 0 then we will give up controlling the parachutes and throw away the dataset. Also check that we have got several bits of data, just in case we get two datapoints that are badly correlated.
@@ -777,7 +758,7 @@ namespace MuMech
             }
             else
             {
-                // How much data is there? If just one datapoint then we need to slightly vary the multplier to avoid doing exactly the same multiplier again and getting a divide by zero!. If there is just two then we will not update the multiplier as we can't conclude much from two points of data!
+                // How much data is there? If just one datapoint then we need to slightly vary the multiplier to avoid doing exactly the same multiplier again and getting a divide by zero!. If there is just two then we will not update the multiplier as we can't conclude much from two points of data!
                 int dataSetSize = regression.dataSetSize;
                 if (dataSetSize == 1)
                 {
@@ -789,7 +770,7 @@ namespace MuMech
                 }
                 else
                 {
-                    // Use the linear regression to give us a new prediciton for when to open the parachutes
+                    // Use the linear regression to give us a new prediction for when to open the parachutes
                     try
                     {
                         this.currentMultiplier = regression.yIntercept;
@@ -901,7 +882,7 @@ namespace MuMech
             currentDataPoint++;
             dataPointCount++;
 
-            // wrap back to the begining if we have got the end of the array
+            // wrap back to the beginning if we have got the end of the array
             if (currentDataPoint >= maxDataPoints)
             {
                 currentDataPoint = 0;
@@ -971,7 +952,7 @@ namespace MuMech
         }
 
         // Calculation the Pearson product-moment correlation coefficient
-        public double CorrelationCoefficent
+        public double CorrelationCoefficient
         {
             get
             {

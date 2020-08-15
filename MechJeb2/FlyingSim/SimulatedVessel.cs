@@ -28,7 +28,7 @@ namespace MuMech
         {
             pool.Release(this);
         }
-        
+
         private static void Reset(SimulatedVessel obj)
         {
             SimulatedPart.Release(obj.parts);
