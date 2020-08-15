@@ -19,11 +19,11 @@ namespace MuMech
 		public float MaxSpeed;
 		public bool Quicksave;
 
-		public CelestialBody Body  {
+		public CelestialBody Body {
 			get { return (Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody); }
 		}
 
-		public MechJebWaypoint(double Latitude, double Longitude, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
+		public MechJebWaypoint(double Latitude, double Longitude, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) {
 			this.Latitude = Latitude;
 			this.Longitude = Longitude;
 			this.Radius = Radius;
@@ -33,7 +33,7 @@ namespace MuMech
 			Update();
 		}
 
-		public MechJebWaypoint(Vector3d Position, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
+		public MechJebWaypoint(Vector3d Position, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) {
 			this.Latitude = Body.GetLatitude(Position);
 			this.Longitude = Body.GetLongitude(Position);
 			this.Radius = Radius;
@@ -165,30 +165,6 @@ namespace MuMech
 				}
 			}
 		}
-
-//		public new void Add(MechJebWaypoint Waypoint) {
-//			this.Add(Waypoint);
-//			updateStats();
-//		}
-//
-//		public new void Insert(int Index, MechJebWaypoint Waypoint) {
-//			this.Insert(Index, Waypoint);
-//			updateStats();
-//		}
-//
-//		public new void Remove(MechJebWaypoint Waypoint) {
-//			this.Remove(Waypoint);
-//			updateStats();
-//		}
-//
-//		public new void RemoveAt(int Index) {
-//			this.RemoveAt(Index);
-//			updateStats();
-//		}
-//
-//		public new void RemoveRange() {
-//
-//		}
 	}
 
 	public class MechJebModuleWaypointWindow : DisplayModule {
@@ -200,37 +176,37 @@ namespace MuMech
 		public WaypointMode Mode = WaypointMode.Rover;
 		public MechJebModuleRoverController ap;
 		public static List<MechJebWaypointRoute> Routes = new List<MechJebWaypointRoute>();
-		[EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Moho Mapdist
+		[EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Moho Mapdist
 		public EditableDouble MohoMapdist = 5000;
-		[EditableInfoItem("#MechJeb_EveMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Eve Mapdist
+		[EditableInfoItem("#MechJeb_EveMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Eve Mapdist
 		public EditableDouble EveMapdist = 5000;
-		[EditableInfoItem("#MechJeb_GillyMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Gilly Mapdist
+		[EditableInfoItem("#MechJeb_GillyMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Gilly Mapdist
 		public EditableDouble GillyMapdist = -500;
-		[EditableInfoItem("#MechJeb_KerbinMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Kerbin Mapdist
+		[EditableInfoItem("#MechJeb_KerbinMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Kerbin Mapdist
 		public EditableDouble KerbinMapdist = 500;
-		[EditableInfoItem("#MechJeb_MunMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Mun Mapdist
+		[EditableInfoItem("#MechJeb_MunMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Mun Mapdist
 		public EditableDouble MunMapdist = 4000;
-		[EditableInfoItem("#MechJeb_MinmusMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Minmus Mapdist
+		[EditableInfoItem("#MechJeb_MinmusMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Minmus Mapdist
 		public EditableDouble MinmusMapdist = 3500;
-		[EditableInfoItem("#MechJeb_DunaMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Duna Mapdist
+		[EditableInfoItem("#MechJeb_DunaMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Duna Mapdist
 		public EditableDouble DunaMapdist = 5000;
-		[EditableInfoItem("#MechJeb_IkeMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Ike Mapdist
+		[EditableInfoItem("#MechJeb_IkeMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Ike Mapdist
 		public EditableDouble IkeMapdist = 4000;
-		[EditableInfoItem("#MechJeb_DresMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Dres Mapdist
+		[EditableInfoItem("#MechJeb_DresMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Dres Mapdist
 		public EditableDouble DresMapdist = 1500;
-		[EditableInfoItem("#MechJeb_EelooMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Eeloo Mapdist
+		[EditableInfoItem("#MechJeb_EelooMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Eeloo Mapdist
 		public EditableDouble EelooMapdist = 2000;
-		[EditableInfoItem("#MechJeb_JoolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Jool Mapdist
+		[EditableInfoItem("#MechJeb_JoolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Jool Mapdist
 		public EditableDouble JoolMapdist = 30000;
-		[EditableInfoItem("#MechJeb_TyloMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Tylo Mapdist
+		[EditableInfoItem("#MechJeb_TyloMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Tylo Mapdist
 		public EditableDouble TyloMapdist = 5000;
-		[EditableInfoItem("#MechJeb_LaytheMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Laythe Mapdist
+		[EditableInfoItem("#MechJeb_LaytheMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Laythe Mapdist
 		public EditableDouble LaytheMapdist = 1000;
-		[EditableInfoItem("#MechJeb_PolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Pol Mapdist
+		[EditableInfoItem("#MechJeb_PolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Pol Mapdist
 		public EditableDouble PolMapdist = 500;
-		[EditableInfoItem("#MechJeb_BopMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Bop Mapdist
+		[EditableInfoItem("#MechJeb_BopMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Bop Mapdist
 		public EditableDouble BopMapdist = 1000;
-		[EditableInfoItem("#MechJeb_VallMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)]//Vall Mapdist
+		[EditableInfoItem("#MechJeb_VallMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Global)] // Vall Mapdist
 		public EditableDouble VallMapdist = 5000;
 
 		internal int selIndex = -1;
@@ -240,9 +216,9 @@ namespace MuMech
 		internal string tmpMaxSpeed = "";
 		internal string tmpLat = "";
 		internal string tmpLon = "";
-	    internal const string coordRegEx = @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
+		internal const string coordRegEx = @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
 
-	    private Vector2 scroll;
+		private Vector2 scroll;
 		private GUIStyle styleActive;
 		private GUIStyle styleInactive;
 		private GUIStyle styleQuicksave;
@@ -352,7 +328,6 @@ namespace MuMech
 			CelestialBody body = FlightGlobals.currentMainBody;
 			Ray mouseRay = FlightCamera.fetch.mainCamera.ScreenPointToRay(Input.mousePosition);
 			RaycastHit raycast;
-//			mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
 			Vector3d relOrigin = mouseRay.origin - body.position;
 			Vector3d relSurfacePosition;
 			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 4f, 1 << 15, QueryTriggerInteraction.Ignore))
@@ -566,7 +541,7 @@ namespace MuMech
 						dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 					}
 					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
-					                           minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
+									minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
 					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
 					if (GUILayout.Button(str, (i == selIndex ? styleActive : (wp.Quicksave ? styleQuicksave : styleInactive))))
 					{
@@ -695,37 +670,38 @@ namespace MuMech
 					ap.Waypoints.RemoveAt(selIndex);
 					if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
 				}
-			    selIndex = -1;
+				selIndex = -1;
 				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
 			if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57)) && selIndex > 0 && selIndex < ap.Waypoints.Count && ap.Waypoints.Count >= 2)
-            {
-                if (alt)
-                {
-                    var t = ap.Waypoints[selIndex];
-                    ap.Waypoints.RemoveAt(selIndex);
-                    ap.Waypoints.Insert(0, t);
-                    selIndex = 0;
-                }
-                else
-                {
-                    ap.Waypoints.Swap(selIndex, --selIndex);
-                }
-            }
-            if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57)) && selIndex >= 0 && selIndex < ap.Waypoints.Count - 1 && ap.Waypoints.Count >= 2)
-            {
-                if (alt)
-                {
-                    var t = ap.Waypoints[selIndex];
-                    ap.Waypoints.RemoveAt(selIndex);
-                    ap.Waypoints.Add(t);
-                    selIndex = ap.Waypoints.Count - 1;
-                }
-                else
-                {
-                    ap.Waypoints.Swap(selIndex, ++selIndex);
-                }
-            }
+			{
+				if (alt)
+				{
+					var t = ap.Waypoints[selIndex];
+					ap.Waypoints.RemoveAt(selIndex);
+					ap.Waypoints.Insert(0, t);
+					selIndex = 0;
+				}
+				else
+				{
+					ap.Waypoints.Swap(selIndex, --selIndex);
+				}
+			}
+
+			if (GUILayout.Button((alt ? "Bottom" : "Down"), GUILayout.Width(57)) && selIndex >= 0 && selIndex < ap.Waypoints.Count - 1 && ap.Waypoints.Count >= 2)
+			{
+				if (alt)
+				{
+					var t = ap.Waypoints[selIndex];
+					ap.Waypoints.RemoveAt(selIndex);
+					ap.Waypoints.Add(t);
+					selIndex = ap.Waypoints.Count - 1;
+				}
+				else
+				{
+					ap.Waypoints.Swap(selIndex, ++selIndex);
+				}
+			}
 			if (GUILayout.Button("Routes"))
 			{
 				showPage = pages.routes;
@@ -767,7 +743,7 @@ namespace MuMech
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
-		//			ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
+//					ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
 					ed.registry.Find(i => i.id == "Editable:RoverController.tractionLimit").DrawItem();
 					ed.registry.Find(i => i.id == "Toggle:RoverController.LimitAcceleration").DrawItem();
 					GUILayout.EndVertical();
@@ -1006,7 +982,7 @@ namespace MuMech
 
 		public override void OnFixedUpdate()
 		{
-			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRouteRenderer.AttachToMapView(core); } //MechJebRouteRenderer.AttachToMapView(core); }
+			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRouteRenderer.AttachToMapView(core); }
 			ap.Waypoints.ForEach(wp => wp.Update());
 //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
 //			greenLine.SetPosition(0, vessel.CoM);
@@ -1043,7 +1019,7 @@ namespace MuMech
 
 		public override string GetName()
 		{
-            return Localizer.Format("#MechJeb_Waypointhelper_title");//"Waypoint Help"
+			return Localizer.Format("#MechJeb_Waypointhelper_title"); // "Waypoint Help"
 		}
 
 		public override string IconName()
@@ -1071,75 +1047,75 @@ namespace MuMech
 				btnActive.active.textColor = btnActive.hover.textColor = btnActive.focused.textColor = btnActive.normal.textColor = Color.green;
 			}
 
-		 	selTopic = GUILayout.SelectionGrid(selTopic, topics, topics.Length);
+			selTopic = GUILayout.SelectionGrid(selTopic, topics, topics.Length);
 
-		 	switch (topics[selTopic])
-		 	{
-                case "Rover Controller":
-		 			HelpTopic("Holding a set Heading", "To hold a specific heading just tick the box next to 'Heading control' and the autopilot will try to keep going for the entered heading." +
-		 			          "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
-		 			          "'Heading Error' simply shows the error between current heading and target heading.");
-		 			HelpTopic("Holding a set Speed", "To hold a specific speed just tick the box next to 'Speed control' and the autopilot will try to keep going at the entered speed." +
-		 			          "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
-		 			          "'Speed Error' simply shows the error between current speed and target speed.");
-		 			HelpTopic("More stability while driving and nice landings", "If you turn on 'Stability Control' then the autopilot will use the reaction wheel's torque to keep the rover aligned with the surface." +
-		 			          "\nThis means that if you make a jump the autopilot will try to align the rover in the best possible way to land as straight and flat as possible given the available time and torque." +
-		 			          "\nBe aware that this doesn't make your rover indestructible, only relatively unlikely to land in a bad way." +
-		 			          "\n\n'Stability Control' will also limit the brake to reduce the chances of flipping over from too much braking power." +
-		 			          "\nSee 'Settings' -> 'Traction and Braking'. This setting is also saved per vessel.");
-		 			HelpTopic("Brake on Pilot Eject", "With this option enabled the rover will stop if the pilot (on manned rovers) should get thrown out of his seat.");
-		 			HelpTopic("Target Speed", "Current speed the autopilot tries to achieve.");
-		 			HelpTopic("Waypoint Index", "Overview of waypoints and which the autopilot is currently driving to.");
-		 			HelpTopic("Button 'Waypoints'", "Opens the waypoint list to set up a route.");
-		 			HelpTopic("Button 'Follow' / 'Stop'", "This sets the autopilot to drive along the set route starting at the first waypoint. Only visible when atleast one waypoint is set." +
-		 			          "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it go for the first waypoint again after reaching the last." +
-		 			          "If the only waypoint happens to be a target it will keep following that instead of only going to it once." +
-		 			          "\n\nIf the autopilot is already active the 'Follow' button will turn into the 'Stop' button which will obviously stop it when pressed.");
-		 			HelpTopic("Button 'To Target'", "Clears the route, adds the target as only waypoint and starts the autopilot. Only visible with a selected target." +
-		 			          "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it continue to follow the target, pausing when near it instead of turning off then.");
-		 			HelpTopic("Button 'Add Target'", "Adds the selected target as a waypoint either at the end of the route or before the selected waypoint. Only visible with a selected target.");
-		 			break;
+			switch (topics[selTopic])
+			{
+				case "Rover Controller":
+					HelpTopic("Holding a set Heading", "To hold a specific heading just tick the box next to 'Heading control' and the autopilot will try to keep going for the entered heading." +
+					          "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
+					          "'Heading Error' simply shows the error between current heading and target heading.");
+					HelpTopic("Holding a set Speed", "To hold a specific speed just tick the box next to 'Speed control' and the autopilot will try to keep going at the entered speed." +
+					          "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
+					          "'Speed Error' simply shows the error between current speed and target speed.");
+					HelpTopic("More stability while driving and nice landings", "If you turn on 'Stability Control' then the autopilot will use the reaction wheel's torque to keep the rover aligned with the surface." +
+					          "\nThis means that if you make a jump the autopilot will try to align the rover in the best possible way to land as straight and flat as possible given the available time and torque." +
+					          "\nBe aware that this doesn't make your rover indestructible, only relatively unlikely to land in a bad way." +
+					          "\n\n'Stability Control' will also limit the brake to reduce the chances of flipping over from too much braking power." +
+					          "\nSee 'Settings' -> 'Traction and Braking'. This setting is also saved per vessel.");
+					HelpTopic("Brake on Pilot Eject", "With this option enabled the rover will stop if the pilot (on manned rovers) should get thrown out of his seat.");
+					HelpTopic("Target Speed", "Current speed the autopilot tries to achieve.");
+					HelpTopic("Waypoint Index", "Overview of waypoints and which the autopilot is currently driving to.");
+					HelpTopic("Button 'Waypoints'", "Opens the waypoint list to set up a route.");
+					HelpTopic("Button 'Follow' / 'Stop'", "This sets the autopilot to drive along the set route starting at the first waypoint. Only visible when atleast one waypoint is set." +
+					          "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it go for the first waypoint again after reaching the last." +
+					          "If the only waypoint happens to be a target it will keep following that instead of only going to it once." +
+					          "\n\nIf the autopilot is already active the 'Follow' button will turn into the 'Stop' button which will obviously stop it when pressed.");
+					HelpTopic("Button 'To Target'", "Clears the route, adds the target as only waypoint and starts the autopilot. Only visible with a selected target." +
+					          "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it continue to follow the target, pausing when near it instead of turning off then.");
+					HelpTopic("Button 'Add Target'", "Adds the selected target as a waypoint either at the end of the route or before the selected waypoint. Only visible with a selected target.");
+					break;
 
-		 		case "Waypoints":
-		 			HelpTopic("Adding Waypoints", "Adds a new waypoint to the route at the end or before the currently selected waypoint, " +
-		 			          "simply click the terrain or somewhere on the body in Mapview." +
-		 			          "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
-		 			HelpTopic("Removing Waypoints", "Removes the currently selected waypoint." +
-		 			          "\n\nAlt clicking will remove all waypoints.");
-		 			HelpTopic("Reordering Waypoints", "'Up' and 'Down' will move the selected waypoint up or down in the list, Alt clicking will move it to the top or bottom respectively.");
-		 			HelpTopic("Waypoint Radius", "Radius defines the distance to the center of the waypoint after which the waypoint will be considered 'reached'." +
-		 			          "\n\nA radius of 5m (default) simply means that when you're 5m from the waypoint away the autopilot will jump to the next or turn off if it was the last." +
-		 			          "\n\nThe 'A' button behind the textfield will set the entered radius for all waypoints.");
-		 			HelpTopic("Speedlimits", "The two speed textfields represent the minimum and maximum speed for the waypoint." +
-		 			          "\n\nThe maximum speed is the speed the autopilot tries to reach to get to the waypoint." +
-		 			          "\n\nThe minimum speed was before used to set the speed with which the autopilot will go through the waypoint, but that got reworked now to be based on the next waypoint's max. speed and the turn needed at the waypoint." +
-		 			          "\n\nI have no idea what this will currently do if set so better just leave it at 0..." +
-		 			          "\n\nThe 'A' buttons set their respective speed for all waypoints.");
-		 			HelpTopic("Quicksaving at a Waypoint", "Clicking the 'QS' button will turn on QuickSave for that waypoint." +
-		 			          "\n\nThis will make the autopilot stop and try to quicksave at that waypoint and then continue. A QuickSave waypoint has yellow text instead of white." +
-		 			          "\n\nSmall sideeffect: leaving the throttle up will prevent the saving from occurring effectively pausing the autopilot at that point until interefered with. (Discovered by Greys)" +
-		 			          "\n\nAlt clicking will toggle QS for all waypoints including the clicked one.");
-		 			HelpTopic("Changing the current target Waypoint", "Alt clicking a waypoint will mark it as the current target waypoint. The active waypoint has a green tinted background.");
-		 			break;
+				case "Waypoints":
+					HelpTopic("Adding Waypoints", "Adds a new waypoint to the route at the end or before the currently selected waypoint, " +
+					          "simply click the terrain or somewhere on the body in Mapview." +
+					          "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
+					HelpTopic("Removing Waypoints", "Removes the currently selected waypoint." +
+					          "\n\nAlt clicking will remove all waypoints.");
+					HelpTopic("Reordering Waypoints", "'Up' and 'Down' will move the selected waypoint up or down in the list, Alt clicking will move it to the top or bottom respectively.");
+					HelpTopic("Waypoint Radius", "Radius defines the distance to the center of the waypoint after which the waypoint will be considered 'reached'." +
+					          "\n\nA radius of 5m (default) simply means that when you're 5m from the waypoint away the autopilot will jump to the next or turn off if it was the last." +
+					          "\n\nThe 'A' button behind the textfield will set the entered radius for all waypoints.");
+					HelpTopic("Speedlimits", "The two speed textfields represent the minimum and maximum speed for the waypoint." +
+					          "\n\nThe maximum speed is the speed the autopilot tries to reach to get to the waypoint." +
+					          "\n\nThe minimum speed was before used to set the speed with which the autopilot will go through the waypoint, but that got reworked now to be based on the next waypoint's max. speed and the turn needed at the waypoint." +
+					          "\n\nI have no idea what this will currently do if set so better just leave it at 0..." +
+					          "\n\nThe 'A' buttons set their respective speed for all waypoints.");
+					HelpTopic("Quicksaving at a Waypoint", "Clicking the 'QS' button will turn on QuickSave for that waypoint." +
+					          "\n\nThis will make the autopilot stop and try to quicksave at that waypoint and then continue. A QuickSave waypoint has yellow text instead of white." +
+					          "\n\nSmall sideeffect: leaving the throttle up will prevent the saving from occurring effectively pausing the autopilot at that point until interefered with. (Discovered by Greys)" +
+					          "\n\nAlt clicking will toggle QS for all waypoints including the clicked one.");
+					HelpTopic("Changing the current target Waypoint", "Alt clicking a waypoint will mark it as the current target waypoint. The active waypoint has a green tinted background.");
+					break;
 
-		 		case "Routes":
-		 			HelpTopic("Routes Help", "The empty textfield is for saving routes, enter a name there before clicking 'Save'." +
-		 			          "\n\nTo load a route simply select one from the list and click 'Load'." +
-		 			          "\n\nTo delete a route simply select it and a 'Delete' button will appear right of it.");
-		 			break;
+				case "Routes":
+					HelpTopic("Routes Help", "The empty textfield is for saving routes, enter a name there before clicking 'Save'." +
+					          "\n\nTo load a route simply select one from the list and click 'Load'." +
+					          "\n\nTo delete a route simply select it and a 'Delete' button will appear right of it.");
+					break;
 
-		 		case "Settings":
-		 			HelpTopic("Heading / Speed PID", "These parameters control the behaviour of the heading's / speed's PID. Saved globally so NO TOUCHING unless you know what you're doing (or atleast know how to write down numbers to restore it if you mess up)");
-		 			HelpTopic("Safe Turn Speed", "'Safe Turn Speed' tells the autopilot which speed the rover can usually go full turn through corners without tipping over." +
-		 			          "\n\nGiven how differently terrain can be and other influences you can just leave it at 3 m/s but if you're impatient or just want to experiment feel free to test around. Saved per vessel type (same named vessels will share the setting).");
-		 			HelpTopic("Traction and Braking", "'Traction' shows in % how many wheels have ground contact." +
-		 			          "\n'Traction Brake Limit' defines what traction is atleast needed for the autopilot to still apply the brakes (given 'Stability Control' is active) even if you hold the brake down." +
-		 			          "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
-		 			          "\n'Traction Brake Limit' is saved per vessel type." +
-		 			          "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
-		 			HelpTopic("Changing the route height in Mapview", "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
-		 			break;
-		 	}
+				case "Settings":
+					HelpTopic("Heading / Speed PID", "These parameters control the behaviour of the heading's / speed's PID. Saved globally so NO TOUCHING unless you know what you're doing (or atleast know how to write down numbers to restore it if you mess up)");
+					HelpTopic("Safe Turn Speed", "'Safe Turn Speed' tells the autopilot which speed the rover can usually go full turn through corners without tipping over." +
+					          "\n\nGiven how differently terrain can be and other influences you can just leave it at 3 m/s but if you're impatient or just want to experiment feel free to test around. Saved per vessel type (same named vessels will share the setting).");
+					HelpTopic("Traction and Braking", "'Traction' shows in % how many wheels have ground contact." +
+					          "\n'Traction Brake Limit' defines what traction is atleast needed for the autopilot to still apply the brakes (given 'Stability Control' is active) even if you hold the brake down." +
+					          "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
+					          "\n'Traction Brake Limit' is saved per vessel type." +
+					          "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
+					HelpTopic("Changing the route height in Mapview", "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
+					break;
+			}
 
 			base.WindowGUI(windowID);
 		}
@@ -1177,9 +1153,9 @@ namespace MuMech
 			line = obj.AddComponent<LineRenderer>();
 			line.useWorldSpace = true;
 			line.material = material;
-		    line.startWidth = 10.0f;
-		    line.endWidth = 10.0f;
-		    line.positionCount = 2;
+			line.startWidth = 10.0f;
+			line.endWidth = 10.0f;
+			line.positionCount = 2;
 			return true;
 		}
 
@@ -1247,11 +1223,11 @@ namespace MuMech
 				//float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 
 				pastPath.startWidth = width;
-			    pastPath.endWidth = width;
+				pastPath.endWidth = width;
 				currPath.startWidth = width;
-			    currPath.endWidth = width;
+				currPath.endWidth = width;
 				nextPath.startWidth = width;
-			    nextPath.endWidth = width;
+				nextPath.endWidth = width;
 				selWP.gameObject.layer = pastPath.gameObject.layer = currPath.gameObject.layer = nextPath.gameObject.layer = (MapView.MapIsEnabled ? 9 : 0);
 
 				int sel = ap.core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex;
@@ -1260,7 +1236,7 @@ namespace MuMech
 				{
 					float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Waypoints[sel].Position) / 600f + 0.1f;
 					selWP.startWidth = 0;
-				    selWP.endWidth = w * 10f;
+					selWP.endWidth = w * 10f;
 					selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f));
 					selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
 				}
@@ -1269,7 +1245,7 @@ namespace MuMech
 				{
 //					Debug.Log("drawing pastPath");
 					pastPath.enabled = true;
-				    pastPath.positionCount = ap.WaypointIndex + 1;
+					pastPath.positionCount = ap.WaypointIndex + 1;
 					for (int i = 0; i < ap.WaypointIndex; i++)
 					{
 //						Debug.Log("vert " + i.ToString());
@@ -1303,7 +1279,7 @@ namespace MuMech
 				{
 //					Debug.Log("drawing nextPath of " + nextCount + " verts");
 					nextPath.enabled = true;
-				    nextPath.positionCount = nextCount;
+					nextPath.positionCount = nextCount;
 					nextPath.SetPosition(0, RaisePositionOverTerrain((ap.WaypointIndex == -1 ? ap.vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position), targetHeight));
 					for (int i = 0; i < nextCount - 1; i++)
 					{
