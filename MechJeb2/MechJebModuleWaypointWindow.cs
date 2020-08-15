@@ -23,7 +23,7 @@ namespace MuMech
 			get { return (Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody); }
 		}
 
-		public MechJebWaypoint(double Latitude, double Longitude, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
+		public MechJebWaypoint(double Latitude, double Longitude, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) {
 			this.Latitude = Latitude;
 			this.Longitude = Longitude;
 			this.Radius = Radius;
@@ -33,7 +33,7 @@ namespace MuMech
 			Update();
 		}
 
-		public MechJebWaypoint(Vector3d Position, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) { //, CelestialBody Body = null) {
+		public MechJebWaypoint(Vector3d Position, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0) {
 			this.Latitude = Body.GetLatitude(Position);
 			this.Longitude = Body.GetLongitude(Position);
 			this.Radius = Radius;
@@ -165,30 +165,6 @@ namespace MuMech
 				}
 			}
 		}
-
-//		public new void Add(MechJebWaypoint Waypoint) {
-//			this.Add(Waypoint);
-//			updateStats();
-//		}
-//
-//		public new void Insert(int Index, MechJebWaypoint Waypoint) {
-//			this.Insert(Index, Waypoint);
-//			updateStats();
-//		}
-//
-//		public new void Remove(MechJebWaypoint Waypoint) {
-//			this.Remove(Waypoint);
-//			updateStats();
-//		}
-//
-//		public new void RemoveAt(int Index) {
-//			this.RemoveAt(Index);
-//			updateStats();
-//		}
-//
-//		public new void RemoveRange() {
-//
-//		}
 	}
 
 	public class MechJebModuleWaypointWindow : DisplayModule {
@@ -352,7 +328,6 @@ namespace MuMech
 			CelestialBody body = FlightGlobals.currentMainBody;
 			Ray mouseRay = FlightCamera.fetch.mainCamera.ScreenPointToRay(Input.mousePosition);
 			RaycastHit raycast;
-//			mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
 			Vector3d relOrigin = mouseRay.origin - body.position;
 			Vector3d relSurfacePosition;
 			if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 4f, 1 << 15, QueryTriggerInteraction.Ignore))
@@ -1007,7 +982,7 @@ namespace MuMech
 
 		public override void OnFixedUpdate()
 		{
-			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRouteRenderer.AttachToMapView(core); } //MechJebRouteRenderer.AttachToMapView(core); }
+			if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRouteRenderer.AttachToMapView(core); }
 			ap.Waypoints.ForEach(wp => wp.Update());
 //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
 //			greenLine.SetPosition(0, vessel.CoM);

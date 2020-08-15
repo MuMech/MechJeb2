@@ -12,46 +12,14 @@ namespace MuMech
 		private CelestialBody lastBody = null;
 		public bool LoopWaypoints = false;
 		
-//		protected bool controlHeading;
 		[ToggleInfoItem("#MechJeb_ControlHeading", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Heading control
-		public bool ControlHeading;  // TODO: change things back to properties when ConfigNodes can save and load these
-//		{
-//			get { return controlHeading; }
-//			set
-//			{
-//				controlHeading = value;
-//                if (controlHeading || controlSpeed || brakeOnEject)
-//				{
-//					users.Add(this);
-//				}
-//				else
-//				{
-//					users.Remove(this);
-//				}
-//			}
-//		}
+		public bool ControlHeading;
 
 		[EditableInfoItem("#MechJeb_Heading", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]//Heading
 		public EditableDouble heading = 0;
 
-//		protected bool controlSpeed = false;
 		[ToggleInfoItem("#MechJeb_ControlSpeed", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Local)]//Speed control
 		public bool ControlSpeed = false;
-//		{
-//			get { return controlSpeed; }
-//			set
-//			{
-//				controlSpeed = value;
-//                if (controlHeading || controlSpeed || brakeOnEject)
-//				{
-//					users.Add(this);
-//				}
-//				else
-//				{
-//					users.Remove(this);
-//				}
-//			}
-//		}
 
 		[EditableInfoItem("#MechJeb_Speed", InfoItem.Category.Rover, width = 40), Persistent(pass = (int)Pass.Local)]//Speed
 		public EditableDouble speed = 10;
@@ -145,7 +113,6 @@ namespace MuMech
 				wheelbases.AddRange(vessel.Parts.Where(
 					p => p.HasModule<ModuleWheelBase>()
 					&& p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG
-//					&& (p.GetModule<ModuleWheels.ModuleWheelSteering>()?.steeringEnabled == true || p.GetModule<ModuleWheels.ModuleWheelMotorSteering>()?.steeringEnabled == true)
 				).Select(p => p.GetModule<ModuleWheelBase>()));
 			}
 			catch (Exception) {}
@@ -188,33 +155,6 @@ namespace MuMech
 			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
 			norm = hit.normal;
 			traction = 0;
-//			foreach (var c in colliders) {
-//				//WheelHit hit;
-//				//if (c.GetGroundHit(out hit)) { traction += 1; }
-//				if (Physics.Raycast(c.transform.position + c.center, -(vesselState.up + norm.normalized) / 2, out hit, c.radius + 1.5f, 1 << 15)) {
-//					traction += (1.5f - (hit.distance - c.radius)) * 100;
-//				}
-//			}
-
-/*
-		    for (int i = 0; i < wheels.Count; i++)
-		    {
-		        var w = wheels[i];
-		        if (w.GroundContact)
-		        {
-		            traction += 100;
-		        }
-		    }
-*/
-
-//		    for (int i = 0; i < colliders.Count; i++)
-//		    {
-//		        var c = colliders[i];
-//		        if (c.isGrounded)
-//		        {
-//		            traction += 100;
-//		        }
-//		    }
 
 		    for (int i = 0; i < wheelbases.Count; i++)
 		    {
@@ -274,8 +214,6 @@ namespace MuMech
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
 					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-//					if (LimitAcceleration) { newSpeed = curSpeed + Mathf.Clamp((float)(newSpeed - curSpeed), -1.5f, 0.5f); }
-//					newSpeed = tgtSpeed + Mathf.Clamp((float)(newSpeed - tgtSpeed), -Time.deltaTime * 8f, Time.deltaTime * 2f);
 					var radius = Math.Max(wp.Radius, 10);
 					if (distance < radius)
 					{
@@ -291,12 +229,10 @@ namespace MuMech
 							{
 								newSpeed = 0;
 								brake = true;
-//								tgtSpeed.force(newSpeed);
 								if (curSpeed < brakeSpeedLimit)
 								{
 									if (wp.Quicksave)
 									{
-										//if (s.mainThrottle > 0) { s.mainThrottle = 0; }
 										if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR)
 										{
 											WaypointIndex = -1;
@@ -310,19 +246,13 @@ namespace MuMech
 										ControlHeading = ControlSpeed = false;
 									}
 								}
-//								else {
-//									Debug.Log("Is this even getting called?");
-//									WaypointIndex++;
-//								}
 							}
 						}
 						else
 						{
 							if (wp.Quicksave)
 							{
-								//if (s.mainThrottle > 0) { s.mainThrottle = 0; }
 								newSpeed = 0;
-//								tgtSpeed.force(newSpeed);
 								if (curSpeed < brakeSpeedLimit)
 								{
 									if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR)
@@ -354,7 +284,6 @@ namespace MuMech
 				{
 					float limit = (Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Square(curSpeed)), 0.1f, 1f) : 1f);
 					// turnSpeed needs to be higher than curSpeed or it will never steer as much as it could even at 0.2m/s above it
-					// double act = headingPID.Compute(headingErr * headingErr / 10 * Math.Sign(headingErr));
 					double act = headingPID.Compute(headingErr);
 					if (traction >= tractionLimit) {
 						s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
@@ -367,7 +296,6 @@ namespace MuMech
 			if (BrakeOnEject && vessel.GetReferenceTransformPart() == null)
 			{
 				s.wheelThrottle = 0;
-//				vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
 				brake = true;
 			}
 			else if (ControlSpeed)
@@ -379,25 +307,11 @@ namespace MuMech
 				{
 					float act = (float)speedPID.Compute(speedErr);
 					s.wheelThrottle = Mathf.Clamp(act, -1f, 1f);
-					// s.wheelThrottle = (!LimitAcceleration ? Mathf.Clamp(act, -1, 1) : // I think I'm using these ( ? : ) a bit too much
-						// (traction == 0 ? 0 : (act < 0 ? Mathf.Clamp(act, -1f, 1f) : (lastThrottle + Mathf.Clamp(act - lastThrottle, -0.01f, 0.01f)) * (traction < tractionLimit ? -1 : 1))));
-//						(lastThrottle + Mathf.Clamp(act, -0.01f, 0.01f)));
-//					Debug.Log(s.wheelThrottle + Mathf.Clamp(act, -0.01f, 0.01f));
 					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
 					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
-					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Math.Sign(curSpeed) == 0) { // StabilityControl && traction > 50 &&
-////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Math.Sign(curSpeed) == 0) {
 						brake = true;
-//						foreach (Part p in wheels) {
-//							if (p.GetModule<ModuleWheels.ModuleWheelDamage>().stressPercent >= 0.01) { // #TODO needs adaptive braking
-//								brake = false;
-//								break;
-//							}
-//						}
 					}
-////					else if (!StabilityControl || traction <= 50 || speedErr > -0.2 || Mathf.Sign(s.wheelThrottle) + Mathf.Sign((float)curSpeed) != 0) {
-////						vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, (GameSettings.BRAKES.GetKey() && vessel.isActiveVessel));
-////					}
 					lastThrottle = Mathf.Clamp(s.wheelThrottle, -1, 1);
 				}
 			}
@@ -407,42 +321,16 @@ namespace MuMech
 				if (!core.attitude.users.Contains(this))
 				{
 					core.attitude.users.Add(this);
-//					line.enabled = true;
 				}
-//				float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
-//				line.SetPosition(0, vessel.CoM);
-//				line.SetPosition(1, vessel.CoM + hit.normal * 5);
-//				line.SetWidth(0, scale + 0.1f);
 				var fSpeed = (float)curSpeed;
-//				if (Mathf.Abs(fSpeed) >= turnSpeed * 0.75) {
 				Vector3 fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
-//				                        ((Mathf.Abs(fSpeed) <= turnSpeed ? vesselState.forward : vesselState.surfaceVelocity / 4) - vessel.transform.right * s.wheelSteer) * Mathf.Sign(fSpeed) :
-//				                        // ^ and then add the steering
 				                        vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
 				                        vesselState.surfaceVelocity); // in the air so follow velocity
 				Vector3.OrthoNormalize(ref norm, ref fwd);
 				var quat = Quaternion.LookRotation(fwd, norm);
 				
-//				if (traction > 0 || speed <= turnSpeed) {
-//					var u = new Vector3(0, 1, 0);
-//
-//					var q = FlightGlobals.ship_rotation;
-//					var q_s = quat;
-//
-//					var q_u = new Quaternion(u.x, u.y, u.z, 0);
-//					var a = Quaternion.Dot(q, q_s * q_u);
-//					var q_qs = Quaternion.Dot(q, q_s);
-//					var b = (a == 0) ? Math.Sign(q_qs) : (q_qs / a);
-//					var g = b / Mathf.Sqrt((b * b) + 1);
-//					var gu = Mathf.Sqrt(1 - (g * g)) * u;
-//					var q_d = new Quaternion() { w = g, x = gu.x, y = gu.y, z = gu.z };
-//					var n = q_s * q_d;
-//
-//					quat = n;
-//				}
                 if (vesselState.torqueAvailable.sqrMagnitude > 0)
 				    core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
-//				}
 			}
 			
 			if (BrakeOnEnergyDepletion)
@@ -474,7 +362,6 @@ namespace MuMech
 				}
 			}
 			
-//			brake = brake && (s.wheelThrottle == 0); // release brake if the user or AP want to drive
 			if (s.wheelThrottle != 0 && (Math.Sign(s.wheelThrottle) + Math.Sign(curSpeed) != 0 || curSpeed < 1))
 			{
 				brake = false; // the AP or user want to drive into the direction of momentum so release the brake

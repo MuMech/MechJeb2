@@ -83,7 +83,7 @@ namespace MuMech
 //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 			
 			GUILayout.BeginHorizontal();
-			if (core.target != null && core.target.Target != null) // && (core.target.targetBody == orbit.referenceBody || (core.target.Orbit != null ? core.target.Orbit.referenceBody == orbit.referenceBody : false))) {
+			if (core.target != null && core.target.Target != null)
 			{
 				var vssl = core.target.Target.GetVessel();
 				
@@ -103,7 +103,6 @@ namespace MuMech
 				{
 					if (vssl != null) {	autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
 					else { autopilot.Waypoints.Add(new MechJebWaypoint(core.target.GetPositionTargetPosition())); }
-//					if (autopilot.WaypointIndex < 0) { autopilot.WaypointIndex = autopilot.Waypoints.Count - 1; }
 				}
 			}
 			GUILayout.EndHorizontal();
