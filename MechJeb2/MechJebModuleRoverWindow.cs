@@ -32,7 +32,7 @@ namespace MuMech
 		protected override void WindowGUI(int windowID)
 		{
 			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			bool alt = GameSettings.MODIFIER_KEY.GetKey();
 
 			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
 			{

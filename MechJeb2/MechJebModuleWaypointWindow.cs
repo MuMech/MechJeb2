@@ -539,10 +539,9 @@ namespace MuMech
 		{
 			return new GUILayoutOption[] { GUILayout.Width(500), GUILayout.Height(400) };
 		}
-
 		public void DrawPageWaypoints()
 		{
-			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			bool alt = GameSettings.MODIFIER_KEY.GetKey();
 			scroll = GUILayout.BeginScrollView(scroll);
 			if (ap.Waypoints.Count > 0) {
 				waypointRects = new Rect[ap.Waypoints.Count];
@@ -749,7 +748,7 @@ namespace MuMech
 
 		public void DrawPageSettings()
 		{
-			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			bool alt = GameSettings.MODIFIER_KEY.GetKey();
 			titleAdd = "Settings";
 			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 			if (!ap.enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
@@ -836,7 +835,7 @@ namespace MuMech
 
 		public void DrawPageRoutes()
 		{
-			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			bool alt = GameSettings.MODIFIER_KEY.GetKey();
 			titleAdd = "Routes for " + vessel.mainBody.bodyName;
 
 			scroll = GUILayout.BeginScrollView(scroll);
@@ -938,7 +937,7 @@ namespace MuMech
 				styleQuicksave.active.textColor = styleQuicksave.focused.textColor = styleQuicksave.hover.textColor = styleQuicksave.normal.textColor = Color.yellow;
 			}
 
-			bool alt = Input.GetKey(KeyCode.LeftAlt);
+			bool alt = GameSettings.MODIFIER_KEY.GetKey();
 
 			switch (showPage)
 			{
