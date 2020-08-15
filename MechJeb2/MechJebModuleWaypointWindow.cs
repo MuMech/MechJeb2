@@ -280,6 +280,8 @@ namespace MuMech
 		{
 			base.OnLoad(local, type, global);
 
+			if (!FlightGlobals.ready) return; // bodies not loaded yet
+
 			ConfigNode wps = new ConfigNode("Routes");
 			if (KSP.IO.File.Exists<MechJebCore>("mechjeb_routes.cfg"))
 			{
@@ -582,24 +584,24 @@ namespace MuMech
 						GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
 						tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(50));
 						float.TryParse(tmpRadius, out wp.Radius);
-						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.Radius = wp.Radius); }
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.Radius = wp.Radius); }
 
 						GUILayout.Label("- Speed: ", GUILayout.ExpandWidth(false));
 						tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(40));
 						float.TryParse(tmpMinSpeed, out wp.MinSpeed);
-						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed); }
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed); }
 
 						GUILayout.Label(" - ", GUILayout.ExpandWidth(false));
 						tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(40));
 						float.TryParse(tmpMaxSpeed, out wp.MaxSpeed);
-						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
+						if (GUILayout.Button("A", GUILayout.ExpandWidth(false))) { ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed); }
 
 						GUILayout.FlexibleSpace();
 						if (GUILayout.Button("QS", (wp.Quicksave ? styleQuicksave : styleInactive), GUILayout.ExpandWidth(false)))
 						{
 							if (alt)
 							{
-								ap.Waypoints.GetRange(i, ap.Waypoints.Count).ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
+								ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
 							}
 							else
 							{
@@ -658,20 +660,20 @@ namespace MuMech
 					}
 				}
 			}
-			if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65)) && selIndex >= 0 && ap.Waypoints.Count > 0)
+			if (GUILayout.Button((alt ? "Clear" : "Remove"), GUILayout.Width(65)) && ap.Waypoints.Count > 0)
 			{
 				if (alt)
 				{
 					ap.WaypointIndex = -1;
 					ap.Waypoints.Clear();
 				}
-				else
+				else if (selIndex >= 0)
 				{
 					ap.Waypoints.RemoveAt(selIndex);
 					if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
+					if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 				}
 				selIndex = -1;
-				//if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
 			}
 			if (GUILayout.Button((alt ? "Top" : "Up"), GUILayout.Width(57)) && selIndex > 0 && selIndex < ap.Waypoints.Count && ap.Waypoints.Count >= 2)
 			{
@@ -829,6 +831,7 @@ namespace MuMech
 					if (GUILayout.Button("Delete", GUILayout.Width(70)))
 					{
 						Routes.RemoveAll(r => r.Name == bodyWPs[i].Name && r.Body == vessel.mainBody && r.Mode == Mode.ToString());
+						SaveRoutes();
 						saveIndex = -1;
 					}
 				}
