@@ -193,7 +193,7 @@ namespace MuMech
                 return rotRef;
             }
 
-            if ((reference == AttitudeReference.MANEUVER_NODE || reference == AttitudeReference.MANEUVER_NODE_COT ) && (vessel.patchedConicSolver.maneuverNodes.Count == 0))
+            if ((reference == AttitudeReference.MANEUVER_NODE || reference == AttitudeReference.MANEUVER_NODE_COT) && (vessel.patchedConicSolver.maneuverNodes.Count == 0))
             {
                 attitudeDeactivate();
                 return rotRef;
