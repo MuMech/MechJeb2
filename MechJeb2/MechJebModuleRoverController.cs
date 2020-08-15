@@ -74,9 +74,7 @@ namespace MuMech
 		[EditableInfoItem("#MechJeb_TractionBrakeLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)] // Traction Brake Limit
 		public EditableDouble tractionLimit = 75;
 		
-		public List<Part> wheels = new List<Part>();
 		public List<ModuleWheelBase> wheelbases = new List<ModuleWheelBase>();
-		public List<WheelCollider> colliders = new List<WheelCollider>();
 		public Vector3 norm = Vector3.zero;
 		
 		public override void OnStart(PartModule.StartState state)
@@ -104,11 +102,6 @@ namespace MuMech
 
 			try
 			{
-				wheels.Clear();
-				wheels.AddRange(vessel.Parts.FindAll(p => p.HasModule<ModuleWheelBase>() /*&& p.FindModelComponent<WheelCollider>() != null*/ && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG));
-				colliders.Clear();
-				wheels.ForEach(p => colliders.AddRange(p.FindModelComponents<WheelCollider>()));
-
 				wheelbases.Clear();
 				wheelbases.AddRange(vessel.Parts.Where(
 					p => p.HasModule<ModuleWheelBase>()
@@ -150,7 +143,7 @@ namespace MuMech
 		
 		public void CalculateTraction()
 		{
-			if (wheels.Count == 0 && colliders.Count == 0) { OnVesselModified(vessel); }
+			if (wheelbases.Count == 0) { OnVesselModified(vessel); }
 			RaycastHit hit;
 			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
 			norm = hit.normal;
