@@ -258,7 +258,7 @@ namespace MuMech
             }
             catch (Exception ex)
             {
-                //Debug.LogError("Exception thrown during Rentry Simulation : " + ex.GetType() + ":" + ex.Message + "\n"+ ex.StackTrace);
+                //Debug.LogError("Exception thrown during Reentry Simulation : " + ex.GetType() + ":" + ex.Message + "\n"+ ex.StackTrace);
                 result.exception = ex;
                 result.outcome = Outcome.ERROR;
             }
@@ -355,7 +355,9 @@ namespace MuMech
             return false;
         }
 
-        // one time step of RK4: There is logic to reduce the dt and repeat if a larger dt results in very large accelerations. Also the parachute opening logic is called from in order to allow the dt to be reduced BEFORE deploying parachutes to give more precision over the point of deployment.
+        // one time step of RK4: There is logic to reduce the dt and repeat if a larger dt results in very large accelerations.
+        // Also the parachute opening logic is called from in order to allow the dt to be reduced BEFORE deploying parachutes to
+        // give more precision over the point of deployment.
         void RK4Step()
         {
             bool repeatWithSmallerStep = false;
@@ -411,7 +413,7 @@ namespace MuMech
                     maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
 
                     // If parachutes are about to open and we are running with a dt larger than the physics frame then drop dt to the physics frame rate and start again
-                    if (willChutesOpen && dt > min_dt) // TODO test to see if we are better off just setting a minimum dt of the physics frame rate.
+                    if (willChutesOpen && dt > min_dt)
                     {
                         dt = Math.Max(dt/2,min_dt);
                         repeatWithSmallerStep = true;

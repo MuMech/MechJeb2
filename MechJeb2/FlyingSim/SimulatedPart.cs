@@ -13,9 +13,9 @@ namespace MuMech
         public bool noDrag;
         public bool hasLiftModule;
         private double bodyLiftMultiplier;
-        
+
         private ReentrySimulation.SimCurves simCurves;
-        
+
         private QuaternionD vesselToPart;
         private QuaternionD partToVessel;
 
@@ -77,6 +77,7 @@ namespace MuMech
 
             //cubes = new DragCubeList();
             CopyDragCubesList(p.DragCubes, cubes);
+            cubes.ForceUpdate(true, true);
 
             // Rotation to convert the vessel space vesselVelocity to the part space vesselVelocity
             // QuaternionD.LookRotation is not working...
@@ -100,11 +101,11 @@ namespace MuMech
                 return Vector3d.zero;
 
             Vector3d dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
-            
+
             cubes.SetDrag(dragVectorDirLocal, mach);
-            
+
             Vector3d drag = -vesselVelocity.normalized * cubes.AreaDrag * dragFactor;
-            
+
             //bool delta = false;
             //string msg = oPart.name;
             //if (vesselVelocity.sqrMagnitude > 1 && dynamicPressurekPa - oPart.dynamicPressurekPa > oPart.dynamicPressurekPa * 0.1)
@@ -160,7 +161,7 @@ namespace MuMech
         {
             if (shieldedFromAirstream || hasLiftModule)
                 return Vector3d.zero;
-            
+
             // direction of the lift in a vessel centric reference
             Vector3d liftV = partToVessel * ((Vector3d)cubes.LiftForce * bodyLiftMultiplier * liftFactor);
 
@@ -204,7 +205,7 @@ namespace MuMech
             private static readonly Pool<DragCube> _Instance = new Pool<DragCube>(
                 () => new DragCube(), cube => { });
 
-            
+
             public static Pool<DragCube> Instance { get { return _Instance; } }
         }
 
@@ -246,7 +247,7 @@ namespace MuMech
             dest.BodyLiftCurve.dragCurve = simCurves.DragCurve;
             dest.BodyLiftCurve.dragMachCurve = simCurves.DragMachCurve;
             dest.BodyLiftCurve.liftMachCurve = simCurves.LiftMachCurve;
-            
+
             dest.SurfaceCurves.dragCurveMultiplier = simCurves.DragCurveMultiplier;
             dest.SurfaceCurves.dragCurveSurface = simCurves.DragCurveSurface;
             dest.SurfaceCurves.dragCurveTail = simCurves.DragCurveTail;
@@ -267,7 +268,7 @@ namespace MuMech
                 dest.DragModifiers[i] = source.DragModifiers[i];
             }
         }
-        
+
         protected void SetCubeWeight(string name, float newWeight)
         {
             int count = cubes.Cubes.Count;

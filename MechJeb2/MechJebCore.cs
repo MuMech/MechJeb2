@@ -500,7 +500,7 @@ namespace MuMech
             //check whether we have loaded any computer modules.
 
             //if (state == StartState.Editor && computerModules.Count == 0)
-            // Seems to happend when launching without comming from the VAB too.
+            // Seems to happend when launching without coming from the VAB too.
             if (unorderedComputerModules.Count == 0)
             {
                 OnLoad(null);

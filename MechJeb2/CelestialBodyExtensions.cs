@@ -27,7 +27,7 @@ namespace MuMech
 
         public static double DragLength(this CelestialBody body, double altitudeASL, double dragCoeff, double mass)
         {
-            return body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL) - body.position, dragCoeff, mass);
+            return body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL), dragCoeff, mass);
         }
 
         public static double RealMaxAtmosphereAltitude(this CelestialBody body)

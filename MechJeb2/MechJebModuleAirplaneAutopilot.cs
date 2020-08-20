@@ -16,17 +16,17 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public double BankAngle = 30;
 
-        [Persistent (pass = (int)Pass.Global)]
+        [Persistent (pass = (int)Pass.Local)]
         public EditableDouble AccKp = 0.5, AccKi = 0.5, AccKd = 0.005;
 
-        [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble PitKp = 2.0, PitKi = 0.5, PitKd = 0.5;
+        [Persistent(pass = (int)Pass.Local)]
+        public EditableDouble PitKp = 2.0, PitKi = 1.0, PitKd = 0.005;
 
-        [Persistent (pass = (int)Pass.Global)]
+        [Persistent (pass = (int)Pass.Local)]
         public EditableDouble RolKp = 0.5, RolKi = 0.02, RolKd = 0.5;
 
-        [Persistent (pass = (int)Pass.Global)]
-        public EditableDouble YawKp = 4.0, YawKi = 0.01, YawKd = 0.02;
+        [Persistent (pass = (int)Pass.Local)]
+        public EditableDouble YawKp = 1.0, YawKi = 0.25, YawKd = 0.02;
 
         [Persistent (pass = (int)Pass.Local)]
         public EditableDouble YawLimit = 10, RollLimit = 45, PitchDownLimit = 15, PitchUpLimit = 25;
@@ -38,6 +38,10 @@ namespace MuMech
         public double pitch_err, roll_err, yaw_err;
         public double pitch_act, roll_act, yaw_act;
         public double RealVertSpeedTarget, RealPitchTarget, RealRollTarget, RealYawTarget, RealAccelerationTarget;
+
+        private bool initPitchController = false;
+        private bool initRollController = false;
+        private bool initYawController = false;
 
         public MechJebModuleAirplaneAutopilot (MechJebCore core) : base (core)
         {
@@ -72,6 +76,8 @@ namespace MuMech
         {
             HeadingHoldEnabled = true;
             RollHoldEnabled = true;
+            initRollController = true;
+            initYawController = true;
             YawPIDController.Reset ();
             RollPIDController.Reset ();
         }
@@ -86,6 +92,7 @@ namespace MuMech
         {
             if (!enabled)
                 return;
+
             _spd = vesselState.speedSurface;
             SpeedHoldEnabled = true;
             core.thrust.users.Add (this);
@@ -96,6 +103,7 @@ namespace MuMech
         {
             if (!enabled)
                 return;
+
             SpeedHoldEnabled = false;
             core.thrust.users.Remove (this);
         }
@@ -104,14 +112,17 @@ namespace MuMech
         {
             if (!enabled)
                 return;
+
             VertSpeedHoldEnabled = true;
             PitchPIDController.Reset();
+            initPitchController = true;
         }
 
         public void DisableVertSpeedHold ()
         {
             if (!enabled)
                 return;
+
             VertSpeedHoldEnabled = false;
         }
 
@@ -119,6 +130,7 @@ namespace MuMech
         {
             if (!enabled)
                 return;
+
             AltitudeHoldEnabled = true;
             if (VertSpeedHoldEnabled) {
                 PitchPIDController.Reset();
@@ -131,34 +143,27 @@ namespace MuMech
         {
             if (!enabled)
                 return;
+
             AltitudeHoldEnabled = false;
             DisableVertSpeedHold ();
         }
 
-        private double convertAltitudeToVerticalSpeed (double deltaAltitude)
+        private double convertAltitudeToVerticalSpeed (double deltaAltitude, double reference = 5)
         {
-            double reference = 5;
             if (reference < 2)
                 reference = 2;
+
             if (deltaAltitude > reference || deltaAltitude < -reference)
                 return deltaAltitude / reference;
             else if (deltaAltitude > 0.1)
-                return deltaAltitude * deltaAltitude / (reference * reference);
-            else if (deltaAltitude > -0.1)
+                return Math.Max(0.05, deltaAltitude * deltaAltitude / (reference * reference));
+            else if (deltaAltitude < -0.1)
+                return Math.Min(-0.05, -deltaAltitude * deltaAltitude / (reference * reference));
+            else
                 return 0;
-            else
-                return -deltaAltitude * deltaAltitude / (reference * reference);
         }
 
-        private double fixPIDfromSpeed (double speed)
-        {
-            if (speed > 600)
-                return 0.5;
-            else
-                return speed * -0.0015 + 1.5;
-        }
-
-        void UpdatePID ()
+        private void UpdatePID ()
         {
             AccelerationPIDController.Kp = AccKp;
             AccelerationPIDController.Ki = AccKi;
@@ -174,9 +179,43 @@ namespace MuMech
             YawPIDController.Kd = YawKd;
         }
 
+        private void SynchronizePIDs (FlightCtrlState s)
+        {
+             // synchronize PID controllers
+            if (initPitchController)
+            {
+                PitchPIDController.intAccum = s.pitch * 100 / PitchPIDController.Ki;
+            }
+
+            if (initRollController)
+            {
+                RollPIDController.intAccum = s.roll * 100 / RollPIDController.Ki;
+            }
+
+            if (initYawController)
+            {
+                YawPIDController.intAccum = s.yaw * 100 / YawPIDController.Ki;
+            }
+
+            initPitchController = false;
+            initRollController = false;
+            initYawController = false;
+        }
+
+        private double computeYaw ()
+        {
+            // probably not perfect, especially when the aircraft is turning
+            double path = vesselState.HeadingFromDirection(vesselState.surfaceVelocity);
+            double nose = vesselState.HeadingFromDirection(vesselState.forward);
+            double angle = MuUtils.ClampDegrees180(nose - path);
+
+            return angle;
+        }
+
         public override void Drive (FlightCtrlState s)
         {
-            UpdatePID ();
+            UpdatePID();
+            SynchronizePIDs(s);
 
             //SpeedHold (set AccelerationTarget automatically to hold speed)
             if (SpeedHoldEnabled) {
@@ -197,7 +236,13 @@ namespace MuMech
 
             //AltitudeHold (set VertSpeed automatically to hold altitude)
             if (AltitudeHoldEnabled) {
-                RealVertSpeedTarget = convertAltitudeToVerticalSpeed(AltitudeTarget - vesselState.altitudeASL);
+                // NOTE:
+                // There is about 0.4 between altitudeASL and the altitude that is displayed in KSP in the top center
+                // i.e. 3000.4m (altitudeASL) equals 3000m ingame.
+                // maybe there is something wrong with the way we calculate altitudeASL. Idk;
+                double deltaAltitude = AltitudeTarget + 0.4 - vesselState.altitudeASL;
+
+                RealVertSpeedTarget = convertAltitudeToVerticalSpeed(deltaAltitude, 10);
                 RealVertSpeedTarget = UtilMath.Clamp(RealVertSpeedTarget, -VertSpeedTarget, VertSpeedTarget);
             }
             else
@@ -213,7 +258,8 @@ namespace MuMech
                 // Vvertical = 2 * PI * TAS * deltaPitch / 360
                 // deltaPitch = Vvertical / Vhorizontal * 180 / PI
                 double deltaVertSpeed = RealVertSpeedTarget - vesselState.speedVertical;
-                double adjustment = 180 / vesselState.speedSurface * deltaVertSpeed / Math.PI;
+                double adjustment = deltaVertSpeed / vesselState.speedSurface * 180 / Math.PI;
+
                 RealPitchTarget = vesselState.vesselPitch + adjustment;
 
                 RealPitchTarget = UtilMath.Clamp(RealPitchTarget, -PitchDownLimit, PitchUpLimit);
@@ -230,15 +276,15 @@ namespace MuMech
                 }
             }
 
-            //HeadingHold
-            double curFlightPath = vesselState.HeadingFromDirection (vesselState.forward);
+            curr_yaw = computeYaw();
+
             // NOTE: we can not use vesselState.vesselHeading here because it interpolates headings internally
             //       i.e. turning from 1° to 359° will end up as (1+359)/2 = 180°
             //       see class MovingAverage for more details
-            curr_yaw = vesselState.currentHeading - curFlightPath;
 
+            //HeadingHold
             if (HeadingHoldEnabled) {
-                double toturn = MuUtils.ClampDegrees180 (HeadingTarget - curFlightPath);
+                double toturn = MuUtils.ClampDegrees180 (HeadingTarget - vesselState.currentHeading);
 
                 if (Math.Abs(toturn) < 0.2) {
                     // yaw for small adjustments

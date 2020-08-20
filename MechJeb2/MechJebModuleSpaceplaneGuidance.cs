@@ -63,7 +63,6 @@ namespace MuMech
                 {
                     GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label8") + autoland.AutolandApproachStateToHumanReadableDescription());//State:
                     GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label9", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));//Distance to waypoint: {0}m
-                    //GUILayout.Label(string.Format("Distance to waypoint: {0} m", Math.Round(autoland.GetAutolandLateralDistanceToNextWaypoint(), 0)));
                     GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label10",Math.Round(autoland.Autopilot.SpeedTarget, 1)));//Target speed: {0} m/s
                     GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label11", Math.Round(autoland.GetAutolandTargetAltitude(autoland.GetAutolandTargetVector()), 0)));//Target altitude: {0} m
                     GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label12", Math.Round(autoland.Autopilot.VertSpeedTarget, 1)));//Target vertical speed: {0} m/s
@@ -92,8 +91,6 @@ namespace MuMech
                 }
             }
         }
-
-
 
         public override void OnStart(PartModule.StartState state)
         {

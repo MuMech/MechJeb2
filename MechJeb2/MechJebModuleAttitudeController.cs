@@ -193,7 +193,7 @@ namespace MuMech
                 return rotRef;
             }
 
-            if ((reference == AttitudeReference.MANEUVER_NODE) && (vessel.patchedConicSolver.maneuverNodes.Count == 0))
+            if ((reference == AttitudeReference.MANEUVER_NODE || reference == AttitudeReference.MANEUVER_NODE_COT) && (vessel.patchedConicSolver.maneuverNodes.Count == 0))
             {
                 attitudeDeactivate();
                 return rotRef;
@@ -307,7 +307,7 @@ namespace MuMech
             }
             else
             {
-                up = attitudeWorldToReference(attitudeReferenceToWorld(attitudeTarget * Vector3d.up, attitudeReference), reference);
+                up = attitudeWorldToReference(attitudeReferenceToWorld(attitudeTarget * Vector3d.up, reference), reference);
             }
             Vector3.OrthoNormalize(ref dir, ref up);
             attitudeTo(Quaternion.LookRotation(dir, up), reference, controller);

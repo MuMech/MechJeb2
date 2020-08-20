@@ -270,6 +270,10 @@ namespace MuMech
             // The curves used for the sim are not thread safe so we need a copy used only by the thread
             ReentrySimulation.SimCurves simCurves = ReentrySimulation.SimCurves.Borrow(patch.referenceBody);
 
+
+            //if (descentSpeedPolicy != null)
+            //    print(vesselState.limitedMaxThrustAccel.ToString("F2") + " " + descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity).ToString("F2"));
+
             SimulatedVessel simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, core.landing.enabled && deployChutes ? limitChutesStage : -1);
             ReentrySimulation sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));

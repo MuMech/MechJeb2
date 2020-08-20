@@ -8,13 +8,6 @@ namespace MuMech
 {
     public static class VesselExtensions
     {
-        public static List<T> GetParts<T>(this Vessel vessel) where T : Part
-        {
-            if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts.OfType<T>().ToList();
-            if (vessel == null) return new List<T>();
-            return vessel.Parts.OfType<T>().ToList();
-        }
-
         public static List<ITargetable> GetTargetables(this Vessel vessel)
         {
             List<Part> parts;
@@ -22,7 +15,7 @@ namespace MuMech
             else if (vessel == null) return new List<ITargetable>();
             else parts = vessel.Parts;
 
-            return (from part in parts from targetable in part.Modules.OfType<ITargetable>() select targetable).ToList();
+            return parts.SelectMany(part => part.Modules.OfType<ITargetable>()).ToList();
         }
 
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule

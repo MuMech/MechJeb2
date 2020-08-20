@@ -98,9 +98,10 @@ namespace MuMech
                     //We're not far from the target. Close the distance
                     double closingSpeed = core.target.Distance / 100;
                     if (closingSpeed > maxClosingSpeed) closingSpeed = maxClosingSpeed;
+                    closingSpeed = Math.Max(0.01, closingSpeed);
                     double closingTime = core.target.Distance / closingSpeed;
-
                     double UT = vesselState.time + 15;
+
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, closingTime);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 

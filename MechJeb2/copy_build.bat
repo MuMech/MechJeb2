@@ -35,3 +35,7 @@ IF EXIST "%ProjectDir%..\Bundles" xcopy /S /Y /I "%ProjectDir%..\Bundles" "%KSPD
 IF EXIST "%ProjectDir%..\Icons" xcopy /S /Y /I "%ProjectDir%..\Icons" "%KSPDIR%\GameData\MechJeb2\Icons"
 IF EXIST "%ProjectDir%..\Localization" xcopy /S /Y /I "%ProjectDir%..\Localization" "%KSPDIR%\GameData\MechJeb2\Localization"
 IF EXIST "%ProjectDir%..\Parts" xcopy /S /Y /I "%ProjectDir%..\Parts" "%KSPDIR%\GameData\MechJeb2\Parts"
+IF EXIST "%ProjectDir%..\LandingSites.cfg" xcopy /Y /I "%ProjectDir%..\LandingSites.cfg" "%KSPDIR%\GameData\MechJeb2\"
+
+:: Display the time of compilation so I don't waste time testing code I did not compile...
+time /t
