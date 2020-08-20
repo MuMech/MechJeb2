@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 using KSP.Localization;
@@ -72,7 +72,7 @@ namespace MuMech
                     double desiredAccel = speedError / speedCorrectionTimeConstant + (desiredSpeedAfterDt - desiredSpeed) / vesselState.deltaT;
                     if (maxAccel - minAccel > 0) core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
                     else core.thrust.targetThrottle = 0;
-                    status = Localizer.Format("#MechJeb_LandingGuidance_Status6", Math.Abs(desiredSpeed).ToString("F1"));//"Braking: target speed = " +  + " m/s"
+                    status = Localizer.Format("#MechJeb_LandingGuidance_Status6", (desiredSpeed >= double.MaxValue ? "∞" : Math.Abs(desiredSpeed).ToString("F1")));//"Braking: target speed = " +  + " m/s"
                 }
 
                 core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, core.landing);
