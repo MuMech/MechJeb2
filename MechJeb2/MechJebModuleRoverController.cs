@@ -148,8 +148,7 @@ namespace MuMech
 
 			for (int i = 0; i < wheelbases.Count; i++)
 			{
-				var w = wheelbases[i];
-				if (w.isGrounded)
+				if (wheelbases[i].isGrounded)
 				{
 					traction += 100;
 				}
@@ -178,7 +177,7 @@ namespace MuMech
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
 			MechJebWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 
-			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
+			bool brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
 			curSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 
 			CalculateTraction();
@@ -196,19 +195,19 @@ namespace MuMech
 				}
 				if (ControlSpeed)
 				{
-					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
-					var distance = Vector3.Distance(vessel.CoM, wp.Position);
+					MechJebWaypoint nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
+					float distance = Vector3.Distance(vessel.CoM, wp.Position);
 					if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
 					// var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
-					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
-					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
+					double maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
+					double minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
 								(nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), MuUtils.ClampDegrees180(heading - HeadingToPos(wp.Position, nextWP.Position))) :
 								(distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					minSpeed = (wp.Quicksave ? 1 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
-					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
+					double newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-					var radius = Math.Max(wp.Radius, 10);
+					float radius = Math.Max(wp.Radius, 10);
 					if (distance < radius)
 					{
 						if (WaypointIndex + 1 >= Waypoints.Count) // last waypoint
@@ -320,12 +319,12 @@ namespace MuMech
 				{
 					core.attitude.users.Add(this);
 				}
-				var fSpeed = (float)curSpeed;
+				float fSpeed = (float)curSpeed;
 				Vector3 fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
 							vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
 							vesselState.surfaceVelocity); // in the air so follow velocity
 				Vector3.OrthoNormalize(ref norm, ref fwd);
-				var quat = Quaternion.LookRotation(fwd, norm);
+				Quaternion quat = Quaternion.LookRotation(fwd, norm);
 
 				if (vesselState.torqueAvailable.sqrMagnitude > 0)
 					core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
@@ -456,7 +455,7 @@ namespace MuMech
 
 			if (local != null)
 			{
-				var wps = local.GetNode("Waypoints");
+				ConfigNode wps = local.GetNode("Waypoints");
 				if (wps != null && wps.HasNode("Waypoint"))
 				{
 					int.TryParse(wps.GetValue("Index"), out WaypointIndex);
