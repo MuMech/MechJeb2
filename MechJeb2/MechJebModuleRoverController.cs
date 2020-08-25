@@ -202,7 +202,7 @@ namespace MuMech
 					// var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
 					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
-								(nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
+								(nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), MuUtils.ClampDegrees180(heading - HeadingToPos(wp.Position, nextWP.Position))) :
 								(distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					minSpeed = (wp.Quicksave ? 1 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
