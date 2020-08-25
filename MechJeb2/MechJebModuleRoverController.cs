@@ -188,7 +188,11 @@ namespace MuMech
 			{
 				if (ControlHeading)
 				{
-					heading.val = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
+					double newHeading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
+
+					// update GUI text only if the value changed
+					if (newHeading != heading)
+						heading.val = newHeading;
 				}
 				if (ControlSpeed)
 				{
