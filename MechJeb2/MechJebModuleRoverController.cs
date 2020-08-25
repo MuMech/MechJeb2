@@ -123,17 +123,18 @@ namespace MuMech
 
 		public double HeadingToPos(Vector3 fromPos, Vector3 toPos)
 		{
+			Transform origin = mainBody.transform;
+
 			// thanks to Cilph who did most of this since I don't understand anything ~ BR2k
-			var body = vessel.mainBody;
-			var fromLon = body.GetLongitude(fromPos);
-			var toLon = body.GetLongitude(toPos);
-			var diff = toLon - fromLon;
-			if (diff < -180) { diff += 360; }
-			if (diff >  180) { diff -= 360; }
-			Vector3 myPos = fromPos - body.transform.position;
-			Vector3 north = body.transform.position + ((float)body.Radius * body.transform.up) - fromPos;
-			Vector3 tgtPos = toPos - fromPos;
-			return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.ProjectOnPlane(tgtPos.normalized, myPos.normalized));
+			Vector3 up = fromPos - origin.position; // position relative to origin, "up" vector
+			up.Normalize();
+
+			// mark north and target directions on horizontal plane
+			Vector3 north = Vector3.ProjectOnPlane(origin.up, up);
+			Vector3 target = Vector3.ProjectOnPlane(toPos - fromPos, up); // no need to normalize
+
+			// apply protractor
+			return Vector3.SignedAngle(north, target, up);
 		}
 
 		public float TurningSpeed(double speed, double error)
