@@ -75,7 +75,6 @@ namespace MuMech
 		public EditableDouble tractionLimit = 75;
 
 		public List<ModuleWheelBase> wheelbases = new List<ModuleWheelBase>();
-		public Vector3 norm = Vector3.zero;
 
 		public override void OnStart(PartModule.StartState state)
 		{
@@ -123,17 +122,18 @@ namespace MuMech
 
 		public double HeadingToPos(Vector3 fromPos, Vector3 toPos)
 		{
+			Transform origin = mainBody.transform;
+
 			// thanks to Cilph who did most of this since I don't understand anything ~ BR2k
-			var body = vessel.mainBody;
-			var fromLon = body.GetLongitude(fromPos);
-			var toLon = body.GetLongitude(toPos);
-			var diff = toLon - fromLon;
-			if (diff < -180) { diff += 360; }
-			if (diff >  180) { diff -= 360; }
-			Vector3 myPos = fromPos - body.transform.position;
-			Vector3 north = body.transform.position + ((float)body.Radius * body.transform.up) - fromPos;
-			Vector3 tgtPos = toPos - fromPos;
-			return (diff < 0 ? -1 : 1) * Vector3.Angle(Vector3d.Exclude(myPos.normalized, north.normalized), Vector3.ProjectOnPlane(tgtPos.normalized, myPos.normalized));
+			Vector3 up = fromPos - origin.position; // position relative to origin, "up" vector
+			up.Normalize();
+
+			// mark north and target directions on horizontal plane
+			Vector3 north = Vector3.ProjectOnPlane(origin.up, up);
+			Vector3 target = Vector3.ProjectOnPlane(toPos - fromPos, up); // no need to normalize
+
+			// apply protractor
+			return Vector3.SignedAngle(north, target, up);
 		}
 
 		public float TurningSpeed(double speed, double error)
@@ -144,15 +144,11 @@ namespace MuMech
 		public void CalculateTraction()
 		{
 			if (wheelbases.Count == 0) { OnVesselModified(vessel); }
-			RaycastHit hit;
-			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
-			norm = hit.normal;
 			traction = 0;
 
 			for (int i = 0; i < wheelbases.Count; i++)
 			{
-				var w = wheelbases[i];
-				if (w.isGrounded)
+				if (wheelbases[i].isGrounded)
 				{
 					traction += 100;
 				}
@@ -181,7 +177,7 @@ namespace MuMech
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
 			MechJebWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 
-			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
+			bool brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
 			curSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 
 			CalculateTraction();
@@ -191,23 +187,27 @@ namespace MuMech
 			{
 				if (ControlHeading)
 				{
-					heading.val = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
+					double newHeading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
+
+					// update GUI text only if the value changed
+					if (newHeading != heading)
+						heading.val = newHeading;
 				}
 				if (ControlSpeed)
 				{
-					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
-					var distance = Vector3.Distance(vessel.CoM, wp.Position);
+					MechJebWaypoint nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
+					float distance = Vector3.Distance(vessel.CoM, wp.Position);
 					if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
 					// var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
-					var maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
-					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
-								(nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), heading - HeadingToPos(wp.Position, nextWP.Position)) :
+					double maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
+					double minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
+								(nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), MuUtils.ClampDegrees180(heading - HeadingToPos(wp.Position, nextWP.Position))) :
 								(distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					minSpeed = (wp.Quicksave ? 1 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
-					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
+					double newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-					var radius = Math.Max(wp.Radius, 10);
+					float radius = Math.Max(wp.Radius, 10);
 					if (distance < radius)
 					{
 						if (WaypointIndex + 1 >= Waypoints.Count) // last waypoint
@@ -311,16 +311,20 @@ namespace MuMech
 
 			if (StabilityControl)
 			{
+				RaycastHit hit;
+				Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
+				Vector3 norm = hit.normal;
+
 				if (!core.attitude.users.Contains(this))
 				{
 					core.attitude.users.Add(this);
 				}
-				var fSpeed = (float)curSpeed;
+				float fSpeed = (float)curSpeed;
 				Vector3 fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
 							vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
 							vesselState.surfaceVelocity); // in the air so follow velocity
 				Vector3.OrthoNormalize(ref norm, ref fwd);
-				var quat = Quaternion.LookRotation(fwd, norm);
+				Quaternion quat = Quaternion.LookRotation(fwd, norm);
 
 				if (vesselState.torqueAvailable.sqrMagnitude > 0)
 					core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
@@ -451,7 +455,7 @@ namespace MuMech
 
 			if (local != null)
 			{
-				var wps = local.GetNode("Waypoints");
+				ConfigNode wps = local.GetNode("Waypoints");
 				if (wps != null && wps.HasNode("Waypoint"))
 				{
 					int.TryParse(wps.GetValue("Index"), out WaypointIndex);
