@@ -75,7 +75,6 @@ namespace MuMech
 		public EditableDouble tractionLimit = 75;
 
 		public List<ModuleWheelBase> wheelbases = new List<ModuleWheelBase>();
-		public Vector3 norm = Vector3.zero;
 
 		public override void OnStart(PartModule.StartState state)
 		{
@@ -145,9 +144,6 @@ namespace MuMech
 		public void CalculateTraction()
 		{
 			if (wheelbases.Count == 0) { OnVesselModified(vessel); }
-			RaycastHit hit;
-			Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
-			norm = hit.normal;
 			traction = 0;
 
 			for (int i = 0; i < wheelbases.Count; i++)
@@ -312,6 +308,10 @@ namespace MuMech
 
 			if (StabilityControl)
 			{
+				RaycastHit hit;
+				Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
+				Vector3 norm = hit.normal;
+
 				if (!core.attitude.users.Contains(this))
 				{
 					core.attitude.users.Add(this);
