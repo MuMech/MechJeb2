@@ -58,11 +58,9 @@ build/%.dll: ${MECHJEBFILES}
 		/reference:"${MANAGED}/mscorlib.dll" \
 		/reference:"${MANAGED}/System.Core.dll" \
 		/reference:"${MANAGED}/System.dll" \
-		/reference:"${MANAGED}/UnityEngine.dll" \
 		/reference:"${MANAGED}/UnityEngine.AnimationModule.dll" \
 		/reference:"${MANAGED}/UnityEngine.AssetBundleModule.dll" \
 		/reference:"${MANAGED}/UnityEngine.CoreModule.dll" \
-		/reference:"${MANAGED}/UnityEngine.ImageConversionModule.dll" \
 		/reference:"${MANAGED}/UnityEngine.IMGUIModule.dll" \
 		/reference:"${MANAGED}/UnityEngine.InputLegacyModule.dll" \
 		/reference:"${MANAGED}/UnityEngine.PhysicsModule.dll" \
