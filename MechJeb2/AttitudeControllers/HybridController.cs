@@ -133,13 +133,9 @@ namespace MuMech.AttitudeControllers
             /* TODO: static engine torque and/or differential throttle */
 
             for(int i = 0; i < 3; i++) {
-                // looks like we only allow the actuation to double every frame here (with a 0.001 minimum)
-                // question:  why?
-                double clamp = Math.Max(Math.Abs(Actuation[i]), 0.005) * 2;
                 Actuation[i] = TargetTorque[i] / ControlTorque[i];
                 if (Math.Abs(Actuation[i]) < EPSILON || double.IsNaN(Actuation[i]))
                     Actuation[i] = 0;
-                Actuation[i] = Math.Max(Math.Min(Actuation[i], clamp), -clamp);
             }
         }
 
