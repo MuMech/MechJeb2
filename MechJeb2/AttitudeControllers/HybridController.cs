@@ -82,19 +82,19 @@ namespace MuMech.AttitudeControllers
             double yaw = ea[1] *UtilMath.Deg2Rad;
             double roll = ea[2] *UtilMath.Deg2Rad;
 
-            // this is the initial direction of the great circle route of the requested transform
-            // (pitch is latitude, yaw is longitude, and we are "navigating" from 0,0)
-            Vector3d temp = new Vector3d(Math.Sin(pitch), Math.Cos(pitch) * Math.Sin(yaw), 0);
-            temp = temp.normalized;
-
             // law of cosines for the "distance" of the miss in radians
             phiTotal = Math.Acos( MuUtils.Clamp( Math.Cos(pitch)*Math.Cos(yaw), -1, 1 ) );
 
+            // this is the initial direction of the great circle route of the requested transform
+            // (pitch is latitude, yaw is longitude, and we are "navigating" from 0,0)
+            Vector3d temp = new Vector3d(Math.Sin(pitch), Math.Cos(pitch) * Math.Sin(yaw), 0);
+            temp = temp.normalized * phiTotal;
+
             // we assemble phi in the pitch, roll, yaw basis that vessel.MOI uses (right handed basis)
             Vector3d phi = new Vector3d(
-                    MuUtils.ClampRadiansPi(-temp[0]*phiTotal), // pitch distance around the geodesic
+                    MuUtils.ClampRadiansPi(-temp[0]), // pitch distance around the geodesic
                     MuUtils.ClampRadiansPi(-roll),
-                    MuUtils.ClampRadiansPi(temp[1]*phiTotal) // yaw distance around the geodesic
+                    MuUtils.ClampRadiansPi(temp[1]) // yaw distance around the geodesic
                     );
 
             phi.Scale(ac.AxisState);
