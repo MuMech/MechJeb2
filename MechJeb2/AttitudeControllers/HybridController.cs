@@ -6,9 +6,6 @@ namespace MuMech.AttitudeControllers
 {
     class HybridController : BaseAttitudeController
     {
-        /* target = Quaternion.LookRotation(vessel.GetObtVelocity().normalized, vessel.up); */
-        //public Quaternion target { get; set; }
-
         [Persistent(pass = (int)Pass.Global)]
         private EditableDouble maxStoppingTime = new EditableDouble(2);
 
@@ -17,13 +14,6 @@ namespace MuMech.AttitudeControllers
 
         [Persistent(pass = (int) Pass.Global)]
         private bool useControlRange = true;
-        //public double RollControlRange {
-        //    get { return this.rollControlRange; }
-        //    set { this.rollControlRange.val = Math.Max(EPSILON, Math.Min(Math.PI, value)); }
-        //}
-
-        //[Persistent(pass = (int)Pass.Global)]
-        //public EditableDoubleMult kWlimit = new EditableDoubleMult(0.15, 0.01);
 
         public TorquePI pitchPI = new TorquePI();
         public TorquePI yawPI = new TorquePI();
@@ -86,21 +76,21 @@ namespace MuMech.AttitudeControllers
             phiTotal = Math.Acos( MuUtils.Clamp( Math.Cos(pitch)*Math.Cos(yaw), -1, 1 ) );
 
             // this is the initial direction of the great circle route of the requested transform
-            // (pitch is latitude, yaw is longitude, and we are "navigating" from 0,0)
-            Vector3d temp = new Vector3d(Math.Sin(pitch), Math.Cos(pitch) * Math.Sin(yaw), 0);
+            // (pitch is latitude, yaw is -longitude, and we are "navigating" from 0,0)
+            Vector3d temp = new Vector3d(Math.Sin(pitch), Math.Cos(pitch) * Math.Sin(-yaw), 0);
             temp = temp.normalized * phiTotal;
 
             // we assemble phi in the pitch, roll, yaw basis that vessel.MOI uses (right handed basis)
             Vector3d phi = new Vector3d(
-                    MuUtils.ClampRadiansPi(-temp[0]), // pitch distance around the geodesic
-                    MuUtils.ClampRadiansPi(-roll),
+                    MuUtils.ClampRadiansPi(temp[0]), // pitch distance around the geodesic
+                    MuUtils.ClampRadiansPi(roll),
                     MuUtils.ClampRadiansPi(temp[1]) // yaw distance around the geodesic
                     );
 
             phi.Scale(ac.AxisState);
 
             if (useInertia)
-                phi += ac.inertia;
+                phi -= ac.inertia;
 
             phiVector = phi;
         }
@@ -115,9 +105,9 @@ namespace MuMech.AttitudeControllers
                 MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
             }
 
-            TargetOmega[0] = pitchRatePI.Update(-phiVector[0], 0, MaxOmega[0]);
-            TargetOmega[1] = rollRatePI.Update(-phiVector[1], 0, MaxOmega[1]);
-            TargetOmega[2] = yawRatePI.Update(-phiVector[2], 0, MaxOmega[2]);
+            TargetOmega[0] = pitchRatePI.Update(phiVector[0], 0, MaxOmega[0]);
+            TargetOmega[1] = rollRatePI.Update(phiVector[1], 0, MaxOmega[1]);
+            TargetOmega[2] = yawRatePI.Update(phiVector[2], 0, MaxOmega[2]);
 
             if (useControlRange && Math.Abs(phiTotal) > rollControlRange) {
                 TargetOmega[1] = 0;
@@ -187,6 +177,16 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label3"), GUILayout.ExpandWidth(true));//"phiVector"
             GUILayout.Label(MuUtils.PrettyPrint(phiVector), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Omega", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(Omega), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("MaxOmega", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(MaxOmega), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
