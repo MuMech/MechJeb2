@@ -23,7 +23,8 @@ namespace MuMech.AttitudeControllers
         public double ChangeRate { get; set; }
         public bool unWinding { get; set; }
 
-        public PIDLoop() : this(1, 0, 0) { }
+        public PIDLoop(double maxoutput = double.MaxValue, double minoutput = double.MinValue, bool extraUnwind = false)
+            : this(1.0, 0, 0, maxoutput, minoutput, extraUnwind) { }
 
         public PIDLoop(double kp, double ki, double kd, double maxoutput = double.MaxValue, double minoutput = double.MinValue, bool extraUnwind = false)
         {

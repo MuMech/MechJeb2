@@ -489,8 +489,6 @@ namespace MuMech
             }
         }
 
-        private double last_update;
-
         //public static bool SupportsGimbalExtension<T>() where T : PartModule
         //{
         //    return gimbalExtDict.ContainsKey(typeof(T));
@@ -502,7 +500,7 @@ namespace MuMech
         //}
         public bool Update(Vessel vessel)
         {
-            if (last_update == Planetarium.GetUniversalTime())
+            if (time == Planetarium.GetUniversalTime())
                 return true;
 
             if (vessel.rootPart.rb == null) return false; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
@@ -526,8 +524,6 @@ namespace MuMech
             ToggleRCSThrust(vessel);
 
             UpdateMoIAndAngularMom(vessel);
-
-            last_update = Planetarium.GetUniversalTime();;
 
             return true;
         }
@@ -661,7 +657,7 @@ namespace MuMech
             horizontalOrbit = Vector3d.Exclude(up, orbitalVelocity).normalized;
             horizontalSurface = Vector3d.Exclude(up, surfaceVelocity).normalized;
 
-            angularVelocity = Quaternion.Inverse(vessel.GetTransform().rotation) * vessel.rootPart.rb.angularVelocity;
+            angularVelocity = vessel.angularVelocity;
 
             radialPlusSurface = Vector3d.Exclude(surfaceVelocity, up).normalized;
             radialPlus = Vector3d.Exclude(orbitalVelocity, up).normalized;

@@ -15,7 +15,7 @@ namespace MuMech.AttitudeControllers
 
         [Persistent(pass = (int) Pass.Global)]
         public bool Tf_autoTune = true;
-        
+
         public Vector3d TfV = new Vector3d(0.3, 0.3, 0.3);
 
         [Persistent(pass = (int) Pass.Global)]
@@ -124,7 +124,7 @@ namespace MuMech.AttitudeControllers
             TfV = 0.05 * ratio;
 
             Vector3d delayFactor = Vector3d.one + 2 * ac.vesselState.torqueReactionSpeed;
-            
+
 
             TfV.Scale(delayFactor);
 
@@ -300,7 +300,7 @@ namespace MuMech.AttitudeControllers
             UI_kiFactor = Math.Max(UI_kiFactor, 0.01);
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_PIDFactor1"), UI_deadband, "", 50);//"Deadband = "
             deadband = Math.Max(UI_deadband, 0.0);
-            
+
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label11"), kWlimit, "%");//"Maximum Relative Angular Velocity"
             double tmp_kWlimit = kWlimit;
             tmp_kWlimit = (EditableDouble)GUILayout.HorizontalSlider((float)tmp_kWlimit, 0.0F, 1.0F);
@@ -353,7 +353,7 @@ namespace MuMech.AttitudeControllers
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label19"), GUILayout.ExpandWidth(true));//"PID Action"
                 GUILayout.Label(MuUtils.PrettyPrint(pidAction), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
-                
+
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label20"), GUILayout.ExpandWidth(true));//"Inertia"
                 GUILayout.Label("|" + ac.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(ac.inertia),

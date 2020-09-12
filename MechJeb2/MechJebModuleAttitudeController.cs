@@ -48,8 +48,7 @@ namespace MuMech
         public List<BaseAttitudeController> controllers = new List<BaseAttitudeController>();
 
         [Persistent(pass = (int)Pass.Global)]
-        public int activeController = 2;
-
+        public int activeController = 3;
 
         public void SetActiveController(int i)
         {
@@ -136,6 +135,7 @@ namespace MuMech
             controllers.Add(new MJAttitudeController(this));
             controllers.Add(new KosAttitudeController(this));
             controllers.Add(new HybridController(this));
+            controllers.Add(new BetterController(this));
 
 
             Controller = new HybridController(this);

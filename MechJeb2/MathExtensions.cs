@@ -20,6 +20,11 @@ namespace MuMech
             return new Vector3(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
         }
 
+        public static Vector3d Sqrt(this Vector3d vector)
+        {
+            return new Vector3d(Math.Sqrt(vector.x), Math.Sqrt(vector.y), Math.Sqrt(vector.z));
+        }
+
         public static Vector3d Reorder(this Vector3d vector, int order)
         {
             switch (order)
