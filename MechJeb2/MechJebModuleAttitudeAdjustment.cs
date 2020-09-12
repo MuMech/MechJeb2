@@ -20,7 +20,6 @@ namespace MuMech
 
             core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox1"));//RCS auto mode
 
-
             int currentController = core.attitude.activeController;
             if (GUILayout.Toggle(currentController == 0, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox2")))//MJAttitudeController
             {
@@ -34,7 +33,10 @@ namespace MuMech
             {
                 currentController = 2;
             }
-
+            if (GUILayout.Toggle(currentController == 3, "BetterController"))
+            {
+                currentController = 3;
+            }
 
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
@@ -42,7 +44,6 @@ namespace MuMech
             core.attitude.Controller.GUI();
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
-
 
             if (currentController != core.attitude.activeController)
             {
@@ -53,7 +54,7 @@ namespace MuMech
             if (showInfos)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label1"), GUILayout.ExpandWidth(true));//Axis Control 
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label1"), GUILayout.ExpandWidth(true));//Axis Control
                 GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisState, "F0"), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
@@ -131,7 +132,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            
+
             base.WindowGUI(windowID);
         }
 

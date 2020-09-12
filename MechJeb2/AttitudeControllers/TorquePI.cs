@@ -13,8 +13,8 @@ namespace MuMech.AttitudeControllers
 
         public double Update(double input, double setpoint, double MomentOfInertia, double maxOutput)
         {
-            Loop.Ki = MomentOfInertia * 4;
-            Loop.Kp = 2 * Math.Pow(MomentOfInertia * Loop.Ki, 0.5);
+            Loop.Ki = 4 * MomentOfInertia;
+            Loop.Kp = 4 * MomentOfInertia;
             return Loop.Update(input, setpoint, maxOutput);
         }
 
