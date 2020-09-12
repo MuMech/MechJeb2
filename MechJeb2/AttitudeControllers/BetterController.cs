@@ -74,7 +74,8 @@ namespace MuMech.AttitudeControllers
 
             // 1. The Euler(-90) here is because the unity transform puts "up" as the pointy end, which is wrong.  The rotation means that
             // "forward" becomes the pointy end, and "up" and "right" correctly define e.g. AoA/pitch and AoS/yaw.  This is just KSP being KSP.
-            // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame.
+            // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame (we do everything in the ship frame
+            // first, and then negate the error to get the error in the target reference frame at the end).
             Quaternion deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0))  * ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
@@ -88,6 +89,7 @@ namespace MuMech.AttitudeControllers
 
             // this is the initial direction of the great circle route of the requested transform
             // (pitch is latitude, yaw is -longitude, and we are "navigating" from 0,0)
+            // doing this calculation is the ship frame is a bit easier to reason about.
             Vector3d temp = new Vector3d(Math.Sin(pitch), Math.Cos(pitch) * Math.Sin(-yaw), 0);
             temp = temp.normalized * errorTotal;
 
@@ -98,6 +100,7 @@ namespace MuMech.AttitudeControllers
                     MuUtils.ClampRadiansPi(temp[1]) // yaw distance around the geodesic
                     );
 
+            // apply the axis control from the parent controller
             phi.Scale(ac.AxisState);
 
             // the error in the ship's position is the negative of the reference position in the ship frame
@@ -107,15 +110,15 @@ namespace MuMech.AttitudeControllers
         Vector3d lastOmega = Vector3d.zero;
 
         private void UpdatePredictionPI() {
-            // velocity relative to the vessel is minus the velocity relative to the target
+            // velcity relative to the target is the minus of the velocity relative to the vessel
+            // (The PID moves the vessel to zero in the target frame)
             Omega = -ac.vessel.angularVelocity;
 
-            // this is the position of the target, the negative of the error
             UpdateError();
 
             Vector3d MaxAlpha = Vector3d.zero;
 
-            // see https://archive.is/NqoUm and the "Alt Hold Controller", the acelleration PID is not implemented so we only
+            // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented so we only
             // have the first two PIDs in the cascade.
             for(int i = 0; i < 3; i++) {
                 MaxAlpha[i] = ControlTorque[i] /  ac.vesselState.MoI[i];
