@@ -44,6 +44,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AttitudeControllers\BaseAttitudeController.cs" />
+    <Compile Include="AttitudeControllers\BetterController.cs" />
     <Compile Include="AttitudeControllers\HybridController.cs" />
     <Compile Include="AttitudeControllers\KosAttitudeController.cs" />
     <Compile Include="AttitudeControllers\MJAttitudeController.cs" />
