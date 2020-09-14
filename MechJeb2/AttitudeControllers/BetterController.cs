@@ -26,7 +26,7 @@ namespace MuMech.AttitudeControllers
         private bool useControlRange = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private EditableDouble Kp = new EditableDouble(50.0);
+        private EditableDouble Kp = new EditableDouble(25.0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private EditableDouble Ki = new EditableDouble(0.0);
@@ -35,7 +35,7 @@ namespace MuMech.AttitudeControllers
         private EditableDouble Kd = new EditableDouble(0.0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private EditableDouble LD = new EditableDouble(0.10);
+        private EditableDouble LD = new EditableDouble(0.6);
 
         public PIDLoop[] Pid = { new PIDLoop(extraUnwind:true), new PIDLoop(extraUnwind:true), new PIDLoop(extraUnwind:true) };
 
@@ -52,6 +52,9 @@ namespace MuMech.AttitudeControllers
         /* max angular rotation */
         private Vector3d MaxOmega = Vector3d.zero;
 
+        /* max angular acceleration */
+        private Vector3d MaxAlpha = Vector3d.zero;
+
         private Vector3d ControlTorque { get { return ac.torque; } }
 
         public BetterController(MechJebModuleAttitudeController controller) : base(controller)
@@ -65,6 +68,12 @@ namespace MuMech.AttitudeControllers
             UpdatePredictionPI();
 
             deltaEuler = -errorVector * Mathf.Rad2Deg;
+
+            for(int i = 0; i < 3; i++) {
+                if (Math.Abs(Actuation[i]) < EPSILON || double.IsNaN(Actuation[i]))
+                    Actuation[i] = 0;
+            }
+
             act = Actuation;
         }
 
@@ -116,19 +125,22 @@ namespace MuMech.AttitudeControllers
 
             UpdateError();
 
-            Vector3d MaxAlpha = Vector3d.zero;
-
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented so we only
             // have the first two PIDs in the cascade.
             for(int i = 0; i < 3; i++) {
                 MaxAlpha[i] = ControlTorque[i] /  ac.vesselState.MoI[i];
-                double Gain = Math.Sqrt(0.5 * MaxAlpha[i] / LD);
-                if (Math.Abs(errorVector[i]) <= 2 * LD)
+                // scale the LD the user inputs to get the actual LD we use
+                // (this was determined entirely empirically by seeing that vessels with appx 1000x range of MaxAlpha
+                // needed a roughly 10x different LD, so by scaling here, we produce a user tunable which should be
+                // fairly constant across a large range of vessels)
+                double effLD = LD * Math.Pow(MaxAlpha[i], 1.0/3.0);
+                double Gain = Math.Sqrt(0.5 * MaxAlpha[i] / effLD);
+                if (Math.Abs(errorVector[i]) <= 2 * effLD)
                     // linear ramp down of acceleration
                     TargetOmega[i] = Gain * errorVector[i];
                 else
                     // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
-                    TargetOmega[i] = Math.Sqrt(2 * MaxAlpha[i] * (Math.Abs(errorVector[i]) - LD)) * Math.Sign(errorVector[i]);
+                    TargetOmega[i] = Math.Sqrt(2 * MaxAlpha[i] * (Math.Abs(errorVector[i]) - effLD)) * Math.Sign(errorVector[i]);
 
                 if (useStoppingTime)
                 {
@@ -152,7 +164,7 @@ namespace MuMech.AttitudeControllers
                 Pid[i].Kp = Kp;
                 Pid[i].Kd = Kd;
 
-                Actuation[i] =  Pid[i].Update(Omega[i] / Math.Pow(MaxAlpha[i], 2.0/3.0), TargetOmega[i] / Math.Pow(MaxAlpha[i], 2.0/3.0), 1.0);
+                Actuation[i] =  Pid[i].Update(Omega[i] / MaxAlpha[i], TargetOmega[i] / MaxAlpha[i], 1.0);
                 TargetTorque[i] = Actuation[i] * ControlTorque[i]; // for display
             }
         }
@@ -249,6 +261,11 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label5"), GUILayout.ExpandWidth(true));//"ControlTorque"
             GUILayout.Label(MuUtils.PrettyPrint(ControlTorque), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("MaxAlpha", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(MaxAlpha), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
     }
