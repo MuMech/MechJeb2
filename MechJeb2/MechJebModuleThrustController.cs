@@ -232,6 +232,7 @@ namespace MuMech
 
         protected bool tmode_changed = false;
 
+        protected double ullageUntil;
 
         public PIDController pid;
 
@@ -522,27 +523,7 @@ namespace MuMech
                 }
             }
 
-            /* auto-RCS ullaging up to very stable */
-            if (autoRCSUllaging && s.mainThrottle > 0.0F && throttleLimit > 0.0F )
-            {
-                if (vesselState.lowestUllage < VesselState.UllageState.VeryStable)
-                {
-                    Debug.Log("MechJeb RCS auto-ullaging: found state below very stable: " + vesselState.lowestUllage);
-                    if (vessel.hasEnabledRCSModules())
-                    {
-                        if (!vessel.ActionGroups[KSPActionGroup.RCS])
-                        {
-                            Debug.Log("MechJeb RCS auto-ullaging: enabling RCS action group for automatic ullaging");
-                            vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
-                        }
-                        Debug.Log("MechJeb RCS auto-ullaging: firing RCS to stabilize ulllage");
-                        setTempLimit(0.0F, LimitMode.UnstableIgnition);
-                        s.Z = -1.0F;
-                    } else {
-                        Debug.Log("MechJeb RCS auto-ullaging: vessel has no enabled/staged RCS modules");
-                    }
-                }
-            }
+            ProcessUllage(s);
 
             /* prevent unstable ignitions */
             if (limitToPreventUnstableIgnition && s.mainThrottle > 0.0F && throttleLimit > 0.0F )
@@ -887,6 +868,52 @@ namespace MuMech
                     grad[i] = -el[j].maxVariableForce.y;
                     i++;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles auto-RCS ullaging up to very stable.
+        /// </summary>
+        /// <param name="s"></param>
+        private void ProcessUllage(FlightCtrlState s)
+        {
+            if (!autoRCSUllaging || s.mainThrottle <= 0F || throttleLimit <= 0F)
+                return;
+
+            bool isStable = vesselState.lowestUllage == VesselState.UllageState.VeryStable;
+            if (!isStable)
+            {
+                ullageUntil = vesselState.time + 0.15;
+            }
+
+            if (vesselState.time >= ullageUntil) 
+                return;
+
+            // Continue ullaging until at least one engine has spooled up enough to produce >1% of it's rated thrust
+            if (isStable && vesselState.enginesWrappers.Where(e => e.engine.requestedThrottle > 0.01)
+                                                       .All(e => e.engine.currentThrottle < 0.01))
+            {
+                ullageUntil = vesselState.time + 0.15;
+            }
+
+            Debug.Log("MechJeb RCS auto-ullaging: found state below very stable: " + vesselState.lowestUllage);
+            if (vessel.hasEnabledRCSModules())
+            {
+                if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                {
+                    Debug.Log("MechJeb RCS auto-ullaging: enabling RCS action group for automatic ullaging");
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                }
+                Debug.Log("MechJeb RCS auto-ullaging: firing RCS to stabilize ulllage");
+                if (!isStable)
+                {
+                    setTempLimit(0.0F, LimitMode.UnstableIgnition);
+                }
+                s.Z = -1.0F;
+            }
+            else
+            {
+                Debug.Log("MechJeb RCS auto-ullaging: vessel has no enabled/staged RCS modules");
             }
         }
 
