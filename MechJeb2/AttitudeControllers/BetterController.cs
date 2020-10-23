@@ -161,7 +161,7 @@ namespace MuMech.AttitudeControllers
             for(int i = 0; i < 3; i++)
             {
                 Pid[i].Ki = Ki;
-                Pid[i].Kp = Kp;
+                Pid[i].Kp = Kp / TimeWarp.CurrentRate;
                 Pid[i].Kd = Kd;
 
                 Actuation[i] =  Pid[i].Update(Omega[i] / MaxAlpha[i], TargetOmega[i] / MaxAlpha[i], 1.0);
