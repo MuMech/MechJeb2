@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using KSP.UI;
 using KSP.UI.Screens;
-using Smooth.Algebraics;
 using Smooth.Dispose;
 using Smooth.Pools;
 using Smooth.Slinq;
@@ -492,6 +492,7 @@ namespace MuMech
         private int resourcePriority;
 
         double dryMass = 0; //the mass of this part, not counting resource mass
+        double crewMass = 0; //the mass of this part crew
         float modulesUnstagedMass;   // the mass of the modules of this part before staging
         float modulesStagedMass = 0; // the mass of the modules of this part after staging
 
@@ -548,6 +549,7 @@ namespace MuMech
             isLaunchClamp = part.IsLaunchClamp();
 
             dryMass = 0;
+            crewMass = 0;
             modulesStagedMass = 0;
 
             decoupledInStage = int.MinValue;
@@ -558,6 +560,40 @@ namespace MuMech
             if (!isLaunchClamp)
             {
                 dryMass = part.prefabMass; // Intentionally ignore the physic flag.
+                
+                if (HighLogic.LoadedSceneIsFlight && part.protoModuleCrew != null)
+                {
+                    for (var i = 0; i < part.protoModuleCrew.Count; i++)
+                    {
+                        ProtoCrewMember crewMember = part.protoModuleCrew[i];
+                        crewMass += PhysicsGlobals.KerbalCrewMass;
+                        if (Versioning.version_minor < 11) continue; // Those only exists in KSP 1.11+
+                        crewMass += crewMember.ResourceMass();
+                        crewMass += crewMember.InventoryMass();
+                    }
+                }
+                else if (HighLogic.LoadedSceneIsEditor)
+                {
+                    if (CrewAssignmentDialog.Instance != null && CrewAssignmentDialog.Instance.CurrentManifestUnsafe != null)
+                    {
+                        PartCrewManifest partCrewManifest = CrewAssignmentDialog.Instance.CurrentManifestUnsafe.GetPartCrewManifest(part.craftID);
+                        if (partCrewManifest != null)
+                        {
+                            ProtoCrewMember[] partCrew = null;
+                            partCrewManifest.GetPartCrew(ref partCrew);
+
+                            for (var i = 0; i < partCrew.Length; i++)
+                            {
+                                ProtoCrewMember crewMember = partCrew[i];
+                                if (crewMember == null ) continue;
+                                crewMass += PhysicsGlobals.KerbalCrewMass;
+                                if (Versioning.version_minor < 11) continue; // Those only exists in KSP 1.11+
+                                crewMass += crewMember.ResourceMass();
+                                crewMass += crewMember.InventoryMass();
+                            }
+                        }
+                    }
+                }
 
                 modulesUnstagedMass = part.GetModuleMassNoAlloc((float) dryMass, ModifierStagingSituation.UNSTAGED);
 
@@ -930,7 +966,7 @@ namespace MuMech
 
             //return dryMass + resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id)) +
             double resMass = resources.KeysList.Slinq().Select((r, rs) => rs[r] * MuUtils.ResourceDensity(r), resources).Sum();
-            return dryMass + resMass +
+            return dryMass + crewMass + resMass +
                    (inverseStage < simStage ? modulesUnstagedMass : modulesStagedMass);
         }
 
