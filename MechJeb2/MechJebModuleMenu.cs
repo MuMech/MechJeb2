@@ -442,6 +442,8 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            if (!HighLogic.LoadedSceneIsGame)
+                return;
             ClearButtons();
             base.OnLoad(local, type, global);
         }
@@ -575,7 +577,6 @@ namespace MuMech
                     if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
                     {
                         windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.width, 0)/GuiUtils.scale;
-                        
                     }
                     else
                     {

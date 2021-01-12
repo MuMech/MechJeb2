@@ -11,6 +11,7 @@ namespace MuMech
 {
     public class VesselState
     {
+        public static bool isLoadedPrincipia = false;
         public static bool isLoadedProceduralFairing = false;
         public static bool isLoadedRealFuels = false;
         // RealFuels.ModuleEngineRF ullageSet field to call via reflection
@@ -315,7 +316,9 @@ namespace MuMech
         public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
         public delegate double DTerminalVelocity();
 
-        static VesselState()
+        private static bool reflectionInitDone = false;
+
+        public void InitReflection()
         {
             FARVesselDragCoeff = null;
             FARVesselRefArea = null;
@@ -323,6 +326,7 @@ namespace MuMech
             FARVesselDynPres = null;
             isLoadedProceduralFairing = ReflectionUtils.isAssemblyLoaded("ProceduralFairings");
             isLoadedRealFuels = ReflectionUtils.isAssemblyLoaded("RealFuels");
+            isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("principia.ksp_plugin_adapter");
             if (isLoadedRealFuels)
             {
                 Debug.Log("MechJeb: RealFuels Assembly is loaded");
@@ -438,7 +442,7 @@ namespace MuMech
             isLoadedFAR = ReflectionUtils.isAssemblyLoaded("FerramAerospaceResearch");
             if (isLoadedFAR)
             {
-                List<string> farNames = new List<string>{ "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
+                List<string> farNames = new List<string> { "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
                 foreach (var name in farNames)
                 {
                     var methodInfo = ReflectionUtils.getMethodByReflection(
@@ -475,10 +479,13 @@ namespace MuMech
                     FARCalculateVesselAeroForces = (FARCalculateVesselAeroForcesDelegate)Delegate.CreateDelegate(typeof(FARCalculateVesselAeroForcesDelegate), FARCalculateVesselAeroForcesMethodInfo);
                 }
             }
+            reflectionInitDone = true;
         }
 
         public VesselState()
         {
+            if (!reflectionInitDone && HighLogic.LoadedSceneIsGame)
+                InitReflection();
             if (isLoadedFAR)
             {
                 TerminalVelocityCall = TerminalVelocityFAR;
@@ -1980,7 +1987,5 @@ namespace MuMech
                 _maxVariableTorque = maxVariableTorque;
             }
         }
-
-
     }
 }

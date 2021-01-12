@@ -103,7 +103,7 @@ namespace MuMech
         {
             update_pitch_and_heading();
 
-            if ( isLoadedPrincipia )
+            if (VesselState.isLoadedPrincipia )
             {
                 // Debug.Log("FOUND PRINCIPIA!!!");
             }
@@ -736,19 +736,17 @@ namespace MuMech
             if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }
 
-        public static bool isLoadedPrincipia = false;
         public static MethodInfo principiaEGNPCDOF;
 
         static MechJebModuleGuidanceController()
         {
-            isLoadedPrincipia = ReflectionUtils.isAssemblyLoaded("principia.ksp_plugin_adapter");
-            if (isLoadedPrincipia)
+            if (VesselState.isLoadedPrincipia)
             {
                 principiaEGNPCDOF = ReflectionUtils.getMethodByReflection("principia.ksp_plugin_adapter", "principia.ksp_plugin_adapter.Interface", "ExternalGetNearestPlannedCoastDegreesOfFreedom", BindingFlags.NonPublic | BindingFlags.Static);
                 if (principiaEGNPCDOF == null)
                 {
                     Debug.Log("failed to find ExternalGetNearestPlannedCoastDegreesOfFreedom");
-                    isLoadedPrincipia = false;
+                    VesselState.isLoadedPrincipia = false;
                     return;
                 }
             }
