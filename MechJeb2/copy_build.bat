@@ -18,10 +18,10 @@ echo Mono: "%MONO%"
 echo pdb2mdb: "%PDB2MDB%"
 echo kspdir: "%KSPDIR%"
 
-IF NOT EXIST "%MONO%" (
-	echo Expected "%MONO%" to point to mono.exe
-	exit 0
-)
+REM IF NOT EXIST "%MONO%" (
+REM 	echo Expected "%MONO%" to point to mono.exe
+REM 	exit 0
+REM )
 
 IF NOT EXIST "%PDB2MDB%" (
 	echo Unable to find "%PDB2MDB%"
