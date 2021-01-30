@@ -1282,7 +1282,7 @@ namespace MuMech
             if (thrustVectorMaxThrottle.magnitude == 0 && vessel.ActionGroups[KSPActionGroup.RCS])
             {
                 rcsThrust = true;
-                thrustVectorMaxThrottle += (Vector3d)(vessel.transform.up) * rcsThrustAvailable.down;
+                thrustVectorMaxThrottle += forward * rcsThrustAvailable.down;
             }
             else
             {
