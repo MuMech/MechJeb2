@@ -170,6 +170,11 @@ namespace MuMech
             return title;
         }
 
+        public override string IconName()
+        {
+            return title;
+        }
+
         public MechJebModuleCustomInfoWindow(MechJebCore core) : base(core) { }
     }
 
