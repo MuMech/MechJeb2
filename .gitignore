@@ -123,3 +123,4 @@ UpgradeLog*.XML
 
 /MechJeb2/.vs/MechJeb2/v15/Server/sqlite3
 MechJeb2-Unity/Temp
+.idea/
