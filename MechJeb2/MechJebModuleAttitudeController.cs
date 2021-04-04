@@ -346,8 +346,10 @@ namespace MuMech
                 return;
 
             torque = vesselState.torqueAvailable;
-            if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+            if (core.thrust.differentialThrottle && core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+            {
                 torque += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+            }
 
 
 
