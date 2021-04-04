@@ -26,16 +26,16 @@ namespace MuMech.AttitudeControllers
         private bool useControlRange = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private EditableDouble Kp = new EditableDouble(25.0);
+        private EditableDouble Kp = new EditableDouble(15);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private EditableDouble Ki = new EditableDouble(0.0);
+        private EditableDouble Ki = new EditableDouble(15);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private EditableDouble Kd = new EditableDouble(0.0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private EditableDouble LD = new EditableDouble(0.6);
+        private EditableDouble Gain = new EditableDouble(5.0);
 
         public PIDLoop[] Pid = { new PIDLoop(extraUnwind:true), new PIDLoop(extraUnwind:true), new PIDLoop(extraUnwind:true) };
 
@@ -129,12 +129,9 @@ namespace MuMech.AttitudeControllers
             // have the first two PIDs in the cascade.
             for(int i = 0; i < 3; i++) {
                 MaxAlpha[i] = ControlTorque[i] /  ac.vesselState.MoI[i];
-                // scale the LD the user inputs to get the actual LD we use
-                // (this was determined entirely empirically by seeing that vessels with appx 1000x range of MaxAlpha
-                // needed a roughly 10x different LD, so by scaling here, we produce a user tunable which should be
-                // fairly constant across a large range of vessels)
-                double effLD = LD * Math.Pow(MaxAlpha[i], 1.0/3.0);
-                double Gain = Math.Sqrt(0.5 * MaxAlpha[i] / effLD);
+
+                double effLD = MaxAlpha[i] / (2 * Gain * Gain);
+
                 if (Math.Abs(errorVector[i]) <= 2 * effLD)
                     // linear ramp down of acceleration
                     TargetOmega[i] = Gain * errorVector[i];
@@ -198,8 +195,8 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("LD", GUILayout.ExpandWidth(false));
-            LD.text = GUILayout.TextField(LD.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Gain", GUILayout.ExpandWidth(false));
+            Gain.text = GUILayout.TextField(Gain.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

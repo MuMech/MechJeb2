@@ -886,7 +886,7 @@ namespace MuMech
                 ullageUntil = vesselState.time + 0.15;
             }
 
-            if (vesselState.time >= ullageUntil) 
+            if (vesselState.time >= ullageUntil)
                 return;
 
             // Continue ullaging until at least one engine has spooled up enough to produce >1% of it's rated thrust
