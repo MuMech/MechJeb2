@@ -506,6 +506,31 @@ namespace MuMech
 
         private static readonly Pool<FuelNode> pool = new Pool<FuelNode>(Create, Reset);
 
+        private delegate double CrewMass(ProtoCrewMember crew);
+        private static readonly CrewMass CrewMassDelegate;
+
+        static FuelNode()
+        {
+            if (Versioning.version_major == 1 && Versioning.version_minor < 11)
+            {
+                CrewMassDelegate = CrewMassOld;
+            }
+            else
+            {
+                CrewMassDelegate = CrewMassNew;
+            }
+        }
+
+        private static double CrewMassOld(ProtoCrewMember crew)
+        {
+            return PhysicsGlobals.KerbalCrewMass;
+        }
+
+        private static double CrewMassNew(ProtoCrewMember crew)
+        {
+            return PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
+        }
+
         public static int PoolSize
         {
             get { return pool.Size; }
@@ -566,10 +591,7 @@ namespace MuMech
                     for (var i = 0; i < part.protoModuleCrew.Count; i++)
                     {
                         ProtoCrewMember crewMember = part.protoModuleCrew[i];
-                        crewMass += PhysicsGlobals.KerbalCrewMass;
-                        if (Versioning.version_minor < 11) continue; // Those only exists in KSP 1.11+
-                        crewMass += crewMember.ResourceMass();
-                        crewMass += crewMember.InventoryMass();
+                        crewMass += CrewMassDelegate(crewMember);
                     }
                 }
                 else if (HighLogic.LoadedSceneIsEditor)
@@ -586,10 +608,7 @@ namespace MuMech
                             {
                                 ProtoCrewMember crewMember = partCrew[i];
                                 if (crewMember == null ) continue;
-                                crewMass += PhysicsGlobals.KerbalCrewMass;
-                                if (Versioning.version_minor < 11) continue; // Those only exists in KSP 1.11+
-                                crewMass += crewMember.ResourceMass();
-                                crewMass += crewMember.InventoryMass();
+                                crewMass += CrewMassDelegate(crewMember);
                             }
                         }
                     }
