@@ -179,7 +179,7 @@ namespace MuMech
             //don't decouple active or idle engines or tanks
             UpdateActiveModuleEngines();
             UpdateBurnedResources();
-            if (InverseStageDecouplesActiveOrIdleEngineOrTank(vessel.currentStage - 1, vessel, burnedResources, activeModuleEngines))
+            if (InverseStageDecouplesActiveOrIdleEngineOrTank(vessel.currentStage - 1, vessel, burnedResources, activeModuleEngines) && !InverseStageReleasesClamps(vessel.currentStage - 1, vessel))
                 return;
 
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
