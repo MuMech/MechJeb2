@@ -381,11 +381,8 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                Part decoupled;
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupled))
-                {
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out Part decoupled))
                     return true;
-                }
             }
             return false;
         }
@@ -410,11 +407,8 @@ namespace MuMech
             for (int i = 0; i < v.parts.Count; i++)
             {
                 Part p = v.parts[i];
-                Part decoupledPart;
-                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out decoupledPart) && HasDeactivatedEngineOrTankDescendant(decoupledPart))
-                {
+                if (p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out Part decoupledPart) && HasDeactivatedEngineOrTankDescendant(decoupledPart))
                     return true;
-                }
             }
             return false;
         }
@@ -422,6 +416,9 @@ namespace MuMech
         //detect if a part is above a deactivated engine or fuel tank
         public static bool HasDeactivatedEngineOrTankDescendant(Part p)
         {
+            if (p is null)
+                return false;
+
             if ((p.State == PartStates.DEACTIVATED) && (p.IsEngine()) && !p.IsSepratron())
             {
                 return true; // TODO: yet more ModuleEngine lazy checks
@@ -444,9 +441,7 @@ namespace MuMech
             for (int i = 0; i < p.children.Count; i++)
             {
                 if (HasDeactivatedEngineOrTankDescendant(p.children[i]))
-                {
                     return true;
-                }
             }
             return false;
         }
