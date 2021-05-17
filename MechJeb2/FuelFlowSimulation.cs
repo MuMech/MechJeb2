@@ -453,10 +453,13 @@ namespace MuMech
         {
             public readonly ModuleEngines engineModule;
             public readonly Vector3d thrustVector;
+            public readonly double ignitionThreshold;
 
             public EngineInfo(ModuleEngines engineModule)
             {
                 this.engineModule = engineModule;
+
+                ignitionThreshold = engineModule.ignitionThreshold;
 
                 thrustVector = Vector3d.zero;
 
@@ -466,9 +469,10 @@ namespace MuMech
         }
 
         readonly DefaultableDictionary<int, double> resources = new DefaultableDictionary<int, double>(0);       //the resources contained in the part
+        readonly DefaultableDictionary<int, double> resourcesFull = new DefaultableDictionary<int, double>(0);   //the resources the part has when full
         readonly KeyableDictionary<int, double> resourceConsumptions = new KeyableDictionary<int, double>();     //the resources this part consumes per unit time when active at full throttle
         readonly DefaultableDictionary<int, double> resourceDrains = new DefaultableDictionary<int, double>(0);  //the resources being drained from this part per unit time at the current simulation time
-        readonly DefaultableDictionary<int, bool> freeResources = new DefaultableDictionary<int, bool>(false);  //the resources that are "free" and assumed to be infinite like IntakeAir
+        readonly DefaultableDictionary<int, bool> freeResources = new DefaultableDictionary<int, bool>(false);   //the resources that are "free" and assumed to be infinite like IntakeAir
 
         // if a resource amount falls below this amount we say that the resource has been drained
         // set to the smallest amount that the user can see is non-zero in the resource tab or by
@@ -562,6 +566,7 @@ namespace MuMech
             this.part = part;
             this.dVLinearThrust = dVLinearThrust;
             resources.Clear();
+            resourcesFull.Clear();
             resourceConsumptions.Clear();
             resourceDrains.Clear();
             freeResources.Clear();
@@ -585,7 +590,7 @@ namespace MuMech
             if (!isLaunchClamp)
             {
                 dryMass = part.prefabMass; // Intentionally ignore the physic flag.
-                
+
                 if (HighLogic.LoadedSceneIsFlight && part.protoModuleCrew != null)
                 {
                     for (var i = 0; i < part.protoModuleCrew.Count; i++)
@@ -644,6 +649,7 @@ namespace MuMech
                     if (r.flowState)
                     {
                         resources[r.info.id] = r.amount;
+                        resourcesFull[r.info.id] = r.maxAmount;
                     }
                     else
                     {
@@ -1016,12 +1022,25 @@ namespace MuMech
             }
         }
 
+        /// <summary>
+        ///     This computes the max timestep that an individual engine part can take, based on
+        ///     Which of the resources that it is drawing will drain to zero.
+        /// </summary>
         public double MaxTimeStep()
         {
             //DebugDrainRates();
-            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>, DefaultableDictionary<int, bool>>(resources, resourceRequestRemainingThreshold, resourceDrains, freeResources);
+            var param = new Smooth.Algebraics.Tuple<DefaultableDictionary<int, double>, double, DefaultableDictionary<int, double>, DefaultableDictionary<int, bool>, DefaultableDictionary<int, double>>(resources, resourceRequestRemainingThreshold, resourceDrains, freeResources, resourcesFull);
+
+            // This looks for non-free resources that are above the resourceRequestRemainingThreshold, and if it finds none, it returns MaxValue
+            // XXX: if we have non-free resources below the resourceRequestRemainingThreshold shouldn't we return zero and maybe log a bug?
             if (!resourceDrains.KeysList.Slinq().Any((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param)) return double.MaxValue;
-            return resourceDrains.KeysList.Slinq().Where((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param).Select((id, p) => p.Item1[id] / p.Item3[id], param).Min();
+
+            // Now we look for the minimum value of resources / resourcesDrains which gives the max time step before this engine part should flame out
+            return resourceDrains.KeysList.Slinq().Where((id, p) => !p.Item4[id] && p.Item1[id] > p.Item2, param).Select(
+                    // first condition:   dt = resources / resourceDrains
+                    // second condition:  dt = ( resources - ignitionThreshold * resourcesFull ) / resourceDrains
+                     (id, p) => Math.Min(p.Item1[id] / p.Item3[id], ( p.Item1[id] - ignitionThreshold * p.Item5[id] ) / p.Item3[id] ), param
+                ).Min();
         }
 
         //Returns an enumeration of the resources this part burns
