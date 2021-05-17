@@ -69,7 +69,10 @@ namespace MuMech
             status = PVGStatus.ENABLED;
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
-            core.stageTracking.users.Add(this);
+            core.stageTracking.enabled = true;
+	    // I suspect there are race conditions in stage tracking, so force a reset+update here before we can ever try computation
+            core.stageTracking.Reset();
+            core.stageTracking.Update();
         }
 
         public override void OnModuleDisabled()
@@ -78,7 +81,7 @@ namespace MuMech
             if (!core.rssMode)
                 core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
-            core.stageTracking.users.Remove(this);
+            core.stageTracking.enabled = false;
             status = PVGStatus.FINISHED;
             last_success_time = 0.0;
             if (p != null)
