@@ -19,3 +19,4 @@
 *.bundle  binary
 
 bin/* text eol=lf
+MechJeb2/copy_build.sh eol=lf
