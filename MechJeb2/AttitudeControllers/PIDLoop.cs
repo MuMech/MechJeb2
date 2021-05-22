@@ -7,8 +7,8 @@ namespace MuMech.AttitudeControllers
         public double Kd        { get; set; }
         public double Ts        { get; set; } = 0.02;
         public double N         { get; set; } = 50;
-        public double AlphaIn   { get; set; } = 1.0;
-        public double AlphaOut  { get; set; } = 1.0;
+        public double SmoothIn   { get; set; } = 1.0;
+        public double SmoothOut  { get; set; } = 1.0;
         public double MinOutput { get; set; } = double.MinValue;
         public double MaxOutput { get; set; } = double.MaxValue;
 
@@ -22,7 +22,7 @@ namespace MuMech.AttitudeControllers
         public double Update(double reference, double measured)
         {
             // lowpass filter the input
-            measured = _m1.IsFinite() ? _m1 + AlphaIn * (measured - _m1) : measured;
+            measured = _m1.IsFinite() ? _m1 + SmoothIn * (measured - _m1) : measured;
 
             double e0 = reference - measured;
 
@@ -34,6 +34,12 @@ namespace MuMech.AttitudeControllers
             double b1 = (2 * Ki * N * Ts * Ts - 8 * Kp - 8 * Kd * N) / a0;
             double b2 = (4 * Kp + 4 * Kd * N - 2 * Ki * Ts - 2 * Kp * N * Ts + Ki * N * Ts * Ts) / a0;
 
+            // if we have NaN values saved into internal state that needs to be cleared here or it won't reset
+            if (!_d1.IsFinite())
+                _d1 = 0;
+            if (!_d2.IsFinite())
+                _d2 = 0;
+            
             // transposed direct form 2
             double u0 = b0 * e0 + _d1;
             u0  = MuUtils.Clamp(u0, MinOutput, MaxOutput);
@@ -41,7 +47,7 @@ namespace MuMech.AttitudeControllers
             _d2 = b2 * e0 - a2 * u0;
 
             // low pass filter the output
-            _o1 = _o1.IsFinite() ? _o1 + AlphaOut * (u0 - _o1) : u0;
+            _o1 = _o1.IsFinite() ? _o1 + SmoothOut * (u0 - _o1) : u0;
 
             _m1 = measured;
 
