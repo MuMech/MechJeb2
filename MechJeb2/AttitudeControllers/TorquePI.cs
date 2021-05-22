@@ -4,11 +4,11 @@ namespace MuMech.AttitudeControllers
 {
     public class TorquePI
     {
-        public PIDLoop Loop { get; set; }
+        public KosPIDLoop Loop { get; set; }
 
         public TorquePI()
         {
-            Loop = new PIDLoop();
+            Loop = new KosPIDLoop();
         }
 
         public double Update(double input, double setpoint, double MomentOfInertia, double maxOutput)

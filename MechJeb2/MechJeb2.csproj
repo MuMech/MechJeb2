@@ -14,7 +14,6 @@
     <NoStdLib>true</NoStdLib>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -48,6 +47,7 @@
     <Compile Include="AttitudeControllers\HybridController.cs" />
     <Compile Include="AttitudeControllers\KosAttitudeController.cs" />
     <Compile Include="AttitudeControllers\MJAttitudeController.cs" />
+    <Compile Include="AttitudeControllers\KosPIDLoop.cs" />
     <Compile Include="AttitudeControllers\PIDLoop.cs" />
     <Compile Include="AttitudeControllers\TorquePI.cs" />
     <Compile Include="AutopilotModule.cs" />
@@ -304,11 +304,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">
-    <Exec Command='call "$(ProjectDir)copy_build.bat" "$(TargetPath)" "$(TargetDir)" "$(TargetName)" "$(ProjectDir)"' />
+    <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;" />
   </Target>
   <Target Name="AfterBuild">
-    <!-- msbuild on Mac always errors out even if this command succeeds -->
-    <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)'" ContinueOnError="true"/>
+    <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)'" />
   </Target>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
