@@ -3,6 +3,7 @@ using Xunit;
 
 namespace MuMech
 {
+    /*
     public class PontryaginTest
     {
         static double mu = 3.9860044189e+14;
@@ -16,7 +17,7 @@ namespace MuMech
         static Vector3d rT = new Vector3d(r185,0,0);
         static Vector3d vT = new Vector3d(0,Math.Cos(inc),Math.Sin(inc)) * vTm;
 
-        /* this is the initial conditions of the singleIntegrateComplex() problem */
+        // this is the initial conditions of the singleIntegrateComplex() problem 
         [Fact]
             public void centralForceThrustComplex()
             {
@@ -40,10 +41,10 @@ namespace MuMech
                 }
             }
 
-        /* this is the (normalized) kernel of a 32.74t rocket with an LR-91 in a 185x185 0 inclination orbit doing
-           a burn to change to a 1000x185 orbit with a 135 degree inclination change, for over 14,000dV burning
-           the rocket down to 282kg (ludicrously burning up half of the 589kg LR-91 along with the rest of
-           the rocket) */
+        // this is the (normalized) kernel of a 32.74t rocket with an LR-91 in a 185x185 0 inclination orbit doing
+        //   a burn to change to a 1000x185 orbit with a 135 degree inclination change, for over 14,000dV burning
+        //   the rocket down to 282kg (ludicrously burning up half of the 589kg LR-91 along with the rest of
+        //   the rocket)
         [Fact]
             public void singleIntegrateComplex()
             {
@@ -62,7 +63,7 @@ namespace MuMech
                 Assert.Equal(0, t - 0.103417032474435, 14);
             }
 
-        /* same problem as the rest, but with multiple shooting and a coast-burn -- 26 + 2 starting conditions, 26 output conditions. */
+        // same problem as the rest, but with multiple shooting and a coast-burn -- 26 + 2 starting conditions, 26 output conditions.
         [Fact]
             public void multpleIntegrateComplex()
             {
@@ -115,8 +116,8 @@ namespace MuMech
                 for(int i = 0; i < 28; i++)
                     Console.WriteLine((p.y0[i] - yfexp[i]) + " " + p.y0[i] + " " + yfexp[i]);
 
-/*                for(int i = 0; i < 28; i++)
-                    Assert.Equal(0, yf[i] - yfexp[i], 3); */
+//                for(int i = 0; i < 28; i++)
+   //                 Assert.Equal(0, yf[i] - yfexp[i], 3); 
             }
 
         [Fact]
@@ -170,4 +171,5 @@ namespace MuMech
                 Assert.Equal(1, 0);
             }
     }
+*/
 }
