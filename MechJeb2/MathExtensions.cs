@@ -136,6 +136,11 @@ namespace MuMech
             return normal * Vector3d.Dot(vector, normal);
         }
 
+        public static bool IsFinite(this Vector3d vector)
+        {
+            return vector[0].IsFinite() && vector[1].IsFinite() && vector[2].IsFinite();
+        }
+
         // +/- infinity is not a finite number (not finite)
         // NaN is also not a finite number (not a number)
         public static bool IsFinite(this double v)

@@ -89,6 +89,12 @@ namespace MuMech
             return x;
         }
 
+        //clamp to [0,1]
+        public static double Clamp01(double x)
+        {
+            return Clamp(x, 0, 1);
+        }
+
         //keeps angles in the range 0 to 360
         public static double ClampDegrees360(double angle)
         {
