@@ -1,3 +1,9 @@
+#!/usr/bin/env bash
+TARGET_PATH=$1
+TARGET_DIR=$2
+TARGET_NAME=$3
+PROJECT_DIR=$4
+
 if [ -z "${TARGET_PATH}" ] ; then
   echo 'Expected $TARGET_PATH to be defined but it is not' >&2
   exit 1
@@ -25,10 +31,24 @@ if [ -z "${PROJECT_DIR}" ] ; then
 fi
 
 if [ -z "${PDB2MDB}" ] ; then
-  echo '$PDB2MDB not found'
-else
-  echo "Running '${PDB2MDB}'"
-  "${PDB2MDB}" "${TARGET_PATH}"
+  PDB2MDB=`which pdb2mdb`
+fi
+
+# Pretty sure Unity handles Portable PDB files now?
+#if [ -z "${PDB2MDB}" ] ; then
+#  echo '$PDB2MDB not found'
+#else
+#  echo "Running '${PDB2MDB}'"
+#  "${PDB2MDB}" "${TARGET_PATH}"
+#fi
+
+if [ -z "${KSPDIR}" ] ; then
+  if [[ $(uname -s) = Linux ]]; then
+    KSPDIR="${HOME}/.local/share/Steam/SteamApps/common/Kerbal Space Program"
+  fi
+  if [[ $(uname -s) = Darwin ]]; then
+    KSPDIR="${HOME}/Library/Application Support/Steam/steamapps/common/Kerbal Space Program"
+  fi
 fi
 
 if [ -z "${KSPDIR}" ] ; then
@@ -50,3 +70,5 @@ else
   cp -r ${PROJECT_DIR}/../Localization "${KSPDIR}/GameData/MechJeb2/"
   cp -r ${PROJECT_DIR}/../Parts "${KSPDIR}/GameData/MechJeb2/"
 fi
+
+exit 0
