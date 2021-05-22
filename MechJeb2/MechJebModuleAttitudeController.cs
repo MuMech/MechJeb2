@@ -60,6 +60,7 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             timeCount = 50;
+            Controller.OnModuleEnabled();
         }
 
         public AttitudeReference attitudeReference
@@ -430,33 +431,38 @@ namespace MuMech
 
         private void SetFlightCtrlState(Vector3d act, Vector3d deltaEuler, FlightCtrlState s, float drive_limit)
         {
-            bool userCommandingPitchYaw = (Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F) ? false : true) || (Mathfx.Approx(s.yaw, s.yawTrim, 0.1F) ? false : true);
-            bool userCommandingRoll = (Mathfx.Approx(s.roll, s.rollTrim, 0.1F) ? false : true);
+            bool userCommandingPitch = !Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F);
+            bool userCommandingYaw = !Mathfx.Approx(s.yaw, s.yawTrim, 0.1F);
+            bool userCommandingRoll = !Mathfx.Approx(s.roll, s.rollTrim, 0.1F);
 
             // Disable the new SAS so it won't interfere. But enable it while in timewarp for compatibility with PersistentRotation
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRateIndex == 0)
                 part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
 
-
             if (attitudeKILLROT)
             {
-                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitchYaw || userCommandingRoll)
+                if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitch || userCommandingYaw || userCommandingRoll)
                 {
                     attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
                     lastReferencePart = vessel.GetReferenceTransformPart();
                 }
             }
-            if (userCommandingPitchYaw || userCommandingRoll)
-            {
-                Controller.Reset();
-            }
+
+            if (userCommandingPitch)
+                Controller.Reset(0);
+            
+            if (userCommandingRoll)
+                Controller.Reset(1);
+
+            if (userCommandingYaw)
+                Controller.Reset(2);
 
             if (!userCommandingRoll)
             {
                 if (!double.IsNaN(act.y)) s.roll = Mathf.Clamp((float)(act.y), -drive_limit, drive_limit);
             }
 
-            if (!userCommandingPitchYaw)
+            if (!userCommandingPitch && !userCommandingYaw)
             {
                 if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float)(act.x), -drive_limit, drive_limit);
                 if (!double.IsNaN(act.z)) s.yaw = Mathf.Clamp((float)(act.z), -drive_limit, drive_limit);

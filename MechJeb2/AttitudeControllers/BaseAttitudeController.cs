@@ -12,6 +12,10 @@
         public virtual void OnModuleDisabled()
         {
         }
+        
+        public virtual void OnModuleEnabled()
+        {
+        }
 
         public virtual void OnStart()
         {
@@ -56,6 +60,11 @@
 
         public virtual void GUI()
         {
+        }
+
+        public virtual void Reset(int i)
+        {
+            Reset();
         }
     }
 }
