@@ -32,7 +32,7 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble minFlipTime = new EditableDouble(20);
+        private readonly EditableDouble minFlipTime = new EditableDouble(60);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble rollControlRange = new EditableDouble(5);
 
@@ -42,7 +42,7 @@ namespace MuMech.AttitudeControllers
         private bool useFlipTime = true;
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private bool useStoppingTime = true;
-        
+
         private readonly PIDLoop[] _pid =
         {
             new PIDLoop(),
@@ -67,7 +67,7 @@ namespace MuMech.AttitudeControllers
 
         /* error */
         private double _errorTotal;
-        
+
         public BetterController(MechJebModuleAttitudeController controller) : base(controller)
         {
         }
@@ -76,7 +76,7 @@ namespace MuMech.AttitudeControllers
         {
             Reset();
         }
-        
+
         private const double EPS = 2.2204e-16;
 
         public override void DrivePre(FlightCtrlState s, out Vector3d act, out Vector3d deltaEuler)
@@ -131,7 +131,7 @@ namespace MuMech.AttitudeControllers
             // the error in the ship's position is the negative of the reference position in the ship frame
             _error0 = -phi;
         }
-        
+
         private void UpdatePredictionPI()
         {
             _omega0 = Vessel.angularVelocityD;
@@ -157,12 +157,11 @@ namespace MuMech.AttitudeControllers
                 if (_maxAlpha[i] == 0)
                     _maxAlpha[i] = 1;
 
-                double warpGain = PosKp / warpFactor;
-                double effLD = _maxAlpha[i] / (2 * warpGain * warpGain);
+                double effLD = _maxAlpha[i] / (2 * PosKp * PosKp);
 
                 if (Math.Abs(error) <= 2 * effLD)
                 {
-                    if (_actuation.magnitude < 0.1)
+                    if (_actuation.magnitude < 0.1 && Math.Abs(error) <= effLD/2.0)
                         _iTerm[i] += error * 0.02;
 
                     // linear ramp down of acceleration
@@ -199,7 +198,7 @@ namespace MuMech.AttitudeControllers
                 _pid[i].SmoothOut  = MuUtils.Clamp01(VelSmoothOut * warpFactor);
                 _pid[i].MinOutput = -1;
                 _pid[i].MaxOutput = 1;
-                
+
                 // need the negative from the pid due to KSP's orientation of actuation
                 _actuation[i] = -_pid[i].Update(_targetOmega[i], _omega0[i]);
 
@@ -208,7 +207,6 @@ namespace MuMech.AttitudeControllers
 
                 _targetTorque[i] = _actuation[i] / ac.torque[i];
             }
-            
             _error1 = _error0;
         }
 
@@ -262,40 +260,40 @@ namespace MuMech.AttitudeControllers
             GUILayout.Label("Velocity Kd", GUILayout.ExpandWidth(false));
             VelKd.text = GUILayout.TextField(VelKd.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Velocity Kd N", GUILayout.ExpandWidth(false));
             VelN.text = GUILayout.TextField(VelN.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Velocity SmoothIn", GUILayout.ExpandWidth(false));
             VelSmoothIn.text = GUILayout.TextField(VelSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Velocity SmoothOut", GUILayout.ExpandWidth(false));
             VelSmoothOut.text = GUILayout.TextField(VelSmoothOut.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.EndVertical();   // Velocity PID Adjustment
             GUILayout.BeginVertical(); // Position PID Adjustment
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Position Kp", GUILayout.ExpandWidth(false));
             PosKp.text = GUILayout.TextField(PosKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Position Ki", GUILayout.ExpandWidth(false));
             PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Position SmoothIn", GUILayout.ExpandWidth(false));
             PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.EndVertical(); // Position PID Adjustment
 
             GUILayout.BeginHorizontal();
@@ -337,7 +335,7 @@ namespace MuMech.AttitudeControllers
             GUILayout.Label("MaxAlpha", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(_maxAlpha), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Position Integral Term", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(_iTerm), GUILayout.ExpandWidth(false));
