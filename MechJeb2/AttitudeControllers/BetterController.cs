@@ -27,7 +27,7 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble PosKp = new EditableDouble(1);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble PosKi = new EditableDouble(0.1);
+        private readonly EditableDouble PosKi = new EditableDouble(1);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
@@ -43,6 +43,38 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private bool useStoppingTime = true;
 
+        private void ApplyZieglerNichols()
+        {
+            VelKp.val            = 18;
+            VelKi.val            = 72;
+            VelKd.val            = 1.125;
+            VelN.val             = 20;
+            VelSmoothIn.val      = 0.1;
+            VelSmoothOut.val     = 1;
+            PosSmoothIn.val      = 0.1;
+            PosKp.val            = 1;
+            PosKi.val            = 1;
+            maxStoppingTime.val  = 10.0;
+            minFlipTime.val      = 20.0;
+            rollControlRange.val = 5;
+        }
+        
+        private void ApplyNoOvershoot()
+        {
+            VelKp.val            = 10;
+            VelKi.val            = 40;
+            VelKd.val            = 1.65;
+            VelN.val             = 20;
+            VelSmoothIn.val      = 0.1;
+            VelSmoothOut.val     = 1;
+            PosSmoothIn.val      = 0.1;
+            PosKp.val            = 0.5;
+            PosKi.val            = 0.1;
+            maxStoppingTime.val  = 2;
+            minFlipTime.val      = 60;
+            rollControlRange.val = 5;
+        }
+        
         private readonly PIDLoop[] _pid =
         {
             new PIDLoop(),
@@ -247,55 +279,68 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginVertical(); // Velocity PID Adjustment
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Velocity Kp", GUILayout.ExpandWidth(false));
-            VelKp.text = GUILayout.TextField(VelKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Vel Kp", GUILayout.ExpandWidth(false));
+            VelKp.text = GUILayout.TextField(VelKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Velocity Ki", GUILayout.ExpandWidth(false));
-            VelKi.text = GUILayout.TextField(VelKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Vel Ki", GUILayout.ExpandWidth(false));
+            VelKi.text = GUILayout.TextField(VelKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Velocity Kd", GUILayout.ExpandWidth(false));
-            VelKd.text = GUILayout.TextField(VelKd.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Vel Kd", GUILayout.ExpandWidth(false));
+            VelKd.text = GUILayout.TextField(VelKd.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Velocity Kd N", GUILayout.ExpandWidth(false));
-            VelN.text = GUILayout.TextField(VelN.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Vel Kd N", GUILayout.ExpandWidth(false));
+            VelN.text = GUILayout.TextField(VelN.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Velocity SmoothIn", GUILayout.ExpandWidth(false));
-            VelSmoothIn.text = GUILayout.TextField(VelSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Vel SmoothIn", GUILayout.ExpandWidth(false));
+            VelSmoothIn.text = GUILayout.TextField(VelSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Velocity SmoothOut", GUILayout.ExpandWidth(false));
-            VelSmoothOut.text = GUILayout.TextField(VelSmoothOut.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Vel SmoothOut", GUILayout.ExpandWidth(false));
+            VelSmoothOut.text = GUILayout.TextField(VelSmoothOut.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();   // Velocity PID Adjustment
             GUILayout.BeginVertical(); // Position PID Adjustment
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Position Kp", GUILayout.ExpandWidth(false));
-            PosKp.text = GUILayout.TextField(PosKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Pos Kp", GUILayout.ExpandWidth(false));
+            PosKp.text = GUILayout.TextField(PosKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Position Ki", GUILayout.ExpandWidth(false));
-            PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Pos Ki", GUILayout.ExpandWidth(false));
+            PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Position SmoothIn", GUILayout.ExpandWidth(false));
-            PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
+            PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical(); // Position PID Adjustment
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical();
+            if (GUILayout.Button(Localizer.Format("Agressive")))
+                ApplyZieglerNichols();
+            if (GUILayout.Button(Localizer.Format("Moderate")))
+                ApplyNoOvershoot();
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label2"), GUILayout.ExpandWidth(true));//"Actuation"
             GUILayout.Label(MuUtils.PrettyPrint(_actuation), GUILayout.ExpandWidth(false));
