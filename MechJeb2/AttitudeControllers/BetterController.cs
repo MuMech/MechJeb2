@@ -10,11 +10,11 @@ namespace MuMech.AttitudeControllers
         private                 Vessel   Vessel => ac.vessel;
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKp = new EditableDouble(18);
+        private readonly EditableDouble VelKp = new EditableDouble(12);
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKi = new EditableDouble(72);
+        private readonly EditableDouble VelKi = new EditableDouble(12);
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKd = new EditableDouble(1.125);
+        private readonly EditableDouble VelKd = new EditableDouble(2);
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private readonly EditableDouble VelN = new EditableDouble(20);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -25,14 +25,14 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private readonly EditableDouble PosSmoothIn = new EditableDouble(0.1);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble PosKp = new EditableDouble(1);
+        private readonly EditableDouble PosKp = new EditableDouble(0.5);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble PosKi = new EditableDouble(1);
+        private readonly EditableDouble PosKi = new EditableDouble(0.1);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble minFlipTime = new EditableDouble(60);
+        private readonly EditableDouble minFlipTime = new EditableDouble(120);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble rollControlRange = new EditableDouble(5);
 
@@ -43,35 +43,35 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private bool useStoppingTime = true;
 
-        private void ApplyZieglerNichols()
+        private void ApplyAggressive()
         {
-            VelKp.val            = 18;
-            VelKi.val            = 72;
-            VelKd.val            = 1.125;
+            VelKp.val            = 42;
+            VelKi.val            = 840;
+            VelKd.val            = 1.36;
             VelN.val             = 20;
-            VelSmoothIn.val      = 0.1;
+            VelSmoothIn.val      = 1;
             VelSmoothOut.val     = 1;
-            PosSmoothIn.val      = 0.1;
-            PosKp.val            = 1;
+            PosSmoothIn.val      = 1;
+            PosKp.val            = 5;
             PosKi.val            = 1;
             maxStoppingTime.val  = 10.0;
             minFlipTime.val      = 20.0;
             rollControlRange.val = 5;
         }
         
-        private void ApplyNoOvershoot()
+        private void ApplyModerate()
         {
-            VelKp.val            = 10;
-            VelKi.val            = 40;
-            VelKd.val            = 1.65;
+            VelKp.val            = 12;
+            VelKi.val            = 12;
+            VelKd.val            = 2;
             VelN.val             = 20;
             VelSmoothIn.val      = 0.1;
             VelSmoothOut.val     = 1;
             PosSmoothIn.val      = 0.1;
             PosKp.val            = 0.5;
-            PosKi.val            = 0.1;
+            PosKi.val            = 0.05;
             maxStoppingTime.val  = 2;
-            minFlipTime.val      = 60;
+            minFlipTime.val      = 120;
             rollControlRange.val = 5;
         }
         
@@ -275,22 +275,26 @@ namespace MuMech.AttitudeControllers
             useControlRange = GUILayout.Toggle(useControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"), GUILayout.ExpandWidth(false));//"RollControlRange"
             rollControlRange.text = GUILayout.TextField(rollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-
-            GUILayout.BeginVertical(); // Velocity PID Adjustment
-
+            
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Kp", GUILayout.ExpandWidth(false));
             VelKp.text = GUILayout.TextField(VelKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Pos Kp", GUILayout.ExpandWidth(false));
+            PosKp.text = GUILayout.TextField(PosKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Ki", GUILayout.ExpandWidth(false));
             VelKi.text = GUILayout.TextField(VelKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Pos Ki", GUILayout.ExpandWidth(false));
+            PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Kd", GUILayout.ExpandWidth(false));
             VelKd.text = GUILayout.TextField(VelKd.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
+            PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -308,37 +312,15 @@ namespace MuMech.AttitudeControllers
             VelSmoothOut.text = GUILayout.TextField(VelSmoothOut.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
-            GUILayout.EndVertical();   // Velocity PID Adjustment
-            GUILayout.BeginVertical(); // Position PID Adjustment
-
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos Kp", GUILayout.ExpandWidth(false));
-            PosKp.text = GUILayout.TextField(PosKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos Ki", GUILayout.ExpandWidth(false));
-            PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
-            PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical(); // Position PID Adjustment
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("", GUILayout.ExpandWidth(false));
+            GUILayout.Label("Presets:", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
             if (GUILayout.Button(Localizer.Format("Agressive")))
-                ApplyZieglerNichols();
+                ApplyAggressive();
             if (GUILayout.Button(Localizer.Format("Moderate")))
-                ApplyNoOvershoot();
-            GUILayout.EndVertical();
+                ApplyModerate();
             GUILayout.EndHorizontal();
             
             GUILayout.BeginHorizontal();
