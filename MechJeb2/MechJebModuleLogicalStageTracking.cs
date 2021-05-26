@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-using KSP.UI.Screens;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -22,23 +21,25 @@ namespace MuMech
     //
     public class MechJebModuleLogicalStageTracking : ComputerModule
     {
-        public MechJebModuleLogicalStageTracking(MechJebCore core) : base(core) { }
+        public MechJebModuleLogicalStageTracking(MechJebCore core) : base(core)
+        {
+        }
 
-        public List<Stage> stages = new List<Stage>();
+        public readonly List<Stage> Stages = new List<Stage>();
 
         // this is used to track how many significant stages we've dropped
-        public int stageCount = 0;
-
-        double lastTime = 0;
+        private int    _stageCount;
+        private double _lastTime;
+        private bool   _stagingEvent;
 
         public override void OnStart(PartModule.StartState state)
         {
-            GameEvents.onStageActivate.Add(handleStageEvent);
+            GameEvents.onStageActivate.Add(HandleStageEvent);
         }
 
         public override void OnDestroy()
         {
-            GameEvents.onStageActivate.Remove(handleStageEvent);
+            GameEvents.onStageActivate.Remove(HandleStageEvent);
         }
 
         public override void OnModuleEnabled()
@@ -46,134 +47,153 @@ namespace MuMech
             Reset();
         }
 
-        private void handleStageEvent(int data)
+        private void HandleStageEvent(int data)
         {
-            if ( !enabled || stages.Count == 0 )
-                return;
-
-            while ( stages[0].ksp_stage > ( vessel.currentStage - 1 ) )
-            {
-                // we did drop a relevant stage
-                stageCount += 1;
-                stages[0].staged = true;
-                stages.RemoveAt(0);
-                Debug.Log("[MechJebModuleLogicalStageTracking] dropping a stage");
-            }
+            _stagingEvent = true;
         }
 
         public void Reset()
         {
-            stages.Clear();
+            Stages.Clear();
+            _stagingEvent = false;
         }
 
         public void Update()
         {
-            if ( lastTime == Planetarium.GetUniversalTime() )
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (_lastTime == Planetarium.GetUniversalTime())
                 return;
 
             core.stageStats.RequestUpdate(this, true);
 
             int j = 0;
 
-            for ( int i = core.stageStats.vacStats.Length - 1; i >= 0; i-- )
+            for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
             {
-                var stats = core.stageStats.vacStats[i];
+                FuelFlowSimulation.Stats stats = core.stageStats.vacStats[i];
 
                 // FIXME: either tweakability or identify ullage + sep motors correctly
-                if ( stats.deltaV < 20 )
-                {
-                    if ( !(j == 0 && stages.Count > 0 && stages[0].ksp_stage == i) ) // check if we're just burning down the current stage
+                if (stats.deltaV < 20)
+                    if (!(j == 0 && Stages.Count > 0 && Stages[0].KspStage == i)) // check if we're just burning down the current stage
                         continue;
+
+                if (_stagingEvent)
+                {
+                    if (i > Stages[1].KspStage)
+                    {
+                        // we staged, but we have a non-zero dV stage in between stage 0 and 1 that appeared,
+                        // which can happen during e.g. hotstaging.  we assume we didn't actually drop a stage yet.
+                        Stages[0].KspStage = vessel.currentStage;
+                        Debug.Log("[MechJebModuleLogicalStageTracking] moving bottom stage up (did we hotstage?)");
+                    }
+                    else
+                    {
+                        // we staged and the next non-zero stage is what we expect.  we assume we jettisoned a stage.
+                        _stageCount       += 1;
+                        Stages[0].Staged =  true;
+                        Stages.RemoveAt(0);
+                        Debug.Log("[MechJebModuleLogicalStageTracking] dropping a stage");
+                    }
+
+                    _stagingEvent = false;
                 }
 
-                if (j >= stages.Count)
+                if (j >= Stages.Count)
                 {
                     Debug.Log("[MechJebModuleLogicalStageTracking] adding a new stage: " + j);
-                    stages.Add(new Stage(this));
+                    Stages.Add(new Stage(this));
                 }
 
-                stages[j].ksp_stage = i;
-                stages[j].rocket_stage = j + stageCount;
-                stages[j].Sync();
+                Stages[j].KspStage    = i;
+                Stages[j].RocketStage = j + _stageCount;
+                Stages[j].Sync();
 
                 j++;
             }
 
-            while( stages.Count > core.stageStats.vacStats.Length )
+            while (Stages.Count > core.stageStats.vacStats.Length)
             {
                 Debug.Log("[MechJebModuleLogicalStageTracking] upper stage disappeared (user reconfig most likely)");
-                stages.RemoveAt(stages.Count-1);
+                Stages.RemoveAt(Stages.Count - 1);
             }
 
-            lastTime = Planetarium.GetUniversalTime();
+            _lastTime = Planetarium.GetUniversalTime();
         }
 
         public class Stage
         {
-            private MechJebModuleLogicalStageTracking parent;
+            private readonly MechJebModuleLogicalStageTracking _parent;
 
             // true if the this was jettisoned normally
-            public bool staged = false;
+            public bool Staged;
 
             // ksp stage from StageStats
-            public int ksp_stage;
+            public int KspStage;
+
             // ∆v of the stage in m/s
-            public double deltaV;
+            public double DeltaV;
+
             // burntime left in the stage in secs
-            public double deltaTime;
+            public double DeltaTime;
+
             // effective isp of the stage (this is derived from the total mass loss and the total ∆v)
-            public double isp;
+            public double Isp;
+
             // effective exhaust velocity of the stage
-            public double v_e { get { return isp * 9.80665; } }
+            public double Ve => Isp * 9.80665;
+
             // starting thrust of the stage
-            public double startThrust;
+            public double StartThrust;
+
             // effective thrust (the "average thrust" derived from the total mdot and the v_e)
-            public double effectiveThrust { get { return v_e * ( startMass - endMass ) / deltaTime; } }
+            public double EffectiveThrust => Ve * (StartMass - _endMass) / DeltaTime;
+
             // starting mass of the stage
-            public double startMass;
+            public double StartMass;
+
             // ending mass of the stage
-            public double endMass;
+            private double _endMass;
+
             // starting acceleration of the stage
-            public double a0 { get { return startThrust / startMass; } }
+            private double A0 => StartThrust / StartMass;
+
             // ideal time to consume the rocket completely
-            public double tau { get { return v_e / a0; } }
+            public double Tau => Ve / A0;
 
             // the stage of the rocket (0-indexed, and should track across staging events)
-            public int rocket_stage = 0;
+            public int RocketStage;
 
             // the last parts list
-            public List<Part> parts = new List<Part>();
+            private readonly List<Part> _parts = new List<Part>();
 
-            private FuelFlowSimulation.Stats vacStats;
+            private FuelFlowSimulation.Stats _vacStats;
 
             public void Sync()
             {
-                if (ksp_stage > parent.core.stageStats.vacStats.Length - 1)
+                if (KspStage > _parent.core.stageStats.vacStats.Length - 1)
                     return;
 
-                vacStats = parent.core.stageStats.vacStats[ksp_stage];
-                deltaV = vacStats.deltaV;
-                deltaTime = vacStats.deltaTime;
-                isp = vacStats.isp;
-                startThrust = vacStats.startThrust * 1000;
-                startMass = vacStats.startMass * 1000;
-                endMass = vacStats.endMass * 1000;
+                _vacStats   = _parent.core.stageStats.vacStats[KspStage];
+                DeltaV      = _vacStats.deltaV;
+                DeltaTime   = _vacStats.deltaTime;
+                Isp         = _vacStats.isp;
+                StartThrust = _vacStats.startThrust * 1000;
+                StartMass   = _vacStats.startMass * 1000;
+                _endMass    = _vacStats.endMass * 1000;
 
-                parts.Clear();
-                for(int i = 0; i < vacStats.parts.Count; i++)
-                {
-                    parts.Add(vacStats.parts[i]);
-                }
+                _parts.Clear();
+                for (int i = 0; i < _vacStats.parts.Count; i++) _parts.Add(_vacStats.parts[i]);
             }
 
             public override string ToString()
             {
-                return "ksp_stage: "+ ksp_stage + " rocket_stage: " + rocket_stage + " isp:" + isp + " thrust:" + startThrust + " m0: " + startMass + " maxt:" + deltaTime;
+                return "ksp_stage: " + KspStage + " rocket_stage: " + RocketStage + " isp:" + Isp + " thrust:" + StartThrust + " m0: " + StartMass +
+                       " maxt:" + DeltaTime;
             }
 
             public Stage(MechJebModuleLogicalStageTracking parent)
             {
-                this.parent = parent;
+                _parent = parent;
             }
         }
     }

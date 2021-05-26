@@ -430,8 +430,8 @@ namespace MuMech {
             y0 = new double[arcIndex(arcs, arcs.Count)];
 
             // update initial position and guess for first arc
-            double ve = g0 * stages[0].isp;
-            tgo = ve * stages[0].startMass / stages[0].startThrust * ( 1 - Math.Exp(-dV/ve) );
+            double ve = g0 * stages[0].Isp;
+            tgo = ve * stages[0].StartMass / stages[0].StartThrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
 
             // initialize overall burn time
