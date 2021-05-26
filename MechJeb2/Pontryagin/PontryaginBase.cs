@@ -40,7 +40,7 @@ namespace MuMech {
 
             public bool complete_burn = false;
             public bool _done = false;
-            public bool done { get { return (stage != null && stage.staged) || _done; } set { _done = value; } }
+            public bool done { get { return (stage != null && stage.Staged) || _done; } set { _done = value; } }
             public bool coast = false;
             public bool coast_after_jettison = false;
             public bool use_fixed_time = false; // confusingly, this is fixed end-time for terminal coasts to rendezvous
@@ -61,14 +61,14 @@ namespace MuMech {
             {
                 if (stage != null)
                 {
-                    _isp = stage.isp;
-                    _thrust = stage.startThrust;
-                    _m0 = stage.startMass;
-                    _avail_dV = stage.deltaV;
-                    _max_bt = stage.deltaTime;
-                    _c = stage.v_e / p.t_scale;
-                    _ksp_stage = stage.ksp_stage;
-                    _rocket_stage = stage.rocket_stage;
+                    _isp = stage.Isp;
+                    _thrust = stage.StartThrust;
+                    _m0 = stage.StartMass;
+                    _avail_dV = stage.DeltaV;
+                    _max_bt = stage.DeltaTime;
+                    _c = stage.Ve / p.t_scale;
+                    _ksp_stage = stage.KspStage;
+                    _rocket_stage = stage.RocketStage;
                 }
                 else
                 {
@@ -439,7 +439,7 @@ namespace MuMech {
         public String last_failure_cause = null;
         public double last_success_time = 0;
 
-        protected List<MechJebModuleLogicalStageTracking.Stage> stages { get { return core.stageTracking.stages; } }
+        protected List<MechJebModuleLogicalStageTracking.Stage> stages { get { return core.stageTracking.Stages; } }
         public double mu;
         public BCType bctype;
         public Action<double[], double[], bool> bcfun;
