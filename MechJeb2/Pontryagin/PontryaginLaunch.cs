@@ -478,7 +478,7 @@ namespace MuMech {
             {
                 if (!arcs[i].coast)
                 {
-                    tot_bt_bar += arcs[i].max_bt_bar;
+                    tot_bt_bar += arcs[i].MaxBtBar;
                 }
             }
 

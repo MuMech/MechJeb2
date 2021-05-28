@@ -79,20 +79,19 @@ namespace MuMech
 
                 if (_stagingEvent)
                 {
-                    if (i > Stages[1].KspStage)
-                    {
-                        // we staged, but we have a non-zero dV stage in between stage 0 and 1 that appeared,
-                        // which can happen during e.g. hotstaging.  we assume we didn't actually drop a stage yet.
-                        Stages[0].KspStage = vessel.currentStage;
-                        Debug.Log("[MechJebModuleLogicalStageTracking] moving bottom stage up (did we hotstage?)");
-                    }
-                    else
+                    if (i <= Stages[1].KspStage)
                     {
                         // we staged and the next non-zero stage is what we expect.  we assume we jettisoned a stage.
-                        _stageCount       += 1;
+                        _stageCount      += 1;
                         Stages[0].Staged =  true;
                         Stages.RemoveAt(0);
                         Debug.Log("[MechJebModuleLogicalStageTracking] dropping a stage");
+                    }
+                    else
+                    {
+                        // we staged, but we have a non-zero dV stage in between stage 0 and 1 that appeared,
+                        // which can happen during e.g. hotstaging.  we assume we didn't actually drop a stage yet.
+                        Debug.Log("[MechJebModuleLogicalStageTracking] staged but did not drop a stage (did we hotstage?)");
                     }
 
                     _stagingEvent = false;

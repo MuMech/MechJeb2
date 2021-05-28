@@ -19,23 +19,19 @@ namespace MuMech {
             // values copied from the stage (important to copy them since the stage values will change
             // in the main thread).
 
-            double _isp;
-            public double isp { get { return _isp; } }
-            double _thrust;
-            public double thrust { get { return _thrust; } }
-            double _m0;
-            public double m0 { get { return _m0; } }
-            double _avail_dV;
-            public double avail_dV { get { return _avail_dV; } }
-            double _max_bt;
-            public double max_bt { get { return _max_bt; } }
-            double _c;
-            public double c { get { return _c; } }
-            public double max_bt_bar { get { return max_bt / p.t_scale; } }
-            int _ksp_stage;
-            public int ksp_stage { get { return _ksp_stage; } }
-            int _rocket_stage;
-            public int rocket_stage { get { return _rocket_stage; } }
+            public double Isp     { get; private set; }
+            public double Thrust  { get; private set; }
+            public double M0      { get; private set; }
+            public double AvailDV { get; private set; }
+            public double MaxBt   { get; private set; }
+
+            public double c { get; private set; }
+
+            public double MaxBtBar => MaxBt / p.t_scale;
+            int           _ksp_stage;
+            public int    ksp_stage => _ksp_stage;
+            int           _rocket_stage;
+            public int    rocket_stage => _rocket_stage;
             public double _synch_time;
 
             public bool complete_burn = false;
@@ -53,7 +49,7 @@ namespace MuMech {
 
             public override string ToString()
             {
-                return "ksp_stage:"+ ksp_stage + " rocket_stage:" + rocket_stage + " isp:" + isp + " thrust:" + thrust + " c:" + c + " m0:" + m0 + " maxt:" + max_bt + " maxtbar:" + max_bt_bar + " avail ∆v:" + avail_dV + " used ∆v:" + dV + ( done ? " (done)" : "" ) + ( infinite ? " (infinite) " : "" );
+                return "ksp_stage:"+ ksp_stage + " rocket_stage:" + rocket_stage + " isp:" + Isp + " thrust:" + Thrust + " c:" + c + " m0:" + M0 + " maxt:" + MaxBt + " maxtbar:" + MaxBtBar + " avail ∆v:" + AvailDV + " used ∆v:" + dV + ( done ? " (done)" : "" ) + ( infinite ? " (infinite) " : "" );
             }
 
             // create a local copy of the information for the optimizer
@@ -61,23 +57,23 @@ namespace MuMech {
             {
                 if (stage != null)
                 {
-                    _isp = stage.Isp;
-                    _thrust = stage.StartThrust;
-                    _m0 = stage.StartMass;
-                    _avail_dV = stage.DeltaV;
-                    _max_bt = stage.DeltaTime;
-                    _c = stage.Ve / p.t_scale;
+                    Isp = stage.Isp;
+                    Thrust = stage.StartThrust;
+                    M0 = stage.StartMass;
+                    AvailDV = stage.DeltaV;
+                    MaxBt = stage.DeltaTime;
+                    c = stage.Ve / p.t_scale;
                     _ksp_stage = stage.KspStage;
                     _rocket_stage = stage.RocketStage;
                 }
                 else
                 {
-                    _isp = 0;
-                    _thrust = 0;
-                    _m0 = -1;
-                    _avail_dV = 0;
-                    _max_bt = 0;
-                    _c = 0;
+                    Isp = 0;
+                    Thrust = 0;
+                    M0 = -1;
+                    AvailDV = 0;
+                    MaxBt = 0;
+                    c = 0;
                     _ksp_stage = -1;
                     _rocket_stage = -1;
                 }
@@ -171,7 +167,7 @@ namespace MuMech {
                 }
                 else
                 {
-                    return String.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n), arc.avail_dV - dV(arc._synch_time, n));
+                    return String.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n), arc.AvailDV - dV(arc._synch_time, n));
                 }
             }
 
@@ -331,7 +327,7 @@ namespace MuMech {
             {
                 for(int k = arcs.Count-1; k >= 0; k--)
                 {
-                    if ( arcs[k].thrust > 0 )
+                    if ( arcs[k].Thrust > 0 )
                         return arcs[k];
                 }
                 return arcs[0];
@@ -438,7 +434,7 @@ namespace MuMech {
         public double last_znorm = 0;
         public String last_failure_cause = null;
         public double last_success_time = 0;
-
+        
         protected List<MechJebModuleLogicalStageTracking.Stage> stages { get { return core.stageTracking.Stages; } }
         public double mu;
         public BCType bctype;
@@ -455,7 +451,7 @@ namespace MuMech {
         public PontryaginBase(MechJebCore core, double mu, Vector3d r0, Vector3d v0, Vector3d pv0, Vector3d pr0, double dV)
         {
             this.core = core;
-            QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
+            QuaternionD rot = QuaternionD.Inverse(Planetarium.fetch.rotation);
             r0 = rot * r0;
             v0 = rot * v0;
             pv0 = rot * pv0;
@@ -486,7 +482,7 @@ namespace MuMech {
             if (thread != null && thread.IsAlive)
                 return;
 
-            QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
+            QuaternionD rot = QuaternionD.Inverse(Planetarium.fetch.rotation);
             r0 = rot * r0;
             v0 = rot * v0;
             this.r0 = r0;
@@ -508,7 +504,7 @@ namespace MuMech {
         public void centralForceThrust(Span<double> y, double x, Span<double> dy, int n, object o)
         {
             Arc arc = (Arc)o;
-            double At = arc.thrust / ( y[12] * g_bar );
+            double At = arc.Thrust / ( y[12] * g_bar );
             if (arc.infinite) At = At * 2;
             double r2 = y[0]*y[0] + y[1]*y[1] + y[2]*y[2];
             double r = Math.Sqrt(r2);
@@ -534,7 +530,7 @@ namespace MuMech {
             dy[10] = y[7] / r3 - 3 / r5 * rdotpv * y[1];
             dy[11] = y[8] / r3 - 3 / r5 * rdotpv * y[2];
             /* m = mdot */
-            dy[12] = ( arc.thrust == 0 || arc.infinite ) ? 0 : - arc.thrust / arc.c;
+            dy[12] = ( arc.Thrust == 0 || arc.infinite ) ? 0 : - arc.Thrust / arc.c;
             /* accumulated ∆v of the arc */
             dy[13] = At;
         }
@@ -659,7 +655,7 @@ namespace MuMech {
             int yf_index = 13 * n;
             int y0_index = arcIndex(arcs, n+1);
             Array.Copy(yf, yf_index, y0, y0_index, 13);
-            double m0 = arcs[n+1].m0;
+            double m0 = arcs[n+1].M0;
             if (m0 > 0)
                 y0[y0_index+12] = m0;
         }
@@ -703,10 +699,10 @@ namespace MuMech {
                 }
                 else
                 {
-                    if ( (tgo <= arcs[i].max_bt_bar) || (i == arcs.Count-1) ) // FIXME?: we're still allowing overburning here
+                    if ( (tgo <= arcs[i].MaxBtBar) || (i == arcs.Count-1) ) // FIXME?: we're still allowing overburning here
                     {
                         // overburning is handled as an "exception" that the caller needs to check
-                        if (tgo > arcs[i].max_bt_bar && i == arcs.Count - 1)
+                        if (tgo > arcs[i].MaxBtBar && i == arcs.Count - 1)
                             overburning = true;
 
                         if (yf != null) {
@@ -725,15 +721,15 @@ namespace MuMech {
                     {
                         if (yf != null) {
                             // normal integration with no midpoints
-                            singleIntegrate(y0, yf, i, ref t, arcs[i].max_bt_bar, arcs, ref dV);
+                            singleIntegrate(y0, yf, i, ref t, arcs[i].MaxBtBar, arcs, ref dV);
                             if (initialize && i < (arcs.Count - 1))
                                 copy_yf_to_y0(y0, yf, i, arcs);
                         } else {
                             // for generating the interpolated chebyshev solution
-                            singleIntegrate(y0, sol, i, ref t, arcs[i].max_bt_bar, arcs, count, ref dV);
+                            singleIntegrate(y0, sol, i, ref t, arcs[i].MaxBtBar, arcs, count, ref dV);
                         }
                         arcs[i].complete_burn = true;
-                        tgo -= arcs[i].max_bt_bar;
+                        tgo -= arcs[i].MaxBtBar;
                     }
                 }
             }
@@ -825,7 +821,7 @@ namespace MuMech {
             z[3] = y0[arcIndex(arcs,0)+3] - v0_bar[0];
             z[4] = y0[arcIndex(arcs,0)+4] - v0_bar[1];
             z[5] = y0[arcIndex(arcs,0)+5] - v0_bar[2];
-            z[6] = y0[arcIndex(arcs,0)+12] - arcs[0].m0;
+            z[6] = y0[arcIndex(arcs,0)+12] - arcs[0].M0;
 
             /* terminal constraints */
             double[] yT = new double[13];
@@ -850,7 +846,7 @@ namespace MuMech {
                 {
                     if ( j == 12 )
                     {
-                        if (arcs[i].m0 <= 0) // negative mass => continuity rather than mass jettison
+                        if (arcs[i].M0 <= 0) // negative mass => continuity rather than mass jettison
                         {
                             /* continuity */
                             z[j+13*i] = y0[j+arcIndex(arcs,i)] - yf[j+13*(i-1)];
@@ -858,7 +854,7 @@ namespace MuMech {
                         else
                         {
                             /* mass jettison */
-                            z[j+13*i] = y0[j+arcIndex(arcs,i)] - arcs[i].m0;
+                            z[j+13*i] = y0[j+arcIndex(arcs,i)] - arcs[i].M0;
                         }
                     }
                     else
@@ -934,7 +930,7 @@ namespace MuMech {
                 }
                 // sum up burntime of burn arcs
                 if ( !arcs[i].coast )
-                    total_bt_bar += arcs[i].max_bt_bar;
+                    total_bt_bar += arcs[i].MaxBtBar;
             }
 
             double znorm = 0.0;
@@ -1067,9 +1063,9 @@ namespace MuMech {
             for(int i = 0; i < arcs.Count; i++)
             {
                 arcindex = arcIndex(arcs,i);
-                if (arcs[i].m0 > 0)  // don't update guess if we're not staging (optimizer has to find the terminal mass of prior stage)
+                if (arcs[i].M0 > 0)  // don't update guess if we're not staging (optimizer has to find the terminal mass of prior stage)
                 {
-                    y0[arcindex+12] = arcs[i].m0;  // update all stages for the m0 in stage stats (boiloff may update upper stages)
+                    y0[arcindex+12] = arcs[i].M0;  // update all stages for the m0 in stage stats (boiloff may update upper stages)
                 }
             }
 
