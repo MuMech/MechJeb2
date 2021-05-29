@@ -17,9 +17,9 @@ namespace MuMech
 
         //adjustable parameters:
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble autostagePreDelay = 0.5;
+        public EditableDouble autostagePreDelay = 0.0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble autostagePostDelay = 1.0;
+        public EditableDouble autostagePostDelay = 0.5;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableInt autostageLimit = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
