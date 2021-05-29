@@ -30,8 +30,8 @@ namespace MuMech
         // this is a public setting to control autowarping
         public bool autowarp = false;
 
-        public PontryaginBase.Solution solution { get { return ( p != null ) ? p.solution : null; } }
-        public List<PontryaginBase.Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
+        public Solution solution { get { return ( p != null ) ? p.solution : null; } }
+        public List<Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
 
         public int successful_converges { get { return ( p != null ) ? p.successful_converges : 0; } }
         public int max_lm_iteration_count { get { return ( p != null ) ? p.max_lm_iteration_count : 0; } }
@@ -104,6 +104,9 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            // FIXME: pretty sure we can make this module dependent upon the stage tracking module running first?  dependency management sucks.
+            core.stageTracking.Update();
+            
             update_pitch_and_heading();
 
             if (VesselState.isLoadedPrincipia )
@@ -183,8 +186,6 @@ namespace MuMech
             }
 
             handle_throttle();
-
-            core.stageTracking.Update();
 
             converge();
 
@@ -593,7 +594,7 @@ namespace MuMech
         // just go off of whatever the solution says for the current time.
         private bool actuallyCoasting()
         {
-            PontryaginBase.Arc current_arc = p.solution.arc(vesselState.time);
+            Arc current_arc = p.solution.arc(vesselState.time);
 
             if ( last_burning_stage_complete && last_burning_stage <= vessel.currentStage )
                 return false;
@@ -614,7 +615,7 @@ namespace MuMech
                 return;
             }
 
-            PontryaginBase.Arc current_arc = p.solution.arc(vesselState.time);
+            Arc current_arc = p.solution.arc(vesselState.time);
 
             if ( current_arc.Thrust != 0 )
             {

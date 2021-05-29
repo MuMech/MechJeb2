@@ -412,7 +412,7 @@ namespace MuMech {
             }
         }
 
-        public override void Bootstrap(double t0)
+        protected override void Bootstrap(double t0)
         {
             int stageCount = numStages > 0 ? numStages : stages.Count;
 
