@@ -96,7 +96,7 @@ namespace MuMech {
             }
         }
 
-        public override void Bootstrap(double t0)
+        protected override void Bootstrap(double t0)
         {
             // set the final time guess
             Tf = t0 + tgo * 3.0 / 2.0;

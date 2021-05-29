@@ -30,8 +30,8 @@ namespace MuMech
         // this is a public setting to control autowarping
         public bool autowarp = false;
 
-        public PontryaginBase.Solution solution { get { return ( p != null ) ? p.solution : null; } }
-        public List<PontryaginBase.Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
+        public Solution solution { get { return ( p != null ) ? p.solution : null; } }
+        public List<Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
 
         public int successful_converges { get { return ( p != null ) ? p.successful_converges : 0; } }
         public int max_lm_iteration_count { get { return ( p != null ) ? p.max_lm_iteration_count : 0; } }
@@ -104,6 +104,9 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            // FIXME: pretty sure we can make this module dependent upon the stage tracking module running first?  dependency management sucks.
+            core.stageTracking.Update();
+            
             update_pitch_and_heading();
 
             if (VesselState.isLoadedPrincipia )
@@ -184,8 +187,6 @@ namespace MuMech
 
             handle_throttle();
 
-            core.stageTracking.Update();
-
             converge();
 
         }
@@ -226,14 +227,7 @@ namespace MuMech
             if ( status == PVGStatus.ENABLED )
                 return;
 
-            bool doupdate = false;
-
-            if (rT != old_rT || vT != old_vT || gamma != old_gamma)
-                doupdate = true;
-
-            // if we are tracking a target inc, don't reset
-            if (inc != old_inc && !targetInc)
-                doupdate = true;
+            bool doupdate = rT != old_rT || vT != old_vT || gamma != old_gamma || (inc != old_inc && !targetInc);
 
             if (p != null && p.bctype != BCType.FLIGHTANGLE4)
                 doupdate = true;
@@ -250,8 +244,8 @@ namespace MuMech
                 p = solver;
             }
 
-            old_rT   = rT;
-            old_vT   = vT;
+            old_rT    = rT;
+            old_vT    = vT;
             old_inc   = inc;
             old_gamma = gamma;
         }
@@ -262,18 +256,8 @@ namespace MuMech
             if ( status == PVGStatus.ENABLED )
                 return;
 
-            bool doupdate = false;
-
-            if (rT != old_rT || vT != old_vT || gamma != old_gamma)
-                doupdate = true;
-
-            // if we are tracking a target LAN, don't reset
-            if (LAN != old_LAN && !targetLAN)
-                doupdate = true;
-
-            // if we are tracking a target inc, don't reset
-            if (inc != old_inc && !targetInc)
-                doupdate = true;
+            bool doupdate = rT != old_rT || vT != old_vT || gamma != old_gamma || (LAN != old_LAN && !targetLAN)
+                            || ( inc != old_inc && !targetInc);
 
             if (p != null && p.bctype != BCType.FLIGHTANGLE5)
                 doupdate = true;
@@ -290,8 +274,8 @@ namespace MuMech
                 p = solver;
             }
 
-            old_rT   = rT;
-            old_vT   = vT;
+            old_rT    = rT;
+            old_vT    = vT;
             old_inc   = inc;
             old_gamma = gamma;
             old_LAN   = LAN;
@@ -610,11 +594,11 @@ namespace MuMech
         // just go off of whatever the solution says for the current time.
         private bool actuallyCoasting()
         {
-            PontryaginBase.Arc current_arc = p.solution.arc(vesselState.time);
+            Arc current_arc = p.solution.arc(vesselState.time);
 
             if ( last_burning_stage_complete && last_burning_stage <= vessel.currentStage )
                 return false;
-            return current_arc.thrust == 0;
+            return current_arc.Thrust == 0;
         }
 
         private void handle_throttle()
@@ -631,9 +615,9 @@ namespace MuMech
                 return;
             }
 
-            PontryaginBase.Arc current_arc = p.solution.arc(vesselState.time);
+            Arc current_arc = p.solution.arc(vesselState.time);
 
-            if ( current_arc.thrust != 0 )
+            if ( current_arc.Thrust != 0 )
             {
                 last_burning_stage = current_arc.ksp_stage;
                 last_burning_stage_complete = current_arc.complete_burn;

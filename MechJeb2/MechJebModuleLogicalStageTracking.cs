@@ -34,12 +34,12 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            GameEvents.onStageActivate.Add(HandleStageEvent);
+            GameEvents.onStageSeparation.Add(HandleStageEvent);
         }
 
         public override void OnDestroy()
         {
-            GameEvents.onStageActivate.Remove(HandleStageEvent);
+            GameEvents.onStageSeparation.Remove(HandleStageEvent);
         }
 
         public override void OnModuleEnabled()
@@ -47,7 +47,7 @@ namespace MuMech
             Reset();
         }
 
-        private void HandleStageEvent(int data)
+        private void HandleStageEvent(EventReport eventReport)
         {
             _stagingEvent = true;
         }
@@ -55,8 +55,11 @@ namespace MuMech
         public void Reset()
         {
             Stages.Clear();
-            _stagingEvent = false;
+            _lastNonZeroStages = -1;
+            _stagingEvent     = false;
         }
+
+        private int _lastNonZeroStages = -1;
 
         public void Update()
         {
@@ -66,37 +69,44 @@ namespace MuMech
 
             core.stageStats.RequestUpdate(this, true);
 
+            /*
+             * Handle staging events: if we just staged and have one less nonzero-stage then remove a stage
+             */
+            
+            int currentNonZeroStages = 0;
+
+            for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
+            {
+                FuelFlowSimulation.Stats stats = core.stageStats.vacStats[i];
+                if (stats.deltaV <= 0)
+                    continue;
+
+                currentNonZeroStages++;
+            }
+
+            if (_stagingEvent && _lastNonZeroStages > 0)
+            {
+                if (currentNonZeroStages < _lastNonZeroStages)
+                {
+                    _stageCount      += 1;
+                    Stages[0].Staged =  true;
+                    Stages.RemoveAt(0);
+                    Debug.Log("[MechJebModuleLogicalStageTracking] dropping a stage");
+                }
+            }
+
+            /*
+             * Deal with resynchronization and with user reconfiguration.
+             */
+            
             int j = 0;
 
             for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
             {
                 FuelFlowSimulation.Stats stats = core.stageStats.vacStats[i];
 
-                // FIXME: either tweakability or identify ullage + sep motors correctly
-                if (stats.deltaV < 20)
-                    if (!(j == 0 && Stages.Count > 0 && Stages[0].KspStage == i)) // check if we're just burning down the current stage
-                        continue;
-
-                if (_stagingEvent)
-                {
-                    if (i > Stages[1].KspStage)
-                    {
-                        // we staged, but we have a non-zero dV stage in between stage 0 and 1 that appeared,
-                        // which can happen during e.g. hotstaging.  we assume we didn't actually drop a stage yet.
-                        Stages[0].KspStage = vessel.currentStage;
-                        Debug.Log("[MechJebModuleLogicalStageTracking] moving bottom stage up (did we hotstage?)");
-                    }
-                    else
-                    {
-                        // we staged and the next non-zero stage is what we expect.  we assume we jettisoned a stage.
-                        _stageCount       += 1;
-                        Stages[0].Staged =  true;
-                        Stages.RemoveAt(0);
-                        Debug.Log("[MechJebModuleLogicalStageTracking] dropping a stage");
-                    }
-
-                    _stagingEvent = false;
-                }
+                if (stats.deltaV <= 0)
+                    continue;
 
                 if (j >= Stages.Count)
                 {
@@ -117,7 +127,8 @@ namespace MuMech
                 Stages.RemoveAt(Stages.Count - 1);
             }
 
-            _lastTime = Planetarium.GetUniversalTime();
+            _lastTime          = Planetarium.GetUniversalTime();
+            _lastNonZeroStages = currentNonZeroStages;
         }
 
         public class Stage

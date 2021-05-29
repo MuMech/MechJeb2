@@ -412,7 +412,7 @@ namespace MuMech {
             }
         }
 
-        public override void Bootstrap(double t0)
+        protected override void Bootstrap(double t0)
         {
             int stageCount = numStages > 0 ? numStages : stages.Count;
 
@@ -478,7 +478,7 @@ namespace MuMech {
             {
                 if (!arcs[i].coast)
                 {
-                    tot_bt_bar += arcs[i].max_bt_bar;
+                    tot_bt_bar += arcs[i].MaxBtBar;
                 }
             }
 

@@ -130,7 +130,7 @@ namespace MuMech
                 double heading = Math.Asin( Math.Cos(inc * UtilMath.Deg2Rad) / Math.Cos(0) );  // clockwise from north
                 Console.WriteLine("heading = " + heading);
 
-                p.AddArc(type: ArcType.BURN, r0: r0, v0: v0, pv0: new Vector3d(0,Math.Cos(heading),Math.Sin(heading)), pr0: Vector3d.zero, m0: 149600 + 3580, dt0: 1, isp: 297, thrust: 2 * 1096.8 * 1000, max_bt: 156);
+                p.AddArc(type: ArcType.BURN, r0: r0, v0: v0, pv0: new Vector3d(0,Math.Cos(heading),Math.Sin(heading)), pr0: Vector3d.zero, m0: 149600 + 3580, dt0: 1, isp: 297, thrust: 2 * 1096.8 * 1000, MaxBt: 156);
                 p.AddArc(type: ArcType.BURN, r0: r0, v0: v0, pv0: new Vector3d(0,Math.Cos(heading),Math.Sin(heading)), pr0: Vector3d.zero, m0: 28400 + 3580, dt0: 0, isp: 316, thrust: 445 * 1000);
                 Console.WriteLine(p.arcs[0].pv0);
                 //p.terminal5constraint(new Vector3d(r185, 0, 0), new Vector3d(0, 0, v185));
