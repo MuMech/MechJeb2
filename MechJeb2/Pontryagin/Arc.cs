@@ -1,5 +1,22 @@
+using System.Collections.Generic;
+using System.Text;
+
 namespace MuMech
 {
+    public class ArcList : List<Arc>
+    {
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            foreach (Arc arc in this)
+            {
+                sb.AppendLine(arc.ToString());
+            }
+
+            return sb.ToString();
+        }
+    }
+    
     public class Arc
     {
         private readonly PontryaginBase                          p;
@@ -56,7 +73,7 @@ namespace MuMech
             if (stage != null)
             {
                 Isp          = stage.Isp;
-                Thrust       = stage.StartThrust;
+                Thrust       = stage.EffectiveThrust; // use the effective thrust to deal with ullage motors
                 M0           = stage.StartMass;
                 AvailDV      = stage.DeltaV;
                 MaxBt        = stage.DeltaTime;

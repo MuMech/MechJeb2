@@ -60,6 +60,8 @@
     <Compile Include="FlyingSim\SimulatedPart.cs" />
     <Compile Include="FlyingSim\SimulatedVessel.cs" />
     <Compile Include="FuelFlowSimulation.cs" />
+    <Compile Include="FuelNode.cs" />
+    <Compile Include="FuelStats.cs" />
     <Compile Include="GLUtils.cs" />
     <Compile Include="GoodingSolver.cs" />
     <Compile Include="GuiUtils.cs" />
