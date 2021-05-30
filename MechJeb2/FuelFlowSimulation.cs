@@ -163,10 +163,10 @@ namespace MuMech
 
             for (int i = 0; i < _nodes.Count; i++) _nodes[i].SetConsumptionRates(throttle, staticPressure, atmDensity, machNumber);
 
-            fuelStats.StartMass   = VesselMass(_simStage);
+            fuelStats.StartMass = VesselMass(_simStage);
             // over a single timestep the thrust is considered constant, we don't support thrust curves.
-            fuelStats.StartThrust = fuelStats.EndThrust  = VesselThrust();
-            
+            fuelStats.StartThrust = fuelStats.EndThrust = VesselThrust();
+
             using (Disposable<List<FuelNode>> engines = FindActiveEngines())
             {
                 if (engines.value.Count > 0)
@@ -188,7 +188,7 @@ namespace MuMech
                     dt = 0;
                 }
             }
-            
+
             fuelStats.DeltaTime    = dt;
             fuelStats.EndMass      = VesselMass(_simStage);
             fuelStats.ResourceMass = fuelStats.StartMass - fuelStats.EndMass;
@@ -197,7 +197,7 @@ namespace MuMech
             fuelStats.Isp = fuelStats.StartMass > fuelStats.EndMass
                 ? fuelStats.DeltaV / (9.80665f * Math.Log(fuelStats.StartMass / fuelStats.EndMass))
                 : 0;
-            
+
             //print("timestep: " + dt + " start thrust: " + fuelStats.StartThrust + " end thrust: " + fuelStats.EndThrust);
 
             return fuelStats;
@@ -330,14 +330,12 @@ namespace MuMech
         //Returns a list of engines that fire during the current simulated stage.
         private Disposable<List<FuelNode>> FindActiveEngines()
         {
-            var param = new Smooth.Algebraics.Tuple<int, List<FuelNode>>(_simStage, _nodes);
             Disposable<List<FuelNode>> activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
-            //print("Finding engines in " + nodes.Count + " parts, there are " + nodes.Slinq().Where(n => n.isEngine).Count());
-            //nodes.Slinq().Where(n => n.isEngine).ForEach(node => print("  (" + node.partName + " " + node.inverseStage + ">=" + simStage + " " + (node.inverseStage >= simStage) + ")"));
-            //print("Finding active engines: excluding resource considerations, there are " + nodes.Slinq().Where(n => n.isEngine && n.inverseStage >= simStage).Count());
-            _nodes.Slinq().Where((n, p) => n.isEngine && n.inverseStage >= p.Item1 && n.isDrawingResources && n.CanDrawNeededResources(p.Item2),
-                param).AddTo(activeEngines.value);
-            //print("Finding active engines: including resource considerations, there are " + activeEngines.value.Count);
+
+            foreach (FuelNode n in _nodes)
+                if (n.isEngine && n.inverseStage >= _simStage && n.isDrawingResources && n.CanDrawNeededResources(_nodes))
+                    activeEngines.value.Add(n);
+
             return activeEngines;
         }
     }
