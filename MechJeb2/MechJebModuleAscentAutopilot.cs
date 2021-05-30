@@ -440,7 +440,7 @@ namespace MuMech
 
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
-        private FuelFlowSimulation.Stats[] vacStats { get { return stats.vacStats; } }
+        private FuelFlowSimulation.FuelStats[] vacStats { get { return stats.vacStats; } }
 
         public abstract bool DriveAscent(FlightCtrlState s);
 

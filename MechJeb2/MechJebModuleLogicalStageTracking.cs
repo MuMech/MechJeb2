@@ -77,8 +77,8 @@ namespace MuMech
 
             for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
             {
-                FuelFlowSimulation.Stats stats = core.stageStats.vacStats[i];
-                if (stats.deltaV <= 0)
+                FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
+                if (fuelStats.DeltaV <= 0)
                     continue;
 
                 currentNonZeroStages++;
@@ -103,9 +103,9 @@ namespace MuMech
 
             for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
             {
-                FuelFlowSimulation.Stats stats = core.stageStats.vacStats[i];
+                FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
 
-                if (stats.deltaV <= 0)
+                if (fuelStats.DeltaV <= 0)
                     continue;
 
                 if (j >= Stages.Count)
@@ -155,18 +155,21 @@ namespace MuMech
 
             // starting thrust of the stage
             public double StartThrust;
+            
+            // ending thrust (this should be the same, except for burned out ullage motors)
+            public double EndThrust;
 
             // effective thrust (the "average thrust" derived from the total mdot and the v_e)
-            public double EffectiveThrust => Ve * (StartMass - _endMass) / DeltaTime;
+            public double EffectiveThrust => Ve * (StartMass - EndMass) / DeltaTime;
 
             // starting mass of the stage
             public double StartMass;
 
             // ending mass of the stage
-            private double _endMass;
+            public double EndMass;
 
-            // starting acceleration of the stage
-            private double A0 => StartThrust / StartMass;
+            // starting acceleration of the stage (use EndThrust to avoid counting ullage motors)
+            private double A0 => EndThrust / StartMass;
 
             // ideal time to consume the rocket completely
             public double Tau => Ve / A0;
@@ -177,23 +180,24 @@ namespace MuMech
             // the last parts list
             private readonly List<Part> _parts = new List<Part>();
 
-            private FuelFlowSimulation.Stats _vacStats;
+            private FuelFlowSimulation.FuelStats _vacFuelStats;
 
             public void Sync()
             {
                 if (KspStage > _parent.core.stageStats.vacStats.Length - 1)
                     return;
 
-                _vacStats   = _parent.core.stageStats.vacStats[KspStage];
-                DeltaV      = _vacStats.deltaV;
-                DeltaTime   = _vacStats.deltaTime;
-                Isp         = _vacStats.isp;
-                StartThrust = _vacStats.startThrust * 1000;
-                StartMass   = _vacStats.startMass * 1000;
-                _endMass    = _vacStats.endMass * 1000;
+                _vacFuelStats = _parent.core.stageStats.vacStats[KspStage];
+                DeltaV        = _vacFuelStats.DeltaV;
+                DeltaTime     = _vacFuelStats.DeltaTime;
+                Isp           = _vacFuelStats.Isp;
+                StartThrust   = _vacFuelStats.StartThrust * 1000;
+                EndThrust     = _vacFuelStats.EndThrust * 1000;
+                StartMass     = _vacFuelStats.StartMass * 1000;
+                EndMass       = _vacFuelStats.EndMass * 1000;
 
                 _parts.Clear();
-                for (int i = 0; i < _vacStats.parts.Count; i++) _parts.Add(_vacStats.parts[i]);
+                for (int i = 0; i < _vacFuelStats.Parts.Count; i++) _parts.Add(_vacFuelStats.Parts[i]);
             }
 
             public override string ToString()

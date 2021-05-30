@@ -417,7 +417,7 @@ namespace MuMech {
             int stageCount = numStages > 0 ? numStages : stages.Count;
 
             // build arcs off of ksp stages, with coasts
-            List<Arc> arcs = new List<Arc>();
+            ArcList arcs = new ArcList();
             for(int i = 0; i < stageCount; i++)
             {
                 arcs.Add(new Arc(this, stage: stages[i], t0: t0));
@@ -429,9 +429,9 @@ namespace MuMech {
             // allocate y0
             y0 = new double[arcIndex(arcs, arcs.Count)];
 
-            // update initial position and guess for first arc
+            // update initial position and guess for first arc (uses effective thrust to deal with ullage motors)
             double ve = g0 * stages[0].Isp;
-            tgo = ve * stages[0].StartMass / stages[0].StartThrust * ( 1 - Math.Exp(-dV/ve) );
+            tgo = ve * stages[0].StartMass / stages[0].EffectiveThrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
 
             // initialize overall burn time
@@ -554,6 +554,8 @@ namespace MuMech {
 
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs);
+            
+            DebugLog($"PVG: arcs in solution after bootstrapping launch: {arcs}");
         }
 
         /*

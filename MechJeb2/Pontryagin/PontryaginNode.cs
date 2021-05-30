@@ -108,7 +108,7 @@ namespace MuMech {
             vT = rot * (vf.xzy / v_scale);
 
             // build arcs off of ksp stages, with coasts
-            List<Arc> arcs = new List<Arc>();
+            ArcList arcs = new ArcList();
 
             arcs.Add(new Arc(this, t0: t0, coast: true));
 

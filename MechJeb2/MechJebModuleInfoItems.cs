@@ -853,8 +853,8 @@ namespace MuMech
 
         private static readonly string[] StageDisplayStates = {Localizer.Format("#MechJeb_InfoItems_button1"), Localizer.Format("#MechJeb_InfoItems_button2"), Localizer.Format("#MechJeb_InfoItems_button3"), Localizer.Format("#MechJeb_InfoItems_button4") };//"Short stats""Long stats""Full stats""Custom"
 
-        private FuelFlowSimulation.Stats[] vacStats;
-        private FuelFlowSimulation.Stats[] atmoStats;
+        private FuelFlowSimulation.FuelStats[] vacStats;
+        private FuelFlowSimulation.FuelStats[] atmoStats;
         private string[] bodies;
 
         [GeneralInfoItem("#MechJeb_StageStatsAll", InfoItem.Category.Vessel, showInEditor = true)]//Stage stats (all)
@@ -877,7 +877,7 @@ namespace MuMech
             Profiler.BeginSample("AllStageStats.UI1");
 
             int numStages = atmoStats.Length;
-            var stages = Enumerable.Range(0, numStages).Where(s => showEmpty || atmoStats[s].deltaV > 0).ToArray();
+            var stages = Enumerable.Range(0, numStages).Where(s => showEmpty || atmoStats[s].DeltaV > 0).ToArray();
 
             GUILayout.BeginVertical();
 
@@ -973,23 +973,23 @@ namespace MuMech
             Profiler.BeginSample("AllStageStats.UI3");
 
             bool noChange = true;
-            if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn1"), stages.Select(s => atmoStats[s].startMass.ToString("F3") + " t"));//"Start Mass"
+            if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn1"), stages.Select(s => atmoStats[s].StartMass.ToString("F3") + " t"));//"Start Mass"
 
             Profiler.EndSample();
 
             Profiler.BeginSample("AllStageStats.UI4");
 
-            if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn2"), stages.Select(s => atmoStats[s].endMass.ToString("F3") + " t"));//"End mass"
-            if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn3"), stages.Select(s => atmoStats[s].stagedMass.ToString("F3") + " t"));//"Staged Mass"
-            if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn4"), stages.Select(s => atmoStats[s].resourceMass.ToString("F3") + " t"));//"Burned Mass"
+            if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn2"), stages.Select(s => atmoStats[s].EndMass.ToString("F3") + " t"));//"End mass"
+            if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn3"), stages.Select(s => atmoStats[s].StagedMass.ToString("F3") + " t"));//"Staged Mass"
+            if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn4"), stages.Select(s => atmoStats[s].ResourceMass.ToString("F3") + " t"));//"Burned Mass"
             if (showVacInitialTWR) noChange &= showVacInitialTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn5"), stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));//"TWR"
             if (showVacMaxTWR) noChange &= showVacMaxTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn6"), stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));//"Max TWR"
             if (showAtmoInitialTWR) noChange &= showAtmoInitialTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn7"), stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));//"SLT"
             if (showAtmoMaxTWR) noChange &= showAtmoMaxTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn8"), stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));//"Max SLT"
-            if (showISP) noChange &= showISP = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn9"), stages.Select(s => atmoStats[s].isp.ToString("F2")));//"ISP"
-            if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn10"), stages.Select(s => atmoStats[s].deltaV.ToString("F0") + " m/s"));//"Atmo ΔV"
-            if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn11"), stages.Select(s => vacStats[s].deltaV.ToString("F0") + " m/s"));//"Vac ΔV"
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => timeSeconds ? MuUtils.ToSI(atmoStats[s].deltaTime, 2) + " s": GuiUtils.TimeToDHMS(atmoStats[s].deltaTime, 1)));//"Time"
+            if (showISP) noChange &= showISP = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn9"), stages.Select(s => atmoStats[s].Isp.ToString("F2")));//"ISP"
+            if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn10"), stages.Select(s => atmoStats[s].DeltaV.ToString("F0") + " m/s"));//"Atmo ΔV"
+            if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn11"), stages.Select(s => vacStats[s].DeltaV.ToString("F0") + " m/s"));//"Vac ΔV"
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => timeSeconds ? MuUtils.ToSI(atmoStats[s].DeltaTime, 2) + " s": GuiUtils.TimeToDHMS(atmoStats[s].DeltaTime, 1)));//"Time"
 
             if (!noChange)
                 StageDisplayState = 3;
@@ -1046,7 +1046,7 @@ namespace MuMech
 
             if (stats.vacStats.Length == 0) return 0;
 
-            return stats.vacStats[stats.vacStats.Length - 1].deltaV;
+            return stats.vacStats[stats.vacStats.Length - 1].DeltaV;
         }
 
         [ValueInfoItem("#MechJeb_StageDV_atmo", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]//Stage ΔV (atmo)
@@ -1057,7 +1057,7 @@ namespace MuMech
 
             if (stats.atmoStats.Length == 0) return 0;
 
-            return stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
+            return stats.atmoStats[stats.atmoStats.Length - 1].DeltaV;
         }
 
         [ValueInfoItem("#MechJeb_StageDV_atmo_vac", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)]//Stage ΔV (atmo, vac)
@@ -1066,8 +1066,8 @@ namespace MuMech
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            double atmDv = (stats.atmoStats.Length == 0) ? 0 : stats.atmoStats[stats.atmoStats.Length - 1].deltaV;
-            double vacDv = (stats.vacStats.Length == 0) ? 0 : stats.vacStats[stats.vacStats.Length - 1].deltaV;
+            double atmDv = (stats.atmoStats.Length == 0) ? 0 : stats.atmoStats[stats.atmoStats.Length - 1].DeltaV;
+            double vacDv = (stats.vacStats.Length == 0) ? 0 : stats.vacStats[stats.vacStats.Length - 1].DeltaV;
 
             return String.Format("{0:F0}, {1:F0}", atmDv, vacDv);
         }
@@ -1080,8 +1080,8 @@ namespace MuMech
 
             if (stats.vacStats.Length == 0 || stats.atmoStats.Length == 0) return 0;
 
-            float vacTimeLeft = (float)stats.vacStats[stats.vacStats.Length - 1].deltaTime;
-            float atmoTimeLeft = (float)stats.atmoStats[stats.atmoStats.Length - 1].deltaTime;
+            float vacTimeLeft = (float)stats.vacStats[stats.vacStats.Length - 1].DeltaTime;
+            float atmoTimeLeft = (float)stats.atmoStats[stats.atmoStats.Length - 1].DeltaTime;
             float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
 
             return timeLeft;
@@ -1111,7 +1111,7 @@ namespace MuMech
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
-            return stats.vacStats.Sum(s => s.deltaV);
+            return stats.vacStats.Sum(s => s.DeltaV);
         }
 
         [ValueInfoItem("#MechJeb_TotalDV_atmo", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]//Total ΔV (atmo)
@@ -1119,7 +1119,7 @@ namespace MuMech
         {
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
-            return stats.atmoStats.Sum(s => s.deltaV);
+            return stats.atmoStats.Sum(s => s.DeltaV);
         }
 
         [ValueInfoItem("#MechJeb_TotalDV_atmo_vac", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)]//Total ΔV (atmo, vac)
@@ -1128,8 +1128,8 @@ namespace MuMech
             MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            double atmDv = stats.atmoStats.Sum(s => s.deltaV);
-            double vacDv = stats.vacStats.Sum(s => s.deltaV);
+            double atmDv = stats.atmoStats.Sum(s => s.DeltaV);
+            double vacDv = stats.vacStats.Sum(s => s.DeltaV);
 
             return String.Format("{0:F0}, {1:F0}", atmDv, vacDv);
         }

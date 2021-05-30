@@ -140,18 +140,18 @@ namespace MuMech
         private readonly double ckEps = 1e-6; /* matches Matlab's default 1e-6 ode45 reltol? */
 
         /* used to update y0 to yf without intermediate values */
-        public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, List<Arc> arcs, ref double dV)
+        public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, ArcList arcs, ref double dV)
         {
             singleIntegrate(y0, yf, null, n, ref t, dt, arcs, 2, ref dV);
         }
 
         /* used to pull intermediate values off to do cubic spline interpolation */
-        public void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
+        public void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, ArcList arcs, int count, ref double dV)
         {
             singleIntegrate(y0, null, sol, n, ref t, dt, arcs, count, ref dV);
         }
 
-        public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, List<Arc> arcs, int count, ref double dV)
+        public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, ArcList arcs, int count, ref double dV)
         {
             Arc e = arcs[n];
 
@@ -235,19 +235,19 @@ namespace MuMech
         }
 
         // normal integration with no midpoints
-        public void multipleIntegrate(double[] y0, double[] yf, List<Arc> arcs, bool initialize = false)
+        public void multipleIntegrate(double[] y0, double[] yf, ArcList arcs, bool initialize = false)
         {
             multipleIntegrate(y0, yf, null, arcs, initialize: initialize);
         }
 
         // for generating the interpolated chebyshev solution
-        public void multipleIntegrate(double[] y0, Solution sol, List<Arc> arcs, int count)
+        public void multipleIntegrate(double[] y0, Solution sol, ArcList arcs, int count)
         {
             multipleIntegrate(y0, null, sol, arcs, count);
         }
 
         // copy the nth
-        private void copy_yf_to_y0(double[] y0, double[] yf, int n, List<Arc> arcs)
+        private void copy_yf_to_y0(double[] y0, double[] yf, int n, ArcList arcs)
         {
             int yf_index = 13 * n;
             int y0_index = arcIndex(arcs, n + 1);
@@ -259,7 +259,7 @@ namespace MuMech
 
         private bool overburning;
 
-        private void multipleIntegrate(double[] y0, double[] yf, Solution sol, List<Arc> arcs, int count = 2, bool initialize = false)
+        private void multipleIntegrate(double[] y0, double[] yf, Solution sol, ArcList arcs, int count = 2, bool initialize = false)
         {
             if (y0 == null)
                 Fatal("internal error - y0 is null");
@@ -353,7 +353,7 @@ namespace MuMech
          * 17-29 - y0 for coast0
          * 30-42 - y0 for burn0
          */
-        public int arcIndex(List<Arc> arcs, int n, bool parameters = false)
+        public int arcIndex(ArcList arcs, int n, bool parameters = false)
         {
             int index = 1;
             for (int i = 0; i < n; i++)
@@ -407,7 +407,7 @@ namespace MuMech
 
         public void optimizationFunction(double[] y0, double[] z, object o)
         {
-            var arcs = (List<Arc>) o;
+            var arcs = (ArcList) o;
             yf = new double[arcs.Count * 13]; /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
             multipleIntegrate(y0, yf, arcs);
 
@@ -539,7 +539,7 @@ namespace MuMech
 
         private alglib.minlmstate state;
 
-        public bool runOptimizer(List<Arc> arcs)
+        public bool runOptimizer(ArcList arcs)
         {
             for (int i = 0; i < y0.Length; i++)
             {
@@ -630,7 +630,7 @@ namespace MuMech
 
         public double[] y0;
 
-        public void UpdateY0(List<Arc> arcs)
+        public void UpdateY0(ArcList arcs)
         {
             /* FIXME: some of the round tripping here is silly */
             //Stage s = stages[0];  // FIXME: shouldn't we be using the arcs.stages?
@@ -662,7 +662,7 @@ namespace MuMech
         }
 
         /* insert coast before the ith stage */
-        protected void InsertCoast(List<Arc> arcs, int i, Solution sol)
+        protected void InsertCoast(ArcList arcs, int i, Solution sol)
         {
             int bottom = arcIndex(arcs, i, true);
 
@@ -690,7 +690,7 @@ namespace MuMech
         }
 
         /* tweak coast at the ith stage, inserting burntime of the ith stage / 2 */
-        protected void RetryCoast(List<Arc> arcs, int i, Solution sol)
+        protected void RetryCoast(ArcList arcs, int i, Solution sol)
         {
             int bottom = arcIndex(arcs, i, true);
 
@@ -707,7 +707,7 @@ namespace MuMech
         }
 
         /* remove an arc from the solution */
-        protected void RemoveArc(List<Arc> arcs, int i, Solution sol)
+        protected void RemoveArc(ArcList arcs, int i, Solution sol)
         {
             int bottom = arcIndex(arcs, i, true);
             int top = arcIndex(arcs, i + 1, true);
@@ -726,14 +726,14 @@ namespace MuMech
         }
 
         protected abstract void Bootstrap(double t0);
-
+        
         private void Optimize(double t0)
         {
-            List<Arc> last_arcs = null;
+            ArcList last_arcs = null;
 
             if (solution != null && y0 != null)
             {
-                last_arcs = new List<Arc>();
+                last_arcs = new ArcList();
                 for (int i = 0; i < solution.arcs.Count; i++)
                 {
                     Arc arc = solution.arcs[i];
@@ -783,6 +783,8 @@ namespace MuMech
                             last_arcs[0].coast_after_jettison = false; /* we can't be after a jettison if we're first */
                             last_arcs[0].use_fixed_time2      = false; /* also can't have a fixed time when we're in the coast */
                         }
+
+                        DebugLog($"PVG: arcs in solution after removing stage: {last_arcs}");
                     }
 
                     if (last_arcs.Count == 0)
@@ -823,6 +825,7 @@ namespace MuMech
                                 Fatal("Optimzer failed after adjusting for overburning");
                                 return;
                             }
+                            DebugLog($"PVG: arcs in solution after adding stage to top: {last_arcs}");
                         }
                     // else we should do something here
 

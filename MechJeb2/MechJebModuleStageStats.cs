@@ -17,14 +17,14 @@ namespace MuMech
         [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)]//ΔV include cosine losses
         public bool dVLinearThrust = true;
 
-        public FuelFlowSimulation.Stats[] atmoStats = { };
-        public FuelFlowSimulation.Stats[] vacStats = { };
+        public FuelFlowSimulation.FuelStats[] atmoStats = { };
+        public FuelFlowSimulation.FuelStats[] vacStats = { };
 
 
         // Those are used to store the next result from the thread since we must move result 
         // to atmoStats/vacStats only in the main thread.
-        private FuelFlowSimulation.Stats[] newAtmoStats;
-        private FuelFlowSimulation.Stats[] newVacStats;
+        private FuelFlowSimulation.FuelStats[] newAtmoStats;
+        private FuelFlowSimulation.FuelStats[] newVacStats;
         private bool resultReady = false;
 
         public void RequestUpdate(object controller, bool wait = false)

@@ -24,7 +24,7 @@ namespace MuMech
         public MechJebModuleAscentPVG pvgascent { get { return core.GetComputerModule<MechJebModuleAscentPVG>(); } }
         public MechJebModuleAscentGT gtascent { get { return core.GetComputerModule<MechJebModuleAscentGT>(); } }
         private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
-        private FuelFlowSimulation.Stats[] atmoStats { get { return stats.atmoStats; } }
+        private FuelFlowSimulation.FuelStats[] atmoStats { get { return stats.atmoStats; } }
 
         private ascentType ascentPathIdx { get { return autopilot.ascentPathIdxPublic; } }
 
@@ -396,7 +396,7 @@ namespace MuMech
                         if ( core.guidance.last_failure_cause != null )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
-                            s.normal.textColor = Color.red;
+                            s.normal.textColor = core.guidance.staleness < 2 && core.guidance.successful_converges > 0 ? Color.green : Color.red;
                             GUILayout.BeginHorizontal();
                             GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label30") + core.guidance.last_failure_cause, s);//LAST FAILURE:
                             GUILayout.EndHorizontal();
@@ -404,8 +404,8 @@ namespace MuMech
 
                         if ( vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH && vessel.situation != Vessel.Situations.SPLASHED && atmoStats.Length > vessel.currentStage)
                         {
-                            double m0 = atmoStats[vessel.currentStage].startMass;
-                            double thrust = atmoStats[vessel.currentStage].startThrust;
+                            double m0 = atmoStats[vessel.currentStage].StartMass;
+                            double thrust = atmoStats[vessel.currentStage].EndThrust;
 
                             if (Math.Abs(vesselState.mass - m0) / m0 > 0.01)
                             {
