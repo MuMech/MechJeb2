@@ -102,8 +102,7 @@ namespace MuMech
 
             private static double CrewMassNew(ProtoCrewMember crew)
             {
-                throw new Exception("i wasn't supposed to commit this");
-                //return PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
+                return PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
             }
 
             public static int PoolSize => pool.Size;
