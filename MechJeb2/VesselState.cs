@@ -822,7 +822,7 @@ namespace MuMech
                     //if (rcsbal.enabled)
                     //    continue;
 
-                    if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
+                    if (!p.ShieldedFromAirstream && rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow && !rcs.flameout && rcs.rcs_active)
                     {
                         Vector3 attitudeControl = new Vector3(rcs.enablePitch ? 1 : 0, rcs.enableRoll ? 1 : 0, rcs.enableYaw ? 1 : 0);
 
@@ -830,11 +830,19 @@ namespace MuMech
                         for (int j = 0; j < rcs.thrusterTransforms.Count; j++)
                         {
                             Transform t = rcs.thrusterTransforms[j];
+
+                            // Borrowed from kOS:  As of KSP 1.11.x, RCS parts now use part variants.  To prevent
+                            // counting torque as if the superset of all variant nozzles were present, the ones not
+                            // currently active have to be culled out here, since KSP isn't culling them out itself when
+                            // it populates ModuleRCS.thrusterTransforms:
+                            if (!t.gameObject.activeInHierarchy)
+                                continue;
+
                             Vector3d thrusterPosition = t.position - movingCoM;
 
                             Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
 
-                            float power = rcs.thrusterPower;
+                            float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f;
 
                             if (FlightInputHandler.fetch.precisionMode)
                             {

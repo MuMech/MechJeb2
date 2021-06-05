@@ -10,24 +10,26 @@ namespace MuMech.AttitudeControllers
         private                 Vessel   Vessel => ac.vessel;
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKp = new EditableDouble(12);
+        private readonly EditableDouble VelKp = new EditableDouble(9.18299345180006);
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKi = new EditableDouble(12);
+        private readonly EditableDouble VelKi = new EditableDouble(16.2833478287224);
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKd = new EditableDouble(2);
+        private readonly EditableDouble VelKd = new EditableDouble(-0.0921320503942923);
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelN = new EditableDouble(20);
+        private readonly EditableDouble VelN = new EditableDouble(99.6720838459594);
+        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        private readonly EditableDouble VelB = new EditableDouble(0.596313214751797);
+        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        private readonly EditableDouble VelC = new EditableDouble(0.596313214751797);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelSmoothIn = new EditableDouble(0.1);
+        private readonly EditableDouble VelSmoothIn = new EditableDouble(0.3);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelSmoothOut = new EditableDouble(1);
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        private readonly EditableDouble PosSmoothIn = new EditableDouble(0.1);
+        private readonly EditableDouble PosSmoothIn = new EditableDouble(1);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble PosKp = new EditableDouble(0.5);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble PosKi = new EditableDouble(0.1);
+        private readonly EditableDouble PosFactor = new EditableDouble(1.0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
@@ -43,38 +45,23 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private bool useStoppingTime = true;
 
-        private void ApplyAggressive()
+        private void ApplyDefaults()
         {
-            VelKp.val            = 42;
-            VelKi.val            = 840;
-            VelKd.val            = 1.36;
-            VelN.val             = 20;
-            VelSmoothIn.val      = 1;
-            VelSmoothOut.val     = 1;
-            PosSmoothIn.val      = 1;
-            PosKp.val            = 5;
-            PosKi.val            = 1;
-            maxStoppingTime.val  = 10.0;
-            minFlipTime.val      = 20.0;
-            rollControlRange.val = 5;
-        }
-        
-        private void ApplyModerate()
-        {
-            VelKp.val            = 12;
-            VelKi.val            = 12;
-            VelKd.val            = 2;
-            VelN.val             = 20;
-            VelSmoothIn.val      = 0.1;
-            VelSmoothOut.val     = 1;
-            PosSmoothIn.val      = 0.1;
-            PosKp.val            = 0.5;
-            PosKi.val            = 0.05;
+            VelKp.val            = 9.18299345180006;
+            VelKi.val            = 16.2833478287224;
+            VelKd.val            = -0.0921320503942923;
+            VelN.val             = 99.6720838459594;
+            VelB.val             = 0.596313214751797;
+            VelC.val             = 0.596313214751797;
+            VelSmoothIn.val      = 0.3;
+            VelSmoothOut.val     = 1.0;
+            PosFactor.val        = 1.0;
+            PosSmoothIn.val      = 1.0;
             maxStoppingTime.val  = 2;
             minFlipTime.val      = 120;
             rollControlRange.val = 5;
         }
-        
+
         private readonly PIDLoop[] _pid =
         {
             new PIDLoop(),
@@ -95,7 +82,6 @@ namespace MuMech.AttitudeControllers
         private Vector3d _targetOmega  = Vector3d.zero;
         private Vector3d _targetTorque = Vector3d.zero;
         private Vector3d _actuation    = Vector3d.zero;
-        private Vector3d _iTerm        = Vector3d.zero;
 
         /* error */
         private double _errorTotal;
@@ -176,7 +162,7 @@ namespace MuMech.AttitudeControllers
             Vector3d controlTorque = ac.torque;
 
             // needed to stop wiggling at higher phys warp
-            double warpFactor = ac.vesselState.deltaT / 0.02;
+            double warpFactor = Math.Pow(ac.vesselState.deltaT / 0.02, 0.90); // the power law here comes ultimately from the simulink PID tuning app
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented so we only
             // have the first two PIDs in the cascade.
@@ -189,20 +175,19 @@ namespace MuMech.AttitudeControllers
                 if (_maxAlpha[i] == 0)
                     _maxAlpha[i] = 1;
 
-                double effLD = _maxAlpha[i] / (2 * PosKp * PosKp);
+                // the cube root scaling was determined mostly via experience
+                double maxAlphaCbrt = Math.Pow(_maxAlpha[i], 1.0 / 3.0);
+                double effLD = maxAlphaCbrt * PosFactor;
+                double posKp = Math.Sqrt( _maxAlpha[i]/(2*effLD));
 
                 if (Math.Abs(error) <= 2 * effLD)
                 {
-                    if (_actuation.magnitude < 0.1 && Math.Abs(error) <= effLD/2.0)
-                        _iTerm[i] += error * 0.02;
-
                     // linear ramp down of acceleration
-                    _targetOmega[i] = -PosKp * error - PosKi * _iTerm[i];
+                    _targetOmega[i] = -posKp * error;
                 }
                 else
                 {
                     // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
-                    _iTerm[i]          = 0;
                     _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
                 }
 
@@ -212,22 +197,20 @@ namespace MuMech.AttitudeControllers
                     if (useFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / minFlipTime);
                     _targetOmega[i] = MuUtils.Clamp(_targetOmega[i], -_maxOmega[i], _maxOmega[i]);
                 }
-            }
 
-            if (useControlRange && _errorTotal * Mathf.Rad2Deg  > rollControlRange)
-                _targetOmega[1] = 0;
 
-            for (int i = 0; i < 3; i++)
-            {
-                double d = _maxAlpha[i] * warpFactor;
+                if (useControlRange && _errorTotal * Mathf.Rad2Deg  > rollControlRange)
+                    _targetOmega[1] = 0;
 
-                _pid[i].Kp        = VelKp / d;
-                _pid[i].Ki        = VelKi / d;
-                _pid[i].Kd        = VelKd / d;
-                _pid[i].N         = VelN;
+                _pid[i].Kp        = VelKp / (_maxAlpha[i] * warpFactor);
+                _pid[i].Ki        = VelKi / (_maxAlpha[i] * warpFactor * warpFactor);
+                _pid[i].Kd        = VelKd / _maxAlpha[i];
+                _pid[i].N         = VelN / warpFactor;
+                _pid[i].B         = VelB;
+                _pid[i].C         = VelC;
                 _pid[i].Ts        = ac.vesselState.deltaT;
-                _pid[i].SmoothIn   = MuUtils.Clamp01(VelSmoothIn * warpFactor);
-                _pid[i].SmoothOut  = MuUtils.Clamp01(VelSmoothOut * warpFactor);
+                _pid[i].SmoothIn  = MuUtils.Clamp01(VelSmoothIn);
+                _pid[i].SmoothOut = MuUtils.Clamp01(VelSmoothOut);
                 _pid[i].MinOutput = -1;
                 _pid[i].MaxOutput = 1;
 
@@ -253,7 +236,6 @@ namespace MuMech.AttitudeControllers
         {
             _pid[i].Reset();
             _omega0[i] = _error0[i] = _error1[i] = double.NaN;
-            _iTerm[i]  = 0;
         }
 
         public override void GUI()
@@ -275,31 +257,45 @@ namespace MuMech.AttitudeControllers
             useControlRange = GUILayout.Toggle(useControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"), GUILayout.ExpandWidth(false));//"RollControlRange"
             rollControlRange.text = GUILayout.TextField(rollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel Kp", GUILayout.ExpandWidth(false));
-            VelKp.text = GUILayout.TextField(VelKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.Label("Pos Kp", GUILayout.ExpandWidth(false));
-            PosKp.text = GUILayout.TextField(PosKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Pos Factor", GUILayout.ExpandWidth(false));
+            PosFactor.text = GUILayout.TextField(PosFactor.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel Ki", GUILayout.ExpandWidth(false));
-            VelKi.text = GUILayout.TextField(VelKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.Label("Pos Ki", GUILayout.ExpandWidth(false));
-            PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel Kd", GUILayout.ExpandWidth(false));
-            VelKd.text = GUILayout.TextField(VelKd.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
             PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            GUILayout.Label("Vel Kp", GUILayout.ExpandWidth(false));
+            VelKp.text = GUILayout.TextField(VelKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Vel Ki", GUILayout.ExpandWidth(false));
+            VelKi.text = GUILayout.TextField(VelKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Vel Kd", GUILayout.ExpandWidth(false));
+            VelKd.text = GUILayout.TextField(VelKd.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Kd N", GUILayout.ExpandWidth(false));
             VelN.text = GUILayout.TextField(VelN.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Vel B", GUILayout.ExpandWidth(false));
+            VelB.text = GUILayout.TextField(VelB.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Vel C", GUILayout.ExpandWidth(false));
+            VelC.text = GUILayout.TextField(VelC.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -313,16 +309,10 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Presets:", GUILayout.ExpandWidth(false));
+            if (GUILayout.Button(Localizer.Format("Reset to Defaults")))
+                ApplyDefaults();
             GUILayout.EndHorizontal();
-            
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(Localizer.Format("Agressive")))
-                ApplyAggressive();
-            if (GUILayout.Button(Localizer.Format("Moderate")))
-                ApplyModerate();
-            GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label2"), GUILayout.ExpandWidth(true));//"Actuation"
             GUILayout.Label(MuUtils.PrettyPrint(_actuation), GUILayout.ExpandWidth(false));
@@ -361,11 +351,6 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label("MaxAlpha", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(_maxAlpha), GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Position Integral Term", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_iTerm), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
     }
