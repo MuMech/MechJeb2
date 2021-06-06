@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using JetBrains.Annotations;
 using KSP.UI;
 using KSP.UI.Screens;
 using Smooth.Dispose;
@@ -15,10 +17,26 @@ namespace MuMech
     {
         public class FuelNode
         {
+            // RealFuels.ModuleEngineRF ullage field to call via reflection
+            private static FieldInfo RFpredictedMaximumResiduals;
+
+            public static void DoReflection()
+            {
+                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
+                {
+                    RFpredictedMaximumResiduals = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
+                    if (RFpredictedMaximumResiduals == null)
+                    {
+                        Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
+                    }
+                }
+            }
+
             private readonly struct EngineInfo
             {
                 public readonly ModuleEngines engineModule;
                 public readonly Vector3d      thrustVector;
+                public readonly double        moduleResiduals;
 
                 public EngineInfo(ModuleEngines engineModule)
                 {
@@ -28,31 +46,38 @@ namespace MuMech
 
                     for (int i = 0; i < engineModule.thrustTransforms.Count; i++)
                         thrustVector -= engineModule.thrustTransforms[i].forward * engineModule.thrustTransformMultipliers[i];
+
+                    double? temp = 0;
+
+                    if (RFpredictedMaximumResiduals != null)
+                    {
+                        try
+                        {
+                            temp = RFpredictedMaximumResiduals.GetValue(engineModule) as double?;
+                        }
+                        catch (ArgumentException)
+                        {
+                            temp = 0;
+                        }
+                    }
+
+                    moduleResiduals = temp ?? 0;
                 }
             }
 
-            private readonly DefaultableDictionary<int, double>
-                resources = new DefaultableDictionary<int, double>(0); //the resources contained in the part
-
-            private readonly KeyableDictionary<int, double>
-                resourceConsumptions =
-                    new KeyableDictionary<int, double>(); //the resources this part consumes per unit time when active at full throttle
-
-            private readonly DefaultableDictionary<int, double>
-                resourceDrains =
-                    new DefaultableDictionary<int, double>(
-                        0); //the resources being drained from this part per unit time at the current simulation time
-
-            private readonly DefaultableDictionary<int, bool>
-                freeResources = new DefaultableDictionary<int, bool>(false); //the resources that are "free" and assumed to be infinite like IntakeAir
+            private readonly DefaultableDictionary<int, double> resources = new DefaultableDictionary<int, double>(0); //the resources contained in the part
+            private readonly DefaultableDictionary<int, double> resourcesFull = new DefaultableDictionary<int, double>(0);   //the resources the part has when full
+            private readonly KeyableDictionary<int, double> resourceConsumptions = new KeyableDictionary<int, double>(); //the resources this part consumes per unit time when active at full throttle
+            private readonly DefaultableDictionary<int, double> resourceDrains = new DefaultableDictionary<int, double>(0); //the resources being drained from this part per unit time at the current simulation
+            private readonly DefaultableDictionary<int, double> resourceResidual = new DefaultableDictionary<int, double>(0); // the fraction of the resource which will be residual
+            private readonly DefaultableDictionary<int, bool> freeResources = new DefaultableDictionary<int, bool>(false); //the resources that are "free" and assumed to be infinite like IntakeAir
 
             // if a resource amount falls below this amount we say that the resource has been drained
             // set to the smallest amount that the user can see is non-zero in the resource tab or by
             // right-clicking.
             private const double DRAINED = 1E-4;
 
-            private readonly KeyableDictionary<int, ResourceFlowMode>
-                propellantFlows = new KeyableDictionary<int, ResourceFlowMode>(); //flow modes of propellants since the engine can override them
+            private readonly KeyableDictionary<int, ResourceFlowMode> propellantFlows = new KeyableDictionary<int, ResourceFlowMode>(); //flow modes of propellants since the engine can override them
 
             private readonly List<FuelNode> crossfeedSources = new List<FuelNode>();
 
@@ -72,6 +97,8 @@ namespace MuMech
             private double crewMass;            //the mass of this part crew
             private float  modulesUnstagedMass; // the mass of the modules of this part before staging
             private float  modulesStagedMass;   // the mass of the modules of this part after staging
+
+            private double maxEngineResiduals; // fractional amount of residuals from RealFuels/ModuleEnginesRF
 
             public string partName; //for debugging
 
@@ -133,6 +160,7 @@ namespace MuMech
                 this.part           = part;
                 this.dVLinearThrust = dVLinearThrust;
                 resources.Clear();
+                resourcesFull.Clear();
                 resourceConsumptions.Clear();
                 resourceDrains.Clear();
                 freeResources.Clear();
@@ -149,6 +177,8 @@ namespace MuMech
                 modulesStagedMass = 0;
 
                 decoupledInStage = int.MinValue;
+
+                maxEngineResiduals = 0.0;
 
                 vesselOrientation = HighLogic.LoadedScene == GameScenes.EDITOR
                     ? EditorLogic.VesselRotation * Vector3d.up
@@ -208,7 +238,10 @@ namespace MuMech
                     if (r.info.density > 0)
                     {
                         if (r.flowState)
-                            resources[r.info.id] = r.amount;
+                        {
+                            resources[r.info.id]     = r.amount;
+                            resourcesFull[r.info.id] = r.maxAmount;
+                        }
                         else
                             dryMass += r.amount * r.info.density; // disabled resources are just dead weight
                     }
@@ -244,6 +277,10 @@ namespace MuMech
 
                     engineInfos.Add(new EngineInfo(e));
                 }
+
+                // find our max maxEngineResiduals for this engine part from all the modules
+                foreach (EngineInfo e in engineInfos)
+                    maxEngineResiduals = Math.Max(maxEngineResiduals, e.moduleResiduals);
             }
 
             // We are not necessarily traversing from the root part but from any interior part, so that p.parent is just another potential child node
@@ -574,8 +611,8 @@ namespace MuMech
                 double minDT = double.MaxValue;
 
                 foreach (int id in resourceDrains.KeysList)
-                    if (!freeResources[id] && resources[id] > resourceRequestRemainingThreshold)
-                        minDT = Math.Min(minDT, resources[id] / resourceDrains[id]);
+                    if (!freeResources[id] && resources[id] > ResidualThreshold(id))
+                        minDT = Math.Min(minDT, ( resources[id] - resourceResidual[id] * resourcesFull[id] ) / resourceDrains[id]);
 
                 return minDT;
             }
@@ -590,7 +627,7 @@ namespace MuMech
             public bool ContainsResources(List<int> whichResources)
             {
                 foreach (int id in whichResources)
-                    if (resources[id] > resourceRequestRemainingThreshold)
+                    if (resources[id] > ResidualThreshold(id))
                         return true;
 
                 return false;
@@ -599,7 +636,7 @@ namespace MuMech
             public bool CanDrawNeededResources(List<FuelNode> vessel)
             {
                 // XXX: this fix is intended to fix SRBs which have burned out but which
-                // still have an amount of fuel over the resourceRequestRemainingThreshold, which
+                // still have an amount of fuel over the ResidualThreshold[id], which
                 // can happen in RealismOverhaul.  this targets specifically "No propellants" because
                 // we do not want flamed out jet engines to trigger this code if they just don't have
                 // enough intake air, and any other causes.
@@ -615,7 +652,7 @@ namespace MuMech
                     {
                         case ResourceFlowMode.NO_FLOW:
                             //check if we contain the needed resource:
-                            if (resources[type] < resourceRequestRemainingThreshold) return false;
+                            if (resources[type] < ResidualThreshold(type)) return false;
                             break;
 
                         case ResourceFlowMode.ALL_VESSEL:
@@ -623,14 +660,14 @@ namespace MuMech
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW:
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
                             //check if any part contains the needed resource:
-                            if (!vessel.Slinq().Any((n, t) => n.resources[t] > n.resourceRequestRemainingThreshold, type)) return false;
+                            if (!vessel.Slinq().Any((n, t) => n.resources[t] > n.ResidualThreshold(type), type)) return false;
                             break;
 
                         case ResourceFlowMode.STAGE_STACK_FLOW:
                         case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                         case ResourceFlowMode.STACK_PRIORITY_SEARCH:
                             // check if we can get any of the needed resources
-                            if (!crossfeedSources.Slinq().Any((n, t) => n.resources[t] > n.resourceRequestRemainingThreshold, type)) return false;
+                            if (!crossfeedSources.Slinq().Any((n, t) => n.resources[t] > n.ResidualThreshold(type), type)) return false;
                             break;
 
                         default: // and NULL
@@ -659,16 +696,19 @@ namespace MuMech
                     switch (resourceFlowMode)
                     {
                         case ResourceFlowMode.NO_FLOW:
-                            resourceDrains[type] += amount;
+                            resourceResidual[type] =  maxEngineResiduals;
+                            resourceDrains[type]   += amount;
                             break;
 
                         case ResourceFlowMode.ALL_VESSEL:
                         case ResourceFlowMode.ALL_VESSEL_BALANCE:
+                            AssignMaxResiduals(type, maxEngineResiduals, vessel);
                             AssignFuelDrainRateStagePriorityFlow(type, amount, false, vessel);
                             break;
 
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW:
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
+                            AssignMaxResiduals(type, maxEngineResiduals, vessel);
                             AssignFuelDrainRateStagePriorityFlow(type, amount, true, vessel);
                             break;
 
@@ -676,49 +716,59 @@ namespace MuMech
                         case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                         case ResourceFlowMode.STACK_PRIORITY_SEARCH:
                             //AssignFuelDrainRateStackPriority(type, true, amount);
+                            AssignMaxResiduals(type, maxEngineResiduals, crossfeedSources);
                             AssignFuelDrainRateStagePriorityFlow(type, amount, true, crossfeedSources);
                             break;
                     }
                 }
             }
 
+            // this assigns the maxResidauls from the engine to all the parts it is drawing from
+            private void AssignMaxResiduals(int type, double maxEngineResiduals, List<FuelNode> vessel)
+            {
+                for (int i = 0; i < vessel.Count; i++)
+                {
+                    FuelNode n = vessel[i];
+                    n.resourceResidual[type] = Math.Max(n.resourceResidual[type], maxEngineResiduals);
+                }
+            }
+
             private void AssignFuelDrainRateStagePriorityFlow(int type, double amount, bool usePrio, List<FuelNode> vessel)
             {
                 int maxPrio = int.MinValue;
-                using (Disposable<List<FuelNode>> dispoSources = ListPool<FuelNode>.Instance.BorrowDisposable())
+                using Disposable<List<FuelNode>> dispoSources = ListPool<FuelNode>.Instance.BorrowDisposable();
+
+                List<FuelNode> sources = dispoSources.value;
+                //print("AssignFuelDrainRateStagePriorityFlow for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name + " in " + vessel.Count + " parts ");
+                for (int i = 0; i < vessel.Count; i++)
                 {
-                    List<FuelNode> sources = dispoSources.value;
-                    //print("AssignFuelDrainRateStagePriorityFlow for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name + " in " + vessel.Count + " parts ");
-                    for (int i = 0; i < vessel.Count; i++)
+                    FuelNode n = vessel[i];
+                    if (n.resources[type] > n.ResidualThreshold(type))
                     {
-                        FuelNode n = vessel[i];
-                        if (n.resources[type] > n.resourceRequestRemainingThreshold)
+                        if (usePrio)
                         {
-                            if (usePrio)
+                            if (n.resourcePriority > maxPrio)
                             {
-                                if (n.resourcePriority > maxPrio)
-                                {
-                                    maxPrio = n.resourcePriority;
-                                    sources.Clear();
-                                    sources.Add(n);
-                                }
-                                else if (n.resourcePriority == maxPrio)
-                                {
-                                    sources.Add(n);
-                                }
+                                maxPrio = n.resourcePriority;
+                                sources.Clear();
+                                sources.Add(n);
                             }
-                            else
+                            else if (n.resourcePriority == maxPrio)
                             {
                                 sources.Add(n);
                             }
                         }
+                        else
+                        {
+                            sources.Add(n);
+                        }
                     }
-
-                    //print(partName + " drains resource from " + sources.Count + " parts ");
-                    for (int i = 0; i < sources.Count; i++)
-                        if (!freeResources[type])
-                            sources[i].resourceDrains[type] += amount / sources.Count;
                 }
+
+                //print(partName + " drains resource from " + sources.Count + " parts ");
+                for (int i = 0; i < sources.Count; i++)
+                    if (!freeResources[type])
+                        sources[i].resourceDrains[type] += amount / sources.Count;
             }
 
             // for a single EngineModule, get thrust + isp + massFlowRate
@@ -743,6 +793,11 @@ namespace MuMech
                 if (cosLoss) thrustVector = Vector3.Dot(vesselOrientation, thrustVector) * thrustVector.normalized;
 
                 return thrustVector * massFlowRate * engineInfo.engineModule.g * engineInfo.engineModule.multIsp * isp;
+            }
+
+            private double ResidualThreshold(int resourceId)
+            {
+                return Math.Max(resourceRequestRemainingThreshold, resourceResidual[resourceId] * resourcesFull[resourceId]);
             }
         }
     }

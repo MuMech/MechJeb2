@@ -566,6 +566,8 @@ namespace MuMech
 
         public override void OnAwake()
         {
+            FuelFlowSimulation.FuelNode.DoReflection();
+
             Dispatcher.CreateDispatcher();
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
