@@ -164,6 +164,7 @@ namespace MuMech
                 resourceConsumptions.Clear();
                 resourceDrains.Clear();
                 freeResources.Clear();
+                resourceResidual.Clear();
 
                 crossfeedSources.Clear();
 
