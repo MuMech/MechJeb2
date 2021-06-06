@@ -14,19 +14,19 @@ namespace MuMech
         FLIGHTANGLE4,
         FLIGHTANGLE5
     }
-    
+
     public abstract class PontryaginBase
     {
         /* dead code but kept as it can be useful for debugging
         protected double LAN(Vector3d r, Vector3d v)
         {
-            var n = new Vector3d(0, -1, 0); // angular momentum vectors point south in KSP and we're in xzy coords 
+            var n = new Vector3d(0, -1, 0); // angular momentum vectors point south in KSP and we're in xzy coords
             Vector3d h = Vector3d.Cross(r, v);
             Vector3d an = -Vector3d.Cross(n, h); // needs to be negative (or swapped) in left handed coordinate system
             return an[2] >= 0 ? Math.Acos(an[0] / an.magnitude) : 2.0 * Math.PI - Math.Acos(an[0] / an.magnitude);
         }
         */
-        
+
         // metrics
         public int    successful_converges;
         public int    max_lm_iteration_count;
@@ -36,7 +36,7 @@ namespace MuMech
         public string last_failure_cause;
         public double last_success_time;
 
-        protected    List<MechJebModuleLogicalStageTracking.Stage> stages => core.stageTracking.Stages;
+        protected    MechJebModuleLogicalStageTracking.StageContainer stages => core.stageTracking.Stages;
         public       double mu;
         public       BCType bctype;
         public       Action<double[], double[], bool> bcfun;
@@ -726,7 +726,7 @@ namespace MuMech
         }
 
         protected abstract void Bootstrap(double t0);
-        
+
         private void Optimize(double t0)
         {
             ArcList last_arcs = null;
@@ -814,6 +814,8 @@ namespace MuMech
                         if (last_arcs.Count < stages.Count)
                         {
                             DebugLog("PVG: adding another available stage to the solution");
+                            DebugLog($"PVG: arcs currently in solution: {last_arcs}");
+                            DebugLog($"PVG: stages in rocket: {stages}");
                             last_arcs.Add(new Arc(this, stage: stages[last_arcs.Count], t0: t0));
                             double[] y0_new = new double[arcIndex(last_arcs, last_arcs.Count)];
                             Array.Copy(y0, 0, y0_new, 0, y0.Length);
