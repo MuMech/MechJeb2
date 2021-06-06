@@ -417,7 +417,9 @@ namespace MuMech
                                 GUILayout.EndHorizontal();
                             }
 
-                            if (Math.Abs(vesselState.thrustCurrent - thrust) / thrust > 0.10)
+                            double thrustfrac = Math.Abs(vesselState.thrustCurrent - thrust) / thrust;
+
+                            if (thrustfrac > 0.10 && thrustfrac < 99.9)
                             {
                                 GUIStyle s = new GUIStyle(GUI.skin.label);
                                 s.normal.textColor = Color.yellow;

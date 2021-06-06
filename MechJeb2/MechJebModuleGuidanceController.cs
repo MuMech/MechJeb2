@@ -104,9 +104,6 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            // FIXME: pretty sure we can make this module dependent upon the stage tracking module running first?  dependency management sucks.
-            core.stageTracking.Update();
-            
             update_pitch_and_heading();
 
             if (VesselState.isLoadedPrincipia )
@@ -188,7 +185,6 @@ namespace MuMech
             handle_throttle();
 
             converge();
-
         }
 
         /*
@@ -576,6 +572,11 @@ namespace MuMech
                 if ( vesselState.time < last_stage_time + 4 )
                     return;
             }
+
+            // run stage tracking right before the optimizer to synch stats and decide if we dropped a stage or not
+            // NOTE: by doing this we make sure we're not running near staging events where the delta-V display might get wonky
+            // that also means the stage information may not be perfectly up to date tick by tick.
+            core.stageTracking.Update();
 
             p.threadStart(vesselState.time);
             //if ( p.threadStart(vesselState.time) )
