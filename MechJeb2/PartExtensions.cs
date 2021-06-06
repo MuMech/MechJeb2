@@ -48,8 +48,8 @@ namespace MuMech
             {
                 PartModule m = p.Modules[i];
                 ModuleEngines eng = m as ModuleEngines;
-                if (eng != null) return !eng.getFlameoutState;
-
+                if (eng != null)
+                    return !eng.getFlameoutState && !eng.engineShutdown;
             }
             return false;
         }
