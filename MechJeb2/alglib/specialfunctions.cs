@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.13.0 (source code generated 2017-12-29)
+ALGLIB 3.17.0 (source code generated 2020-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -49,8 +49,13 @@ public partial class alglib
     public static double gammafunction(double x)
     {
     
-        double result = gammafunc.gammafunction(x);
-        return result;
+        return gammafunc.gammafunction(x, null);
+    }
+    
+    public static double gammafunction(double x, alglib.xparams _params)
+    {
+    
+        return gammafunc.gammafunction(x, _params);
     }
     
     /*************************************************************************
@@ -88,8 +93,13 @@ public partial class alglib
     public static double lngamma(double x, out double sgngam)
     {
         sgngam = 0;
-        double result = gammafunc.lngamma(x, ref sgngam);
-        return result;
+        return gammafunc.lngamma(x, ref sgngam, null);
+    }
+    
+    public static double lngamma(double x, out double sgngam, alglib.xparams _params)
+    {
+        sgngam = 0;
+        return gammafunc.lngamma(x, ref sgngam, _params);
     }
 
 }
@@ -126,8 +136,13 @@ public partial class alglib
     public static double errorfunction(double x)
     {
     
-        double result = normaldistr.errorfunction(x);
-        return result;
+        return normaldistr.errorfunction(x, null);
+    }
+    
+    public static double errorfunction(double x, alglib.xparams _params)
+    {
+    
+        return normaldistr.errorfunction(x, _params);
     }
     
     /*************************************************************************
@@ -160,12 +175,56 @@ public partial class alglib
     public static double errorfunctionc(double x)
     {
     
-        double result = normaldistr.errorfunctionc(x);
-        return result;
+        return normaldistr.errorfunctionc(x, null);
+    }
+    
+    public static double errorfunctionc(double x, alglib.xparams _params)
+    {
+    
+        return normaldistr.errorfunctionc(x, _params);
     }
     
     /*************************************************************************
-    Normal distribution function
+    Same as normalcdf(), obsolete name.
+    *************************************************************************/
+    public static double normaldistribution(double x)
+    {
+    
+        return normaldistr.normaldistribution(x, null);
+    }
+    
+    public static double normaldistribution(double x, alglib.xparams _params)
+    {
+    
+        return normaldistr.normaldistribution(x, _params);
+    }
+    
+    /*************************************************************************
+    Normal distribution PDF
+
+    Returns Gaussian probability density function:
+
+                   1
+       f(x)  = --------- * exp(-x^2/2)
+               sqrt(2pi)
+
+    Cephes Math Library Release 2.8:  June, 2000
+    Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
+    *************************************************************************/
+    public static double normalpdf(double x)
+    {
+    
+        return normaldistr.normalpdf(x, null);
+    }
+    
+    public static double normalpdf(double x, alglib.xparams _params)
+    {
+    
+        return normaldistr.normalpdf(x, _params);
+    }
+    
+    /*************************************************************************
+    Normal distribution CDF
 
     Returns the area under the Gaussian probability density
     function, integrated from minus infinity to x:
@@ -194,11 +253,16 @@ public partial class alglib
     Cephes Math Library Release 2.8:  June, 2000
     Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
     *************************************************************************/
-    public static double normaldistribution(double x)
+    public static double normalcdf(double x)
     {
     
-        double result = normaldistr.normaldistribution(x);
-        return result;
+        return normaldistr.normalcdf(x, null);
+    }
+    
+    public static double normalcdf(double x, alglib.xparams _params)
+    {
+    
+        return normaldistr.normalcdf(x, _params);
     }
     
     /*************************************************************************
@@ -210,12 +274,32 @@ public partial class alglib
     public static double inverf(double e)
     {
     
-        double result = normaldistr.inverf(e);
-        return result;
+        return normaldistr.inverf(e, null);
+    }
+    
+    public static double inverf(double e, alglib.xparams _params)
+    {
+    
+        return normaldistr.inverf(e, _params);
     }
     
     /*************************************************************************
-    Inverse of Normal distribution function
+    Same as invnormalcdf(), deprecated name
+    *************************************************************************/
+    public static double invnormaldistribution(double y0)
+    {
+    
+        return normaldistr.invnormaldistribution(y0, null);
+    }
+    
+    public static double invnormaldistribution(double y0, alglib.xparams _params)
+    {
+    
+        return normaldistr.invnormaldistribution(y0, _params);
+    }
+    
+    /*************************************************************************
+    Inverse of Normal CDF
 
     Returns the argument, x, for which the area under the
     Gaussian probability density function (integrated from
@@ -239,11 +323,93 @@ public partial class alglib
     Cephes Math Library Release 2.8:  June, 2000
     Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
     *************************************************************************/
-    public static double invnormaldistribution(double y0)
+    public static double invnormalcdf(double y0)
     {
     
-        double result = normaldistr.invnormaldistribution(y0);
-        return result;
+        return normaldistr.invnormalcdf(y0, null);
+    }
+    
+    public static double invnormalcdf(double y0, alglib.xparams _params)
+    {
+    
+        return normaldistr.invnormalcdf(y0, _params);
+    }
+    
+    /*************************************************************************
+    Bivariate normal PDF
+
+    Returns probability density function of the bivariate  Gaussian  with
+    correlation parameter equal to Rho:
+
+                             1              (    x^2 - 2*rho*x*y + y^2  )
+        f(x,y,rho) = ----------------- * exp( - ----------------------- )
+                     2pi*sqrt(1-rho^2)      (        2*(1-rho^2)        )
+
+
+    with -1<rho<+1 and arbitrary x, y.
+
+    This function won't fail as long as Rho is in (-1,+1) range.
+
+      -- ALGLIB --
+         Copyright 15.11.2019 by Bochkanov Sergey
+    *************************************************************************/
+    public static double bivariatenormalpdf(double x, double y, double rho)
+    {
+    
+        return normaldistr.bivariatenormalpdf(x, y, rho, null);
+    }
+    
+    public static double bivariatenormalpdf(double x, double y, double rho, alglib.xparams _params)
+    {
+    
+        return normaldistr.bivariatenormalpdf(x, y, rho, _params);
+    }
+    
+    /*************************************************************************
+    Bivariate normal CDF
+
+    Returns the area under the bivariate Gaussian  PDF  with  correlation
+    parameter equal to Rho, integrated from minus infinity to (x,y):
+
+
+                                              x      y
+                                              -      -
+                                1            | |    | |
+        bvn(x,y,rho) = -------------------   |      |   f(u,v,rho)*du*dv
+                        2pi*sqrt(1-rho^2)  | |    | |
+                                            -      -
+                                           -INF   -INF
+
+
+    where
+
+                          (    u^2 - 2*rho*u*v + v^2  )
+        f(u,v,rho)   = exp( - ----------------------- )
+                          (        2*(1-rho^2)        )
+
+
+    with -1<rho<+1 and arbitrary x, y.
+
+    This subroutine uses high-precision approximation scheme proposed  by
+    Alan Genz in "Numerical  Computation  of  Rectangular  Bivariate  and
+    Trivariate Normal and  t  probabilities",  which  computes  CDF  with
+    absolute error roughly equal to 1e-14.
+
+    This function won't fail as long as Rho is in (-1,+1) range.
+
+      -- ALGLIB --
+         Copyright 15.11.2019 by Bochkanov Sergey
+    *************************************************************************/
+    public static double bivariatenormalcdf(double x, double y, double rho)
+    {
+    
+        return normaldistr.bivariatenormalcdf(x, y, rho, null);
+    }
+    
+    public static double bivariatenormalcdf(double x, double y, double rho, alglib.xparams _params)
+    {
+    
+        return normaldistr.bivariatenormalcdf(x, y, rho, _params);
     }
 
 }
@@ -283,8 +449,13 @@ public partial class alglib
     public static double incompletegamma(double a, double x)
     {
     
-        double result = igammaf.incompletegamma(a, x);
-        return result;
+        return igammaf.incompletegamma(a, x, null);
+    }
+    
+    public static double incompletegamma(double a, double x, alglib.xparams _params)
+    {
+    
+        return igammaf.incompletegamma(a, x, _params);
     }
     
     /*************************************************************************
@@ -323,8 +494,13 @@ public partial class alglib
     public static double incompletegammac(double a, double x)
     {
     
-        double result = igammaf.incompletegammac(a, x);
-        return result;
+        return igammaf.incompletegammac(a, x, null);
+    }
+    
+    public static double incompletegammac(double a, double x, alglib.xparams _params)
+    {
+    
+        return igammaf.incompletegammac(a, x, _params);
     }
     
     /*************************************************************************
@@ -366,8 +542,13 @@ public partial class alglib
     public static double invincompletegammac(double a, double y0)
     {
     
-        double result = igammaf.invincompletegammac(a, y0);
-        return result;
+        return igammaf.invincompletegammac(a, y0, null);
+    }
+    
+    public static double invincompletegammac(double a, double y0, alglib.xparams _params)
+    {
+    
+        return igammaf.invincompletegammac(a, y0, _params);
     }
 
 }
@@ -408,8 +589,13 @@ public partial class alglib
     public static double ellipticintegralk(double m)
     {
     
-        double result = elliptic.ellipticintegralk(m);
-        return result;
+        return elliptic.ellipticintegralk(m, null);
+    }
+    
+    public static double ellipticintegralk(double m, alglib.xparams _params)
+    {
+    
+        return elliptic.ellipticintegralk(m, _params);
     }
     
     /*************************************************************************
@@ -451,8 +637,13 @@ public partial class alglib
     public static double ellipticintegralkhighprecision(double m1)
     {
     
-        double result = elliptic.ellipticintegralkhighprecision(m1);
-        return result;
+        return elliptic.ellipticintegralkhighprecision(m1, null);
+    }
+    
+    public static double ellipticintegralkhighprecision(double m1, alglib.xparams _params)
+    {
+    
+        return elliptic.ellipticintegralkhighprecision(m1, _params);
     }
     
     /*************************************************************************
@@ -492,8 +683,13 @@ public partial class alglib
     public static double incompleteellipticintegralk(double phi, double m)
     {
     
-        double result = elliptic.incompleteellipticintegralk(phi, m);
-        return result;
+        return elliptic.incompleteellipticintegralk(phi, m, null);
+    }
+    
+    public static double incompleteellipticintegralk(double phi, double m, alglib.xparams _params)
+    {
+    
+        return elliptic.incompleteellipticintegralk(phi, m, _params);
     }
     
     /*************************************************************************
@@ -526,8 +722,13 @@ public partial class alglib
     public static double ellipticintegrale(double m)
     {
     
-        double result = elliptic.ellipticintegrale(m);
-        return result;
+        return elliptic.ellipticintegrale(m, null);
+    }
+    
+    public static double ellipticintegrale(double m, alglib.xparams _params)
+    {
+    
+        return elliptic.ellipticintegrale(m, _params);
     }
     
     /*************************************************************************
@@ -563,8 +764,13 @@ public partial class alglib
     public static double incompleteellipticintegrale(double phi, double m)
     {
     
-        double result = elliptic.incompleteellipticintegrale(phi, m);
-        return result;
+        return elliptic.incompleteellipticintegrale(phi, m, null);
+    }
+    
+    public static double incompleteellipticintegrale(double phi, double m, alglib.xparams _params)
+    {
+    
+        return elliptic.incompleteellipticintegrale(phi, m, _params);
     }
 
 }
@@ -585,8 +791,13 @@ public partial class alglib
     public static double hermitecalculate(int n, double x)
     {
     
-        double result = hermite.hermitecalculate(n, x);
-        return result;
+        return hermite.hermitecalculate(n, x, null);
+    }
+    
+    public static double hermitecalculate(int n, double x, alglib.xparams _params)
+    {
+    
+        return hermite.hermitecalculate(n, x, _params);
     }
     
     /*************************************************************************
@@ -605,8 +816,13 @@ public partial class alglib
     public static double hermitesum(double[] c, int n, double x)
     {
     
-        double result = hermite.hermitesum(c, n, x);
-        return result;
+        return hermite.hermitesum(c, n, x, null);
+    }
+    
+    public static double hermitesum(double[] c, int n, double x, alglib.xparams _params)
+    {
+    
+        return hermite.hermitesum(c, n, x, _params);
     }
     
     /*************************************************************************
@@ -621,8 +837,13 @@ public partial class alglib
     public static void hermitecoefficients(int n, out double[] c)
     {
         c = new double[0];
-        hermite.hermitecoefficients(n, ref c);
-        return;
+        hermite.hermitecoefficients(n, ref c, null);
+    }
+    
+    public static void hermitecoefficients(int n, out double[] c, alglib.xparams _params)
+    {
+        c = new double[0];
+        hermite.hermitecoefficients(n, ref c, _params);
     }
 
 }
@@ -658,8 +879,13 @@ public partial class alglib
     public static double dawsonintegral(double x)
     {
     
-        double result = dawson.dawsonintegral(x);
-        return result;
+        return dawson.dawsonintegral(x, null);
+    }
+    
+    public static double dawsonintegral(double x, alglib.xparams _params)
+    {
+    
+        return dawson.dawsonintegral(x, _params);
     }
 
 }
@@ -710,8 +936,14 @@ public partial class alglib
     {
         si = 0;
         ci = 0;
-        trigintegrals.sinecosineintegrals(x, ref si, ref ci);
-        return;
+        trigintegrals.sinecosineintegrals(x, ref si, ref ci, null);
+    }
+    
+    public static void sinecosineintegrals(double x, out double si, out double ci, alglib.xparams _params)
+    {
+        si = 0;
+        ci = 0;
+        trigintegrals.sinecosineintegrals(x, ref si, ref ci, _params);
     }
     
     /*************************************************************************
@@ -758,8 +990,14 @@ public partial class alglib
     {
         shi = 0;
         chi = 0;
-        trigintegrals.hyperbolicsinecosineintegrals(x, ref shi, ref chi);
-        return;
+        trigintegrals.hyperbolicsinecosineintegrals(x, ref shi, ref chi, null);
+    }
+    
+    public static void hyperbolicsinecosineintegrals(double x, out double shi, out double chi, alglib.xparams _params)
+    {
+        shi = 0;
+        chi = 0;
+        trigintegrals.hyperbolicsinecosineintegrals(x, ref shi, ref chi, _params);
     }
 
 }
@@ -795,8 +1033,13 @@ public partial class alglib
     public static double poissondistribution(int k, double m)
     {
     
-        double result = poissondistr.poissondistribution(k, m);
-        return result;
+        return poissondistr.poissondistribution(k, m, null);
+    }
+    
+    public static double poissondistribution(int k, double m, alglib.xparams _params)
+    {
+    
+        return poissondistr.poissondistribution(k, m, _params);
     }
     
     /*************************************************************************
@@ -828,8 +1071,13 @@ public partial class alglib
     public static double poissoncdistribution(int k, double m)
     {
     
-        double result = poissondistr.poissoncdistribution(k, m);
-        return result;
+        return poissondistr.poissoncdistribution(k, m, null);
+    }
+    
+    public static double poissoncdistribution(int k, double m, alglib.xparams _params)
+    {
+    
+        return poissondistr.poissoncdistribution(k, m, _params);
     }
     
     /*************************************************************************
@@ -854,8 +1102,13 @@ public partial class alglib
     public static double invpoissondistribution(int k, double y)
     {
     
-        double result = poissondistr.invpoissondistribution(k, y);
-        return result;
+        return poissondistr.invpoissondistribution(k, y, null);
+    }
+    
+    public static double invpoissondistribution(int k, double y, alglib.xparams _params)
+    {
+    
+        return poissondistr.invpoissondistribution(k, y, _params);
     }
 
 }
@@ -896,8 +1149,13 @@ public partial class alglib
     public static double besselj0(double x)
     {
     
-        double result = bessel.besselj0(x);
-        return result;
+        return bessel.besselj0(x, null);
+    }
+    
+    public static double besselj0(double x, alglib.xparams _params)
+    {
+    
+        return bessel.besselj0(x, _params);
     }
     
     /*************************************************************************
@@ -923,8 +1181,13 @@ public partial class alglib
     public static double besselj1(double x)
     {
     
-        double result = bessel.besselj1(x);
-        return result;
+        return bessel.besselj1(x, null);
+    }
+    
+    public static double besselj1(double x, alglib.xparams _params)
+    {
+    
+        return bessel.besselj1(x, _params);
     }
     
     /*************************************************************************
@@ -957,8 +1220,13 @@ public partial class alglib
     public static double besseljn(int n, double x)
     {
     
-        double result = bessel.besseljn(n, x);
-        return result;
+        return bessel.besseljn(n, x, null);
+    }
+    
+    public static double besseljn(int n, double x, alglib.xparams _params)
+    {
+    
+        return bessel.besseljn(n, x, _params);
     }
     
     /*************************************************************************
@@ -992,8 +1260,13 @@ public partial class alglib
     public static double bessely0(double x)
     {
     
-        double result = bessel.bessely0(x);
-        return result;
+        return bessel.bessely0(x, null);
+    }
+    
+    public static double bessely0(double x, alglib.xparams _params)
+    {
+    
+        return bessel.bessely0(x, _params);
     }
     
     /*************************************************************************
@@ -1020,8 +1293,13 @@ public partial class alglib
     public static double bessely1(double x)
     {
     
-        double result = bessel.bessely1(x);
-        return result;
+        return bessel.bessely1(x, null);
+    }
+    
+    public static double bessely1(double x, alglib.xparams _params)
+    {
+    
+        return bessel.bessely1(x, _params);
     }
     
     /*************************************************************************
@@ -1049,8 +1327,13 @@ public partial class alglib
     public static double besselyn(int n, double x)
     {
     
-        double result = bessel.besselyn(n, x);
-        return result;
+        return bessel.besselyn(n, x, null);
+    }
+    
+    public static double besselyn(int n, double x, alglib.xparams _params)
+    {
+    
+        return bessel.besselyn(n, x, _params);
     }
     
     /*************************************************************************
@@ -1077,8 +1360,13 @@ public partial class alglib
     public static double besseli0(double x)
     {
     
-        double result = bessel.besseli0(x);
-        return result;
+        return bessel.besseli0(x, null);
+    }
+    
+    public static double besseli0(double x, alglib.xparams _params)
+    {
+    
+        return bessel.besseli0(x, _params);
     }
     
     /*************************************************************************
@@ -1105,8 +1393,13 @@ public partial class alglib
     public static double besseli1(double x)
     {
     
-        double result = bessel.besseli1(x);
-        return result;
+        return bessel.besseli1(x, null);
+    }
+    
+    public static double besseli1(double x, alglib.xparams _params)
+    {
+    
+        return bessel.besseli1(x, _params);
     }
     
     /*************************************************************************
@@ -1133,8 +1426,13 @@ public partial class alglib
     public static double besselk0(double x)
     {
     
-        double result = bessel.besselk0(x);
-        return result;
+        return bessel.besselk0(x, null);
+    }
+    
+    public static double besselk0(double x, alglib.xparams _params)
+    {
+    
+        return bessel.besselk0(x, _params);
     }
     
     /*************************************************************************
@@ -1159,8 +1457,13 @@ public partial class alglib
     public static double besselk1(double x)
     {
     
-        double result = bessel.besselk1(x);
-        return result;
+        return bessel.besselk1(x, null);
+    }
+    
+    public static double besselk1(double x, alglib.xparams _params)
+    {
+    
+        return bessel.besselk1(x, _params);
     }
     
     /*************************************************************************
@@ -1188,8 +1491,13 @@ public partial class alglib
     public static double besselkn(int nn, double x)
     {
     
-        double result = bessel.besselkn(nn, x);
-        return result;
+        return bessel.besselkn(nn, x, null);
+    }
+    
+    public static double besselkn(int nn, double x, alglib.xparams _params)
+    {
+    
+        return bessel.besselkn(nn, x, _params);
     }
 
 }
@@ -1241,8 +1549,13 @@ public partial class alglib
     public static double incompletebeta(double a, double b, double x)
     {
     
-        double result = ibetaf.incompletebeta(a, b, x);
-        return result;
+        return ibetaf.incompletebeta(a, b, x, null);
+    }
+    
+    public static double incompletebeta(double a, double b, double x, alglib.xparams _params)
+    {
+    
+        return ibetaf.incompletebeta(a, b, x, _params);
     }
     
     /*************************************************************************
@@ -1276,8 +1589,13 @@ public partial class alglib
     public static double invincompletebeta(double a, double b, double y)
     {
     
-        double result = ibetaf.invincompletebeta(a, b, y);
-        return result;
+        return ibetaf.invincompletebeta(a, b, y, null);
+    }
+    
+    public static double invincompletebeta(double a, double b, double y, alglib.xparams _params)
+    {
+    
+        return ibetaf.invincompletebeta(a, b, y, _params);
     }
 
 }
@@ -1320,8 +1638,13 @@ public partial class alglib
     public static double fdistribution(int a, int b, double x)
     {
     
-        double result = fdistr.fdistribution(a, b, x);
-        return result;
+        return fdistr.fdistribution(a, b, x, null);
+    }
+    
+    public static double fdistribution(int a, int b, double x, alglib.xparams _params)
+    {
+    
+        return fdistr.fdistribution(a, b, x, _params);
     }
     
     /*************************************************************************
@@ -1363,8 +1686,13 @@ public partial class alglib
     public static double fcdistribution(int a, int b, double x)
     {
     
-        double result = fdistr.fcdistribution(a, b, x);
-        return result;
+        return fdistr.fcdistribution(a, b, x, null);
+    }
+    
+    public static double fcdistribution(int a, int b, double x, alglib.xparams _params)
+    {
+    
+        return fdistr.fcdistribution(a, b, x, _params);
     }
     
     /*************************************************************************
@@ -1405,8 +1733,13 @@ public partial class alglib
     public static double invfdistribution(int a, int b, double y)
     {
     
-        double result = fdistr.invfdistribution(a, b, y);
-        return result;
+        return fdistr.invfdistribution(a, b, y, null);
+    }
+    
+    public static double invfdistribution(int a, int b, double y, alglib.xparams _params)
+    {
+    
+        return fdistr.invfdistribution(a, b, y, _params);
     }
 
 }
@@ -1459,8 +1792,13 @@ public partial class alglib
     public static void fresnelintegral(double x, ref double c, ref double s)
     {
     
-        fresnel.fresnelintegral(x, ref c, ref s);
-        return;
+        fresnel.fresnelintegral(x, ref c, ref s, null);
+    }
+    
+    public static void fresnelintegral(double x, ref double c, ref double s, alglib.xparams _params)
+    {
+    
+        fresnel.fresnelintegral(x, ref c, ref s, _params);
     }
 
 }
@@ -1514,8 +1852,16 @@ public partial class alglib
         cn = 0;
         dn = 0;
         ph = 0;
-        jacobianelliptic.jacobianellipticfunctions(u, m, ref sn, ref cn, ref dn, ref ph);
-        return;
+        jacobianelliptic.jacobianellipticfunctions(u, m, ref sn, ref cn, ref dn, ref ph, null);
+    }
+    
+    public static void jacobianellipticfunctions(double u, double m, out double sn, out double cn, out double dn, out double ph, alglib.xparams _params)
+    {
+        sn = 0;
+        cn = 0;
+        dn = 0;
+        ph = 0;
+        jacobianelliptic.jacobianellipticfunctions(u, m, ref sn, ref cn, ref dn, ref ph, _params);
     }
 
 }
@@ -1565,8 +1911,13 @@ public partial class alglib
     public static double psi(double x)
     {
     
-        double result = psif.psi(x);
-        return result;
+        return psif.psi(x, null);
+    }
+    
+    public static double psi(double x, alglib.xparams _params)
+    {
+    
+        return psif.psi(x, _params);
     }
 
 }
@@ -1602,8 +1953,13 @@ public partial class alglib
     public static double exponentialintegralei(double x)
     {
     
-        double result = expintegrals.exponentialintegralei(x);
-        return result;
+        return expintegrals.exponentialintegralei(x, null);
+    }
+    
+    public static double exponentialintegralei(double x, alglib.xparams _params)
+    {
+    
+        return expintegrals.exponentialintegralei(x, _params);
     }
     
     /*************************************************************************
@@ -1640,8 +1996,13 @@ public partial class alglib
     public static double exponentialintegralen(double x, int n)
     {
     
-        double result = expintegrals.exponentialintegralen(x, n);
-        return result;
+        return expintegrals.exponentialintegralen(x, n, null);
+    }
+    
+    public static double exponentialintegralen(double x, int n, alglib.xparams _params)
+    {
+    
+        return expintegrals.exponentialintegralen(x, n, _params);
     }
 
 }
@@ -1662,8 +2023,13 @@ public partial class alglib
     public static double laguerrecalculate(int n, double x)
     {
     
-        double result = laguerre.laguerrecalculate(n, x);
-        return result;
+        return laguerre.laguerrecalculate(n, x, null);
+    }
+    
+    public static double laguerrecalculate(int n, double x, alglib.xparams _params)
+    {
+    
+        return laguerre.laguerrecalculate(n, x, _params);
     }
     
     /*************************************************************************
@@ -1681,8 +2047,13 @@ public partial class alglib
     public static double laguerresum(double[] c, int n, double x)
     {
     
-        double result = laguerre.laguerresum(c, n, x);
-        return result;
+        return laguerre.laguerresum(c, n, x, null);
+    }
+    
+    public static double laguerresum(double[] c, int n, double x, alglib.xparams _params)
+    {
+    
+        return laguerre.laguerresum(c, n, x, _params);
     }
     
     /*************************************************************************
@@ -1697,8 +2068,13 @@ public partial class alglib
     public static void laguerrecoefficients(int n, out double[] c)
     {
         c = new double[0];
-        laguerre.laguerrecoefficients(n, ref c);
-        return;
+        laguerre.laguerrecoefficients(n, ref c, null);
+    }
+    
+    public static void laguerrecoefficients(int n, out double[] c, alglib.xparams _params)
+    {
+        c = new double[0];
+        laguerre.laguerrecoefficients(n, ref c, _params);
     }
 
 }
@@ -1742,8 +2118,13 @@ public partial class alglib
     public static double chisquaredistribution(double v, double x)
     {
     
-        double result = chisquaredistr.chisquaredistribution(v, x);
-        return result;
+        return chisquaredistr.chisquaredistribution(v, x, null);
+    }
+    
+    public static double chisquaredistribution(double v, double x, alglib.xparams _params)
+    {
+    
+        return chisquaredistr.chisquaredistribution(v, x, _params);
     }
     
     /*************************************************************************
@@ -1780,8 +2161,13 @@ public partial class alglib
     public static double chisquarecdistribution(double v, double x)
     {
     
-        double result = chisquaredistr.chisquarecdistribution(v, x);
-        return result;
+        return chisquaredistr.chisquarecdistribution(v, x, null);
+    }
+    
+    public static double chisquarecdistribution(double v, double x, alglib.xparams _params)
+    {
+    
+        return chisquaredistr.chisquarecdistribution(v, x, _params);
     }
     
     /*************************************************************************
@@ -1807,8 +2193,13 @@ public partial class alglib
     public static double invchisquaredistribution(double v, double y)
     {
     
-        double result = chisquaredistr.invchisquaredistribution(v, y);
-        return result;
+        return chisquaredistr.invchisquaredistribution(v, y, null);
+    }
+    
+    public static double invchisquaredistribution(double v, double y, alglib.xparams _params)
+    {
+    
+        return chisquaredistr.invchisquaredistribution(v, y, _params);
     }
 
 }
@@ -1829,8 +2220,13 @@ public partial class alglib
     public static double legendrecalculate(int n, double x)
     {
     
-        double result = legendre.legendrecalculate(n, x);
-        return result;
+        return legendre.legendrecalculate(n, x, null);
+    }
+    
+    public static double legendrecalculate(int n, double x, alglib.xparams _params)
+    {
+    
+        return legendre.legendrecalculate(n, x, _params);
     }
     
     /*************************************************************************
@@ -1849,8 +2245,13 @@ public partial class alglib
     public static double legendresum(double[] c, int n, double x)
     {
     
-        double result = legendre.legendresum(c, n, x);
-        return result;
+        return legendre.legendresum(c, n, x, null);
+    }
+    
+    public static double legendresum(double[] c, int n, double x, alglib.xparams _params)
+    {
+    
+        return legendre.legendresum(c, n, x, _params);
     }
     
     /*************************************************************************
@@ -1865,8 +2266,13 @@ public partial class alglib
     public static void legendrecoefficients(int n, out double[] c)
     {
         c = new double[0];
-        legendre.legendrecoefficients(n, ref c);
-        return;
+        legendre.legendrecoefficients(n, ref c, null);
+    }
+    
+    public static void legendrecoefficients(int n, out double[] c, alglib.xparams _params)
+    {
+        c = new double[0];
+        legendre.legendrecoefficients(n, ref c, _params);
     }
 
 }
@@ -1899,8 +2305,13 @@ public partial class alglib
     public static double beta(double a, double b)
     {
     
-        double result = betaf.beta(a, b);
-        return result;
+        return betaf.beta(a, b, null);
+    }
+    
+    public static double beta(double a, double b, alglib.xparams _params)
+    {
+    
+        return betaf.beta(a, b, _params);
     }
 
 }
@@ -1923,8 +2334,13 @@ public partial class alglib
     public static double chebyshevcalculate(int r, int n, double x)
     {
     
-        double result = chebyshev.chebyshevcalculate(r, n, x);
-        return result;
+        return chebyshev.chebyshevcalculate(r, n, x, null);
+    }
+    
+    public static double chebyshevcalculate(int r, int n, double x, alglib.xparams _params)
+    {
+    
+        return chebyshev.chebyshevcalculate(r, n, x, _params);
     }
     
     /*************************************************************************
@@ -1947,8 +2363,13 @@ public partial class alglib
     public static double chebyshevsum(double[] c, int r, int n, double x)
     {
     
-        double result = chebyshev.chebyshevsum(c, r, n, x);
-        return result;
+        return chebyshev.chebyshevsum(c, r, n, x, null);
+    }
+    
+    public static double chebyshevsum(double[] c, int r, int n, double x, alglib.xparams _params)
+    {
+    
+        return chebyshev.chebyshevsum(c, r, n, x, _params);
     }
     
     /*************************************************************************
@@ -1963,8 +2384,13 @@ public partial class alglib
     public static void chebyshevcoefficients(int n, out double[] c)
     {
         c = new double[0];
-        chebyshev.chebyshevcoefficients(n, ref c);
-        return;
+        chebyshev.chebyshevcoefficients(n, ref c, null);
+    }
+    
+    public static void chebyshevcoefficients(int n, out double[] c, alglib.xparams _params)
+    {
+        c = new double[0];
+        chebyshev.chebyshevcoefficients(n, ref c, _params);
     }
     
     /*************************************************************************
@@ -1983,8 +2409,13 @@ public partial class alglib
     public static void fromchebyshev(double[] a, int n, out double[] b)
     {
         b = new double[0];
-        chebyshev.fromchebyshev(a, n, ref b);
-        return;
+        chebyshev.fromchebyshev(a, n, ref b, null);
+    }
+    
+    public static void fromchebyshev(double[] a, int n, out double[] b, alglib.xparams _params)
+    {
+        b = new double[0];
+        chebyshev.fromchebyshev(a, n, ref b, _params);
     }
 
 }
@@ -2036,8 +2467,13 @@ public partial class alglib
     public static double studenttdistribution(int k, double t)
     {
     
-        double result = studenttdistr.studenttdistribution(k, t);
-        return result;
+        return studenttdistr.studenttdistribution(k, t, null);
+    }
+    
+    public static double studenttdistribution(int k, double t, alglib.xparams _params)
+    {
+    
+        return studenttdistr.studenttdistribution(k, t, _params);
     }
     
     /*************************************************************************
@@ -2060,8 +2496,13 @@ public partial class alglib
     public static double invstudenttdistribution(int k, double p)
     {
     
-        double result = studenttdistr.invstudenttdistribution(k, p);
-        return result;
+        return studenttdistr.invstudenttdistribution(k, p, null);
+    }
+    
+    public static double invstudenttdistribution(int k, double p, alglib.xparams _params)
+    {
+    
+        return studenttdistr.invstudenttdistribution(k, p, _params);
     }
 
 }
@@ -2103,8 +2544,13 @@ public partial class alglib
     public static double binomialdistribution(int k, int n, double p)
     {
     
-        double result = binomialdistr.binomialdistribution(k, n, p);
-        return result;
+        return binomialdistr.binomialdistribution(k, n, p, null);
+    }
+    
+    public static double binomialdistribution(int k, int n, double p, alglib.xparams _params)
+    {
+    
+        return binomialdistr.binomialdistribution(k, n, p, _params);
     }
     
     /*************************************************************************
@@ -2143,8 +2589,13 @@ public partial class alglib
     public static double binomialcdistribution(int k, int n, double p)
     {
     
-        double result = binomialdistr.binomialcdistribution(k, n, p);
-        return result;
+        return binomialdistr.binomialcdistribution(k, n, p, null);
+    }
+    
+    public static double binomialcdistribution(int k, int n, double p, alglib.xparams _params)
+    {
+    
+        return binomialdistr.binomialcdistribution(k, n, p, _params);
     }
     
     /*************************************************************************
@@ -2178,8 +2629,13 @@ public partial class alglib
     public static double invbinomialdistribution(int k, int n, double y)
     {
     
-        double result = binomialdistr.invbinomialdistribution(k, n, y);
-        return result;
+        return binomialdistr.invbinomialdistribution(k, n, y, null);
+    }
+    
+    public static double invbinomialdistribution(int k, int n, double y, alglib.xparams _params)
+    {
+    
+        return binomialdistr.invbinomialdistribution(k, n, y, _params);
     }
 
 }
@@ -2225,8 +2681,16 @@ public partial class alglib
         aip = 0;
         bi = 0;
         bip = 0;
-        airyf.airy(x, ref ai, ref aip, ref bi, ref bip);
-        return;
+        airyf.airy(x, ref ai, ref aip, ref bi, ref bip, null);
+    }
+    
+    public static void airy(double x, out double ai, out double aip, out double bi, out double bip, alglib.xparams _params)
+    {
+        ai = 0;
+        aip = 0;
+        bi = 0;
+        bip = 0;
+        airyf.airy(x, ref ai, ref aip, ref bi, ref bip, _params);
     }
 
 }
@@ -2254,7 +2718,8 @@ public partial class alglib
         Original copyright 1984, 1987, 1989, 1992, 2000 by Stephen L. Moshier
         Translated to AlgoPascal by Bochkanov Sergey (2005, 2006, 2007).
         *************************************************************************/
-        public static double gammafunction(double x)
+        public static double gammafunction(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double p = 0;
@@ -2285,11 +2750,11 @@ public partial class alglib
                     }
                     z = q*Math.Sin(Math.PI*z);
                     z = Math.Abs(z);
-                    z = Math.PI/(z*gammastirf(q));
+                    z = Math.PI/(z*gammastirf(q, _params));
                 }
                 else
                 {
-                    z = gammastirf(x);
+                    z = gammastirf(x, _params);
                 }
                 result = sgngam*z;
                 return result;
@@ -2379,7 +2844,8 @@ public partial class alglib
         Translated to AlgoPascal by Bochkanov Sergey (2005, 2006, 2007).
         *************************************************************************/
         public static double lngamma(double x,
-            ref double sgngam)
+            ref double sgngam,
+            alglib.xparams _params)
         {
             double result = 0;
             double a = 0;
@@ -2403,7 +2869,7 @@ public partial class alglib
             if( (double)(x)<(double)(-34.0) )
             {
                 q = -x;
-                w = lngamma(q, ref tmp);
+                w = lngamma(q, ref tmp, _params);
                 p = (int)Math.Floor(q);
                 i = (int)Math.Round(p);
                 if( i%2==0 )
@@ -2499,7 +2965,8 @@ public partial class alglib
         }
 
 
-        private static double gammastirf(double x)
+        private static double gammastirf(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double y = 0;
@@ -2558,7 +3025,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double errorfunction(double x)
+        public static double errorfunction(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double xsq = 0;
@@ -2593,7 +3061,7 @@ public partial class alglib
                 result = s;
                 return result;
             }
-            result = s*(1-errorfunctionc(x));
+            result = s*(1-errorfunctionc(x, _params));
             return result;
         }
 
@@ -2625,7 +3093,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double errorfunctionc(double x)
+        public static double errorfunctionc(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double p = 0;
@@ -2633,12 +3102,12 @@ public partial class alglib
 
             if( (double)(x)<(double)(0) )
             {
-                result = 2-errorfunctionc(-x);
+                result = 2-errorfunctionc(-x, _params);
                 return result;
             }
             if( (double)(x)<(double)(0.5) )
             {
-                result = 1.0-errorfunction(x);
+                result = 1.0-errorfunction(x, _params);
                 return result;
             }
             if( (double)(x)>=(double)(10) )
@@ -2670,7 +3139,43 @@ public partial class alglib
 
 
         /*************************************************************************
-        Normal distribution function
+        Same as normalcdf(), obsolete name.
+        *************************************************************************/
+        public static double normaldistribution(double x,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = 0.5*(errorfunction(x/1.41421356237309504880, _params)+1);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Normal distribution PDF
+
+        Returns Gaussian probability density function:
+
+                       1
+           f(x)  = --------- * exp(-x^2/2)
+                   sqrt(2pi)
+
+        Cephes Math Library Release 2.8:  June, 2000
+        Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
+        *************************************************************************/
+        public static double normalpdf(double x,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            alglib.ap.assert(math.isfinite(x), "NormalPDF: X is infinite");
+            result = Math.Exp(-(x*x/2))/Math.Sqrt(2*Math.PI);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Normal distribution CDF
 
         Returns the area under the Gaussian probability density
         function, integrated from minus infinity to x:
@@ -2699,11 +3204,12 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double normaldistribution(double x)
+        public static double normalcdf(double x,
+            alglib.xparams _params)
         {
             double result = 0;
 
-            result = 0.5*(errorfunction(x/1.41421356237309504880)+1);
+            result = 0.5*(errorfunction(x/1.41421356237309504880, _params)+1);
             return result;
         }
 
@@ -2714,17 +3220,31 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double inverf(double e)
+        public static double inverf(double e,
+            alglib.xparams _params)
         {
             double result = 0;
 
-            result = invnormaldistribution(0.5*(e+1))/Math.Sqrt(2);
+            result = invnormaldistribution(0.5*(e+1), _params)/Math.Sqrt(2);
             return result;
         }
 
 
         /*************************************************************************
-        Inverse of Normal distribution function
+        Same as invnormalcdf(), deprecated name
+        *************************************************************************/
+        public static double invnormaldistribution(double y0,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = invnormalcdf(y0, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Inverse of Normal CDF
 
         Returns the argument, x, for which the area under the
         Gaussian probability density function (integrated from
@@ -2748,7 +3268,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1988, 1992, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double invnormaldistribution(double y0)
+        public static double invnormalcdf(double y0,
+            alglib.xparams _params)
         {
             double result = 0;
             double expm2 = 0;
@@ -2866,6 +3387,256 @@ public partial class alglib
         }
 
 
+        /*************************************************************************
+        Bivariate normal PDF
+
+        Returns probability density function of the bivariate  Gaussian  with
+        correlation parameter equal to Rho:
+
+                                 1              (    x^2 - 2*rho*x*y + y^2  )
+            f(x,y,rho) = ----------------- * exp( - ----------------------- )
+                         2pi*sqrt(1-rho^2)      (        2*(1-rho^2)        )
+
+
+        with -1<rho<+1 and arbitrary x, y.
+
+        This function won't fail as long as Rho is in (-1,+1) range.
+
+          -- ALGLIB --
+             Copyright 15.11.2019 by Bochkanov Sergey
+        *************************************************************************/
+        public static double bivariatenormalpdf(double x,
+            double y,
+            double rho,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double onerho2 = 0;
+
+            alglib.ap.assert(math.isfinite(x), "BivariateNormalCDF: X is infinite");
+            alglib.ap.assert(math.isfinite(y), "BivariateNormalCDF: Y is infinite");
+            alglib.ap.assert(math.isfinite(rho), "BivariateNormalCDF: Rho is infinite");
+            alglib.ap.assert((double)(-1)<(double)(rho) && (double)(rho)<(double)(1), "BivariateNormalCDF: Rho is not in (-1,+1) range");
+            onerho2 = (1-rho)*(1+rho);
+            result = Math.Exp(-((x*x+y*y-2*rho*x*y)/(2*onerho2)))/(2*Math.PI*Math.Sqrt(onerho2));
+            return result;
+        }
+
+
+        /*************************************************************************
+        Bivariate normal CDF
+
+        Returns the area under the bivariate Gaussian  PDF  with  correlation
+        parameter equal to Rho, integrated from minus infinity to (x,y):
+
+
+                                                  x      y
+                                                  -      -  
+                                    1            | |    | | 
+            bvn(x,y,rho) = -------------------   |      |   f(u,v,rho)*du*dv
+                            2pi*sqrt(1-rho^2)  | |    | |    
+                                                -      -
+                                               -INF   -INF
+
+                                               
+        where
+
+                              (    u^2 - 2*rho*u*v + v^2  )
+            f(u,v,rho)   = exp( - ----------------------- )
+                              (        2*(1-rho^2)        )
+
+
+        with -1<rho<+1 and arbitrary x, y.
+
+        This subroutine uses high-precision approximation scheme proposed  by
+        Alan Genz in "Numerical  Computation  of  Rectangular  Bivariate  and
+        Trivariate Normal and  t  probabilities",  which  computes  CDF  with
+        absolute error roughly equal to 1e-14.
+
+        This function won't fail as long as Rho is in (-1,+1) range.
+
+          -- ALGLIB --
+             Copyright 15.11.2019 by Bochkanov Sergey
+        *************************************************************************/
+        public static double bivariatenormalcdf(double x,
+            double y,
+            double rho,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double rangea = 0;
+            double rangeb = 0;
+            double s = 0;
+            double v = 0;
+            double v0 = 0;
+            double v1 = 0;
+            double fxys = 0;
+            double ta = 0;
+            double tb = 0;
+            double tc = 0;
+
+            alglib.ap.assert(math.isfinite(x), "BivariateNormalCDF: X is infinite");
+            alglib.ap.assert(math.isfinite(y), "BivariateNormalCDF: Y is infinite");
+            alglib.ap.assert(math.isfinite(rho), "BivariateNormalCDF: Rho is infinite");
+            alglib.ap.assert((double)(-1)<(double)(rho) && (double)(rho)<(double)(1), "BivariateNormalCDF: Rho is not in (-1,+1) range");
+            if( (double)(rho)==(double)(0) )
+            {
+                result = normalcdf(x, _params)*normalcdf(y, _params);
+                return result;
+            }
+            if( (double)(Math.Abs(rho))<=(double)(0.8) )
+            {
+                
+                //
+                // Rho is small, compute integral using using formula (3) by Alan Genz, integrated
+                // by means of 10-point Gauss-Legendre quadrature
+                //
+                rangea = 0;
+                rangeb = Math.Asin(rho);
+                v = 0;
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.2491470458134028, -0.1252334085114689, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.2491470458134028, 0.1252334085114689, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.2334925365383548, -0.3678314989981802, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.2334925365383548, 0.3678314989981802, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.2031674267230659, -0.5873179542866175, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.2031674267230659, 0.5873179542866175, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.1600783285433462, -0.7699026741943047, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.1600783285433462, 0.7699026741943047, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.1069393259953184, -0.9041172563704749, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.1069393259953184, 0.9041172563704749, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.0471753363865118, -0.9815606342467192, _params);
+                v = v+bvnintegrate3(rangea, rangeb, x, y, 0.0471753363865118, 0.9815606342467192, _params);
+                v = v*0.5*(rangeb-rangea)/(2*Math.PI);
+                result = normalcdf(x, _params)*normalcdf(y, _params)+v;
+            }
+            else
+            {
+                
+                //
+                // Rho is large, compute integral using using formula (6) by Alan Genz, integrated
+                // by means of 20-point Gauss-Legendre quadrature.
+                //
+                x = -x;
+                y = -y;
+                s = Math.Sign(rho);
+                if( (double)(s)>(double)(0) )
+                {
+                    fxys = normalcdf(-Math.Max(x, y), _params);
+                }
+                else
+                {
+                    fxys = Math.Max(0.0, normalcdf(-x, _params)-normalcdf(y, _params));
+                }
+                rangea = 0;
+                rangeb = Math.Sqrt((1-rho)*(1+rho));
+                
+                //
+                // Compute first term (analytic integral) from formula (6)
+                //
+                ta = rangeb;
+                tb = Math.Abs(x-s*y);
+                tc = (4-s*x*y)/8;
+                v0 = ta*(1-tc*(tb*tb-ta*ta)/3)*Math.Exp(-(tb*tb/(2*ta*ta)))-tb*(1-tc*tb*tb/3)*Math.Sqrt(2*Math.PI)*normalcdf(-(tb/ta), _params);
+                v0 = v0*Math.Exp(-(s*x*y/2))/(2*Math.PI);
+                
+                //
+                // Compute second term (numerical integral, 20-point Gauss-Legendre rule) from formula (6)
+                //
+                v1 = 0;
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1527533871307258, -0.0765265211334973, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1527533871307258, 0.0765265211334973, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1491729864726037, -0.2277858511416451, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1491729864726037, 0.2277858511416451, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1420961093183820, -0.3737060887154195, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1420961093183820, 0.3737060887154195, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1316886384491766, -0.5108670019508271, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1316886384491766, 0.5108670019508271, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1181945319615184, -0.6360536807265150, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1181945319615184, 0.6360536807265150, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1019301198172404, -0.7463319064601508, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.1019301198172404, 0.7463319064601508, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0832767415767048, -0.8391169718222188, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0832767415767048, 0.8391169718222188, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0626720483341091, -0.9122344282513259, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0626720483341091, 0.9122344282513259, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0406014298003869, -0.9639719272779138, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0406014298003869, 0.9639719272779138, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0176140071391521, -0.9931285991850949, _params);
+                v1 = v1+bvnintegrate6(rangea, rangeb, x, y, s, 0.0176140071391521, 0.9931285991850949, _params);
+                v1 = v1*0.5*(rangeb-rangea)/(2*Math.PI);
+                result = fxys-s*(v0+v1);
+            }
+            result = Math.Max(result, 0);
+            result = Math.Min(result, 1);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Internal function which computes integrand of  formula  (3)  by  Alan
+        Genz times Gaussian weights (passed by user).
+
+          -- ALGLIB --
+             Copyright 15.11.2019 by Bochkanov Sergey
+        *************************************************************************/
+        private static double bvnintegrate3(double rangea,
+            double rangeb,
+            double x,
+            double y,
+            double gw,
+            double gx,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double r = 0;
+            double t2 = 0;
+            double dd = 0;
+            double sinr = 0;
+            double cosr = 0;
+
+            r = (rangeb-rangea)*0.5*gx+(rangeb+rangea)*0.5;
+            t2 = Math.Tan(0.5*r);
+            dd = 1/(1+t2*t2);
+            sinr = 2*t2*dd;
+            cosr = (1-t2*t2)*dd;
+            result = gw*Math.Exp(-((x*x+y*y-2*x*y*sinr)/(2*cosr*cosr)));
+            return result;
+        }
+
+
+        /*************************************************************************
+        Internal function which computes integrand of  formula  (6)  by  Alan
+        Genz times Gaussian weights (passed by user).
+
+          -- ALGLIB --
+             Copyright 15.11.2019 by Bochkanov Sergey
+        *************************************************************************/
+        private static double bvnintegrate6(double rangea,
+            double rangeb,
+            double x,
+            double y,
+            double s,
+            double gw,
+            double gx,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double r = 0;
+            double exphsk22x2 = 0;
+            double exphsk2 = 0;
+            double sqrt1x2 = 0;
+            double exphsk1sqrt1x2 = 0;
+
+            r = (rangeb-rangea)*0.5*gx+(rangeb+rangea)*0.5;
+            exphsk22x2 = Math.Exp(-((x-s*y)*(x-s*y)/(2*r*r)));
+            exphsk2 = Math.Exp(-(x*s*y/2));
+            sqrt1x2 = Math.Sqrt((1-r)*(1+r));
+            exphsk1sqrt1x2 = Math.Exp(-(x*s*y/(1+sqrt1x2)));
+            result = gw*exphsk22x2*(exphsk1sqrt1x2/sqrt1x2-exphsk2*(1+(4-x*y*s)*r*r/8));
+            return result;
+        }
+
+
     }
     public class igammaf
     {
@@ -2899,7 +3670,8 @@ public partial class alglib
         Copyright 1985, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double incompletegamma(double a,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double igammaepsilon = 0;
@@ -2917,10 +3689,10 @@ public partial class alglib
             }
             if( (double)(x)>(double)(1) && (double)(x)>(double)(a) )
             {
-                result = 1-incompletegammac(a, x);
+                result = 1-incompletegammac(a, x, _params);
                 return result;
             }
-            ax = a*Math.Log(x)-x-gammafunc.lngamma(a, ref tmp);
+            ax = a*Math.Log(x)-x-gammafunc.lngamma(a, ref tmp, _params);
             if( (double)(ax)<(double)(-709.78271289338399) )
             {
                 result = 0;
@@ -2976,7 +3748,8 @@ public partial class alglib
         Copyright 1985, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double incompletegammac(double a,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double igammaepsilon = 0;
@@ -3008,10 +3781,10 @@ public partial class alglib
             }
             if( (double)(x)<(double)(1) || (double)(x)<(double)(a) )
             {
-                result = 1-incompletegamma(a, x);
+                result = 1-incompletegamma(a, x, _params);
                 return result;
             }
-            ax = a*Math.Log(x)-x-gammafunc.lngamma(a, ref tmp);
+            ax = a*Math.Log(x)-x-gammafunc.lngamma(a, ref tmp, _params);
             if( (double)(ax)<(double)(-709.78271289338399) )
             {
                 result = 0;
@@ -3099,7 +3872,8 @@ public partial class alglib
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double invincompletegammac(double a,
-            double y0)
+            double y0,
+            alglib.xparams _params)
         {
             double result = 0;
             double igammaepsilon = 0;
@@ -3125,9 +3899,9 @@ public partial class alglib
             yh = 1;
             dithresh = 5*igammaepsilon;
             d = 1/(9*a);
-            y = 1-d-normaldistr.invnormaldistribution(y0)*Math.Sqrt(d);
+            y = 1-d-normaldistr.invnormaldistribution(y0, _params)*Math.Sqrt(d);
             x = a*y*y*y;
-            lgm = gammafunc.lngamma(a, ref tmp);
+            lgm = gammafunc.lngamma(a, ref tmp, _params);
             i = 0;
             while( i<10 )
             {
@@ -3136,7 +3910,7 @@ public partial class alglib
                     d = 0.0625;
                     break;
                 }
-                y = incompletegammac(a, x);
+                y = incompletegammac(a, x, _params);
                 if( (double)(y)<(double)(yl) || (double)(y)>(double)(yh) )
                 {
                     d = 0.0625;
@@ -3177,7 +3951,7 @@ public partial class alglib
                 while( (double)(x0)==(double)(iinvgammabignumber) )
                 {
                     x = (1+d)*x;
-                    y = incompletegammac(a, x);
+                    y = incompletegammac(a, x, _params);
                     if( (double)(y)<(double)(y0) )
                     {
                         x0 = x;
@@ -3193,7 +3967,7 @@ public partial class alglib
             while( i<400 )
             {
                 x = x1+d*(x0-x1);
-                y = incompletegammac(a, x);
+                y = incompletegammac(a, x, _params);
                 lgm = (x0-x1)/(x1+x0);
                 if( (double)(Math.Abs(lgm))<(double)(dithresh) )
                 {
@@ -3292,11 +4066,12 @@ public partial class alglib
         Cephes Math Library, Release 2.8:  June, 2000
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double ellipticintegralk(double m)
+        public static double ellipticintegralk(double m,
+            alglib.xparams _params)
         {
             double result = 0;
 
-            result = ellipticintegralkhighprecision(1.0-m);
+            result = ellipticintegralkhighprecision(1.0-m, _params);
             return result;
         }
 
@@ -3337,7 +4112,8 @@ public partial class alglib
         Cephes Math Library, Release 2.8:  June, 2000
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double ellipticintegralkhighprecision(double m1)
+        public static double ellipticintegralkhighprecision(double m1,
+            alglib.xparams _params)
         {
             double result = 0;
             double p = 0;
@@ -3412,7 +4188,8 @@ public partial class alglib
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double incompleteellipticintegralk(double phi,
-            double m)
+            double m,
+            alglib.xparams _params)
         {
             double result = 0;
             double a = 0;
@@ -3447,7 +4224,7 @@ public partial class alglib
             }
             if( npio2!=0 )
             {
-                k = ellipticintegralk(1-a);
+                k = ellipticintegralk(1-a, _params);
                 phi = phi-npio2*pio2;
             }
             else
@@ -3473,9 +4250,9 @@ public partial class alglib
                     e = Math.Atan(e);
                     if( npio2==0 )
                     {
-                        k = ellipticintegralk(1-a);
+                        k = ellipticintegralk(1-a, _params);
                     }
-                    temp = k-incompleteellipticintegralk(e, m);
+                    temp = k-incompleteellipticintegralk(e, m, _params);
                     if( s<0 )
                     {
                         temp = -temp;
@@ -3537,7 +4314,8 @@ public partial class alglib
         Cephes Math Library, Release 2.8: June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double ellipticintegrale(double m)
+        public static double ellipticintegrale(double m,
+            alglib.xparams _params)
         {
             double result = 0;
             double p = 0;
@@ -3607,7 +4385,8 @@ public partial class alglib
         Copyright 1984, 1987, 1993, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double incompleteellipticintegrale(double phi,
-            double m)
+            double m,
+            alglib.xparams _params)
         {
             double result = 0;
             double pio2 = 0;
@@ -3647,7 +4426,7 @@ public partial class alglib
                 s = 1;
             }
             a = 1.0-m;
-            ebig = ellipticintegrale(m);
+            ebig = ellipticintegrale(m, _params);
             if( (double)(a)==(double)(0) )
             {
                 temp = Math.Sin(lphi);
@@ -3679,7 +4458,7 @@ public partial class alglib
                 if( (double)(Math.Abs(e))<(double)(10) )
                 {
                     e = Math.Atan(e);
-                    temp = ebig+m*Math.Sin(lphi)*Math.Sin(e)-incompleteellipticintegrale(e, m);
+                    temp = ebig+m*Math.Sin(lphi)*Math.Sin(e)-incompleteellipticintegrale(e, m, _params);
                     if( s<0 )
                     {
                         temp = -temp;
@@ -3706,7 +4485,7 @@ public partial class alglib
                 d = d+d;
                 e = e+c*Math.Sin(lphi);
             }
-            temp = ebig/ellipticintegralk(m);
+            temp = ebig/ellipticintegralk(m, _params);
             temp = temp*((Math.Atan(t)+md*Math.PI)/(d*a));
             temp = temp+e;
             if( s<0 )
@@ -3732,7 +4511,8 @@ public partial class alglib
             the value of the Hermite polynomial Hn at x
         *************************************************************************/
         public static double hermitecalculate(int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             int i = 0;
@@ -3789,7 +4569,8 @@ public partial class alglib
         *************************************************************************/
         public static double hermitesum(double[] c,
             int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double b1 = 0;
@@ -3819,7 +4600,8 @@ public partial class alglib
             C   -   coefficients
         *************************************************************************/
         public static void hermitecoefficients(int n,
-            ref double[] c)
+            ref double[] c,
+            alglib.xparams _params)
         {
             int i = 0;
 
@@ -3866,7 +4648,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double dawsonintegral(double x)
+        public static double dawsonintegral(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double x2 = 0;
@@ -4008,7 +4791,8 @@ public partial class alglib
         *************************************************************************/
         public static void sinecosineintegrals(double x,
             ref double si,
-            ref double ci)
+            ref double ci,
+            alglib.xparams _params)
         {
             double z = 0;
             double c = 0;
@@ -4218,7 +5002,8 @@ public partial class alglib
         *************************************************************************/
         public static void hyperbolicsinecosineintegrals(double x,
             ref double shi,
-            ref double chi)
+            ref double chi,
+            alglib.xparams _params)
         {
             double k = 0;
             double z = 0;
@@ -4275,52 +5060,52 @@ public partial class alglib
                     k = Math.Exp(x)/x;
                     b0 = 1.83889230173399459482E-17;
                     b1 = 0.0;
-                    chebiterationshichi(a, -9.55485532279655569575E-17, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.04326105980879882648E-16, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.09896949074905343022E-15, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.31313534344092599234E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 5.93976226264314278932E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.47197010497749154755E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.40059764613117131000E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 9.49044626224223543299E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.61596181145435454033E-11, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.77899784436430310321E-10, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.35455469767246947469E-9, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.03257121792819495123E-9, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.56699611114982536845E-8, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.44818877384267342057E-7, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 7.82018215184051295296E-7, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -5.39919118403805073710E-6, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.12458202168959833422E-5, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 8.90136741950727517826E-5, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.02558474743846862168E-3, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.96064440855633256972E-2, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.11847751047257036625E0, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, -9.55485532279655569575E-17, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 2.04326105980879882648E-16, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 1.09896949074905343022E-15, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.31313534344092599234E-14, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 5.93976226264314278932E-14, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -3.47197010497749154755E-14, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.40059764613117131000E-12, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 9.49044626224223543299E-12, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.61596181145435454033E-11, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.77899784436430310321E-10, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 1.35455469767246947469E-9, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.03257121792819495123E-9, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -3.56699611114982536845E-8, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 1.44818877384267342057E-7, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 7.82018215184051295296E-7, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -5.39919118403805073710E-6, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -3.12458202168959833422E-5, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 8.90136741950727517826E-5, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 2.02558474743846862168E-3, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 2.96064440855633256972E-2, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 1.11847751047257036625E0, ref b0, ref b1, ref b2, _params);
                     s = k*0.5*(b0-b2);
                     b0 = -8.12435385225864036372E-18;
                     b1 = 0.0;
-                    chebiterationshichi(a, 2.17586413290339214377E-17, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 5.22624394924072204667E-17, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -9.48812110591690559363E-16, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 5.35546311647465209166E-15, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.21009970113732918701E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -6.00865178553447437951E-14, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 7.16339649156028587775E-13, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -2.93496072607599856104E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.40359438136491256904E-12, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 8.76302288609054966081E-11, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -4.40092476213282340617E-10, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -1.87992075640569295479E-10, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.31458150989474594064E-8, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -4.75513930924765465590E-8, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -2.21775018801848880741E-7, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.94635531373272490962E-6, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 4.33505889257316408893E-6, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -6.13387001076494349496E-5, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, -3.13085477492997465138E-4, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 4.97164789823116062801E-4, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 2.64347496031374526641E-2, ref b0, ref b1, ref b2);
-                    chebiterationshichi(a, 1.11446150876699213025E0, ref b0, ref b1, ref b2);
+                    chebiterationshichi(a, 2.17586413290339214377E-17, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 5.22624394924072204667E-17, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -9.48812110591690559363E-16, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 5.35546311647465209166E-15, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.21009970113732918701E-14, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -6.00865178553447437951E-14, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 7.16339649156028587775E-13, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -2.93496072607599856104E-12, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.40359438136491256904E-12, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 8.76302288609054966081E-11, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -4.40092476213282340617E-10, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -1.87992075640569295479E-10, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 1.31458150989474594064E-8, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -4.75513930924765465590E-8, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -2.21775018801848880741E-7, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 1.94635531373272490962E-6, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 4.33505889257316408893E-6, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -6.13387001076494349496E-5, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, -3.13085477492997465138E-4, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 4.97164789823116062801E-4, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 2.64347496031374526641E-2, ref b0, ref b1, ref b2, _params);
+                    chebiterationshichi(a, 1.11446150876699213025E0, ref b0, ref b1, ref b2, _params);
                     c = k*0.5*(b0-b2);
                 }
                 else
@@ -4331,54 +5116,54 @@ public partial class alglib
                         k = Math.Exp(x)/x;
                         b0 = -1.05311574154850938805E-17;
                         b1 = 0.0;
-                        chebiterationshichi(a, 2.62446095596355225821E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 8.82090135625368160657E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.38459811878103047136E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -8.30608026366935789136E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.93397875437050071776E-15, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.01765565969729044505E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -4.21128170307640802703E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.60818204519802480035E-13, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.34714954175994481761E-13, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.72600352129153073807E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.66894954752839083608E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.49278141024730899554E-11, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.58580661666482709598E-10, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.79289437183355633342E-10, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.76281629144264523277E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.69050228879421288846E-8, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.25391771228487041649E-7, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.16229947068677338732E-6, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.61038260117376323993E-5, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.49810375601053973070E-4, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.28478065259647610779E-2, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.03665722588798326712E0, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, 2.62446095596355225821E-17, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 8.82090135625368160657E-17, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -3.38459811878103047136E-16, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -8.30608026366935789136E-16, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 3.93397875437050071776E-15, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.01765565969729044505E-14, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -4.21128170307640802703E-14, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -1.60818204519802480035E-13, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 3.34714954175994481761E-13, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 2.72600352129153073807E-12, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.66894954752839083608E-12, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -3.49278141024730899554E-11, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -1.58580661666482709598E-10, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -1.79289437183355633342E-10, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.76281629144264523277E-9, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.69050228879421288846E-8, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.25391771228487041649E-7, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.16229947068677338732E-6, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.61038260117376323993E-5, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 3.49810375601053973070E-4, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.28478065259647610779E-2, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.03665722588798326712E0, ref b0, ref b1, ref b2, _params);
                         s = k*0.5*(b0-b2);
                         b0 = 8.06913408255155572081E-18;
                         b1 = 0.0;
-                        chebiterationshichi(a, -2.08074168180148170312E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -5.98111329658272336816E-17, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.68533951085945765591E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 4.52313941698904694774E-16, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.10734917335299464535E-15, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -4.42823207332531972288E-15, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.49639695410806959872E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 6.63406731718911586609E-14, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.71902448093119218395E-13, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.27135418132338309016E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.74851141935315395333E-12, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.33781843985453438400E-11, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 2.71436006377612442764E-11, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -2.56600180000355990529E-10, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -1.61021375163803438552E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -4.72543064876271773512E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, -3.00095178028681682282E-9, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 7.79387474390914922337E-8, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.06942765566401507066E-6, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.59503164802313196374E-5, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 3.49592575153777996871E-4, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.28475387530065247392E-2, ref b0, ref b1, ref b2);
-                        chebiterationshichi(a, 1.03665693917934275131E0, ref b0, ref b1, ref b2);
+                        chebiterationshichi(a, -2.08074168180148170312E-17, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -5.98111329658272336816E-17, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 2.68533951085945765591E-16, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 4.52313941698904694774E-16, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -3.10734917335299464535E-15, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -4.42823207332531972288E-15, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 3.49639695410806959872E-14, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 6.63406731718911586609E-14, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -3.71902448093119218395E-13, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -1.27135418132338309016E-12, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 2.74851141935315395333E-12, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 2.33781843985453438400E-11, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 2.71436006377612442764E-11, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -2.56600180000355990529E-10, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -1.61021375163803438552E-9, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -4.72543064876271773512E-9, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, -3.00095178028681682282E-9, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 7.79387474390914922337E-8, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.06942765566401507066E-6, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.59503164802313196374E-5, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 3.49592575153777996871E-4, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.28475387530065247392E-2, ref b0, ref b1, ref b2, _params);
+                        chebiterationshichi(a, 1.03665693917934275131E0, ref b0, ref b1, ref b2, _params);
                         c = k*0.5*(b0-b2);
                     }
                     else
@@ -4409,7 +5194,8 @@ public partial class alglib
             double c,
             ref double b0,
             ref double b1,
-            ref double b2)
+            ref double b2,
+            alglib.xparams _params)
         {
             b2 = b1;
             b1 = b0;
@@ -4446,12 +5232,13 @@ public partial class alglib
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double poissondistribution(int k,
-            double m)
+            double m,
+            alglib.xparams _params)
         {
             double result = 0;
 
             alglib.ap.assert(k>=0 && (double)(m)>(double)(0), "Domain error in PoissonDistribution");
-            result = igammaf.incompletegammac(k+1, m);
+            result = igammaf.incompletegammac(k+1, m, _params);
             return result;
         }
 
@@ -4483,12 +5270,13 @@ public partial class alglib
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double poissoncdistribution(int k,
-            double m)
+            double m,
+            alglib.xparams _params)
         {
             double result = 0;
 
             alglib.ap.assert(k>=0 && (double)(m)>(double)(0), "Domain error in PoissonDistributionC");
-            result = igammaf.incompletegamma(k+1, m);
+            result = igammaf.incompletegamma(k+1, m, _params);
             return result;
         }
 
@@ -4513,12 +5301,13 @@ public partial class alglib
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double invpoissondistribution(int k,
-            double y)
+            double y,
+            alglib.xparams _params)
         {
             double result = 0;
 
             alglib.ap.assert((k>=0 && (double)(y)>=(double)(0)) && (double)(y)<(double)(1), "Domain error in InvPoissonDistribution");
-            result = igammaf.invincompletegammac(k+1, y);
+            result = igammaf.invincompletegammac(k+1, y, _params);
             return result;
         }
 
@@ -4556,7 +5345,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double besselj0(double x)
+        public static double besselj0(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double xsq = 0;
@@ -4572,7 +5362,7 @@ public partial class alglib
             }
             if( (double)(x)>(double)(8.0) )
             {
-                besselasympt0(x, ref pzero, ref qzero);
+                besselasympt0(x, ref pzero, ref qzero, _params);
                 nn = x-Math.PI/4;
                 result = Math.Sqrt(2/Math.PI/x)*(pzero*Math.Cos(nn)-qzero*Math.Sin(nn));
                 return result;
@@ -4621,7 +5411,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double besselj1(double x)
+        public static double besselj1(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double s = 0;
@@ -4639,7 +5430,7 @@ public partial class alglib
             }
             if( (double)(x)>(double)(8.0) )
             {
-                besselasympt1(x, ref pzero, ref qzero);
+                besselasympt1(x, ref pzero, ref qzero, _params);
                 nn = x-3*Math.PI/4;
                 result = Math.Sqrt(2/Math.PI/x)*(pzero*Math.Cos(nn)-qzero*Math.Sin(nn));
                 if( (double)(s)<(double)(0) )
@@ -4700,7 +5491,8 @@ public partial class alglib
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double besseljn(int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double pkm2 = 0;
@@ -4738,12 +5530,12 @@ public partial class alglib
             }
             if( n==0 )
             {
-                result = sg*besselj0(x);
+                result = sg*besselj0(x, _params);
                 return result;
             }
             if( n==1 )
             {
-                result = sg*besselj1(x);
+                result = sg*besselj1(x, _params);
                 return result;
             }
             if( n==2 )
@@ -4754,7 +5546,7 @@ public partial class alglib
                 }
                 else
                 {
-                    result = sg*(2.0*besselj1(x)/x-besselj0(x));
+                    result = sg*(2.0*besselj1(x, _params)/x-besselj0(x, _params));
                 }
                 return result;
             }
@@ -4790,11 +5582,11 @@ public partial class alglib
             while( k!=0 );
             if( (double)(Math.Abs(pk))>(double)(Math.Abs(pkm1)) )
             {
-                ans = besselj1(x)/pk;
+                ans = besselj1(x, _params)/pk;
             }
             else
             {
-                ans = besselj0(x)/pkm1;
+                ans = besselj0(x, _params)/pkm1;
             }
             result = sg*ans;
             return result;
@@ -4829,7 +5621,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double bessely0(double x)
+        public static double bessely0(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double nn = 0;
@@ -4841,7 +5634,7 @@ public partial class alglib
 
             if( (double)(x)>(double)(8.0) )
             {
-                besselasympt0(x, ref pzero, ref qzero);
+                besselasympt0(x, ref pzero, ref qzero, _params);
                 nn = x-Math.PI/4;
                 result = Math.Sqrt(2/Math.PI/x)*(pzero*Math.Sin(nn)+qzero*Math.Cos(nn));
                 return result;
@@ -4865,7 +5658,7 @@ public partial class alglib
             q4 = 23928830434997818.57439356652+xsq*q4;
             q4 = 4192417043410839973.904769661+xsq*q4;
             q4 = 372645883898616588198.9980+xsq*q4;
-            result = p4/q4+2/Math.PI*besselj0(x)*Math.Log(x);
+            result = p4/q4+2/Math.PI*besselj0(x, _params)*Math.Log(x);
             return result;
         }
 
@@ -4891,7 +5684,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double bessely1(double x)
+        public static double bessely1(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double nn = 0;
@@ -4903,7 +5697,7 @@ public partial class alglib
 
             if( (double)(x)>(double)(8.0) )
             {
-                besselasympt1(x, ref pzero, ref qzero);
+                besselasympt1(x, ref pzero, ref qzero, _params);
                 nn = x-3*Math.PI/4;
                 result = Math.Sqrt(2/Math.PI/x)*(pzero*Math.Sin(nn)+qzero*Math.Cos(nn));
                 return result;
@@ -4928,7 +5722,7 @@ public partial class alglib
             q4 = 29549879358971486742.90758119+xsq*q4;
             q4 = 5435310377188854170800.653097+xsq*q4;
             q4 = 508206736694124324531442.4152+xsq*q4;
-            result = x*p4/q4+2/Math.PI*(besselj1(x)*Math.Log(x)-1/x);
+            result = x*p4/q4+2/Math.PI*(besselj1(x, _params)*Math.Log(x)-1/x);
             return result;
         }
 
@@ -4956,7 +5750,8 @@ public partial class alglib
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double besselyn(int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             int i = 0;
@@ -4976,16 +5771,16 @@ public partial class alglib
             }
             if( n==0 )
             {
-                result = bessely0(x);
+                result = bessely0(x, _params);
                 return result;
             }
             if( n==1 )
             {
-                result = s*bessely1(x);
+                result = s*bessely1(x, _params);
                 return result;
             }
-            a = bessely0(x);
-            b = bessely1(x);
+            a = bessely0(x, _params);
+            b = bessely1(x, _params);
             for(i=1; i<=n-1; i++)
             {
                 tmp = b;
@@ -5018,7 +5813,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double besseli0(double x)
+        public static double besseli0(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double y = 0;
@@ -5035,66 +5831,66 @@ public partial class alglib
             if( (double)(x)<=(double)(8.0) )
             {
                 y = x/2.0-2.0;
-                besselmfirstcheb(-4.41534164647933937950E-18, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 3.33079451882223809783E-17, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -2.43127984654795469359E-16, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.71539128555513303061E-15, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -1.16853328779934516808E-14, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 7.67618549860493561688E-14, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -4.85644678311192946090E-13, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 2.95505266312963983461E-12, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -1.72682629144155570723E-11, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 9.67580903537323691224E-11, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -5.18979560163526290666E-10, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 2.65982372468238665035E-9, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -1.30002500998624804212E-8, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 6.04699502254191894932E-8, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -2.67079385394061173391E-7, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.11738753912010371815E-6, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -4.41673835845875056359E-6, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.64484480707288970893E-5, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -5.75419501008210370398E-5, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.88502885095841655729E-4, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -5.76375574538582365885E-4, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.63947561694133579842E-3, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -4.32430999505057594430E-3, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.05464603945949983183E-2, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -2.37374148058994688156E-2, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 4.93052842396707084878E-2, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -9.49010970480476444210E-2, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.71620901522208775349E-1, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -3.04682672343198398683E-1, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 6.76795274409476084995E-1, ref b0, ref b1, ref b2);
+                besselmfirstcheb(-4.41534164647933937950E-18, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 3.33079451882223809783E-17, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -2.43127984654795469359E-16, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.71539128555513303061E-15, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -1.16853328779934516808E-14, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 7.67618549860493561688E-14, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -4.85644678311192946090E-13, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 2.95505266312963983461E-12, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -1.72682629144155570723E-11, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 9.67580903537323691224E-11, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -5.18979560163526290666E-10, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 2.65982372468238665035E-9, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -1.30002500998624804212E-8, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 6.04699502254191894932E-8, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -2.67079385394061173391E-7, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.11738753912010371815E-6, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -4.41673835845875056359E-6, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.64484480707288970893E-5, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -5.75419501008210370398E-5, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.88502885095841655729E-4, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -5.76375574538582365885E-4, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.63947561694133579842E-3, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -4.32430999505057594430E-3, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.05464603945949983183E-2, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -2.37374148058994688156E-2, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 4.93052842396707084878E-2, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -9.49010970480476444210E-2, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.71620901522208775349E-1, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -3.04682672343198398683E-1, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 6.76795274409476084995E-1, ref b0, ref b1, ref b2, _params);
                 v = 0.5*(b0-b2);
                 result = Math.Exp(x)*v;
                 return result;
             }
             z = 32.0/x-2.0;
-            besselmfirstcheb(-7.23318048787475395456E-18, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -4.83050448594418207126E-18, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 4.46562142029675999901E-17, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 3.46122286769746109310E-17, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -2.82762398051658348494E-16, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -3.42548561967721913462E-16, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 1.77256013305652638360E-15, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 3.81168066935262242075E-15, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -9.55484669882830764870E-15, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -4.15056934728722208663E-14, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 1.54008621752140982691E-14, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 3.85277838274214270114E-13, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 7.18012445138366623367E-13, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -1.79417853150680611778E-12, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -1.32158118404477131188E-11, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, -3.14991652796324136454E-11, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 1.18891471078464383424E-11, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 4.94060238822496958910E-10, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 3.39623202570838634515E-9, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 2.26666899049817806459E-8, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 2.04891858946906374183E-7, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 2.89137052083475648297E-6, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 6.88975834691682398426E-5, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 3.36911647825569408990E-3, ref b0, ref b1, ref b2);
-            besselmnextcheb(z, 8.04490411014108831608E-1, ref b0, ref b1, ref b2);
+            besselmfirstcheb(-7.23318048787475395456E-18, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -4.83050448594418207126E-18, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 4.46562142029675999901E-17, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 3.46122286769746109310E-17, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -2.82762398051658348494E-16, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -3.42548561967721913462E-16, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 1.77256013305652638360E-15, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 3.81168066935262242075E-15, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -9.55484669882830764870E-15, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -4.15056934728722208663E-14, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 1.54008621752140982691E-14, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 3.85277838274214270114E-13, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 7.18012445138366623367E-13, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -1.79417853150680611778E-12, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -1.32158118404477131188E-11, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, -3.14991652796324136454E-11, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 1.18891471078464383424E-11, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 4.94060238822496958910E-10, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 3.39623202570838634515E-9, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 2.26666899049817806459E-8, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 2.04891858946906374183E-7, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 2.89137052083475648297E-6, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 6.88975834691682398426E-5, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 3.36911647825569408990E-3, ref b0, ref b1, ref b2, _params);
+            besselmnextcheb(z, 8.04490411014108831608E-1, ref b0, ref b1, ref b2, _params);
             v = 0.5*(b0-b2);
             result = Math.Exp(x)*v/Math.Sqrt(x);
             return result;
@@ -5122,7 +5918,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1985, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double besseli1(double x)
+        public static double besseli1(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double y = 0;
@@ -5136,66 +5933,66 @@ public partial class alglib
             if( (double)(z)<=(double)(8.0) )
             {
                 y = z/2.0-2.0;
-                besselm1firstcheb(2.77791411276104639959E-18, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.11142121435816608115E-17, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.55363195773620046921E-16, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.10559694773538630805E-15, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 7.60068429473540693410E-15, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -5.04218550472791168711E-14, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 3.22379336594557470981E-13, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.98397439776494371520E-12, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.17361862988909016308E-11, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -6.66348972350202774223E-11, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 3.62559028155211703701E-10, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.88724975172282928790E-9, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 9.38153738649577178388E-9, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -4.44505912879632808065E-8, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.00329475355213526229E-7, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -8.56872026469545474066E-7, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 3.47025130813767847674E-6, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.32731636560394358279E-5, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 4.78156510755005422638E-5, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.61760815825896745588E-4, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 5.12285956168575772895E-4, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.51357245063125314899E-3, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 4.15642294431288815669E-3, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.05640848946261981558E-2, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.47264490306265168283E-2, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -5.29459812080949914269E-2, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.02643658689847095384E-1, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.76416518357834055153E-1, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.52587186443633654823E-1, ref b0, ref b1, ref b2);
+                besselm1firstcheb(2.77791411276104639959E-18, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.11142121435816608115E-17, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.55363195773620046921E-16, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.10559694773538630805E-15, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 7.60068429473540693410E-15, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -5.04218550472791168711E-14, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 3.22379336594557470981E-13, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.98397439776494371520E-12, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.17361862988909016308E-11, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -6.66348972350202774223E-11, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 3.62559028155211703701E-10, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.88724975172282928790E-9, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 9.38153738649577178388E-9, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -4.44505912879632808065E-8, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.00329475355213526229E-7, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -8.56872026469545474066E-7, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 3.47025130813767847674E-6, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.32731636560394358279E-5, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 4.78156510755005422638E-5, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.61760815825896745588E-4, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 5.12285956168575772895E-4, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.51357245063125314899E-3, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 4.15642294431288815669E-3, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.05640848946261981558E-2, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.47264490306265168283E-2, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -5.29459812080949914269E-2, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.02643658689847095384E-1, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.76416518357834055153E-1, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.52587186443633654823E-1, ref b0, ref b1, ref b2, _params);
                 v = 0.5*(b0-b2);
                 z = v*z*Math.Exp(z);
             }
             else
             {
                 y = 32.0/z-2.0;
-                besselm1firstcheb(7.51729631084210481353E-18, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 4.41434832307170791151E-18, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -4.65030536848935832153E-17, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -3.20952592199342395980E-17, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.96262899764595013876E-16, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 3.30820231092092828324E-16, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.88035477551078244854E-15, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -3.81440307243700780478E-15, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.04202769841288027642E-14, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 4.27244001671195135429E-14, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.10154184277266431302E-14, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -4.08355111109219731823E-13, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -7.19855177624590851209E-13, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.03562854414708950722E-12, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.41258074366137813316E-11, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 3.25260358301548823856E-11, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.89749581235054123450E-11, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -5.58974346219658380687E-10, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -3.83538038596423702205E-9, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.63146884688951950684E-8, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.51223623787020892529E-7, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -3.88256480887769039346E-6, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.10588938762623716291E-4, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -9.76109749136146840777E-3, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 7.78576235018280120474E-1, ref b0, ref b1, ref b2);
+                besselm1firstcheb(7.51729631084210481353E-18, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 4.41434832307170791151E-18, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -4.65030536848935832153E-17, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -3.20952592199342395980E-17, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.96262899764595013876E-16, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 3.30820231092092828324E-16, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.88035477551078244854E-15, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -3.81440307243700780478E-15, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.04202769841288027642E-14, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 4.27244001671195135429E-14, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.10154184277266431302E-14, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -4.08355111109219731823E-13, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -7.19855177624590851209E-13, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.03562854414708950722E-12, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.41258074366137813316E-11, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 3.25260358301548823856E-11, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.89749581235054123450E-11, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -5.58974346219658380687E-10, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -3.83538038596423702205E-9, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.63146884688951950684E-8, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.51223623787020892529E-7, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -3.88256480887769039346E-6, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.10588938762623716291E-4, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -9.76109749136146840777E-3, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 7.78576235018280120474E-1, ref b0, ref b1, ref b2, _params);
                 v = 0.5*(b0-b2);
                 z = v*Math.Exp(z)/Math.Sqrt(z);
             }
@@ -5229,7 +6026,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double besselk0(double x)
+        public static double besselk0(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double y = 0;
@@ -5243,47 +6041,47 @@ public partial class alglib
             if( (double)(x)<=(double)(2) )
             {
                 y = x*x-2.0;
-                besselmfirstcheb(1.37446543561352307156E-16, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 4.25981614279661018399E-14, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.03496952576338420167E-11, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.90451637722020886025E-9, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 2.53479107902614945675E-7, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 2.28621210311945178607E-5, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 1.26461541144692592338E-3, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 3.59799365153615016266E-2, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, 3.44289899924628486886E-1, ref b0, ref b1, ref b2);
-                besselmnextcheb(y, -5.35327393233902768720E-1, ref b0, ref b1, ref b2);
+                besselmfirstcheb(1.37446543561352307156E-16, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 4.25981614279661018399E-14, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.03496952576338420167E-11, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.90451637722020886025E-9, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 2.53479107902614945675E-7, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 2.28621210311945178607E-5, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 1.26461541144692592338E-3, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 3.59799365153615016266E-2, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, 3.44289899924628486886E-1, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(y, -5.35327393233902768720E-1, ref b0, ref b1, ref b2, _params);
                 v = 0.5*(b0-b2);
-                v = v-Math.Log(0.5*x)*besseli0(x);
+                v = v-Math.Log(0.5*x)*besseli0(x, _params);
             }
             else
             {
                 z = 8.0/x-2.0;
-                besselmfirstcheb(5.30043377268626276149E-18, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -1.64758043015242134646E-17, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 5.21039150503902756861E-17, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -1.67823109680541210385E-16, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 5.51205597852431940784E-16, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -1.84859337734377901440E-15, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 6.34007647740507060557E-15, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -2.22751332699166985548E-14, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 8.03289077536357521100E-14, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -2.98009692317273043925E-13, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 1.14034058820847496303E-12, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -4.51459788337394416547E-12, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 1.85594911495471785253E-11, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -7.95748924447710747776E-11, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 3.57739728140030116597E-10, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -1.69753450938905987466E-9, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 8.57403401741422608519E-9, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -4.66048989768794782956E-8, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 2.76681363944501510342E-7, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -1.83175552271911948767E-6, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 1.39498137188764993662E-5, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -1.28495495816278026384E-4, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 1.56988388573005337491E-3, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, -3.14481013119645005427E-2, ref b0, ref b1, ref b2);
-                besselmnextcheb(z, 2.44030308206595545468E0, ref b0, ref b1, ref b2);
+                besselmfirstcheb(5.30043377268626276149E-18, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -1.64758043015242134646E-17, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 5.21039150503902756861E-17, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -1.67823109680541210385E-16, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 5.51205597852431940784E-16, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -1.84859337734377901440E-15, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 6.34007647740507060557E-15, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -2.22751332699166985548E-14, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 8.03289077536357521100E-14, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -2.98009692317273043925E-13, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 1.14034058820847496303E-12, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -4.51459788337394416547E-12, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 1.85594911495471785253E-11, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -7.95748924447710747776E-11, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 3.57739728140030116597E-10, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -1.69753450938905987466E-9, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 8.57403401741422608519E-9, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -4.66048989768794782956E-8, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 2.76681363944501510342E-7, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -1.83175552271911948767E-6, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 1.39498137188764993662E-5, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -1.28495495816278026384E-4, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 1.56988388573005337491E-3, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, -3.14481013119645005427E-2, ref b0, ref b1, ref b2, _params);
+                besselmnextcheb(z, 2.44030308206595545468E0, ref b0, ref b1, ref b2, _params);
                 v = 0.5*(b0-b2);
                 v = v*Math.Exp(-x)/Math.Sqrt(x);
             }
@@ -5311,7 +6109,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double besselk1(double x)
+        public static double besselk1(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double y = 0;
@@ -5326,48 +6125,48 @@ public partial class alglib
             if( (double)(x)<=(double)(2) )
             {
                 y = x*x-2.0;
-                besselm1firstcheb(-7.02386347938628759343E-18, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.42744985051936593393E-15, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -6.66690169419932900609E-13, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.41148839263352776110E-10, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.21338763073472585583E-8, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.43340614156596823496E-6, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.73028895751305206302E-4, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -6.97572385963986435018E-3, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.22611180822657148235E-1, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -3.53155960776544875667E-1, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.52530022733894777053E0, ref b0, ref b1, ref b2);
+                besselm1firstcheb(-7.02386347938628759343E-18, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.42744985051936593393E-15, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -6.66690169419932900609E-13, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.41148839263352776110E-10, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.21338763073472585583E-8, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.43340614156596823496E-6, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.73028895751305206302E-4, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -6.97572385963986435018E-3, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.22611180822657148235E-1, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -3.53155960776544875667E-1, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.52530022733894777053E0, ref b0, ref b1, ref b2, _params);
                 v = 0.5*(b0-b2);
-                result = Math.Log(z)*besseli1(x)+v/x;
+                result = Math.Log(z)*besseli1(x, _params)+v/x;
             }
             else
             {
                 y = 8.0/x-2.0;
-                besselm1firstcheb(-5.75674448366501715755E-18, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.79405087314755922667E-17, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -5.68946255844285935196E-17, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.83809354436663880070E-16, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -6.05704724837331885336E-16, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.03870316562433424052E-15, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -7.01983709041831346144E-15, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.47715442448130437068E-14, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -8.97670518232499435011E-14, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 3.34841966607842919884E-13, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.28917396095102890680E-12, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 5.13963967348173025100E-12, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.12996783842756842877E-11, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 9.21831518760500529508E-11, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -4.19035475934189648750E-10, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.01504975519703286596E-9, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.03457624656780970260E-8, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 5.74108412545004946722E-8, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -3.50196060308781257119E-7, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.40648494783721712015E-6, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -1.93619797416608296024E-5, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.95215518471351631108E-4, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, -2.85781685962277938680E-3, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 1.03923736576817238437E-1, ref b0, ref b1, ref b2);
-                besselm1nextcheb(y, 2.72062619048444266945E0, ref b0, ref b1, ref b2);
+                besselm1firstcheb(-5.75674448366501715755E-18, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.79405087314755922667E-17, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -5.68946255844285935196E-17, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.83809354436663880070E-16, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -6.05704724837331885336E-16, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.03870316562433424052E-15, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -7.01983709041831346144E-15, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.47715442448130437068E-14, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -8.97670518232499435011E-14, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 3.34841966607842919884E-13, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.28917396095102890680E-12, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 5.13963967348173025100E-12, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.12996783842756842877E-11, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 9.21831518760500529508E-11, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -4.19035475934189648750E-10, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.01504975519703286596E-9, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.03457624656780970260E-8, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 5.74108412545004946722E-8, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -3.50196060308781257119E-7, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.40648494783721712015E-6, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -1.93619797416608296024E-5, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.95215518471351631108E-4, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, -2.85781685962277938680E-3, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 1.03923736576817238437E-1, ref b0, ref b1, ref b2, _params);
+                besselm1nextcheb(y, 2.72062619048444266945E0, ref b0, ref b1, ref b2, _params);
                 v = 0.5*(b0-b2);
                 result = Math.Exp(-x)*v/Math.Sqrt(x);
             }
@@ -5398,7 +6197,8 @@ public partial class alglib
         Copyright 1984, 1987, 1988, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double besselkn(int nn,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double k = 0;
@@ -5556,7 +6356,8 @@ public partial class alglib
         private static void besselmfirstcheb(double c,
             ref double b0,
             ref double b1,
-            ref double b2)
+            ref double b2,
+            alglib.xparams _params)
         {
             b0 = c;
             b1 = 0.0;
@@ -5574,7 +6375,8 @@ public partial class alglib
             double c,
             ref double b0,
             ref double b1,
-            ref double b2)
+            ref double b2,
+            alglib.xparams _params)
         {
             b2 = b1;
             b1 = b0;
@@ -5591,7 +6393,8 @@ public partial class alglib
         private static void besselm1firstcheb(double c,
             ref double b0,
             ref double b1,
-            ref double b2)
+            ref double b2,
+            alglib.xparams _params)
         {
             b0 = c;
             b1 = 0.0;
@@ -5609,7 +6412,8 @@ public partial class alglib
             double c,
             ref double b0,
             ref double b1,
-            ref double b2)
+            ref double b2,
+            alglib.xparams _params)
         {
             b2 = b1;
             b1 = b0;
@@ -5619,7 +6423,8 @@ public partial class alglib
 
         private static void besselasympt0(double x,
             ref double pzero,
-            ref double qzero)
+            ref double qzero,
+            alglib.xparams _params)
         {
             double xsq = 0;
             double p2 = 0;
@@ -5666,7 +6471,8 @@ public partial class alglib
 
         private static void besselasympt1(double x,
             ref double pzero,
-            ref double qzero)
+            ref double qzero,
+            alglib.xparams _params)
         {
             double xsq = 0;
             double p2 = 0;
@@ -5755,7 +6561,8 @@ public partial class alglib
         *************************************************************************/
         public static double incompletebeta(double a,
             double b,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double t = 0;
@@ -5790,7 +6597,7 @@ public partial class alglib
             flag = 0;
             if( (double)(b*x)<=(double)(1.0) && (double)(x)<=(double)(0.95) )
             {
-                result = incompletebetaps(a, b, x, maxgam);
+                result = incompletebetaps(a, b, x, maxgam, _params);
                 return result;
             }
             w = 1.0-x;
@@ -5809,7 +6616,7 @@ public partial class alglib
             }
             if( (flag==1 && (double)(b*x)<=(double)(1.0)) && (double)(x)<=(double)(0.95) )
             {
-                t = incompletebetaps(a, b, x, maxgam);
+                t = incompletebetaps(a, b, x, maxgam, _params);
                 if( (double)(t)<=(double)(math.machineepsilon) )
                 {
                     result = 1.0-math.machineepsilon;
@@ -5823,11 +6630,11 @@ public partial class alglib
             y = x*(a+b-2.0)-(a-1.0);
             if( (double)(y)<(double)(0.0) )
             {
-                w = incompletebetafe(a, b, x, big, biginv);
+                w = incompletebetafe(a, b, x, big, biginv, _params);
             }
             else
             {
-                w = incompletebetafe2(a, b, x, big, biginv)/xc;
+                w = incompletebetafe2(a, b, x, big, biginv, _params)/xc;
             }
             y = a*Math.Log(x);
             t = b*Math.Log(xc);
@@ -5837,7 +6644,7 @@ public partial class alglib
                 t = t*Math.Pow(x, a);
                 t = t/a;
                 t = t*w;
-                t = t*(gammafunc.gammafunction(a+b)/(gammafunc.gammafunction(a)*gammafunc.gammafunction(b)));
+                t = t*(gammafunc.gammafunction(a+b, _params)/(gammafunc.gammafunction(a, _params)*gammafunc.gammafunction(b, _params)));
                 if( flag==1 )
                 {
                     if( (double)(t)<=(double)(math.machineepsilon) )
@@ -5855,7 +6662,7 @@ public partial class alglib
                 }
                 return result;
             }
-            y = y+t+gammafunc.lngamma(a+b, ref sg)-gammafunc.lngamma(a, ref sg)-gammafunc.lngamma(b, ref sg);
+            y = y+t+gammafunc.lngamma(a+b, ref sg, _params)-gammafunc.lngamma(a, ref sg, _params)-gammafunc.lngamma(b, ref sg, _params);
             y = y+Math.Log(w/a);
             if( (double)(y)<(double)(minlog) )
             {
@@ -5911,7 +6718,8 @@ public partial class alglib
         *************************************************************************/
         public static double invincompletebeta(double a,
             double b,
-            double y)
+            double y,
+            alglib.xparams _params)
         {
             double result = 0;
             double aaa = 0;
@@ -6009,7 +6817,7 @@ public partial class alglib
                         bbb = b;
                         y0 = y;
                         x = aaa/(aaa+bbb);
-                        yyy = incompletebeta(aaa, bbb, x);
+                        yyy = incompletebeta(aaa, bbb, x, _params);
                         mainlooppos = ihalve;
                         continue;
                     }
@@ -6017,7 +6825,7 @@ public partial class alglib
                     {
                         dithresh = 1.0e-4;
                     }
-                    yp = -normaldistr.invnormaldistribution(y);
+                    yp = -normaldistr.invnormaldistribution(y, _params);
                     if( (double)(y)>(double)(0.5) )
                     {
                         rflg = 1;
@@ -6043,7 +6851,7 @@ public partial class alglib
                         break;
                     }
                     x = aaa/(aaa+bbb*Math.Exp(d));
-                    yyy = incompletebeta(aaa, bbb, x);
+                    yyy = incompletebeta(aaa, bbb, x, _params);
                     yp = (yyy-y0)/y0;
                     if( (double)(Math.Abs(yp))<(double)(0.2) )
                     {
@@ -6089,7 +6897,7 @@ public partial class alglib
                                     break;
                                 }
                             }
-                            yyy = incompletebeta(aaa, bbb, x);
+                            yyy = incompletebeta(aaa, bbb, x, _params);
                             yp = (x1-x0)/(x1+x0);
                             if( (double)(Math.Abs(yp))<(double)(dithresh) )
                             {
@@ -6148,7 +6956,7 @@ public partial class alglib
                                     y0 = 1.0-y;
                                 }
                                 x = 1.0-x;
-                                yyy = incompletebeta(aaa, bbb, x);
+                                yyy = incompletebeta(aaa, bbb, x, _params);
                                 x0 = 0.0;
                                 yl = 0.0;
                                 x1 = 1.0;
@@ -6231,7 +7039,7 @@ public partial class alglib
                         break;
                     }
                     nflg = 1;
-                    lgm = gammafunc.lngamma(aaa+bbb, ref s)-gammafunc.lngamma(aaa, ref s)-gammafunc.lngamma(bbb, ref s);
+                    lgm = gammafunc.lngamma(aaa+bbb, ref s, _params)-gammafunc.lngamma(aaa, ref s, _params)-gammafunc.lngamma(bbb, ref s, _params);
                     i = 0;
                     mainlooppos = newtcycle;
                     continue;
@@ -6246,7 +7054,7 @@ public partial class alglib
                     {
                         if( i!=0 )
                         {
-                            yyy = incompletebeta(aaa, bbb, x);
+                            yyy = incompletebeta(aaa, bbb, x, _params);
                         }
                         if( (double)(yyy)<(double)(yl) )
                         {
@@ -6368,7 +7176,8 @@ public partial class alglib
             double b,
             double x,
             double big,
-            double biginv)
+            double biginv,
+            alglib.xparams _params)
         {
             double result = 0;
             double xk = 0;
@@ -6482,7 +7291,8 @@ public partial class alglib
             double b,
             double x,
             double big,
-            double biginv)
+            double biginv,
+            alglib.xparams _params)
         {
             double result = 0;
             double xk = 0;
@@ -6597,7 +7407,8 @@ public partial class alglib
         private static double incompletebetaps(double a,
             double b,
             double x,
-            double maxgam)
+            double maxgam,
+            alglib.xparams _params)
         {
             double result = 0;
             double s = 0;
@@ -6631,12 +7442,12 @@ public partial class alglib
             u = a*Math.Log(x);
             if( (double)(a+b)<(double)(maxgam) && (double)(Math.Abs(u))<(double)(Math.Log(math.maxrealnumber)) )
             {
-                t = gammafunc.gammafunction(a+b)/(gammafunc.gammafunction(a)*gammafunc.gammafunction(b));
+                t = gammafunc.gammafunction(a+b, _params)/(gammafunc.gammafunction(a, _params)*gammafunc.gammafunction(b, _params));
                 s = s*t*Math.Pow(x, a);
             }
             else
             {
-                t = gammafunc.lngamma(a+b, ref sg)-gammafunc.lngamma(a, ref sg)-gammafunc.lngamma(b, ref sg)+u+Math.Log(s);
+                t = gammafunc.lngamma(a+b, ref sg, _params)-gammafunc.lngamma(a, ref sg, _params)-gammafunc.lngamma(b, ref sg, _params)+u+Math.Log(s);
                 if( (double)(t)<(double)(Math.Log(math.minrealnumber)) )
                 {
                     s = 0.0;
@@ -6688,7 +7499,8 @@ public partial class alglib
         *************************************************************************/
         public static double fdistribution(int a,
             int b,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double w = 0;
@@ -6696,7 +7508,7 @@ public partial class alglib
             alglib.ap.assert((a>=1 && b>=1) && (double)(x)>=(double)(0), "Domain error in FDistribution");
             w = a*x;
             w = w/(b+w);
-            result = ibetaf.incompletebeta(0.5*a, 0.5*b, w);
+            result = ibetaf.incompletebeta(0.5*a, 0.5*b, w, _params);
             return result;
         }
 
@@ -6739,14 +7551,15 @@ public partial class alglib
         *************************************************************************/
         public static double fcdistribution(int a,
             int b,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double w = 0;
 
             alglib.ap.assert((a>=1 && b>=1) && (double)(x)>=(double)(0), "Domain error in FCDistribution");
             w = b/(b+a*x);
-            result = ibetaf.incompletebeta(0.5*b, 0.5*a, w);
+            result = ibetaf.incompletebeta(0.5*b, 0.5*a, w, _params);
             return result;
         }
 
@@ -6788,7 +7601,8 @@ public partial class alglib
         *************************************************************************/
         public static double invfdistribution(int a,
             int b,
-            double y)
+            double y,
+            alglib.xparams _params)
         {
             double result = 0;
             double w = 0;
@@ -6798,7 +7612,7 @@ public partial class alglib
             //
             // Compute probability for x = 0.5
             //
-            w = ibetaf.incompletebeta(0.5*b, 0.5*a, 0.5);
+            w = ibetaf.incompletebeta(0.5*b, 0.5*a, 0.5, _params);
             
             //
             // If that is greater than y, then the solution w < .5
@@ -6806,12 +7620,12 @@ public partial class alglib
             //
             if( (double)(w)>(double)(y) || (double)(y)<(double)(0.001) )
             {
-                w = ibetaf.invincompletebeta(0.5*b, 0.5*a, y);
+                w = ibetaf.invincompletebeta(0.5*b, 0.5*a, y, _params);
                 result = (b-b*w)/(a*w);
             }
             else
             {
-                w = ibetaf.invincompletebeta(0.5*a, 0.5*b, 1.0-y);
+                w = ibetaf.invincompletebeta(0.5*a, 0.5*b, 1.0-y, _params);
                 result = b*w/(a*(1.0-w));
             }
             return result;
@@ -6865,7 +7679,8 @@ public partial class alglib
         *************************************************************************/
         public static void fresnelintegral(double x,
             ref double c,
-            ref double s)
+            ref double s,
+            alglib.xparams _params)
         {
             double xxa = 0;
             double f = 0;
@@ -7039,7 +7854,8 @@ public partial class alglib
             ref double sn,
             ref double cn,
             ref double dn,
-            ref double ph)
+            ref double ph,
+            alglib.xparams _params)
         {
             double ai = 0;
             double b = 0;
@@ -7162,7 +7978,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  June, 2000
         Copyright 1984, 1987, 1992, 2000 by Stephen L. Moshier
         *************************************************************************/
-        public static double psi(double x)
+        public static double psi(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double p = 0;
@@ -7281,7 +8098,8 @@ public partial class alglib
         Cephes Math Library Release 2.8:  May, 1999
         Copyright 1999 by Stephen L. Moshier
         *************************************************************************/
-        public static double exponentialintegralei(double x)
+        public static double exponentialintegralei(double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double eul = 0;
@@ -7490,7 +8308,8 @@ public partial class alglib
         Copyright 1985, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double exponentialintegralen(double x,
-            int n)
+            int n,
+            alglib.xparams _params)
         {
             double result = 0;
             double r = 0;
@@ -7650,7 +8469,8 @@ public partial class alglib
             the value of the Laguerre polynomial Ln at x
         *************************************************************************/
         public static double laguerrecalculate(int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double a = 0;
@@ -7690,7 +8510,8 @@ public partial class alglib
         *************************************************************************/
         public static double laguerresum(double[] c,
             int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double b1 = 0;
@@ -7720,7 +8541,8 @@ public partial class alglib
             C   -   coefficients
         *************************************************************************/
         public static void laguerrecoefficients(int n,
-            ref double[] c)
+            ref double[] c,
+            alglib.xparams _params)
         {
             int i = 0;
 
@@ -7772,12 +8594,13 @@ public partial class alglib
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double chisquaredistribution(double v,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
 
             alglib.ap.assert((double)(x)>=(double)(0) && (double)(v)>=(double)(1), "Domain error in ChiSquareDistribution");
-            result = igammaf.incompletegamma(v/2.0, x/2.0);
+            result = igammaf.incompletegamma(v/2.0, x/2.0, _params);
             return result;
         }
 
@@ -7814,12 +8637,13 @@ public partial class alglib
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double chisquarecdistribution(double v,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
 
             alglib.ap.assert((double)(x)>=(double)(0) && (double)(v)>=(double)(1), "Domain error in ChiSquareDistributionC");
-            result = igammaf.incompletegammac(v/2.0, x/2.0);
+            result = igammaf.incompletegammac(v/2.0, x/2.0, _params);
             return result;
         }
 
@@ -7845,12 +8669,13 @@ public partial class alglib
         Copyright 1984, 1987, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double invchisquaredistribution(double v,
-            double y)
+            double y,
+            alglib.xparams _params)
         {
             double result = 0;
 
             alglib.ap.assert(((double)(y)>=(double)(0) && (double)(y)<=(double)(1)) && (double)(v)>=(double)(1), "Domain error in InvChiSquareDistribution");
-            result = 2*igammaf.invincompletegammac(0.5*v, y);
+            result = 2*igammaf.invincompletegammac(0.5*v, y, _params);
             return result;
         }
 
@@ -7869,7 +8694,8 @@ public partial class alglib
             the value of the Legendre polynomial Pn at x
         *************************************************************************/
         public static double legendrecalculate(int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double a = 0;
@@ -7914,7 +8740,8 @@ public partial class alglib
         *************************************************************************/
         public static double legendresum(double[] c,
             int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double b1 = 0;
@@ -7944,7 +8771,8 @@ public partial class alglib
             C   -   coefficients
         *************************************************************************/
         public static void legendrecoefficients(int n,
-            ref double[] c)
+            ref double[] c,
+            alglib.xparams _params)
         {
             int i = 0;
 
@@ -7993,7 +8821,8 @@ public partial class alglib
         Copyright 1984, 1987 by Stephen L. Moshier
         *************************************************************************/
         public static double beta(double a,
-            double b)
+            double b,
+            alglib.xparams _params)
         {
             double result = 0;
             double y = 0;
@@ -8006,27 +8835,27 @@ public partial class alglib
             y = a+b;
             if( (double)(Math.Abs(y))>(double)(171.624376956302725) )
             {
-                y = gammafunc.lngamma(y, ref s);
+                y = gammafunc.lngamma(y, ref s, _params);
                 sg = sg*s;
-                y = gammafunc.lngamma(b, ref s)-y;
+                y = gammafunc.lngamma(b, ref s, _params)-y;
                 sg = sg*s;
-                y = gammafunc.lngamma(a, ref s)+y;
+                y = gammafunc.lngamma(a, ref s, _params)+y;
                 sg = sg*s;
                 alglib.ap.assert((double)(y)<=(double)(Math.Log(math.maxrealnumber)), "Overflow in Beta");
                 result = sg*Math.Exp(y);
                 return result;
             }
-            y = gammafunc.gammafunction(y);
+            y = gammafunc.gammafunction(y, _params);
             alglib.ap.assert((double)(y)!=(double)(0), "Overflow in Beta");
             if( (double)(a)>(double)(b) )
             {
-                y = gammafunc.gammafunction(a)/y;
-                y = y*gammafunc.gammafunction(b);
+                y = gammafunc.gammafunction(a, _params)/y;
+                y = y*gammafunc.gammafunction(b, _params);
             }
             else
             {
-                y = gammafunc.gammafunction(b)/y;
-                y = y*gammafunc.gammafunction(a);
+                y = gammafunc.gammafunction(b, _params)/y;
+                y = y*gammafunc.gammafunction(a, _params);
             }
             result = y;
             return result;
@@ -8050,7 +8879,8 @@ public partial class alglib
         *************************************************************************/
         public static double chebyshevcalculate(int r,
             int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             int i = 0;
@@ -8120,7 +8950,8 @@ public partial class alglib
         public static double chebyshevsum(double[] c,
             int r,
             int n,
-            double x)
+            double x,
+            alglib.xparams _params)
         {
             double result = 0;
             double b1 = 0;
@@ -8157,7 +8988,8 @@ public partial class alglib
             C   -   coefficients
         *************************************************************************/
         public static void chebyshevcoefficients(int n,
-            ref double[] c)
+            ref double[] c,
+            alglib.xparams _params)
         {
             int i = 0;
 
@@ -8198,7 +9030,8 @@ public partial class alglib
         *************************************************************************/
         public static void fromchebyshev(double[] a,
             int n,
-            ref double[] b)
+            ref double[] b,
+            alglib.xparams _params)
         {
             int i = 0;
             int k = 0;
@@ -8300,7 +9133,8 @@ public partial class alglib
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double studenttdistribution(int k,
-            double t)
+            double t,
+            alglib.xparams _params)
         {
             double result = 0;
             double x = 0;
@@ -8322,7 +9156,7 @@ public partial class alglib
             {
                 rk = k;
                 z = rk/(rk+t*t);
-                result = 0.5*ibetaf.incompletebeta(0.5*rk, 0.5, z);
+                result = 0.5*ibetaf.incompletebeta(0.5*rk, 0.5, z, _params);
                 return result;
             }
             if( (double)(t)<(double)(0) )
@@ -8394,7 +9228,8 @@ public partial class alglib
         Copyright 1984, 1987, 1995, 2000 by Stephen L. Moshier
         *************************************************************************/
         public static double invstudenttdistribution(int k,
-            double p)
+            double p,
+            alglib.xparams _params)
         {
             double result = 0;
             double t = 0;
@@ -8412,7 +9247,7 @@ public partial class alglib
                     return result;
                 }
                 z = 1.0-2.0*p;
-                z = ibetaf.invincompletebeta(0.5, 0.5*rk, Math.Abs(z));
+                z = ibetaf.invincompletebeta(0.5, 0.5*rk, Math.Abs(z), _params);
                 t = Math.Sqrt(rk*z/(1.0-z));
                 if( (double)(p)<(double)(0.5) )
                 {
@@ -8427,7 +9262,7 @@ public partial class alglib
                 p = 1.0-p;
                 rflg = 1;
             }
-            z = ibetaf.invincompletebeta(0.5*rk, 0.5, 2.0*p);
+            z = ibetaf.invincompletebeta(0.5*rk, 0.5, 2.0*p, _params);
             if( (double)(math.maxrealnumber*z)<(double)(rk) )
             {
                 result = rflg*math.maxrealnumber;
@@ -8475,7 +9310,8 @@ public partial class alglib
         *************************************************************************/
         public static double binomialdistribution(int k,
             int n,
-            double p)
+            double p,
+            alglib.xparams _params)
         {
             double result = 0;
             double dk = 0;
@@ -8501,7 +9337,7 @@ public partial class alglib
             else
             {
                 dk = k+1;
-                dk = ibetaf.incompletebeta(dn, dk, 1.0-p);
+                dk = ibetaf.incompletebeta(dn, dk, 1.0-p, _params);
             }
             result = dk;
             return result;
@@ -8543,7 +9379,8 @@ public partial class alglib
         *************************************************************************/
         public static double binomialcdistribution(int k,
             int n,
-            double p)
+            double p,
+            alglib.xparams _params)
         {
             double result = 0;
             double dk = 0;
@@ -8566,7 +9403,7 @@ public partial class alglib
             {
                 if( (double)(p)<(double)(0.01) )
                 {
-                    dk = -nearunityunit.nuexpm1(dn*nearunityunit.nulog1p(-p));
+                    dk = -nearunityunit.nuexpm1(dn*nearunityunit.nulog1p(-p, _params), _params);
                 }
                 else
                 {
@@ -8576,7 +9413,7 @@ public partial class alglib
             else
             {
                 dk = k+1;
-                dk = ibetaf.incompletebeta(dk, dn, p);
+                dk = ibetaf.incompletebeta(dk, dn, p, _params);
             }
             result = dk;
             return result;
@@ -8613,7 +9450,8 @@ public partial class alglib
         *************************************************************************/
         public static double invbinomialdistribution(int k,
             int n,
-            double y)
+            double y,
+            alglib.xparams _params)
         {
             double result = 0;
             double dk = 0;
@@ -8626,7 +9464,7 @@ public partial class alglib
             {
                 if( (double)(y)>(double)(0.8) )
                 {
-                    p = -nearunityunit.nuexpm1(nearunityunit.nulog1p(y-1.0)/dn);
+                    p = -nearunityunit.nuexpm1(nearunityunit.nulog1p(y-1.0, _params)/dn, _params);
                 }
                 else
                 {
@@ -8636,14 +9474,14 @@ public partial class alglib
             else
             {
                 dk = k+1;
-                p = ibetaf.incompletebeta(dn, dk, 0.5);
+                p = ibetaf.incompletebeta(dn, dk, 0.5, _params);
                 if( (double)(p)>(double)(0.5) )
                 {
-                    p = ibetaf.invincompletebeta(dk, dn, 1.0-y);
+                    p = ibetaf.invincompletebeta(dk, dn, 1.0-y, _params);
                 }
                 else
                 {
-                    p = 1.0-ibetaf.invincompletebeta(dn, dk, y);
+                    p = 1.0-ibetaf.invincompletebeta(dn, dk, y, _params);
                 }
             }
             result = p;
@@ -8690,7 +9528,8 @@ public partial class alglib
             ref double ai,
             ref double aip,
             ref double bi,
-            ref double bip)
+            ref double bip,
+            alglib.xparams _params)
         {
             double z = 0;
             double zz = 0;

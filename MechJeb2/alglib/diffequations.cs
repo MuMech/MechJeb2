@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.13.0 (source code generated 2017-12-29)
+ALGLIB 3.17.0 (source code generated 2020-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -145,9 +145,15 @@ public partial class alglib
     public static void odesolverrkck(double[] y, int n, double[] x, int m, double eps, double h, out odesolverstate state)
     {
         state = new odesolverstate();
-        odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj);
-        return;
+        odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj, null);
     }
+    
+    public static void odesolverrkck(double[] y, int n, double[] x, int m, double eps, double h, out odesolverstate state, alglib.xparams _params)
+    {
+        state = new odesolverstate();
+        odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj, _params);
+    }
+            
     public static void odesolverrkck(double[] y, double[] x, double eps, double h, out odesolverstate state)
     {
         int n;
@@ -156,7 +162,20 @@ public partial class alglib
         state = new odesolverstate();
         n = ap.len(y);
         m = ap.len(x);
-        odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj);
+        odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj, null);
+    
+        return;
+    }
+            
+    public static void odesolverrkck(double[] y, double[] x, double eps, double h, out odesolverstate state, alglib.xparams _params)
+    {
+        int n;
+        int m;
+    
+        state = new odesolverstate();
+        n = ap.len(y);
+        m = ap.len(x);
+        odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj, _params);
     
         return;
     }
@@ -169,8 +188,13 @@ public partial class alglib
     public static bool odesolveriteration(odesolverstate state)
     {
     
-        bool result = odesolver.odesolveriteration(state.innerobj);
-        return result;
+        return odesolver.odesolveriteration(state.innerobj, null);
+    }
+    
+    public static bool odesolveriteration(odesolverstate state, alglib.xparams _params)
+    {
+    
+        return odesolver.odesolveriteration(state.innerobj, _params);
     }
     /*************************************************************************
     This function is used to launcn iterations of ODE solver
@@ -186,9 +210,14 @@ public partial class alglib
     *************************************************************************/
     public static void odesolversolve(odesolverstate state, ndimensional_ode_rp diff, object obj)
     {
+        odesolversolve(state, diff, obj, null);
+    }
+    
+    public static void odesolversolve(odesolverstate state, ndimensional_ode_rp diff, object obj, alglib.xparams _params)
+    {
         if( diff==null )
             throw new alglibexception("ALGLIB: error in 'odesolversolve()' (diff is null)");
-        while( alglib.odesolveriteration(state) )
+        while( alglib.odesolveriteration(state, _params) )
         {
             if( state.needdy )
             {
@@ -230,8 +259,16 @@ public partial class alglib
         xtbl = new double[0];
         ytbl = new double[0,0];
         rep = new odesolverreport();
-        odesolver.odesolverresults(state.innerobj, ref m, ref xtbl, ref ytbl, rep.innerobj);
-        return;
+        odesolver.odesolverresults(state.innerobj, ref m, ref xtbl, ref ytbl, rep.innerobj, null);
+    }
+    
+    public static void odesolverresults(odesolverstate state, out int m, out double[] xtbl, out double[,] ytbl, out odesolverreport rep, alglib.xparams _params)
+    {
+        m = 0;
+        xtbl = new double[0];
+        ytbl = new double[0,0];
+        rep = new odesolverreport();
+        odesolver.odesolverresults(state.innerobj, ref m, ref xtbl, ref ytbl, rep.innerobj, _params);
     }
 
 }
@@ -400,18 +437,19 @@ public partial class alglib
             int m,
             double eps,
             double h,
-            odesolverstate state)
+            odesolverstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(n>=1, "ODESolverRKCK: N<1!");
             alglib.ap.assert(m>=1, "ODESolverRKCK: M<1!");
             alglib.ap.assert(alglib.ap.len(y)>=n, "ODESolverRKCK: Length(Y)<N!");
             alglib.ap.assert(alglib.ap.len(x)>=m, "ODESolverRKCK: Length(X)<M!");
-            alglib.ap.assert(apserv.isfinitevector(y, n), "ODESolverRKCK: Y contains infinite or NaN values!");
-            alglib.ap.assert(apserv.isfinitevector(x, m), "ODESolverRKCK: Y contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(y, n, _params), "ODESolverRKCK: Y contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x, m, _params), "ODESolverRKCK: Y contains infinite or NaN values!");
             alglib.ap.assert(math.isfinite(eps), "ODESolverRKCK: Eps is not finite!");
             alglib.ap.assert((double)(eps)!=(double)(0), "ODESolverRKCK: Eps is zero!");
             alglib.ap.assert(math.isfinite(h), "ODESolverRKCK: H is not finite!");
-            odesolverinit(0, y, n, x, m, eps, h, state);
+            odesolverinit(0, y, n, x, m, eps, h, state, _params);
         }
 
 
@@ -420,7 +458,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 01.09.2009 by Bochkanov Sergey
         *************************************************************************/
-        public static bool odesolveriteration(odesolverstate state)
+        public static bool odesolveriteration(odesolverstate state,
+            alglib.xparams _params)
         {
             bool result = new bool();
             int n = 0;
@@ -833,7 +872,8 @@ public partial class alglib
             ref int m,
             ref double[] xtbl,
             ref double[,] ytbl,
-            odesolverreport rep)
+            odesolverreport rep,
+            alglib.xparams _params)
         {
             double v = 0;
             int i = 0;
@@ -880,7 +920,8 @@ public partial class alglib
             int m,
             double eps,
             double h,
-            odesolverstate state)
+            odesolverstate state,
+            alglib.xparams _params)
         {
             int i = 0;
             double v = 0;

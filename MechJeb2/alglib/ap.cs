@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 3.13.0 (source code generated 2017-12-29)
+ALGLIB 3.17.0 (source code generated 2020-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -228,10 +228,69 @@ public partial class alglib
                             Works in both managed and native versions  of
                             ALGLIB.
     ********************************************************************/
-    public abstract class alglibobject
+    public abstract class alglibobject : IDisposable
     {
         public virtual void _deallocate() {}
         public abstract alglibobject make_copy();
+        public void Dispose()
+        {
+            _deallocate();
+        }
+    }
+    
+    /********************************************************************
+    xparams object, used to pass additional parameters like multithreading
+    settings, and several predefined values
+    ********************************************************************/
+    public class xparams
+    {
+        public ulong flags;
+        public xparams(ulong v)
+        {
+            flags = v;
+        }
+    }
+    private static ulong FLG_THREADING_MASK          = 0x7;
+    private static   int FLG_THREADING_SHIFT         = 0;
+    private static ulong FLG_THREADING_USE_GLOBAL    = 0x0;
+    private static ulong FLG_THREADING_SERIAL        = 0x1;
+    private static ulong FLG_THREADING_PARALLEL      = 0x2;
+    public static xparams serial   = new xparams(FLG_THREADING_SERIAL);
+    public static xparams parallel = new xparams(FLG_THREADING_PARALLEL);
+
+    /********************************************************************
+    Global flags, split into several char-sized variables in order
+    to avoid problem with non-atomic reads/writes (single-byte ops
+    are atomic on all modern architectures);
+    
+    Following variables are included:
+    * threading-related settings
+    ********************************************************************/
+    public static byte global_threading_flags = (byte)(FLG_THREADING_SERIAL>>FLG_THREADING_SHIFT);
+    
+    public static void setglobalthreading(xparams p)
+    {
+        AE_CRITICAL_ASSERT(p!=null);
+        ae_set_global_threading(p.flags);
+    }
+    
+    public static void ae_set_global_threading(ulong flg_value)
+    {
+        flg_value = flg_value&FLG_THREADING_MASK;
+        AE_CRITICAL_ASSERT(flg_value==FLG_THREADING_SERIAL || flg_value==FLG_THREADING_PARALLEL);
+        global_threading_flags = (byte)(flg_value>>FLG_THREADING_SHIFT);
+    }
+    
+    public static ulong ae_get_global_threading()
+    {
+        return ((ulong)global_threading_flags)<<FLG_THREADING_SHIFT;
+    }
+    
+    static ulong ae_get_effective_threading(xparams p)
+    {
+        if( p==null || (p.flags&FLG_THREADING_MASK)==FLG_THREADING_USE_GLOBAL )
+            return ((ulong)global_threading_flags)<<FLG_THREADING_SHIFT;
+        return p.flags&FLG_THREADING_MASK;
     }
     
     /********************************************************************
@@ -248,8 +307,8 @@ public partial class alglib
                    set to null), but any attempt to work with this object
                    will crash your program.
     
-    IMPORTANT (2): memory ownen by object will be recycled by GC  in  any
-                   case. This method just enforced IMMEDIATE deallocation.
+    IMPORTANT (2): memory owned by object will be recycled by GC  in  any
+                   case. This method just enforces IMMEDIATE deallocation.
     ********************************************************************/
     public static void deallocateimmediately<T>(ref T obj) where T : alglib.alglibobject
     {
@@ -301,6 +360,60 @@ public partial class alglib
     ********************************************************************/
     public static void free_disposed_items()
     {
+    }
+    
+    /************************************************************************
+    This function maps nworkers  number  (which  can  be  positive,  zero  or
+    negative with 0 meaning "all cores", -1 meaning "all cores -1" and so on)
+    to "effective", strictly positive workers count.
+
+    This  function  is  intended  to  be used by debugging/testing code which
+    tests different number of worker threads. It is NOT aligned  in  any  way
+    with ALGLIB multithreading framework (i.e. it can return  non-zero worker
+    count even for single-threaded GPLed ALGLIB).
+    ************************************************************************/
+    public static int get_effective_workers(int nworkers)
+    {
+        int ncores = System.Environment.ProcessorCount;
+        if( nworkers>=1 )
+            return nworkers>ncores ? ncores : nworkers;
+        return ncores+nworkers>=1 ? ncores+nworkers : 1;
+    }
+    
+    /********************************************************************
+    This function activates trace output, with trace log being  saved  to
+    file (appended to the end).
+
+    Tracing allows us to study behavior of ALGLIB solvers  and  to  debug
+    their failures:
+    * tracing is  limited  by one/several ALGLIB parts specified by means
+      of trace tags, like "SLP" (for SLP solver) or "OPTGUARD"  (OptGuard
+      integrity checker).
+    * some ALGLIB solvers support hierarchies of trace tags which activate
+      different kinds of tracing. Say, "SLP" defines some basic  tracing,
+      but "SLP.PROBING" defines more detailed and costly tracing.
+    * generally, "TRACETAG.SUBTAG"   also  implicitly  activates  logging
+      which is activated by "TRACETAG"
+    * you may define multiple trace tags by separating them with  commas,
+      like "SLP,OPTGUARD,SLP.PROBING"
+    * trace tags are case-insensitive
+    * spaces/tabs are NOT allowed in the tags string
+
+    Trace log is saved to file "filename", which is opened in the  append
+    mode. If no file with such name  can  be  opened,  tracing  won't  be
+    performed (but no exception will be generated).
+    ********************************************************************/
+    public static void trace_file(string tags, string filename)
+    {
+        ap.trace_file(tags, filename);
+    }
+    
+    /********************************************************************
+    This function disables tracing.
+    ********************************************************************/
+    public static void trace_disable()
+    {
+        ap.trace_disable();
     }
     
     /********************************************************************
@@ -358,12 +471,30 @@ public partial class alglib
         public static void assert(bool cond, string s)
         {
             if( !cond )
+            {
+                if( trace_mode!=TRACE_MODE.NONE )
+                    trace("---!!! CRITICAL ERROR !!!--- exception with message '"+s+"' was generated\n");
                 throw new alglibexception(s);
+            }
         }
         
         public static void assert(bool cond)
         {
             assert(cond, "ALGLIB: assertion failed");
+        }
+        
+        /****************************************************************
+        Error tracking for unit testing purposes; utility functions.
+        ****************************************************************/
+        public static string sef_xdesc = "";
+        
+        public static void seterrorflag(ref bool flag, bool cond, string xdesc)
+        {
+            if( cond )
+            {
+                flag = true;
+                sef_xdesc = xdesc;
+            }
         }
         
         /****************************************************************
@@ -663,6 +794,60 @@ public partial class alglib
                 }
             return true;
         }
+        
+        /********************************************************************
+        Tracing and logging
+        ********************************************************************/
+        enum TRACE_MODE { NONE, FILE };
+        private static TRACE_MODE trace_mode = TRACE_MODE.NONE;
+        private static string trace_tags = "";
+        private static string trace_filename = "";
+        
+        public static void trace_file(string tags, string filename)
+        {
+            trace_mode     = TRACE_MODE.FILE;
+            trace_tags     = ","+tags.ToLower()+",";
+            trace_filename = filename;
+            trace("####################################################################################################\n");
+            trace("# TRACING ENABLED: "+System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")+"\n");
+            trace("# TRACE TAGS:      '"+tags+"'\n");
+            trace("####################################################################################################\n");
+        }
+        
+        public static void trace_disable()
+        {
+            trace_mode     = TRACE_MODE.NONE;
+            trace_tags     = "";
+        }
+        
+        public static bool istraceenabled(string tag, xparams _params)
+        {
+            // trace disabled
+            if( trace_mode==TRACE_MODE.NONE )
+                return false;
+            
+            // contains tag (followed by comma, which means exact match)
+            if( trace_tags.Contains(","+tag.ToLower()+",") )
+                return true;
+            
+            // contains tag (followed by dot, which means match with child)
+            if( trace_tags.Contains(","+tag.ToLower()+".") )
+                return true;
+            
+            // nothing
+            return false;
+        }
+        
+        public static void trace(string s)
+        {
+            if( trace_mode==TRACE_MODE.NONE )
+                return;
+            if( trace_mode==TRACE_MODE.FILE )
+            {
+                System.IO.File.AppendAllText(trace_filename,s);
+                return;
+            }
+        }
     };
     
     /********************************************************************
@@ -960,6 +1145,15 @@ public partial class alglib
             entries_needed++;
         }
 
+        public void alloc_byte_array(byte[] a)
+        {
+            if( mode!=SMODE.ALLOC )
+                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            int n = ap.len(a);
+            n = n/8 + (n%8>0 ? 1 : 0);
+            entries_needed += 1+n;
+        }
+
         private int get_alloc_size()
         {
             int rows, lastrowsize, result;
@@ -1053,7 +1247,7 @@ public partial class alglib
             io_stream = i_stream;
         }
 
-        private void serialize_value(bool v0, int v1, double v2, int val_idx)
+        private void serialize_value(bool v0, int v1, double v2, ulong v3, int val_idx)
         {
             // prepare serialization
             char[] arr_out = null;
@@ -1078,6 +1272,8 @@ public partial class alglib
                 int2str(   v1, arr_out, ref cnt_out);
             else if( val_idx==2 )
                 double2str(v2, arr_out, ref cnt_out);
+            else if( val_idx==3 )
+                ulong2str( v3, arr_out, ref cnt_out);
             else
                 throw new alglib.alglibexception("ALGLIB: internal error during serialization");
             entries_saved++;
@@ -1136,17 +1332,43 @@ public partial class alglib
 
         public void serialize_bool(bool v)
         {
-            serialize_value(v, 0, 0, 0);
+            serialize_value(v, 0, 0, 0, 0);
         }
 
         public void serialize_int(int v)
         {
-            serialize_value(false, v, 0, 1);
+            serialize_value(false, v, 0, 0, 1);
         }
 
         public void serialize_double(double v)
         {
-            serialize_value(false, 0, v, 2);
+            serialize_value(false, 0, v, 0, 2);
+        }
+
+        public void serialize_ulong(ulong v)
+        {
+            serialize_value(false, 0, 0, v, 3);
+        }
+
+        public void serialize_byte_array(byte[] v)
+        {
+            int chunk_size = 8;
+            
+            // save array length
+            int n = ap.len(v);
+            serialize_int(n);
+            
+            // determine entries count
+            int entries_count = n/chunk_size + (n%chunk_size>0 ? 1 : 0);
+            for(int eidx=0; eidx<entries_count; eidx++)
+            {
+                int elen = n-eidx*chunk_size;
+                elen = elen>chunk_size ? chunk_size : elen;
+                ulong tmp = 0x0;
+                for(int i=0; i<elen; i++)
+                    tmp = tmp | (((ulong)v[eidx*chunk_size+i])<<(8*i));
+                serialize_ulong(tmp);
+            }
         }
 
         public bool unserialize_bool()
@@ -1186,6 +1408,42 @@ public partial class alglib
                 return str2double(entry_buf_char, ref dummy);
             }
             throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+        }
+
+        public ulong unserialize_ulong()
+        {
+            if( mode==SMODE.FROM_STRING )
+                return str2ulong(in_str, ref bytes_read);
+            if( mode==SMODE.FROM_STREAM )
+            {
+                unstream_entry_char();
+                int dummy = 0;
+                return str2ulong(entry_buf_char, ref dummy);
+            }
+            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+        }
+
+        public byte[] unserialize_byte_array()
+        {
+            int chunk_size = 8;
+            
+            // read array length, allocate output
+            int n = unserialize_int();
+            byte[] result = new byte[n];
+            
+            // determine entries count
+            int entries_count = n/chunk_size + (n%chunk_size>0 ? 1 : 0);
+            for(int eidx=0; eidx<entries_count; eidx++)
+            {
+                int elen = n-eidx*chunk_size;
+                elen = elen>chunk_size ? chunk_size : elen;
+                ulong tmp = unserialize_ulong();
+                for(int i=0; i<elen; i++)
+                    result[eidx*chunk_size+i] = unchecked((byte)(tmp>>(8*i)));
+            }
+            
+            // done
+            return result;
         }
 
         public void stop()
@@ -1490,7 +1748,7 @@ public partial class alglib
             if( !System.BitConverter.IsLittleEndian )
                 System.Array.Reverse(_bytes);
             return System.BitConverter.ToInt32(_bytes,0);
-        }    
+        }
         
         
         /************************************************************************
@@ -1583,6 +1841,46 @@ public partial class alglib
                 buf[offs+i] = sixbits2char(sixbits[i]);
             offs += SER_ENTRY_LENGTH;
         }
+        
+        
+        /************************************************************************
+        This function serializes ulong value into buffer
+
+        v           ulong value to be serialized
+        buf         buffer, at least 11 characters wide 
+        offs        offset in the buffer
+        
+        after return from this function, offs points to the char's past the value
+        being read.
+        ************************************************************************/
+        private static void ulong2str(ulong v, char[] buf, ref int offs)
+        {
+            int i;
+            int[] sixbits = new int[12];
+            byte[] bytes = new byte[9];
+            
+            //
+            // process general case:
+            // 1. copy v to array of chars
+            // 2. set 9th byte to zero in order to simplify conversion to six-bit representation
+            // 3. convert to little endian (if needed)
+            // 4. convert to six-bit representation
+            //    (last 12th element of sixbits is always zero, we do not output it)
+            //
+            byte[] _bytes = System.BitConverter.GetBytes((ulong)v);
+            if( !System.BitConverter.IsLittleEndian )
+                System.Array.Reverse(_bytes);
+            for(i=0; i<sizeof(ulong); i++)
+                bytes[i] = _bytes[i];
+            for(i=sizeof(ulong); i<9; i++)
+                bytes[i] = 0;
+            threebytes2foursixbits(bytes, 0, sixbits, 0);
+            threebytes2foursixbits(bytes, 3, sixbits, 4);
+            threebytes2foursixbits(bytes, 6, sixbits, 8);
+            for(i=0; i<SER_ENTRY_LENGTH; i++)
+                buf[offs+i] = sixbits2char(sixbits[i]);
+            offs += SER_ENTRY_LENGTH;
+        }
 
         /************************************************************************
         This function unserializes double value from string
@@ -1667,6 +1965,65 @@ public partial class alglib
             if( !System.BitConverter.IsLittleEndian )
                 System.Array.Reverse(_bytes);        
             return System.BitConverter.ToDouble(_bytes,0);
+        }
+
+        /************************************************************************
+        This function unserializes ulong value from string
+
+        buf         buffer which contains value; leading spaces/tabs/newlines are 
+                    ignored, traling spaces/tabs/newlines are treated as  end  of
+                    the ulong value.
+        offs        offset in the buffer
+        
+        after return from this function, offs points to the char's past the value
+        being read.
+
+        This function raises an error in case unexpected symbol is found
+        ************************************************************************/
+        private static ulong str2ulong(char[] buf, ref int offs)
+        {
+            string emsg = "ALGLIB: unable to read ulong value from stream";
+            int[] sixbits = new int[12];
+            byte[]  bytes = new byte[9];
+            byte[] _bytes = new byte[sizeof(ulong)];
+            int sixbitsread, i;
+            
+            
+            // 
+            // skip leading spaces
+            //
+            while( buf[offs]==' ' || buf[offs]=='\t' || buf[offs]=='\n' || buf[offs]=='\r' )
+                offs++;
+            
+            // 
+            // 1. read and decode six-bit digits
+            // 2. check that all 11 digits were read
+            // 3. set last 12th digit to zero (needed for simplicity of conversion)
+            // 4. convert to 8 bytes
+            // 5. convert to big endian representation, if needed
+            //
+            sixbitsread = 0;
+            while( buf[offs]!=' ' && buf[offs]!='\t' && buf[offs]!='\n' && buf[offs]!='\r' && buf[offs]!=0 )
+            {
+                int d;
+                d = char2sixbits(buf[offs]);
+                if( d<0 || sixbitsread>=SER_ENTRY_LENGTH )
+                    throw new alglib.alglibexception(emsg);
+                sixbits[sixbitsread] = d;
+                sixbitsread++;
+                offs++;
+            }
+            if( sixbitsread!=SER_ENTRY_LENGTH )
+                throw new alglib.alglibexception(emsg);
+            sixbits[SER_ENTRY_LENGTH] = 0;
+            foursixbits2threebytes(sixbits, 0, bytes, 0);
+            foursixbits2threebytes(sixbits, 4, bytes, 3);
+            foursixbits2threebytes(sixbits, 8, bytes, 6);
+            for(i=0; i<sizeof(ulong); i++)
+                _bytes[i] = bytes[i];        
+            if( !System.BitConverter.IsLittleEndian )
+                System.Array.Reverse(_bytes);        
+            return System.BitConverter.ToUInt64(_bytes,0);
         }
     }
     
@@ -2135,7 +2492,11 @@ public partial class alglib
     public partial class smp
     {
         public static int cores_count = 1;
-        public static volatile int cores_to_use = 0;
+        public static volatile int cores_to_use = 1;
+        public static bool isparallelcontext()
+        {
+            return false;
+        }
     }
     public class smpselftests
     {
@@ -2147,5 +2508,9 @@ public partial class alglib
     public static void setnworkers(int nworkers)
     {
         alglib.smp.cores_to_use = nworkers;
+    }
+    public static int getnworkers()
+    {
+        return alglib.smp.cores_to_use;
     }
 }
