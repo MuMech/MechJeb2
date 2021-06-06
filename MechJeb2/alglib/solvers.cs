@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.13.0 (source code generated 2017-12-29)
+ALGLIB 3.17.0 (source code generated 2020-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -116,43 +116,20 @@ public partial class alglib
                ! This  performance  penalty  is  especially  visible  in   the
                ! multithreaded mode, because both condition number  estimation
                ! and   iterative    refinement   are   inherently   sequential
-               ! calculations. It also very significant on small matrices.
+               ! calculations. It is also very significant on small matrices.
                !
                ! Thus, if you need high performance and if you are pretty sure
                ! that your system is well conditioned, we  strongly  recommend
                ! you to use faster solver, RMatrixSolveFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -184,18 +161,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_rmatrixsolve(double[,] a, int n, double[] b, out int info, out densesolverreport rep, out double[] x)
+    public static void rmatrixsolve(double[,] a, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers._pexec_rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -213,37 +187,14 @@ public partial class alglib
     If you need condition number estimation or iterative refinement, use  more
     feature-rich version - RMatrixSolve().
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -270,16 +221,13 @@ public partial class alglib
     public static void rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info)
     {
         info = 0;
-        directdensesolvers.rmatrixsolvefast(a, n, b, ref info);
-        return;
+        directdensesolvers.rmatrixsolvefast(a, n, b, ref info, null);
     }
     
-    
-    public static void smp_rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info)
+    public static void rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_rmatrixsolvefast(a, n, b, ref info);
-        return;
+        directdensesolvers.rmatrixsolvefast(a, n, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -312,37 +260,14 @@ public partial class alglib
                ! that your system is well conditioned, we  strongly  recommend
                ! you to use faster solver, RMatrixSolveMFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -382,18 +307,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out int info, out densesolverreport rep, out double[,] x)
+    public static void rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers._pexec_rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -408,37 +330,14 @@ public partial class alglib
     * O(N^3+M*N^2) complexity
     * no additional functionality, highest performance
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -476,16 +375,13 @@ public partial class alglib
     public static void rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info);
-        return;
+        directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info, null);
     }
     
-    
-    public static void smp_rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info)
+    public static void rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_rmatrixsolvemfast(a, n, b, m, ref info);
-        return;
+        directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -547,8 +443,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void rmatrixlusolve(double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new double[0];
+        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -586,8 +489,13 @@ public partial class alglib
     public static void rmatrixlusolvefast(double[,] lua, int[] p, int n, ref double[] b, out int info)
     {
         info = 0;
-        directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info);
-        return;
+        directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info, null);
+    }
+    
+    public static void rmatrixlusolvefast(double[,] lua, int[] p, int n, ref double[] b, out int info, alglib.xparams _params)
+    {
+        info = 0;
+        directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -622,35 +530,14 @@ public partial class alglib
                ! In such cases we strongly recommend you to use faster solver,
                ! RMatrixLUSolveMFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. Triangular solver is relatively easy to parallelize.
-      ! However, parallelization will be efficient  only for  large number  of
-      ! right parts M.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -686,18 +573,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
+    public static void rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers._pexec_rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -713,35 +597,14 @@ public partial class alglib
     * O(M*N^2) complexity
     * fast algorithm without ANY additional checks, just triangular solver
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. Triangular solver is relatively easy to parallelize.
-      ! However, parallelization will be efficient  only for  large number  of
-      ! right parts M.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -770,16 +633,13 @@ public partial class alglib
     public static void rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info);
-        return;
+        directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info, null);
     }
     
-    
-    public static void smp_rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info)
+    public static void rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_rmatrixlusolvemfast(lua, p, n, b, m, ref info);
-        return;
+        directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -823,8 +683,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new double[0];
+        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -868,8 +735,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new double[0,0];
+        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -900,37 +774,14 @@ public partial class alglib
                ! that your system is well conditioned, we  strongly  recommend
                ! you to use faster solver, CMatrixSolveMFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -969,18 +820,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out int info, out densesolverreport rep, out complex[,] x)
+    public static void cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers._pexec_cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -993,37 +841,14 @@ public partial class alglib
     * O(N^3+M*N^2) complexity
     * no additional time consuming functions
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1051,16 +876,13 @@ public partial class alglib
     public static void cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info);
-        return;
+        directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info, null);
     }
     
-    
-    public static void smp_cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info)
+    public static void cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_cmatrixsolvemfast(a, n, b, m, ref info);
-        return;
+        directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -1089,37 +911,14 @@ public partial class alglib
                ! that your system is well conditioned, we  strongly  recommend
                ! you to use faster solver, CMatrixSolveFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1151,18 +950,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_cmatrixsolve(complex[,] a, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x)
+    public static void cmatrixsolve(complex[,] a, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers._pexec_cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -1173,37 +969,14 @@ public partial class alglib
     * O(N^3) complexity
     * no additional time consuming features, just triangular solver
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that LU decomposition  is  harder  to
-      ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-      ! many internal synchronization points which can not be avoided. However
-      ! parallelism starts to be profitable starting  from  N=1024,  achieving
-      ! near-linear speedup for N=4096 or higher.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1230,16 +1003,13 @@ public partial class alglib
     public static void cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info)
     {
         info = 0;
-        directdensesolvers.cmatrixsolvefast(a, n, b, ref info);
-        return;
+        directdensesolvers.cmatrixsolvefast(a, n, b, ref info, null);
     }
     
-    
-    public static void smp_cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info)
+    public static void cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_cmatrixsolvefast(a, n, b, ref info);
-        return;
+        directdensesolvers.cmatrixsolvefast(a, n, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -1270,35 +1040,14 @@ public partial class alglib
                ! In such cases we strongly recommend you to use faster solver,
                ! CMatrixLUSolveMFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. Triangular solver is relatively easy to parallelize.
-      ! However, parallelization will be efficient  only for  large number  of
-      ! right parts M.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1332,18 +1081,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
+    public static void cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers._pexec_cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -1355,35 +1101,14 @@ public partial class alglib
     * O(M*N^2) complexity
     * no additional time-consuming features
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. Triangular solver is relatively easy to parallelize.
-      ! However, parallelization will be efficient  only for  large number  of
-      ! right parts M.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1413,16 +1138,13 @@ public partial class alglib
     public static void cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info);
-        return;
+        directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info, null);
     }
     
-    
-    public static void smp_cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info)
+    public static void cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_cmatrixlusolvemfast(lua, p, n, b, m, ref info);
-        return;
+        directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -1482,8 +1204,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void cmatrixlusolve(complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new complex[0];
+        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -1524,8 +1253,13 @@ public partial class alglib
     public static void cmatrixlusolvefast(complex[,] lua, int[] p, int n, ref complex[] b, out int info)
     {
         info = 0;
-        directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info);
-        return;
+        directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info, null);
+    }
+    
+    public static void cmatrixlusolvefast(complex[,] lua, int[] p, int n, ref complex[] b, out int info, alglib.xparams _params)
+    {
+        info = 0;
+        directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -1566,8 +1300,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new complex[0,0];
+        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -1607,8 +1348,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new complex[0];
+        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -1641,36 +1389,14 @@ public partial class alglib
                ! that your system is well conditioned, we  strongly  recommend
                ! you to use faster solver, SPDMatrixSolveMFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1704,18 +1430,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
+    public static void spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers._pexec_spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -1727,36 +1450,14 @@ public partial class alglib
     * matrix is represented by its upper or lower triangle
     * no additional time consuming features
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1784,16 +1485,13 @@ public partial class alglib
     public static void spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info, null);
     }
     
-    
-    public static void smp_spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info)
+    public static void spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_spdmatrixsolvemfast(a, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -1827,36 +1525,14 @@ public partial class alglib
                ! that your system is well conditioned, we  strongly  recommend
                ! you to use faster solver, SPDMatrixSolveFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1889,18 +1565,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x)
+    public static void spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers._pexec_spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -1913,36 +1586,14 @@ public partial class alglib
     * matrix is represented by its upper or lower triangle
     * no additional time consuming features like condition number estimation
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1969,16 +1620,13 @@ public partial class alglib
     public static void spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info)
     {
         info = 0;
-        directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info);
-        return;
+        directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info, null);
     }
     
-    
-    public static void smp_spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info)
+    public static void spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_spdmatrixsolvefast(a, n, isupper, b, ref info);
-        return;
+        directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -2043,18 +1691,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
+    public static void spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers._pexec_spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -2092,16 +1737,13 @@ public partial class alglib
     public static void spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, null);
     }
     
-    
-    public static void smp_spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info)
+    public static void spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -2163,8 +1805,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void spdmatrixcholeskysolve(double[,] cha, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new double[0];
+        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -2200,8 +1849,13 @@ public partial class alglib
     public static void spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, ref double[] b, out int info)
     {
         info = 0;
-        directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info);
-        return;
+        directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, null);
+    }
+    
+    public static void spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, ref double[] b, out int info, alglib.xparams _params)
+    {
+        info = 0;
+        directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -2234,36 +1888,14 @@ public partial class alglib
                ! In such cases we strongly recommend you to use faster solver,
                ! HPDMatrixSolveMFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2290,18 +1922,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
+    public static void hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers._pexec_hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -2313,36 +1942,14 @@ public partial class alglib
     * matrix is represented by its upper or lower triangle
     * no additional time consuming features like condition number estimation
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2371,16 +1978,13 @@ public partial class alglib
     public static void hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info, null);
     }
     
-    
-    public static void smp_hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info)
+    public static void hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_hpdmatrixsolvemfast(a, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -2414,36 +2018,14 @@ public partial class alglib
                ! that your system is well conditioned, we  strongly  recommend
                ! you to use faster solver, HPDMatrixSolveFast() function.
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2469,18 +2051,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x)
+    public static void hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers._pexec_hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -2493,36 +2072,14 @@ public partial class alglib
     * matrix is represented by its upper or lower triangle
     * no additional time consuming functions
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes two  important  improvements  of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-      ! * multicore support
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-      ! * about 2-3x faster than ALGLIB for C++ without MKL
-      ! * about 7-10x faster than "pure C#" edition of ALGLIB
-      ! Difference in performance will be more striking  on  newer  CPU's with
-      ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-      ! problem whose size is at least 128, with best  efficiency achieved for
-      ! N's larger than 512.
-      !
-      ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-      ! of this function. We should note that Cholesky decomposition is harder
-      ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-      ! several synchronization points which  can  not  be  avoided.  However,
-      ! parallelism starts to be profitable starting from N=500.
-      !
-      ! In order to use multicore features you have to:
-      ! * use commercial version of ALGLIB
-      ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-      !   multicore code will be used (for multicore support)
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2551,16 +2108,13 @@ public partial class alglib
     public static void hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info)
     {
         info = 0;
-        directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info);
-        return;
+        directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info, null);
     }
     
-    
-    public static void smp_hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info)
+    public static void hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_hpdmatrixsolvefast(a, n, isupper, b, ref info);
-        return;
+        directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -2626,18 +2180,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
+    public static void hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers._pexec_hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -2674,16 +2225,13 @@ public partial class alglib
     public static void hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info)
     {
         info = 0;
-        directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, null);
     }
     
-    
-    public static void smp_hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info)
+    public static void hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info, alglib.xparams _params)
     {
         info = 0;
-        directdensesolvers._pexec_hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info);
-        return;
+        directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, _params);
     }
     
     /*************************************************************************
@@ -2745,8 +2293,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, null);
+    }
+    
+    public static void hpdmatrixcholeskysolve(complex[,] cha, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    {
+        info = 0;
+        rep = new densesolverreport();
+        x = new complex[0];
+        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, _params);
     }
     
     /*************************************************************************
@@ -2782,8 +2337,13 @@ public partial class alglib
     public static void hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, ref complex[] b, out int info)
     {
         info = 0;
-        directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info);
-        return;
+        directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, null);
+    }
+    
+    public static void hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, ref complex[] b, out int info, alglib.xparams _params)
+    {
+        info = 0;
+        directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, _params);
     }
     
     /*************************************************************************
@@ -2799,22 +2359,14 @@ public partial class alglib
     * iterative refinement
     * O(N^3) complexity
 
-    COMMERCIAL EDITION OF ALGLIB:
-
-      ! Commercial version of ALGLIB includes one  important  improvement   of
-      ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! COMMERCIAL EDITION OF ALGLIB:
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
-      !
-      ! Generally, commercial ALGLIB is several times faster than  open-source
-      ! generic C edition, and many times faster than open-source C# edition.
-      !
-      ! Multithreaded acceleration is only partially supported (some parts are
-      ! optimized, but most - are not).
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      ! * hardware vendor (Intel) implementations of linear algebra primitives
+      !   (C++ and C# versions, x86/x64 platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2857,18 +2409,15 @@ public partial class alglib
         info = 0;
         rep = new densesolverlsreport();
         x = new double[0];
-        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x, null);
     }
     
-    
-    public static void smp_rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out int info, out densesolverlsreport rep, out double[] x)
+    public static void rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out int info, out densesolverlsreport rep, out double[] x, alglib.xparams _params)
     {
         info = 0;
         rep = new densesolverlsreport();
         x = new double[0];
-        directdensesolvers._pexec_rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x);
-        return;
+        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x, _params);
     }
 
 }
@@ -2966,14 +2515,49 @@ public partial class alglib
     OUTPUT PARAMETERS:
         State   -   structure which stores algorithm state
 
+    NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
+          allocated place as much as possible.
+
       -- ALGLIB --
          Copyright 30.11.2011 by Bochkanov Sergey
     *************************************************************************/
     public static void linlsqrcreate(int m, int n, out linlsqrstate state)
     {
         state = new linlsqrstate();
-        linlsqr.linlsqrcreate(m, n, state.innerobj);
-        return;
+        linlsqr.linlsqrcreate(m, n, state.innerobj, null);
+    }
+    
+    public static void linlsqrcreate(int m, int n, out linlsqrstate state, alglib.xparams _params)
+    {
+        state = new linlsqrstate();
+        linlsqr.linlsqrcreate(m, n, state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function initializes linear LSQR Solver.  It  provides  exactly  same
+    functionality as linlsqrcreate(), but reuses  previously  allocated  space
+    as much as possible.
+
+    INPUT PARAMETERS:
+        M       -   number of rows in A
+        N       -   number of variables, N>0
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 14.11.2018 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state)
+    {
+    
+        linlsqr.linlsqrcreatebuf(m, n, state.innerobj, null);
+    }
+    
+    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrcreatebuf(m, n, state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -2991,8 +2575,13 @@ public partial class alglib
     public static void linlsqrsetprecunit(linlsqrstate state)
     {
     
-        linlsqr.linlsqrsetprecunit(state.innerobj);
-        return;
+        linlsqr.linlsqrsetprecunit(state.innerobj, null);
+    }
+    
+    public static void linlsqrsetprecunit(linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetprecunit(state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3009,8 +2598,13 @@ public partial class alglib
     public static void linlsqrsetprecdiag(linlsqrstate state)
     {
     
-        linlsqr.linlsqrsetprecdiag(state.innerobj);
-        return;
+        linlsqr.linlsqrsetprecdiag(state.innerobj, null);
+    }
+    
+    public static void linlsqrsetprecdiag(linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetprecdiag(state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3029,8 +2623,13 @@ public partial class alglib
     public static void linlsqrsetlambdai(linlsqrstate state, double lambdai)
     {
     
-        linlsqr.linlsqrsetlambdai(state.innerobj, lambdai);
-        return;
+        linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, null);
+    }
+    
+    public static void linlsqrsetlambdai(linlsqrstate state, double lambdai, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, _params);
     }
     
     /*************************************************************************
@@ -3059,8 +2658,13 @@ public partial class alglib
     public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b)
     {
     
-        linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b);
-        return;
+        linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, null);
+    }
+    
+    public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, _params);
     }
     
     /*************************************************************************
@@ -3084,8 +2688,13 @@ public partial class alglib
     public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits)
     {
     
-        linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits);
-        return;
+        linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, null);
+    }
+    
+    public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, _params);
     }
     
     /*************************************************************************
@@ -3106,6 +2715,8 @@ public partial class alglib
                         *  7    rounding errors prevent further progress,
                                 X contains best point found so far.
                                 (sometimes returned on singular systems)
+                        *  8    user requested termination via calling
+                                linlsqrrequesttermination()
                     * Rep.IterationsCount contains iterations count
                     * NMV countains number of matrix-vector calculations
 
@@ -3116,8 +2727,14 @@ public partial class alglib
     {
         x = new double[0];
         rep = new linlsqrreport();
-        linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj);
-        return;
+        linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj, null);
+    }
+    
+    public static void linlsqrresults(linlsqrstate state, out double[] x, out linlsqrreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new linlsqrreport();
+        linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3136,8 +2753,77 @@ public partial class alglib
     public static void linlsqrsetxrep(linlsqrstate state, bool needxrep)
     {
     
-        linlsqr.linlsqrsetxrep(state.innerobj, needxrep);
-        return;
+        linlsqr.linlsqrsetxrep(state.innerobj, needxrep, null);
+    }
+    
+    public static void linlsqrsetxrep(linlsqrstate state, bool needxrep, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetxrep(state.innerobj, needxrep, _params);
+    }
+    
+    /*************************************************************************
+    This function is used to peek into LSQR solver and get  current  iteration
+    counter. You can safely "peek" into the solver from another thread.
+
+    INPUT PARAMETERS:
+        S           -   solver object
+
+    RESULT:
+        iteration counter, in [0,INF)
+
+      -- ALGLIB --
+         Copyright 21.05.2018 by Bochkanov Sergey
+    *************************************************************************/
+    public static int linlsqrpeekiterationscount(linlsqrstate s)
+    {
+    
+        return linlsqr.linlsqrpeekiterationscount(s.innerobj, null);
+    }
+    
+    public static int linlsqrpeekiterationscount(linlsqrstate s, alglib.xparams _params)
+    {
+    
+        return linlsqr.linlsqrpeekiterationscount(s.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This subroutine submits request for termination of the running solver.  It
+    can be called from some other thread which wants LSQR solver to  terminate
+    (obviously, the  thread  running  LSQR  solver can not request termination
+    because it is already busy working on LSQR).
+
+    As result, solver  stops  at  point  which  was  "current  accepted"  when
+    termination  request  was  submitted  and returns error code 8 (successful
+    termination).  Such   termination   is  a smooth  process  which  properly
+    deallocates all temporaries.
+
+    INPUT PARAMETERS:
+        State   -   solver structure
+
+    NOTE: calling this function on solver which is NOT running  will  have  no
+          effect.
+
+    NOTE: multiple calls to this function are possible. First call is counted,
+          subsequent calls are silently ignored.
+
+    NOTE: solver clears termination flag on its start, it means that  if  some
+          other thread will request termination too soon, its request will went
+          unnoticed.
+
+      -- ALGLIB --
+         Copyright 08.10.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrrequesttermination(linlsqrstate state)
+    {
+    
+        linlsqr.linlsqrrequesttermination(state.innerobj, null);
+    }
+    
+    public static void linlsqrrequesttermination(linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrrequesttermination(state.innerobj, _params);
     }
 
 }
@@ -3221,8 +2907,14 @@ public partial class alglib
     {
         x = new complex[0];
         rep = new polynomialsolverreport();
-        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj);
-        return;
+        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj, null);
+    }
+    
+    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep, alglib.xparams _params)
+    {
+        x = new complex[0];
+        rep = new polynomialsolverreport();
+        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj, _params);
     }
 
 }
@@ -3377,16 +3069,33 @@ public partial class alglib
     public static void nleqcreatelm(int n, int m, double[] x, out nleqstate state)
     {
         state = new nleqstate();
-        nleq.nleqcreatelm(n, m, x, state.innerobj);
-        return;
+        nleq.nleqcreatelm(n, m, x, state.innerobj, null);
     }
+    
+    public static void nleqcreatelm(int n, int m, double[] x, out nleqstate state, alglib.xparams _params)
+    {
+        state = new nleqstate();
+        nleq.nleqcreatelm(n, m, x, state.innerobj, _params);
+    }
+            
     public static void nleqcreatelm(int m, double[] x, out nleqstate state)
     {
         int n;
     
         state = new nleqstate();
         n = ap.len(x);
-        nleq.nleqcreatelm(n, m, x, state.innerobj);
+        nleq.nleqcreatelm(n, m, x, state.innerobj, null);
+    
+        return;
+    }
+            
+    public static void nleqcreatelm(int m, double[] x, out nleqstate state, alglib.xparams _params)
+    {
+        int n;
+    
+        state = new nleqstate();
+        n = ap.len(x);
+        nleq.nleqcreatelm(n, m, x, state.innerobj, _params);
     
         return;
     }
@@ -3413,8 +3122,13 @@ public partial class alglib
     public static void nleqsetcond(nleqstate state, double epsf, int maxits)
     {
     
-        nleq.nleqsetcond(state.innerobj, epsf, maxits);
-        return;
+        nleq.nleqsetcond(state.innerobj, epsf, maxits, null);
+    }
+    
+    public static void nleqsetcond(nleqstate state, double epsf, int maxits, alglib.xparams _params)
+    {
+    
+        nleq.nleqsetcond(state.innerobj, epsf, maxits, _params);
     }
     
     /*************************************************************************
@@ -3433,8 +3147,13 @@ public partial class alglib
     public static void nleqsetxrep(nleqstate state, bool needxrep)
     {
     
-        nleq.nleqsetxrep(state.innerobj, needxrep);
-        return;
+        nleq.nleqsetxrep(state.innerobj, needxrep, null);
+    }
+    
+    public static void nleqsetxrep(nleqstate state, bool needxrep, alglib.xparams _params)
+    {
+    
+        nleq.nleqsetxrep(state.innerobj, needxrep, _params);
     }
     
     /*************************************************************************
@@ -3457,8 +3176,13 @@ public partial class alglib
     public static void nleqsetstpmax(nleqstate state, double stpmax)
     {
     
-        nleq.nleqsetstpmax(state.innerobj, stpmax);
-        return;
+        nleq.nleqsetstpmax(state.innerobj, stpmax, null);
+    }
+    
+    public static void nleqsetstpmax(nleqstate state, double stpmax, alglib.xparams _params)
+    {
+    
+        nleq.nleqsetstpmax(state.innerobj, stpmax, _params);
     }
     
     /*************************************************************************
@@ -3469,8 +3193,13 @@ public partial class alglib
     public static bool nleqiteration(nleqstate state)
     {
     
-        bool result = nleq.nleqiteration(state.innerobj);
-        return result;
+        return nleq.nleqiteration(state.innerobj, null);
+    }
+    
+    public static bool nleqiteration(nleqstate state, alglib.xparams _params)
+    {
+    
+        return nleq.nleqiteration(state.innerobj, _params);
     }
     /*************************************************************************
     This family of functions is used to launcn iterations of nonlinear solver
@@ -3492,11 +3221,16 @@ public partial class alglib
     *************************************************************************/
     public static void nleqsolve(nleqstate state, ndimensional_func func, ndimensional_jac  jac, ndimensional_rep rep, object obj)
     {
+        nleqsolve(state, func, jac, rep, obj, null);
+    }
+    
+    public static void nleqsolve(nleqstate state, ndimensional_func func, ndimensional_jac  jac, ndimensional_rep rep, object obj, alglib.xparams _params)
+    {
         if( func==null )
             throw new alglibexception("ALGLIB: error in 'nleqsolve()' (func is null)");
         if( jac==null )
             throw new alglibexception("ALGLIB: error in 'nleqsolve()' (jac is null)");
-        while( alglib.nleqiteration(state) )
+        while( alglib.nleqiteration(state, _params) )
         {
             if( state.needf )
             {
@@ -3549,8 +3283,14 @@ public partial class alglib
     {
         x = new double[0];
         rep = new nleqreport();
-        nleq.nleqresults(state.innerobj, ref x, rep.innerobj);
-        return;
+        nleq.nleqresults(state.innerobj, ref x, rep.innerobj, null);
+    }
+    
+    public static void nleqresults(nleqstate state, out double[] x, out nleqreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new nleqreport();
+        nleq.nleqresults(state.innerobj, ref x, rep.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3567,8 +3307,13 @@ public partial class alglib
     public static void nleqresultsbuf(nleqstate state, ref double[] x, nleqreport rep)
     {
     
-        nleq.nleqresultsbuf(state.innerobj, ref x, rep.innerobj);
-        return;
+        nleq.nleqresultsbuf(state.innerobj, ref x, rep.innerobj, null);
+    }
+    
+    public static void nleqresultsbuf(nleqstate state, ref double[] x, nleqreport rep, alglib.xparams _params)
+    {
+    
+        nleq.nleqresultsbuf(state.innerobj, ref x, rep.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3591,8 +3336,13 @@ public partial class alglib
     public static void nleqrestartfrom(nleqstate state, double[] x)
     {
     
-        nleq.nleqrestartfrom(state.innerobj, x);
-        return;
+        nleq.nleqrestartfrom(state.innerobj, x, null);
+    }
+    
+    public static void nleqrestartfrom(nleqstate state, double[] x, alglib.xparams _params)
+    {
+    
+        nleq.nleqrestartfrom(state.innerobj, x, _params);
     }
 
 }
@@ -3645,27 +3395,71 @@ public partial class alglib
 
     INPUT PARAMETERS
         A       -   sparse matrix, must be NxN exactly
-        N       -   size of A, N>0
         IsUpper -   which half of A is provided (another half is ignored)
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Rep     -   solver report, following fields are set:
-                    * rep.terminationtype - solver status; >0 for success,
-                      set to -3 on failure (degenerate or non-SPD system).
         X       -   array[N], it contains:
                     * rep.terminationtype>0    =>  solution
                     * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
 
       -- ALGLIB --
          Copyright 26.12.2017 by Bochkanov Sergey
     *************************************************************************/
-    public static void sparsesolvesks(sparsematrix a, int n, bool isupper, double[] b, out sparsesolverreport rep, out double[] x)
+    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
     {
-        rep = new sparsesolverreport();
         x = new double[0];
-        directsparsesolvers.sparsesolvesks(a.innerobj, n, isupper, b, rep.innerobj, ref x);
-        return;
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolvesks(a.innerobj, isupper, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolvesks(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+    definite matrix A, N*1 vectors x and b.
+
+    This solver  converts  input  matrix  to  CRS  format,  performs  Cholesky
+    factorization using supernodal Cholesky  decomposition  with  permutation-
+    reducing ordering and uses sparse triangular solver to get solution of the
+    original system.
+
+    INPUT PARAMETERS
+        A       -   sparse matrix, must be NxN exactly
+        IsUpper -   which half of A is provided (another half is ignored)
+        B       -   array[N], right part
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolve(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3673,32 +3467,115 @@ public partial class alglib
     matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
 
     IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
-               sparse storage format. An exception will be  generated  if  you
-               pass matrix in some other format (HASH or CRS).
+               or CRS (compressed row storage) format. An  exception  will  be
+               generated if you pass matrix in some other format.
 
     INPUT PARAMETERS
-        A       -   sparse NxN matrix stored in SKS format, must be NxN exactly
-        N       -   size of A, N>0
+        A       -   sparse NxN matrix stored in CRs or SKS format, must be NxN
+                    exactly
         IsUpper -   which half of A is provided (another half is ignored)
         B       -   array[N], right part
 
     OUTPUT PARAMETERS
-        Rep     -   solver report, following fields are set:
-                    * rep.terminationtype - solver status; >0 for success,
-                      set to -3 on failure (degenerate or non-SPD system).
         X       -   array[N], it contains:
                     * rep.terminationtype>0    =>  solution
                     * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
 
       -- ALGLIB --
          Copyright 26.12.2017 by Bochkanov Sergey
     *************************************************************************/
-    public static void sparsecholeskysolvesks(sparsematrix a, int n, bool isupper, double[] b, out sparsesolverreport rep, out double[] x)
+    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
     {
-        rep = new sparsesolverreport();
         x = new double[0];
-        directsparsesolvers.sparsecholeskysolvesks(a.innerobj, n, isupper, b, rep.innerobj, ref x);
-        return;
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdcholeskysolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdcholeskysolve(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+    matrix A, N*1 vectors x and b.
+
+    This solver converts input matrix to CRS format, performs LU factorization
+    and uses sparse triangular solvers to get solution of the original system.
+
+    INPUT PARAMETERS
+        A       -   sparse matrix, must be NxN exactly, any storage format
+        N       -   size of A, N>0
+        B       -   array[0..N-1], right part
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate system).
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsesolve(a.innerobj, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsesolve(a.innerobj, b, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+    matrix A given by its LU factorization, N*1 vectors x and b.
+
+    IMPORTANT: this solver requires input matrix  to  be  in  the  CRS  sparse
+               storage format. An exception will  be  generated  if  you  pass
+               matrix in some other format (HASH or SKS).
+
+    INPUT PARAMETERS
+        A       -   LU factorization of the sparse matrix, must be NxN exactly
+                    in CRS storage format
+        P, Q    -   pivot indexes from LU factorization
+        N       -   size of A, N>0
+        B       -   array[0..N-1], right part
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate system).
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, _params);
     }
 
 }
@@ -3805,8 +3682,13 @@ public partial class alglib
     public static void lincgcreate(int n, out lincgstate state)
     {
         state = new lincgstate();
-        lincg.lincgcreate(n, state.innerobj);
-        return;
+        lincg.lincgcreate(n, state.innerobj, null);
+    }
+    
+    public static void lincgcreate(int n, out lincgstate state, alglib.xparams _params)
+    {
+        state = new lincgstate();
+        lincg.lincgcreate(n, state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3825,8 +3707,13 @@ public partial class alglib
     public static void lincgsetstartingpoint(lincgstate state, double[] x)
     {
     
-        lincg.lincgsetstartingpoint(state.innerobj, x);
-        return;
+        lincg.lincgsetstartingpoint(state.innerobj, x, null);
+    }
+    
+    public static void lincgsetstartingpoint(lincgstate state, double[] x, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetstartingpoint(state.innerobj, x, _params);
     }
     
     /*************************************************************************
@@ -3844,8 +3731,13 @@ public partial class alglib
     public static void lincgsetprecunit(lincgstate state)
     {
     
-        lincg.lincgsetprecunit(state.innerobj);
-        return;
+        lincg.lincgsetprecunit(state.innerobj, null);
+    }
+    
+    public static void lincgsetprecunit(lincgstate state, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetprecunit(state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3862,8 +3754,13 @@ public partial class alglib
     public static void lincgsetprecdiag(lincgstate state)
     {
     
-        lincg.lincgsetprecdiag(state.innerobj);
-        return;
+        lincg.lincgsetprecdiag(state.innerobj, null);
+    }
+    
+    public static void lincgsetprecdiag(lincgstate state, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetprecdiag(state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3888,8 +3785,13 @@ public partial class alglib
     public static void lincgsetcond(lincgstate state, double epsf, int maxits)
     {
     
-        lincg.lincgsetcond(state.innerobj, epsf, maxits);
-        return;
+        lincg.lincgsetcond(state.innerobj, epsf, maxits, null);
+    }
+    
+    public static void lincgsetcond(lincgstate state, double epsf, int maxits, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetcond(state.innerobj, epsf, maxits, _params);
     }
     
     /*************************************************************************
@@ -3922,8 +3824,13 @@ public partial class alglib
     public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b)
     {
     
-        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b);
-        return;
+        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, null);
+    }
+    
+    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b, alglib.xparams _params)
+    {
+    
+        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, _params);
     }
     
     /*************************************************************************
@@ -3956,8 +3863,14 @@ public partial class alglib
     {
         x = new double[0];
         rep = new lincgreport();
-        lincg.lincgresults(state.innerobj, ref x, rep.innerobj);
-        return;
+        lincg.lincgresults(state.innerobj, ref x, rep.innerobj, null);
+    }
+    
+    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new lincgreport();
+        lincg.lincgresults(state.innerobj, ref x, rep.innerobj, _params);
     }
     
     /*************************************************************************
@@ -3970,8 +3883,13 @@ public partial class alglib
     public static void lincgsetrestartfreq(lincgstate state, int srf)
     {
     
-        lincg.lincgsetrestartfreq(state.innerobj, srf);
-        return;
+        lincg.lincgsetrestartfreq(state.innerobj, srf, null);
+    }
+    
+    public static void lincgsetrestartfreq(lincgstate state, int srf, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetrestartfreq(state.innerobj, srf, _params);
     }
     
     /*************************************************************************
@@ -3995,8 +3913,13 @@ public partial class alglib
     public static void lincgsetrupdatefreq(lincgstate state, int freq)
     {
     
-        lincg.lincgsetrupdatefreq(state.innerobj, freq);
-        return;
+        lincg.lincgsetrupdatefreq(state.innerobj, freq, null);
+    }
+    
+    public static void lincgsetrupdatefreq(lincgstate state, int freq, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetrupdatefreq(state.innerobj, freq, _params);
     }
     
     /*************************************************************************
@@ -4015,8 +3938,13 @@ public partial class alglib
     public static void lincgsetxrep(lincgstate state, bool needxrep)
     {
     
-        lincg.lincgsetxrep(state.innerobj, needxrep);
-        return;
+        lincg.lincgsetxrep(state.innerobj, needxrep, null);
+    }
+    
+    public static void lincgsetxrep(lincgstate state, bool needxrep, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetxrep(state.innerobj, needxrep, _params);
     }
 
 }
@@ -4094,44 +4022,21 @@ public partial class alglib
                    ! This  performance  penalty  is  especially  visible  in   the
                    ! multithreaded mode, because both condition number  estimation
                    ! and   iterative    refinement   are   inherently   sequential
-                   ! calculations. It also very significant on small matrices.
+                   ! calculations. It is also very significant on small matrices.
                    !
                    ! Thus, if you need high performance and if you are pretty sure
                    ! that your system is well conditioned, we  strongly  recommend
                    ! you to use faster solver, RMatrixSolveFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -4162,7 +4067,8 @@ public partial class alglib
             double[] b,
             ref int info,
             densesolverreport rep,
-            ref double[] x)
+            ref double[] x,
+            alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
@@ -4181,26 +4087,12 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            rmatrixsolvem(a, n, bm, 1, true, ref info, rep, ref xm);
+            rmatrixsolvem(a, n, bm, 1, true, ref info, rep, ref xm, _params);
             x = new double[n];
             for(i_=0; i_<=n-1;i_++)
             {
                 x[i_] = xm[i_,0];
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_rmatrixsolve(double[,] a,
-            int n,
-            double[] b,
-            ref int info,
-            densesolverreport rep,
-            ref double[] x)
-        {
-            rmatrixsolve(a,n,b,ref info,rep,ref x);
         }
 
 
@@ -4219,38 +4111,15 @@ public partial class alglib
         If you need condition number estimation or iterative refinement, use  more
         feature-rich version - RMatrixSolve().
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -4276,7 +4145,8 @@ public partial class alglib
         public static void rmatrixsolvefast(double[,] a,
             int n,
             double[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -4290,7 +4160,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            trfac.rmatrixlu(ref a, n, n, ref p);
+            trfac.rmatrixlu(ref a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( (double)(a[i,i])==(double)(0) )
@@ -4303,20 +4173,8 @@ public partial class alglib
                     return;
                 }
             }
-            rbasiclusolve(a, p, n, b);
+            rbasiclusolve(a, p, n, b, _params);
             info = 1;
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_rmatrixsolvefast(double[,] a,
-            int n,
-            double[] b,
-            ref int info)
-        {
-            rmatrixsolvefast(a,n,b,ref info);
         }
 
 
@@ -4350,38 +4208,15 @@ public partial class alglib
                    ! that your system is well conditioned, we  strongly  recommend
                    ! you to use faster solver, RMatrixSolveMFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -4422,7 +4257,8 @@ public partial class alglib
             bool rfs,
             ref int info,
             densesolverreport rep,
-            ref double[,] x)
+            ref double[,] x,
+            alglib.xparams _params)
         {
             double[,] da = new double[0,0];
             double[,] emptya = new double[0,0];
@@ -4455,31 +4291,15 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            trfac.rmatrixlu(ref da, n, n, ref p);
+            trfac.rmatrixlu(ref da, n, n, ref p, _params);
             if( rfs )
             {
-                rmatrixlusolveinternal(da, p, n, a, true, b, m, ref info, rep, ref x);
+                rmatrixlusolveinternal(da, p, n, a, true, b, m, ref info, rep, ref x, _params);
             }
             else
             {
-                rmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref info, rep, ref x);
+                rmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_rmatrixsolvem(double[,] a,
-            int n,
-            double[,] b,
-            int m,
-            bool rfs,
-            ref int info,
-            densesolverreport rep,
-            ref double[,] x)
-        {
-            rmatrixsolvem(a,n,b,m,rfs,ref info,rep,ref x);
         }
 
 
@@ -4495,38 +4315,15 @@ public partial class alglib
         * O(N^3+M*N^2) complexity
         * no additional functionality, highest performance
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -4564,7 +4361,8 @@ public partial class alglib
             int n,
             double[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             double v = 0;
             int i = 0;
@@ -4584,7 +4382,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            trfac.rmatrixlu(ref a, n, n, ref p);
+            trfac.rmatrixlu(ref a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( (double)(a[i,i])==(double)(0) )
@@ -4616,22 +4414,9 @@ public partial class alglib
                     }
                 }
             }
-            ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, true, 0, b, 0, 0);
-            ablas.rmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0);
+            ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, true, 0, b, 0, 0, _params);
+            ablas.rmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0, _params);
             info = 1;
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_rmatrixsolvemfast(double[,] a,
-            int n,
-            double[,] b,
-            int m,
-            ref int info)
-        {
-            rmatrixsolvemfast(a,n,b,m,ref info);
         }
 
 
@@ -4695,7 +4480,8 @@ public partial class alglib
             double[] b,
             ref int info,
             densesolverreport rep,
-            ref double[] x)
+            ref double[] x,
+            alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
@@ -4714,7 +4500,7 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            rmatrixlusolvem(lua, p, n, bm, 1, ref info, rep, ref xm);
+            rmatrixlusolvem(lua, p, n, bm, 1, ref info, rep, ref xm, _params);
             x = new double[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -4759,7 +4545,8 @@ public partial class alglib
             int[] p,
             int n,
             double[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -4783,7 +4570,7 @@ public partial class alglib
                     return;
                 }
             }
-            rbasiclusolve(lua, p, n, b);
+            rbasiclusolve(lua, p, n, b, _params);
             info = 1;
         }
 
@@ -4820,36 +4607,15 @@ public partial class alglib
                    ! In such cases we strongly recommend you to use faster solver,
                    ! RMatrixLUSolveMFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. Triangular solver is relatively easy to parallelize.
-          ! However, parallelization will be efficient  only for  large number  of
-          ! right parts M.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -4886,7 +4652,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref double[,] x)
+            ref double[,] x,
+            alglib.xparams _params)
         {
             double[,] emptya = new double[0,0];
 
@@ -4906,23 +4673,7 @@ public partial class alglib
             //
             // solve
             //
-            rmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref info, rep, ref x);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_rmatrixlusolvem(double[,] lua,
-            int[] p,
-            int n,
-            double[,] b,
-            int m,
-            ref int info,
-            densesolverreport rep,
-            ref double[,] x)
-        {
-            rmatrixlusolvem(lua,p,n,b,m,ref info,rep,ref x);
+            rmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -4939,36 +4690,15 @@ public partial class alglib
         * O(M*N^2) complexity
         * fast algorithm without ANY additional checks, just triangular solver
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. Triangular solver is relatively easy to parallelize.
-          ! However, parallelization will be efficient  only for  large number  of
-          ! right parts M.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -4998,7 +4728,8 @@ public partial class alglib
             int n,
             double[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             double v = 0;
             int i = 0;
@@ -5047,23 +4778,9 @@ public partial class alglib
                     }
                 }
             }
-            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, b, 0, 0);
-            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, b, 0, 0);
+            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, b, 0, 0, _params);
+            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, b, 0, 0, _params);
             info = 1;
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_rmatrixlusolvemfast(double[,] lua,
-            int[] p,
-            int n,
-            double[,] b,
-            int m,
-            ref int info)
-        {
-            rmatrixlusolvemfast(lua,p,n,b,m,ref info);
         }
 
 
@@ -5110,7 +4827,8 @@ public partial class alglib
             double[] b,
             ref int info,
             densesolverreport rep,
-            ref double[] x)
+            ref double[] x,
+            alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
@@ -5129,7 +4847,7 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            rmatrixmixedsolvem(a, lua, p, n, bm, 1, ref info, rep, ref xm);
+            rmatrixmixedsolvem(a, lua, p, n, bm, 1, ref info, rep, ref xm, _params);
             x = new double[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -5182,7 +4900,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref double[,] x)
+            ref double[,] x,
+            alglib.xparams _params)
         {
             info = 0;
             x = new double[0,0];
@@ -5200,7 +4919,7 @@ public partial class alglib
             //
             // solve
             //
-            rmatrixlusolveinternal(lua, p, n, a, true, b, m, ref info, rep, ref x);
+            rmatrixlusolveinternal(lua, p, n, a, true, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -5232,38 +4951,15 @@ public partial class alglib
                    ! that your system is well conditioned, we  strongly  recommend
                    ! you to use faster solver, CMatrixSolveMFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -5303,7 +4999,8 @@ public partial class alglib
             bool rfs,
             ref int info,
             densesolverreport rep,
-            ref complex[,] x)
+            ref complex[,] x,
+            alglib.xparams _params)
         {
             complex[,] da = new complex[0,0];
             complex[,] emptya = new complex[0,0];
@@ -5335,31 +5032,15 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            trfac.cmatrixlu(ref da, n, n, ref p);
+            trfac.cmatrixlu(ref da, n, n, ref p, _params);
             if( rfs )
             {
-                cmatrixlusolveinternal(da, p, n, a, true, b, m, ref info, rep, ref x);
+                cmatrixlusolveinternal(da, p, n, a, true, b, m, ref info, rep, ref x, _params);
             }
             else
             {
-                cmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref info, rep, ref x);
+                cmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_cmatrixsolvem(complex[,] a,
-            int n,
-            complex[,] b,
-            int m,
-            bool rfs,
-            ref int info,
-            densesolverreport rep,
-            ref complex[,] x)
-        {
-            cmatrixsolvem(a,n,b,m,rfs,ref info,rep,ref x);
         }
 
 
@@ -5373,38 +5054,15 @@ public partial class alglib
         * O(N^3+M*N^2) complexity
         * no additional time consuming functions
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -5432,7 +5090,8 @@ public partial class alglib
             int n,
             complex[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             complex v = 0;
             int i = 0;
@@ -5452,7 +5111,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            trfac.cmatrixlu(ref a, n, n, ref p);
+            trfac.cmatrixlu(ref a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( a[i,i]==0 )
@@ -5484,22 +5143,9 @@ public partial class alglib
                     }
                 }
             }
-            ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, true, 0, b, 0, 0);
-            ablas.cmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0);
+            ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, true, 0, b, 0, 0, _params);
+            ablas.cmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0, _params);
             info = 1;
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_cmatrixsolvemfast(complex[,] a,
-            int n,
-            complex[,] b,
-            int m,
-            ref int info)
-        {
-            cmatrixsolvemfast(a,n,b,m,ref info);
         }
 
 
@@ -5529,38 +5175,15 @@ public partial class alglib
                    ! that your system is well conditioned, we  strongly  recommend
                    ! you to use faster solver, CMatrixSolveFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -5591,7 +5214,8 @@ public partial class alglib
             complex[] b,
             ref int info,
             densesolverreport rep,
-            ref complex[] x)
+            ref complex[] x,
+            alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
@@ -5610,26 +5234,12 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            cmatrixsolvem(a, n, bm, 1, true, ref info, rep, ref xm);
+            cmatrixsolvem(a, n, bm, 1, true, ref info, rep, ref xm, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
                 x[i_] = xm[i_,0];
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_cmatrixsolve(complex[,] a,
-            int n,
-            complex[] b,
-            ref int info,
-            densesolverreport rep,
-            ref complex[] x)
-        {
-            cmatrixsolve(a,n,b,ref info,rep,ref x);
         }
 
 
@@ -5641,38 +5251,15 @@ public partial class alglib
         * O(N^3) complexity
         * no additional time consuming features, just triangular solver
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that LU decomposition  is  harder  to
-          ! parallelize than, say, matrix-matrix  product  -  this  algorithm  has
-          ! many internal synchronization points which can not be avoided. However
-          ! parallelism starts to be profitable starting  from  N=1024,  achieving
-          ! near-linear speedup for N=4096 or higher.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -5698,7 +5285,8 @@ public partial class alglib
         public static void cmatrixsolvefast(complex[,] a,
             int n,
             complex[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -5712,7 +5300,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            trfac.cmatrixlu(ref a, n, n, ref p);
+            trfac.cmatrixlu(ref a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( a[i,i]==0 )
@@ -5725,20 +5313,8 @@ public partial class alglib
                     return;
                 }
             }
-            cbasiclusolve(a, p, n, b);
+            cbasiclusolve(a, p, n, b, _params);
             info = 1;
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_cmatrixsolvefast(complex[,] a,
-            int n,
-            complex[] b,
-            ref int info)
-        {
-            cmatrixsolvefast(a,n,b,ref info);
         }
 
 
@@ -5770,36 +5346,15 @@ public partial class alglib
                    ! In such cases we strongly recommend you to use faster solver,
                    ! CMatrixLUSolveMFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. Triangular solver is relatively easy to parallelize.
-          ! However, parallelization will be efficient  only for  large number  of
-          ! right parts M.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -5834,7 +5389,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref complex[,] x)
+            ref complex[,] x,
+            alglib.xparams _params)
         {
             complex[,] emptya = new complex[0,0];
 
@@ -5854,23 +5410,7 @@ public partial class alglib
             //
             // solve
             //
-            cmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref info, rep, ref x);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_cmatrixlusolvem(complex[,] lua,
-            int[] p,
-            int n,
-            complex[,] b,
-            int m,
-            ref int info,
-            densesolverreport rep,
-            ref complex[,] x)
-        {
-            cmatrixlusolvem(lua,p,n,b,m,ref info,rep,ref x);
+            cmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -5883,36 +5423,15 @@ public partial class alglib
         * O(M*N^2) complexity
         * no additional time-consuming features
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. Triangular solver is relatively easy to parallelize.
-          ! However, parallelization will be efficient  only for  large number  of
-          ! right parts M.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -5943,7 +5462,8 @@ public partial class alglib
             int n,
             complex[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             complex v = 0;
             int i = 0;
@@ -5992,23 +5512,9 @@ public partial class alglib
                     }
                 }
             }
-            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, b, 0, 0);
-            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, b, 0, 0);
+            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, b, 0, 0, _params);
+            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, b, 0, 0, _params);
             info = 1;
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_cmatrixlusolvemfast(complex[,] lua,
-            int[] p,
-            int n,
-            complex[,] b,
-            int m,
-            ref int info)
-        {
-            cmatrixlusolvemfast(lua,p,n,b,m,ref info);
         }
 
 
@@ -6070,7 +5576,8 @@ public partial class alglib
             complex[] b,
             ref int info,
             densesolverreport rep,
-            ref complex[] x)
+            ref complex[] x,
+            alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
@@ -6089,7 +5596,7 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            cmatrixlusolvem(lua, p, n, bm, 1, ref info, rep, ref xm);
+            cmatrixlusolvem(lua, p, n, bm, 1, ref info, rep, ref xm, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -6137,7 +5644,8 @@ public partial class alglib
             int[] p,
             int n,
             complex[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -6161,7 +5669,7 @@ public partial class alglib
                     return;
                 }
             }
-            cbasiclusolve(lua, p, n, b);
+            cbasiclusolve(lua, p, n, b, _params);
             info = 1;
         }
 
@@ -6207,7 +5715,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref complex[,] x)
+            ref complex[,] x,
+            alglib.xparams _params)
         {
             info = 0;
             x = new complex[0,0];
@@ -6225,7 +5734,7 @@ public partial class alglib
             //
             // solve
             //
-            cmatrixlusolveinternal(lua, p, n, a, true, b, m, ref info, rep, ref x);
+            cmatrixlusolveinternal(lua, p, n, a, true, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -6268,7 +5777,8 @@ public partial class alglib
             complex[] b,
             ref int info,
             densesolverreport rep,
-            ref complex[] x)
+            ref complex[] x,
+            alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
@@ -6287,7 +5797,7 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            cmatrixmixedsolvem(a, lua, p, n, bm, 1, ref info, rep, ref xm);
+            cmatrixmixedsolvem(a, lua, p, n, bm, 1, ref info, rep, ref xm, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -6326,37 +5836,15 @@ public partial class alglib
                    ! that your system is well conditioned, we  strongly  recommend
                    ! you to use faster solver, SPDMatrixSolveMFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -6391,7 +5879,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref double[,] x)
+            ref double[,] x,
+            alglib.xparams _params)
         {
             double[,] da = new double[0,0];
             int i = 0;
@@ -6435,7 +5924,7 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            if( !trfac.spdmatrixcholesky(ref da, n, isupper) )
+            if( !trfac.spdmatrixcholesky(ref da, n, isupper, _params) )
             {
                 x = new double[n, m];
                 for(i=0; i<=n-1; i++)
@@ -6451,23 +5940,7 @@ public partial class alglib
                 return;
             }
             info = 1;
-            spdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref info, rep, ref x);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_spdmatrixsolvem(double[,] a,
-            int n,
-            bool isupper,
-            double[,] b,
-            int m,
-            ref int info,
-            densesolverreport rep,
-            ref double[,] x)
-        {
-            spdmatrixsolvem(a,n,isupper,b,m,ref info,rep,ref x);
+            spdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -6480,37 +5953,15 @@ public partial class alglib
         * matrix is represented by its upper or lower triangle
         * no additional time consuming features
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -6539,7 +5990,8 @@ public partial class alglib
             bool isupper,
             double[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -6553,7 +6005,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            if( !trfac.spdmatrixcholesky(ref a, n, isupper) )
+            if( !trfac.spdmatrixcholesky(ref a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -6567,28 +6019,14 @@ public partial class alglib
             }
             if( isupper )
             {
-                ablas.rmatrixlefttrsm(n, m, a, 0, 0, true, false, 1, b, 0, 0);
-                ablas.rmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0);
+                ablas.rmatrixlefttrsm(n, m, a, 0, 0, true, false, 1, b, 0, 0, _params);
+                ablas.rmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0, _params);
             }
             else
             {
-                ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, false, 0, b, 0, 0);
-                ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, false, 1, b, 0, 0);
+                ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, false, 0, b, 0, 0, _params);
+                ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, false, 1, b, 0, 0, _params);
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_spdmatrixsolvemfast(double[,] a,
-            int n,
-            bool isupper,
-            double[,] b,
-            int m,
-            ref int info)
-        {
-            spdmatrixsolvemfast(a,n,isupper,b,m,ref info);
         }
 
 
@@ -6623,37 +6061,15 @@ public partial class alglib
                    ! that your system is well conditioned, we  strongly  recommend
                    ! you to use faster solver, SPDMatrixSolveFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -6686,7 +6102,8 @@ public partial class alglib
             double[] b,
             ref int info,
             densesolverreport rep,
-            ref double[] x)
+            ref double[] x,
+            alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
@@ -6705,27 +6122,12 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            spdmatrixsolvem(a, n, isupper, bm, 1, ref info, rep, ref xm);
+            spdmatrixsolvem(a, n, isupper, bm, 1, ref info, rep, ref xm, _params);
             x = new double[n];
             for(i_=0; i_<=n-1;i_++)
             {
                 x[i_] = xm[i_,0];
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_spdmatrixsolve(double[,] a,
-            int n,
-            bool isupper,
-            double[] b,
-            ref int info,
-            densesolverreport rep,
-            ref double[] x)
-        {
-            spdmatrixsolve(a,n,isupper,b,ref info,rep,ref x);
         }
 
 
@@ -6739,37 +6141,15 @@ public partial class alglib
         * matrix is represented by its upper or lower triangle
         * no additional time consuming features like condition number estimation
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -6796,7 +6176,8 @@ public partial class alglib
             int n,
             bool isupper,
             double[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
 
@@ -6809,7 +6190,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            if( !trfac.spdmatrixcholesky(ref a, n, isupper) )
+            if( !trfac.spdmatrixcholesky(ref a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -6818,20 +6199,7 @@ public partial class alglib
                 info = -3;
                 return;
             }
-            spdbasiccholeskysolve(a, n, isupper, b);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_spdmatrixsolvefast(double[,] a,
-            int n,
-            bool isupper,
-            double[] b,
-            ref int info)
-        {
-            spdmatrixsolvefast(a,n,isupper,b,ref info);
+            spdbasiccholeskysolve(a, n, isupper, b, _params);
         }
 
 
@@ -6899,7 +6267,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref double[,] x)
+            ref double[,] x,
+            alglib.xparams _params)
         {
             double[,] emptya = new double[0,0];
 
@@ -6919,23 +6288,7 @@ public partial class alglib
             //
             // solve
             //
-            spdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref info, rep, ref x);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_spdmatrixcholeskysolvem(double[,] cha,
-            int n,
-            bool isupper,
-            double[,] b,
-            int m,
-            ref int info,
-            densesolverreport rep,
-            ref double[,] x)
-        {
-            spdmatrixcholeskysolvem(cha,n,isupper,b,m,ref info,rep,ref x);
+            spdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -6976,7 +6329,8 @@ public partial class alglib
             bool isupper,
             double[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -7007,28 +6361,14 @@ public partial class alglib
             }
             if( isupper )
             {
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 1, b, 0, 0);
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, b, 0, 0);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 1, b, 0, 0, _params);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, b, 0, 0, _params);
             }
             else
             {
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, b, 0, 0);
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 1, b, 0, 0);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, b, 0, 0, _params);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 1, b, 0, 0, _params);
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_spdmatrixcholeskysolvemfast(double[,] cha,
-            int n,
-            bool isupper,
-            double[,] b,
-            int m,
-            ref int info)
-        {
-            spdmatrixcholeskysolvemfast(cha,n,isupper,b,m,ref info);
         }
 
 
@@ -7092,7 +6432,8 @@ public partial class alglib
             double[] b,
             ref int info,
             densesolverreport rep,
-            ref double[] x)
+            ref double[] x,
+            alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
@@ -7111,7 +6452,7 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            spdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref info, rep, ref xm);
+            spdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref info, rep, ref xm, _params);
             x = new double[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -7154,7 +6495,8 @@ public partial class alglib
             int n,
             bool isupper,
             double[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int k = 0;
@@ -7179,7 +6521,7 @@ public partial class alglib
                     return;
                 }
             }
-            spdbasiccholeskysolve(cha, n, isupper, b);
+            spdbasiccholeskysolve(cha, n, isupper, b, _params);
         }
 
 
@@ -7213,37 +6555,15 @@ public partial class alglib
                    ! In such cases we strongly recommend you to use faster solver,
                    ! HPDMatrixSolveMFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -7271,7 +6591,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref complex[,] x)
+            ref complex[,] x,
+            alglib.xparams _params)
         {
             complex[,] da = new complex[0,0];
             int i = 0;
@@ -7314,7 +6635,7 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            if( !trfac.hpdmatrixcholesky(ref da, n, isupper) )
+            if( !trfac.hpdmatrixcholesky(ref da, n, isupper, _params) )
             {
                 x = new complex[n, m];
                 for(i=0; i<=n-1; i++)
@@ -7330,23 +6651,7 @@ public partial class alglib
                 return;
             }
             info = 1;
-            hpdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref info, rep, ref x);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_hpdmatrixsolvem(complex[,] a,
-            int n,
-            bool isupper,
-            complex[,] b,
-            int m,
-            ref int info,
-            densesolverreport rep,
-            ref complex[,] x)
-        {
-            hpdmatrixsolvem(a,n,isupper,b,m,ref info,rep,ref x);
+            hpdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -7359,37 +6664,15 @@ public partial class alglib
         * matrix is represented by its upper or lower triangle
         * no additional time consuming features like condition number estimation
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -7419,7 +6702,8 @@ public partial class alglib
             bool isupper,
             complex[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -7433,7 +6717,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            if( !trfac.hpdmatrixcholesky(ref a, n, isupper) )
+            if( !trfac.hpdmatrixcholesky(ref a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -7447,28 +6731,14 @@ public partial class alglib
             }
             if( isupper )
             {
-                ablas.cmatrixlefttrsm(n, m, a, 0, 0, true, false, 2, b, 0, 0);
-                ablas.cmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0);
+                ablas.cmatrixlefttrsm(n, m, a, 0, 0, true, false, 2, b, 0, 0, _params);
+                ablas.cmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0, _params);
             }
             else
             {
-                ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, false, 0, b, 0, 0);
-                ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, false, 2, b, 0, 0);
+                ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, false, 0, b, 0, 0, _params);
+                ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, false, 2, b, 0, 0, _params);
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_hpdmatrixsolvemfast(complex[,] a,
-            int n,
-            bool isupper,
-            complex[,] b,
-            int m,
-            ref int info)
-        {
-            hpdmatrixsolvemfast(a,n,isupper,b,m,ref info);
         }
 
 
@@ -7503,37 +6773,15 @@ public partial class alglib
                    ! that your system is well conditioned, we  strongly  recommend
                    ! you to use faster solver, HPDMatrixSolveFast() function.
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -7559,7 +6807,8 @@ public partial class alglib
             complex[] b,
             ref int info,
             densesolverreport rep,
-            ref complex[] x)
+            ref complex[] x,
+            alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
@@ -7578,27 +6827,12 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            hpdmatrixsolvem(a, n, isupper, bm, 1, ref info, rep, ref xm);
+            hpdmatrixsolvem(a, n, isupper, bm, 1, ref info, rep, ref xm, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
                 x[i_] = xm[i_,0];
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_hpdmatrixsolve(complex[,] a,
-            int n,
-            bool isupper,
-            complex[] b,
-            ref int info,
-            densesolverreport rep,
-            ref complex[] x)
-        {
-            hpdmatrixsolve(a,n,isupper,b,ref info,rep,ref x);
         }
 
 
@@ -7612,37 +6846,15 @@ public partial class alglib
         * matrix is represented by its upper or lower triangle
         * no additional time consuming functions
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes two  important  improvements  of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          ! * multicore support
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Say, on SSE2-capable CPU with N=1024, HPC ALGLIB will be:
-          ! * about 2-3x faster than ALGLIB for C++ without MKL
-          ! * about 7-10x faster than "pure C#" edition of ALGLIB
-          ! Difference in performance will be more striking  on  newer  CPU's with
-          ! support for newer SIMD instructions. Generally,  MKL  accelerates  any
-          ! problem whose size is at least 128, with best  efficiency achieved for
-          ! N's larger than 512.
-          !
-          ! Commercial edition of ALGLIB also supports multithreaded  acceleration
-          ! of this function. We should note that Cholesky decomposition is harder
-          ! to parallelize than, say, matrix-matrix product - this  algorithm  has
-          ! several synchronization points which  can  not  be  avoided.  However,
-          ! parallelism starts to be profitable starting from N=500.
-          !
-          ! In order to use multicore features you have to:
-          ! * use commercial version of ALGLIB
-          ! * call  this  function  with  "smp_"  prefix,  which  indicates  that
-          !   multicore code will be used (for multicore support)
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -7671,7 +6883,8 @@ public partial class alglib
             int n,
             bool isupper,
             complex[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
 
@@ -7684,7 +6897,7 @@ public partial class alglib
                 info = -1;
                 return;
             }
-            if( !trfac.hpdmatrixcholesky(ref a, n, isupper) )
+            if( !trfac.hpdmatrixcholesky(ref a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -7693,20 +6906,7 @@ public partial class alglib
                 info = -3;
                 return;
             }
-            hpdbasiccholeskysolve(a, n, isupper, b);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_hpdmatrixsolvefast(complex[,] a,
-            int n,
-            bool isupper,
-            complex[] b,
-            ref int info)
-        {
-            hpdmatrixsolvefast(a,n,isupper,b,ref info);
+            hpdbasiccholeskysolve(a, n, isupper, b, _params);
         }
 
 
@@ -7775,7 +6975,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref complex[,] x)
+            ref complex[,] x,
+            alglib.xparams _params)
         {
             complex[,] emptya = new complex[0,0];
 
@@ -7797,23 +6998,7 @@ public partial class alglib
             // 2. factorize scaled matrix
             // 3. solve
             //
-            hpdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref info, rep, ref x);
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_hpdmatrixcholeskysolvem(complex[,] cha,
-            int n,
-            bool isupper,
-            complex[,] b,
-            int m,
-            ref int info,
-            densesolverreport rep,
-            ref complex[,] x)
-        {
-            hpdmatrixcholeskysolvem(cha,n,isupper,b,m,ref info,rep,ref x);
+            hpdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref info, rep, ref x, _params);
         }
 
 
@@ -7853,7 +7038,8 @@ public partial class alglib
             bool isupper,
             complex[,] b,
             int m,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -7884,28 +7070,14 @@ public partial class alglib
             }
             if( isupper )
             {
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 2, b, 0, 0);
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, b, 0, 0);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 2, b, 0, 0, _params);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, b, 0, 0, _params);
             }
             else
             {
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, b, 0, 0);
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 2, b, 0, 0);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, b, 0, 0, _params);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 2, b, 0, 0, _params);
             }
-        }
-
-
-        /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_hpdmatrixcholeskysolvemfast(complex[,] cha,
-            int n,
-            bool isupper,
-            complex[,] b,
-            int m,
-            ref int info)
-        {
-            hpdmatrixcholeskysolvemfast(cha,n,isupper,b,m,ref info);
         }
 
 
@@ -7969,7 +7141,8 @@ public partial class alglib
             complex[] b,
             ref int info,
             densesolverreport rep,
-            ref complex[] x)
+            ref complex[] x,
+            alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
@@ -7988,7 +7161,7 @@ public partial class alglib
             {
                 bm[i_,0] = b[i_];
             }
-            hpdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref info, rep, ref xm);
+            hpdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref info, rep, ref xm, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -8031,7 +7204,8 @@ public partial class alglib
             int n,
             bool isupper,
             complex[] b,
-            ref int info)
+            ref int info,
+            alglib.xparams _params)
         {
             int i = 0;
             int k = 0;
@@ -8056,7 +7230,7 @@ public partial class alglib
                     return;
                 }
             }
-            hpdbasiccholeskysolve(cha, n, isupper, b);
+            hpdbasiccholeskysolve(cha, n, isupper, b, _params);
         }
 
 
@@ -8073,23 +7247,15 @@ public partial class alglib
         * iterative refinement
         * O(N^3) complexity
 
-        COMMERCIAL EDITION OF ALGLIB:
-
-          ! Commercial version of ALGLIB includes one  important  improvement   of
-          ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
-          !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
-          !
-          ! Generally, commercial ALGLIB is several times faster than  open-source
-          ! generic C edition, and many times faster than open-source C# edition.
-          !
-          ! Multithreaded acceleration is only partially supported (some parts are
-          ! optimized, but most - are not).
-          !
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! * hardware vendor (Intel) implementations of linear algebra primitives
+          !   (C++ and C# versions, x86/x64 platform)
+          ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
           ! related features provided by commercial edition of ALGLIB.
@@ -8133,7 +7299,8 @@ public partial class alglib
             double threshold,
             ref int info,
             densesolverlsreport rep,
-            ref double[] x)
+            ref double[] x,
+            alglib.xparams _params)
         {
             double[] sv = new double[0];
             double[,] u = new double[0,0];
@@ -8176,7 +7343,7 @@ public partial class alglib
             //
             // Factorize A first
             //
-            svdfailed = !svd.rmatrixsvd(a, nrows, ncols, 1, 2, 2, ref sv, ref u, ref vt);
+            svdfailed = !svd.rmatrixsvd(a, nrows, ncols, 1, 2, 2, ref sv, ref u, ref vt, _params);
             zeroa = (double)(sv[0])==(double)(0);
             if( svdfailed || zeroa )
             {
@@ -8258,7 +7425,7 @@ public partial class alglib
                 }
             }
             rep.k = ncols-kernelidx;
-            nrfs = densesolverrfsmaxv2(ncols, rep.r2);
+            nrfs = densesolverrfsmaxv2(ncols, rep.r2, _params);
             terminatenexttime = false;
             rp = new double[nrows];
             for(rfs=0; rfs<=nrfs; rfs++)
@@ -8293,7 +7460,7 @@ public partial class alglib
                             tx[i_] = x[i_];
                         }
                         tx[ncols] = b[i];
-                        xblas.xdot(ta, tx, ncols+1, ref buf, ref v, ref verr);
+                        xblas.xdot(ta, tx, ncols+1, ref buf, ref v, ref verr, _params);
                         rp[i] = -v;
                         smallerr = smallerr && (double)(Math.Abs(v))<(double)(4*verr);
                     }
@@ -8369,22 +7536,6 @@ public partial class alglib
 
 
         /*************************************************************************
-        Single-threaded stub. HPC ALGLIB replaces it by multithreaded code.
-        *************************************************************************/
-        public static void _pexec_rmatrixsolvels(double[,] a,
-            int nrows,
-            int ncols,
-            double[] b,
-            double threshold,
-            ref int info,
-            densesolverlsreport rep,
-            ref double[] x)
-        {
-            rmatrixsolvels(a,nrows,ncols,b,threshold,ref info,rep,ref x);
-        }
-
-
-        /*************************************************************************
         Internal LU solver
 
           -- ALGLIB --
@@ -8399,7 +7550,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref double[,] x)
+            ref double[,] x,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -8450,9 +7602,9 @@ public partial class alglib
             //
             // estimate condition number, test for near singularity
             //
-            rep.r1 = rcond.rmatrixlurcond1(lua, n);
-            rep.rinf = rcond.rmatrixlurcondinf(lua, n);
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            rep.r1 = rcond.rmatrixlurcond1(lua, n, _params);
+            rep.rinf = rcond.rmatrixlurcondinf(lua, n, _params);
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) || (double)(rep.rinf)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -8493,8 +7645,8 @@ public partial class alglib
                     }
                 }
             }
-            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, x, 0, 0);
-            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, x, 0, 0);
+            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, x, 0, 0, _params);
+            ablas.rmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, x, 0, 0, _params);
             
             //
             // Second stage: iterative refinement
@@ -8503,7 +7655,7 @@ public partial class alglib
             {
                 for(k=0; k<=m-1; k++)
                 {
-                    nrfs = densesolverrfsmax(n, rep.r1, rep.rinf);
+                    nrfs = densesolverrfsmax(n, rep.r1, rep.rinf, _params);
                     terminatenexttime = false;
                     for(rfs=0; rfs<=nrfs-1; rfs++)
                     {
@@ -8528,7 +7680,7 @@ public partial class alglib
                             }
                             xa[n] = -1;
                             xb[n] = b[i,k];
-                            xblas.xdot(xa, xb, n+1, ref tx, ref v, ref verr);
+                            xblas.xdot(xa, xb, n+1, ref tx, ref v, ref verr, _params);
                             y[i] = -v;
                             smallerr = smallerr && (double)(Math.Abs(v))<(double)(4*verr);
                         }
@@ -8540,7 +7692,7 @@ public partial class alglib
                         //
                         // solve and update
                         //
-                        rbasiclusolve(lua, p, n, y);
+                        rbasiclusolve(lua, p, n, y, _params);
                         for(i_=0; i_<=n-1;i_++)
                         {
                             x[i_,k] = x[i_,k] + y[i_];
@@ -8566,7 +7718,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref double[,] x)
+            ref double[,] x,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -8588,9 +7741,9 @@ public partial class alglib
             //
             // estimate condition number, test for near singularity
             //
-            rep.r1 = rcond.spdmatrixcholeskyrcond(cha, n, isupper);
+            rep.r1 = rcond.spdmatrixcholeskyrcond(cha, n, isupper, _params);
             rep.rinf = rep.r1;
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -8618,13 +7771,13 @@ public partial class alglib
             }
             if( isupper )
             {
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 1, x, 0, 0);
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, x, 0, 0);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 1, x, 0, 0, _params);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, x, 0, 0, _params);
             }
             else
             {
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, x, 0, 0);
-                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 1, x, 0, 0);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, x, 0, 0, _params);
+                ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 1, x, 0, 0, _params);
             }
         }
 
@@ -8644,7 +7797,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref complex[,] x)
+            ref complex[,] x,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -8696,9 +7850,9 @@ public partial class alglib
             //
             // estimate condition number, test for near singularity
             //
-            rep.r1 = rcond.cmatrixlurcond1(lua, n);
-            rep.rinf = rcond.cmatrixlurcondinf(lua, n);
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) || (double)(rep.rinf)<(double)(rcond.rcondthreshold()) )
+            rep.r1 = rcond.cmatrixlurcond1(lua, n, _params);
+            rep.rinf = rcond.cmatrixlurcondinf(lua, n, _params);
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) || (double)(rep.rinf)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -8736,8 +7890,8 @@ public partial class alglib
                     }
                 }
             }
-            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, x, 0, 0);
-            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, x, 0, 0);
+            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, x, 0, 0, _params);
+            ablas.cmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, x, 0, 0, _params);
             
             //
             // solve
@@ -8765,7 +7919,7 @@ public partial class alglib
                 //
                 if( havea )
                 {
-                    nrfs = densesolverrfsmax(n, rep.r1, rep.rinf);
+                    nrfs = densesolverrfsmax(n, rep.r1, rep.rinf, _params);
                     terminatenexttime = false;
                     for(rfs=0; rfs<=nrfs-1; rfs++)
                     {
@@ -8790,7 +7944,7 @@ public partial class alglib
                             }
                             xa[n] = -1;
                             xb[n] = bc[i];
-                            xblas.xcdot(xa, xb, n+1, ref tmpbuf, ref v, ref verr);
+                            xblas.xcdot(xa, xb, n+1, ref tmpbuf, ref v, ref verr, _params);
                             y[i] = -v;
                             smallerr = smallerr && (double)(math.abscomplex(v))<(double)(4*verr);
                         }
@@ -8802,7 +7956,7 @@ public partial class alglib
                         //
                         // solve and update
                         //
-                        cbasiclusolve(lua, p, n, y);
+                        cbasiclusolve(lua, p, n, y, _params);
                         for(i_=0; i_<=n-1;i_++)
                         {
                             xc[i_] = xc[i_] + y[i_];
@@ -8837,7 +7991,8 @@ public partial class alglib
             int m,
             ref int info,
             densesolverreport rep,
-            ref complex[,] x)
+            ref complex[,] x,
+            alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
@@ -8871,9 +8026,9 @@ public partial class alglib
             //
             // estimate condition number, test for near singularity
             //
-            rep.r1 = rcond.hpdmatrixcholeskyrcond(cha, n, isupper);
+            rep.r1 = rcond.hpdmatrixcholeskyrcond(cha, n, isupper, _params);
             rep.rinf = rep.r1;
-            if( (double)(rep.r1)<(double)(rcond.rcondthreshold()) )
+            if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -8901,13 +8056,13 @@ public partial class alglib
             }
             if( isupper )
             {
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 2, x, 0, 0);
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, x, 0, 0);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 2, x, 0, 0, _params);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, true, false, 0, x, 0, 0, _params);
             }
             else
             {
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, x, 0, 0);
-                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 2, x, 0, 0);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, x, 0, 0, _params);
+                ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 2, x, 0, 0, _params);
             }
         }
 
@@ -8924,7 +8079,8 @@ public partial class alglib
         *************************************************************************/
         private static int densesolverrfsmax(int n,
             double r1,
-            double rinf)
+            double rinf,
+            alglib.xparams _params)
         {
             int result = 0;
 
@@ -8944,11 +8100,12 @@ public partial class alglib
              Copyright 27.01.2010 by Bochkanov Sergey
         *************************************************************************/
         private static int densesolverrfsmaxv2(int n,
-            double r2)
+            double r2,
+            alglib.xparams _params)
         {
             int result = 0;
 
-            result = densesolverrfsmax(n, 0, 0);
+            result = densesolverrfsmax(n, 0, 0, _params);
             return result;
         }
 
@@ -8965,7 +8122,8 @@ public partial class alglib
         private static void rbasiclusolve(double[,] lua,
             int[] p,
             int n,
-            double[] xb)
+            double[] xb,
+            alglib.xparams _params)
         {
             int i = 0;
             double v = 0;
@@ -9015,7 +8173,8 @@ public partial class alglib
         private static void spdbasiccholeskysolve(double[,] cha,
             int n,
             bool isupper,
-            double[] xb)
+            double[] xb,
+            alglib.xparams _params)
         {
             int i = 0;
             double v = 0;
@@ -9113,7 +8272,8 @@ public partial class alglib
         private static void cbasiclusolve(complex[,] lua,
             int[] p,
             int n,
-            complex[] xb)
+            complex[] xb,
+            alglib.xparams _params)
         {
             int i = 0;
             complex v = 0;
@@ -9163,7 +8323,8 @@ public partial class alglib
         private static void hpdbasiccholeskysolve(complex[,] cha,
             int n,
             bool isupper,
-            complex[] xb)
+            complex[] xb,
+            alglib.xparams _params)
         {
             int i = 0;
             complex v = 0;
@@ -9307,6 +8468,7 @@ public partial class alglib
             public int repnmv;
             public int repterminationtype;
             public bool running;
+            public bool userterminationneeded;
             public double[] tmpd;
             public double[] tmpx;
             public rcommstate rstate;
@@ -9385,6 +8547,7 @@ public partial class alglib
                 _result.repnmv = repnmv;
                 _result.repterminationtype = repterminationtype;
                 _result.running = running;
+                _result.userterminationneeded = userterminationneeded;
                 _result.tmpd = (double[])tmpd.Clone();
                 _result.tmpx = (double[])tmpx.Clone();
                 _result.rstate = (rcommstate)rstate.make_copy();
@@ -9443,18 +8606,48 @@ public partial class alglib
 
         OUTPUT PARAMETERS:
             State   -   structure which stores algorithm state
+            
+        NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
+              allocated place as much as possible.
 
           -- ALGLIB --
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrcreate(int m,
             int n,
-            linlsqrstate state)
+            linlsqrstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(m>0, "LinLSQRCreate: M<=0");
+            alglib.ap.assert(n>0, "LinLSQRCreate: N<=0");
+            linlsqrcreatebuf(m, n, state, _params);
+        }
+
+
+        /*************************************************************************
+        This function initializes linear LSQR Solver.  It  provides  exactly  same
+        functionality as linlsqrcreate(), but reuses  previously  allocated  space
+        as much as possible.
+          
+        INPUT PARAMETERS:
+            M       -   number of rows in A
+            N       -   number of variables, N>0
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 14.11.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrcreatebuf(int m,
+            int n,
+            linlsqrstate state,
+            alglib.xparams _params)
         {
             int i = 0;
 
-            alglib.ap.assert(m>0, "LinLSQRCreate: M<=0");
-            alglib.ap.assert(n>0, "LinLSQRCreate: N<=0");
+            alglib.ap.assert(m>0, "LinLSQRCreateBuf: M<=0");
+            alglib.ap.assert(n>0, "LinLSQRCreateBuf: N<=0");
             state.m = m;
             state.n = n;
             state.prectype = 0;
@@ -9465,6 +8658,7 @@ public partial class alglib
             state.lambdai = 0;
             state.xrep = false;
             state.running = false;
+            state.repiterationscount = 0;
             
             //
             // * allocate arrays
@@ -9472,7 +8666,7 @@ public partial class alglib
             //   calling SolveSparse()
             // * set B to zero
             //
-            normestimator.normestimatorcreate(m, n, 2, 2, state.nes);
+            normestimator.normestimatorcreate(m, n, 2, 2, state.nes, _params);
             state.rx = new double[state.n];
             state.ui = new double[state.m+state.n];
             state.uip1 = new double[state.m+state.n];
@@ -9512,13 +8706,14 @@ public partial class alglib
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrsetb(linlsqrstate state,
-            double[] b)
+            double[] b,
+            alglib.xparams _params)
         {
             int i = 0;
 
             alglib.ap.assert(!state.running, "LinLSQRSetB: you can not change B when LinLSQRIteration is running");
             alglib.ap.assert(state.m<=alglib.ap.len(b), "LinLSQRSetB: Length(B)<M");
-            alglib.ap.assert(apserv.isfinitevector(b, state.m), "LinLSQRSetB: B contains infinite or NaN values");
+            alglib.ap.assert(apserv.isfinitevector(b, state.m, _params), "LinLSQRSetB: B contains infinite or NaN values");
             state.bnorm2 = 0;
             for(i=0; i<=state.m-1; i++)
             {
@@ -9540,7 +8735,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void linlsqrsetprecunit(linlsqrstate state)
+        public static void linlsqrsetprecunit(linlsqrstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetPrecUnit: you can not change preconditioner, because function LinLSQRIteration is running!");
             state.prectype = -1;
@@ -9558,7 +8754,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void linlsqrsetprecdiag(linlsqrstate state)
+        public static void linlsqrsetprecdiag(linlsqrstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
             state.prectype = 0;
@@ -9579,7 +8776,8 @@ public partial class alglib
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrsetlambdai(linlsqrstate state,
-            double lambdai)
+            double lambdai,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetLambdaI: you can not set LambdaI, because function LinLSQRIteration is running");
             alglib.ap.assert(math.isfinite(lambdai) && (double)(lambdai)>=(double)(0), "LinLSQRSetLambdaI: LambdaI is infinite or NaN");
@@ -9592,7 +8790,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static bool linlsqriteration(linlsqrstate state)
+        public static bool linlsqriteration(linlsqrstate state,
+            alglib.xparams _params)
         {
             bool result = new bool();
             int summn = 0;
@@ -9656,20 +8855,21 @@ public partial class alglib
             // Routine body
             //
             alglib.ap.assert(alglib.ap.len(state.b)>0, "LinLSQRIteration: using non-allocated array B");
+            summn = state.m+state.n;
             bnorm = Math.Sqrt(state.bnorm2);
+            state.userterminationneeded = false;
             state.running = true;
             state.repnmv = 0;
-            clearrfields(state);
             state.repiterationscount = 0;
-            summn = state.m+state.n;
             state.r2 = state.bnorm2;
+            clearrfields(state, _params);
             
             //
             //estimate for ANorm
             //
-            normestimator.normestimatorrestart(state.nes);
+            normestimator.normestimatorrestart(state.nes, _params);
         lbl_7:
-            if( !normestimator.normestimatoriteration(state.nes) )
+            if( !normestimator.normestimatoriteration(state.nes, _params) )
             {
                 goto lbl_8;
             }
@@ -9682,7 +8882,7 @@ public partial class alglib
                 state.x[i_] = state.nes.x[i_];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needmv = true;
             state.rstate.stage = 0;
             goto lbl_rcomm;
@@ -9707,7 +8907,7 @@ public partial class alglib
             //matrix-vector multiplication
             //
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needmtv = true;
             state.rstate.stage = 1;
             goto lbl_rcomm;
@@ -9721,7 +8921,7 @@ public partial class alglib
         lbl_11:
             goto lbl_7;
         lbl_8:
-            normestimator.normestimatorresults(state.nes, ref state.anorm);
+            normestimator.normestimatorresults(state.nes, ref state.anorm, _params);
             
             //
             //initialize .RX by zeros
@@ -9742,7 +8942,7 @@ public partial class alglib
             {
                 state.x[i_] = state.rx[i_];
             }
-            clearrfields(state);
+            clearrfields(state, _params);
             state.xupdated = true;
             state.rstate.stage = 2;
             goto lbl_rcomm;
@@ -9804,7 +9004,7 @@ public partial class alglib
                 state.x[i] = state.ui[i];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needmtv = true;
             state.rstate.stage = 3;
             goto lbl_rcomm;
@@ -9876,7 +9076,7 @@ public partial class alglib
                 state.x[i_] = state.vi[i_];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needmv = true;
             state.rstate.stage = 4;
             goto lbl_rcomm;
@@ -9905,7 +9105,7 @@ public partial class alglib
                 state.x[i_] = state.uip1[i_];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needmtv = true;
             state.rstate.stage = 5;
             goto lbl_rcomm;
@@ -9933,7 +9133,7 @@ public partial class alglib
             //
             // Build next orthogonal transformation
             //
-            state.rhoi = apserv.safepythag2(state.rhobari, state.betaip1);
+            state.rhoi = apserv.safepythag2(state.rhobari, state.betaip1, _params);
             state.ci = state.rhobari/state.rhoi;
             state.si = state.betaip1/state.rhoi;
             state.theta = state.si*state.alphaip1;
@@ -9984,7 +9184,7 @@ public partial class alglib
             {
                 state.x[i_] = state.rx[i_];
             }
-            clearrfields(state);
+            clearrfields(state, _params);
             state.xupdated = true;
             state.rstate.stage = 6;
             goto lbl_rcomm;
@@ -10028,6 +9228,17 @@ public partial class alglib
                 //
                 state.running = false;
                 state.repterminationtype = 4;
+                result = false;
+                return result;
+            }
+            if( state.userterminationneeded )
+            {
+                
+                //
+                // User requested termination
+                //
+                state.running = false;
+                state.repterminationtype = 8;
                 result = false;
                 return result;
             }
@@ -10105,7 +9316,8 @@ public partial class alglib
         *************************************************************************/
         public static void linlsqrsolvesparse(linlsqrstate state,
             sparse.sparsematrix a,
-            double[] b)
+            double[] b,
+            alglib.xparams _params)
         {
             int n = 0;
             int i = 0;
@@ -10117,13 +9329,13 @@ public partial class alglib
             n = state.n;
             alglib.ap.assert(!state.running, "LinLSQRSolveSparse: you can not call this function when LinLSQRIteration is running");
             alglib.ap.assert(alglib.ap.len(b)>=state.m, "LinLSQRSolveSparse: Length(B)<M");
-            alglib.ap.assert(apserv.isfinitevector(b, state.m), "LinLSQRSolveSparse: B contains infinite or NaN values");
+            alglib.ap.assert(apserv.isfinitevector(b, state.m, _params), "LinLSQRSolveSparse: B contains infinite or NaN values");
             
             //
             // Allocate temporaries
             //
-            apserv.rvectorsetlengthatleast(ref state.tmpd, n);
-            apserv.rvectorsetlengthatleast(ref state.tmpx, n);
+            apserv.rvectorsetlengthatleast(ref state.tmpd, n, _params);
+            apserv.rvectorsetlengthatleast(ref state.tmpx, n, _params);
             
             //
             // Compute diagonal scaling matrix D
@@ -10140,7 +9352,7 @@ public partial class alglib
                 }
                 t0 = 0;
                 t1 = 0;
-                while( sparse.sparseenumerate(a, ref t0, ref t1, ref i, ref j, ref v) )
+                while( sparse.sparseenumerate(a, ref t0, ref t1, ref i, ref j, ref v, _params) )
                 {
                     state.tmpd[j] = state.tmpd[j]+math.sqr(v);
                 }
@@ -10176,9 +9388,9 @@ public partial class alglib
             // by A or A'. After solution we modify State.RX so it will store untransformed
             // variables
             //
-            linlsqrsetb(state, b);
-            linlsqrrestart(state);
-            while( linlsqriteration(state) )
+            linlsqrsetb(state, b, _params);
+            linlsqrrestart(state, _params);
+            while( linlsqriteration(state, _params) )
             {
                 if( state.needmv )
                 {
@@ -10186,11 +9398,11 @@ public partial class alglib
                     {
                         state.tmpx[i] = state.tmpd[i]*state.x[i];
                     }
-                    sparse.sparsemv(a, state.tmpx, ref state.mv);
+                    sparse.sparsemv(a, state.tmpx, ref state.mv, _params);
                 }
                 if( state.needmtv )
                 {
-                    sparse.sparsemtv(a, state.x, ref state.mtv);
+                    sparse.sparsemtv(a, state.x, ref state.mtv, _params);
                     for(i=0; i<=n-1; i++)
                     {
                         state.mtv[i] = state.tmpd[i]*state.mtv[i];
@@ -10225,7 +9437,8 @@ public partial class alglib
         public static void linlsqrsetcond(linlsqrstate state,
             double epsa,
             double epsb,
-            int maxits)
+            int maxits,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetCond: you can not call this function when LinLSQRIteration is running");
             alglib.ap.assert(math.isfinite(epsa) && (double)(epsa)>=(double)(0), "LinLSQRSetCond: EpsA is negative, INF or NAN");
@@ -10264,6 +9477,8 @@ public partial class alglib
                             *  7    rounding errors prevent further progress,
                                     X contains best point found so far.
                                     (sometimes returned on singular systems)
+                            *  8    user requested termination via calling
+                                    linlsqrrequesttermination()
                         * Rep.IterationsCount contains iterations count
                         * NMV countains number of matrix-vector calculations
                         
@@ -10272,7 +9487,8 @@ public partial class alglib
         *************************************************************************/
         public static void linlsqrresults(linlsqrstate state,
             ref double[] x,
-            linlsqrreport rep)
+            linlsqrreport rep,
+            alglib.xparams _params)
         {
             int i_ = 0;
 
@@ -10307,7 +9523,8 @@ public partial class alglib
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrsetxrep(linlsqrstate state,
-            bool needxrep)
+            bool needxrep,
+            alglib.xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -10319,19 +9536,79 @@ public partial class alglib
           -- ALGLIB --
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static void linlsqrrestart(linlsqrstate state)
+        public static void linlsqrrestart(linlsqrstate state,
+            alglib.xparams _params)
         {
             state.rstate.ia = new int[1+1];
             state.rstate.ra = new double[0+1];
             state.rstate.stage = -1;
-            clearrfields(state);
+            clearrfields(state, _params);
+            state.repiterationscount = 0;
+        }
+
+
+        /*************************************************************************
+        This function is used to peek into LSQR solver and get  current  iteration
+        counter. You can safely "peek" into the solver from another thread.
+
+        INPUT PARAMETERS:
+            S           -   solver object
+
+        RESULT:
+            iteration counter, in [0,INF)
+
+          -- ALGLIB --
+             Copyright 21.05.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static int linlsqrpeekiterationscount(linlsqrstate s,
+            alglib.xparams _params)
+        {
+            int result = 0;
+
+            result = s.repiterationscount;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This subroutine submits request for termination of the running solver.  It
+        can be called from some other thread which wants LSQR solver to  terminate
+        (obviously, the  thread  running  LSQR  solver can not request termination
+        because it is already busy working on LSQR).
+
+        As result, solver  stops  at  point  which  was  "current  accepted"  when
+        termination  request  was  submitted  and returns error code 8 (successful
+        termination).  Such   termination   is  a smooth  process  which  properly
+        deallocates all temporaries.
+
+        INPUT PARAMETERS:
+            State   -   solver structure
+
+        NOTE: calling this function on solver which is NOT running  will  have  no
+              effect.
+              
+        NOTE: multiple calls to this function are possible. First call is counted,
+              subsequent calls are silently ignored.
+
+        NOTE: solver clears termination flag on its start, it means that  if  some
+              other thread will request termination too soon, its request will went
+              unnoticed.
+
+          -- ALGLIB --
+             Copyright 08.10.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrrequesttermination(linlsqrstate state,
+            alglib.xparams _params)
+        {
+            state.userterminationneeded = true;
         }
 
 
         /*************************************************************************
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
-        private static void clearrfields(linlsqrstate state)
+        private static void clearrfields(linlsqrstate state,
+            alglib.xparams _params)
         {
             state.xupdated = false;
             state.needmv = false;
@@ -10409,7 +9686,8 @@ public partial class alglib
         public static void polynomialsolve(double[] a,
             int n,
             ref complex[] x,
-            polynomialsolverreport rep)
+            polynomialsolverreport rep,
+            alglib.xparams _params)
         {
             double[,] c = new double[0,0];
             double[,] vl = new double[0,0];
@@ -10429,7 +9707,7 @@ public partial class alglib
 
             alglib.ap.assert(n>0, "PolynomialSolve: N<=0");
             alglib.ap.assert(alglib.ap.len(a)>=n+1, "PolynomialSolve: Length(A)<N+1");
-            alglib.ap.assert(apserv.isfinitevector(a, n+1), "PolynomialSolve: A contains infitite numbers");
+            alglib.ap.assert(apserv.isfinitevector(a, n+1, _params), "PolynomialSolve: A contains infitite numbers");
             alglib.ap.assert((double)(a[n])!=(double)(0), "PolynomialSolve: A[N]=0");
             
             //
@@ -10474,7 +9752,7 @@ public partial class alglib
                     c[i,i-1] = 1;
                     c[i,ne-1] = -a[i];
                 }
-                status = evd.rmatrixevd(c, ne, 0, ref wr, ref wi, ref vl, ref vr);
+                status = evd.rmatrixevd(c, ne, 0, ref wr, ref wi, ref vl, ref vr, _params);
                 alglib.ap.assert(status, "PolynomialSolve: inernal error - EVD solver failed");
                 for(i=0; i<=ne-1; i++)
                 {
@@ -10685,28 +9963,29 @@ public partial class alglib
         public static void nleqcreatelm(int n,
             int m,
             double[] x,
-            nleqstate state)
+            nleqstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(n>=1, "NLEQCreateLM: N<1!");
             alglib.ap.assert(m>=1, "NLEQCreateLM: M<1!");
             alglib.ap.assert(alglib.ap.len(x)>=n, "NLEQCreateLM: Length(X)<N!");
-            alglib.ap.assert(apserv.isfinitevector(x, n), "NLEQCreateLM: X contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x, n, _params), "NLEQCreateLM: X contains infinite or NaN values!");
             
             //
             // Initialize
             //
             state.n = n;
             state.m = m;
-            nleqsetcond(state, 0, 0);
-            nleqsetxrep(state, false);
-            nleqsetstpmax(state, 0);
+            nleqsetcond(state, 0, 0, _params);
+            nleqsetxrep(state, false, _params);
+            nleqsetstpmax(state, 0, _params);
             state.x = new double[n];
             state.xbase = new double[n];
             state.j = new double[m, n];
             state.fi = new double[m];
             state.rightpart = new double[n];
             state.candstep = new double[n];
-            nleqrestartfrom(state, x);
+            nleqrestartfrom(state, x, _params);
         }
 
 
@@ -10731,7 +10010,8 @@ public partial class alglib
         *************************************************************************/
         public static void nleqsetcond(nleqstate state,
             double epsf,
-            int maxits)
+            int maxits,
+            alglib.xparams _params)
         {
             alglib.ap.assert(math.isfinite(epsf), "NLEQSetCond: EpsF is not finite number!");
             alglib.ap.assert((double)(epsf)>=(double)(0), "NLEQSetCond: negative EpsF!");
@@ -10759,7 +10039,8 @@ public partial class alglib
              Copyright 20.08.2010 by Bochkanov Sergey
         *************************************************************************/
         public static void nleqsetxrep(nleqstate state,
-            bool needxrep)
+            bool needxrep,
+            alglib.xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -10783,7 +10064,8 @@ public partial class alglib
              Copyright 20.08.2010 by Bochkanov Sergey
         *************************************************************************/
         public static void nleqsetstpmax(nleqstate state,
-            double stpmax)
+            double stpmax,
+            alglib.xparams _params)
         {
             alglib.ap.assert(math.isfinite(stpmax), "NLEQSetStpMax: StpMax is not finite!");
             alglib.ap.assert((double)(stpmax)>=(double)(0), "NLEQSetStpMax: StpMax<0!");
@@ -10796,7 +10078,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 20.03.2009 by Bochkanov Sergey
         *************************************************************************/
-        public static bool nleqiteration(nleqstate state)
+        public static bool nleqiteration(nleqstate state,
+            alglib.xparams _params)
         {
             bool result = new bool();
             int n = 0;
@@ -10886,7 +10169,7 @@ public partial class alglib
             //
             // Calculate F/G, initialize algorithm
             //
-            clearrequestfields(state);
+            clearrequestfields(state, _params);
             state.needf = true;
             state.rstate.stage = 0;
             goto lbl_rcomm;
@@ -10907,7 +10190,7 @@ public partial class alglib
             //
             // progress report
             //
-            clearrequestfields(state);
+            clearrequestfields(state, _params);
             state.xupdated = true;
             state.rstate.stage = 1;
             goto lbl_rcomm;
@@ -10940,7 +10223,7 @@ public partial class alglib
             // with current point and State.FBase filled with function value
             // at XBase
             //
-            clearrequestfields(state);
+            clearrequestfields(state, _params);
             state.needfij = true;
             for(i_=0; i_<=n-1;i_++)
             {
@@ -10952,7 +10235,7 @@ public partial class alglib
             state.needfij = false;
             state.repnfunc = state.repnfunc+1;
             state.repnjac = state.repnjac+1;
-            ablas.rmatrixmv(n, m, state.j, 0, 0, 1, state.fi, 0, ref state.rightpart, 0);
+            ablas.rmatrixmv(n, m, state.j, 0, 0, 1, state.fi, 0, state.rightpart, 0, _params);
             for(i_=0; i_<=n-1;i_++)
             {
                 state.rightpart[i_] = -1*state.rightpart[i_];
@@ -10978,7 +10261,7 @@ public partial class alglib
             {
                 state.candstep[i] = 0;
             }
-            fbls.fblssolvecgx(state.j, m, n, lambdav, state.rightpart, ref state.candstep, ref state.cgbuf);
+            fbls.fblssolvecgx(state.j, m, n, lambdav, state.rightpart, ref state.candstep, ref state.cgbuf, _params);
             
             //
             // Normalize step (it must be no more than StpMax)
@@ -10992,7 +10275,7 @@ public partial class alglib
                     break;
                 }
             }
-            linmin.linminnormalized(ref state.candstep, ref stepnorm, n);
+            linmin.linminnormalized(ref state.candstep, ref stepnorm, n, _params);
             if( (double)(state.stpmax)!=(double)(0) )
             {
                 stepnorm = Math.Min(stepnorm, state.stpmax);
@@ -11038,7 +10321,7 @@ public partial class alglib
                 state.f = state.fbase;
                 goto lbl_10;
             }
-            clearrequestfields(state);
+            clearrequestfields(state, _params);
             state.needf = true;
             state.rstate.stage = 3;
             goto lbl_rcomm;
@@ -11051,10 +10334,10 @@ public partial class alglib
                 //
                 // function value decreased, move on
                 //
-                decreaselambda(ref lambdav, ref rho, lambdadown);
+                decreaselambda(ref lambdav, ref rho, lambdadown, _params);
                 goto lbl_10;
             }
-            if( !increaselambda(ref lambdav, ref rho, lambdaup) )
+            if( !increaselambda(ref lambdav, ref rho, lambdaup, _params) )
             {
                 
                 //
@@ -11090,7 +10373,7 @@ public partial class alglib
             {
                 goto lbl_11;
             }
-            clearrequestfields(state);
+            clearrequestfields(state, _params);
             state.xupdated = true;
             state.f = state.fbase;
             for(i_=0; i_<=n-1;i_++)
@@ -11178,11 +10461,12 @@ public partial class alglib
         *************************************************************************/
         public static void nleqresults(nleqstate state,
             ref double[] x,
-            nleqreport rep)
+            nleqreport rep,
+            alglib.xparams _params)
         {
             x = new double[0];
 
-            nleqresultsbuf(state, ref x, rep);
+            nleqresultsbuf(state, ref x, rep, _params);
         }
 
 
@@ -11199,7 +10483,8 @@ public partial class alglib
         *************************************************************************/
         public static void nleqresultsbuf(nleqstate state,
             ref double[] x,
-            nleqreport rep)
+            nleqreport rep,
+            alglib.xparams _params)
         {
             int i_ = 0;
 
@@ -11236,12 +10521,13 @@ public partial class alglib
              Copyright 30.07.2010 by Bochkanov Sergey
         *************************************************************************/
         public static void nleqrestartfrom(nleqstate state,
-            double[] x)
+            double[] x,
+            alglib.xparams _params)
         {
             int i_ = 0;
 
             alglib.ap.assert(alglib.ap.len(x)>=state.n, "NLEQRestartFrom: Length(X)<N!");
-            alglib.ap.assert(apserv.isfinitevector(x, state.n), "NLEQRestartFrom: X contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x, state.n, _params), "NLEQRestartFrom: X contains infinite or NaN values!");
             for(i_=0; i_<=state.n-1;i_++)
             {
                 state.x[i_] = x[i_];
@@ -11250,14 +10536,15 @@ public partial class alglib
             state.rstate.ba = new bool[0+1];
             state.rstate.ra = new double[5+1];
             state.rstate.stage = -1;
-            clearrequestfields(state);
+            clearrequestfields(state, _params);
         }
 
 
         /*************************************************************************
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
-        private static void clearrequestfields(nleqstate state)
+        private static void clearrequestfields(nleqstate state,
+            alglib.xparams _params)
         {
             state.needf = false;
             state.needfij = false;
@@ -11270,7 +10557,8 @@ public partial class alglib
         *************************************************************************/
         private static bool increaselambda(ref double lambdav,
             ref double nu,
-            double lambdaup)
+            double lambdaup,
+            alglib.xparams _params)
         {
             bool result = new bool();
             double lnlambda = 0;
@@ -11303,7 +10591,8 @@ public partial class alglib
         *************************************************************************/
         private static void decreaselambda(ref double lambdav,
             ref double nu,
-            double lambdadown)
+            double lambdadown,
+            alglib.xparams _params)
         {
             nu = 1;
             if( (double)(Math.Log(lambdav)+Math.Log(lambdadown))<(double)(Math.Log(math.minrealnumber)) )
@@ -11357,42 +10646,43 @@ public partial class alglib
 
         INPUT PARAMETERS
             A       -   sparse matrix, must be NxN exactly
-            N       -   size of A, N>0
             IsUpper -   which half of A is provided (another half is ignored)
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Rep     -   solver report, following fields are set:
-                        * rep.terminationtype - solver status; >0 for success,
-                          set to -3 on failure (degenerate or non-SPD system).
             X       -   array[N], it contains:
                         * rep.terminationtype>0    =>  solution
                         * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
 
           -- ALGLIB --
              Copyright 26.12.2017 by Bochkanov Sergey
         *************************************************************************/
-        public static void sparsesolvesks(sparse.sparsematrix a,
-            int n,
+        public static void sparsespdsolvesks(sparse.sparsematrix a,
             bool isupper,
             double[] b,
+            ref double[] x,
             sparsesolverreport rep,
-            ref double[] x)
+            alglib.xparams _params)
         {
             int i = 0;
             sparse.sparsematrix a2 = new sparse.sparsematrix();
+            int n = 0;
 
             x = new double[0];
 
-            alglib.ap.assert(n>0, "SparseSolveSKS: N<=0");
-            alglib.ap.assert(sparse.sparsegetnrows(a)==n, "SparseSolveSKS: rows(A)!=N");
-            alglib.ap.assert(sparse.sparsegetncols(a)==n, "SparseSolveSKS: cols(A)!=N");
-            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSolveSKS: length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, n), "SparseSolveSKS: B contains infinities or NANs");
-            initreport(rep);
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSPDSolveSKS: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDSolveSKS: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDSolveSKS: cols(A)!=N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDSolveSKS: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDSolveSKS: B contains infinities or NANs");
+            initreport(rep, _params);
             x = new double[n];
-            sparse.sparsecopytosks(a, a2);
-            if( !trfac.sparsecholeskyskyline(a2, n, isupper) )
+            sparse.sparsecopytosks(a, a2, _params);
+            if( !trfac.sparsecholeskyskyline(a2, n, isupper, _params) )
             {
                 rep.terminationtype = -3;
                 for(i=0; i<=n-1; i++)
@@ -11407,13 +10697,97 @@ public partial class alglib
             }
             if( isupper )
             {
-                sparse.sparsetrsv(a2, isupper, false, 1, x);
-                sparse.sparsetrsv(a2, isupper, false, 0, x);
+                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
+                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
             }
             else
             {
-                sparse.sparsetrsv(a2, isupper, false, 0, x);
-                sparse.sparsetrsv(a2, isupper, false, 1, x);
+                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
+                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+        definite matrix A, N*1 vectors x and b.
+
+        This solver  converts  input  matrix  to  CRS  format,  performs  Cholesky
+        factorization using supernodal Cholesky  decomposition  with  permutation-
+        reducing ordering and uses sparse triangular solver to get solution of the
+        original system.
+
+        INPUT PARAMETERS
+            A       -   sparse matrix, must be NxN exactly
+            IsUpper -   which half of A is provided (another half is ignored)
+            B       -   array[N], right part
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsespdsolve(sparse.sparsematrix a,
+            bool isupper,
+            double[] b,
+            ref double[] x,
+            sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            sparse.sparsematrix a2 = new sparse.sparsematrix();
+            int n = 0;
+            double v = 0;
+            int[] p = new int[0];
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSPDSolve: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDSolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDSolve: cols(A)!=N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDSolve: B contains infinities or NANs");
+            initreport(rep, _params);
+            sparse.sparsecopytocrs(a, a2, _params);
+            if( !trfac.sparsecholeskyp(a2, isupper, ref p, _params) )
+            {
+                rep.terminationtype = -3;
+                ablasf.rsetallocv(n, 0.0, ref x, _params);
+                return;
+            }
+            ablasf.rcopyallocv(n, b, ref x, _params);
+            for(i=0; i<=n-1; i++)
+            {
+                j = p[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
+            }
+            if( isupper )
+            {
+                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
+                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
+            }
+            else
+            {
+                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
+                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
+            }
+            for(i=n-1; i>=0; i--)
+            {
+                j = p[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
             }
             rep.terminationtype = 1;
         }
@@ -11424,48 +10798,50 @@ public partial class alglib
         matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
 
         IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
-                   sparse storage format. An exception will be  generated  if  you
-                   pass matrix in some other format (HASH or CRS).
+                   or CRS (compressed row storage) format. An  exception  will  be
+                   generated if you pass matrix in some other format.
 
         INPUT PARAMETERS
-            A       -   sparse NxN matrix stored in SKS format, must be NxN exactly
-            N       -   size of A, N>0
+            A       -   sparse NxN matrix stored in CRs or SKS format, must be NxN
+                        exactly
             IsUpper -   which half of A is provided (another half is ignored)
             B       -   array[N], right part
 
         OUTPUT PARAMETERS
-            Rep     -   solver report, following fields are set:
-                        * rep.terminationtype - solver status; >0 for success,
-                          set to -3 on failure (degenerate or non-SPD system).
             X       -   array[N], it contains:
                         * rep.terminationtype>0    =>  solution
                         * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
 
           -- ALGLIB --
              Copyright 26.12.2017 by Bochkanov Sergey
         *************************************************************************/
-        public static void sparsecholeskysolvesks(sparse.sparsematrix a,
-            int n,
+        public static void sparsespdcholeskysolve(sparse.sparsematrix a,
             bool isupper,
             double[] b,
+            ref double[] x,
             sparsesolverreport rep,
-            ref double[] x)
+            alglib.xparams _params)
         {
             int i = 0;
+            int n = 0;
 
             x = new double[0];
 
-            alglib.ap.assert(n>0, "SparseSolveSKS: N<=0");
-            alglib.ap.assert(sparse.sparsegetnrows(a)==n, "SparseSolveSKS: rows(A)!=N");
-            alglib.ap.assert(sparse.sparsegetncols(a)==n, "SparseSolveSKS: cols(A)!=N");
-            alglib.ap.assert(sparse.sparseissks(a), "SparseSolveSKS: A is not an SKS matrix");
-            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSolveSKS: length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, n), "SparseSolveSKS: B contains infinities or NANs");
-            initreport(rep);
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSPDCholeskySolve: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDCholeskySolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDCholeskySolve: cols(A)!=N");
+            alglib.ap.assert(sparse.sparseissks(a, _params) || sparse.sparseiscrs(a, _params), "SparseSPDCholeskySolve: A is not an SKS/CRS matrix");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDCholeskySolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDCholeskySolve: B contains infinities or NANs");
+            initreport(rep, _params);
             x = new double[n];
             for(i=0; i<=n-1; i++)
             {
-                if( (double)(sparse.sparseget(a, i, i))==(double)(0.0) )
+                if( (double)(sparse.sparseget(a, i, i, _params))==(double)(0.0) )
                 {
                     rep.terminationtype = -3;
                     for(i=0; i<=n-1; i++)
@@ -11481,13 +10857,187 @@ public partial class alglib
             }
             if( isupper )
             {
-                sparse.sparsetrsv(a, isupper, false, 1, x);
-                sparse.sparsetrsv(a, isupper, false, 0, x);
+                sparse.sparsetrsv(a, isupper, false, 1, x, _params);
+                sparse.sparsetrsv(a, isupper, false, 0, x, _params);
             }
             else
             {
-                sparse.sparsetrsv(a, isupper, false, 0, x);
-                sparse.sparsetrsv(a, isupper, false, 1, x);
+                sparse.sparsetrsv(a, isupper, false, 0, x, _params);
+                sparse.sparsetrsv(a, isupper, false, 1, x, _params);
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+        matrix A, N*1 vectors x and b.
+
+        This solver converts input matrix to CRS format, performs LU factorization
+        and uses sparse triangular solvers to get solution of the original system.
+
+        INPUT PARAMETERS
+            A       -   sparse matrix, must be NxN exactly, any storage format
+            N       -   size of A, N>0
+            B       -   array[0..N-1], right part
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate system).
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesolve(sparse.sparsematrix a,
+            double[] b,
+            ref double[] x,
+            sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            int n = 0;
+            double v = 0;
+            sparse.sparsematrix a2 = new sparse.sparsematrix();
+            int[] pivp = new int[0];
+            int[] pivq = new int[0];
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSolve: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSolve: cols(A)!=N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSolve: B contains infinities or NANs");
+            initreport(rep, _params);
+            x = new double[n];
+            sparse.sparsecopytocrs(a, a2, _params);
+            if( !trfac.sparselu(a2, 0, ref pivp, ref pivq, _params) )
+            {
+                rep.terminationtype = -3;
+                for(i=0; i<=n-1; i++)
+                {
+                    x[i] = 0;
+                }
+                return;
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = b[i];
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                j = pivp[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
+            }
+            sparse.sparsetrsv(a2, false, true, 0, x, _params);
+            sparse.sparsetrsv(a2, true, false, 0, x, _params);
+            for(i=n-1; i>=0; i--)
+            {
+                j = pivq[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+        matrix A given by its LU factorization, N*1 vectors x and b.
+
+        IMPORTANT: this solver requires input matrix  to  be  in  the  CRS  sparse
+                   storage format. An exception will  be  generated  if  you  pass
+                   matrix in some other format (HASH or SKS).
+
+        INPUT PARAMETERS
+            A       -   LU factorization of the sparse matrix, must be NxN exactly
+                        in CRS storage format
+            P, Q    -   pivot indexes from LU factorization
+            N       -   size of A, N>0
+            B       -   array[0..N-1], right part
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate system).
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparselusolve(sparse.sparsematrix a,
+            int[] p,
+            int[] q,
+            double[] b,
+            ref double[] x,
+            sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            double v = 0;
+            int n = 0;
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseLUSolve: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseLUSolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseLUSolve: cols(A)!=N");
+            alglib.ap.assert(sparse.sparseiscrs(a, _params), "SparseLUSolve: A is not an SKS matrix");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseLUSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseLUSolve: B contains infinities or NANs");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "SparseLUSolve: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(q)>=n, "SparseLUSolve: length(Q)<N");
+            for(i=0; i<=n-1; i++)
+            {
+                alglib.ap.assert(p[i]>=i && p[i]<n, "SparseLUSolve: P is corrupted");
+                alglib.ap.assert(q[i]>=i && q[i]<n, "SparseLUSolve: Q is corrupted");
+            }
+            initreport(rep, _params);
+            x = new double[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( a.didx[i]==a.uidx[i] || a.vals[a.didx[i]]==0.0 )
+                {
+                    rep.terminationtype = -3;
+                    for(i=0; i<=n-1; i++)
+                    {
+                        x[i] = 0;
+                    }
+                    return;
+                }
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = b[i];
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                j = p[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
+            }
+            sparse.sparsetrsv(a, false, true, 0, x, _params);
+            sparse.sparsetrsv(a, true, false, 0, x, _params);
+            for(i=n-1; i>=0; i--)
+            {
+                j = q[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
             }
             rep.terminationtype = 1;
         }
@@ -11499,7 +11049,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 26.12.2017 by Bochkanov Sergey
         *************************************************************************/
-        private static void initreport(sparsesolverreport rep)
+        private static void initreport(sparsesolverreport rep,
+            alglib.xparams _params)
         {
             rep.terminationtype = 0;
         }
@@ -11674,7 +11225,8 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgcreate(int n,
-            lincgstate state)
+            lincgstate state,
+            alglib.xparams _params)
         {
             int i = 0;
 
@@ -11715,7 +11267,7 @@ public partial class alglib
             state.x = new double[state.n];
             state.mv = new double[state.n];
             state.pv = new double[state.n];
-            updateitersdata(state);
+            updateitersdata(state, _params);
             state.rstate.ia = new int[0+1];
             state.rstate.ra = new double[2+1];
             state.rstate.stage = -1;
@@ -11736,13 +11288,14 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgsetstartingpoint(lincgstate state,
-            double[] x)
+            double[] x,
+            alglib.xparams _params)
         {
             int i_ = 0;
 
             alglib.ap.assert(!state.running, "LinCGSetStartingPoint: you can not change starting point because LinCGIteration() function is running");
             alglib.ap.assert(state.n<=alglib.ap.len(x), "LinCGSetStartingPoint: Length(X)<N");
-            alglib.ap.assert(apserv.isfinitevector(x, state.n), "LinCGSetStartingPoint: X contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x, state.n, _params), "LinCGSetStartingPoint: X contains infinite or NaN values!");
             for(i_=0; i_<=state.n-1;i_++)
             {
                 state.startx[i_] = x[i_];
@@ -11763,13 +11316,14 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgsetb(lincgstate state,
-            double[] b)
+            double[] b,
+            alglib.xparams _params)
         {
             int i_ = 0;
 
             alglib.ap.assert(!state.running, "LinCGSetB: you can not set B, because function LinCGIteration is running!");
             alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, state.n), "LinCGSetB: B contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, state.n, _params), "LinCGSetB: B contains infinite or NaN values!");
             for(i_=0; i_<=state.n-1;i_++)
             {
                 state.b[i_] = b[i_];
@@ -11789,7 +11343,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void lincgsetprecunit(lincgstate state)
+        public static void lincgsetprecunit(lincgstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetPrecUnit: you can not change preconditioner, because function LinCGIteration is running!");
             state.prectype = -1;
@@ -11807,7 +11362,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void lincgsetprecdiag(lincgstate state)
+        public static void lincgsetprecdiag(lincgstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
             state.prectype = 0;
@@ -11835,7 +11391,8 @@ public partial class alglib
         *************************************************************************/
         public static void lincgsetcond(lincgstate state,
             double epsf,
-            int maxits)
+            int maxits,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetCond: you can not change stopping criteria when LinCGIteration() is running");
             alglib.ap.assert(math.isfinite(epsf) && (double)(epsf)>=(double)(0), "LinCGSetCond: EpsF is negative or contains infinite or NaN values");
@@ -11859,7 +11416,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static bool lincgiteration(lincgstate state)
+        public static bool lincgiteration(lincgstate state,
+            alglib.xparams _params)
         {
             bool result = new bool();
             int i = 0;
@@ -11932,8 +11490,8 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.len(state.b)>0, "LinCGIteration: B is not initialized (you must initialize B by LinCGSetB() call");
             state.running = true;
             state.repnmv = 0;
-            clearrfields(state);
-            updateitersdata(state);
+            clearrfields(state, _params);
+            updateitersdata(state, _params);
             
             //
             // Start 0-th iteration
@@ -11947,7 +11505,7 @@ public partial class alglib
                 state.x[i_] = state.rx[i_];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needvmv = true;
             state.rstate.stage = 0;
             goto lbl_rcomm;
@@ -11976,7 +11534,7 @@ public partial class alglib
             {
                 state.x[i_] = state.rx[i_];
             }
-            clearrfields(state);
+            clearrfields(state, _params);
             state.xupdated = true;
             state.rstate.stage = 1;
             goto lbl_rcomm;
@@ -12010,7 +11568,7 @@ public partial class alglib
                 state.x[i_] = state.r[i_];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needprec = true;
             state.rstate.stage = 2;
             goto lbl_rcomm;
@@ -12041,7 +11599,7 @@ public partial class alglib
                 state.x[i_] = state.p[i_];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needvmv = true;
             state.rstate.stage = 3;
             goto lbl_rcomm;
@@ -12122,7 +11680,7 @@ public partial class alglib
                 state.x[i_] = state.cx[i_];
             }
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needmv = true;
             state.rstate.stage = 4;
             goto lbl_rcomm;
@@ -12169,7 +11727,7 @@ public partial class alglib
             {
                 state.x[i_] = state.rx[i_];
             }
-            clearrfields(state);
+            clearrfields(state, _params);
             state.xupdated = true;
             state.rstate.stage = 5;
             goto lbl_rcomm;
@@ -12210,7 +11768,7 @@ public partial class alglib
             {
                 state.x[i_] = state.rx[i_];
             }
-            clearrfields(state);
+            clearrfields(state, _params);
             state.xupdated = true;
             state.rstate.stage = 6;
             goto lbl_rcomm;
@@ -12266,7 +11824,7 @@ public partial class alglib
             //prepere of parameters for next iteration
             //
             state.repnmv = state.repnmv+1;
-            clearrfields(state);
+            clearrfields(state, _params);
             state.needprec = true;
             state.rstate.stage = 7;
             goto lbl_rcomm;
@@ -12385,7 +11943,8 @@ public partial class alglib
         public static void lincgsolvesparse(lincgstate state,
             sparse.sparsematrix a,
             bool isupper,
-            double[] b)
+            double[] b,
+            alglib.xparams _params)
         {
             int n = 0;
             int i = 0;
@@ -12395,12 +11954,12 @@ public partial class alglib
 
             n = state.n;
             alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, state.n), "LinCGSetB: B contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, state.n, _params), "LinCGSetB: B contains infinite or NaN values!");
             
             //
             // Allocate temporaries
             //
-            apserv.rvectorsetlengthatleast(ref state.tmpd, n);
+            apserv.rvectorsetlengthatleast(ref state.tmpd, n, _params);
             
             //
             // Compute diagonal scaling matrix D
@@ -12413,7 +11972,7 @@ public partial class alglib
                 //
                 for(i=0; i<=n-1; i++)
                 {
-                    v = sparse.sparsegetdiagonal(a, i);
+                    v = sparse.sparsegetdiagonal(a, i, _params);
                     if( (double)(v)>(double)(0) )
                     {
                         state.tmpd[i] = 1/Math.Sqrt(v);
@@ -12439,9 +11998,9 @@ public partial class alglib
             //
             // Solve
             //
-            lincgrestart(state);
-            lincgsetb(state, b);
-            while( lincgiteration(state) )
+            lincgrestart(state, _params);
+            lincgsetb(state, b, _params);
+            while( lincgiteration(state, _params) )
             {
                 
                 //
@@ -12449,11 +12008,11 @@ public partial class alglib
                 //
                 if( state.needmv )
                 {
-                    sparse.sparsesmv(a, isupper, state.x, ref state.mv);
+                    sparse.sparsesmv(a, isupper, state.x, ref state.mv, _params);
                 }
                 if( state.needvmv )
                 {
-                    sparse.sparsesmv(a, isupper, state.x, ref state.mv);
+                    sparse.sparsesmv(a, isupper, state.x, ref state.mv, _params);
                     vmv = 0.0;
                     for(i_=0; i_<=state.n-1;i_++)
                     {
@@ -12500,7 +12059,8 @@ public partial class alglib
         *************************************************************************/
         public static void lincgresults(lincgstate state,
             ref double[] x,
-            lincgreport rep)
+            lincgreport rep,
+            alglib.xparams _params)
         {
             int i_ = 0;
 
@@ -12530,7 +12090,8 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgsetrestartfreq(lincgstate state,
-            int srf)
+            int srf,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetRestartFreq: you can not change restart frequency when LinCGIteration() is running");
             alglib.ap.assert(srf>0, "LinCGSetRestartFreq: non-positive SRF");
@@ -12557,7 +12118,8 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgsetrupdatefreq(lincgstate state,
-            int freq)
+            int freq,
+            alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetRUpdateFreq: you can not change update frequency when LinCGIteration() is running");
             alglib.ap.assert(freq>=0, "LinCGSetRUpdateFreq: non-positive Freq");
@@ -12579,7 +12141,8 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgsetxrep(lincgstate state,
-            bool needxrep)
+            bool needxrep,
+            alglib.xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -12591,19 +12154,21 @@ public partial class alglib
           -- ALGLIB --
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static void lincgrestart(lincgstate state)
+        public static void lincgrestart(lincgstate state,
+            alglib.xparams _params)
         {
             state.rstate.ia = new int[0+1];
             state.rstate.ra = new double[2+1];
             state.rstate.stage = -1;
-            clearrfields(state);
+            clearrfields(state, _params);
         }
 
 
         /*************************************************************************
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
-        private static void clearrfields(lincgstate state)
+        private static void clearrfields(lincgstate state,
+            alglib.xparams _params)
         {
             state.xupdated = false;
             state.needmv = false;
@@ -12617,7 +12182,8 @@ public partial class alglib
         /*************************************************************************
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
-        private static void updateitersdata(lincgstate state)
+        private static void updateitersdata(lincgstate state,
+            alglib.xparams _params)
         {
             state.repiterationscount = 0;
             state.repnmv = 0;

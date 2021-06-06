@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.13.0 (source code generated 2017-12-29)
+ALGLIB 3.17.0 (source code generated 2020-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -67,8 +67,15 @@ public partial class alglib
         info = 0;
         x = new double[0];
         w = new double[0];
-        gq.gqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref w);
-        return;
+        gq.gqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref w, null);
+    }
+    
+    public static void gqgeneraterec(double[] alpha, double[] beta, double mu0, int n, out int info, out double[] x, out double[] w, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        w = new double[0];
+        gq.gqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref w, _params);
     }
     
     /*************************************************************************
@@ -115,8 +122,15 @@ public partial class alglib
         info = 0;
         x = new double[0];
         w = new double[0];
-        gq.gqgenerategausslobattorec(alpha, beta, mu0, a, b, n, ref info, ref x, ref w);
-        return;
+        gq.gqgenerategausslobattorec(alpha, beta, mu0, a, b, n, ref info, ref x, ref w, null);
+    }
+    
+    public static void gqgenerategausslobattorec(double[] alpha, double[] beta, double mu0, double a, double b, int n, out int info, out double[] x, out double[] w, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        w = new double[0];
+        gq.gqgenerategausslobattorec(alpha, beta, mu0, a, b, n, ref info, ref x, ref w, _params);
     }
     
     /*************************************************************************
@@ -163,8 +177,15 @@ public partial class alglib
         info = 0;
         x = new double[0];
         w = new double[0];
-        gq.gqgenerategaussradaurec(alpha, beta, mu0, a, n, ref info, ref x, ref w);
-        return;
+        gq.gqgenerategaussradaurec(alpha, beta, mu0, a, n, ref info, ref x, ref w, null);
+    }
+    
+    public static void gqgenerategaussradaurec(double[] alpha, double[] beta, double mu0, double a, int n, out int info, out double[] x, out double[] w, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        w = new double[0];
+        gq.gqgenerategaussradaurec(alpha, beta, mu0, a, n, ref info, ref x, ref w, _params);
     }
     
     /*************************************************************************
@@ -196,8 +217,15 @@ public partial class alglib
         info = 0;
         x = new double[0];
         w = new double[0];
-        gq.gqgenerategausslegendre(n, ref info, ref x, ref w);
-        return;
+        gq.gqgenerategausslegendre(n, ref info, ref x, ref w, null);
+    }
+    
+    public static void gqgenerategausslegendre(int n, out int info, out double[] x, out double[] w, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        w = new double[0];
+        gq.gqgenerategausslegendre(n, ref info, ref x, ref w, _params);
     }
     
     /*************************************************************************
@@ -232,8 +260,15 @@ public partial class alglib
         info = 0;
         x = new double[0];
         w = new double[0];
-        gq.gqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref w);
-        return;
+        gq.gqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref w, null);
+    }
+    
+    public static void gqgenerategaussjacobi(int n, double alpha, double beta, out int info, out double[] x, out double[] w, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        w = new double[0];
+        gq.gqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref w, _params);
     }
     
     /*************************************************************************
@@ -267,8 +302,15 @@ public partial class alglib
         info = 0;
         x = new double[0];
         w = new double[0];
-        gq.gqgenerategausslaguerre(n, alpha, ref info, ref x, ref w);
-        return;
+        gq.gqgenerategausslaguerre(n, alpha, ref info, ref x, ref w, null);
+    }
+    
+    public static void gqgenerategausslaguerre(int n, double alpha, out int info, out double[] x, out double[] w, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        w = new double[0];
+        gq.gqgenerategausslaguerre(n, alpha, ref info, ref x, ref w, _params);
     }
     
     /*************************************************************************
@@ -299,8 +341,15 @@ public partial class alglib
         info = 0;
         x = new double[0];
         w = new double[0];
-        gq.gqgenerategausshermite(n, ref info, ref x, ref w);
-        return;
+        gq.gqgenerategausshermite(n, ref info, ref x, ref w, null);
+    }
+    
+    public static void gqgenerategausshermite(int n, out int info, out double[] x, out double[] w, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        w = new double[0];
+        gq.gqgenerategausshermite(n, ref info, ref x, ref w, _params);
     }
 
 }
@@ -360,8 +409,16 @@ public partial class alglib
         x = new double[0];
         wkronrod = new double[0];
         wgauss = new double[0];
-        gkq.gkqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref wkronrod, ref wgauss);
-        return;
+        gkq.gkqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref wkronrod, ref wgauss, null);
+    }
+    
+    public static void gkqgeneraterec(double[] alpha, double[] beta, double mu0, int n, out int info, out double[] x, out double[] wkronrod, out double[] wgauss, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        wkronrod = new double[0];
+        wgauss = new double[0];
+        gkq.gkqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref wkronrod, ref wgauss, _params);
     }
     
     /*************************************************************************
@@ -399,8 +456,16 @@ public partial class alglib
         x = new double[0];
         wkronrod = new double[0];
         wgauss = new double[0];
-        gkq.gkqgenerategausslegendre(n, ref info, ref x, ref wkronrod, ref wgauss);
-        return;
+        gkq.gkqgenerategausslegendre(n, ref info, ref x, ref wkronrod, ref wgauss, null);
+    }
+    
+    public static void gkqgenerategausslegendre(int n, out int info, out double[] x, out double[] wkronrod, out double[] wgauss, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        wkronrod = new double[0];
+        wgauss = new double[0];
+        gkq.gkqgenerategausslegendre(n, ref info, ref x, ref wkronrod, ref wgauss, _params);
     }
     
     /*************************************************************************
@@ -445,8 +510,16 @@ public partial class alglib
         x = new double[0];
         wkronrod = new double[0];
         wgauss = new double[0];
-        gkq.gkqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref wkronrod, ref wgauss);
-        return;
+        gkq.gkqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref wkronrod, ref wgauss, null);
+    }
+    
+    public static void gkqgenerategaussjacobi(int n, double alpha, double beta, out int info, out double[] x, out double[] wkronrod, out double[] wgauss, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        wkronrod = new double[0];
+        wgauss = new double[0];
+        gkq.gkqgenerategaussjacobi(n, alpha, beta, ref info, ref x, ref wkronrod, ref wgauss, _params);
     }
     
     /*************************************************************************
@@ -481,8 +554,16 @@ public partial class alglib
         x = new double[0];
         wkronrod = new double[0];
         wgauss = new double[0];
-        gkq.gkqlegendrecalc(n, ref info, ref x, ref wkronrod, ref wgauss);
-        return;
+        gkq.gkqlegendrecalc(n, ref info, ref x, ref wkronrod, ref wgauss, null);
+    }
+    
+    public static void gkqlegendrecalc(int n, out int info, out double[] x, out double[] wkronrod, out double[] wgauss, alglib.xparams _params)
+    {
+        info = 0;
+        x = new double[0];
+        wkronrod = new double[0];
+        wgauss = new double[0];
+        gkq.gkqlegendrecalc(n, ref info, ref x, ref wkronrod, ref wgauss, _params);
     }
     
     /*************************************************************************
@@ -513,8 +594,16 @@ public partial class alglib
         wkronrod = new double[0];
         wgauss = new double[0];
         eps = 0;
-        gkq.gkqlegendretbl(n, ref x, ref wkronrod, ref wgauss, ref eps);
-        return;
+        gkq.gkqlegendretbl(n, ref x, ref wkronrod, ref wgauss, ref eps, null);
+    }
+    
+    public static void gkqlegendretbl(int n, out double[] x, out double[] wkronrod, out double[] wgauss, out double eps, alglib.xparams _params)
+    {
+        x = new double[0];
+        wkronrod = new double[0];
+        wgauss = new double[0];
+        eps = 0;
+        gkq.gkqlegendretbl(n, ref x, ref wkronrod, ref wgauss, ref eps, _params);
     }
 
 }
@@ -636,8 +725,13 @@ public partial class alglib
     public static void autogksmooth(double a, double b, out autogkstate state)
     {
         state = new autogkstate();
-        autogk.autogksmooth(a, b, state.innerobj);
-        return;
+        autogk.autogksmooth(a, b, state.innerobj, null);
+    }
+    
+    public static void autogksmooth(double a, double b, out autogkstate state, alglib.xparams _params)
+    {
+        state = new autogkstate();
+        autogk.autogksmooth(a, b, state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -666,8 +760,13 @@ public partial class alglib
     public static void autogksmoothw(double a, double b, double xwidth, out autogkstate state)
     {
         state = new autogkstate();
-        autogk.autogksmoothw(a, b, xwidth, state.innerobj);
-        return;
+        autogk.autogksmoothw(a, b, xwidth, state.innerobj, null);
+    }
+    
+    public static void autogksmoothw(double a, double b, double xwidth, out autogkstate state, alglib.xparams _params)
+    {
+        state = new autogkstate();
+        autogk.autogksmoothw(a, b, xwidth, state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -705,8 +804,13 @@ public partial class alglib
     public static void autogksingular(double a, double b, double alpha, double beta, out autogkstate state)
     {
         state = new autogkstate();
-        autogk.autogksingular(a, b, alpha, beta, state.innerobj);
-        return;
+        autogk.autogksingular(a, b, alpha, beta, state.innerobj, null);
+    }
+    
+    public static void autogksingular(double a, double b, double alpha, double beta, out autogkstate state, alglib.xparams _params)
+    {
+        state = new autogkstate();
+        autogk.autogksingular(a, b, alpha, beta, state.innerobj, _params);
     }
     
     /*************************************************************************
@@ -717,8 +821,13 @@ public partial class alglib
     public static bool autogkiteration(autogkstate state)
     {
     
-        bool result = autogk.autogkiteration(state.innerobj);
-        return result;
+        return autogk.autogkiteration(state.innerobj, null);
+    }
+    
+    public static bool autogkiteration(autogkstate state, alglib.xparams _params)
+    {
+    
+        return autogk.autogkiteration(state.innerobj, _params);
     }
 
 
@@ -736,9 +845,14 @@ public partial class alglib
     *************************************************************************/
     public static void autogkintegrate(autogkstate state, integrator1_func func, object obj)
     {
+        autogkintegrate(state, func, obj, null);
+    }
+        
+    public static void autogkintegrate(autogkstate state, integrator1_func func, object obj, alglib.xparams _params)
+    {
         if( func==null )
             throw new alglibexception("ALGLIB: error in 'autogkintegrate()' (func is null)");
-        while( alglib.autogkiteration(state) )
+        while( alglib.autogkiteration(state, _params) )
         {
             if( state.needf )
             {
@@ -768,8 +882,14 @@ public partial class alglib
     {
         v = 0;
         rep = new autogkreport();
-        autogk.autogkresults(state.innerobj, ref v, rep.innerobj);
-        return;
+        autogk.autogkresults(state.innerobj, ref v, rep.innerobj, null);
+    }
+    
+    public static void autogkresults(autogkstate state, out double v, out autogkreport rep, alglib.xparams _params)
+    {
+        v = 0;
+        rep = new autogkreport();
+        autogk.autogkresults(state.innerobj, ref v, rep.innerobj, _params);
     }
 
 }
@@ -819,7 +939,8 @@ public partial class alglib
             int n,
             ref int info,
             ref double[] x,
-            ref double[] w)
+            ref double[] w,
+            alglib.xparams _params)
         {
             int i = 0;
             double[] d = new double[0];
@@ -857,7 +978,7 @@ public partial class alglib
             //
             // EVD
             //
-            if( !evd.smatrixtdevd(ref d, e, n, 3, ref z) )
+            if( !evd.smatrixtdevd(ref d, e, n, 3, ref z, _params) )
             {
                 info = -3;
                 return;
@@ -923,7 +1044,8 @@ public partial class alglib
             int n,
             ref int info,
             ref double[] x,
-            ref double[] w)
+            ref double[] w,
+            alglib.xparams _params)
         {
             int i = 0;
             double[] d = new double[0];
@@ -1036,7 +1158,7 @@ public partial class alglib
             //
             // EVD
             //
-            if( !evd.smatrixtdevd(ref d, e, n+2, 3, ref z) )
+            if( !evd.smatrixtdevd(ref d, e, n+2, 3, ref z, _params) )
             {
                 info = -3;
                 return;
@@ -1101,7 +1223,8 @@ public partial class alglib
             int n,
             ref int info,
             ref double[] x,
-            ref double[] w)
+            ref double[] w,
+            alglib.xparams _params)
         {
             int i = 0;
             double[] d = new double[0];
@@ -1158,7 +1281,7 @@ public partial class alglib
             //
             // EVD
             //
-            if( !evd.smatrixtdevd(ref d, e, n+1, 3, ref z) )
+            if( !evd.smatrixtdevd(ref d, e, n+1, 3, ref z, _params) )
             {
                 info = -3;
                 return;
@@ -1204,7 +1327,8 @@ public partial class alglib
         public static void gqgenerategausslegendre(int n,
             ref int info,
             ref double[] x,
-            ref double[] w)
+            ref double[] w,
+            alglib.xparams _params)
         {
             double[] alpha = new double[0];
             double[] beta = new double[0];
@@ -1230,7 +1354,7 @@ public partial class alglib
             {
                 beta[i] = 1/(4-1/math.sqr(i));
             }
-            gqgeneraterec(alpha, beta, beta[0], n, ref info, ref x, ref w);
+            gqgeneraterec(alpha, beta, beta[0], n, ref info, ref x, ref w, _params);
             
             //
             // test basic properties to detect errors
@@ -1284,7 +1408,8 @@ public partial class alglib
             double beta,
             ref int info,
             ref double[] x,
-            ref double[] w)
+            ref double[] w,
+            alglib.xparams _params)
         {
             double[] a = new double[0];
             double[] b = new double[0];
@@ -1308,7 +1433,7 @@ public partial class alglib
             b = new double[n];
             apb = alpha+beta;
             a[0] = (beta-alpha)/(apb+2);
-            t = (apb+1)*Math.Log(2)+gammafunc.lngamma(alpha+1, ref s)+gammafunc.lngamma(beta+1, ref s)-gammafunc.lngamma(apb+2, ref s);
+            t = (apb+1)*Math.Log(2)+gammafunc.lngamma(alpha+1, ref s, _params)+gammafunc.lngamma(beta+1, ref s, _params)-gammafunc.lngamma(apb+2, ref s, _params);
             if( (double)(t)>(double)(Math.Log(math.maxrealnumber)) )
             {
                 info = -4;
@@ -1327,7 +1452,7 @@ public partial class alglib
                     b[i] = 0.25*(1+alpha/i)*(1+beta/i)*(1+apb/i)/((1+0.5*(apb+1)/i)*(1+0.5*(apb-1)/i)*math.sqr(1+0.5*apb/i));
                 }
             }
-            gqgeneraterec(a, b, b[0], n, ref info, ref x, ref w);
+            gqgeneraterec(a, b, b[0], n, ref info, ref x, ref w, _params);
             
             //
             // test basic properties to detect errors
@@ -1379,7 +1504,8 @@ public partial class alglib
             double alpha,
             ref int info,
             ref double[] x,
-            ref double[] w)
+            ref double[] w,
+            alglib.xparams _params)
         {
             double[] a = new double[0];
             double[] b = new double[0];
@@ -1399,7 +1525,7 @@ public partial class alglib
             a = new double[n];
             b = new double[n];
             a[0] = alpha+1;
-            t = gammafunc.lngamma(alpha+1, ref s);
+            t = gammafunc.lngamma(alpha+1, ref s, _params);
             if( (double)(t)>=(double)(Math.Log(math.maxrealnumber)) )
             {
                 info = -4;
@@ -1414,7 +1540,7 @@ public partial class alglib
                     b[i] = i*(i+alpha);
                 }
             }
-            gqgeneraterec(a, b, b[0], n, ref info, ref x, ref w);
+            gqgeneraterec(a, b, b[0], n, ref info, ref x, ref w, _params);
             
             //
             // test basic properties to detect errors
@@ -1462,7 +1588,8 @@ public partial class alglib
         public static void gqgenerategausshermite(int n,
             ref int info,
             ref double[] x,
-            ref double[] w)
+            ref double[] w,
+            alglib.xparams _params)
         {
             double[] a = new double[0];
             double[] b = new double[0];
@@ -1491,7 +1618,7 @@ public partial class alglib
                     b[i] = 0.5*i;
                 }
             }
-            gqgeneraterec(a, b, b[0], n, ref info, ref x, ref w);
+            gqgeneraterec(a, b, b[0], n, ref info, ref x, ref w, _params);
             
             //
             // test basic properties to detect errors
@@ -1565,7 +1692,8 @@ public partial class alglib
             ref int info,
             ref double[] x,
             ref double[] wkronrod,
-            ref double[] wgauss)
+            ref double[] wgauss,
+            alglib.xparams _params)
         {
             double[] ta = new double[0];
             int i = 0;
@@ -1613,7 +1741,7 @@ public partial class alglib
             //
             // Calculate Gauss nodes/weights, save them for later processing
             //
-            gq.gqgeneraterec(alpha, beta, mu0, n, ref info, ref xgtmp, ref wgtmp);
+            gq.gqgeneraterec(alpha, beta, mu0, n, ref info, ref xgtmp, ref wgtmp, _params);
             if( info<0 )
             {
                 return;
@@ -1735,7 +1863,7 @@ public partial class alglib
             //
             // calculation of Kronrod nodes and weights, unpacking of Gauss weights
             //
-            gq.gqgeneraterec(alpha, beta, mu0, 2*n+1, ref info, ref x, ref wkronrod);
+            gq.gqgeneraterec(alpha, beta, mu0, 2*n+1, ref info, ref x, ref wkronrod, _params);
             if( info==-2 )
             {
                 info = -5;
@@ -1800,7 +1928,8 @@ public partial class alglib
             ref int info,
             ref double[] x,
             ref double[] wkronrod,
-            ref double[] wgauss)
+            ref double[] wgauss,
+            alglib.xparams _params)
         {
             double eps = 0;
 
@@ -1812,11 +1941,11 @@ public partial class alglib
             if( (double)(math.machineepsilon)>(double)(1.0E-32) && (((((n==15 || n==21) || n==31) || n==41) || n==51) || n==61) )
             {
                 info = 1;
-                gkqlegendretbl(n, ref x, ref wkronrod, ref wgauss, ref eps);
+                gkqlegendretbl(n, ref x, ref wkronrod, ref wgauss, ref eps, _params);
             }
             else
             {
-                gkqlegendrecalc(n, ref info, ref x, ref wkronrod, ref wgauss);
+                gkqlegendrecalc(n, ref info, ref x, ref wkronrod, ref wgauss, _params);
             }
         }
 
@@ -1863,7 +1992,8 @@ public partial class alglib
             ref int info,
             ref double[] x,
             ref double[] wkronrod,
-            ref double[] wgauss)
+            ref double[] wgauss,
+            alglib.xparams _params)
         {
             int clen = 0;
             double[] a = new double[0];
@@ -1899,7 +2029,7 @@ public partial class alglib
             }
             apb = alpha+beta;
             a[0] = (beta-alpha)/(apb+2);
-            t = (apb+1)*Math.Log(2)+gammafunc.lngamma(alpha+1, ref s)+gammafunc.lngamma(beta+1, ref s)-gammafunc.lngamma(apb+2, ref s);
+            t = (apb+1)*Math.Log(2)+gammafunc.lngamma(alpha+1, ref s, _params)+gammafunc.lngamma(beta+1, ref s, _params)-gammafunc.lngamma(apb+2, ref s, _params);
             if( (double)(t)>(double)(Math.Log(math.maxrealnumber)) )
             {
                 info = -4;
@@ -1918,7 +2048,7 @@ public partial class alglib
                     b[i] = 0.25*(1+alpha/i)*(1+beta/i)*(1+apb/i)/((1+0.5*(apb+1)/i)*(1+0.5*(apb-1)/i)*math.sqr(1+0.5*apb/i));
                 }
             }
-            gkqgeneraterec(a, b, b[0], n, ref info, ref x, ref wkronrod, ref wgauss);
+            gkqgeneraterec(a, b, b[0], n, ref info, ref x, ref wkronrod, ref wgauss, _params);
             
             //
             // test basic properties to detect errors
@@ -1970,7 +2100,8 @@ public partial class alglib
             ref int info,
             ref double[] x,
             ref double[] wkronrod,
-            ref double[] wgauss)
+            ref double[] wgauss,
+            alglib.xparams _params)
         {
             double[] alpha = new double[0];
             double[] beta = new double[0];
@@ -2004,7 +2135,7 @@ public partial class alglib
             {
                 beta[k] = 1/(4-1/math.sqr(k));
             }
-            gkqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref wkronrod, ref wgauss);
+            gkqgeneraterec(alpha, beta, mu0, n, ref info, ref x, ref wkronrod, ref wgauss, _params);
             
             //
             // test basic properties to detect errors
@@ -2052,7 +2183,8 @@ public partial class alglib
             ref double[] x,
             ref double[] wkronrod,
             ref double[] wgauss,
-            ref double eps)
+            ref double eps,
+            alglib.xparams _params)
         {
             int i = 0;
             int ng = 0;
@@ -2424,7 +2556,7 @@ public partial class alglib
             //
             // reorder
             //
-            tsort.tagsort(ref x, n, ref p1, ref p2);
+            tsort.tagsort(ref x, n, ref p1, ref p2, _params);
             for(i=0; i<=n-1; i++)
             {
                 tmp = wkronrod[i];
@@ -2632,11 +2764,12 @@ public partial class alglib
         *************************************************************************/
         public static void autogksmooth(double a,
             double b,
-            autogkstate state)
+            autogkstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(math.isfinite(a), "AutoGKSmooth: A is not finite!");
             alglib.ap.assert(math.isfinite(b), "AutoGKSmooth: B is not finite!");
-            autogksmoothw(a, b, 0.0, state);
+            autogksmoothw(a, b, 0.0, state, _params);
         }
 
 
@@ -2666,7 +2799,8 @@ public partial class alglib
         public static void autogksmoothw(double a,
             double b,
             double xwidth,
-            autogkstate state)
+            autogkstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(math.isfinite(a), "AutoGKSmoothW: A is not finite!");
             alglib.ap.assert(math.isfinite(b), "AutoGKSmoothW: B is not finite!");
@@ -2717,7 +2851,8 @@ public partial class alglib
             double b,
             double alpha,
             double beta,
-            autogkstate state)
+            autogkstate state,
+            alglib.xparams _params)
         {
             alglib.ap.assert(math.isfinite(a), "AutoGKSingular: A is not finite!");
             alglib.ap.assert(math.isfinite(b), "AutoGKSingular: B is not finite!");
@@ -2740,7 +2875,8 @@ public partial class alglib
           -- ALGLIB --
              Copyright 07.05.2009 by Bochkanov Sergey
         *************************************************************************/
-        public static bool autogkiteration(autogkstate state)
+        public static bool autogkiteration(autogkstate state,
+            alglib.xparams _params)
         {
             bool result = new bool();
             double s = 0;
@@ -2841,9 +2977,9 @@ public partial class alglib
             //
             // general case
             //
-            autogkinternalprepare(a, b, eps, state.xwidth, state.internalstate);
+            autogkinternalprepare(a, b, eps, state.xwidth, state.internalstate, _params);
         lbl_5:
-            if( !autogkinternaliteration(state.internalstate) )
+            if( !autogkinternaliteration(state.internalstate, _params) )
             {
                 goto lbl_6;
             }
@@ -2922,9 +3058,9 @@ public partial class alglib
             //     integral(f(x)dx, a, (b+a)/2) =
             //     = 1/(1+alpha) * integral(t^(-alpha/(1+alpha))*f(a+t^(1/(1+alpha)))dt, 0, (0.5*(b-a))^(1+alpha))
             //
-            autogkinternalprepare(0, Math.Pow(0.5*(b-a), 1+alpha), eps, state.xwidth, state.internalstate);
+            autogkinternalprepare(0, Math.Pow(0.5*(b-a), 1+alpha), eps, state.xwidth, state.internalstate, _params);
         lbl_9:
-            if( !autogkinternaliteration(state.internalstate) )
+            if( !autogkinternaliteration(state.internalstate, _params) )
             {
                 goto lbl_10;
             }
@@ -2970,9 +3106,9 @@ public partial class alglib
             //     integral(f(x)dx, (b+a)/2, b) =
             //     = 1/(1+beta) * integral(t^(-beta/(1+beta))*f(b-t^(1/(1+beta)))dt, 0, (0.5*(b-a))^(1+beta))
             //
-            autogkinternalprepare(0, Math.Pow(0.5*(b-a), 1+beta), eps, state.xwidth, state.internalstate);
+            autogkinternalprepare(0, Math.Pow(0.5*(b-a), 1+beta), eps, state.xwidth, state.internalstate, _params);
         lbl_11:
-            if( !autogkinternaliteration(state.internalstate) )
+            if( !autogkinternaliteration(state.internalstate, _params) )
             {
                 goto lbl_12;
             }
@@ -3061,7 +3197,8 @@ public partial class alglib
         *************************************************************************/
         public static void autogkresults(autogkstate state,
             ref double v,
-            autogkreport rep)
+            autogkreport rep,
+            alglib.xparams _params)
         {
             v = 0;
 
@@ -3084,7 +3221,8 @@ public partial class alglib
             double b,
             double eps,
             double xwidth,
-            autogkinternalstate state)
+            autogkinternalstate state,
+            alglib.xparams _params)
         {
             
             //
@@ -3107,7 +3245,8 @@ public partial class alglib
         /*************************************************************************
         Internal AutoGK subroutine
         *************************************************************************/
-        private static bool autogkinternaliteration(autogkinternalstate state)
+        private static bool autogkinternaliteration(autogkinternalstate state,
+            alglib.xparams _params)
         {
             bool result = new bool();
             double c1 = 0;
@@ -3189,7 +3328,7 @@ public partial class alglib
             // use 15-point Gauss-Kronrod formula.
             //
             state.n = 15;
-            gkq.gkqgenerategausslegendre(state.n, ref info, ref state.qn, ref state.wk, ref state.wg);
+            gkq.gkqgenerategausslegendre(state.n, ref info, ref state.qn, ref state.wk, ref state.wg, _params);
             if( info<0 )
             {
                 state.info = -5;
@@ -3398,7 +3537,7 @@ public partial class alglib
             //
             if( state.heapused==state.heapsize )
             {
-                mheapresize(ref state.heap, ref state.heapsize, 4*state.heapsize, state.heapwidth);
+                mheapresize(ref state.heap, ref state.heapsize, 4*state.heapsize, state.heapwidth, _params);
             }
             
             //
@@ -3418,7 +3557,7 @@ public partial class alglib
             //
             // Exclude interval with maximum absolute error
             //
-            mheappop(ref state.heap, state.heapused, state.heapwidth);
+            mheappop(ref state.heap, state.heapused, state.heapwidth, _params);
             state.sumerr = state.sumerr-state.heap[state.heapused-1,0];
             state.sumabs = state.sumabs-state.heap[state.heapused-1,2];
             
@@ -3486,8 +3625,8 @@ public partial class alglib
             j = j+1;
             goto lbl_16;
         lbl_18:
-            mheappush(ref state.heap, state.heapused-1, state.heapwidth);
-            mheappush(ref state.heap, state.heapused, state.heapwidth);
+            mheappush(ref state.heap, state.heapused-1, state.heapwidth, _params);
+            mheappush(ref state.heap, state.heapused, state.heapwidth, _params);
             state.heapused = state.heapused+1;
             goto lbl_14;
         lbl_15:
@@ -3518,7 +3657,8 @@ public partial class alglib
 
         private static void mheappop(ref double[,] heap,
             int heapsize,
-            int heapwidth)
+            int heapwidth,
+            alglib.xparams _params)
         {
             int i = 0;
             int p = 0;
@@ -3566,7 +3706,8 @@ public partial class alglib
 
         private static void mheappush(ref double[,] heap,
             int heapsize,
-            int heapwidth)
+            int heapwidth,
+            alglib.xparams _params)
         {
             int i = 0;
             int p = 0;
@@ -3602,7 +3743,8 @@ public partial class alglib
         private static void mheapresize(ref double[,] heap,
             ref int heapsize,
             int newheapsize,
-            int heapwidth)
+            int heapwidth,
+            alglib.xparams _params)
         {
             double[,] tmp = new double[0,0];
             int i = 0;
