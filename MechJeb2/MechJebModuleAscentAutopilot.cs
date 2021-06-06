@@ -64,6 +64,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool skipCircularization = false;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public EditableDouble rollAltitude = new EditableDouble(50);
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool _autostage = true;
         public bool autostage
         {

@@ -27,7 +27,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool attachAltFlag = false;
 
-        private MechJebModuleAscentGuidance ascentGuidance { get { return core.GetComputerModule<MechJebModuleAscentGuidance>(); } }
+        private MechJebModuleAscentGuidance ascentGuidance => core.GetComputerModule<MechJebModuleAscentGuidance>();
 
         public override void OnModuleEnabled()
         {
@@ -178,9 +178,11 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90, core.guidance.heading);
 
-            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
+            bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
 
-            if (!vessel.LiftedOff() || vessel.Landed) {
+            core.attitude.AxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
+
+            if (!liftedOff) {
                 status = Localizer.Format("#MechJeb_Ascent_status12");//"Awaiting liftoff"
             }
             else

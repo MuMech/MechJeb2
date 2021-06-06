@@ -290,8 +290,9 @@ namespace MuMech
                     autopilot.forceRoll = GUILayout.Toggle(autopilot.forceRoll, Localizer.Format("#MechJeb_Ascent_checkbox2"));//Force Roll
                     if (autopilot.forceRoll)
                     {
-                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label22"), autopilot.verticalRoll, "º", 30f);//climb
-                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label23"), autopilot.turnRoll, "º", 30f);//turn
+                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label22"), autopilot.verticalRoll, "º", 30f); //climb
+                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label23"), autopilot.turnRoll, "º", 30f);     //turn
+                        GuiUtils.SimpleTextBox("Alt", autopilot.rollAltitude, "m", 30f);
                     }
                     GUILayout.EndHorizontal();
 
