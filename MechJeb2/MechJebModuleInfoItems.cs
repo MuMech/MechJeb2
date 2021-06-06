@@ -989,7 +989,7 @@ namespace MuMech
             if (showISP) noChange &= showISP = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn9"), stages.Select(s => atmoStats[s].Isp.ToString("F2")));//"ISP"
             if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn10"), stages.Select(s => atmoStats[s].DeltaV.ToString("F0") + " m/s"));//"Atmo ΔV"
             if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn11"), stages.Select(s => vacStats[s].DeltaV.ToString("F0") + " m/s"));//"Vac ΔV"
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => timeSeconds ? MuUtils.ToSI(atmoStats[s].DeltaTime, 2) + " s": GuiUtils.TimeToDHMS(atmoStats[s].DeltaTime, 1)));//"Time"
+            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => timeSeconds ? atmoStats[s].DeltaTime.ToString("F2") + "s": GuiUtils.TimeToDHMS(atmoStats[s].DeltaTime, 1)));//"Time"
 
             if (!noChange)
                 StageDisplayState = 3;
