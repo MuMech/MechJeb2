@@ -42,6 +42,8 @@ fi
 #  "${PDB2MDB}" "${TARGET_PATH}"
 #fi
 
+KSPDIR="${HOME}/ksp/vanilla_1.11.1"
+
 if [ -z "${KSPDIR}" ] ; then
   if [[ $(uname -s) = Linux ]]; then
     KSPDIR="${HOME}/.local/share/Steam/SteamApps/common/Kerbal Space Program"

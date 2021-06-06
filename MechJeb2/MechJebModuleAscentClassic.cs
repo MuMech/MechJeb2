@@ -137,7 +137,9 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90);
 
-            core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && vesselState.altitudeBottom > 50);
+            bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
+
+            core.attitude.AxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
 
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
