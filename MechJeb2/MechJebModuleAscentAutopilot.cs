@@ -573,6 +573,8 @@ namespace MuMech
                 }
             }
 
+            bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.speedVertical.value > 1;
+
             double pitch = 90 - Vector3d.Angle(desiredThrustVector, vesselState.up);
 
             double hdg;
@@ -585,22 +587,23 @@ namespace MuMech
 
             if (autopilot.forceRoll)
             {
-                core.attitude.AxisControl(!vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50));
                 if ( desiredPitch == 90.0)
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50), true);
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.verticalRoll, this, liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude), true);
                 }
                 else
                 {
-                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this, !vessel.Landed, !vessel.Landed, !vessel.Landed && (vesselState.altitudeBottom > 50), true);
+                    core.attitude.attitudeTo(hdg, pitch, autopilot.turnRoll, this, liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude), true);
                 }
             }
             else
             {
                 core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
             }
-        }
 
+
+            core.attitude.AxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
+        }
     }
 
     public static class LaunchTiming
