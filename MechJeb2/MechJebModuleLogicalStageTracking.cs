@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 namespace MuMech
@@ -21,58 +22,48 @@ namespace MuMech
     //
     public class MechJebModuleLogicalStageTracking : ComputerModule
     {
+        public class StageContainer : List<Stage>
+        {
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                foreach (Stage stage in this) sb.AppendLine(stage.ToString());
+
+                return sb.ToString();
+            }
+        }
+
         public MechJebModuleLogicalStageTracking(MechJebCore core) : base(core)
         {
         }
 
-        public readonly List<Stage> Stages = new List<Stage>();
+        public readonly StageContainer Stages = new StageContainer();
 
         // this is used to track how many significant stages we've dropped
-        private int    _stageCount;
-        private double _lastTime;
-        private bool   _stagingEvent;
-
-        public override void OnStart(PartModule.StartState state)
-        {
-            GameEvents.onStageSeparation.Add(HandleStageEvent);
-        }
-
-        public override void OnDestroy()
-        {
-            GameEvents.onStageSeparation.Remove(HandleStageEvent);
-        }
+        private int _stageCount;
 
         public override void OnModuleEnabled()
         {
             Reset();
         }
 
-        private void HandleStageEvent(EventReport eventReport)
-        {
-            _stagingEvent = true;
-        }
-
         public void Reset()
         {
             Stages.Clear();
             _lastNonZeroStages = -1;
-            _stagingEvent     = false;
         }
 
         private int _lastNonZeroStages = -1;
 
+        // FIXME: this should be moved to OnFixedUpdate() and made to run before the GuidanceController
         public void Update()
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (_lastTime == Planetarium.GetUniversalTime())
-                return;
-
             core.stageStats.RequestUpdate(this, true);
 
             /*
              * Handle staging events: if we just staged and have one less nonzero-stage then remove a stage
              */
-            
+
             int currentNonZeroStages = 0;
 
             for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
@@ -84,21 +75,18 @@ namespace MuMech
                 currentNonZeroStages++;
             }
 
-            if (_stagingEvent && _lastNonZeroStages > 0)
+            if (currentNonZeroStages < _lastNonZeroStages)
             {
-                if (currentNonZeroStages < _lastNonZeroStages)
-                {
-                    _stageCount      += 1;
-                    Stages[0].Staged =  true;
-                    Stages.RemoveAt(0);
-                    Debug.Log("[MechJebModuleLogicalStageTracking] dropping a stage");
-                }
+                _stageCount      += 1;
+                Stages[0].Staged =  true;
+                Stages.RemoveAt(0);
+                Debug.Log("[MechJebModuleLogicalStageTracking] dropping a stage");
             }
 
             /*
              * Deal with resynchronization and with user reconfiguration.
              */
-            
+
             int j = 0;
 
             for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
@@ -127,7 +115,6 @@ namespace MuMech
                 Stages.RemoveAt(Stages.Count - 1);
             }
 
-            _lastTime          = Planetarium.GetUniversalTime();
             _lastNonZeroStages = currentNonZeroStages;
         }
 
@@ -155,7 +142,7 @@ namespace MuMech
 
             // starting thrust of the stage
             public double StartThrust;
-            
+
             // ending thrust (this should be the same, except for burned out ullage motors)
             public double EndThrust;
 
