@@ -653,7 +653,7 @@ namespace MuMech
                     {
                         case ResourceFlowMode.NO_FLOW:
                             //check if we contain the needed resource:
-                            if (resources[type] < ResidualThreshold(type)) return false;
+                            if (resources[type] <= ResidualThreshold(type)) return false;
                             break;
 
                         case ResourceFlowMode.ALL_VESSEL:
