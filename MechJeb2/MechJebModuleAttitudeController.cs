@@ -139,7 +139,7 @@ namespace MuMech
             controllers.Add(new BetterController(this));
 
 
-            Controller = new HybridController(this);
+            Controller = new BetterController(this);
 
         }
 
@@ -450,7 +450,7 @@ namespace MuMech
 
             if (userCommandingPitch)
                 Controller.Reset(0);
-            
+
             if (userCommandingRoll)
                 Controller.Reset(1);
 
