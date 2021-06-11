@@ -543,6 +543,11 @@ namespace MuMech
             CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString).enabled = false;
             CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString).enabled = false;
             CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[4].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[5].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[6].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[7].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[10].sharingString).enabled = false;
         }
 
         public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
@@ -820,7 +825,7 @@ namespace MuMech
         public ToggleInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
 
-    //Apply this attribute to a method to indicate that it is a method that will draw 
+    //Apply this attribute to a method to indicate that it is a method that will draw
     //an InfoItem
     [AttributeUsage(AttributeTargets.Method)]
     public class GeneralInfoItemAttribute : InfoItemAttribute
@@ -846,7 +851,7 @@ namespace MuMech
             public string sharingString;
         }
 
-        public static Preset[] presets = new Preset[] 
+        public static Preset[] presets = new Preset[]
         {
             new Preset
             {
@@ -861,9 +866,13 @@ Value:VesselState.orbitPeA
 Value:VesselState.orbitPeriod
 Value:VesselState.orbitTimeToAp
 Value:VesselState.orbitTimeToPe
+Value:VesselState.orbitSemiMajorAxis
 Value:VesselState.orbitInclination
 Value:VesselState.orbitEccentricity
+Value:VesselState.orbitLAN
+Value:VesselState.orbitArgumentOfPeriapsis
 Value:VesselState.angleToPrograde
+Value:InfoItems.RelativeInclinationToTarget
 -----------------------------"//Orbit Info
             },
 
@@ -883,6 +892,7 @@ Value:VesselState.speedSurface
 Value:VesselState.speedVertical
 Value:VesselState.speedSurfaceHorizontal
 Value:InfoItems.GetCoordinateString
+Value:InfoItems.CurrentBiome
 -----------------------------"//Surface Info
             },
 
@@ -916,19 +926,20 @@ General:InfoItems.AllStageStats
 -----------------------------"//Delta-V Stats
             },
 
-            new Preset 
+            new Preset
             {
                 name = Localizer.Format("#MechJeb_WindowEd_Presetname5"),//Ascent Stats
-                sharingString = 
+                sharingString =
 @"--- MechJeb Custom Window ---
 Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname5")+@"
 Show in: flight
-Value:FlightRecorder.timeSinceMark
 Value:FlightRecorder.deltaVExpended
 Value:FlightRecorder.gravityLosses
 Value:FlightRecorder.dragLosses
 Value:FlightRecorder.steeringLosses
+Value:FlightRecorder.timeSinceMark
 Value:FlightRecorder.phaseAngleFromMark
+Value:FlightRecorder.GroundDistanceFromMark
 -----------------------------"//Ascent Stats
             },
 
@@ -965,6 +976,7 @@ Value:InfoItems.SuicideBurnCountdown
 Value:InfoItems.SurfaceTWR
 Action:TargetController.PickPositionTargetOnMap
 Value:InfoItems.TargetDistance
+Value:InfoItems.CurrentBiome
 -----------------------------"//Landing Info
             },
 
@@ -982,8 +994,12 @@ Value:InfoItems.TargetPeriapsis
 Value:InfoItems.TargetOrbitPeriod
 Value:InfoItems.TargetOrbitTimeToAp
 Value:InfoItems.TargetOrbitTimeToPe
+Value:InfoItems.TargetSMA
 Value:InfoItems.TargetInclination
 Value:InfoItems.TargetEccentricity
+Value:InfoItems.TargetLAN
+Value:InfoItems.TargetAoP
+Value:InfoItems.RelativeInclinationToTarget
 -----------------------------"//Target Orbit Info
             },
 
@@ -1024,6 +1040,15 @@ Value:TargetController.GetPositionTargetString
 @"--- MechJeb Custom Window ---
 Name: "+Localizer.Format("#MechJeb_WindowEd_Presetname11")+@"
 Show in: flight
+Value:VesselState.AoA
+Value:VesselState.AoS
+Value:VesselState.AoD
+Value:VesselState.mach
+Value:VesselState.dynamicPressure
+Value.VesselState.maxDynamicPressure
+Value.VesselState.intakeAir
+Value.VesselState.intakeAirAllIntakes
+Value.VesselState.intakeAirNeeded
 Value:VesselState.atmosphericDensityGrams
 Value:InfoItems.AtmosphericPressure
 Value:InfoItems.AtmosphericDrag
