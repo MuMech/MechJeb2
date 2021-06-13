@@ -184,6 +184,9 @@ namespace MuMech
 
             handle_throttle();
 
+            // this needs to run on every tick because it updates the stage stats for the active solution
+            core.stageTracking.Update();
+
             converge();
         }
 
@@ -551,9 +554,6 @@ namespace MuMech
                 }
             }
 
-            if ( (vesselState.time - last_optimizer_time) < MuUtils.Clamp(pvgInterval, 1.00, 30.00) )
-                return;
-
             // if we have unstable ullage then continuously update the "staging" timer until we are not
             if ( ( vesselState.lowestUllage < VesselState.UllageState.Stable ) && !isCoasting() )
             {
@@ -573,10 +573,9 @@ namespace MuMech
                     return;
             }
 
-            // run stage tracking right before the optimizer to synch stats and decide if we dropped a stage or not
-            // NOTE: by doing this we make sure we're not running near staging events where the delta-V display might get wonky
-            // that also means the stage information may not be perfectly up to date tick by tick.
-            core.stageTracking.Update();
+
+            if ( (vesselState.time - last_optimizer_time) < MuUtils.Clamp(pvgInterval, 1.00, 30.00) )
+                return;
 
             p.threadStart(vesselState.time);
             //if ( p.threadStart(vesselState.time) )
