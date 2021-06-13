@@ -282,7 +282,7 @@ namespace MuMech
                 core.thrust.ThrustOff();
             }
 
-            core.attitude.AxisControl(false, false, false);
+            core.attitude.SetAxisControl(false, false, false);
 
             if (timedLaunch && tMinus > 10.0)
             {
@@ -315,7 +315,7 @@ namespace MuMech
                 // kill the optimizer if it is running.
                 core.guidance.enabled = false;
 
-                core.attitude.AxisControl(false, false, false);
+                core.attitude.SetAxisControl(false, false, false);
                 return;
             }
 
@@ -602,7 +602,7 @@ namespace MuMech
             }
 
 
-            core.attitude.AxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
+            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
         }
     }
 

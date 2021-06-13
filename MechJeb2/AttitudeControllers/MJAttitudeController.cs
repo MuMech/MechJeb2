@@ -181,7 +181,7 @@ namespace MuMech.AttitudeControllers
                 rotDirection.x * UtilMath.Deg2Rad
             );
 
-            error.Scale(ac.AxisState);
+            error.Scale(ac.AxisControl);
 
             Vector3d err = error + ac.inertia;
             err = new Vector3d(

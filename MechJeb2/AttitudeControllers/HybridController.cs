@@ -87,7 +87,7 @@ namespace MuMech.AttitudeControllers
                     MuUtils.ClampRadiansPi(temp[1]) // yaw distance around the geodesic
                     );
 
-            phi.Scale(ac.AxisState);
+            phi.Scale(ac.AxisControl);
 
             if (useInertia)
                 phi -= ac.inertia;

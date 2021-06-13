@@ -89,7 +89,7 @@ namespace MuMech
 
             bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
 
-            core.attitude.AxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
+            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
 
             if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
