@@ -55,7 +55,7 @@ namespace MuMech
 
         private int _lastNonZeroStages = -1;
 
-        // FIXME: this should be moved to OnFixedUpdate() and made to run before the GuidanceController
+        // FIXME: this is no longer worth being a computer module, its just a sub-part of the GuidanceController
         public void Update()
         {
             core.stageStats.RequestUpdate(this, true);
