@@ -180,7 +180,7 @@ namespace MuMech
 
             bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
 
-            core.attitude.AxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
+            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
 
             if (!liftedOff) {
                 status = Localizer.Format("#MechJeb_Ascent_status12");//"Awaiting liftoff"

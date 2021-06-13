@@ -295,7 +295,7 @@ namespace MuMech
                             {
                                 Engage(false);
                             }
-                            core.attitude.AxisControl(forcePitch, forceYaw, forceRol);
+                            core.attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         } else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE)
                         {
                             bool changed = false;
@@ -367,7 +367,7 @@ namespace MuMech
                             {
                                 Engage(false);
                             }
-                            core.attitude.AxisControl(forcePitch, forceYaw, forceRol);
+                            core.attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
                         break;
                     case Mode.TARGET:

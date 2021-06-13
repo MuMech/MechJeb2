@@ -164,6 +164,8 @@ namespace MuMech.AttitudeControllers
                     _actuation[i] = 0;
 
             act = _actuation;
+
+            act.Scale(ac.AxisControl);
         }
 
         private void UpdateError()
@@ -199,7 +201,7 @@ namespace MuMech.AttitudeControllers
             );
 
             // apply the axis control from the parent controller
-            phi.Scale(ac.AxisState);
+            phi.Scale(ac.AxisControl);
 
             // the error in the ship's position is the negative of the reference position in the ship frame
             _error0 = -phi;

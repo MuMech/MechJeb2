@@ -42,7 +42,7 @@ namespace MuMech
 
         protected AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
 
-        protected Vector3d _axisControl = Vector3d.one;
+        public Vector3d AxisControl { get; private set; } = Vector3d.one;
 
         public BaseAttitudeController Controller { get; protected set; }
         public List<BaseAttitudeController> controllers = new List<BaseAttitudeController>();
@@ -90,7 +90,7 @@ namespace MuMech
             {
                 if (Math.Abs(Vector3d.Angle(_attitudeTarget * Vector3d.forward, value * Vector3d.forward)) > 10)
                 {
-                    AxisControl(true, true, true);
+                    SetAxisControl(true, true, true);
                     attitudeChanged = true;
                 }
                 _attitudeTarget = value;
@@ -107,15 +107,9 @@ namespace MuMech
         {
             get
             {
-                return _axisControl.y > 0;
+                return AxisControl.y > 0;
             }
         }
-
-        public Vector3d AxisState
-        {
-            get { return new Vector3d(_axisControl.x, _axisControl.y, _axisControl.z); }
-        }
-
 
         //[Persistent(pass = (int)Pass.Global | (int)Pass.Type), ToggleInfoItem("Use stock SAS", InfoItem.Category.Vessel)]
         // Disable the use of Stock SAS for now
@@ -176,11 +170,10 @@ namespace MuMech
             }
         }
 
-        public void AxisControl(bool pitch, bool yaw, bool roll)
+        public void SetAxisControl(bool pitch, bool yaw, bool roll)
         {
-            _axisControl.x = pitch ? 1 : 0;
-            _axisControl.y = roll ? 1 : 0;
-            _axisControl.z = yaw ? 1 : 0;
+            AxisControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0
+            );
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
@@ -292,7 +285,7 @@ namespace MuMech
             users.Add(controller);
             attitudeReference = reference;
             attitudeTarget = attitude;
-            AxisControl(AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
+            SetAxisControl(AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
             return true;
         }
 
@@ -312,7 +305,7 @@ namespace MuMech
             }
             Vector3.OrthoNormalize(ref dir, ref up);
             attitudeTo(Quaternion.LookRotation(dir, up), reference, controller);
-            AxisControl(true, true, false);
+            SetAxisControl(true, true, false);
             return true;
         }
 
@@ -420,8 +413,6 @@ namespace MuMech
                 SetFlightCtrlState(act, deltaEuler, s, 1);
 
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
-
-                Controller.DrivePost(s);
 
                 // Feed the control torque to the differential throttle
                 if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)

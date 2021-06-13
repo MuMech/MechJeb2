@@ -55,7 +55,7 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label1"), GUILayout.ExpandWidth(true));//Axis Control
-                GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisState, "F0"), GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisControl, "F0"), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
