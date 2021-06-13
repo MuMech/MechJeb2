@@ -178,7 +178,7 @@ namespace MuMech
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90, core.guidance.heading);
 
-            bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.speedVertical.value > 1;
+            bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
 
             core.attitude.AxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
 

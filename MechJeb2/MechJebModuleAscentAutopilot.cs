@@ -573,7 +573,7 @@ namespace MuMech
                 }
             }
 
-            bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.speedVertical.value > 1;
+            bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
 
             double pitch = 90 - Vector3d.Angle(desiredThrustVector, vesselState.up);
 
