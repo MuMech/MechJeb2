@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MuMech.MathJ;
 
 namespace MuMech
 {
     public class Solution
     {
-        public double t0; // kerbal time
-        public double t_scale;
-        public double v_scale;
-        public double r_scale;
+        public  double t0; // kerbal time
+        private double t_scale;
+        private double v_scale;
+        private double r_scale;
 
         public Solution(double t_scale, double v_scale, double r_scale, double t0)
         {
@@ -37,14 +38,14 @@ namespace MuMech
         public double current_tgo(double t)
         {
             double tbar = (t - t0) / t_scale;
-            return (segments[0].tmax - tbar) * t_scale;
+            return (segments[0].Tmax - tbar) * t_scale;
         }
 
         public double tgo_bar(double tbar, int n) // tgo for each segment/arc in the solution
         {
-            if (tbar > segments[n].tmin)
-                return Math.Max(segments[n].tmax - tbar, 0);
-            return segments[n].tmax - segments[n].tmin;
+            if (tbar > segments[n].Tmin)
+                return Math.Max(segments[n].Tmax - tbar, 0);
+            return segments[n].Tmax - segments[n].Tmin;
         }
 
         public double tburn_bar(double tbar)
@@ -105,13 +106,13 @@ namespace MuMech
             int last = segments.Count - 1;
             if (arcs[last].coast)
                 // we do not include the time of a final coast in overall tgo/vgo
-                return segments[last].tmin;
-            return segments[last].tmax;
+                return segments[last].Tmin;
+            return segments[last].Tmax;
         }
 
         public double tmin() // normalized time
         {
-            return segments[0].tmin;
+            return segments[0].Tmin;
         }
 
         public double tbar(double t)
@@ -190,8 +191,8 @@ namespace MuMech
         public double dV(double t, int n)
         {
             double tbar = (t - t0) / t_scale;
-            double tmin = segments[n].tmin;
-            double tmax = segments[n].tmax;
+            double tmin = segments[n].Tmin;
+            double tmax = segments[n].Tmax;
 
             if (tbar > tmin)
                 tmin = tbar;
@@ -216,11 +217,11 @@ namespace MuMech
             for (int k = 0; k < segments.Count; k++)
             {
                 Segment s = segments[k];
-                if (tbar < s.tmax)
-                    return s.interpolate(i, tbar);
+                if (tbar < s.Tmax)
+                    return s.Interpolate(i, tbar);
             }
 
-            return segments[segments.Count - 1].interpolate(i, tbar);
+            return segments[segments.Count - 1].Interpolate(i, tbar);
         }
 
         public int           num_segments => segments.Count;
@@ -253,7 +254,7 @@ namespace MuMech
             for (int k = 0; k < segments.Count; k++)
             {
                 Segment s = segments[k];
-                if (tbar < s.tmax)
+                if (tbar < s.Tmax)
                     return k;
             }
 
@@ -266,67 +267,29 @@ namespace MuMech
             return arcs[segment(t)];
         }
 
-        // Synch stats from LogicalStageTracking controller
-        public void UpdateStageInfo(double t0)
-        {
-            for (int i = 0; i < arcs.Count; i++)
-                arcs[i].UpdateStageInfo(t0);
-        }
-
         public class Segment
         {
-            public double                       tmin, tmax;
-            public alglib.spline1dinterpolant[] interpolant = new alglib.spline1dinterpolant[14];
-            public double[]                     ysaved;
+            private readonly CN     _interpolant;
+            public readonly  double Tmin;
+            public readonly  double Tmax;
 
-            public double interpolate(int i, double tbar)
+            public double Interpolate(int i, double tbar)
             {
-                if (interpolant[i] != null)
-                    return alglib.spline1dcalc(interpolant[i], tbar);
-                return ysaved[i];
+                return _interpolant.Evaluate(tbar)[i];
             }
 
-            public Segment(List<double> t, List<double[]> y)
+            public Segment(CN interpolant)
             {
-                int n = t.Count;
-                double[] ti = new double[n];
-                double[][] yi = new double[14][];
+                _interpolant = interpolant;
 
-                tmin = t[0];
-                tmax = t[n - 1];
-
-                // if tmin == tmax (zero delta-t arc) alglib explodes
-                if (tmin != tmax)
-                {
-                    for (int i = 0; i < 14; i++)
-                        yi[i] = new double[n];
-
-                    int j2 = 0;
-
-                    for (int j = 0; j < n; j++)
-                    {
-                        if (j > 1 && Math.Abs(t[j] - ti[j2 - 1]) < 1e-15)
-                            continue;
-
-                        ti[j2] = t[j];
-                        for (int i = 0; i < 14; i++) yi[i][j2] = y[j][i];
-
-                        j2++;
-                    }
-
-                    for (int i = 0; i < 14; i++)
-                        alglib.spline1dbuildcubic(ti, yi[i], j2, 0, 0, 0, 0, out interpolant[i]);
-                }
-                else
-                {
-                    ysaved = y[0];
-                }
+                Tmin = interpolant.MinTime;
+                Tmax = interpolant.MaxTime;
             }
         }
 
-        public void AddSegment(List<double> t, List<double[]> y, Arc a)
+        public void AddSegment(CN interpolant, Arc a)
         {
-            segments.Add(new Segment(t, y));
+            segments.Add(new Segment(interpolant));
             arcs.Add(a);
         }
     }

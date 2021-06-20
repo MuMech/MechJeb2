@@ -51,7 +51,6 @@
     <Compile Include="AttitudeControllers\PIDLoop.cs" />
     <Compile Include="AttitudeControllers\TorquePI.cs" />
     <Compile Include="AutopilotModule.cs" />
-    <Compile Include="Brent.cs" />
     <Compile Include="CelestialBodyExtensions.cs" />
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="ComputerModule.cs" />
@@ -98,6 +97,18 @@
     <Compile Include="Maneuver\TimeSelector.cs" />
     <Compile Include="Maneuver\TransferCalculator.cs" />
     <Compile Include="MathExtensions.cs" />
+    <Compile Include="MathJ\AVL.cs" />
+    <Compile Include="MathJ\BrentMin.cs" />
+    <Compile Include="MathJ\BrentRoot.cs" />
+    <Compile Include="MathJ\CN.cs" />
+    <Compile Include="MathJ\Curve.cs" />
+    <Compile Include="MathJ\Event.cs" />
+    <Compile Include="MathJ\DormandPrince.cs" />
+    <Compile Include="MathJ\Functions.cs" />
+    <Compile Include="MathJ\ObjectPool.cs" />
+    <Compile Include="MathJ\ODE.cs" />
+    <Compile Include="MathJ\ODESolver.cs" />
+    <Compile Include="MathJ\Utils.cs" />
     <Compile Include="Matrix3x3d.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
@@ -158,7 +169,6 @@
     <Compile Include="MechjebBundlesManager.cs" />
     <Compile Include="ModExtensionDemo.cs" />
     <Compile Include="MuUtils.cs" />
-    <Compile Include="ODE.cs" />
     <Compile Include="OrbitExtensions.cs" />
     <Compile Include="OrbitalManeuverCalculator.cs" />
     <Compile Include="PIDController.cs" />
@@ -258,6 +268,10 @@
     <Reference Include="mscorlib">
     </Reference>
     <Reference Include="System">
+    </Reference>
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Core">
     </Reference>
