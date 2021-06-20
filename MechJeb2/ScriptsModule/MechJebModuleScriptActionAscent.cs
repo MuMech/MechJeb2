@@ -65,7 +65,7 @@ namespace MuMech
                     GUILayout.Label("GravityTurn™ ASCENT to " + (autopilot.desiredOrbitAltitude / 1000.0) + "km");
                     break;
                 case ascentType.PVG:
-                    GUILayout.Label("PVG ASCENT to " + (autopilot.desiredOrbitAltitude / 1000.0) + "x" + ((ascentPath as MechJebModuleAscentPVG).desiredApoapsis / 1000.0) + "km");
+                    GUILayout.Label("PVG ASCENT to " + (autopilot.desiredOrbitAltitude / 1000.0) + "x" + ((ascentPath as MechJebModuleAscentPVG).DesiredApoapsis / 1000.0) + "km");
                     break;
             }
 

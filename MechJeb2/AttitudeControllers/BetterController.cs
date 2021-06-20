@@ -164,8 +164,6 @@ namespace MuMech.AttitudeControllers
                     _actuation[i] = 0;
 
             act = _actuation;
-
-            act.Scale(ac.AxisControl);
         }
 
         private void UpdateError()
@@ -250,7 +248,6 @@ namespace MuMech.AttitudeControllers
                     if (useFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / minFlipTime);
                     _targetOmega[i] = MuUtils.Clamp(_targetOmega[i], -_maxOmega[i], _maxOmega[i]);
                 }
-
 
                 if (useControlRange && _errorTotal * Mathf.Rad2Deg > rollControlRange)
                     _targetOmega[1] = 0;

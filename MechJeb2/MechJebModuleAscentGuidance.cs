@@ -147,15 +147,15 @@ namespace MuMech
                     {
 
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label1"), autopilot.desiredOrbitAltitude, "km");//Target Periapsis
-                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label2"), pvgascent.desiredApoapsis, "km");//Target Apoapsis:
+                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label2"), pvgascent.DesiredApoapsis, "km");//Target Apoapsis:
 
                         GUILayout.BeginHorizontal();
-                        pvgascent.attachAltFlag = GUILayout.Toggle(pvgascent.attachAltFlag, Localizer.Format("#MechJeb_Ascent_attachAlt"));//Attach Altitude:
-                        pvgascent.desiredAttachAlt.text = GUILayout.TextField(pvgascent.desiredAttachAlt.text);
+                        pvgascent.AttachAltFlag = GUILayout.Toggle(pvgascent.AttachAltFlag, Localizer.Format("#MechJeb_Ascent_attachAlt"));//Attach Altitude:
+                        pvgascent.DesiredAttachAlt.text = GUILayout.TextField(pvgascent.DesiredAttachAlt.text);
                         GUILayout.Label("km", GUILayout.ExpandWidth(false));
                         GUILayout.EndHorizontal();
 
-                        if ( pvgascent.desiredApoapsis >= 0 && pvgascent.desiredApoapsis < autopilot.desiredOrbitAltitude )
+                        if ( pvgascent.DesiredApoapsis >= 0 && pvgascent.DesiredApoapsis < autopilot.desiredOrbitAltitude )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.yellow;
@@ -163,9 +163,9 @@ namespace MuMech
                         }
                         else
                         {
-                            if ( pvgascent.attachAltFlag )
+                            if ( pvgascent.AttachAltFlag )
                             {
-                                if ( pvgascent.desiredAttachAlt > pvgascent.desiredApoapsis )
+                                if ( pvgascent.DesiredAttachAlt > pvgascent.DesiredApoapsis )
                                 {
                                     GUIStyle s = new GUIStyle(GUI.skin.label);
                                     s.normal.textColor = XKCDColors.Orange;
@@ -173,15 +173,15 @@ namespace MuMech
                                 }
                             }
                         }
-                        if ( pvgascent.desiredApoapsis < 0 )
+                        if ( pvgascent.DesiredApoapsis < 0 )
                         {
                             GUIStyle s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = XKCDColors.Orange;
                             GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label4"), s);//Hyperbolic target orbit (neg Ap)
                         }
-                        if ( pvgascent.attachAltFlag )
+                        if ( pvgascent.AttachAltFlag )
                         {
-                            if ( pvgascent.desiredAttachAlt < autopilot.desiredOrbitAltitude )
+                            if ( pvgascent.DesiredAttachAlt < autopilot.desiredOrbitAltitude )
                             {
                                 GUIStyle s = new GUIStyle(GUI.skin.label);
                                 s.normal.textColor = XKCDColors.Orange;
@@ -228,8 +228,15 @@ namespace MuMech
                     else if (ascentPathIdx == ascentType.PVG)
                     {
                         GUILayout.BeginVertical();
-                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label13"), pvgascent.pitchStartVelocity, "m/s");//Booster Pitch start:
-                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label14"), pvgascent.pitchRate, "°/s");//Booster Pitch rate:
+                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label13"), pvgascent.PitchStartVelocity, "m/s");//Booster Pitch start:
+                        GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label14"), pvgascent.PitchRate, "°/s");//Booster Pitch rate:
+                        GuiUtils.SimpleTextBox("Q Trigger:", pvgascent.DynamicPressureTrigger, "kPa");
+
+                        GUILayout.BeginHorizontal();
+                        pvgascent.StagingTriggerFlag  = GUILayout.Toggle(pvgascent.StagingTriggerFlag,"PVG After Stage:");
+                        pvgascent.StagingTrigger.text = GUILayout.TextField(pvgascent.StagingTrigger.text);
+                        GUILayout.EndHorizontal();
+
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label15"), core.guidance.pvgInterval, "s");//Guidance Interval:
                         if ( core.guidance.pvgInterval < 1 || core.guidance.pvgInterval > 30 )
                         {
@@ -250,7 +257,7 @@ namespace MuMech
                             else
                                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label20"), s);//Qα limit is recommended to be 1000 to 4000 Pa-rad
                         }
-                        pvgascent.omitCoast = GUILayout.Toggle(pvgascent.omitCoast, Localizer.Format("#MechJeb_Ascent_checkbox1"));//Omit Coast
+                        pvgascent.OmitCoast = GUILayout.Toggle(pvgascent.OmitCoast, Localizer.Format("#MechJeb_Ascent_checkbox1"));//Omit Coast
                         GUILayout.EndVertical();
                     }
                 }
