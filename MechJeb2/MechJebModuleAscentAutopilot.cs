@@ -23,10 +23,10 @@ namespace MuMech
         // this is the public API for ascentPathIdx which is enum type and does wiring
         public ascentType ascentPathIdxPublic {
             get {
-                return (ascentType) this.ascentPathIdx;
+                return (ascentType) ascentPathIdx;
             }
             set {
-                this.ascentPathIdx = (int) value;
+                ascentPathIdx = (int) value;
                 doWiring();
             }
         }
@@ -76,7 +76,7 @@ namespace MuMech
                 _autostage = value;
                 if (changed)
                 {
-                    if (_autostage && this.enabled) core.staging.users.Add(this);
+                    if (_autostage && enabled) core.staging.users.Add(this);
                     if (!_autostage) core.staging.users.Remove(this);
                 }
             }
@@ -334,7 +334,7 @@ namespace MuMech
         {
             if (!vessel.patchedConicsUnlocked() || skipCircularization)
             {
-                this.users.Clear();
+                users.Clear();
                 return;
             }
 
@@ -349,7 +349,7 @@ namespace MuMech
                     if (recorder != null) launchLANDifference = vesselState.orbitLAN - recorder.markLAN;
 
                     //finished circularize
-                    this.users.Clear();
+                    users.Clear();
                     return;
                 }
             }
@@ -423,8 +423,8 @@ namespace MuMech
         {
             if ( type == ascentType.CLASSIC )
                 return core.GetComputerModule<MechJebModuleAscentClassicMenu>();
-            else
-                return null;
+
+            return null;
         }
 
     }
@@ -436,13 +436,11 @@ namespace MuMech
 
     public abstract class MechJebModuleAscentBase : ComputerModule
     {
-        public MechJebModuleAscentBase(MechJebCore core) : base(core) { }
+        protected MechJebModuleAscentBase(MechJebCore core) : base(core) { }
 
-        public string status { get; set; }
+        public string status { get; protected set; }
 
-        public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
-        private MechJebModuleStageStats stats { get { return core.GetComputerModule<MechJebModuleStageStats>(); } }
-        private FuelFlowSimulation.FuelStats[] vacStats { get { return stats.vacStats; } }
+        protected MechJebModuleAscentAutopilot autopilot => core.GetComputerModule<MechJebModuleAscentAutopilot>();
 
         public abstract bool DriveAscent(FlightCtrlState s);
 

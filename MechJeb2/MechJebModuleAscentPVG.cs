@@ -1,5 +1,6 @@
 using System;
 using KSP.Localization;
+using UnityEngine;
 
 /*
  * Optimized launches for RSS/RO
@@ -184,7 +185,10 @@ namespace MuMech
 
             bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
 
+            core.attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
             core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > autopilot.rollAltitude);
+
+            Debug.Log($"actuation control: {core.attitude.ActuationControl}");
 
             if (!liftedOff)
             {
