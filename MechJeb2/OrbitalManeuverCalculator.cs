@@ -79,9 +79,9 @@ namespace MuMech
                 maxDeltaV = Math.Abs(Vector3d.Dot(o.SwappedOrbitalVelocityAtUT(UT), burnDirection));
             }
 
-            BrentFun f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR;  };
+            Func<double, object?, double> f = delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR;  };
             double dV = 0;
-            try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null); }
+            try { dV = BrentRoot.Solve(f, minDeltaV, maxDeltaV, null); }
             catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
@@ -115,9 +115,9 @@ namespace MuMech
 
             // solve for the reciprocal of the ApR which is a continuous function that avoids the parabolic singularity and
             // change of sign for hyperbolic orbits.
-            BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0/newApR;  };
+            Func<double, object?, double> f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0/newApR;  };
             double dV = 0;
-            try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-8, out dV, out _, null); }
+            try { dV = BrentRoot.Solve(f, minDeltaV, maxDeltaV, null); }
             catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
@@ -350,12 +350,12 @@ namespace MuMech
             }
 
             burnUT = 0;
-            BrentFun f = delegate(double testTime, object ign) {
+            Func<double, object?, double> f = delegate(double testTime, object ign) {
                 double testApsisPhaseAngle;
                 DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, testTime, out testApsisPhaseAngle);
                 return testApsisPhaseAngle;
             };
-            try { Brent.Root(f, maxTime, minTime, 1e-8, out burnUT, out _, null); }
+            try { burnUT = BrentRoot.Solve(f, maxTime, minTime, null); }
             catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out _);
@@ -442,7 +442,7 @@ namespace MuMech
             burnUT = UT;
             Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime - burnUT);
 
-            // FIXME: replace with Brent's 1-d minimization algorithm
+            // FIXME: replace with BrentRoot's 1-d minimization algorithm
             const int fineness = 20;
             for (double step = 0.5; step < fineness; step += 1.0)
             {
@@ -1123,9 +1123,9 @@ namespace MuMech
 
             // solve for the reciprocal of the SMA which is a continuous function that avoids the parabolic singularity and
             // change of sign for hyperbolic orbits.
-            BrentFun f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - 1.0/newSMA;  };
+            Func<double, object?, double> f = delegate(double testDeltaV, object ign) { return 1.0/o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - 1.0/newSMA;  };
             double dV = 0;
-            try { Brent.Root(f, minDeltaV, maxDeltaV, 1e-4, out dV, out _, null); }
+            try { dV = BrentRoot.Solve(f, minDeltaV, maxDeltaV, null); }
             catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
 
             return dV * burnDirection;
@@ -1222,9 +1222,9 @@ namespace MuMech
         {
             if ( transfer.referenceBody != target.orbit.referenceBody )
                 throw new ArgumentException("[MechJeb] SOI_intercept: transfer orbit must be in the same SOI as the target celestial");
-            BrentFun f = delegate(double UT, object ign) { return ( transfer.getRelativePositionAtUT(UT) - target.orbit.getRelativePositionAtUT(UT) ).magnitude - target.sphereOfInfluence;  };
+            Func<double, object?, double> f = delegate(double UT, object ign) { return ( transfer.getRelativePositionAtUT(UT) - target.orbit.getRelativePositionAtUT(UT) ).magnitude - target.sphereOfInfluence;  };
             UT = 0;
-            try { Brent.Root(f, UT1, UT2, 1e-4, out UT, out _, null); }
+            try { UT = BrentRoot.Solve(f, UT1, UT2, null); }
             catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
         }
     }

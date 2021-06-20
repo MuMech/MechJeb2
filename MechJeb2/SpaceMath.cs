@@ -70,7 +70,7 @@ namespace MuMech
                 ref Vector3d vneg, ref Vector3d vpos, ref Vector3d r, ref double dt, bool debug = false)
         {
             double rot, dv;
-            BrentFun f = delegate(double testrot, object ign) {
+            Func<double, object?, double> f = delegate(double testrot, object ign) {
                 double dt = 0;
                 Vector3d vneg = new Vector3d();
                 Vector3d vpos = new Vector3d();
@@ -78,7 +78,7 @@ namespace MuMech
                 singleImpulseHyperbolicBurn(mu, r0, v0, v_inf, ref vneg, ref vpos, ref r, ref dt, (float)testrot, debug);
                 return (vpos - vneg).magnitude;
             };
-            Brent.Minimize(f, -30, 30, 1e-6, out rot, out dv, null);
+            BrentMin.Minimize(f, -30, 30, 1e-6, out rot, out dv, null);
             singleImpulseHyperbolicBurn(mu, r0, v0, v_inf, ref vneg, ref vpos, ref r, ref dt, (float)rot, debug);
         }
 

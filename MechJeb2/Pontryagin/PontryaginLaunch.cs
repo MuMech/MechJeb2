@@ -451,7 +451,7 @@ namespace MuMech {
             }
 
             Solution new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-            multipleIntegrate(y0, new_sol, arcs, 10);
+            multipleIntegrate(y0, new_sol, arcs);
 
             for(int i = arcs.Count - 1; i >= 0; i--)
             {
@@ -512,7 +512,7 @@ namespace MuMech {
             if (insertedCoast)
             {
                 new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-                multipleIntegrate(y0, new_sol, arcs, 10);
+                multipleIntegrate(y0, new_sol, arcs);
 
                 double coastlen = new_sol.tgo(new_sol.t0, arcs.Count-2); // human seconds
                 double coast_time = y0[arcIndex(arcs, arcs.Count-2, parameters: true)]; // normalized units
@@ -548,13 +548,13 @@ namespace MuMech {
             }
 
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-            multipleIntegrate(y0, new_sol, arcs, 10);
+            multipleIntegrate(y0, new_sol, arcs);
 
             this.solution = new_sol;
 
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs);
-            
+
             DebugLog($"PVG: arcs in solution after bootstrapping launch: {arcs}");
         }
 

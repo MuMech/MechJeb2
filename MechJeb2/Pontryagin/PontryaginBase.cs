@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using MuMech.MathJ;
 using UnityEngine;
 
 namespace MuMech
@@ -103,147 +104,122 @@ namespace MuMech
             v0_bar = this.v0 / v_scale;
         }
 
-        public void centralForceThrust(Span<double> y, double x, Span<double> dy, int n, object o)
+        private class VacuumThrustKernel<T> : ODE<T> where T : ODESolver, new()
         {
-            var arc = (Arc) o;
-            double At = arc.Thrust / (y[12] * g_bar);
-            if (arc.infinite) At = At * 2;
-            double r2 = y[0] * y[0] + y[1] * y[1] + y[2] * y[2];
-            double r = Math.Sqrt(r2);
-            double r3 = r2 * r;
-            double r5 = r3 * r2;
-            double pvm = Math.Sqrt(y[6] * y[6] + y[7] * y[7] + y[8] * y[8]);
-            double rdotpv = y[0] * y[6] + y[1] * y[7] + y[2] * y[8];
+            public override int N => 14;
+            public override int M => 0;
 
-            /* dr = v */
-            dy[0] = y[3];
-            dy[1] = y[4];
-            dy[2] = y[5];
-            /* dv = - r / r^3 + At * u */
-            dy[3] = -y[0] / r3 + At * y[6] / pvm;
-            dy[4] = -y[1] / r3 + At * y[7] / pvm;
-            dy[5] = -y[2] / r3 + At * y[8] / pvm;
-            /* dpv = - pr */
-            dy[6] = -y[9];
-            dy[7] = -y[10];
-            dy[8] = -y[11];
-            /* dpr = pv / r3 - 3 / r5 dot(r, pv) r */
-            dy[9]  = y[6] / r3 - 3 / r5 * rdotpv * y[0];
-            dy[10] = y[7] / r3 - 3 / r5 * rdotpv * y[1];
-            dy[11] = y[8] / r3 - 3 / r5 * rdotpv * y[2];
-            /* m = mdot */
-            dy[12] = arc.Thrust == 0 || arc.infinite ? 0 : -arc.Thrust / arc.c;
-            /* accumulated ∆v of the arc */
-            dy[13] = At;
+            public Arc    arc   { get; set; }
+            public double g_bar { get; set; }
+
+            protected override void dydt(double[] y, double x, double[] dy)
+            {
+                double At = arc.Thrust / (y[12] * g_bar);
+                if (arc.infinite) At = At * 2;
+                double r2 = y[0] * y[0] + y[1] * y[1] + y[2] * y[2];
+                double r = Math.Sqrt(r2);
+                double r3 = r2 * r;
+                double r5 = r3 * r2;
+                double pvm = Math.Sqrt(y[6] * y[6] + y[7] * y[7] + y[8] * y[8]);
+                double rdotpv = y[0] * y[6] + y[1] * y[7] + y[2] * y[8];
+
+                /* dr = v */
+                dy[0] = y[3];
+                dy[1] = y[4];
+                dy[2] = y[5];
+                /* dv = - r / r^3 + At * u */
+                dy[3] = -y[0] / r3 + At * y[6] / pvm;
+                dy[4] = -y[1] / r3 + At * y[7] / pvm;
+                dy[5] = -y[2] / r3 + At * y[8] / pvm;
+                /* dpv = - pr */
+                dy[6] = -y[9];
+                dy[7] = -y[10];
+                dy[8] = -y[11];
+                /* dpr = pv / r3 - 3 / r5 dot(r, pv) r */
+                dy[9]  = y[6] / r3 - 3 / r5 * rdotpv * y[0];
+                dy[10] = y[7] / r3 - 3 / r5 * rdotpv * y[1];
+                dy[11] = y[8] / r3 - 3 / r5 * rdotpv * y[2];
+                /* m = mdot */
+                dy[12] = arc.Thrust == 0 || arc.infinite ? 0 : -arc.Thrust / arc.c;
+                /* accumulated ∆v of the arc */
+                dy[13] = At;
+            }
         }
+
+        private readonly VacuumThrustKernel<DormandPrince> _integrator = new VacuumThrustKernel<DormandPrince>();
 
         private readonly double ckEps = 1e-6; /* matches Matlab's default 1e-6 ode45 reltol? */
 
         /* used to update y0 to yf without intermediate values */
-        public void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, ArcList arcs, ref double dV)
+        protected void singleIntegrate(double[] y0, double[] yf, int n, ref double t, double dt, ArcList arcs, ref double dV)
         {
-            singleIntegrate(y0, yf, null, n, ref t, dt, arcs, 2, ref dV);
+            singleIntegrate(y0, yf, null, n, ref t, dt, arcs, ref dV);
         }
 
         /* used to pull intermediate values off to do cubic spline interpolation */
-        public void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, ArcList arcs, int count, ref double dV)
+        protected void singleIntegrate(double[] y0, Solution sol, int n, ref double t, double dt, ArcList arcs, ref double dV)
         {
-            singleIntegrate(y0, null, sol, n, ref t, dt, arcs, count, ref dV);
+            singleIntegrate(y0, null, sol, n, ref t, dt, arcs, ref dV);
         }
 
-        public void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, ArcList arcs, int count, ref double dV)
+        private void singleIntegrate(double[] y0, double[] yf, Solution sol, int n, ref double t, double dt, ArcList arcs, ref double dV)
         {
             Arc e = arcs[n];
 
-            // gotta have at least a start and an end
-            if (count < 2)
-                count = 2;
-
-            double[] yi = new double[14];
-            Array.Copy(y0, arcIndex(arcs, n), yi, 0, 13);
-            yi[13] = dV;
+            double[] y = new double[14];
+            double[] y1 = new double[14];
+            Array.Copy(y0, arcIndex(arcs, n), y, 0, 13);
+            y[13] = dV;
 
             // fix the starting point to being r0_bar, v0_bar
             if (n == 0)
             {
-                yi[0] = r0_bar[0];
-                yi[1] = r0_bar[1];
-                yi[2] = r0_bar[2];
-                yi[3] = v0_bar[0];
-                yi[4] = v0_bar[1];
-                yi[5] = v0_bar[2];
+                y[0] = r0_bar[0];
+                y[1] = r0_bar[1];
+                y[2] = r0_bar[2];
+                y[3] = v0_bar[0];
+                y[4] = v0_bar[1];
+                y[5] = v0_bar[2];
             }
 
-            /*
-            if ( e.thrust > 0 )
-            {
-                // time to burn the entire stage
-                double tau = e.isp * g0 * y[12] / e.thrust / t_scale;
-
-                if ( dt > tau )
-                    Debug.Log("TAU EXCEEEDED!");
-                // clip dt at 99.9% of tau
-//                if ( dt > 0.999 * tau && !e.infinite )
-//                    dt = 0.999 * tau;
-            }
-            */
-
-            Span<double> xtbl = stackalloc double[count];
-            for (int i = 0; i < count; i++)
-                xtbl[i] = t + dt * i / (count - 1);
-
-            /*
-            // Chebyshev sampling
-            for(int k = 1; k < (count-1); k++)
-            {
-                int l = count - 2;
-                x[k] = t + 0.5 * dt  + 0.5 * dt * Math.Cos(Math.PI*(2*(l-k)+1)/(2*l));
-            }
-            // But also get the endpoints exactly
-            x[0] = t;
-            x[count-1] = t + dt;
-            */
-
-            List<double> xlist = null;
-            List<double[]> ylist = null;
+            CN interpolant = null;
 
             if (sol != null)
             {
-                ylist = new List<double[]>();
-                xlist = new List<double>();
+                interpolant = _integrator.GetInterpolant();
+                interpolant.Clear();
             }
 
-            // FIXME: remove this allocation by using a jagged span
-            double[][] ytbl = new double[14][];
-            for (int i = 0; i < 14; i++)
-                ytbl[i] = new double[count];
-
-            ODE.RKDP547FM(centralForceThrust, e, yi, 14, xtbl, ytbl, ckEps, 0, hmin: 1e-15, xlist: xlist, ylist: ylist);
+            _integrator.Integrator.Hmin     = 1e-15;
+            _integrator.Integrator.Accuracy = ckEps;
+            _integrator.arc                 = e;
+            _integrator.g_bar               = g_bar;
+            _integrator.Integrate(y, y1, t, t + dt, interpolant);
 
             t    = t + dt;
-            e.dV = (ytbl[13][count - 1] - dV) * v_scale;
-            dV   = ytbl[13][count - 1];
+            e.dV = (y1[13] - dV) * v_scale;
+            dV   = y1[13];
 
-            if (sol != null) sol.AddSegment(xlist, ylist, e);
+            if (sol != null) sol.AddSegment(interpolant, e);
 
             if (yf != null)
                 for (int i = 0; i < 13; i++)
                 {
                     int j = 13 * n + i;
-                    yf[j] = ytbl[i][1];
+                    yf[j] = y1[i];
                 }
         }
 
         // normal integration with no midpoints
-        public void multipleIntegrate(double[] y0, double[] yf, ArcList arcs, bool initialize = false)
+        protected void multipleIntegrate(double[] y0, double[] yf, ArcList arcs, bool initialize = false)
         {
             multipleIntegrate(y0, yf, null, arcs, initialize: initialize);
         }
 
         // for generating the interpolated chebyshev solution
-        public void multipleIntegrate(double[] y0, Solution sol, ArcList arcs, int count)
+        protected void multipleIntegrate(double[] y0, Solution sol, ArcList arcs)
         {
-            multipleIntegrate(y0, null, sol, arcs, count);
+            multipleIntegrate(y0, null, sol, arcs);
         }
 
         // copy the nth
@@ -259,7 +235,7 @@ namespace MuMech
 
         private bool overburning;
 
-        private void multipleIntegrate(double[] y0, double[] yf, Solution sol, ArcList arcs, int count = 2, bool initialize = false)
+        private void multipleIntegrate(double[] y0, double[] yf, Solution sol, ArcList arcs, bool initialize = false)
         {
             if (y0 == null)
                 Fatal("internal error - y0 is null");
@@ -284,15 +260,13 @@ namespace MuMech
 
                     if (yf != null)
                     {
-                        // normal integration with no midpoints
                         singleIntegrate(y0, yf, i, ref t, coast_time, arcs, ref dV);
                         if (initialize && i < arcs.Count - 1)
                             copy_yf_to_y0(y0, yf, i, arcs);
                     }
                     else
                     {
-                        // for generating the interpolated chebyshev solution
-                        singleIntegrate(y0, sol, i, ref t, coast_time, arcs, count, ref dV);
+                        singleIntegrate(y0, sol, i, ref t, coast_time, arcs, ref dV);
                     }
 
                     arcs[i].complete_burn = false;
@@ -315,7 +289,7 @@ namespace MuMech
                         else
                         {
                             // for generating the interpolated chebyshev solution
-                            singleIntegrate(y0, sol, i, ref t, tgo, arcs, count, ref dV);
+                            singleIntegrate(y0, sol, i, ref t, tgo, arcs, ref dV);
                         }
 
                         arcs[i].complete_burn = false;
@@ -333,7 +307,7 @@ namespace MuMech
                         else
                         {
                             // for generating the interpolated chebyshev solution
-                            singleIntegrate(y0, sol, i, ref t, arcs[i].MaxBtBar, arcs, count, ref dV);
+                            singleIntegrate(y0, sol, i, ref t, arcs[i].MaxBtBar, arcs, ref dV);
                         }
 
                         arcs[i].complete_burn =  true;
@@ -672,8 +646,8 @@ namespace MuMech
             arcs.Insert(i, new Arc(this, sol.t0, coast_after_jettison: true, coast: true));
             double[] y0_new = new double[arcIndex(arcs, arcs.Count)];
 
-            double tmin = sol.segments[i].tmin;
-            double dt = sol.segments[i].tmax - tmin;
+            double tmin = sol.segments[i].Tmin;
+            double dt = sol.segments[i].Tmax - tmin;
 
             // copy all the lower arcs
             Array.Copy(y0, 0, y0_new, 0, bottom);
@@ -697,8 +671,8 @@ namespace MuMech
             if (!arcs[i].coast)
                 throw new Exception("trying to update a non-coasting coast");
 
-            double tmin = sol.segments[i + 1].tmin;
-            double dt = sol.segments[i + 1].tmax - tmin;
+            double tmin = sol.segments[i + 1].Tmin;
+            double dt = sol.segments[i + 1].Tmax - tmin;
 
             y0[bottom]     = dt / 2.0;
             y0[bottom + 1] = 0.0;
@@ -833,7 +807,7 @@ namespace MuMech
 
                     var sol = new Solution(t_scale, v_scale, r_scale, t0);
 
-                    multipleIntegrate(y0, sol, last_arcs, 10);
+                    multipleIntegrate(y0, sol, last_arcs);
 
                     solution = sol;
 

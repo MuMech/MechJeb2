@@ -160,7 +160,7 @@ namespace MuMech {
             }
 
             Solution new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-            multipleIntegrate(y0, new_sol, arcs, 10);
+            multipleIntegrate(y0, new_sol, arcs);
 
             //Debug.Log("optimizer done");
             if ( new_sol.tgo(new_sol.t0, 0) < 0 )
@@ -183,7 +183,7 @@ namespace MuMech {
 
                 //Debug.Log("optimizer done");
                 new_sol = new Solution(t_scale, v_scale, r_scale, t0);
-                multipleIntegrate(y0, new_sol, arcs, 10);
+                multipleIntegrate(y0, new_sol, arcs);
             }
 
             //for(int k = 0; k < y0.Length; k++)
