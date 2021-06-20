@@ -76,7 +76,7 @@ namespace MuMech
             Arc arc = arcs[n];
             if (arc.ksp_stage < 0)
                 return string.Format("coast: {0:F1}s", tgo(t, n));
-            return string.Format("burn {0}: {1:F1}s {2:F1}m/s ({3:F1})", arc.ksp_stage, tgo(t, n), dV(t, n),
+            return string.Format("burn {0} ({1}): {2:F1}s {3:F1}m/s ({4:F1})", arc.rocket_stage+1, arc.ksp_stage, tgo(t, n), dV(t, n),
                 arc.AvailDV - dV(arc._synch_time, n));
         }
 
