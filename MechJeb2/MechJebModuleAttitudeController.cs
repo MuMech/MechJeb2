@@ -42,7 +42,9 @@ namespace MuMech
 
         private AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
 
-        public Vector3d AxisControl { get; private set; } = Vector3d.one;
+        public Vector3d AxisControl        { get; private set; } = Vector3d.one;
+        public Vector3d ActuationControl   { get; private set; } = Vector3d.one;
+        public Vector3d OmegaTarget        { get; private set; } = new Vector3d(double.NaN, double.NaN, double.NaN);
 
         public           BaseAttitudeController       Controller { get; private set; }
         private readonly List<BaseAttitudeController> _controllers = new List<BaseAttitudeController>();
@@ -59,6 +61,9 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             timeCount = 50;
+            SetAxisControl(true, true, true);
+            SetActuationControl(true, true, true);
+            SetOmegaTarget();
             Controller.OnModuleEnabled();
         }
 
@@ -144,8 +149,17 @@ namespace MuMech
 
         public void SetAxisControl(bool pitch, bool yaw, bool roll)
         {
-            AxisControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0
-            );
+            AxisControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0);
+        }
+
+        public void SetActuationControl(bool pitch, bool yaw, bool roll)
+        {
+            ActuationControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0);
+        }
+
+        public void SetOmegaTarget(double pitch = double.NaN, double yaw = double.NaN, double roll = double.NaN)
+        {
+            OmegaTarget = new Vector3d(pitch, yaw, roll);
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
@@ -368,6 +382,8 @@ namespace MuMech
                 Vector3d act;
                 Vector3d deltaEuler;
                 Controller.DrivePre(s, out act, out deltaEuler);
+
+                act.Scale(ActuationControl);
 
                 SetFlightCtrlState(act, deltaEuler, s, 1);
 

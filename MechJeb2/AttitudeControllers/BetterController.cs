@@ -230,27 +230,34 @@ namespace MuMech.AttitudeControllers
                 if (_maxAlpha[i] == 0)
                     _maxAlpha[i] = 1;
 
-                // the cube root scaling was determined mostly via experience
-                double maxAlphaCbrt = Math.Pow(_maxAlpha[i], 1.0 / 3.0);
-                double effLD = maxAlphaCbrt * PosFactor;
-                double posKp = Math.Sqrt(_maxAlpha[i] / (2 * effLD));
-
-                if (Math.Abs(error) <= 2 * effLD)
-                    // linear ramp down of acceleration
-                    _targetOmega[i] = -posKp * error;
-                else
-                    // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
-                    _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
-
-                if (useStoppingTime)
+                if (ac.OmegaTarget[i].IsFinite())
                 {
-                    _maxOmega[i] = _maxAlpha[i] * maxStoppingTime;
-                    if (useFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / minFlipTime);
-                    _targetOmega[i] = MuUtils.Clamp(_targetOmega[i], -_maxOmega[i], _maxOmega[i]);
+                    _targetOmega[i] = ac.OmegaTarget[i];
                 }
+                else
+                {
+                    // the cube root scaling was determined mostly via experience
+                    double maxAlphaCbrt = Math.Pow(_maxAlpha[i], 1.0 / 3.0);
+                    double effLD = maxAlphaCbrt * PosFactor;
+                    double posKp = Math.Sqrt(_maxAlpha[i] / (2 * effLD));
 
-                if (useControlRange && _errorTotal * Mathf.Rad2Deg > rollControlRange)
-                    _targetOmega[1] = 0;
+                    if (Math.Abs(error) <= 2 * effLD)
+                        // linear ramp down of acceleration
+                        _targetOmega[i] = -posKp * error;
+                    else
+                        // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
+                        _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
+
+                    if (useStoppingTime)
+                    {
+                        _maxOmega[i] = _maxAlpha[i] * maxStoppingTime;
+                        if (useFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / minFlipTime);
+                        _targetOmega[i] = MuUtils.Clamp(_targetOmega[i], -_maxOmega[i], _maxOmega[i]);
+                    }
+
+                    if (useControlRange && _errorTotal * Mathf.Rad2Deg > rollControlRange)
+                        _targetOmega[1] = 0;
+                }
 
                 _pid[i].Kp        = VelKp / (_maxAlpha[i] * warpFactor);
                 _pid[i].Ki        = VelKi / (_maxAlpha[i] * warpFactor * warpFactor);
@@ -271,6 +278,9 @@ namespace MuMech.AttitudeControllers
                     _actuation[i] = 0;
 
                 _targetTorque[i] = _actuation[i] / ac.torque[i];
+
+                if (ac.ActuationControl[i] == 0)
+                    Reset(i);
             }
 
             _error1 = _error0;
