@@ -550,9 +550,8 @@ namespace MuMech
             */
 
             var rep = new alglib.minlmreport();
-            alglib.minlmcreatev(y0.Length, y0, lmDiffStep,
-                out state); /* y0.Length must == z.Length returned by the BC function for square problems */
-            // alglib.minlmsetbc(state, bndl, bndu);
+            alglib.minlmcreatev(y0.Length, y0, lmDiffStep, out state);
+            //alglib.minlmsetbc(state, bndl, bndu);
             alglib.minlmsetcond(state, lmEpsx, lmIter);
             alglib.minlmoptimize(state, optimizationFunction, null, arcs);
 
@@ -695,7 +694,14 @@ namespace MuMech
             Array.Copy(y0, top, y0_new, bottom, y0_new.Length - bottom);
 
             y0 = y0_new;
-            yf = new double[arcs.Count * 13]; /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
+            yf = new double[arcs.Count * 13];
+
+            if (arcs[0].coast)
+            {
+                arcs[0].coast_after_jettison = false; /* we can't be after a jettison if we're first */
+                arcs[0].use_fixed_time2      = false; /* also can't have a fixed time when we're in the coast */
+            }
+
             multipleIntegrate(y0, yf, arcs, true);
         }
 
@@ -740,23 +746,8 @@ namespace MuMech
                     while (last_arcs[0].done)
                     {
                         DebugLog($"PVG: removing stage 0: {last_arcs[0]}");
-                        double[] y0_old = y0;
-                        last_arcs.RemoveAt(0);
-                        int new_upper_length = arcIndex(last_arcs, last_arcs.Count) - 2;
 
-                        // copy the upper N-1 arcs
-                        int start = y0_old.Length - new_upper_length;
-                        // neeed the upper N-1 arcs plus the 2 burntime parameters
-                        y0 = new double[new_upper_length + 2];
-                        // copy the 2 burntime parameters
-                        Array.Copy(y0_old, 0, y0, 0, 2);
-                        Array.Copy(y0_old, start, y0, 2, new_upper_length);
-
-                        if (last_arcs[0].coast)
-                        {
-                            last_arcs[0].coast_after_jettison = false; /* we can't be after a jettison if we're first */
-                            last_arcs[0].use_fixed_time2      = false; /* also can't have a fixed time when we're in the coast */
-                        }
+                        RemoveArc(last_arcs, 0, solution);
 
                         DebugLog($"PVG: arcs in solution after removing stage: {last_arcs}");
                     }
@@ -766,15 +757,6 @@ namespace MuMech
                         Fatal("Zero stages after shrinking rocket");
                         return;
                     }
-
-                    // fix up coast stage mass for boiloff
-                    // FIXME: this is now broken because m0 of a coast arc is always < 0 and coasts have no associated Stage
-                    // (does it matter? can this be deleted? coast stages don't care about mass)
-                    //for(int i = 0; i < last_arcs.Count; i++)
-                    //{
-                    //    if (last_arcs[i].thrust == 0 && last_arcs[i].m0 > 0 && i < last_arcs.Count - 1)
-                    //        last_arcs[i].stage.startMass = last_arcs[i+1].stage.startMass;
-                    //}
 
                     UpdateY0(last_arcs);
 
@@ -811,8 +793,7 @@ namespace MuMech
 
                     solution = sol;
 
-                    yf = new double[last_arcs.Count *
-                                    13]; /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
+                    yf = new double[last_arcs.Count * 13];
                     multipleIntegrate(y0, yf, last_arcs);
 
                     successful_converges += 1;
