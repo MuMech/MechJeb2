@@ -550,7 +550,7 @@ namespace MuMech {
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs);
 
-            this.solution = new_sol;
+            this.Solution = new_sol;
 
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs);

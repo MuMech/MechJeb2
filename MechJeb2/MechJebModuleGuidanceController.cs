@@ -30,8 +30,8 @@ namespace MuMech
         // this is a public setting to control autowarping
         public bool autowarp = false;
 
-        public Solution solution { get { return ( p != null ) ? p.solution : null; } }
-        public List<Arc> arcs { get { return ( solution != null) ? p.solution.arcs : null; } }
+        public Solution solution { get { return ( p != null ) ? p.Solution : null; } }
+        public List<Arc> arcs { get { return ( solution != null) ? p.Solution.arcs : null; } }
 
         public int successful_converges { get { return ( p != null ) ? p.successful_converges : 0; } }
         public int max_lm_iteration_count { get { return ( p != null ) ? p.max_lm_iteration_count : 0; } }
@@ -138,7 +138,7 @@ namespace MuMech
                 p.UpdatePosition(vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot, tgo, vgo);
             }
 
-            if ( p != null && p.solution != null && isTerminalGuidance() )
+            if ( p != null && p.Solution != null && isTerminalGuidance() )
             {
                 bool has_rcs = vessel.hasEnabledRCSModules(); // && ( vesselState.rcsThrustAvailable.up > 0 );
 
@@ -533,7 +533,7 @@ namespace MuMech
                 p.last_failure_cause = "Optimizer watchdog timeout"; // bit dirty poking other people's data
             }
 
-            if (p.solution == null)
+            if (p.Solution == null)
             {
                 /* we have a solver but no solution */
                 status = PVGStatus.INITIALIZING;
@@ -560,11 +560,11 @@ namespace MuMech
                 last_stage_time = vesselState.time;
             }
 
-            if ( p.solution != null )
+            if ( p.Solution != null )
             {
                 // The current_tgo is the "booster" stage of the solution, it is allowed to go negative, for staging freeze
                 // running the optimizer for 4 seconds on either side of staging.
-                if ( Math.Abs(p.solution.current_tgo(vesselState.time)) < 4 )
+                if ( Math.Abs(p.Solution.current_tgo(vesselState.time)) < 4 )
                     return;
 
                 // Also if we just triggered a KSP stage separation or just started coasting, then wait for 4 seconds for
@@ -581,7 +581,7 @@ namespace MuMech
             //if ( p.threadStart(vesselState.time) )
             //Debug.Log("MechJeb: started optimizer thread");
 
-            if (status == PVGStatus.INITIALIZING && p.solution != null)
+            if (status == PVGStatus.INITIALIZING && p.Solution != null)
                 status = PVGStatus.CONVERGED;
 
             last_optimizer_time = vesselState.time;
@@ -594,7 +594,7 @@ namespace MuMech
         // just go off of whatever the solution says for the current time.
         private bool actuallyCoasting()
         {
-            Arc current_arc = p.solution.arc(vesselState.time);
+            Arc current_arc = p.Solution.arc(vesselState.time);
 
             if ( last_burning_stage_complete && last_burning_stage <= vessel.currentStage )
                 return false;
@@ -603,7 +603,7 @@ namespace MuMech
 
         private void handle_throttle()
         {
-            if ( p == null || p.solution == null )
+            if ( p == null || p.Solution == null )
                 return;
 
             if ( !allow_execution )
@@ -615,7 +615,7 @@ namespace MuMech
                 return;
             }
 
-            Arc current_arc = p.solution.arc(vesselState.time);
+            Arc current_arc = p.Solution.arc(vesselState.time);
 
             if ( current_arc.Thrust != 0 )
             {
@@ -651,7 +651,7 @@ namespace MuMech
                     status = PVGStatus.BURNING;
                 }
 
-                core.staging.autostageLimitInternal = p.solution.terminal_burn_arc().ksp_stage;
+                core.staging.autostageLimitInternal = p.Solution.terminal_burn_arc().ksp_stage;
             }
         }
 
@@ -659,12 +659,12 @@ namespace MuMech
         private void update_pitch_and_heading()
         {
             // FIXME: if we have no solution update off of lambda + lambdaDot + last update time
-            if (p == null || p.solution == null)
+            if (p == null || p.Solution == null)
                 return;
 
             // if we're not flying yet, continuously update the t0 of the solution
             if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
-                p.solution.t0 = vesselState.time;
+                p.Solution.t0 = vesselState.time;
 
             if ( status == PVGStatus.TERMINAL_RCS )
             {
@@ -673,12 +673,12 @@ namespace MuMech
             }
             else
             {
-                lambda = p.solution.pv(vesselState.time);
-                lambdaDot = p.solution.pr(vesselState.time);
+                lambda = p.Solution.pv(vesselState.time);
+                lambdaDot = p.Solution.pr(vesselState.time);
                 iF = lambda.normalized;
-                p.solution.pitch_and_heading(vesselState.time, ref pitch, ref heading);
-                tgo = p.solution.tgo(vesselState.time);
-                vgo = p.solution.vgo(vesselState.time);
+                p.Solution.pitch_and_heading(vesselState.time, ref pitch, ref heading);
+                tgo = p.Solution.tgo(vesselState.time);
+                vgo = p.Solution.vgo(vesselState.time);
             }
         }
 

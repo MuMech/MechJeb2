@@ -188,8 +188,6 @@ namespace MuMech
             core.attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
             core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > autopilot.rollAltitude);
 
-            Debug.Log($"actuation control: {core.attitude.ActuationControl}");
-
             if (!liftedOff)
             {
                 status = Localizer.Format("#MechJeb_Ascent_status12"); //"Awaiting liftoff"
