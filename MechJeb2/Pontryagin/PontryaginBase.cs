@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Threading;
 using MuMech.MathJ;
 using UnityEngine;
@@ -81,7 +80,7 @@ namespace MuMech
         {
             // this is safe (and must be kept safe) to hammer on every tick and to not update
             // the current position while a guidance solution thread is currently running.
-            if (thread != null && thread.IsAlive)
+            if (_thread != null && _thread.IsAlive)
                 return;
 
             QuaternionD rot = QuaternionD.Inverse(Planetarium.fetch.rotation);
@@ -89,7 +88,7 @@ namespace MuMech
             v0      = rot * v0;
             this.r0 = r0;
             this.v0 = v0;
-            if (solution != null)
+            if (Solution != null)
             {
                 /* uhm, FIXME: this round trip is silly */
                 pv0      = rot * lambda;
@@ -213,7 +212,7 @@ namespace MuMech
         // normal integration with no midpoints
         protected void multipleIntegrate(double[] y0, double[] yf, ArcList arcs, bool initialize = false)
         {
-            multipleIntegrate(y0, yf, null, arcs, initialize: initialize);
+            multipleIntegrate(y0, yf, null, arcs, initialize);
         }
 
         // for generating the interpolated chebyshev solution
@@ -234,6 +233,7 @@ namespace MuMech
         }
 
         private bool overburning;
+        private int  activeBurns;
 
         private void multipleIntegrate(double[] y0, double[] yf, Solution sol, ArcList arcs, bool initialize = false)
         {
@@ -245,7 +245,10 @@ namespace MuMech
             double tgo = y0[0];
             double dV = 0;
 
+            // if we are burning past the current "top" of the rocket
             overburning = false;
+            // how many burn phases are currently active (some burns might have tgo = 0 but they'll get pruned next tick)
+            activeBurns = 0;
             for (int i = 0; i < arcs.Count; i++)
                 if (arcs[i].coast)
                 {
@@ -273,7 +276,8 @@ namespace MuMech
                 }
                 else
                 {
-                    if (tgo <= arcs[i].MaxBtBar || i == arcs.Count - 1) // FIXME?: we're still allowing overburning here
+                    activeBurns++;
+                    if (tgo <= arcs[i].MaxBtBar || i == arcs.Count - 1)
                     {
                         // overburning is handled as an "exception" that the caller needs to check
                         if (tgo > arcs[i].MaxBtBar && i == arcs.Count - 1)
@@ -628,8 +632,8 @@ namespace MuMech
                     y0[arcindex + 12] = arcs[i].M0; // update all stages for the m0 in stage stats (boiloff may update upper stages)
             }
 
-            if (solution != null)
-                y0[0] = solution.tburn_bar(0); // FIXME: need to pass actual t0 here
+            if (Solution != null)
+                y0[0] = Solution.tburn_bar(0); // FIXME: need to pass actual t0 here
             else
                 y0[0] = tgo_bar;
         }
@@ -711,18 +715,18 @@ namespace MuMech
         {
             ArcList last_arcs = null;
 
-            if (solution != null && y0 != null)
+            if (Solution != null && y0 != null)
             {
                 last_arcs = new ArcList();
-                for (int i = 0; i < solution.arcs.Count; i++)
+                for (int i = 0; i < Solution.arcs.Count; i++)
                 {
-                    Arc arc = solution.arcs[i];
+                    Arc arc = Solution.arcs[i];
                     arc.UpdateStageInfo(t0);         // FIXME: this has the effect of synch'ing the stage information to the solution
-                    last_arcs.Add(solution.arcs[i]); // shallow copy
-                    if (solution.tgo(t0, i) <= 0)    // this is responsible for skipping done coasts and anything else in the past
+                    last_arcs.Add(Solution.arcs[i]); // shallow copy
+                    if (Solution.tgo(t0, i) <= 0)    // this is responsible for skipping done coasts and anything else in the past
                     {
-                        DebugLog($"PVG marking stage {i} done: {solution.arcs[i]}");
-                        solution.arcs[i].done = true; // this has the side effect of marking the arc done in the existing solution
+                        DebugLog($"PVG marking stage {i} done: {Solution.arcs[i]}");
+                        Solution.arcs[i].done = true; // this has the side effect of marking the arc done in the existing solution
                     }
                 }
             }
@@ -747,7 +751,7 @@ namespace MuMech
                     {
                         DebugLog($"PVG: removing stage 0: {last_arcs[0]}");
 
-                        RemoveArc(last_arcs, 0, solution);
+                        RemoveArc(last_arcs, 0, Solution);
 
                         DebugLog($"PVG: arcs in solution after removing stage: {last_arcs}");
                     }
@@ -766,13 +770,15 @@ namespace MuMech
                         return;
                     }
 
+                    multipleIntegrate(y0, yf, last_arcs);
+
                     if (overburning)
-                        if (last_arcs.Count < stages.Count)
+                        if (activeBurns < stages.Count)
                         {
                             DebugLog("PVG: adding another available stage to the solution");
                             DebugLog($"PVG: arcs currently in solution: {last_arcs}");
                             DebugLog($"PVG: stages in rocket: {stages}");
-                            last_arcs.Add(new Arc(this, stage: stages[last_arcs.Count], t0: t0));
+                            last_arcs.Add(new Arc(this, stage: stages[activeBurns], t0: t0));
                             double[] y0_new = new double[arcIndex(last_arcs, last_arcs.Count)];
                             Array.Copy(y0, 0, y0_new, 0, y0.Length);
                             y0 = y0_new;
@@ -783,6 +789,7 @@ namespace MuMech
                                 Fatal("Optimzer failed after adjusting for overburning");
                                 return;
                             }
+
                             DebugLog($"PVG: arcs in solution after adding stage to top: {last_arcs}");
                         }
                     // else we should do something here
@@ -791,7 +798,7 @@ namespace MuMech
 
                     multipleIntegrate(y0, sol, last_arcs);
 
-                    solution = sol;
+                    Solution = sol;
 
                     yf = new double[last_arcs.Count * 13];
                     multipleIntegrate(y0, yf, last_arcs);
@@ -802,56 +809,49 @@ namespace MuMech
             }
             catch (alglib.alglibexception e)
             {
-                last_alglib_exception = e;
+                _lastAlglibException = e;
                 Fatal("Uncaught Alglib Exception (" + e.GetType().Name + "): " + e.Message + "; " + e.msg);
             }
             catch (Exception e)
             {
-                last_exception = e;
+                _lastException = e;
                 Fatal("Uncaught Exception (" + e.GetType().Name + "): " + e.Message);
             }
         }
 
-        public alglib.alglibexception last_alglib_exception;
-        public Exception              last_exception;
+        private alglib.alglibexception _lastAlglibException;
+        private Exception              _lastException;
 
-        public Solution solution;
+        public Solution Solution;
 
-        private Thread thread;
+        private Thread _thread;
 
-        // FIXME: still not using this, should it just be removed?
-        public void forceBootstrap()
-        {
-            KillThread();
-            y0 = null;
-        }
-
-        public double start_time;
+        private double _startTime;
 
         public double running_time(double t0)
         {
-            if (thread != null)
-                return t0 - start_time;
+            if (_thread != null)
+                return t0 - _startTime;
             return 0;
         }
 
         public bool threadStart(double t0)
         {
-            if (thread != null && thread.IsAlive) return false;
+            if (_thread != null && _thread.IsAlive) return false;
 
-            if (thread != null) thread.Abort();
+            if (_thread != null) _thread.Abort();
 
-            start_time = t0;
-            thread     = new Thread(() => Optimize(t0));
-            thread.Start();
+            _startTime = t0;
+            _thread    = new Thread(() => Optimize(t0));
+            _thread.Start();
             return true;
         }
 
         // FIXME: use the thread safe Debug.Log that is kicking around the MJ sources, didn't need to write this
 
         // Minimum viable message Queue
-        private readonly Queue logQueue = new Queue();
-        private readonly Mutex mut      = new Mutex();
+        private readonly Queue _logQueue = new Queue();
+        private readonly Mutex _logMutex = new Mutex();
 
         // NOTE: The Debug.Log() method is NOT THREADSAFE IN UNITY and causes CTD.
         //
@@ -860,9 +860,9 @@ namespace MuMech
         //
         protected void DebugLog(string s)
         {
-            mut.WaitOne();
-            logQueue.Enqueue(s);
-            mut.ReleaseMutex();
+            _logMutex.WaitOne();
+            _logQueue.Enqueue(s);
+            _logMutex.ReleaseMutex();
         }
 
         // Similarly we can't log fatal stacktraces to the log from the thread, so we have to save state
@@ -881,36 +881,36 @@ namespace MuMech
         //
         public void Janitorial()
         {
-            if (last_alglib_exception != null)
+            if (_lastAlglibException != null)
             {
-                alglib.alglibexception e = last_alglib_exception;
-                last_alglib_exception = null;
+                alglib.alglibexception e = _lastAlglibException;
+                _lastAlglibException = null;
                 Debug.Log("An exception occurred: " + e.GetType().Name);
                 Debug.Log("Message: " + e.Message);
                 Debug.Log("MSG: " + e.msg);
                 Debug.Log("Stack Trace:\n" + e.StackTrace);
             }
 
-            if (last_exception != null)
+            if (_lastException != null)
             {
-                Exception e = last_exception;
-                last_exception = null;
+                Exception e = _lastException;
+                _lastException = null;
                 Debug.Log("An exception occurred: " + e.GetType().Name);
                 Debug.Log("Message: " + e.Message);
                 Debug.Log("Stack Trace:\n" + e.StackTrace);
             }
 
-            mut.WaitOne();
-            while (logQueue.Count > 0) Debug.Log((string) logQueue.Dequeue());
-            mut.ReleaseMutex();
+            _logMutex.WaitOne();
+            while (_logQueue.Count > 0) Debug.Log((string) _logQueue.Dequeue());
+            _logMutex.ReleaseMutex();
         }
 
         // Does what it says on the tin.
         //
         public void KillThread()
         {
-            if (thread != null)
-                thread.Abort();
+            if (_thread != null)
+                _thread.Abort();
         }
     }
 }

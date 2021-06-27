@@ -189,7 +189,7 @@ namespace MuMech {
             //for(int k = 0; k < y0.Length; k++)
                 //Debug.Log("new y0[" + k + "] = " + y0[k]);
 
-            this.solution = new_sol;
+            this.Solution = new_sol;
             //Debug.Log("done with bootstrap");
         }
     }
