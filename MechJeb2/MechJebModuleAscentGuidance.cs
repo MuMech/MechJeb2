@@ -258,8 +258,8 @@ namespace MuMech
                                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label20"), s);//Qα limit is recommended to be 1000 to 4000 Pa-rad
                         }
                         GUILayout.BeginHorizontal();
-                        pvgascent.fixedCoast  = GUILayout.Toggle(pvgascent.fixedCoast,"Fixed Coast Length:");
-                        pvgascent.fixedCoastLength.text = GUILayout.TextField(pvgascent.fixedCoastLength.text);
+                        pvgascent.FixedCoast  = GUILayout.Toggle(pvgascent.FixedCoast,"Fixed Coast Length:");
+                        pvgascent.FixedCoastLength.text = GUILayout.TextField(pvgascent.FixedCoastLength.text);
                         GUILayout.EndHorizontal();
                         GUILayout.EndVertical();
                     }
