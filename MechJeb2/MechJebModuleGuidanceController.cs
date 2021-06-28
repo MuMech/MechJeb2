@@ -221,7 +221,7 @@ namespace MuMech
         double old_numStages;
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle4constraint(double rT, double vT, double inc, double gamma, double sma, bool omitCoast, bool targetInc)
+        public void flightangle4constraint(double rT, double vT, double inc, double gamma, double sma, double fixedCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -238,7 +238,7 @@ namespace MuMech
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle4constraint, rT: " + rT + " vT:" + vT + " inc:" + inc + " gamma:" + gamma);
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
+                solver.fixedCoast = fixedCoast;
                 solver.flightangle4constraint(rT, vT, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad);
                 p = solver;
             }
@@ -250,7 +250,7 @@ namespace MuMech
         }
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle5constraint(double rT, double vT, double inc, double gamma, double LAN, double sma, bool omitCoast, bool targetInc, bool targetLAN)
+        public void flightangle5constraint(double rT, double vT, double inc, double gamma, double LAN, double sma, double fixedCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -268,7 +268,7 @@ namespace MuMech
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle5constraint, rT: " + rT + " vT:" + vT + " inc:" + inc + " gamma:" + gamma + " LAN:" + LAN + " sma: " + sma);
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
+                solver.fixedCoast = fixedCoast;
                 solver.flightangle5constraint(rT, vT, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad);
                 p = solver;
             }
@@ -302,7 +302,7 @@ namespace MuMech
             return new PontryaginLaunch(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: lambda, dV: approximateDeltaV(sma));
         }
 
-        public void keplerian3constraint(double sma, double ecc, double inc, bool omitCoast, bool targetInc)
+        public void keplerian3constraint(double sma, double ecc, double inc, double fixedCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -326,7 +326,7 @@ namespace MuMech
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian3constraint");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
+                solver.fixedCoast = fixedCoast;
                 solver.keplerian3constraint(sma, ecc, inc * UtilMath.Deg2Rad);
                 p = solver;
             }
@@ -336,7 +336,7 @@ namespace MuMech
             old_inc = inc;
         }
 
-        public void keplerian4constraintArgPfree(double sma, double ecc, double inc, double LAN, bool omitCoast, bool targetInc, bool targetLAN)
+        public void keplerian4constraintArgPfree(double sma, double ecc, double inc, double LAN, double fixedCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -364,7 +364,7 @@ namespace MuMech
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian4constraintArgPfree");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
+                solver.fixedCoast = fixedCoast;
                 solver.keplerian4constraintArgPfree(sma, ecc, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad);
                 p = solver;
             }
@@ -375,7 +375,7 @@ namespace MuMech
             old_LAN = LAN;
         }
 
-        public void keplerian5constraint(double sma, double ecc, double inc, double LAN, double ArgP, bool omitCoast, bool currentInc)
+        public void keplerian5constraint(double sma, double ecc, double inc, double LAN, double ArgP, double fixedCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -399,7 +399,7 @@ namespace MuMech
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian5constraint");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
+                solver.fixedCoast = fixedCoast;
                 solver.keplerian5constraint(sma, ecc, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad, ArgP * UtilMath.Deg2Rad);
                 p = solver;
             }
@@ -412,7 +412,7 @@ namespace MuMech
         }
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle3constraintMAXE(double rTm, double gamma, double inc, int numStages, double sma, bool omitCoast, bool currentInc)
+        public void flightangle3constraintMAXE(double rTm, double gamma, double inc, int numStages, double sma, double fixedCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -433,7 +433,7 @@ namespace MuMech
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle3constraintMAXE");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
+                solver.fixedCoast = fixedCoast;
                 solver.flightangle3constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, numStages);
                 p = solver;
             }
@@ -445,7 +445,7 @@ namespace MuMech
         }
 
         // sma is only used for the initial guess but it is the responsibility of the caller
-        public void flightangle4constraintMAXE(double rTm, double gamma, double inc, double LAN, int numStages, double sma, bool omitCoast, bool currentInc)
+        public void flightangle4constraintMAXE(double rTm, double gamma, double inc, double LAN, int numStages, double sma, double fixedCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
                 return;
@@ -466,7 +466,7 @@ namespace MuMech
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle3constraintMAXE");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
-                solver.omitCoast = omitCoast;
+                solver.fixedCoast = fixedCoast;
                 solver.flightangle4constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad, numStages);
                 p = solver;
             }

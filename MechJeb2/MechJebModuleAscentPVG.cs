@@ -33,7 +33,10 @@ namespace MuMech
         public readonly EditableInt StagingTrigger = new EditableInt(1);
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        public bool OmitCoast = false;
+        public bool fixedCoast = false;
+
+        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        public readonly EditableDouble fixedCoastLength = new EditableDouble(0);
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         public bool AttachAltFlag = false;
@@ -160,19 +163,21 @@ namespace MuMech
                 lanflag = true;
             }
 
+            double coastLen = fixedCoast && fixedCoastLength > 0  ? fixedCoastLength : -1;
+
             if (lanflag)
             {
                 if (ecc < 1e-4 || AttachAltFlag)
-                    core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, OmitCoast, false, true);
+                    core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, coastLen, false, true);
                 else
-                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, OmitCoast, false, true);
+                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, coastLen, false, true);
             }
             else
             {
                 if (ecc < 1e-4 || AttachAltFlag)
-                    core.guidance.flightangle4constraint(rT, vT, inclination, gammaT, sma, OmitCoast, false);
+                    core.guidance.flightangle4constraint(rT, vT, inclination, gammaT, sma, coastLen, false);
                 else
-                    core.guidance.keplerian3constraint(sma, ecc, inclination, OmitCoast, false);
+                    core.guidance.keplerian3constraint(sma, ecc, inclination, coastLen, false);
             }
         }
 
