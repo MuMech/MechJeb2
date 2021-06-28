@@ -163,7 +163,9 @@ namespace MuMech
                 lanflag = true;
             }
 
-            double coastLen = FixedCoast && FixedCoastLength > 0  ? FixedCoastLength : -1;
+            double coastLen = FixedCoast ? FixedCoastLength : -1;
+            if (FixedCoast && FixedCoastLength < 0)
+                coastLen = 0;
 
             if (lanflag)
             {
