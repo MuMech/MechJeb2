@@ -33,10 +33,10 @@ namespace MuMech
         public readonly EditableInt StagingTrigger = new EditableInt(1);
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        public bool fixedCoast = false;
+        public bool FixedCoast = true;
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
-        public readonly EditableDouble fixedCoastLength = new EditableDouble(0);
+        public readonly EditableDouble FixedCoastLength = new EditableDouble(0);
 
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         public bool AttachAltFlag = false;
@@ -163,7 +163,7 @@ namespace MuMech
                 lanflag = true;
             }
 
-            double coastLen = fixedCoast && fixedCoastLength > 0  ? fixedCoastLength : -1;
+            double coastLen = FixedCoast && FixedCoastLength > 0  ? FixedCoastLength : -1;
 
             if (lanflag)
             {
