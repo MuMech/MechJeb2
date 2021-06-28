@@ -639,30 +639,40 @@ namespace MuMech
         }
 
         /* insert coast before the ith stage */
-        protected void InsertCoast(ArcList arcs, int i, Solution sol)
+        protected void InsertCoast(ArcList arcs, int i, Solution sol, double fixedLength = -1)
         {
-            int bottom = arcIndex(arcs, i, true);
-
             if (arcs[i].coast)
                 throw new Exception("adding a coast before a coast");
 
-            arcs.Insert(i, new Arc(this, sol.t0, coast_after_jettison: true, coast: true));
+            Arc arc;
+
+            if (fixedLength < 0)
+                arc = new Arc(this, sol.t0)
+                {
+                    coast_after_jettison = true,
+                    coast = true
+                };
+            else
+                arc = new Arc(this, sol.t0)
+                {
+                    use_fixed_time2 = true,
+                    coast           = true,
+                    fixed_time      = fixedLength,
+                    fixed_tbar      = fixedLength / t_scale
+                };
+
+            arcs.Insert(i, arc);
             double[] y0_new = new double[arcIndex(arcs, arcs.Count)];
 
-            double tmin = sol.segments[i].Tmin;
-            double dt = sol.segments[i].Tmax - tmin;
-
+            int bottom = arcIndex(arcs, i, true);
             // copy all the lower arcs
             Array.Copy(y0, 0, y0_new, 0, bottom);
             // initialize the coast
-            //y0_new[bottom] = Math.Asin(MuUtils.Clamp(0.5 / MAX_COAST_TAU - 1, -1, 1));
-            y0_new[bottom] = y0[0]; // dt/2.0;
-            // keep the burntime of the upper stage constant
-            y0_new[0] = y0[0]; // - dt/2.0;
+            y0_new[bottom] = fixedLength < 0 ? y0[0] : fixedLength;
 
             // FIXME: copy the rest of the parameters for upper stage coasts
             y0 = y0_new;
-            yf = new double[arcs.Count * 13]; /* somewhat confusingly y0 contains the state, costate and parameters, while yf omits the parameters */
+            yf = new double[arcs.Count * 13];
             multipleIntegrate(y0, yf, arcs, true);
         }
 

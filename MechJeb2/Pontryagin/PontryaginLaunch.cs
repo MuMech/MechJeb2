@@ -10,7 +10,7 @@ namespace MuMech {
         {
         }
 
-        public bool omitCoast;
+        public double fixedCoast;
 
         double rTm;
         double vTm;
@@ -443,7 +443,6 @@ namespace MuMech {
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs, initialize: true);
 
-
             if ( !runOptimizer(arcs) )
             {
                 Fatal("Target is unreachable even with infinite ISP");
@@ -464,9 +463,14 @@ namespace MuMech {
 
             bool insertedCoast = false;
 
-            if (arcs.Count > 1 && !omitCoast)
+            if (arcs.Count > 1 && fixedCoast < 0)
             {
                 InsertCoast(arcs, arcs.Count-1, new_sol);
+                insertedCoast = true;
+            }
+            if (fixedCoast > 0)
+            {
+                InsertCoast(arcs, arcs.Count - 1, new_sol, fixedCoast);
                 insertedCoast = true;
             }
             arcs[arcs.Count-1].infinite = false;
@@ -515,8 +519,6 @@ namespace MuMech {
                 multipleIntegrate(y0, new_sol, arcs);
 
                 double coastlen = new_sol.tgo(new_sol.t0, arcs.Count-2); // human seconds
-                double coast_time = y0[arcIndex(arcs, arcs.Count-2, parameters: true)]; // normalized units
-                double max_coast_time = Math.PI / 5.0; // 36 degrees
 
                 if ( coastlen < 1 )
                 {
@@ -530,27 +532,12 @@ namespace MuMech {
                         return;
                     }
                 }
-                else if ( coast_time > max_coast_time )
-                {
-                    DebugLog("optimium coast exceeded maximum normalized time (roughly 1/4 of an arc around the planet) and was truncated.");
-                    arcs[arcs.Count-2].use_fixed_time2 = true;
-                    arcs[arcs.Count-2].fixed_time = max_coast_time * t_scale;
-                    arcs[arcs.Count-2].fixed_tbar = max_coast_time;
-                    y0[arcIndex(arcs, arcs.Count-2, parameters: true)] = max_coast_time;
-                    multipleIntegrate(y0, yf, arcs, initialize: true);
-                    if ( !runOptimizer(arcs) )
-                    {
-                        Fatal("Optimizer exploded after truncating long coast (weird)");
-                        y0 = null;
-                        return;
-                    }
-                }
             }
 
             new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs);
 
-            this.Solution = new_sol;
+            Solution = new_sol;
 
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs);
