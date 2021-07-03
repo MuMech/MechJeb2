@@ -30,7 +30,7 @@ namespace MuMech
             _nodeLookup.Clear();
             _partLookup.Clear();
 
-            Part negOnePart = parts[0];
+            Part negOnePart = null;
 
             // initial parts scan, construct the nodes and lookup tables, and choose our root part
             for (int index = 0; index < parts.Count; index++)
