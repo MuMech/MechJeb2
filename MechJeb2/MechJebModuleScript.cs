@@ -188,20 +188,19 @@ namespace MuMech
 		public void LoadScriptModuleConfig()
 		{
 			string slotName = this.getSaveSlotName(false);
-			if (File.Exists<MechJebCore>("mechjeb_settings_script_" + slotName + "_conf.cfg"))
-			{
-				ConfigNode node = null;
-				try
-				{
-					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_conf.cfg"));
-				}
-				catch (Exception e)
-				{
-					Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + slotName + "_conf.cfg: " + e);
-				}
-				if (node == null) return;
-
-				ConfigNode.LoadObjectFromConfig(this, node);
+            try
+            {
+                if (File.Exists<MechJebCore>("mechjeb_settings_script_" + slotName + "_conf.cfg"))
+                {
+                    ConfigNode node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_conf.cfg"));
+                    if (node == null) return;
+                    ConfigNode.LoadObjectFromConfig(this, node);
+                }
+            }
+            catch (Exception e)
+            {
+				Debug.LogError("MechJebModuleScript.LoadConfig caught an exception trying to load mechjeb_settings_script_" + slotName + "_conf.cfg: " + e);
+                return;
 			}
 			this.updateScriptsNames();
 		}
