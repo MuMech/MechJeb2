@@ -60,6 +60,15 @@ namespace MuMech.MathJ
         public static double AnimationCurveInterpolant(double x1, double y1, double yp1, double wt1, double x2, double y2, double yp2, double wt2,
             double x)
         {
+            // gracefully handle interpolants with a single node
+            if (x1 == x2)
+            {
+                // this looks backwards but it isn't
+                if (x <= x1)
+                    return y2 + (x - x2) * yp2;
+                return y1 + (x - x2) * yp1;
+            }
+
             double dx = x2 - x1;
             x = (x - x1) / dx;
             double dy = y2 - y1;
@@ -74,6 +83,15 @@ namespace MuMech.MathJ
 
         public static Vector3d AnimationCurveInterpolant(double x1, Vector3d y1, Vector3d yp1, double wt1, double x2, Vector3d y2, Vector3d yp2, double wt2, double x)
         {
+            // gracefully handle interpolants with a single node
+            if (x1 == x2)
+            {
+                // this looks backwards but it isn't
+                if (x <= x1)
+                    return y2 + (x - x2) * yp2;
+                return y1 + (x - x2) * yp1;
+            }
+
             double dx = x2 - x1;
             x = (x - x1) / dx;
             Vector3d dy = y2 - y1;
@@ -89,6 +107,26 @@ namespace MuMech.MathJ
         public static void AnimationCurveInterpolant(int n, double x1, double[] y1, double[] yp1, double wt1, double x2, double[] y2, double[] yp2,
             double wt2, double x, double[] y)
         {
+            // gracefully handle interpolants with a single node
+            if (x1 == x2)
+            {
+                // this looks backwards but it isn't
+                if (x <= x1)
+                {
+                    for (int i = 0; i < n; i++)
+                    {
+                        y[i] = y2[i] + (x - x2) * yp2[i];
+                    }
+                    return;
+                }
+
+                for (int i = 0; i < n; i++)
+                {
+                    y[i] = y1[i] + (x - x2) * yp1[i];
+                }
+                return;
+            }
+
             double dx = x2 - x1;
             double xs = (x - x1) / dx;
 

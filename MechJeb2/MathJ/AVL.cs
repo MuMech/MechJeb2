@@ -228,11 +228,10 @@ namespace MuMech.MathJ
             if (_lastRight == null)
             {
                 _lastRight = _lastLeft;
-                _lastLeft  = GetNextLeftThread(_lastRight);
+                _lastLeft  = GetNextLeftThread(_lastRight) ?? _lastRight;
             }
 
-            // FIXME: somehow lastleft can be null here
-            return (_lastLeft!.Data, _lastRight.Data);
+            return (_lastLeft.Data, _lastRight.Data);
         }
 
         private Node<TStore> ClosestSmallerElementSearch(TIndex data)
