@@ -1198,15 +1198,14 @@ namespace MuMech
             orbit.EndUT = orbit.eccentricity >= 1.0 ? orbit.period : burnUT + orbit.period;
             Orbit next_orbit = OrbitPool.Borrow();
 
-            PatchedConics.CalculatePatch(orbit, next_orbit, burnUT, solverParameters, null);
-
-            while( (orbit.referenceBody!=target) && (orbit.EndUT < arrivalUT) )
+            bool ok = PatchedConics.CalculatePatch(orbit, next_orbit, burnUT, solverParameters, null);
+            while (ok & (orbit.referenceBody!=target) && (orbit.EndUT < arrivalUT) )
             {
                 OrbitPool.Release(orbit);
                 orbit = next_orbit;
                 next_orbit = OrbitPool.Borrow();
 
-                PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, solverParameters, null);
+                ok = PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, solverParameters, null);
             }
             intercept = orbit;
             intercept.UpdateFromOrbitAtUT(orbit, arrivalUT, orbit.referenceBody);
