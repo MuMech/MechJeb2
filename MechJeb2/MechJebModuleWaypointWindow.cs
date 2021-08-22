@@ -287,7 +287,7 @@ namespace MuMech
 			{
 				try
 				{
-					wps = ConfigNode.Load(KSP.IO.IOUtils.GetFilePathFor(core.GetType(), "mechjeb_routes.cfg"));
+					wps = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_routes.cfg"));
 				}
 				catch (Exception e)
 				{
@@ -317,7 +317,7 @@ namespace MuMech
 				}
 			}
 
-			cn.Save(KSP.IO.IOUtils.GetFilePathFor(core.GetType(), "mechjeb_routes.cfg"));
+			cn.Save(MuUtils.GetCfgPath("mechjeb_routes.cfg"));
 		}
 
 		public override string GetName()

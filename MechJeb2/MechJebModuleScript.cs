@@ -182,7 +182,7 @@ namespace MuMech
 		{
 			string slotName = this.getSaveSlotName(false);
 			ConfigNode node = ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null);
-			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_conf.cfg"));
+			node.Save(MuUtils.GetCfgPath("mechjeb_settings_script_" + slotName + "_conf.cfg"));
 		}
 
 		public void LoadScriptModuleConfig()
@@ -192,7 +192,7 @@ namespace MuMech
             {
                 if (File.Exists<MechJebCore>("mechjeb_settings_script_" + slotName + "_conf.cfg"))
                 {
-                    ConfigNode node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_conf.cfg"));
+                    ConfigNode node = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_script_" + slotName + "_conf.cfg"));
                     if (node == null) return;
                     ConfigNode.LoadObjectFromConfig(this, node);
                 }
@@ -488,7 +488,7 @@ namespace MuMech
 			{
 				try
 				{
-					node = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
+					node = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
 				}
 				catch (Exception e)
 				{
@@ -514,7 +514,7 @@ namespace MuMech
 			{
 				slotName = "G";
 			}
-			node.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
+			node.Save(MuUtils.GetCfgPath("mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
 			if (notify)
 			{
 				string message_label = Localizer.Format("#MechJeb_ScriptMod_label2");//"current vessel"
@@ -529,7 +529,7 @@ namespace MuMech
 		public void DeleteConfig(int slot, bool notify, bool forceSlotName)
 		{
 			string slotName = this.getSaveSlotName(forceSlotName);
-			File.Delete<MechJebCore>(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
+			File.Delete<MechJebCore>(MuUtils.GetCfgPath("mechjeb_settings_script_" + slotName + "_" + slot + ".cfg"));
 			if (notify)
 			{
 				this.setFlashMessage("Script deleted on slot " + (slot+1), 0);

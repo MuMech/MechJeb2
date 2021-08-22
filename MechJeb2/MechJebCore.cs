@@ -847,7 +847,7 @@ namespace MuMech
                 {
                     try
                     {
-                        global = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                        global = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
                     }
                     catch (Exception e)
                     {
@@ -866,7 +866,7 @@ namespace MuMech
                 {
                     try
                     {
-                        type = ConfigNode.Load(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
+                        type = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_type_" + vesselName + ".cfg"));
                     }
                     catch (Exception e)
                     {
@@ -1018,13 +1018,13 @@ namespace MuMech
                 {
                     string vesselName = (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch ? EditorLogic.fetch.shipNameField.text : vessel.vesselName);
                     vesselName = string.Join("_", vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
-                    type.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_type_" + vesselName + ".cfg"));
+                    type.Save(MuUtils.GetCfgPath("mechjeb_settings_type_" + vesselName + ".cfg"));
                 }
                 Profiler.EndSample();
                 Profiler.BeginSample("MechJebCore.OnSave.global");
                 if (global != null && lastFocus == vessel)
                 {
-                    global.Save(IOUtils.GetFilePathFor(this.GetType(), "mechjeb_settings_global.cfg"));
+                    global.Save(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
                 }
                 Profiler.EndSample();
             }

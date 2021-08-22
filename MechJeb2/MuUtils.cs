@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using UnityEngine;
 
@@ -16,6 +17,13 @@ namespace MuMech
         }
 
         private static readonly string[] units = { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+
+
+        private static readonly string cfgPath = Path.Combine(KSPUtil.ApplicationRootPath, "GameData\\MechJeb2\\Plugins\\PluginData\\MechJeb2");
+        public static string GetCfgPath(string file)
+        {
+            return Path.Combine(cfgPath, file);
+        }
 
         //Puts numbers into SI format, e.g. 1234 -> "1.234 k", 0.0045678 -> "4.568 m"
         //maxPrecision is the exponent of the smallest place value that will be shown; for example
