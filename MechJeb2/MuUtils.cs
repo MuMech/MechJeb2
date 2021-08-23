@@ -19,7 +19,7 @@ namespace MuMech
         private static readonly string[] units = { "y", "z", "a", "f", "p", "n", "μ", "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" };
 
 
-        private static readonly string cfgPath = Path.Combine(KSPUtil.ApplicationRootPath, "GameData\\MechJeb2\\Plugins\\PluginData\\MechJeb2");
+        private static readonly string cfgPath = Path.Combine(KSPUtil.ApplicationRootPath, "GameData/MechJeb2/Plugins/PluginData/MechJeb2");
         public static string GetCfgPath(string file)
         {
             return Path.Combine(cfgPath, file);
