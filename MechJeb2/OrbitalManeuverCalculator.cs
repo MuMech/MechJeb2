@@ -1171,7 +1171,7 @@ namespace MuMech
         // Global OrbitPool for re-using Orbit objects
         //
 
-        private static readonly Pool<Orbit> OrbitPool = new Pool<Orbit>(createOrbit, resetOrbit);
+        public static readonly Pool<Orbit> OrbitPool = new Pool<Orbit>(createOrbit, resetOrbit);
         private static Orbit createOrbit() { return new Orbit(); }
         private static void resetOrbit(Orbit o) { }
 

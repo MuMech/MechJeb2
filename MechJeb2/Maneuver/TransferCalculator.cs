@@ -1,161 +1,160 @@
 ﻿// #define DEBUG
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace MuMech
 {
     public class TransferCalculator
     {
-        public int bestDate = 0;
-        public int bestDuration = 0;
-        public bool stop = false;
+        public int  BestDate;
+        public int  BestDuration;
+        public bool Stop = false;
 
-        int pendingJobs;
+        private int _pendingJobs;
 
         // Original parameters, only used to check if parameters have changed
-        public readonly Orbit originOrbit;
-        public readonly Orbit destinationOrbit;
+        public readonly Orbit OriginOrbit;
+        public readonly Orbit DestinationOrbit;
 
-        protected readonly Orbit origin;
-        protected readonly Orbit destination;
+        private readonly Orbit _origin;
+        private readonly Orbit _destination;
 
-        protected int nextDateIndex;
-        protected readonly int dateSamples;
-        public readonly double minDepartureTime;
-        public readonly double maxDepartureTime;
-        public readonly double minTransferTime;
-        public readonly double maxTransferTime;
-        protected readonly int maxDurationSamples;
+        protected          int    NextDateIndex;
+        protected readonly int    DateSamples;
+        public readonly    double MinDepartureTime;
+        public readonly    double MaxDepartureTime;
+        public readonly    double MinTransferTime;
+        public readonly    double MaxTransferTime;
+        protected readonly int    MaxDurationSamples;
 
-        public double[,] computed;
+        public readonly double[,] Computed;
 #if DEBUG
-        string[,] log;
+        private readonly string[,] _log;
 #endif
 
-        public double arrivalDate = -1;
-        bool includeCaptureBurn;
-
-        public double minDV;
+        public           double ArrivalDate = -1;
+        private readonly bool   _includeCaptureBurn;
 
         public TransferCalculator(
-                Orbit o, Orbit target,
-                double min_departure_time,
-                double max_transfer_time,
-                double min_sampling_step, bool includeCaptureBurn):
-            this(o, target, min_departure_time, min_departure_time + max_transfer_time, 3600, max_transfer_time,
-                    Math.Min(1000, Math.Max(200, (int) (max_transfer_time / Math.Max(min_sampling_step, 60.0)))),
-                    Math.Min(1000, Math.Max(200, (int) (max_transfer_time / Math.Max(min_sampling_step, 60.0)))), includeCaptureBurn)
+            Orbit o, Orbit target,
+            double minDepartureTime,
+            double maxTransferTime,
+            double minSamplingStep, bool includeCaptureBurn) :
+            this(o, target, minDepartureTime, minDepartureTime + maxTransferTime, 3600, maxTransferTime,
+                Math.Min(1000, Math.Max(200, (int)(maxTransferTime / Math.Max(minSamplingStep, 60.0)))),
+                Math.Min(1000, Math.Max(200, (int)(maxTransferTime / Math.Max(minSamplingStep, 60.0)))), includeCaptureBurn)
         {
             StartThreads();
         }
 
         protected TransferCalculator(
-                Orbit o, Orbit target,
-                double min_departure_time,
-                double max_departure_time,
-                double min_transfer_time,
-                double max_transfer_time,
-                int width,
-                int height,
-                bool includeCaptureBurn)
+            Orbit o, Orbit target,
+            double minDepartureTime,
+            double maxDepartureTime,
+            double minTransferTime,
+            double maxTransferTime,
+            int width,
+            int height,
+            bool includeCaptureBurn)
         {
-            originOrbit = o;
-            destinationOrbit = target;
+            OriginOrbit      = o;
+            DestinationOrbit = target;
 
-            origin = new Orbit();
-            origin.UpdateFromOrbitAtUT(o, min_departure_time, o.referenceBody);
-            destination = new Orbit();
-            destination.UpdateFromOrbitAtUT(target, min_departure_time, target.referenceBody);
-            maxDurationSamples = height;
-            dateSamples = width;
-            nextDateIndex = dateSamples;
-            this.minDepartureTime = min_departure_time;
-            this.maxDepartureTime = max_departure_time;
-            this.minTransferTime = min_transfer_time;
-            this.maxTransferTime = max_transfer_time;
-            this.includeCaptureBurn = includeCaptureBurn;
-            computed = new double[dateSamples, maxDurationSamples];
-            pendingJobs = 0;
+            _origin = new Orbit();
+            _origin.UpdateFromOrbitAtUT(o, minDepartureTime, o.referenceBody);
+            _destination = new Orbit();
+            _destination.UpdateFromOrbitAtUT(target, minDepartureTime, target.referenceBody);
+            MaxDurationSamples  = height;
+            DateSamples         = width;
+            NextDateIndex       = DateSamples;
+            MinDepartureTime    = minDepartureTime;
+            MaxDepartureTime    = maxDepartureTime;
+            MinTransferTime     = minTransferTime;
+            MaxTransferTime     = maxTransferTime;
+            _includeCaptureBurn = includeCaptureBurn;
+            Computed            = new double[DateSamples, MaxDurationSamples];
+            _pendingJobs        = 0;
 
 #if DEBUG
-            log = new string[dateSamples, maxDurationSamples];
+            _log = new string[DateSamples, MaxDurationSamples];
 #endif
         }
 
         protected void StartThreads()
         {
-
-            if (pendingJobs != 0)
+            if (_pendingJobs != 0)
                 throw new Exception("Computation threads have already been started");
 
-            pendingJobs = Math.Max(1, Environment.ProcessorCount - 1);
-            for (int job = 0; job < pendingJobs; job++)
+            _pendingJobs = Math.Max(1, Environment.ProcessorCount - 1);
+            for (int job = 0; job < _pendingJobs; job++)
                 ThreadPool.QueueUserWorkItem(ComputeDeltaV);
 
             //pending_jobs = 1;
             //ComputeDeltaV(this);
         }
 
-        private bool IsBetter(int date_index1, int duration_index1, int date_index2, int duration_index2)
+        private bool IsBetter(int dateIndex1, int durationIndex1, int dateIndex2, int durationIndex2)
         {
-            return computed[date_index1, duration_index1] > computed[date_index2, duration_index2];
+            return Computed[dateIndex1, durationIndex1] > Computed[dateIndex2, durationIndex2];
         }
 
-        void CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
+        private void CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
         {
             double t1 = t0 + dt;
-            CelestialBody origin_planet = origin.referenceBody;
+            CelestialBody originPlanet = _origin.referenceBody;
 
-            Vector3d V1_0 = origin_planet.orbit.getOrbitalVelocityAtUT(t0);
-            Vector3d R1 = origin_planet.orbit.getRelativePositionAtUT(t0);
+            Vector3d v1_0 = originPlanet.orbit.getOrbitalVelocityAtUT(t0);
+            Vector3d r1 = originPlanet.orbit.getRelativePositionAtUT(t0);
 
-            Vector3d R2 = destination.getRelativePositionAtUT(t1);
-            Vector3d V2_1 = destination.getOrbitalVelocityAtUT(t1);
+            Vector3d r2 = _destination.getRelativePositionAtUT(t1);
+            Vector3d v2_1 = _destination.getOrbitalVelocityAtUT(t1);
 
-            Vector3d V1 = V1_0;
-            Vector3d V2 = V2_1;
-            try {
-                GoodingSolver.Solve(origin_planet.referenceBody.gravParameter, R1, V1_0, R2, V2_1, dt, 0, out V1, out V2);
+            Vector3d v1 = v1_0;
+            Vector3d v2 = v2_1;
+            try
+            {
+                GoodingSolver.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, v2_1, dt, 0, out v1, out v2);
             }
-            catch (Exception) {}
+            catch
+            {
+                // ignored
+            }
 
-            exitDV = V1 - V1_0;
-            captureDV = V2_1 - V2;
+            exitDV    = v1 - v1_0;
+            captureDV = v2_1 - v2;
         }
 
-        void ComputeDeltaV(object args)
+        private void ComputeDeltaV(object args)
         {
-            for (int date_index = TakeDateIndex();
-                    date_index >= 0;
-                    date_index = TakeDateIndex())
+            for (int dateIndex = TakeDateIndex();
+                dateIndex >= 0;
+                dateIndex = TakeDateIndex())
             {
-                double t0 = DateFromIndex(date_index);
+                double t0 = DateFromIndex(dateIndex);
 
-                if (double.IsInfinity(t0))
-                {
-                    continue;
-                }
+                if (double.IsInfinity(t0)) continue;
 
-                int duration_samples = DurationSamplesForDate(date_index);
-                for (int duration_index = 0; duration_index < duration_samples; duration_index++)
+                int durationSamples = DurationSamplesForDate(dateIndex);
+                for (int durationIndex = 0; durationIndex < durationSamples; durationIndex++)
                 {
-                    if (stop)
+                    if (Stop)
                         break;
 
-                    double dt = DurationFromIndex(duration_index);
+                    double dt = DurationFromIndex(durationIndex);
 
-                    Vector3d exitDV, captureDV;
-                    CalcLambertDVs(t0, dt, out exitDV, out captureDV);
-                    var maneuver = ComputeEjectionManeuver(exitDV, origin, t0);
+                    CalcLambertDVs(t0, dt, out Vector3d exitDV, out Vector3d captureDV);
+                    ManeuverParameters maneuver = ComputeEjectionManeuver(exitDV, _origin, t0);
 
-                    computed[date_index, duration_index] = maneuver.dV.magnitude;
-                    if (includeCaptureBurn)
-                        computed[date_index, duration_index] += captureDV.magnitude;
+                    Computed[dateIndex, durationIndex] = maneuver.dV.magnitude;
+                    if (_includeCaptureBurn)
+                        Computed[dateIndex, durationIndex] += captureDV.magnitude;
 #if DEBUG
-                    log[date_index, duration_index] += "," + computed[date_index, duration_index];
+                    _log[dateIndex, durationIndex] += "," + Computed[dateIndex, durationIndex];
 #endif
                 }
             }
@@ -165,286 +164,343 @@ namespace MuMech
 
         private void JobFinished()
         {
-            int remaining = Interlocked.Decrement(ref pendingJobs);
+            int remaining = Interlocked.Decrement(ref _pendingJobs);
             if (remaining == 0)
             {
-                for (int date_index = 0; date_index < dateSamples; date_index++)
+                for (int dateIndex = 0; dateIndex < DateSamples; dateIndex++)
                 {
-                    int n = DurationSamplesForDate(date_index);
-                    for (int duration_index = 0; duration_index < n; duration_index++)
-                    {
-                        if (IsBetter(bestDate, bestDuration, date_index, duration_index))
+                    int n = DurationSamplesForDate(dateIndex);
+                    for (int durationIndex = 0; durationIndex < n; durationIndex++)
+                        if (IsBetter(BestDate, BestDuration, dateIndex, durationIndex))
                         {
-                            bestDate = date_index;
-                            bestDuration = duration_index;
+                            BestDate     = dateIndex;
+                            BestDuration = durationIndex;
                         }
-                    }
                 }
 
-                arrivalDate = DateFromIndex(bestDate) + DurationFromIndex(bestDuration);
-                minDV = computed[bestDate, bestDuration];
+                ArrivalDate = DateFromIndex(BestDate) + DurationFromIndex(BestDuration);
 
-                pendingJobs = -1;
+                _pendingJobs = -1;
 
 #if DEBUG
-                string dir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                var f = System.IO.File.CreateText(dir + "/DeltaVWorking.csv");
-                f.WriteLine(originOrbit.referenceBody.referenceBody.gravParameter);
-                for (int date_index = 0; date_index < dateSamples; date_index++)
+                string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                StreamWriter f = File.CreateText(dir + "/DeltaVWorking.csv");
+                f.WriteLine(OriginOrbit.referenceBody.referenceBody.gravParameter);
+                for (int dateIndex = 0; dateIndex < DateSamples; dateIndex++)
                 {
-                    int n = DurationSamplesForDate(date_index);
-                    for (int duration_index = 0; duration_index < n; duration_index++)
-                    {
-                        f.WriteLine(log[date_index, duration_index]);
-                    }
+                    int n = DurationSamplesForDate(dateIndex);
+                    for (int durationIndex = 0; durationIndex < n; durationIndex++) f.WriteLine(_log[dateIndex, durationIndex]);
                 }
 #endif
             }
         }
 
-        public bool Finished { get { return pendingJobs == -1; } }
+        public bool Finished => _pendingJobs == -1;
 
-        public virtual int Progress { get
-            { return (int)(100 * (1 - Math.Sqrt((double)Math.Max(0, nextDateIndex) / dateSamples))); } }
+        public virtual int Progress => (int)(100 * (1 - Math.Sqrt((double)Math.Max(0, NextDateIndex) / DateSamples)));
 
-        protected int TakeDateIndex() { return Interlocked.Decrement(ref nextDateIndex); }
-
-        public virtual int DurationSamplesForDate(int date_index)
+        private int TakeDateIndex()
         {
-            return (int)(maxDurationSamples * (maxDepartureTime - DateFromIndex(date_index)) / maxTransferTime);
+            return Interlocked.Decrement(ref NextDateIndex);
         }
+
+        protected virtual int DurationSamplesForDate(int dateIndex)
+        {
+            return (int)(MaxDurationSamples * (MaxDepartureTime - DateFromIndex(dateIndex)) / MaxTransferTime);
+        }
+
         public double DurationFromIndex(int index)
         {
-            return minTransferTime + index * (maxTransferTime - minTransferTime) / maxDurationSamples;
+            return MinTransferTime + index * (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
         }
+
         public double DateFromIndex(int index)
         {
-            return minDepartureTime + index * (maxDepartureTime - minDepartureTime) / dateSamples;
+            return MinDepartureTime + index * (MaxDepartureTime - MinDepartureTime) / DateSamples;
         }
 
-
-        public ManeuverParameters ComputeEjectionManeuver(Vector3d exit_velocity, Orbit initial_orbit, double UT_0, bool debug = false)
+        private static ManeuverParameters ComputeEjectionManeuver(Vector3d exitVelocity, Orbit initialOrbit, double ut0, bool debug = false)
         {
-            Vector3d r0;
-            Vector3d v0;
-            Vector3d vneg = new Vector3d();
-            Vector3d vpos = new Vector3d();
-            Vector3d r = new Vector3d();
-            double dt = 0;
-
             // get our reference position on the orbit
-            initial_orbit.GetOrbitalStateVectorsAtUT(UT_0, out r0, out v0);
+            Vector3d r0 = initialOrbit.getRelativePositionAtUT(ut0);
+            Vector3d v0 = initialOrbit.getOrbitalVelocityAtUT(ut0);
 
             // analytic solution for paring orbit ejection to hyperbolic v-infinity
-            SpaceMath.singleImpulseHyperbolicBurn(initial_orbit.referenceBody.gravParameter, r0, v0, exit_velocity, ref vneg, ref vpos, ref r, ref dt, debug);
+            SpaceMath.singleImpulseHyperbolicBurn(initialOrbit.referenceBody.gravParameter, r0, v0, exitVelocity, out Vector3d vneg,
+                out Vector3d vpos, out Vector3d r, out double dt, debug);
 
             if (!dt.IsFinite() || !r.magnitude.IsFinite() || !vpos.magnitude.IsFinite() || !vneg.magnitude.IsFinite())
-            {
-                Debug.Log("mu = " + initial_orbit.referenceBody.gravParameter + " r0 = " + r0 + " v0 = " + v0 + " vinf = " + exit_velocity );
-            }
+                Debug.Log("[MechJeb TransferCalculator] BUG mu = " + initialOrbit.referenceBody.gravParameter + " r0 = " + r0 + " v0 = " + v0 +
+                          " vinf = " + exitVelocity);
 
-            return new ManeuverParameters((vpos - vneg).xzy, UT_0 + dt);
+            return new ManeuverParameters((vpos - vneg).xzy, ut0 + dt);
         }
 
-        void zeroMissObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_transfer, double UT_arrival)
+        private double        _impulseScale;
+        private double        _timeScale;
+        private double        _initialTime;
+        private double        _arrivalTime;
+        private double        _targetPeR;
+        private Orbit         _initialOrbit;
+        private CelestialBody _targetBody;
+
+        private void FindSOIObjective(double[] x, double[] fi, object obj)
         {
-            Vector3d DV = new Vector3d(x[0], x[1], x[2]);
+            Vector3d dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
 
-            Orbit orbit;
-            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, UT_transfer, UT_arrival, out orbit);
+            double burnUT = _initialTime + x[3] * _timeScale;
+            double arrivalUT = _arrivalTime + x[4] * _timeScale;
 
-            Vector3d err = orbit.getTruePositionAtUT(UT_arrival) - target.orbit.getTruePositionAtUT(UT_arrival);
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out Orbit orbit);
 
-            fi[0] = err.x;
-            fi[1] = err.y;
-            fi[2] = err.z;
+            Vector3d err = orbit.getTruePositionAtUT(arrivalUT) - _targetBody.orbit.getTruePositionAtUT(arrivalUT);
+
+            fi[0] = dv.sqrMagnitude / _impulseScale / _impulseScale;
+
+            fi[1] = err.x * err.x / 1e+6;
+            fi[2] = err.y * err.y / 1e+6;
+            fi[3] = err.z * err.z / 1e+6;
+
+            OrbitalManeuverCalculator.OrbitPool.Release(orbit);
         }
 
-        void periapsisObjectiveFunction(double[] x, double[] fi, object obj, Orbit initial_orbit, CelestialBody target, double UT_transfer, double UT_arrival, double target_PeR, ref bool failed)
+        private void FindSOI(ManeuverParameters maneuver, ref double utArrival)
         {
-            Vector3d DV = new Vector3d(x[0], x[1], x[2]);
+            const int VARS = 5;
+            const double DIFFSTEP = 1e-6;
+            const double EPSX = 1e-4;
+            const int MAXITS = 1000;
+            const int EQUALITYCONSTRAINTS = 3;
+            const int INEQUALITYCONSTRAINTS = 0;
 
-            Orbit orbit;
-            OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target, DV, UT_transfer, UT_arrival, out orbit);
+            double[] x = new double[VARS];
 
-            if (orbit.referenceBody == target)
+            _impulseScale = maneuver.dV.magnitude;
+            _timeScale    = _initialOrbit.period;
+            _initialTime  = maneuver.UT;
+            _arrivalTime  = utArrival;
+
+            x[0] = maneuver.dV.x / _impulseScale;
+            x[1] = maneuver.dV.y / _impulseScale;
+            x[2] = maneuver.dV.z / _impulseScale;
+            x[3] = 0;
+            x[4] = 0;
+
+            alglib.minnlccreatef(VARS, x, DIFFSTEP, out alglib.minnlcstate state);
+            alglib.minnlcsetstpmax(state, 1e-3);
+            //double rho = 250.0;
+            //int outerits = 5;
+            //alglib.minnlcsetalgoaul(state, rho, outerits);
+            //alglib.minnlcsetalgoslp(state);
+            alglib.minnlcsetalgosqp(state);
+            alglib.minnlcsetcond(state, EPSX, MAXITS);
+
+            alglib.minnlcsetnlc(state, EQUALITYCONSTRAINTS, INEQUALITYCONSTRAINTS);
+
+            alglib.minnlcoptimize(state, FindSOIObjective, null, null);
+            alglib.minnlcresults(state, out x, out alglib.minnlcreport rep);
+
+            Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
+            Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+
+            maneuver.dV = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
+            maneuver.UT = _initialTime + x[3] * _timeScale;
+            utArrival   = _arrivalTime + x[4] * _timeScale;
+        }
+
+        private void PeriapsisObjective(double[] x, double[] fi, object obj)
+        {
+            Vector3d dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
+
+            double burnUT = _initialTime + x[3] * _timeScale;
+            double arrivalUT = _arrivalTime;
+
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out Orbit orbit);
+
+            if (orbit.referenceBody == _targetBody)
             {
-                fi[0]  = ( orbit.PeR - target_PeR );
-                failed = false;  // we intersected at some point with the target body SOIt
+                double err = (orbit.PeR - _targetPeR) / 1e6;
+                fi[0] = dv.sqrMagnitude / _impulseScale / _impulseScale;
+                fi[1] = err * err;
             }
             else
             {
-                fi[0] = ( orbit.getTruePositionAtUT(UT_arrival) - target.orbit.getTruePositionAtUT(UT_arrival) ).magnitude;
-                failed = true;  // we did not intersect the target body SOI
+                fi[1] = fi[0] = 1e300;
             }
+
+            OrbitalManeuverCalculator.OrbitPool.Release(orbit);
         }
 
-        public List<ManeuverParameters> OptimizeEjection(double UT_transfer, Orbit initial_orbit, Orbit target, CelestialBody target_body, double UT_arrival, double earliest_UT, double target_PeR, bool includeCaptureBurn)
+        private void AdjustPeriapsis(ManeuverParameters maneuver, ref double utArrival)
         {
-            int N = 0;
+            const int VARS = 4;
+            const double DIFFSTEP = 1e-8;
+            const double EPSX = 1e-7;
+            const int MAXITS = 1000;
+            const int EQUALITYCONSTRAINTS = 1;
+            const int INEQUALITYCONSTRAINTS = 0;
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            double[] x = new double[VARS];
 
-            while(true)
+            _impulseScale = maneuver.dV.magnitude;
+            _timeScale    = _initialOrbit.period;
+            _initialTime  = maneuver.UT;
+            _arrivalTime  = utArrival;
+
+            x[0] = maneuver.dV.x / _impulseScale;
+            x[1] = maneuver.dV.y / _impulseScale;
+            x[2] = maneuver.dV.z / _impulseScale;
+            x[3] = 0;
+
+            //
+            // run the NLP
+            //
+            alglib.minnlccreatef(VARS, x, DIFFSTEP, out alglib.minnlcstate state);
+            alglib.minnlcsetstpmax(state, 1e-3);
+            double rho = 250.0;
+            int outerits = 5;
+            alglib.minnlcsetalgoaul(state, rho, outerits);
+            //alglib.minnlcsetalgoslp(state);
+            //alglib.minnlcsetalgosqp(state);
+            alglib.minnlcsetcond(state, EPSX, MAXITS);
+
+            alglib.minnlcsetnlc(state, EQUALITYCONSTRAINTS, INEQUALITYCONSTRAINTS);
+
+            alglib.minnlcsetprecexactrobust(state, 0);
+
+            alglib.minnlcoptimize(state, PeriapsisObjective, null, null);
+            alglib.minnlcresults(state, out x, out alglib.minnlcreport rep);
+
+            Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
+            Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+
+            maneuver.dV = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
+            maneuver.UT = _initialTime + x[3] * _timeScale;
+        }
+
+        public List<ManeuverParameters> OptimizeEjection(double utTransfer, Orbit initialOrbit, CelestialBody targetBody,
+            double utArrival, double earliestUT, double targetPeR, bool includeCaptureBurn)
+        {
+            int n = 0;
+
+            _initialOrbit = initialOrbit;
+            _targetBody   = targetBody;
+            _targetPeR    = targetPeR;
+
+            var nodeList = new List<ManeuverParameters>();
+
+            while (true)
             {
-                const double DIFFSTEP = 1e-6;
-                const double EPSX = 1e-9;
-                const int MAXITS = 100;
+                bool failed = false;
 
-                alglib.minlmstate state;
-                alglib.minlmreport rep;
+                CalcLambertDVs(utTransfer, utArrival - utTransfer, out Vector3d exitDV, out Vector3d _);
 
-                double[] x = new double[3];
-                double[] scale = new double[3];
-
-                Vector3d exitDV, captureDV;
-                CalcLambertDVs(UT_transfer, UT_arrival - UT_transfer, out exitDV, out captureDV);
-
-                Orbit source = initial_orbit.referenceBody.orbit; // helicentric orbit of the source planet
+                Orbit source = initialOrbit.referenceBody.orbit; // helicentric orbit of the source planet
 
                 // helicentric transfer orbit
-                Orbit transfer_orbit = new Orbit();
-                transfer_orbit.UpdateFromStateVectors(source.getRelativePositionAtUT(UT_transfer), source.getOrbitalVelocityAtUT(UT_transfer) + exitDV, source.referenceBody, UT_transfer);
+                var transferOrbit = new Orbit();
+                transferOrbit.UpdateFromStateVectors(source.getRelativePositionAtUT(utTransfer),
+                    source.getOrbitalVelocityAtUT(utTransfer) + exitDV, source.referenceBody, utTransfer);
 
-                double UT_SOI_exit;
-                OrbitalManeuverCalculator.SOI_intercept(transfer_orbit, initial_orbit.referenceBody, UT_transfer, UT_arrival, out UT_SOI_exit);
+                OrbitalManeuverCalculator.SOI_intercept(transferOrbit, initialOrbit.referenceBody, utTransfer, utArrival, out double utSoiExit);
 
                 // convert from heliocentric to body centered velocity
-                Vector3d Vsoi = transfer_orbit.getOrbitalVelocityAtUT(UT_SOI_exit) - initial_orbit.referenceBody.orbit.getOrbitalVelocityAtUT(UT_SOI_exit);
+                Vector3d vsoi = transferOrbit.getOrbitalVelocityAtUT(utSoiExit) -
+                                initialOrbit.referenceBody.orbit.getOrbitalVelocityAtUT(utSoiExit);
 
                 // find the magnitude of Vinf from energy
-                double Vsoi_mag = Vsoi.magnitude;
-                double E_h = Vsoi_mag * Vsoi_mag / 2 - initial_orbit.referenceBody.gravParameter / initial_orbit.referenceBody.sphereOfInfluence;
-                double Vinf_mag = Math.Sqrt(2 * E_h);
+                double vsoiMag = vsoi.magnitude;
+                double eh = vsoiMag * vsoiMag / 2 - initialOrbit.referenceBody.gravParameter / initialOrbit.referenceBody.sphereOfInfluence;
+                double vinfMag = Math.Sqrt(2 * eh);
 
                 // scale Vsoi by the Vinf magnitude (this is now the Vinf target that will yield Vsoi at the SOI interface, but in the Vsoi direction)
-                Vector3d Vinf = Vsoi / Vsoi.magnitude * Vinf_mag;
+                Vector3d vinf = vsoi / vsoi.magnitude * vinfMag;
 
                 // using Vsoi seems to work slightly better here than the Vinf from the heliocentric computation at UT_Transfer
                 //ManeuverParameters maneuver = ComputeEjectionManeuver(Vsoi, initial_orbit, UT_transfer, true);
-                ManeuverParameters maneuver = ComputeEjectionManeuver(Vinf, initial_orbit, UT_transfer, true);
+                ManeuverParameters maneuver = ComputeEjectionManeuver(vinf, initialOrbit, utTransfer);
 
-                //
-                // common setup for the optimization problems
-                //
+                // the arrival time plus a bit extra
+                double extraArrival = maneuver.UT + (utArrival - maneuver.UT) * 1.1;
 
-                x[0] = maneuver.dV.x;
-                x[1] = maneuver.dV.y;
-                x[2] = maneuver.dV.z;
-                UT_transfer = maneuver.UT;
+                // check to see if we're in the SOI
+                OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, maneuver.dV, maneuver.UT, extraArrival,
+                    out Orbit orbit2);
 
-                scale[0] = scale[1] = scale[2] = 1000.0f;
-
-                //
-                // initial patched conic shooting to precisely hit the target
-                //
-
-                const int ZEROMISSCONS = 3;
-                double[] fi = new double[ZEROMISSCONS];
-
-                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_transfer, UT_arrival);
-                Debug.Log("zero miss phase before optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
-
-                alglib.minlmcreatev(3, ZEROMISSCONS, x, DIFFSTEP, out state);
-                alglib.minlmsetcond(state, EPSX, MAXITS);
-                alglib.minlmsetscale(state, scale);
-                alglib.minlmoptimize(state, (x, fi, obj) => zeroMissObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_transfer, UT_arrival), null, null);
-                alglib.minlmresults(state, out x, out rep);
-
-                zeroMissObjectiveFunction(x, fi, null, initial_orbit, target_body, UT_transfer, UT_arrival);
-                Debug.Log("zero miss phase after optimization = " + new Vector3d(fi[0], fi[1], fi[2]).magnitude + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
-
-                Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
-                Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
-
-                //
-                // Fine tuning of the periapsis
-                //
-
-                bool failed = false;
-
-                if (target_PeR > 0)
+                if (orbit2.referenceBody != _targetBody)
                 {
-                    const int PERIAPSISCONS = 1;
-                    double[] fi2 = new double[PERIAPSISCONS];
-
-                    periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed);
-                    Debug.Log("periapsis phase before optimization = " + fi2[0] + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
-
-                    alglib.minlmcreatev(3, PERIAPSISCONS, x, DIFFSTEP, out state);
-                    alglib.minlmsetcond(state, EPSX, MAXITS);
-                    alglib.minlmsetscale(state, scale);
-                    alglib.minlmoptimize(state, (x, fi, obj) => periapsisObjectiveFunction(x, fi, obj, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed), null, null);
-                    alglib.minlmresults(state, out x, out rep);
-
-                    periapsisObjectiveFunction(x, fi2, null, initial_orbit, target_body, UT_transfer, UT_arrival, target_PeR, ref failed);
-                    Debug.Log("periapsis phase after optimization = " + fi2[0] + " m (" + new Vector3d(x[0], x[1], x[2]).magnitude + " m/s)");
-
-                    Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
-                    Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
+                    Debug.Log("Transfer calculator:  analytic solution does not intersect SOI, doing some expensive thinking to move it closer...");
+                    // update the maneuver and arrival times to move into the SOI
+                    FindSOI(maneuver, ref utArrival);
                 }
 
-                maneuver.dV.x = x[0];
-                maneuver.dV.y = x[1];
-                maneuver.dV.z = x[2];
+                extraArrival = maneuver.UT + (utArrival - maneuver.UT) * 1.1;
 
-                //
-                // exit conditions and error handling
-                //
+                OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, maneuver.dV, maneuver.UT, extraArrival,
+                    out Orbit orbit3);
 
-                // try again if we failed to intersect the target orbit
-                if ( failed )
+                if (orbit3.referenceBody == _targetBody)
                 {
-                    Debug.Log("Failed to intersect target orbit");
+                    Debug.Log("Transfer calculator: adjusting periapsis target");
+                    AdjustPeriapsis(maneuver, ref extraArrival);
                 }
+                else
+                {
+                    failed = true;
+                    Debug.Log("Transfer calculator: failed to find the SOI");
+                }
+
                 // try again in one orbit if the maneuver node is in the past
-                else if (maneuver.UT < earliest_UT || failed)
+                if (maneuver.UT < earliestUT || failed)
                 {
-                    Debug.Log("Transfer calculator: maneuver is " + (earliest_UT - maneuver.UT) + " s too early, trying again in " + initial_orbit.period + " s");
-                    UT_transfer += initial_orbit.period;
+                    Debug.Log("Transfer calculator: maneuver is " + (earliestUT - maneuver.UT) + " s too early, trying again in " +
+                              initialOrbit.period + " s");
+                    utTransfer += initialOrbit.period;
                 }
-                else {
-                    Debug.Log("from optimizer DV = " + maneuver.dV + " t = " + maneuver.UT + " original arrival = " + UT_arrival);
-                    NodeList.Add(maneuver);
+                else
+                {
+                    Debug.Log("from optimizer DV = " + maneuver.dV + " t = " + maneuver.UT + " original arrival = " + utArrival);
+                    nodeList.Add(maneuver);
                     break;
                 }
-                if (N++ > 10)
-                {
-                    throw new OperationException("Ejection Optimization failed; try manual selection");
-                }
+
+                if (n++ > 10) throw new OperationException("Ejection Optimization failed; try manual selection");
             }
-            if (NodeList.Count > 0 && target_PeR > 0 && includeCaptureBurn)
-            {
-                // calculate the incoming orbit
-                Orbit incoming_orbit;
-                OrbitalManeuverCalculator.PatchedConicInterceptBody(initial_orbit, target_body, NodeList[0].dV, NodeList[0].UT, UT_arrival, out incoming_orbit);
-                double burnUT = incoming_orbit.NextPeriapsisTime(incoming_orbit.StartUT);
-                NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(incoming_orbit, burnUT), burnUT));
-            }
-            return NodeList;
+
+            if (nodeList.Count <= 0 || !(targetPeR > 0) || !includeCaptureBurn)
+                return nodeList;
+
+            // calculate the incoming orbit
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(initialOrbit, targetBody, nodeList[0].dV, nodeList[0].UT, utArrival,
+                out Orbit incomingOrbit);
+            double burnUT = incomingOrbit.NextPeriapsisTime(incomingOrbit.StartUT);
+            nodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(incomingOrbit, burnUT), burnUT));
+
+            return nodeList;
         }
     }
 
     public class AllGraphTransferCalculator : TransferCalculator
     {
         public AllGraphTransferCalculator(
-                Orbit o, Orbit target,
-                double min_departure_time,
-                double max_departure_time,
-                double min_transfer_time,
-                double max_transfer_time,
-                int width,
-                int height,
-                bool includeCaptureBurn) : base(o, target, min_departure_time, max_departure_time, min_transfer_time, max_transfer_time, width, height, includeCaptureBurn)
+            Orbit o, Orbit target,
+            double minDepartureTime,
+            double maxDepartureTime,
+            double minTransferTime,
+            double maxTransferTime,
+            int width,
+            int height,
+            bool includeCaptureBurn) : base(o, target, minDepartureTime, maxDepartureTime, minTransferTime, maxTransferTime, width, height,
+            includeCaptureBurn)
         {
             StartThreads();
         }
 
-        public override int DurationSamplesForDate(int date_index)
+        protected override int DurationSamplesForDate(int dateIndex)
         {
-            return maxDurationSamples;
+            return MaxDurationSamples;
         }
 
-        public override int Progress { get { return Math.Min(100, (int)(100 * (1 - (double)nextDateIndex / dateSamples))); } }
+        public override int Progress => Math.Min(100, (int)(100 * (1 - (double)NextDateIndex / DateSamples)));
     }
 }

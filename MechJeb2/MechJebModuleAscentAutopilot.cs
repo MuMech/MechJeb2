@@ -599,7 +599,6 @@ namespace MuMech
                 core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
             }
 
-
             core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
         }
     }
