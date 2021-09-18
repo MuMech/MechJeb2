@@ -312,7 +312,7 @@ namespace MuMech
         {
             Vector3d dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
 
-            double burnUT = _initialTime + x[3] * _timeScale;
+            double burnUT = _initialTime;
             double arrivalUT = _arrivalTime;
 
             OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out Orbit orbit);
@@ -333,7 +333,7 @@ namespace MuMech
 
         private void AdjustPeriapsis(ManeuverParameters maneuver, ref double utArrival)
         {
-            const int VARS = 4;
+            const int VARS = 3;
             const double DIFFSTEP = 1e-8;
             const double EPSX = 1e-7;
             const int MAXITS = 1000;
@@ -350,7 +350,6 @@ namespace MuMech
             x[0] = maneuver.dV.x / _impulseScale;
             x[1] = maneuver.dV.y / _impulseScale;
             x[2] = maneuver.dV.z / _impulseScale;
-            x[3] = 0;
 
             //
             // run the NLP
@@ -375,7 +374,7 @@ namespace MuMech
             Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
 
             maneuver.dV = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
-            maneuver.UT = _initialTime + x[3] * _timeScale;
+            maneuver.UT = _initialTime;
         }
 
         public List<ManeuverParameters> OptimizeEjection(double utTransfer, Orbit initialOrbit, CelestialBody targetBody,
