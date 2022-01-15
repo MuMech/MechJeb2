@@ -65,12 +65,9 @@ namespace MuMech
 
         public ReentrySimulation.Result GetErrorResult()
         {
-            if (null != errorResult)
+            if (null != errorResult && null != errorResult.body)
             {
-                if (null != errorResult.body)
-                {
-                    errorResult.endASL = errorResult.body.TerrainAltitude(errorResult.endPosition.latitude, errorResult.endPosition.longitude);
-                }
+                errorResult.endASL = errorResult.body.TerrainAltitude(errorResult.endPosition.latitude, errorResult.endPosition.longitude);
             }
             return errorResult;
         }
@@ -241,7 +238,7 @@ namespace MuMech
         protected void StartSimulation(bool addParachuteError)
         {
             double altitudeOfPreviousPrediction = 0;
-            double parachuteMultiplierForThisSimulation = this.parachuteSemiDeployMultiplier;
+            var parachuteMultiplierForThisSimulation = this.parachuteSemiDeployMultiplier;
             if (addParachuteError)
             {
                 errorSimulationRunning = true;
@@ -252,30 +249,27 @@ namespace MuMech
                 simulationRunning = true;
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
             }
-            Orbit patch = GetReenteringPatch() ?? orbit;
+            var patch = GetReenteringPatch() ?? orbit;
             // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
-            if (result != null)
+            if (result?.outcome == ReentrySimulation.Outcome.LANDED && result.body != null)
             {
-                if (result.outcome == ReentrySimulation.Outcome.LANDED && result.body != null)
-                {
-                    altitudeOfPreviousPrediction = result.endASL; // Note that we are caling GetResult here to force the it to calculate the endASL, if it has not already done this. It is not allowed to do this previously as we are only allowed to do it from this thread, not the reentry simulation thread.
-                }
+                altitudeOfPreviousPrediction = result.endASL; // Note that we are caling GetResult here to force the it to calculate the endASL, if it has not already done this. It is not allowed to do this previously as we are only allowed to do it from this thread, not the reentry simulation thread.
             }
             // Is this a simulation run with errors added? If so then add some error to the parachute multiple
             if (addParachuteError)
             {
-                parachuteMultiplierForThisSimulation *= 1d + (random.Next(1000000) - 500000d) / 10000000d;
+                parachuteMultiplierForThisSimulation *= 1d + ((random.Next(1000000) - 500000d) / 10000000d);
             }
 
             // The curves used for the sim are not thread safe so we need a copy used only by the thread
-            ReentrySimulation.SimCurves simCurves = ReentrySimulation.SimCurves.Borrow(patch.referenceBody);
+            var simCurves = ReentrySimulation.SimCurves.Borrow(patch.referenceBody);
 
 
             //if (descentSpeedPolicy != null)
             //    print(vesselState.limitedMaxThrustAccel.ToString("F2") + " " + descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity).ToString("F2"));
 
-            SimulatedVessel simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, core.landing.enabled && deployChutes ? limitChutesStage : -1);
-            ReentrySimulation sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
+            var simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, core.landing.enabled && deployChutes ? limitChutesStage : -1);
+            var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL, vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt, Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
             //Run the simulation in a separate thread
@@ -285,10 +279,10 @@ namespace MuMech
 
         private void RunSimulation(object o)
         {
-            ReentrySimulation sim = (ReentrySimulation)o;
+            var sim = (ReentrySimulation)o;
             try
             {
-                ReentrySimulation.Result newResult = sim.RunSimulation();
+                var newResult = sim.RunSimulation();
 
                 lock (readyResults)
                 {
@@ -299,7 +293,7 @@ namespace MuMech
                 {
                     //see how long the simulation took
                     errorStopwatch.Stop();
-                    long millisecondsToCompletion = errorStopwatch.ElapsedMilliseconds;
+                    var millisecondsToCompletion = errorStopwatch.ElapsedMilliseconds;
                     lastErrorSimTime = millisecondsToCompletion * 0.001;
                     lastErrorSimSteps = newResult.steps;
 
@@ -317,7 +311,7 @@ namespace MuMech
                 {
                     //see how long the simulation took
                     stopwatch.Stop();
-                    long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+                    var millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
                     stopwatch.Reset();
 
                     //set the delay before the next simulation
@@ -365,31 +359,36 @@ namespace MuMech
             {
                 while (readyResults.Count > 0)
                 {
-                    ReentrySimulation.Result newResult = (ReentrySimulation.Result) readyResults.Dequeue();
+                    var newResult = (ReentrySimulation.Result) readyResults.Dequeue();
 
                     // If running the simulation resulted in an error then just ignore it.
                     if (newResult.outcome != ReentrySimulation.Outcome.ERROR)
                     {
                         if (newResult.body != null)
+                        {
                             newResult.endASL = newResult.body.TerrainAltitude(newResult.endPosition.latitude, newResult.endPosition.longitude);
+                        }
 
                         if (newResult.multiplierHasError)
                         {
-                            if (errorResult != null)
-                                errorResult.Release();
+                            errorResult?.Release();
+
                             errorResult = newResult;
                         }
                         else
                         {
-                            if (result != null)
-                                result.Release();
+                            result?.Release();
+
                             result = newResult;
                         }
                     }
                     else
                     {
                         if (newResult.exception != null)
+                        {
                             print("Exception in the last simulation\n" + newResult.exception.Message + "\n" + newResult.exception.StackTrace);
+                        }
+
                         newResult.Release();
                     }
                 }
@@ -398,20 +397,23 @@ namespace MuMech
 
         protected Orbit GetReenteringPatch()
         {
-            Orbit patch = orbit;
+            var patch = orbit;
 
-            int i = 0;
+            var i = 0;
 
             do
             {
                 i++;
-                double reentryRadius = patch.referenceBody.Radius + patch.referenceBody.RealMaxAtmosphereAltitude();
-                Orbit nextPatch = vessel.GetNextPatch(patch, aerobrakeNode);
+                var reentryRadius = patch.referenceBody.Radius + patch.referenceBody.RealMaxAtmosphereAltitude();
+                var nextPatch = vessel.GetNextPatch(patch, aerobrakeNode);
                 if (patch.PeR < reentryRadius)
                 {
-                    if (patch.Radius(patch.StartUT) < reentryRadius) return patch;
+                    if (patch.Radius(patch.StartUT) < reentryRadius)
+                    {
+                        return patch;
+                    }
 
-                    double reentryTime = patch.NextTimeOfRadius(patch.StartUT, reentryRadius);
+                    var reentryTime = patch.NextTimeOfRadius(patch.StartUT, reentryRadius);
                     if (patch.StartUT < reentryTime && (nextPatch == null || reentryTime < nextPatch.StartUT))
                     {
                         return patch;
@@ -430,21 +432,18 @@ namespace MuMech
             if (makeAerobrakeNodes)
             {
                 //Remove node after finishing aerobraking:
-                if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
+                if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode) && aerobrakeNode.UT < vesselState.time && vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
                 {
-                    if (aerobrakeNode.UT < vesselState.time && vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
-                    {
-                        aerobrakeNode.RemoveSelf();
-                        aerobrakeNode = null;
-                    }
+                    aerobrakeNode.RemoveSelf();
+                    aerobrakeNode = null;
                 }
 
                 //Update or create node if necessary:
-                ReentrySimulation.Result r = Result;
-                if (r != null && r.outcome == ReentrySimulation.Outcome.AEROBRAKED)
+                var r = Result;
+                if (r?.outcome == ReentrySimulation.Outcome.AEROBRAKED)
                 {
                     //Compute the node dV:
-                    Orbit preAerobrakeOrbit = GetReenteringPatch();
+                    var preAerobrakeOrbit = GetReenteringPatch();
 
                     //Put the node at periapsis, unless we're past periapsis. In that case put the node at the current time.
                     double UT;
@@ -458,14 +457,14 @@ namespace MuMech
                         UT = preAerobrakeOrbit.NextPeriapsisTime(preAerobrakeOrbit.StartUT);
                     }
 
-                    Orbit postAerobrakeOrbit = MuUtils.OrbitFromStateVectors(r.WorldAeroBrakePosition(), r.WorldAeroBrakeVelocity(), r.body, r.aeroBrakeUT);
+                    var postAerobrakeOrbit = MuUtils.OrbitFromStateVectors(r.WorldAeroBrakePosition(), r.WorldAeroBrakeVelocity(), r.body, r.aeroBrakeUT);
 
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(preAerobrakeOrbit, UT, postAerobrakeOrbit.ApR);
+                    var dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(preAerobrakeOrbit, UT, postAerobrakeOrbit.ApR);
 
                     if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                     {
                         //update the existing node
-                        Vector3d nodeDV = preAerobrakeOrbit.DeltaVToManeuverNodeCoordinates(UT, dV);
+                        var nodeDV = preAerobrakeOrbit.DeltaVToManeuverNodeCoordinates(UT, dV);
                         aerobrakeNode.UpdateNode(nodeDV, UT);
                     }
                     else
@@ -497,20 +496,25 @@ namespace MuMech
         {
             if ((MapView.MapIsEnabled || camTrajectory) && !vessel.LandedOrSplashed && this.enabled)
             {
-                ReentrySimulation.Result drawnResult = Result;
+                var drawnResult = Result;
                 if (drawnResult != null)
                 {
                     if (drawnResult.outcome == ReentrySimulation.Outcome.LANDED)
+                    {
                         GLUtils.DrawGroundMarker(drawnResult.body, drawnResult.endPosition.latitude, drawnResult.endPosition.longitude, Color.blue, MapView.MapIsEnabled, 60);
+                    }
 
                     if (showTrajectory && drawnResult.outcome != ReentrySimulation.Outcome.ERROR && drawnResult.outcome != ReentrySimulation.Outcome.NO_REENTRY)
                     {
-                        double interval = Math.Max(Math.Min((drawnResult.endUT - drawnResult.input_UT) / 1000, 10), 0.1);
+                        var interval = Math.Max(Math.Min((drawnResult.endUT - drawnResult.input_UT) / 1000, 10), 0.1);
                         //using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory && MapView.MapIsEnabled))
                         using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory))
                         {
                             if (!MapView.MapIsEnabled && (noSkipToFreefall || vessel.staticPressurekPa > 0))
+                            {
                                 list.value[0] = vesselState.CoM;
+                            }
+
                             GLUtils.DrawPath(drawnResult.body, list.value, Color.red, MapView.MapIsEnabled);
                         }
                     }

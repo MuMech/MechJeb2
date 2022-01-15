@@ -51,9 +51,13 @@ namespace MuMech
             get
             {
                 if (current_step == null)
+                {
                     return "Off";
+                }
                 else
+                {
                     return current_step.status;
+                }
             }
         }
 

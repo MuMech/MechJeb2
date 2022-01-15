@@ -7,23 +7,23 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionStaging : MechJebModuleScriptAction
 	{
-		public static String NAME = "Staging";
+		public static string NAME = "Staging";
 
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt stage = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool nextStage = true;
-		private List<String> stagesList = new List<String>();
+		private readonly List<string> stagesList = new List<string>();
 
 		public MechJebModuleScriptActionStaging (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
-			for (int i = 0; i<StageManager.StageCount; i++)
+			for (var i = 0; i<StageManager.StageCount; i++)
 			{
 				stagesList.Add (i+"");
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (nextStage)
@@ -37,12 +37,12 @@ namespace MuMech
 			this.endAction ();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

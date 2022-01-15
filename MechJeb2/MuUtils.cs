@@ -31,32 +31,50 @@ namespace MuMech
         //while 56789 will be formated as "56.789 k"
         public static string ToSI(double d, int maxPrecision = -99, int sigFigs = 4)
         {
-            if (d == 0 || double.IsInfinity(d) || double.IsNaN(d)) return d.ToString() + " ";
+            if (d == 0 || double.IsInfinity(d) || double.IsNaN(d))
+            {
+                return d.ToString() + " ";
+            }
 
-            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
+            var exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))); //exponent of d if it were expressed in scientific notation
 
             const int unitIndexOffset = 8; //index of "" in the units array
-            int unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
-            if (unitIndex < 0) unitIndex = 0;
-            if (unitIndex >= units.Length) unitIndex = units.Length - 1;
-            string unit = units[unitIndex];
+            var unitIndex = (int)Math.Floor(exponent / 3.0) + unitIndexOffset;
+            if (unitIndex < 0)
+            {
+                unitIndex = 0;
+            }
 
-            int actualExponent = (unitIndex - unitIndexOffset) * 3; //exponent of the unit we will us, e.g. 3 for k.
+            if (unitIndex >= units.Length)
+            {
+                unitIndex = units.Length - 1;
+            }
+
+            var unit = units[unitIndex];
+
+            var actualExponent = (unitIndex - unitIndexOffset) * 3; //exponent of the unit we will us, e.g. 3 for k.
             d /= Math.Pow(10, actualExponent);
 
-            int digitsAfterDecimal = sigFigs - (int)(Math.Ceiling(Math.Log10(Math.Abs(d))));
+            var digitsAfterDecimal = sigFigs - (int)(Math.Ceiling(Math.Log10(Math.Abs(d))));
 
-            if (digitsAfterDecimal > actualExponent - maxPrecision) digitsAfterDecimal = actualExponent - maxPrecision;
-            if (digitsAfterDecimal < 0) digitsAfterDecimal = 0;
+            if (digitsAfterDecimal > actualExponent - maxPrecision)
+            {
+                digitsAfterDecimal = actualExponent - maxPrecision;
+            }
 
-            string ret = d.ToString("F" + digitsAfterDecimal) + " " + unit;
+            if (digitsAfterDecimal < 0)
+            {
+                digitsAfterDecimal = 0;
+            }
+
+            var ret = d.ToString("F" + digitsAfterDecimal) + " " + unit;
 
             return ret;
         }
 
         public static string PadPositive(double x, string format = "F3")
         {
-            string s = x.ToString(format);
+            var s = x.ToString(format);
             return s[0] == '-' ? s : " " + s;
         }
 
@@ -74,13 +92,13 @@ namespace MuMech
         //asinh(x) = log(x + sqrt(x^2 + 1))
         public static double Asinh(double x)
         {
-            return Math.Log(x + Math.Sqrt(x * x + 1));
+            return Math.Log(x + Math.Sqrt((x * x) + 1));
         }
 
         //acosh(x) = log(x + sqrt(x^2 - 1))
         public static double Acosh(double x)
         {
-            return Math.Log(x + Math.Sqrt(x * x - 1));
+            return Math.Log(x + Math.Sqrt((x * x) - 1));
         }
 
         //atanh(x) = (log(1+x) - log(1-x))/2
@@ -92,8 +110,16 @@ namespace MuMech
         //since there doesn't seem to be a Math.Clamp?
         public static double Clamp(double x, double min, double max)
         {
-            if (x < min) return min;
-            if (x > max) return max;
+            if (x < min)
+            {
+                return min;
+            }
+
+            if (x > max)
+            {
+                return max;
+            }
+
             return x;
         }
 
@@ -106,30 +132,50 @@ namespace MuMech
         //keeps angles in the range 0 to 360
         public static double ClampDegrees360(double angle)
         {
-            angle = angle % 360.0;
-            if (angle < 0) return angle + 360.0;
-            else return angle;
+            angle %= 360.0;
+            if (angle < 0)
+            {
+                return angle + 360.0;
+            }
+            else
+            {
+                return angle;
+            }
         }
 
         //keeps angles in the range -180 to 180
         public static double ClampDegrees180(double angle)
         {
             angle = ClampDegrees360(angle);
-            if (angle > 180) angle -= 360;
+            if (angle > 180)
+            {
+                angle -= 360;
+            }
+
             return angle;
         }
 
         public static double ClampRadiansTwoPi(double angle)
         {
-            angle = angle % (2 * Math.PI);
-            if (angle < 0) return angle + 2 * Math.PI;
-            else return angle;
+            angle %= (2 * Math.PI);
+            if (angle < 0)
+            {
+                return angle + (2 * Math.PI);
+            }
+            else
+            {
+                return angle;
+            }
         }
 
         public static double ClampRadiansPi(double angle)
         {
             angle = ClampRadiansTwoPi(angle);
-            if (angle > Math.PI) angle -= 2 * Math.PI;
+            if (angle > Math.PI)
+            {
+                angle -= 2 * Math.PI;
+            }
+
             return angle;
         }
 
@@ -140,21 +186,24 @@ namespace MuMech
         }
 
         public static double IntPow(double val, int exp) {
-            double result = val;
-            for(int i=1;i<exp;++i)
+            var result = val;
+            for(var i=1;i<exp;++i)
+            {
                 result *= val;
+            }
+
             return result;
         }
 
         public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double UT)
         {
-            Orbit ret = new Orbit();
+            var ret = new Orbit();
             ret.UpdateFromStateVectors(OrbitExtensions.SwapYZ(pos - body.position), OrbitExtensions.SwapYZ(vel), body, UT);
             if (double.IsNaN(ret.argumentOfPeriapsis))
             {
                 Vector3d vectorToAN = Quaternion.AngleAxis(-(float)ret.LAN, Planetarium.up) * Planetarium.right;
-                Vector3d vectorToPe = OrbitExtensions.SwapYZ(ret.eccVec);
-                double cosArgumentOfPeriapsis = Vector3d.Dot(vectorToAN, vectorToPe) / (vectorToAN.magnitude * vectorToPe.magnitude);
+                var vectorToPe = OrbitExtensions.SwapYZ(ret.eccVec);
+                var cosArgumentOfPeriapsis = Vector3d.Dot(vectorToAN, vectorToPe) / (vectorToAN.magnitude * vectorToPe.magnitude);
                 //Squad's UpdateFromStateVectors is missing these checks, which are needed due to finite precision arithmetic:
                 if(cosArgumentOfPeriapsis > 1) {
                     ret.argumentOfPeriapsis = 0;
@@ -180,7 +229,7 @@ namespace MuMech
 
         public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
         {
-            T tmp = list[indexA];
+            var tmp = list[indexA];
             list[indexA] = list[indexB];
             list[indexB] = tmp;
             return list;
@@ -188,8 +237,8 @@ namespace MuMech
 
         public static void DrawLine(Texture2D tex, int x1, int y1, int x2, int y2, Color col)
         {
-            int dy = y2 - y1;
-            int dx = x2 - x1;
+            var dy = y2 - y1;
+            var dx = x2 - x1;
             int stepx, stepy;
 
             if (dy < 0) { dy = -dy; stepy = -1; }
@@ -236,24 +285,38 @@ namespace MuMech
 
         public static Color HSVtoRGB(float hue, float saturation, float value, float alpha)
         {
-            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
-            float f = hue / 60 - Mathf.Floor(hue / 60);
+            var hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
+            var f = (hue / 60) - Mathf.Floor(hue / 60);
 
-            float v = value;
-            float p = value * (1 - saturation);
-            float q = value * (1 - f * saturation);
-            float t = value * (1 - (1 - f) * saturation);
+            var v = value;
+            var p = value * (1 - saturation);
+            var q = value * (1 - (f * saturation));
+            var t = value * (1 - ((1 - f) * saturation));
 
             if (hi == 0)
+            {
                 return new Color(v, t, p, alpha);
+            }
+
             if (hi == 1)
+            {
                 return new Color(q, v, p, alpha);
+            }
+
             if (hi == 2)
+            {
                 return new Color(p, v, t, alpha);
+            }
+
             if (hi == 3)
+            {
                 return new Color(p, q, v, alpha);
+            }
+
             if (hi == 4)
+            {
                 return new Color(t, p, v, alpha);
+            }
 
             return new Color(v, p, q, alpha);
         }
@@ -261,8 +324,8 @@ namespace MuMech
 
     public class MovingAverage
     {
-        private double[] store;
-        private int storeSize;
+        private readonly double[] store;
+        private readonly int storeSize;
         private int nextIndex = 0;
 
         public double value
@@ -270,7 +333,7 @@ namespace MuMech
             get
             {
                 double tmp = 0;
-                for (int i = 0; i < store.Length; i++)
+                for (var i = 0; i < store.Length; i++)
                 {
                     tmp += store[i];
                 }
@@ -292,7 +355,7 @@ namespace MuMech
 
         public void force(double newValue)
         {
-            for (int i = 0; i < storeSize; i++)
+            for (var i = 0; i < storeSize; i++)
             {
                 store[i] = newValue;
             }
@@ -316,16 +379,16 @@ namespace MuMech
 
     public class MovingAverage3d
     {
-        private Vector3d[] store;
-        private int storeSize;
+        private readonly Vector3d[] store;
+        private readonly int storeSize;
         private int nextIndex = 0;
 
         public Vector3d value
         {
             get
             {
-                Vector3d tmp = Vector3d.zero;
-                for (int i = 0; i < store.Length; i++)
+                var tmp = Vector3d.zero;
+                for (var i = 0; i < store.Length; i++)
                 {
                     tmp += store[i];
                 }
@@ -347,7 +410,7 @@ namespace MuMech
 
         public void force(Vector3d newValue)
         {
-            for (int i = 0; i < storeSize; i++)
+            for (var i = 0; i < storeSize; i++)
             {
                 store[i] = newValue;
             }
@@ -385,7 +448,10 @@ namespace MuMech
             }
             set
             {
-                if (d.ContainsKey(key)) d[key] = value;
+                if (d.ContainsKey(key))
+                {
+                    d[key] = value;
+                }
                 else
                 {
                     k.Add(key);
@@ -450,15 +516,19 @@ namespace MuMech
         {
             get
             {
-                TValue val;
-                if (d.TryGetValue(key, out val))
+                if (d.TryGetValue(key, out var val))
+                {
                     return val;
+                }
 
                 return defaultValue;
             }
             set
             {
-                if (d.ContainsKey(key)) d[key] = value;
+                if (d.ContainsKey(key))
+                {
+                    d[key] = value;
+                }
                 else
                 {
                     k.Add(key);
@@ -471,7 +541,7 @@ namespace MuMech
     //Represents a 2x2 matrix
     public class Matrix2x2
     {
-        double a, b, c, d;
+        readonly double a, b, c, d;
 
         //  [a    b]
         //  [      ]
@@ -491,13 +561,13 @@ namespace MuMech
             //inverse = --- [      ]
             //          det [-b   a]
 
-            double det = a * d - b * c;
+            var det = (a * d) - (b * c);
             return new Matrix2x2(d / det, -b / det, -c / det, a / det);
         }
 
         public static Vector2d operator *(Matrix2x2 M, Vector2d vec)
         {
-            return new Vector2d(M.a * vec.x + M.b * vec.y, M.c * vec.x + M.d * vec.y);
+            return new Vector2d((M.a * vec.x) + (M.b * vec.y), (M.c * vec.x) + (M.d * vec.y));
         }
     }
 }

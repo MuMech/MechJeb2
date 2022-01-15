@@ -97,11 +97,17 @@ namespace MuMech
         {
             var turnEnd = (autoPath ? autoTurnEndAltitude : turnEndAltitude);
 
-            if (IsVerticalAscent(altitude, velocity)) return 90.0;
+            if (IsVerticalAscent(altitude, velocity))
+            {
+                return 90.0;
+            }
 
-            if (altitude > turnEnd) return turnEndAngle;
+            if (altitude > turnEnd)
+            {
+                return turnEndAngle;
+            }
 
-            return Mathf.Clamp((float)(90.0 - Math.Pow((altitude - actualTurnStart) / (turnEnd - actualTurnStart), turnShapeExponent) * (90.0 - turnEndAngle)), 0.01F, 89.99F);
+            return Mathf.Clamp((float)(90.0 - (Math.Pow((altitude - actualTurnStart) / (turnEnd - actualTurnStart), turnShapeExponent) * (90.0 - turnEndAngle))), 0.01F, 89.99F);
         }
 
         enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, EXIT };
@@ -131,20 +137,36 @@ namespace MuMech
 
         void DriveVerticalAscent(FlightCtrlState s)
         {
-            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) mode = AscentMode.GRAVITY_TURN;
-            if (autopilot.autoThrottle && orbit.ApA > autopilot.desiredOrbitAltitude) mode = AscentMode.COAST_TO_APOAPSIS;
+            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface))
+            {
+                mode = AscentMode.GRAVITY_TURN;
+            }
+
+            if (autopilot.autoThrottle && orbit.ApA > autopilot.desiredOrbitAltitude)
+            {
+                mode = AscentMode.COAST_TO_APOAPSIS;
+            }
 
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90);
 
-            bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
+            var liftedOff = vessel.LiftedOff() && !vessel.Landed;
 
             core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
 
-            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
+            if (autopilot.autoThrottle)
+            {
+                core.thrust.targetThrottle = 1.0F;
+            }
 
-            if (!vessel.LiftedOff() || vessel.Landed) status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
-            else status = Localizer.Format("#MechJeb_Ascent_status18");//"Vertical ascent"
+            if (!vessel.LiftedOff() || vessel.Landed)
+            {
+                status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
+            }
+            else
+            {
+                status = Localizer.Format("#MechJeb_Ascent_status18");//"Vertical ascent"
+            }
         }
 
 
@@ -176,21 +198,21 @@ namespace MuMech
                 }
             }
 
-            double desiredFlightPathAngle = FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
+            var desiredFlightPathAngle = FlightPathAngle(vesselState.altitudeASL, vesselState.speedSurface);
 
             if (autopilot.correctiveSteering)
             {
 
-                double actualFlightPathAngle = Math.Atan2(vesselState.speedVertical, vesselState.speedSurfaceHorizontal) * UtilMath.Rad2Deg;
+                var actualFlightPathAngle = Math.Atan2(vesselState.speedVertical, vesselState.speedSurfaceHorizontal) * UtilMath.Rad2Deg;
 
                 /* form an isosceles triangle with unit vectors pointing in the desired and actual flight path angle directions and find the length of the base */
-                double velocityError = 2 * Math.Sin( UtilMath.Deg2Rad * ( desiredFlightPathAngle - actualFlightPathAngle ) / 2 );
+                var velocityError = 2 * Math.Sin( UtilMath.Deg2Rad * ( desiredFlightPathAngle - actualFlightPathAngle ) / 2 );
 
-                double difficulty = vesselState.surfaceVelocity.magnitude * 0.02 / vesselState.ThrustAccel(core.thrust.targetThrottle);
+                var difficulty = vesselState.surfaceVelocity.magnitude * 0.02 / vesselState.ThrustAccel(core.thrust.targetThrottle);
                 difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
-                double steerOffset = autopilot.correctiveSteeringGain * difficulty * velocityError;
+                var steerOffset = autopilot.correctiveSteeringGain * difficulty * velocityError;
 
-                double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset) * UtilMath.Rad2Deg, -30, 30);
+                var steerAngle = MuUtils.Clamp(Math.Asin(steerOffset) * UtilMath.Rad2Deg, -30, 30);
 
                 desiredFlightPathAngle = MuUtils.Clamp(desiredFlightPathAngle + steerAngle, -90, 90);
             }
@@ -204,7 +226,7 @@ namespace MuMech
         {
             core.thrust.targetThrottle = 0;
 
-            double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
+            var apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
 
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {

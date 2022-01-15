@@ -14,7 +14,7 @@ namespace MuMech.MathJ
 
         public override void Add(double time, double[] value, double[] tangent)
         {
-            if (Keyframes.TryGetValue(time, out Keyframe<double[]> old))
+            if (Keyframes.TryGetValue(time, out var old))
             {
                 old.OutTangent = tangent;
                 old.OutValue   = value;
@@ -22,18 +22,18 @@ namespace MuMech.MathJ
             }
             else
             {
-                double[] invalue = Utils.DoublePool.Rent(N);
-                double[] intangent = Utils.DoublePool.Rent(N);
-                double[] outvalue = Utils.DoublePool.Rent(N);
-                double[] outtangent = Utils.DoublePool.Rent(N);
+                var invalue = Utils.DoublePool.Rent(N);
+                var intangent = Utils.DoublePool.Rent(N);
+                var outvalue = Utils.DoublePool.Rent(N);
+                var outtangent = Utils.DoublePool.Rent(N);
 
-                for (int i = 0; i < N; i++)
+                for (var i = 0; i < N; i++)
                 {
                     invalue[i]   = outvalue[i]   = value[i];
                     intangent[i] = outtangent[i] = tangent[i];
                 }
 
-                Keyframe<double[]> frame = Keyframe<double[]>.Get(time, invalue, outvalue, intangent, outtangent);
+                var frame = Keyframe<double[]>.Get(time, invalue, outvalue, intangent, outtangent);
 
                 Keyframes.Add(frame);
             }
@@ -52,23 +52,30 @@ namespace MuMech.MathJ
         /// </summary>
         private void ApplyAutoTangent()
         {
-            Keyframe<double[]> lastKeyframe = Keyframes.FirstData;
+            var lastKeyframe = Keyframes.FirstData;
 
             // FIXME: for now all we do is LERP, fitting a cubic spline to possibly irregular data is a bit of a PITA
-            foreach (Keyframe<double[]> keyframe in Keyframes)
+            foreach (var keyframe in Keyframes)
             {
                 if (keyframe.CompareTo(Keyframes.FirstData) == 0)
-                    for (int i = AutotangentOffset; i < N; i++)
+                {
+                    for (var i = AutotangentOffset; i < N; i++)
                     {
-                        double slope = (keyframe.InValue[i] - lastKeyframe.OutValue[i]) / (keyframe.Time - lastKeyframe.Time);
+                        var slope = (keyframe.InValue[i] - lastKeyframe.OutValue[i]) / (keyframe.Time - lastKeyframe.Time);
                         keyframe.InTangent[i]      = slope;
                         lastKeyframe.OutTangent[i] = slope;
 
                         if (lastKeyframe == Keyframes.FirstData)
+                        {
                             lastKeyframe.InTangent[i] = slope;
+                        }
+
                         if (keyframe == Keyframes.LastData)
+                        {
                             keyframe.OutTangent[i] = slope;
+                        }
                     }
+                }
 
                 lastKeyframe = keyframe;
             }
@@ -79,11 +86,13 @@ namespace MuMech.MathJ
         public override double[] Evaluate(double time)
         {
             if (AutotangentOffset > -1 && !_appliedAutoTangent)
+            {
                 ApplyAutoTangent();
+            }
 
-            (Keyframe<double[]> min, Keyframe<double[]> max) = Keyframes.FindRange(time);
+            (var min, var max) = Keyframes.FindRange(time);
 
-            double[] y = Utils.DoublePool.Rent(N);
+            var y = Utils.DoublePool.Rent(N);
 
             EvaluationFunction(min.Time, min.OutValue, min.OutTangent, min.OutWeight, max.Time, max.InValue, max.InTangent, max.InWeight, time, y);
 
@@ -98,7 +107,7 @@ namespace MuMech.MathJ
 
         public static Curve<Vector3d>.Keyframe<Vector3d> ExtractVectorKeyFrame(Keyframe<double[]> old, int startOffset)
         {
-            Curve<Vector3d>.Keyframe<Vector3d> frame = Curve<Vector3d>.Keyframe<Vector3d>.Get(
+            var frame = Curve<Vector3d>.Keyframe<Vector3d>.Get(
                 old.Time,
                 new Vector3d(old.InValue[startOffset], old.InValue[startOffset + 1], old.InValue[startOffset + 2]),
                 new Vector3d(old.OutValue[startOffset], old.OutValue[startOffset + 1], old.OutValue[startOffset + 2]),
@@ -113,7 +122,7 @@ namespace MuMech.MathJ
 
         public static Curve<double>.Keyframe<double> ExtractScalarKeyFrame(Keyframe<double[]> old, int startOffset)
         {
-            Curve<double>.Keyframe<double> frame = Curve<double>.Keyframe<double>.Get(
+            var frame = Curve<double>.Keyframe<double>.Get(
                 old.Time,
                 old.InValue[startOffset],
                 old.OutValue[startOffset],

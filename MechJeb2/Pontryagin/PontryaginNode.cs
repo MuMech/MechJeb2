@@ -18,8 +18,8 @@ namespace MuMech {
         }
 
         private Orbit target;
-        private double tc1, tc1_bar;
-        private double tc2, tc2_bar;
+        private readonly double tc1, tc1_bar;
+        private readonly double tc2, tc2_bar;
         private double Tf;
         private Vector3d rT;
         private Vector3d vT;
@@ -45,21 +45,23 @@ namespace MuMech {
             z[4] = yT[4] - vT[1];
             z[5] = yT[5] - vT[2];
             if ( terminal )
+            {
                 throw new Exception("need to fix this");
+            }
 
             // no transversality for 6-constraint intercept
         }
 
         private void terminal5constraint(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rTp = rT;
-            Vector3d vTp = vT;
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rTp = rT;
+            var vTp = vT;
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d hT = Vector3d.Cross(rTp, vTp);
+            var hT = Vector3d.Cross(rTp, vTp);
 
             if (Math.Abs(hT[1]) <= 1e-6)
             {
@@ -73,12 +75,12 @@ namespace MuMech {
                 hT = Vector3d.Cross(rTp, vTp);
             }
 
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d eT = - ( rTp.normalized + Vector3d.Cross(hT, vTp) );
-            Vector3d ef = - ( rf.normalized + Vector3d.Cross(hf, vf) );
-            Vector3d hmiss = hf - hT;
-            Vector3d emiss = ef - eT;
-            double trans = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
+            var hf = Vector3d.Cross(rf, vf);
+            var eT = - ( rTp.normalized + Vector3d.Cross(hT, vTp) );
+            var ef = - ( rf.normalized + Vector3d.Cross(hf, vf) );
+            var hmiss = hf - hT;
+            var emiss = ef - eT;
+            var trans = Vector3d.Dot(prf, vf) - (Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude ));
 
             if (!terminal)
             {
@@ -99,20 +101,19 @@ namespace MuMech {
         protected override void Bootstrap(double t0)
         {
             // set the final time guess
-            Tf = t0 + tgo * 3.0 / 2.0;
-            Vector3d rf, vf;
+            Tf = t0 + (tgo * 3.0 / 2.0);
 
-            target.GetOrbitalStateVectorsAtUT(Tf, out rf, out vf);
+            target.GetOrbitalStateVectorsAtUT(Tf, out var rf, out var vf);
             QuaternionD rot = Quaternion.Inverse(Planetarium.fetch.rotation);
             rT = rot * (rf.xzy / r_scale);
             vT = rot * (vf.xzy / v_scale);
 
             // build arcs off of ksp stages, with coasts
-            ArcList arcs = new ArcList();
+            var arcs = new ArcList();
 
             arcs.Add(new Arc(this, t0: t0, coast: true));
 
-            for(int i = 0; i < stages.Count; i++)
+            for(var i = 0; i < stages.Count; i++)
             {
                 arcs.Add(new Arc(this, stage: stages[i], t0: t0));
             }
@@ -141,14 +142,14 @@ namespace MuMech {
             yf = new double[arcs.Count*13];
             multipleIntegrate(y0, yf, arcs, initialize: true);
 
-            double[] y0_saved = new double[y0.Length];
+            var y0_saved = new double[y0.Length];
             Array.Copy(y0, y0_saved, y0.Length);
 
             //for(int j = 0; j < y0.Length; j++)
             //    Debug.Log("bootstrap - y0[" + j + "] = " + y0[j]);
             //Debug.Log("running optimizer");
 
-            bool success = runOptimizer(arcs);
+            var success = runOptimizer(arcs);
 
             if ( !success )
             {
@@ -159,7 +160,7 @@ namespace MuMech {
                 return;
             }
 
-            Solution new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+            var new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs);
 
             //Debug.Log("optimizer done");

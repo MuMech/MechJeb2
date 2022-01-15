@@ -8,7 +8,7 @@ namespace MuMech
 
         public override string getName() {return Localizer.Format("#MechJeb_Maneu_circularize_title");}//"circularize"
 
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationCircularize()
         {
@@ -22,8 +22,8 @@ namespace MuMech
 
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add( new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, UT), UT) );
             return NodeList;
         }

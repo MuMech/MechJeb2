@@ -21,10 +21,14 @@ namespace MuMech
             ShowInEditor = true;
 
             if (toolbarButtons == null)
+            {
                 toolbarButtons = new Dictionary<DisplayModule, Button>();
+            }
 
             if (featureButtons == null)
+            {
                 featureButtons = new Dictionary<Action, Button>();
+            }
         }
 
         public enum WindowStat
@@ -80,12 +84,12 @@ namespace MuMech
                     case WindowSide.LEFT:
                         return new Rect((windowProgr - 1) * windowPos.width, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
                     case WindowSide.RIGHT:
-                        return new Rect(GuiUtils.scaledScreenWidth - windowProgr * windowPos.width, Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
+                        return new Rect(GuiUtils.scaledScreenWidth - (windowProgr * windowPos.width), Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
                     case WindowSide.TOP:
-                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - windowPos.width * 0.5f - windowHPos, 0, GuiUtils.scaledScreenWidth - windowPos.width), (windowProgr - 1) * windowPos.height, windowPos.width, windowPos.height);
+                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - (windowPos.width * 0.5f) - windowHPos, 0, GuiUtils.scaledScreenWidth - windowPos.width), (windowProgr - 1) * windowPos.height, windowPos.width, windowPos.height);
                     case WindowSide.BOTTOM:
                     default:
-                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - windowPos.width * 0.5f - windowHPos, 0, GuiUtils.scaledScreenWidth - windowPos.width), GuiUtils.scaledScreenHeight - windowProgr * windowPos.height, windowPos.width, windowPos.height);
+                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - (windowPos.width * 0.5f) - windowHPos, 0, GuiUtils.scaledScreenWidth - windowPos.width), GuiUtils.scaledScreenHeight - (windowProgr * windowPos.height), windowPos.width, windowPos.height);
                 }
             }
         }
@@ -99,12 +103,12 @@ namespace MuMech
                     case WindowSide.LEFT:
                         return new Rect(Mathf.Clamp(windowVPos, - GuiUtils.scaledScreenHeight, -100), windowPos.width * windowProgr, 100, 25);
                     case WindowSide.RIGHT:
-                        return new Rect(Mathf.Clamp(windowVPos, - GuiUtils.scaledScreenHeight, -100), GuiUtils.scaledScreenWidth - 25 - windowPos.width * windowProgr, 100, 25);
+                        return new Rect(Mathf.Clamp(windowVPos, - GuiUtils.scaledScreenHeight, -100), GuiUtils.scaledScreenWidth - 25 - (windowPos.width * windowProgr), 100, 25);
                     case WindowSide.TOP:
                         return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50), windowProgr * windowPos.height, 100, 25);
                     case WindowSide.BOTTOM:
                     default:
-                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50), GuiUtils.scaledScreenHeight - windowProgr * windowPos.height - 25, 100, 25);
+                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50), GuiUtils.scaledScreenHeight - (windowProgr * windowPos.height) - 25, 100, 25);
                 }
             }
         }
@@ -158,7 +162,9 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (columns < 1)
+            {
                 columns = 1;
+            }
         }
 
         // If the Toolbar is loaded and we don't want to display the big menu button
@@ -182,20 +188,20 @@ namespace MuMech
                 ShowHideWindow();
             }
 
-            GUIStyle toggleInactive = new GUIStyle(GUI.skin.toggle);
+            var toggleInactive = new GUIStyle(GUI.skin.toggle);
             toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
-            GUIStyle toggleActive = new GUIStyle(toggleInactive);
+            var toggleActive = new GUIStyle(toggleInactive);
             toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
 
-            List<DisplayModule> displayModules = core.GetDisplayModules(DisplayOrder.instance);
-            int i = 0;
-            int step = Mathf.CeilToInt((float)(displayModules.Count(d => !d.hidden && d.showInCurrentScene) + 1 ) / columns);
+            var displayModules = core.GetDisplayModules(DisplayOrder.instance);
+            var i = 0;
+            var step = Mathf.CeilToInt((float)(displayModules.Count(d => !d.hidden && d.showInCurrentScene) + 1 ) / columns);
             
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
 
-            foreach (DisplayModule module in displayModules)
+            foreach (var module in displayModules)
             {
                 if (!module.hidden && module.showInCurrentScene)
                 {
@@ -219,17 +225,21 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (core.someModuleAreLocked)
+            {
                 GUILayout.Label(Localizer.Format("#MechJeb_ModuleAreLocked"));//"Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station."
+            }
         }
 
         public void SetupAppLauncher()
         {
             if (!ApplicationLauncher.Ready)
+            {
                 return;
+            }
 
             if (useAppLauncher && mjButton == null)
             {
-                Texture2D mjButtonTexture = GameDatabase.Instance.GetTexture("MechJeb2/Icons/MJ2", false);
+                var mjButtonTexture = GameDatabase.Instance.GetTexture("MechJeb2/Icons/MJ2", false);
 
                 mjButton = ApplicationLauncher.Instance.AddModApplication(ShowHideMasterWindow, ShowHideMasterWindow, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, mjButtonTexture);
             }
@@ -243,31 +253,35 @@ namespace MuMech
 
         public void ShowHideMasterWindow()
         {
-            MechJebModuleMenu mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModule<MechJebModuleMenu>();
+            var mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModule<MechJebModuleMenu>();
             mod.ShowHideWindow();
         }
 
         public void SetupToolBarButtons()
         {
             if (!ToolbarManager.ToolbarAvailable)
+            {
                 return;
+            }
 
             SetupMainToolbarButton();
 
-            foreach (DisplayModule module in core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.hidden))
+            foreach (var module in core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.hidden))
             {
                 Button button;
                 if (!toolbarButtons.ContainsKey(module))
                 {
                     Debug.Log("Create button for module " + module.GetName());
 
-                    String name = GetCleanName(module.IconName());
+                    var name = GetCleanName(module.IconName());
 
-                    String TexturePath = "MechJeb2/Icons/" + name;
-                    String TexturePathActive = TexturePath + "_active";
+                    var TexturePath = "MechJeb2/Icons/" + name;
+                    var TexturePathActive = TexturePath + "_active";
 
-                    button = new Button();
-                    button.button = ToolbarManager.Instance.add("MechJeb2", name);
+                    button = new Button
+                    {
+                        button = ToolbarManager.Instance.add("MechJeb2", name)
+                    };
 
                     if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
                     {
@@ -294,7 +308,7 @@ namespace MuMech
                     button.button.ToolTip = "MechJeb " + module.GetName();
                     button.button.OnClick += (b) =>
                     {
-                        DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetDisplayModules(DisplayOrder.instance).FirstOrDefault(m => m == module);
+                        var mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetDisplayModules(DisplayOrder.instance).FirstOrDefault(m => m == module);
                         if (mod != null)
                         {
                             mod.enabled = !mod.enabled;
@@ -314,7 +328,7 @@ namespace MuMech
             if (featureButtons.Count == 0)
             {
                 var maneuverPlannerModule = core.GetComputerModule<MechJebModuleManeuverPlanner>();
-                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
+                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule?.hidden == false)
                 {
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", (b) =>
                     {
@@ -340,7 +354,7 @@ namespace MuMech
                         {
                             ScreenMessages.PostScreenMessage("No maneuver nodes", 2f);
                         }
-                    }, () => vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.node != null && core.node.enabled);
+                    }, () => vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.node?.enabled == true);
 
                     CreateFeatureButton(maneuverPlannerModule, "Autostage_Once", "MechJeb Autostage Once", (b) =>
                     {
@@ -381,8 +395,10 @@ namespace MuMech
             var texturePath = "MechJeb2/Icons/" + nameId;
             var texturePathActive = texturePath + "_active";
 
-            var button = new Button();
-            button.button = ToolbarManager.Instance.add("MechJeb2", nameId);
+            var button = new Button
+            {
+                button = ToolbarManager.Instance.add("MechJeb2", nameId)
+            };
 
             if (GameDatabase.Instance.GetTexture(texturePath, false) == null)
             {
@@ -419,7 +435,9 @@ namespace MuMech
         public void SetupMainToolbarButton()
         {
             if (!ToolbarManager.ToolbarAvailable)
+            {
                 return;
+            }
 
             if (menuButton == null)
             {
@@ -434,8 +452,8 @@ namespace MuMech
 
         private string GetCleanName(string name)
         {
-            string regexSearch = " .:" + new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            Regex r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            var regexSearch = " .:" + new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            var r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
             return r.Replace(name, "_");
         }
 
@@ -443,7 +461,10 @@ namespace MuMech
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             if (!HighLogic.LoadedSceneIsGame)
+            {
                 return;
+            }
+
             ClearButtons();
             base.OnLoad(local, type, global);
         }
@@ -459,7 +480,7 @@ namespace MuMech
 
         private void ClearButtons()
         {
-            if (mjButton != null && mjButton.gameObject != null)
+            if (mjButton?.gameObject != null)
             {
                 ApplicationLauncher.Instance.RemoveModApplication(mjButton);
                 mjButton = null;
@@ -467,28 +488,19 @@ namespace MuMech
 
             if (ToolbarManager.ToolbarAvailable)
             {
-                foreach (Button b in toolbarButtons.Values)
+                foreach (var b in toolbarButtons.Values)
                 {
-                    if (b.button != null)
-                    {
-                        b.button.Destroy();
-                    }
+                    b.button?.Destroy();
                 }
                 toolbarButtons.Clear();
 
-                foreach (Button b in featureButtons.Values)
+                foreach (var b in featureButtons.Values)
                 {
-                    if (b.button != null)
-                    {
-                        b.button.Destroy();
-                    }
+                    b.button?.Destroy();
                 }
                 featureButtons.Clear();
 
-                if (menuButton != null)
-                {
-                    menuButton.Destroy();
-                }
+                menuButton?.Destroy();
             }
         }
 
@@ -516,10 +528,12 @@ namespace MuMech
 
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");
-            Matrix4x4 previousGuiMatrix = GUI.matrix;
+            var previousGuiMatrix = GUI.matrix;
             if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
-                GUI.matrix = GUI.matrix*Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-            
+            {
+                GUI.matrix *= Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
+            }
+
             if (!HideMenuButton && GUI.RepeatButton(buttonPos, (windowStat == WindowStat.HIDDEN) ^ (windowSide == WindowSide.TOP || windowSide == WindowSide.LEFT) ? "▲ MechJeb ▲" : "▼ MechJeb ▼"))
             {
                 if (Event.current.button == 0)
@@ -589,7 +603,7 @@ namespace MuMech
                 }
             }
 
-            if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
+            if (HighLogic.LoadedSceneIsEditor || (vessel?.isActiveVessel == true))
             {
                 SetupAppLauncher();
                 SetupToolBarButtons();
@@ -602,7 +616,7 @@ namespace MuMech
             }
         }
 
-        public class DisplayOrder : IComparer<DisplayModule>
+        public sealed class DisplayOrder : IComparer<DisplayModule>
         {
             private DisplayOrder()
             {
@@ -612,11 +626,19 @@ namespace MuMech
 
             int IComparer<DisplayModule>.Compare(DisplayModule a, DisplayModule b)
             {
-                bool customA = a is MechJebModuleCustomInfoWindow;
-                bool customB = b is MechJebModuleCustomInfoWindow;
-                if (!customA && customB) return -1;
-                if (customA && !customB) return 1;
-                return string.Compare(a.GetName(), b.GetName(), StringComparison.Ordinal);
+                var customA = a is MechJebModuleCustomInfoWindow;
+                var customB = b is MechJebModuleCustomInfoWindow;
+                if (!customA && customB)
+                {
+                    return -1;
+                }
+
+                if (customA && !customB)
+                {
+                    return 1;
+                }
+
+                return string.CompareOrdinal(a.GetName(), b.GetName());
             }
         }
     }

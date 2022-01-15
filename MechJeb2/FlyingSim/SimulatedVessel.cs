@@ -37,7 +37,7 @@ namespace MuMech
 
         public static SimulatedVessel Borrow(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage)
         {
-            SimulatedVessel vessel = pool.Borrow();
+            var vessel = pool.Borrow();
             vessel.Init(v, simCurves, startTime, limitChutesStage);
             return vessel;
         }
@@ -52,15 +52,17 @@ namespace MuMech
             simCurves = _simCurves;
 
             if (parts.Capacity < count)
+            {
                 parts.Capacity = count;
+            }
 
-            for (int i=0; i < count; i++)
+            for (var i=0; i < count; i++)
             {
                 SimulatedPart simulatedPart = null;
-                bool special = false;
-                for (int j = 0; j < oParts[i].Modules.Count; j++)
+                var special = false;
+                for (var j = 0; j < oParts[i].Modules.Count; j++)
                 {
-                    ModuleParachute mp = oParts[i].Modules[j] as ModuleParachute;
+                    var mp = oParts[i].Modules[j] as ModuleParachute;
                     if (mp != null && v.mainBody.atmosphere)
                     {
                         special = true;
@@ -79,11 +81,11 @@ namespace MuMech
 
         public Vector3d Drag(Vector3d localVelocity, double dynamicPressurekPa, float mach)
         {
-            Vector3d drag = Vector3d.zero;
+            var drag = Vector3d.zero;
 
-            double dragFactor = dynamicPressurekPa * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
+            var dragFactor = dynamicPressurekPa * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 drag += parts[i].Drag(localVelocity, dragFactor, mach);
             }
@@ -93,11 +95,11 @@ namespace MuMech
 
         public Vector3d Lift(Vector3d localVelocity, float dynamicPressurekPa, float mach)
         {
-            Vector3d lift = Vector3d.zero;
+            var lift = Vector3d.zero;
 
             double liftFactor = dynamicPressurekPa * simCurves.LiftMachCurve.Evaluate(mach);
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 lift += parts[i].Lift(localVelocity, liftFactor);
             }
@@ -107,7 +109,7 @@ namespace MuMech
 
         public bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double shockTemp, double t, double parachuteSemiDeployMultiplier)
         {
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 if (parts[i].SimulateAndRollback(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t, parachuteSemiDeployMultiplier))
                 {
@@ -119,8 +121,8 @@ namespace MuMech
 
         public bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
-            bool deploying = false;
-            for (int i = 0; i < count; i++)
+            var deploying = false;
+            for (var i = 0; i < count; i++)
             {
                 deploying |= parts[i].Simulate(altATGL, altASL, endASL, pressure, shockTemp, time, semiDeployMultiplier);
             }

@@ -7,7 +7,7 @@ namespace MuMech
     {
         public override string getName() { return Localizer.Format("#MechJeb_match_planes_title");}//match planes with target
 
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationPlane ()
         {
@@ -25,7 +25,7 @@ namespace MuMech
 
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             if (!target.NormalTargetExists)
             {
@@ -101,7 +101,7 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception6"));//wrong time reference.
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(dV, UT));
             return NodeList;
         }

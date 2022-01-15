@@ -61,7 +61,7 @@ public partial class alglib
         fft.fftc1d(ref a, n, null);
     }
     
-    public static void fftc1d(ref complex[] a, int n, alglib.xparams _params)
+    public static void fftc1d(ref complex[] a, int n, xparams _params)
     {
     
         fft.fftc1d(ref a, n, _params);
@@ -78,7 +78,7 @@ public partial class alglib
         return;
     }
             
-    public static void fftc1d(ref complex[] a, alglib.xparams _params)
+    public static void fftc1d(ref complex[] a, xparams _params)
     {
         int n;
     
@@ -115,7 +115,7 @@ public partial class alglib
         fft.fftc1dinv(ref a, n, null);
     }
     
-    public static void fftc1dinv(ref complex[] a, int n, alglib.xparams _params)
+    public static void fftc1dinv(ref complex[] a, int n, xparams _params)
     {
     
         fft.fftc1dinv(ref a, n, _params);
@@ -132,7 +132,7 @@ public partial class alglib
         return;
     }
             
-    public static void fftc1dinv(ref complex[] a, alglib.xparams _params)
+    public static void fftc1dinv(ref complex[] a, xparams _params)
     {
         int n;
     
@@ -172,7 +172,7 @@ public partial class alglib
         fft.fftr1d(a, n, ref f, null);
     }
     
-    public static void fftr1d(double[] a, int n, out complex[] f, alglib.xparams _params)
+    public static void fftr1d(double[] a, int n, out complex[] f, xparams _params)
     {
         f = new complex[0];
         fft.fftr1d(a, n, ref f, _params);
@@ -189,7 +189,7 @@ public partial class alglib
         return;
     }
             
-    public static void fftr1d(double[] a, out complex[] f, alglib.xparams _params)
+    public static void fftr1d(double[] a, out complex[] f, xparams _params)
     {
         int n;
     
@@ -241,7 +241,7 @@ public partial class alglib
         fft.fftr1dinv(f, n, ref a, null);
     }
     
-    public static void fftr1dinv(complex[] f, int n, out double[] a, alglib.xparams _params)
+    public static void fftr1dinv(complex[] f, int n, out double[] a, xparams _params)
     {
         a = new double[0];
         fft.fftr1dinv(f, n, ref a, _params);
@@ -258,7 +258,7 @@ public partial class alglib
         return;
     }
             
-    public static void fftr1dinv(complex[] f, out double[] a, alglib.xparams _params)
+    public static void fftr1dinv(complex[] f, out double[] a, xparams _params)
     {
         int n;
     
@@ -297,7 +297,7 @@ public partial class alglib
         fht.fhtr1d(ref a, n, null);
     }
     
-    public static void fhtr1d(ref double[] a, int n, alglib.xparams _params)
+    public static void fhtr1d(ref double[] a, int n, xparams _params)
     {
     
         fht.fhtr1d(ref a, n, _params);
@@ -325,7 +325,7 @@ public partial class alglib
         fht.fhtr1dinv(ref a, n, null);
     }
     
-    public static void fhtr1dinv(ref double[] a, int n, alglib.xparams _params)
+    public static void fhtr1dinv(ref double[] a, int n, xparams _params)
     {
     
         fht.fhtr1dinv(ref a, n, _params);
@@ -371,7 +371,7 @@ public partial class alglib
         conv.convc1d(a, m, b, n, ref r, null);
     }
     
-    public static void convc1d(complex[] a, int m, complex[] b, int n, out complex[] r, alglib.xparams _params)
+    public static void convc1d(complex[] a, int m, complex[] b, int n, out complex[] r, xparams _params)
     {
         r = new complex[0];
         conv.convc1d(a, m, b, n, ref r, _params);
@@ -409,7 +409,7 @@ public partial class alglib
         conv.convc1dinv(a, m, b, n, ref r, null);
     }
     
-    public static void convc1dinv(complex[] a, int m, complex[] b, int n, out complex[] r, alglib.xparams _params)
+    public static void convc1dinv(complex[] a, int m, complex[] b, int n, out complex[] r, xparams _params)
     {
         r = new complex[0];
         conv.convc1dinv(a, m, b, n, ref r, _params);
@@ -449,7 +449,7 @@ public partial class alglib
         conv.convc1dcircular(s, m, r, n, ref c, null);
     }
     
-    public static void convc1dcircular(complex[] s, int m, complex[] r, int n, out complex[] c, alglib.xparams _params)
+    public static void convc1dcircular(complex[] s, int m, complex[] r, int n, out complex[] c, xparams _params)
     {
         c = new complex[0];
         conv.convc1dcircular(s, m, r, n, ref c, _params);
@@ -487,7 +487,7 @@ public partial class alglib
         conv.convc1dcircularinv(a, m, b, n, ref r, null);
     }
     
-    public static void convc1dcircularinv(complex[] a, int m, complex[] b, int n, out complex[] r, alglib.xparams _params)
+    public static void convc1dcircularinv(complex[] a, int m, complex[] b, int n, out complex[] r, xparams _params)
     {
         r = new complex[0];
         conv.convc1dcircularinv(a, m, b, n, ref r, _params);
@@ -521,7 +521,7 @@ public partial class alglib
         conv.convr1d(a, m, b, n, ref r, null);
     }
     
-    public static void convr1d(double[] a, int m, double[] b, int n, out double[] r, alglib.xparams _params)
+    public static void convr1d(double[] a, int m, double[] b, int n, out double[] r, xparams _params)
     {
         r = new double[0];
         conv.convr1d(a, m, b, n, ref r, _params);
@@ -559,7 +559,7 @@ public partial class alglib
         conv.convr1dinv(a, m, b, n, ref r, null);
     }
     
-    public static void convr1dinv(double[] a, int m, double[] b, int n, out double[] r, alglib.xparams _params)
+    public static void convr1dinv(double[] a, int m, double[] b, int n, out double[] r, xparams _params)
     {
         r = new double[0];
         conv.convr1dinv(a, m, b, n, ref r, _params);
@@ -593,7 +593,7 @@ public partial class alglib
         conv.convr1dcircular(s, m, r, n, ref c, null);
     }
     
-    public static void convr1dcircular(double[] s, int m, double[] r, int n, out double[] c, alglib.xparams _params)
+    public static void convr1dcircular(double[] s, int m, double[] r, int n, out double[] c, xparams _params)
     {
         c = new double[0];
         conv.convr1dcircular(s, m, r, n, ref c, _params);
@@ -631,7 +631,7 @@ public partial class alglib
         conv.convr1dcircularinv(a, m, b, n, ref r, null);
     }
     
-    public static void convr1dcircularinv(double[] a, int m, double[] b, int n, out double[] r, alglib.xparams _params)
+    public static void convr1dcircularinv(double[] a, int m, double[] b, int n, out double[] r, xparams _params)
     {
         r = new double[0];
         conv.convr1dcircularinv(a, m, b, n, ref r, _params);
@@ -684,7 +684,7 @@ public partial class alglib
         corr.corrc1d(signal, n, pattern, m, ref r, null);
     }
     
-    public static void corrc1d(complex[] signal, int n, complex[] pattern, int m, out complex[] r, alglib.xparams _params)
+    public static void corrc1d(complex[] signal, int n, complex[] pattern, int m, out complex[] r, xparams _params)
     {
         r = new complex[0];
         corr.corrc1d(signal, n, pattern, m, ref r, _params);
@@ -723,7 +723,7 @@ public partial class alglib
         corr.corrc1dcircular(signal, m, pattern, n, ref c, null);
     }
     
-    public static void corrc1dcircular(complex[] signal, int m, complex[] pattern, int n, out complex[] c, alglib.xparams _params)
+    public static void corrc1dcircular(complex[] signal, int m, complex[] pattern, int n, out complex[] c, xparams _params)
     {
         c = new complex[0];
         corr.corrc1dcircular(signal, m, pattern, n, ref c, _params);
@@ -771,7 +771,7 @@ public partial class alglib
         corr.corrr1d(signal, n, pattern, m, ref r, null);
     }
     
-    public static void corrr1d(double[] signal, int n, double[] pattern, int m, out double[] r, alglib.xparams _params)
+    public static void corrr1d(double[] signal, int n, double[] pattern, int m, out double[] r, xparams _params)
     {
         r = new double[0];
         corr.corrr1d(signal, n, pattern, m, ref r, _params);
@@ -810,7 +810,7 @@ public partial class alglib
         corr.corrr1dcircular(signal, m, pattern, n, ref c, null);
     }
     
-    public static void corrr1dcircular(double[] signal, int m, double[] pattern, int n, out double[] c, alglib.xparams _params)
+    public static void corrr1dcircular(double[] signal, int m, double[] pattern, int n, out double[] c, xparams _params)
     {
         c = new double[0];
         corr.corrr1dcircular(signal, m, pattern, n, ref c, _params);
@@ -852,11 +852,11 @@ public partial class alglib
         *************************************************************************/
         public static void fftc1d(ref complex[] a,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
-            int i = 0;
-            double[] buf = new double[0];
+            var plan = new ftbase.fasttransformplan();
+            var i = 0;
+            var buf = new double[0];
 
             alglib.ap.assert(n>0, "FFTC1D: incorrect N!");
             alglib.ap.assert(alglib.ap.len(a)>=n, "FFTC1D: Length(A)<N!");
@@ -877,8 +877,8 @@ public partial class alglib
             buf = new double[2*n];
             for(i=0; i<=n-1; i++)
             {
-                buf[2*i+0] = a[i].x;
-                buf[2*i+1] = a[i].y;
+                buf[(2 * i) + 0] = a[i].x;
+                buf[(2 * i) + 1] = a[i].y;
             }
             
             //
@@ -896,8 +896,8 @@ public partial class alglib
             //
             for(i=0; i<=n-1; i++)
             {
-                a[i].x = buf[2*i+0];
-                a[i].y = buf[2*i+1];
+                a[i].x = buf[(2 * i) + 0];
+                a[i].y = buf[(2 * i) + 1];
             }
         }
 
@@ -924,9 +924,9 @@ public partial class alglib
         *************************************************************************/
         public static void fftc1dinv(ref complex[] a,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(n>0, "FFTC1DInv: incorrect N!");
             alglib.ap.assert(alglib.ap.len(a)>=n, "FFTC1DInv: Length(A)<N!");
@@ -978,17 +978,17 @@ public partial class alglib
         public static void fftr1d(double[] a,
             int n,
             ref complex[] f,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int n2 = 0;
-            int idx = 0;
+            var i = 0;
+            var n2 = 0;
+            var idx = 0;
             complex hn = 0;
             complex hmnc = 0;
             complex v = 0;
-            double[] buf = new double[0];
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
-            int i_ = 0;
+            var buf = new double[0];
+            var plan = new ftbase.fasttransformplan();
+            var i_ = 0;
 
             f = new complex[0];
 
@@ -1047,7 +1047,7 @@ public partial class alglib
                     hmnc.y = -buf[idx+1];
                     v.x = -Math.Sin(-(2*Math.PI*i/n));
                     v.y = Math.Cos(-(2*Math.PI*i/n));
-                    f[i] = hn+hmnc-v*(hn-hmnc);
+                    f[i] = hn+hmnc- (v *(hn-hmnc));
                     f[i].x = 0.5*f[i].x;
                     f[i].y = 0.5*f[i].y;
                 }
@@ -1110,11 +1110,11 @@ public partial class alglib
         public static void fftr1dinv(complex[] f,
             int n,
             ref double[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] h = new double[0];
-            complex[] fh = new complex[0];
+            var i = 0;
+            var h = new double[0];
+            var fh = new complex[0];
 
             a = new double[0];
 
@@ -1185,17 +1185,17 @@ public partial class alglib
             int n,
             ref double[] buf,
             ftbase.fasttransformplan plan,
-            alglib.xparams _params)
+            xparams _params)
         {
             double x = 0;
             double y = 0;
-            int i = 0;
-            int n2 = 0;
-            int idx = 0;
+            var i = 0;
+            var n2 = 0;
+            var idx = 0;
             complex hn = 0;
             complex hmnc = 0;
             complex v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>0 && n%2==0, "FFTR1DEvenInplace: incorrect N!");
             
@@ -1234,9 +1234,9 @@ public partial class alglib
                 hmnc.y = -buf[idx+1];
                 v.x = -Math.Sin(-(2*Math.PI*i/n));
                 v.y = Math.Cos(-(2*Math.PI*i/n));
-                v = hn+hmnc-v*(hn-hmnc);
-                a[2*i+0] = 0.5*v.x;
-                a[2*i+1] = 0.5*v.y;
+                v = hn+hmnc- (v *(hn-hmnc));
+                a[(2 * i) + 0] = 0.5*v.x;
+                a[(2 * i) + 1] = 0.5*v.y;
             }
             a[1] = buf[0]-buf[1];
         }
@@ -1253,13 +1253,13 @@ public partial class alglib
             int n,
             ref double[] buf,
             ftbase.fasttransformplan plan,
-            alglib.xparams _params)
+            xparams _params)
         {
             double x = 0;
             double y = 0;
             double t = 0;
-            int i = 0;
-            int n2 = 0;
+            var i = 0;
+            var n2 = 0;
 
             alglib.ap.assert(n>0 && n%2==0, "FFTR1DInvInternalEven: incorrect N!");
             
@@ -1289,8 +1289,8 @@ public partial class alglib
             buf[0] = a[0];
             for(i=1; i<=n2-1; i++)
             {
-                x = a[2*i+0];
-                y = a[2*i+1];
+                x = a[(2 * i) + 0];
+                y = a[(2 * i) + 1];
                 buf[i] = x-y;
                 buf[n-i] = x+y;
             }
@@ -1300,8 +1300,8 @@ public partial class alglib
             t = (double)1/(double)n;
             for(i=1; i<=n2-1; i++)
             {
-                x = buf[2*i+0];
-                y = buf[2*i+1];
+                x = buf[(2 * i) + 0];
+                y = buf[(2 * i) + 1];
                 a[i] = t*(x-y);
                 a[n-i] = t*(x+y);
             }
@@ -1331,10 +1331,10 @@ public partial class alglib
         *************************************************************************/
         public static void fhtr1d(ref double[] a,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            complex[] fa = new complex[0];
+            var i = 0;
+            var fa = new complex[0];
 
             alglib.ap.assert(n>0, "FHTR1D: incorrect N!");
             
@@ -1376,9 +1376,9 @@ public partial class alglib
         *************************************************************************/
         public static void fhtr1dinv(ref double[] a,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(n>0, "FHTR1DInv: incorrect N!");
             
@@ -1441,7 +1441,7 @@ public partial class alglib
             complex[] b,
             int n,
             ref complex[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
             r = new complex[0];
 
@@ -1491,13 +1491,13 @@ public partial class alglib
             complex[] b,
             int n,
             ref complex[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int p = 0;
-            double[] buf = new double[0];
-            double[] buf2 = new double[0];
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
+            var i = 0;
+            var p = 0;
+            var buf = new double[0];
+            var buf2 = new double[0];
+            var plan = new ftbase.fasttransformplan();
             complex c1 = 0;
             complex c2 = 0;
             complex c3 = 0;
@@ -1511,44 +1511,44 @@ public partial class alglib
             buf = new double[2*p];
             for(i=0; i<=m-1; i++)
             {
-                buf[2*i+0] = a[i].x;
-                buf[2*i+1] = a[i].y;
+                buf[(2 * i) + 0] = a[i].x;
+                buf[(2 * i) + 1] = a[i].y;
             }
             for(i=m; i<=p-1; i++)
             {
-                buf[2*i+0] = 0;
-                buf[2*i+1] = 0;
+                buf[(2 * i) + 0] = 0;
+                buf[(2 * i) + 1] = 0;
             }
             buf2 = new double[2*p];
             for(i=0; i<=n-1; i++)
             {
-                buf2[2*i+0] = b[i].x;
-                buf2[2*i+1] = b[i].y;
+                buf2[(2 * i) + 0] = b[i].x;
+                buf2[(2 * i) + 1] = b[i].y;
             }
             for(i=n; i<=p-1; i++)
             {
-                buf2[2*i+0] = 0;
-                buf2[2*i+1] = 0;
+                buf2[(2 * i) + 0] = 0;
+                buf2[(2 * i) + 1] = 0;
             }
             ftbase.ftapplyplan(plan, buf, 0, 1, _params);
             ftbase.ftapplyplan(plan, buf2, 0, 1, _params);
             for(i=0; i<=p-1; i++)
             {
-                c1.x = buf[2*i+0];
-                c1.y = buf[2*i+1];
-                c2.x = buf2[2*i+0];
-                c2.y = buf2[2*i+1];
+                c1.x = buf[(2 * i) + 0];
+                c1.y = buf[(2 * i) + 1];
+                c2.x = buf2[(2 * i) + 0];
+                c2.y = buf2[(2 * i) + 1];
                 c3 = c1/c2;
-                buf[2*i+0] = c3.x;
-                buf[2*i+1] = -c3.y;
+                buf[(2 * i) + 0] = c3.x;
+                buf[(2 * i) + 1] = -c3.y;
             }
             ftbase.ftapplyplan(plan, buf, 0, 1, _params);
             t = (double)1/(double)p;
             r = new complex[m-n+1];
             for(i=0; i<=m-n; i++)
             {
-                r[i].x = t*buf[2*i+0];
-                r[i].y = -(t*buf[2*i+1]);
+                r[i].x = t*buf[(2 * i) + 0];
+                r[i].y = -(t*buf[(2 * i) + 1]);
             }
         }
 
@@ -1586,14 +1586,14 @@ public partial class alglib
             complex[] r,
             int n,
             ref complex[] c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[] buf = new complex[0];
-            int i1 = 0;
-            int i2 = 0;
-            int j2 = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var buf = new complex[0];
+            var i1 = 0;
+            var i2 = 0;
+            var j2 = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             c = new complex[0];
 
@@ -1620,7 +1620,7 @@ public partial class alglib
                     {
                         buf[i_] = buf[i_] + r[i_+i1_];
                     }
-                    i1 = i1+m;
+                    i1 += m;
                 }
                 convc1dcircular(s, m, buf, m, ref c, _params);
                 return;
@@ -1660,22 +1660,22 @@ public partial class alglib
             complex[] b,
             int n,
             ref complex[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int j2 = 0;
-            double[] buf = new double[0];
-            double[] buf2 = new double[0];
-            complex[] cbuf = new complex[0];
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
+            var i = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var j2 = 0;
+            var buf = new double[0];
+            var buf2 = new double[0];
+            var cbuf = new complex[0];
+            var plan = new ftbase.fasttransformplan();
             complex c1 = 0;
             complex c2 = 0;
             complex c3 = 0;
             double t = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             r = new complex[0];
 
@@ -1702,7 +1702,7 @@ public partial class alglib
                     {
                         cbuf[i_] = cbuf[i_] + b[i_+i1_];
                     }
-                    i1 = i1+m;
+                    i1 += m;
                 }
                 convc1dcircularinv(a, m, cbuf, m, ref r, _params);
                 return;
@@ -1715,39 +1715,39 @@ public partial class alglib
             buf = new double[2*m];
             for(i=0; i<=m-1; i++)
             {
-                buf[2*i+0] = a[i].x;
-                buf[2*i+1] = a[i].y;
+                buf[(2 * i) + 0] = a[i].x;
+                buf[(2 * i) + 1] = a[i].y;
             }
             buf2 = new double[2*m];
             for(i=0; i<=n-1; i++)
             {
-                buf2[2*i+0] = b[i].x;
-                buf2[2*i+1] = b[i].y;
+                buf2[(2 * i) + 0] = b[i].x;
+                buf2[(2 * i) + 1] = b[i].y;
             }
             for(i=n; i<=m-1; i++)
             {
-                buf2[2*i+0] = 0;
-                buf2[2*i+1] = 0;
+                buf2[(2 * i) + 0] = 0;
+                buf2[(2 * i) + 1] = 0;
             }
             ftbase.ftapplyplan(plan, buf, 0, 1, _params);
             ftbase.ftapplyplan(plan, buf2, 0, 1, _params);
             for(i=0; i<=m-1; i++)
             {
-                c1.x = buf[2*i+0];
-                c1.y = buf[2*i+1];
-                c2.x = buf2[2*i+0];
-                c2.y = buf2[2*i+1];
+                c1.x = buf[(2 * i) + 0];
+                c1.y = buf[(2 * i) + 1];
+                c2.x = buf2[(2 * i) + 0];
+                c2.y = buf2[(2 * i) + 1];
                 c3 = c1/c2;
-                buf[2*i+0] = c3.x;
-                buf[2*i+1] = -c3.y;
+                buf[(2 * i) + 0] = c3.x;
+                buf[(2 * i) + 1] = -c3.y;
             }
             ftbase.ftapplyplan(plan, buf, 0, 1, _params);
             t = (double)1/(double)m;
             r = new complex[m];
             for(i=0; i<=m-1; i++)
             {
-                r[i].x = t*buf[2*i+0];
-                r[i].y = -(t*buf[2*i+1]);
+                r[i].x = t*buf[(2 * i) + 0];
+                r[i].y = -(t*buf[(2 * i) + 1]);
             }
         }
 
@@ -1779,7 +1779,7 @@ public partial class alglib
             double[] b,
             int n,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
             r = new double[0];
 
@@ -1829,18 +1829,18 @@ public partial class alglib
             double[] b,
             int n,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int p = 0;
-            double[] buf = new double[0];
-            double[] buf2 = new double[0];
-            double[] buf3 = new double[0];
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
+            var i = 0;
+            var p = 0;
+            var buf = new double[0];
+            var buf2 = new double[0];
+            var buf3 = new double[0];
+            var plan = new ftbase.fasttransformplan();
             complex c1 = 0;
             complex c2 = 0;
             complex c3 = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             r = new double[0];
 
@@ -1870,15 +1870,15 @@ public partial class alglib
             fft.fftr1dinternaleven(ref buf2, p, ref buf3, plan, _params);
             buf[0] = buf[0]/buf2[0];
             buf[1] = buf[1]/buf2[1];
-            for(i=1; i<=p/2-1; i++)
+            for(i=1; i<= (p / 2) - 1; i++)
             {
-                c1.x = buf[2*i+0];
-                c1.y = buf[2*i+1];
-                c2.x = buf2[2*i+0];
-                c2.y = buf2[2*i+1];
+                c1.x = buf[(2 * i) + 0];
+                c1.y = buf[(2 * i) + 1];
+                c2.x = buf2[(2 * i) + 0];
+                c2.y = buf2[(2 * i) + 1];
                 c3 = c1/c2;
-                buf[2*i+0] = c3.x;
-                buf[2*i+1] = c3.y;
+                buf[(2 * i) + 0] = c3.x;
+                buf[(2 * i) + 1] = c3.y;
             }
             fft.fftr1dinvinternaleven(ref buf, p, ref buf3, plan, _params);
             r = new double[m-n+1];
@@ -1916,14 +1916,14 @@ public partial class alglib
             double[] r,
             int n,
             ref double[] c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] buf = new double[0];
-            int i1 = 0;
-            int i2 = 0;
-            int j2 = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var buf = new double[0];
+            var i1 = 0;
+            var i2 = 0;
+            var j2 = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             c = new double[0];
 
@@ -1950,7 +1950,7 @@ public partial class alglib
                     {
                         buf[i_] = buf[i_] + r[i_+i1_];
                     }
-                    i1 = i1+m;
+                    i1 += m;
                 }
                 convr1dcircular(s, m, buf, m, ref c, _params);
                 return;
@@ -1994,23 +1994,23 @@ public partial class alglib
             double[] b,
             int n,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int j2 = 0;
-            double[] buf = new double[0];
-            double[] buf2 = new double[0];
-            double[] buf3 = new double[0];
-            complex[] cbuf = new complex[0];
-            complex[] cbuf2 = new complex[0];
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
+            var i = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var j2 = 0;
+            var buf = new double[0];
+            var buf2 = new double[0];
+            var buf3 = new double[0];
+            var cbuf = new complex[0];
+            var cbuf2 = new complex[0];
+            var plan = new ftbase.fasttransformplan();
             complex c1 = 0;
             complex c2 = 0;
             complex c3 = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             r = new double[0];
 
@@ -2037,7 +2037,7 @@ public partial class alglib
                     {
                         buf[i_] = buf[i_] + b[i_+i1_];
                     }
-                    i1 = i1+m;
+                    i1 += m;
                 }
                 convr1dcircularinv(a, m, buf, m, ref r, _params);
                 return;
@@ -2072,15 +2072,15 @@ public partial class alglib
                 fft.fftr1dinternaleven(ref buf2, m, ref buf3, plan, _params);
                 buf[0] = buf[0]/buf2[0];
                 buf[1] = buf[1]/buf2[1];
-                for(i=1; i<=m/2-1; i++)
+                for(i=1; i<= (m / 2) - 1; i++)
                 {
-                    c1.x = buf[2*i+0];
-                    c1.y = buf[2*i+1];
-                    c2.x = buf2[2*i+0];
-                    c2.y = buf2[2*i+1];
+                    c1.x = buf[(2 * i) + 0];
+                    c1.y = buf[(2 * i) + 1];
+                    c2.x = buf2[(2 * i) + 0];
+                    c2.y = buf2[(2 * i) + 1];
                     c3 = c1/c2;
-                    buf[2*i+0] = c3.x;
-                    buf[2*i+1] = c3.y;
+                    buf[(2 * i) + 0] = c3.x;
+                    buf[(2 * i) + 1] = c3.y;
                 }
                 fft.fftr1dinvinternaleven(ref buf, m, ref buf3, plan, _params);
                 r = new double[m];
@@ -2148,17 +2148,17 @@ public partial class alglib
             int alg,
             int q,
             ref complex[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int p = 0;
-            int ptotal = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int j1 = 0;
-            int j2 = 0;
-            complex[] bbuf = new complex[0];
+            var i = 0;
+            var j = 0;
+            var p = 0;
+            var ptotal = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var j1 = 0;
+            var j2 = 0;
+            var bbuf = new complex[0];
             complex v = 0;
             double ax = 0;
             double ay = 0;
@@ -2169,12 +2169,12 @@ public partial class alglib
             double ty = 0;
             double flopcand = 0;
             double flopbest = 0;
-            int algbest = 0;
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
-            double[] buf = new double[0];
-            double[] buf2 = new double[0];
-            int i_ = 0;
-            int i1_ = 0;
+            var algbest = 0;
+            var plan = new ftbase.fasttransformplan();
+            var buf = new double[0];
+            var buf2 = new double[0];
+            var i_ = 0;
+            var i1_ = 0;
 
             r = new complex[0];
 
@@ -2215,7 +2215,7 @@ public partial class alglib
                         //
                         // special code for circular convolution of a sequence with a smooth length
                         //
-                        flopcand = 3*ftbase.ftbasegetflopestimate(m, _params)+6*m;
+                        flopcand = (3 *ftbase.ftbasegetflopestimate(m, _params)) + 6*m;
                         if( (double)(flopcand)<(double)(flopbest) )
                         {
                             algbest = 1;
@@ -2229,7 +2229,7 @@ public partial class alglib
                         // general cyclic/non-cyclic convolution
                         //
                         p = ftbase.ftbasefindsmooth(m+n-1, _params);
-                        flopcand = 3*ftbase.ftbasegetflopestimate(p, _params)+6*p;
+                        flopcand = (3 *ftbase.ftbasegetflopestimate(p, _params)) + 6*p;
                         if( (double)(flopcand)<(double)(flopbest) )
                         {
                             algbest = 1;
@@ -2245,19 +2245,19 @@ public partial class alglib
                 ptotal = 1;
                 while( ptotal<n )
                 {
-                    ptotal = ptotal*2;
+                    ptotal *= 2;
                 }
                 while( ptotal<=m+n-1 )
                 {
                     p = ptotal-n+1;
-                    flopcand = (int)Math.Ceiling((double)m/(double)p)*(2*ftbase.ftbasegetflopestimate(ptotal, _params)+8*ptotal);
+                    flopcand = (int)Math.Ceiling((double)m/(double)p)*((2 *ftbase.ftbasegetflopestimate(ptotal, _params)) + 8*ptotal);
                     if( (double)(flopcand)<(double)(flopbest) )
                     {
                         flopbest = flopcand;
                         algbest = 2;
                         q = p;
                     }
-                    ptotal = ptotal*2;
+                    ptotal *= 2;
                 }
                 alg = algbest;
                 convc1dx(a, m, b, n, circular, alg, q, ref r, _params);
@@ -2312,7 +2312,7 @@ public partial class alglib
                         i1_ = (j1) - (i1);
                         for(i_=i1; i_<=i2;i_++)
                         {
-                            r[i_] = r[i_] + v*a[i_+i1_];
+                            r[i_] = r[i_] + (v *a[i_+i1_]);
                         }
                         i1 = i;
                         i2 = m-1;
@@ -2321,7 +2321,7 @@ public partial class alglib
                         i1_ = (j1) - (i1);
                         for(i_=i1; i_<=i2;i_++)
                         {
-                            r[i_] = r[i_] + v*a[i_+i1_];
+                            r[i_] = r[i_] + (v *a[i_+i1_]);
                         }
                     }
                 }
@@ -2342,7 +2342,7 @@ public partial class alglib
                         i1_ = (0) - (i);
                         for(i_=i; i_<=i+m-1;i_++)
                         {
-                            r[i_] = r[i_] + v*a[i_+i1_];
+                            r[i_] = r[i_] + (v *a[i_+i1_]);
                         }
                     }
                 }
@@ -2371,40 +2371,40 @@ public partial class alglib
                     buf = new double[2*m];
                     for(i=0; i<=m-1; i++)
                     {
-                        buf[2*i+0] = a[i].x;
-                        buf[2*i+1] = a[i].y;
+                        buf[(2 * i) + 0] = a[i].x;
+                        buf[(2 * i) + 1] = a[i].y;
                     }
                     buf2 = new double[2*m];
                     for(i=0; i<=n-1; i++)
                     {
-                        buf2[2*i+0] = b[i].x;
-                        buf2[2*i+1] = b[i].y;
+                        buf2[(2 * i) + 0] = b[i].x;
+                        buf2[(2 * i) + 1] = b[i].y;
                     }
                     for(i=n; i<=m-1; i++)
                     {
-                        buf2[2*i+0] = 0;
-                        buf2[2*i+1] = 0;
+                        buf2[(2 * i) + 0] = 0;
+                        buf2[(2 * i) + 1] = 0;
                     }
                     ftbase.ftapplyplan(plan, buf, 0, 1, _params);
                     ftbase.ftapplyplan(plan, buf2, 0, 1, _params);
                     for(i=0; i<=m-1; i++)
                     {
-                        ax = buf[2*i+0];
-                        ay = buf[2*i+1];
-                        bx = buf2[2*i+0];
-                        by = buf2[2*i+1];
-                        tx = ax*bx-ay*by;
-                        ty = ax*by+ay*bx;
-                        buf[2*i+0] = tx;
-                        buf[2*i+1] = -ty;
+                        ax = buf[(2 * i) + 0];
+                        ay = buf[(2 * i) + 1];
+                        bx = buf2[(2 * i) + 0];
+                        by = buf2[(2 * i) + 1];
+                        tx = (ax * bx) - ay*by;
+                        ty = (ax * by) + ay*bx;
+                        buf[(2 * i) + 0] = tx;
+                        buf[(2 * i) + 1] = -ty;
                     }
                     ftbase.ftapplyplan(plan, buf, 0, 1, _params);
                     t = (double)1/(double)m;
                     r = new complex[m];
                     for(i=0; i<=m-1; i++)
                     {
-                        r[i].x = t*buf[2*i+0];
-                        r[i].y = -(t*buf[2*i+1]);
+                        r[i].x = t*buf[(2 * i) + 0];
+                        r[i].y = -(t*buf[(2 * i) + 1]);
                     }
                 }
                 else
@@ -2423,37 +2423,37 @@ public partial class alglib
                     buf = new double[2*p];
                     for(i=0; i<=m-1; i++)
                     {
-                        buf[2*i+0] = a[i].x;
-                        buf[2*i+1] = a[i].y;
+                        buf[(2 * i) + 0] = a[i].x;
+                        buf[(2 * i) + 1] = a[i].y;
                     }
                     for(i=m; i<=p-1; i++)
                     {
-                        buf[2*i+0] = 0;
-                        buf[2*i+1] = 0;
+                        buf[(2 * i) + 0] = 0;
+                        buf[(2 * i) + 1] = 0;
                     }
                     buf2 = new double[2*p];
                     for(i=0; i<=n-1; i++)
                     {
-                        buf2[2*i+0] = b[i].x;
-                        buf2[2*i+1] = b[i].y;
+                        buf2[(2 * i) + 0] = b[i].x;
+                        buf2[(2 * i) + 1] = b[i].y;
                     }
                     for(i=n; i<=p-1; i++)
                     {
-                        buf2[2*i+0] = 0;
-                        buf2[2*i+1] = 0;
+                        buf2[(2 * i) + 0] = 0;
+                        buf2[(2 * i) + 1] = 0;
                     }
                     ftbase.ftapplyplan(plan, buf, 0, 1, _params);
                     ftbase.ftapplyplan(plan, buf2, 0, 1, _params);
                     for(i=0; i<=p-1; i++)
                     {
-                        ax = buf[2*i+0];
-                        ay = buf[2*i+1];
-                        bx = buf2[2*i+0];
-                        by = buf2[2*i+1];
-                        tx = ax*bx-ay*by;
-                        ty = ax*by+ay*bx;
-                        buf[2*i+0] = tx;
-                        buf[2*i+1] = -ty;
+                        ax = buf[(2 * i) + 0];
+                        ay = buf[(2 * i) + 1];
+                        bx = buf2[(2 * i) + 0];
+                        by = buf2[(2 * i) + 1];
+                        tx = (ax * bx) - ay*by;
+                        ty = (ax * by) + ay*bx;
+                        buf[(2 * i) + 0] = tx;
+                        buf[(2 * i) + 1] = -ty;
                     }
                     ftbase.ftapplyplan(plan, buf, 0, 1, _params);
                     t = (double)1/(double)p;
@@ -2466,13 +2466,13 @@ public partial class alglib
                         r = new complex[m];
                         for(i=0; i<=m-1; i++)
                         {
-                            r[i].x = t*buf[2*i+0];
-                            r[i].y = -(t*buf[2*i+1]);
+                            r[i].x = t*buf[(2 * i) + 0];
+                            r[i].y = -(t*buf[(2 * i) + 1]);
                         }
                         for(i=m; i<=m+n-2; i++)
                         {
-                            r[i-m].x = r[i-m].x+t*buf[2*i+0];
-                            r[i-m].y = r[i-m].y-t*buf[2*i+1];
+                            r[i-m].x = r[i-m].x+ (t *buf[(2 * i) + 0]);
+                            r[i-m].y = r[i-m].y- (t *buf[(2 * i) + 1]);
                         }
                     }
                     else
@@ -2484,8 +2484,8 @@ public partial class alglib
                         r = new complex[m+n-1];
                         for(i=0; i<=m+n-2; i++)
                         {
-                            r[i].x = t*buf[2*i+0];
-                            r[i].y = -(t*buf[2*i+1]);
+                            r[i].x = t*buf[(2 * i) + 0];
+                            r[i].y = -(t*buf[(2 * i) + 1]);
                         }
                     }
                 }
@@ -2554,25 +2554,25 @@ public partial class alglib
                     p = Math.Min(q, m-i);
                     for(j=0; j<=p-1; j++)
                     {
-                        buf[2*j+0] = a[i+j].x;
-                        buf[2*j+1] = a[i+j].y;
+                        buf[(2 * j) + 0] = a[i+j].x;
+                        buf[(2 * j) + 1] = a[i+j].y;
                     }
                     for(j=p; j<=q+n-2; j++)
                     {
-                        buf[2*j+0] = 0;
-                        buf[2*j+1] = 0;
+                        buf[(2 * j) + 0] = 0;
+                        buf[(2 * j) + 1] = 0;
                     }
                     ftbase.ftapplyplan(plan, buf, 0, 1, _params);
                     for(j=0; j<=q+n-2; j++)
                     {
-                        ax = buf[2*j+0];
-                        ay = buf[2*j+1];
+                        ax = buf[(2 * j) + 0];
+                        ay = buf[(2 * j) + 1];
                         bx = bbuf[j].x;
                         by = bbuf[j].y;
-                        tx = ax*bx-ay*by;
-                        ty = ax*by+ay*bx;
-                        buf[2*j+0] = tx;
-                        buf[2*j+1] = -ty;
+                        tx = (ax * bx) - ay*by;
+                        ty = (ax * by) + ay*bx;
+                        buf[(2 * j) + 0] = tx;
+                        buf[(2 * j) + 1] = -ty;
                     }
                     ftbase.ftapplyplan(plan, buf, 0, 1, _params);
                     t = (double)1/(double)(q+n-1);
@@ -2588,15 +2588,15 @@ public partial class alglib
                     }
                     for(j=0; j<=j1; j++)
                     {
-                        r[i+j].x = r[i+j].x+buf[2*j+0]*t;
-                        r[i+j].y = r[i+j].y-buf[2*j+1]*t;
+                        r[i+j].x = r[i+j].x+ (buf[(2 * j) + 0]*t);
+                        r[i+j].y = r[i+j].y- (buf[(2 * j) + 1]*t);
                     }
                     for(j=j2; j<=p+n-2; j++)
                     {
-                        r[j-j2].x = r[j-j2].x+buf[2*j+0]*t;
-                        r[j-j2].y = r[j-j2].y-buf[2*j+1]*t;
+                        r[j-j2].x = r[j-j2].x+ (buf[(2 * j) + 0]*t);
+                        r[j-j2].y = r[j-j2].y- (buf[(2 * j) + 1]*t);
                     }
-                    i = i+p;
+                    i += p;
                 }
                 return;
             }
@@ -2636,17 +2636,17 @@ public partial class alglib
             int alg,
             int q,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
-            int i = 0;
-            int j = 0;
-            int p = 0;
-            int ptotal = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int j1 = 0;
-            int j2 = 0;
+            var i = 0;
+            var j = 0;
+            var p = 0;
+            var ptotal = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var j1 = 0;
+            var j2 = 0;
             double ax = 0;
             double ay = 0;
             double bx = 0;
@@ -2655,13 +2655,13 @@ public partial class alglib
             double ty = 0;
             double flopcand = 0;
             double flopbest = 0;
-            int algbest = 0;
-            ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
-            double[] buf = new double[0];
-            double[] buf2 = new double[0];
-            double[] buf3 = new double[0];
-            int i_ = 0;
-            int i1_ = 0;
+            var algbest = 0;
+            var plan = new ftbase.fasttransformplan();
+            var buf = new double[0];
+            var buf2 = new double[0];
+            var buf3 = new double[0];
+            var i_ = 0;
+            var i1_ = 0;
 
             r = new double[0];
 
@@ -2710,7 +2710,7 @@ public partial class alglib
                         //
                         // special code for circular convolution of a sequence with a smooth length
                         //
-                        flopcand = 3*ftbase.ftbasegetflopestimate(m/2, _params)+(double)(6*m)/(double)2;
+                        flopcand = (3 *ftbase.ftbasegetflopestimate(m/2, _params)) + (double)(6*m)/(double)2;
                         if( (double)(flopcand)<(double)(flopbest) )
                         {
                             algbest = 1;
@@ -2724,7 +2724,7 @@ public partial class alglib
                         // general cyclic/non-cyclic convolution
                         //
                         p = ftbase.ftbasefindsmootheven(m+n-1, _params);
-                        flopcand = 3*ftbase.ftbasegetflopestimate(p/2, _params)+(double)(6*p)/(double)2;
+                        flopcand = (3 *ftbase.ftbasegetflopestimate(p/2, _params)) + (double)(6*p)/(double)2;
                         if( (double)(flopcand)<(double)(flopbest) )
                         {
                             algbest = 1;
@@ -2740,19 +2740,19 @@ public partial class alglib
                 ptotal = 1;
                 while( ptotal<n )
                 {
-                    ptotal = ptotal*2;
+                    ptotal *= 2;
                 }
                 while( ptotal<=m+n-1 )
                 {
                     p = ptotal-n+1;
-                    flopcand = (int)Math.Ceiling((double)m/(double)p)*(2*ftbase.ftbasegetflopestimate(ptotal/2, _params)+1*(ptotal/2));
+                    flopcand = (int)Math.Ceiling((double)m/(double)p)*((2 *ftbase.ftbasegetflopestimate(ptotal/2, _params)) + 1*(ptotal/2));
                     if( (double)(flopcand)<(double)(flopbest) )
                     {
                         flopbest = flopcand;
                         algbest = 2;
                         q = p;
                     }
-                    ptotal = ptotal*2;
+                    ptotal *= 2;
                 }
                 alg = algbest;
                 convr1dx(a, m, b, n, circular, alg, q, ref r, _params);
@@ -2807,7 +2807,7 @@ public partial class alglib
                         i1_ = (j1) - (i1);
                         for(i_=i1; i_<=i2;i_++)
                         {
-                            r[i_] = r[i_] + v*a[i_+i1_];
+                            r[i_] = r[i_] + (v *a[i_+i1_]);
                         }
                         i1 = i;
                         i2 = m-1;
@@ -2816,7 +2816,7 @@ public partial class alglib
                         i1_ = (j1) - (i1);
                         for(i_=i1; i_<=i2;i_++)
                         {
-                            r[i_] = r[i_] + v*a[i_+i1_];
+                            r[i_] = r[i_] + (v *a[i_+i1_]);
                         }
                     }
                 }
@@ -2837,7 +2837,7 @@ public partial class alglib
                         i1_ = (0) - (i);
                         for(i_=i; i_<=i+m-1;i_++)
                         {
-                            r[i_] = r[i_] + v*a[i_+i1_];
+                            r[i_] = r[i_] + (v *a[i_+i1_]);
                         }
                     }
                 }
@@ -2885,16 +2885,16 @@ public partial class alglib
                     fft.fftr1dinternaleven(ref buf2, m, ref buf3, plan, _params);
                     buf[0] = buf[0]*buf2[0];
                     buf[1] = buf[1]*buf2[1];
-                    for(i=1; i<=m/2-1; i++)
+                    for(i=1; i<= (m / 2) - 1; i++)
                     {
-                        ax = buf[2*i+0];
-                        ay = buf[2*i+1];
-                        bx = buf2[2*i+0];
-                        by = buf2[2*i+1];
-                        tx = ax*bx-ay*by;
-                        ty = ax*by+ay*bx;
-                        buf[2*i+0] = tx;
-                        buf[2*i+1] = ty;
+                        ax = buf[(2 * i) + 0];
+                        ay = buf[(2 * i) + 1];
+                        bx = buf2[(2 * i) + 0];
+                        by = buf2[(2 * i) + 1];
+                        tx = (ax * bx) - ay*by;
+                        ty = (ax * by) + ay*bx;
+                        buf[(2 * i) + 0] = tx;
+                        buf[(2 * i) + 1] = ty;
                     }
                     fft.fftr1dinvinternaleven(ref buf, m, ref buf3, plan, _params);
                     r = new double[m];
@@ -2939,16 +2939,16 @@ public partial class alglib
                     fft.fftr1dinternaleven(ref buf2, p, ref buf3, plan, _params);
                     buf[0] = buf[0]*buf2[0];
                     buf[1] = buf[1]*buf2[1];
-                    for(i=1; i<=p/2-1; i++)
+                    for(i=1; i<= (p / 2) - 1; i++)
                     {
-                        ax = buf[2*i+0];
-                        ay = buf[2*i+1];
-                        bx = buf2[2*i+0];
-                        by = buf2[2*i+1];
-                        tx = ax*bx-ay*by;
-                        ty = ax*by+ay*bx;
-                        buf[2*i+0] = tx;
-                        buf[2*i+1] = ty;
+                        ax = buf[(2 * i) + 0];
+                        ay = buf[(2 * i) + 1];
+                        bx = buf2[(2 * i) + 0];
+                        by = buf2[(2 * i) + 1];
+                        tx = (ax * bx) - ay*by;
+                        ty = (ax * by) + ay*bx;
+                        buf[(2 * i) + 0] = tx;
+                        buf[(2 * i) + 1] = ty;
                     }
                     fft.fftr1dinvinternaleven(ref buf, p, ref buf3, plan, _params);
                     if( circular )
@@ -3050,16 +3050,16 @@ public partial class alglib
                     fft.fftr1dinternaleven(ref buf, q+n-1, ref buf3, plan, _params);
                     buf[0] = buf[0]*buf2[0];
                     buf[1] = buf[1]*buf2[1];
-                    for(j=1; j<=(q+n-1)/2-1; j++)
+                    for(j=1; j<= ((q+n-1)/2) - 1; j++)
                     {
-                        ax = buf[2*j+0];
-                        ay = buf[2*j+1];
-                        bx = buf2[2*j+0];
-                        by = buf2[2*j+1];
-                        tx = ax*bx-ay*by;
-                        ty = ax*by+ay*bx;
-                        buf[2*j+0] = tx;
-                        buf[2*j+1] = ty;
+                        ax = buf[(2 * j) + 0];
+                        ay = buf[(2 * j) + 1];
+                        bx = buf2[(2 * j) + 0];
+                        by = buf2[(2 * j) + 1];
+                        tx = (ax * bx) - ay*by;
+                        ty = (ax * by) + ay*bx;
+                        buf[(2 * j) + 0] = tx;
+                        buf[(2 * j) + 1] = ty;
                     }
                     fft.fftr1dinvinternaleven(ref buf, q+n-1, ref buf3, plan, _params);
                     if( circular )
@@ -3085,7 +3085,7 @@ public partial class alglib
                             r[i_] = r[i_] + buf[i_+i1_];
                         }
                     }
-                    i = i+p;
+                    i += p;
                 }
                 return;
             }
@@ -3136,13 +3136,13 @@ public partial class alglib
             complex[] pattern,
             int m,
             ref complex[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[] p = new complex[0];
-            complex[] b = new complex[0];
-            int i = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var p = new complex[0];
+            var b = new complex[0];
+            var i = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             r = new complex[0];
 
@@ -3202,16 +3202,16 @@ public partial class alglib
             complex[] pattern,
             int n,
             ref complex[] c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[] p = new complex[0];
-            complex[] b = new complex[0];
-            int i1 = 0;
-            int i2 = 0;
-            int i = 0;
-            int j2 = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var p = new complex[0];
+            var b = new complex[0];
+            var i1 = 0;
+            var i2 = 0;
+            var i = 0;
+            var j2 = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             c = new complex[0];
 
@@ -3238,7 +3238,7 @@ public partial class alglib
                     {
                         b[i_] = b[i_] + pattern[i_+i1_];
                     }
-                    i1 = i1+m;
+                    i1 += m;
                 }
                 corrc1dcircular(signal, m, b, m, ref c, _params);
                 return;
@@ -3311,13 +3311,13 @@ public partial class alglib
             double[] pattern,
             int m,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] p = new double[0];
-            double[] b = new double[0];
-            int i = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var p = new double[0];
+            var b = new double[0];
+            var i = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             r = new double[0];
 
@@ -3377,16 +3377,16 @@ public partial class alglib
             double[] pattern,
             int n,
             ref double[] c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] p = new double[0];
-            double[] b = new double[0];
-            int i1 = 0;
-            int i2 = 0;
-            int i = 0;
-            int j2 = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var p = new double[0];
+            var b = new double[0];
+            var i1 = 0;
+            var i2 = 0;
+            var i = 0;
+            var j2 = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             c = new double[0];
 
@@ -3413,7 +3413,7 @@ public partial class alglib
                     {
                         b[i_] = b[i_] + pattern[i_+i1_];
                     }
-                    i1 = i1+m;
+                    i1 += m;
                 }
                 corrr1dcircular(signal, m, b, m, ref c, _params);
                 return;

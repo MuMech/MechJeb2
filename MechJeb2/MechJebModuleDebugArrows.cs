@@ -83,7 +83,9 @@ namespace MuMech
         {
             // Dirty cleanup. I m spending too much time on this already
             if (comSphere == null)
+            {
                 return;
+            }
 
             comSphere.Destroy();
             comSphere = null;
@@ -121,7 +123,9 @@ namespace MuMech
         public override void OnUpdate()
         {
             if (vessel != FlightGlobals.ActiveVessel)
+            {
                 return;
+            }
 
             if (comSphere == null)
             {
@@ -146,7 +150,7 @@ namespace MuMech
 
 
             var frameVel = (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) * Time.fixedDeltaTime;
-            Vector3d instantCoM = vesselState.CoM + frameVel;
+            var instantCoM = vesselState.CoM + frameVel;
 
             Vector3 arrowPos = displayAtCoM
                 ? instantCoM
@@ -267,8 +271,10 @@ namespace MuMech
 
         public DebugArrow(Color color, bool seeThrough = false)
         {
-            gameObject = new GameObject("DebugArrow");
-            gameObject.layer = 15; // Change layer. Not reentry effect that way (TODO :  try 22)
+            gameObject = new GameObject("DebugArrow")
+            {
+                layer = 15 // Change layer. Not reentry effect that way (TODO :  try 22)
+            };
 
             haft = CreateCone(1f, 0.05f, 0.05f, 0f, 20);
             haft.transform.parent = gameObject.transform;
@@ -299,7 +305,9 @@ namespace MuMech
         public void Destroy()
         {
             if (gameObject != null)
+            {
                 Object.Destroy(gameObject);
+            }
         }
 
         public void SeeThrough(bool state)
@@ -316,8 +324,11 @@ namespace MuMech
         public void SetLength(float length)
         {
             if (this.length == length)
+            {
                 return;
-            float conePos = length - coneLength;
+            }
+
+            var conePos = length - coneLength;
             if (conePos > 0)
             {
                 this.length = length;
@@ -353,7 +364,9 @@ namespace MuMech
         public void State(bool state)
         {
             if (state != gameObject.activeSelf)
+            {
                 gameObject.SetActive(state);
+            }
         }
 
         // From http://wiki.unity3d.com/index.php/ProceduralPrimitives
@@ -361,56 +374,56 @@ namespace MuMech
         private GameObject CreateCone(float height, float bottomRadius, float topRadius, float offset, int nbSides)
         {
             cone = new GameObject();
-            MeshFilter filter = cone.AddComponent<MeshFilter>();
-            Mesh mesh = filter.mesh;
+            var filter = cone.AddComponent<MeshFilter>();
+            var mesh = filter.mesh;
             mesh.Clear();
 
-            int nbVerticesCap = nbSides + 1;
+            var nbVerticesCap = nbSides + 1;
 
 #region Vertices
 
             // bottom + top + sides
-            Vector3[] vertices = new Vector3[nbVerticesCap + nbVerticesCap + nbSides * 2 + 2];
-            int vert = 0;
-            float _2pi = Mathf.PI * 2f;
+            var vertices = new Vector3[nbVerticesCap + nbVerticesCap + (nbSides * 2) + 2];
+            var vert = 0;
+            var _2pi = Mathf.PI * 2f;
 
             // Bottom cap
             vertices[vert++] = new Vector3(0f, offset, 0f);
             while (vert <= nbSides)
             {
-                float rad = (float)vert / nbSides * _2pi;
+                var rad = (float)vert / nbSides * _2pi;
                 vertices[vert] = new Vector3(Mathf.Cos(rad) * bottomRadius, offset, Mathf.Sin(rad) * bottomRadius);
                 vert++;
             }
 
             // Top cap
             vertices[vert++] = new Vector3(0f, offset + height, 0f);
-            while (vert <= nbSides * 2 + 1)
+            while (vert <= (nbSides * 2) + 1)
             {
-                float rad = (float)(vert - nbSides - 1) / nbSides * _2pi;
+                var rad = (float)(vert - nbSides - 1) / nbSides * _2pi;
                 vertices[vert] = new Vector3(Mathf.Cos(rad) * topRadius, offset + height, Mathf.Sin(rad) * topRadius);
                 vert++;
             }
 
             // Sides
-            int v = 0;
+            var v = 0;
             while (vert <= vertices.Length - 4)
             {
-                float rad = (float)v / nbSides * _2pi;
+                var rad = (float)v / nbSides * _2pi;
                 vertices[vert] = new Vector3(Mathf.Cos(rad) * topRadius, offset + height, Mathf.Sin(rad) * topRadius);
                 vertices[vert + 1] = new Vector3(Mathf.Cos(rad) * bottomRadius, offset, Mathf.Sin(rad) * bottomRadius);
                 vert += 2;
                 v++;
             }
-            vertices[vert] = vertices[nbSides * 2 + 2];
-            vertices[vert + 1] = vertices[nbSides * 2 + 3];
+            vertices[vert] = vertices[(nbSides * 2) + 2];
+            vertices[vert + 1] = vertices[(nbSides * 2) + 3];
 
 #endregion
 
 #region Normales
 
             // bottom + top + sides
-            Vector3[] normales = new Vector3[vertices.Length];
+            var normales = new Vector3[vertices.Length];
             vert = 0;
 
             // Bottom cap
@@ -420,7 +433,7 @@ namespace MuMech
             }
 
             // Top cap
-            while (vert <= nbSides * 2 + 1)
+            while (vert <= (nbSides * 2) + 1)
             {
                 normales[vert++] = Vector3.up;
             }
@@ -429,9 +442,9 @@ namespace MuMech
             v = 0;
             while (vert <= vertices.Length - 4)
             {
-                float rad = (float)v / nbSides * _2pi;
-                float cos = Mathf.Cos(rad);
-                float sin = Mathf.Sin(rad);
+                var rad = (float)v / nbSides * _2pi;
+                var cos = Mathf.Cos(rad);
+                var sin = Mathf.Sin(rad);
 
                 normales[vert] = new Vector3(cos, 0f, sin);
                 normales[vert + 1] = normales[vert];
@@ -439,43 +452,43 @@ namespace MuMech
                 vert += 2;
                 v++;
             }
-            normales[vert] = normales[nbSides * 2 + 2];
-            normales[vert + 1] = normales[nbSides * 2 + 3];
+            normales[vert] = normales[(nbSides * 2) + 2];
+            normales[vert + 1] = normales[(nbSides * 2) + 3];
 
 #endregion
 
 #region UVs
 
-            Vector2[] uvs = new Vector2[vertices.Length];
+            var uvs = new Vector2[vertices.Length];
 
             // Bottom cap
-            int u = 0;
+            var u = 0;
             uvs[u++] = new Vector2(0.5f, 0.5f);
             while (u <= nbSides)
             {
-                float rad = (float)u / nbSides * _2pi;
-                uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+                var rad = (float)u / nbSides * _2pi;
+                uvs[u] = new Vector2((Mathf.Cos(rad) * .5f) + .5f, (Mathf.Sin(rad) * .5f) + .5f);
                 u++;
             }
 
             // Top cap
             uvs[u++] = new Vector2(0.5f, 0.5f);
-            while (u <= nbSides * 2 + 1)
+            while (u <= (nbSides * 2) + 1)
             {
-                float rad = (float)u / nbSides * _2pi;
-                uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+                var rad = (float)u / nbSides * _2pi;
+                uvs[u] = new Vector2((Mathf.Cos(rad) * .5f) + .5f, (Mathf.Sin(rad) * .5f) + .5f);
                 u++;
             }
 
             // Sides
-            int u_sides = 0;
-            while (u <= uvs.Length - 4)
+            for (
+            // Sides
+            var u_sides = 0; u <= uvs.Length - 4; u_sides++)
             {
-                float t = (float)u_sides / nbSides;
+                var t = (float)u_sides / nbSides;
                 uvs[u] = new Vector3(t, 1f);
                 uvs[u + 1] = new Vector3(t, 0f);
                 u += 2;
-                u_sides++;
             }
             uvs[u] = new Vector2(1f, 1f);
             uvs[u + 1] = new Vector2(1f, 0f);
@@ -484,12 +497,12 @@ namespace MuMech
 
 #region Triangles
 
-            int nbTriangles = nbSides + nbSides + nbSides * 2;
-            int[] triangles = new int[nbTriangles * 3 + 3];
+            var nbTriangles = nbSides + nbSides + (nbSides * 2);
+            var triangles = new int[(nbTriangles * 3) + 3];
 
             // Bottom cap
-            int tri = 0;
-            int i = 0;
+            var tri = 0;
+            var i = 0;
             while (tri < nbSides - 1)
             {
                 triangles[i] = 0;
@@ -590,13 +603,18 @@ namespace MuMech
         public void State(bool state)
         {
             if (state != gameObject.activeSelf)
+            {
                 gameObject.SetActive(state);
+            }
         }
 
         public void SetRadius(float radius)
         {
             if (this.radius == radius || radius <= 0)
+            {
                 return;
+            }
+
             this.radius = radius;
             gameObject.transform.localScale = new Vector3(radius, radius, radius);
         }
@@ -612,18 +630,20 @@ namespace MuMech
 
         private static GameObject CreateIcoSphere(float radius, int recursionLevel = 3)
         {
-            GameObject gameObject = new GameObject("DebugIcoSphere");
-            gameObject.layer = 15; // Change layer. Not reentry effect that way (TODO :  try 22)
+            var gameObject = new GameObject("DebugIcoSphere")
+            {
+                layer = 15 // Change layer. Not reentry effect that way (TODO :  try 22)
+            };
 
-            MeshFilter filter = gameObject.AddComponent<MeshFilter>();
-            Mesh mesh = filter.mesh;
+            var filter = gameObject.AddComponent<MeshFilter>();
+            var mesh = filter.mesh;
             mesh.Clear();
 
-            List<Vector3> vertList = new List<Vector3>();
-            Dictionary<long, int> middlePointIndexCache = new Dictionary<long, int>();
+            var vertList = new List<Vector3>();
+            var middlePointIndexCache = new Dictionary<long, int>();
 
             // create 12 vertices of a icosahedron
-            float t = (1f + Mathf.Sqrt(5f)) / 2f;
+            var t = (1f + Mathf.Sqrt(5f)) / 2f;
 
             vertList.Add(new Vector3(-1f, t, 0f).normalized * radius);
             vertList.Add(new Vector3(1f, t, 0f).normalized * radius);
@@ -642,7 +662,7 @@ namespace MuMech
 
 
             // create 20 triangles of the icosahedron
-            List<TriangleIndices> faces = new List<TriangleIndices>();
+            var faces = new List<TriangleIndices>();
 
             // 5 faces around point 0
             faces.Add(new TriangleIndices(0, 11, 5));
@@ -674,16 +694,16 @@ namespace MuMech
 
 
             // refine triangles
-            for (int i = 0; i < recursionLevel; i++)
+            for (var i = 0; i < recursionLevel; i++)
             {
-                List<TriangleIndices> faces2 = new List<TriangleIndices>();
-                for (int j = 0; j < faces.Count; j++)
+                var faces2 = new List<TriangleIndices>();
+                for (var j = 0; j < faces.Count; j++)
                 {
                     var tri = faces[j];
                     // replace triangle by 4 triangles
-                    int a = getMiddlePoint(tri.v1, tri.v2, ref vertList, ref middlePointIndexCache, radius);
-                    int b = getMiddlePoint(tri.v2, tri.v3, ref vertList, ref middlePointIndexCache, radius);
-                    int c = getMiddlePoint(tri.v3, tri.v1, ref vertList, ref middlePointIndexCache, radius);
+                    var a = getMiddlePoint(tri.v1, tri.v2, ref vertList, ref middlePointIndexCache, radius);
+                    var b = getMiddlePoint(tri.v2, tri.v3, ref vertList, ref middlePointIndexCache, radius);
+                    var c = getMiddlePoint(tri.v3, tri.v1, ref vertList, ref middlePointIndexCache, radius);
 
                     faces2.Add(new TriangleIndices(tri.v1, a, c));
                     faces2.Add(new TriangleIndices(tri.v2, b, a));
@@ -695,8 +715,8 @@ namespace MuMech
 
             mesh.vertices = vertList.ToArray();
 
-            List<int> triList = new List<int>();
-            for (int i = 0; i < faces.Count; i++)
+            var triList = new List<int>();
+            for (var i = 0; i < faces.Count; i++)
             {
                 triList.Add(faces[i].v1);
                 triList.Add(faces[i].v2);
@@ -708,10 +728,11 @@ namespace MuMech
             mesh.triangles = triList.ToArray();
             mesh.uv = new Vector2[vertList.Count];
 
-            Vector3[] normales = new Vector3[vertList.Count];
-            for (int i = 0; i < normales.Length; i++)
+            var normales = new Vector3[vertList.Count];
+            for (var i = 0; i < normales.Length; i++)
+            {
                 normales[i] = vertList[i].normalized;
-
+            }
 
             mesh.normals = normales;
 
@@ -738,21 +759,20 @@ namespace MuMech
         private static int getMiddlePoint(int p1, int p2, ref List<Vector3> vertices, ref Dictionary<long, int> cache, float radius)
         {
             // first check if we have it already
-            bool firstIsSmaller = p1 < p2;
+            var firstIsSmaller = p1 < p2;
             long smallerIndex = firstIsSmaller ? p1 : p2;
             long greaterIndex = firstIsSmaller ? p2 : p1;
-            long key = (smallerIndex << 32) + greaterIndex;
+            var key = (smallerIndex << 32) + greaterIndex;
 
-            int ret;
-            if (cache.TryGetValue(key, out ret))
+            if (cache.TryGetValue(key, out var ret))
             {
                 return ret;
             }
 
             // not in cache, calculate it
-            Vector3 point1 = vertices[p1];
-            Vector3 point2 = vertices[p2];
-            Vector3 middle = new Vector3
+            var point1 = vertices[p1];
+            var point2 = vertices[p2];
+            var middle = new Vector3
                 (
                  (point1.x + point2.x) / 2f,
                  (point1.y + point2.y) / 2f,
@@ -760,7 +780,7 @@ namespace MuMech
                 );
 
             // add vertex makes sure point is on unit sphere
-            int i = vertices.Count;
+            var i = vertices.Count;
             vertices.Add(middle.normalized * radius);
 
             // store it, return index

@@ -10,7 +10,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newLAN = 0;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationLan ()
         {
@@ -27,13 +27,15 @@ namespace MuMech
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (o.inclination < 10)
+            {
                 errorMessage = Localizer.Format("#MechJeb_AN_error",o.inclination);//"Warning: orbital plane has a low inclination of <<1>>º (recommend > 10º) and so maneuver may not be accurate"
+            }
 
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             var dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, UT, target.targetLongitude);
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(dV, UT));
             return NodeList;
         }

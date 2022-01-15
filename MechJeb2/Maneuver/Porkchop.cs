@@ -9,7 +9,7 @@ namespace MuMech
     {
         public static void RefreshTexture(double[,] nodes, Texture2D texture)
         {
-            Gradient colours = new Gradient();
+            var colours = new Gradient();
             var colourKeys = new GradientColorKey[6];
             colourKeys[0].color = new Color(0.25f, 0.25f, 1.0f);
             colourKeys[0].time = 0.0f;
@@ -32,19 +32,21 @@ namespace MuMech
 
             colours.SetKeys(colourKeys, alphaKeys);
 
-            int width = nodes.GetLength(0);
-            int height = nodes.GetLength(1);
+            var width = nodes.GetLength(0);
+            var height = nodes.GetLength(1);
 
-            double DVminsqr = double.MaxValue;
-            double DVmaxsqr = double.MinValue;
-            for (int i = 0; i < width; i++)
+            var DVminsqr = double.MaxValue;
+            var DVmaxsqr = double.MinValue;
+            for (var i = 0; i < width; i++)
             {
-                for (int j = 0; j < height; j++)
+                for (var j = 0; j < height; j++)
                 {
                     if ( !nodes[i,j].IsFinite() )
+                    {
                         continue;
+                    }
 
-                    double DVsqr = nodes[i, j] * nodes[i, j];
+                    var DVsqr = nodes[i, j] * nodes[i, j];
                     DVminsqr = Math.Min(DVminsqr, DVsqr);
                     DVmaxsqr = Math.Max(DVmaxsqr, DVsqr);
                 }
@@ -52,14 +54,14 @@ namespace MuMech
 
             Debug.Log("[MechJeb] porkchop scanning found DVminsqr = " + DVminsqr + " DVmaxsqr = " + DVmaxsqr);
 
-            double logDVminsqr = Math.Log(DVminsqr);
-            double logDVmaxsqr = Math.Min(Math.Log(DVmaxsqr), logDVminsqr + 4);
+            var logDVminsqr = Math.Log(DVminsqr);
+            var logDVmaxsqr = Math.Min(Math.Log(DVmaxsqr), logDVminsqr + 4);
 
-            for (int i = 0; i < width; i++)
+            for (var i = 0; i < width; i++)
             {
-                for (int j = 0; j < height; j++)
+                for (var j = 0; j < height; j++)
                 {
-                    double lambda = (Math.Log(nodes[i, j] * nodes[i, j]) - logDVminsqr) / (logDVmaxsqr - logDVminsqr);
+                    var lambda = (Math.Log(nodes[i, j] * nodes[i, j]) - logDVminsqr) / (logDVmaxsqr - logDVminsqr);
                     texture.SetPixel(i, j, colours.Evaluate((float)lambda));
                 }
             }
@@ -67,7 +69,7 @@ namespace MuMech
             texture.Apply();
 
 #if DEBUG
-            string dir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            var dir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             System.IO.File.WriteAllBytes(dir + "/Porkchop.png", texture.EncodeToPNG());
 #endif
         }

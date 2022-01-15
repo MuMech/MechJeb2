@@ -6,35 +6,35 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionSmartASS : MechJebModuleScriptAction
 	{
-		public static String NAME = "SmartASS";
-		private MechJebModuleSmartASS smartAss;
+		public static string NAME = "SmartASS";
+		private readonly MechJebModuleSmartASS smartAss;
 
-		private static MechJebModuleSmartASS.Mode[] Target2Mode = MechJebModuleSmartASS.Target2Mode;
-		private static bool[] TargetIsMode = MechJebModuleSmartASS.TargetIsMode;
-		private static string[] ModeTexts = MechJebModuleSmartASS.ScriptModeTexts;
-		private static string[] TargetTexts = MechJebModuleSmartASS.ScriptTargetTexts;
+		private static readonly MechJebModuleSmartASS.Mode[] Target2Mode = MechJebModuleSmartASS.Target2Mode;
+		private static readonly bool[] TargetIsMode = MechJebModuleSmartASS.TargetIsMode;
+		private static readonly string[] ModeTexts = MechJebModuleSmartASS.ScriptModeTexts;
+		private static readonly string[] TargetTexts = MechJebModuleSmartASS.ScriptTargetTexts;
 
 		// Target/Mode -> Mode index
-		private int[] targetModeSelectorIdxs = new int[TargetTexts.Length];
-		private int[] modeModeSelectorIdxs   = new int[ModeTexts.Length];
+		private readonly int[] targetModeSelectorIdxs = new int[TargetTexts.Length];
+		private readonly int[] modeModeSelectorIdxs   = new int[ModeTexts.Length];
 		// Mode index -> Mode/Target
-		private List<bool> isTargetMode                        = new List<bool>();
-		private List<MechJebModuleSmartASS.Target> targetModes = new List<MechJebModuleSmartASS.Target>();
-		private List<MechJebModuleSmartASS.Mode> modeModes     = new List<MechJebModuleSmartASS.Mode>();
-		private List<String> modeStrings                       = new List<String>();
+		private readonly List<bool> isTargetMode                        = new List<bool>();
+		private readonly List<MechJebModuleSmartASS.Target> targetModes = new List<MechJebModuleSmartASS.Target>();
+		private readonly List<MechJebModuleSmartASS.Mode> modeModes     = new List<MechJebModuleSmartASS.Mode>();
+		private readonly List<string> modeStrings                       = new List<string>();
 
 		// Target -> Target index
-		private int[] targetSelectorIdxs = new int[TargetTexts.Length];
+		private readonly int[] targetSelectorIdxs = new int[TargetTexts.Length];
 		// Mode -> Target index -> Target
-		private List<MechJebModuleSmartASS.Target>[] targets = new List<MechJebModuleSmartASS.Target>[ModeTexts.Length];
-		private List<String>[] targetStrings                 = new List<String>[ModeTexts.Length];
+		private readonly List<MechJebModuleSmartASS.Target>[] targets = new List<MechJebModuleSmartASS.Target>[ModeTexts.Length];
+		private readonly List<string>[] targetStrings                 = new List<string>[ModeTexts.Length];
 
-		private static string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
-		private static string[] DirectionTexts = Enum.GetNames(typeof(Vector6.Direction));
+		private static readonly string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
+		private static readonly string[] DirectionTexts = Enum.GetNames(typeof(Vector6.Direction));
 
 		private MechJebModuleSmartASS.Target target;
 		[Persistent(pass = (int)Pass.Type)]
-		private String targetName;
+		private string targetName;
 		[Persistent(pass = (int)Pass.Type)]
 		public EditableDouble srfHdg = new EditableDouble(90);
 		[Persistent(pass = (int)Pass.Type)]
@@ -54,17 +54,17 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		public Vector6.Direction advDirection = Vector6.Direction.FORWARD;
 		[Persistent(pass = (int)Pass.Type)]
-		private Boolean forceRol = false;
+		private bool forceRol = false;
 		[Persistent(pass = (int)Pass.Type)]
-		private Boolean forcePitch = true;
+		private bool forcePitch = true;
 		[Persistent(pass = (int)Pass.Type)]
-		private Boolean forceYaw = true;
+		private bool forceYaw = true;
 
 
         public MechJebModuleScriptActionSmartASS(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
 		{
 			this.smartAss = core.GetComputerModule<MechJebModuleSmartASS>();
-			int modeIdx = 0;
+			var modeIdx = 0;
 			foreach (MechJebModuleSmartASS.Target target in Enum.GetValues(typeof(MechJebModuleSmartASS.Target)))
 			{
 				if (TargetIsMode[(int)target] && target != MechJebModuleSmartASS.Target.AUTO)
@@ -87,7 +87,7 @@ namespace MuMech
 					modeStrings.Add(ModeTexts[(int)mode]);
 					modeModeSelectorIdxs[(int)mode] = modeIdx++;
 					targets[(int)mode] = new List<MechJebModuleSmartASS.Target>();
-					targetStrings[(int)mode] = new List<String>();
+					targetStrings[(int)mode] = new List<string>();
 				}
 			}
 
@@ -95,7 +95,7 @@ namespace MuMech
 			{
 				if (!TargetIsMode[(int)target])
 				{
-					MechJebModuleSmartASS.Mode mode = Target2Mode[(int)target];
+					var mode = Target2Mode[(int)target];
 					targetSelectorIdxs[(int)target] = targets[(int)mode].Count;
 					targets[(int)mode].Add(target);
 					targetStrings[(int)mode].Add(TargetTexts[(int)target]);
@@ -103,7 +103,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			this.smartAss.mode = Target2Mode[(int)target];
@@ -123,12 +123,12 @@ namespace MuMech
 			this.smartAss.Engage();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			foreach (MechJebModuleSmartASS.Target target in Enum.GetValues(typeof(MechJebModuleSmartASS.Target)))
 			{
@@ -140,7 +140,7 @@ namespace MuMech
 			}
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (!this.isStarted() || this.isExecuted())
 			{
@@ -159,17 +159,17 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			int modeSelectorIdx = TargetIsMode[(int)target]
+			var modeSelectorIdx = TargetIsMode[(int)target]
 				? targetModeSelectorIdxs[(int)target]
 				: modeModeSelectorIdxs[(int)Target2Mode[(int)target]];
 			GUILayout.BeginHorizontal(GUILayout.Width(150));
 			modeSelectorIdx = GuiUtils.ComboBox.Box(modeSelectorIdx, modeStrings.ToArray(), modeStrings);
 			GUILayout.EndHorizontal();
-			bool showForceRol = false;
+			var showForceRol = false;
 			if (this.isTargetMode[modeSelectorIdx])
 			{
 				target = this.targetModes[modeSelectorIdx];
@@ -177,15 +177,15 @@ namespace MuMech
 			}
 			else
 			{
-				MechJebModuleSmartASS.Mode mode = this.modeModes[modeSelectorIdx];
-				List<String> targetStrings = this.targetStrings[(int)mode];
+				var mode = this.modeModes[modeSelectorIdx];
+				var targetStrings = this.targetStrings[(int)mode];
 				if (targetStrings.Count == 1)
 				{
 					target = this.targets[(int)mode][0];
 				}
 				else
 				{
-					int targetSelectorIdx = (Target2Mode[(int)target] == mode) ? targetSelectorIdxs[(int)target] : 0;
+					var targetSelectorIdx = (Target2Mode[(int)target] == mode) ? targetSelectorIdxs[(int)target] : 0;
 					GUILayout.BeginHorizontal(GUILayout.Width(160));
 					targetSelectorIdx = GuiUtils.ComboBox.Box(targetSelectorIdx, targetStrings.ToArray(), targetStrings);
 					GUILayout.EndHorizontal();

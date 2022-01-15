@@ -14,7 +14,7 @@ namespace MuMech.MathJ
 
         public T Get()
         {
-            return _objects.TryTake(out T item) ? item : new T();
+            return _objects.TryTake(out var item) ? item : new T();
         }
 
         public void Return(T item)

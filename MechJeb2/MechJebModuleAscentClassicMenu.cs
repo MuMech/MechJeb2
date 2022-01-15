@@ -14,7 +14,7 @@ namespace MuMech
 
         public MechJebModuleAscentClassic path { get { return autopilot.ascentPath as MechJebModuleAscentClassic; } }
         public MechJebModuleAscentAutopilot autopilot;
-        static Texture2D pathTexture = new Texture2D(400, 100);
+        static readonly Texture2D pathTexture = new Texture2D(400, 100);
         private MechJebModuleFlightRecorder recorder;
         private double lastMaxAtmosphereAltitude = -1;
 
@@ -98,14 +98,14 @@ namespace MuMech
 
             if (Event.current.type == EventType.Repaint)
             {
-                Rect r = GUILayoutUtility.GetLastRect();
+                var r = GUILayoutUtility.GetLastRect();
                 r.xMin += GUI.skin.box.margin.left;
                 r.yMin += GUI.skin.box.margin.top;
 
                 r.xMax -= GUI.skin.box.margin.right;
                 r.yMax -= GUI.skin.box.margin.bottom;
 
-                float scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / r.height);
+                var scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / r.height);
 
                 DrawnPath(r, scale, scale, path, Color.red);
                 DrawnTrajectory(r, path, recorder);
@@ -119,14 +119,14 @@ namespace MuMech
         //redraw the picture of the planned flight path
         public static void UpdateAtmoTexture(Texture2D texture, CelestialBody mainBody, double maxAltitude, bool realAtmo = false)
         {
-            double scale = maxAltitude / texture.height; //meters per pixel
+            var scale = maxAltitude / texture.height; //meters per pixel
 
-            double maxAtmosphereAltitude = mainBody.RealMaxAtmosphereAltitude();
-            double pressureSeaLevel = mainBody.atmospherePressureSeaLevel;
+            var maxAtmosphereAltitude = mainBody.RealMaxAtmosphereAltitude();
+            var pressureSeaLevel = mainBody.atmospherePressureSeaLevel;
 
-            for (int y = 0; y < texture.height; y++)
+            for (var y = 0; y < texture.height; y++)
             {
-                double alt = scale * y;
+                var alt = scale * y;
 
                 if (realAtmo)
                 {
@@ -134,18 +134,20 @@ namespace MuMech
                 }
                 else
                 {
-                    alt = 1.0 - alt / maxAtmosphereAltitude;
+                    alt = 1.0 - (alt / maxAtmosphereAltitude);
                 }
 
-                float v = (float)(mainBody.atmosphere ? alt : 0.0F);
-                Color c = new Color(0.0F, 0.0F, v);
+                var v = (float)(mainBody.atmosphere ? alt : 0.0F);
+                var c = new Color(0.0F, 0.0F, v);
 
-                for (int x = 0; x < texture.width; x++)
+                for (var x = 0; x < texture.width; x++)
                 {
                     texture.SetPixel(x, y, c);
 
                     if (mainBody.atmosphere && (int)(maxAtmosphereAltitude / scale) == y)
+                    {
                         texture.SetPixel(x, y, XKCDColors.LightGreyBlue);
+                    }
                 }
             }
 
@@ -157,18 +159,18 @@ namespace MuMech
 
             float alt = 0;
             float downrange = 0;
-            Vector2 p1 = new Vector2(r.xMin, r.yMax);
-            Vector2 p2 = new Vector2();
+            var p1 = new Vector2(r.xMin, r.yMax);
+            var p2 = new Vector2();
 
             while (alt < (path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) && downrange < r.width * scaleX)
             {
-                float desiredAngle = (float)(alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
+                var desiredAngle = (float)(alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
 
                 alt += scaleY * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
                 downrange += scaleX * Mathf.Cos(desiredAngle * Mathf.Deg2Rad);
 
-                p2.x = r.xMin + downrange / scaleX;
-                p2.y = r.yMax - alt / scaleY;
+                p2.x = r.xMin + (downrange / scaleX);
+                p2.y = r.yMax - (alt / scaleY);
 
                 if ((p1 - p2).sqrMagnitude >= 1.0)
                 {
@@ -182,14 +184,16 @@ namespace MuMech
         private static void DrawnTrajectory(Rect r, MechJebModuleAscentClassic path, MechJebModuleFlightRecorder recorder)
         {
             if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
+            {
                 return;
+            }
 
-            float scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / r.height); //meters per pixel
+            var scale = (float)((path.autoPath ? path.autoTurnEndAltitude : path.turnEndAltitude) / r.height); //meters per pixel
 
-            int t = 1;
+            var t = 1;
 
-            Vector2 p1 = new Vector2(r.xMin + (float)(recorder.history[0].downRange / scale), r.yMax - (float)(recorder.history[0].altitudeASL / scale));
-            Vector2 p2 = new Vector2();
+            var p1 = new Vector2(r.xMin + (float)(recorder.history[0].downRange / scale), r.yMax - (float)(recorder.history[0].altitudeASL / scale));
+            var p2 = new Vector2();
 
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
@@ -197,7 +201,7 @@ namespace MuMech
                 p2.x = r.xMin + (float)(rec.downRange / scale);
                 p2.y = r.yMax - (float)(rec.altitudeASL / scale);
 
-                if (r.Contains(p2) && (p1 - p2).sqrMagnitude >= 1.0 || t < 2)
+                if ((r.Contains(p2) && (p1 - p2).sqrMagnitude >= 1.0) || t < 2)
                 {
                     Drawing.DrawLine(p1, p2, Color.white, 2, true);
                     p1.x = p2.x;

@@ -19,9 +19,13 @@ namespace MuMech
 
                 core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT_HORIZONTAL, core.landing);
                 if (core.attitude.attitudeAngleFromTarget() < 5)
+                {
                     core.thrust.targetThrottle = 1;
+                }
                 else
+                {
                     core.thrust.targetThrottle = 0;
+                }
 
                 status = Localizer.Format("#MechJeb_LandingGuidance_Status16");//"Doing deorbit burn."
 

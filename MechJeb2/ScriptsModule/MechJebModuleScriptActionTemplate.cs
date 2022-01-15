@@ -12,23 +12,23 @@ namespace MuMech
 	// 6. Add the load settings action in "LoadConfig" in MechJebModuleScript
 	public class MechJebModuleScriptActionTemplate : MechJebModuleScriptAction
 	{
-		public static String NAME = "Template";
+		public static string NAME = "Template";
 
 		public MechJebModuleScriptActionTemplate (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

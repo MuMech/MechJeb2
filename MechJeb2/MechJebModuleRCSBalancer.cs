@@ -37,7 +37,7 @@ namespace MuMech
         public EditableDouble tuningParamFactorWaste = 1;
 
         // Variables for RCS solving.
-        private RCSSolverThread solverThread = new RCSSolverThread();
+        private readonly RCSSolverThread solverThread = new RCSSolverThread();
         private List<RCSSolver.Thruster> thrusters = null;
         private double[] throttles = null;
 
@@ -61,7 +61,7 @@ namespace MuMech
 
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.statusString);//"Status"
 
-            string error = solverThread.errorString;
+            var error = solverThread.errorString;
             if (!string.IsNullOrEmpty(error))
             {
                 GUILayout.Label(error, GUILayout.ExpandWidth(true));
@@ -76,20 +76,20 @@ namespace MuMech
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_RCSThrusterStates_Label1"));//"RCS thrusters states (scaled to 0-9)"
 
-            bool firstRcsModule = true;
-            string thrusterStates = "";
-            for (int index = 0; index < vessel.parts.Count; index++)
+            var firstRcsModule = true;
+            var thrusterStates = "";
+            for (var index = 0; index < vessel.parts.Count; index++)
             {
-                Part p = vessel.parts[index];
-                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                var p = vessel.parts[index];
+                foreach (var pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (!firstRcsModule)
                     {
                         thrusterStates += " ";
                     }
                     firstRcsModule = false;
-                    thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
-                    for (int i = 0; i < pm.thrustForces.Length; i++)
+                    thrusterStates += string.Format("({0:F0}:", pm.thrusterPower * 9);
+                    for (var i = 0; i < pm.thrustForces.Length; i++)
                     {
                         if (i != 0)
                         {
@@ -110,13 +110,13 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            bool firstRcsModule = true;
-            string thrusterStates = "";
+            var firstRcsModule = true;
+            var thrusterStates = "";
 
-            for (int index = 0; index < vessel.parts.Count; index++)
+            for (var index = 0; index < vessel.parts.Count; index++)
             {
-                Part p = vessel.parts[index];
-                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                var p = vessel.parts[index];
+                foreach (var pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (!firstRcsModule)
                     {
@@ -134,10 +134,10 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_ControlVector", InfoItem.Category.Thrust)]//Control vector
         private void ControlVectorInfoItem()
         {
-            FlightCtrlState s = FlightInputHandler.state;
+            var s = FlightInputHandler.state;
 
-            string xyz = String.Format("{0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
-            string rpy = String.Format("{0:F2} {1:F2} {2:F2}", s.roll, s.pitch, s.yaw);
+            var xyz = string.Format("{0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
+            var rpy = string.Format("{0:F2} {1:F2} {2:F2}", s.roll, s.pitch, s.yaw);
             GUILayout.BeginVertical();
             GuiUtils.SimpleLabel("X/Y/Z", xyz);
             GuiUtils.SimpleLabel("R/P/Y", rpy);
@@ -177,7 +177,7 @@ namespace MuMech
         // Throttles RCS thrusters to keep a vessel balanced during translation.
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
-            bool cutThrottles = false;
+            var cutThrottles = false;
 
             if (s.X == 0 && s.Y == 0 && s.Z == 0)
             {
@@ -198,7 +198,7 @@ namespace MuMech
             //     backward (n): z +1
             // To turn this vector into a vessel-relative one, we need to negate
             // each value and also swap the Y and Z values.
-            Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
+            var direction = new Vector3(-s.X, -s.Z, -s.Y);
             
             // RCS balancing on rotation isn't supported.
             //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
@@ -217,14 +217,14 @@ namespace MuMech
 
             if (cutThrottles)
             {
-                for (int i = 0; i < throttles.Length; i++)
+                for (var i = 0; i < throttles.Length; i++)
                 {
                     throttles[i] = 0;
                 }
             }
 
             // Apply the calculated throttles to all RCS parts.
-            for (int i = 0; i < thrusters.Count; i++)
+            for (var i = 0; i < thrusters.Count; i++)
             {
                 thrusters[i].partModule.thrusterPower = (float)throttles[i];
             }
@@ -232,12 +232,14 @@ namespace MuMech
 
         public void UpdateTuningParameters()
         {
-            double wasteThreshold = overdrive * overdriveScale;
-            RCSSolverTuningParams tuningParams = new RCSSolverTuningParams();
-            tuningParams.wasteThreshold     = wasteThreshold;
-            tuningParams.factorTorque       = tuningParamFactorTorque;
-            tuningParams.factorTranslate    = tuningParamFactorTranslate;
-            tuningParams.factorWaste        = tuningParamFactorWaste;
+            var wasteThreshold = overdrive * overdriveScale;
+            var tuningParams = new RCSSolverTuningParams
+            {
+                wasteThreshold = wasteThreshold,
+                factorTorque = tuningParamFactorTorque,
+                factorTranslate = tuningParamFactorTranslate,
+                factorWaste = tuningParamFactorWaste
+            };
             solverThread.UpdateTuningParameters(tuningParams);
         }
 

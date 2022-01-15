@@ -7,7 +7,7 @@ namespace MuMech
     {
         public delegate void AreaChanged(double minx, double maxx, double miny, double maxy);
 
-        static GUIStyle selectionStyle;
+        static readonly GUIStyle selectionStyle;
 
         public bool draggable = true;
 
@@ -16,14 +16,14 @@ namespace MuMech
 
         private bool mouseDown;
 
-        private double minx;
-        private double maxx;
-        private double miny;
-        private double maxy;
+        private readonly double minx;
+        private readonly double maxx;
+        private readonly double miny;
+        private readonly double maxy;
 
-        private Texture2D texture;
+        private readonly Texture2D texture;
 
-        private AreaChanged callback;
+        private readonly AreaChanged callback;
 
         public PlotArea (double minx, double maxx, double miny, double maxy, Texture2D texture, AreaChanged callback)
         {
@@ -38,7 +38,7 @@ namespace MuMech
         static PlotArea()
         {
             selectionStyle = new GUIStyle();
-            Texture2D background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            var background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
             background.SetPixel(0,0, new Color(0, 0, 1, 0.3f));
             background.Apply();
             selectionStyle.normal.background = background;
@@ -46,11 +46,11 @@ namespace MuMech
 
         public double x(int index)
         {
-            return minx + index * (maxx - minx) / texture.width;
+            return minx + (index * (maxx - minx) / texture.width);
         }
         public double y(int index)
         {
-            return miny + index * (maxy - miny) / texture.height;
+            return miny + (index * (maxy - miny) / texture.height);
         }
 
         public int[] lastHoveredPoint = null;
@@ -78,7 +78,7 @@ namespace MuMech
             {
                 hoveredPoint = null;
                 var rect = GUILayoutUtility.GetLastRect(); rect.x +=1; rect.y += 2;
-                Vector2 mouse = Event.current.mousePosition;
+                var mouse = Event.current.mousePosition;
                 if (rect.Contains(mouse))
                 {
                     var pos = (mouse - rect.position);
@@ -122,18 +122,21 @@ namespace MuMech
                         break;
                     case EventType.ScrollWheel:
                         if (Event.current.delta.y == 0)
+                        {
                             break;
-                        double lambda = Event.current.delta.y < 0 ? 0.7 : 1/0.7;
-                        double deltax = maxx - minx;
-                        double deltay = maxy - miny;
+                        }
 
-                        double newminx = x(hoveredPoint[0]) - hoveredPoint[0] * lambda * deltax / texture.width;
-                        double newminy = y(hoveredPoint[1]) - hoveredPoint[1] * lambda * deltay / texture.height;
+                        var lambda = Event.current.delta.y < 0 ? 0.7 : 1/0.7;
+                        var deltax = maxx - minx;
+                        var deltay = maxy - miny;
+
+                        var newminx = x(hoveredPoint[0]) - (hoveredPoint[0] * lambda * deltax / texture.width);
+                        var newminy = y(hoveredPoint[1]) - (hoveredPoint[1] * lambda * deltay / texture.height);
                         callback(
                                 newminx,
-                                newminx + lambda * deltax,
+                                newminx + (lambda * deltax),
                                 newminy,
-                                newminy + lambda * deltay
+                                newminy + (lambda * deltay)
                                 );
 
                         break;
@@ -147,7 +150,7 @@ namespace MuMech
 
         private void ProcessKeys()
         {
-            KeyCode code = Event.current.keyCode;
+            var code = Event.current.keyCode;
             int dirX = 0, dirY = 0;
 
             if (code == KeyCode.W || code == KeyCode.S ||
@@ -163,14 +166,14 @@ namespace MuMech
 
             if (dirX != 0 || dirY != 0)
             {
-                double dx = maxx - minx;
-                double dy = maxy - miny;
+                var dx = maxx - minx;
+                var dy = maxy - miny;
 
-                double moveDx = dx * 0.25 * dirX;
-                double moveDy = dy * 0.25 * dirY;
+                var moveDx = dx * 0.25 * dirX;
+                var moveDy = dy * 0.25 * dirY;
 
-                double newMinX = minx + moveDx;
-                double newMinY = miny + moveDy;
+                var newMinX = minx + moveDx;
+                var newMinY = miny + moveDy;
 
                 callback(
                         newMinX,

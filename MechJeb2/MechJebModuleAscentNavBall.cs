@@ -42,7 +42,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (NavBallGuidance && autopilot != null && autopilot.ascentPath != null)
+            if (NavBallGuidance && autopilot?.ascentPath != null)
             {
                 core.target.UpdateDirectionTarget(autopilot.ascentPath.thrustVectorForNavball);
             }

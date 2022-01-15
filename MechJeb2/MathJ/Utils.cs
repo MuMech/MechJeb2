@@ -21,14 +21,20 @@ namespace MuMech.MathJ
         public static bool NearlyEqual(double a, double b, double epsilon = EPS)
         {
             const double minNormal = 2.2250738585072014E-308d;
-            double absA = Math.Abs(a);
-            double absB = Math.Abs(b);
-            double diff = Math.Abs(a - b);
+            var absA = Math.Abs(a);
+            var absB = Math.Abs(b);
+            var diff = Math.Abs(a - b);
 
             if (a.Equals(b))
+            {
                 return true;
+            }
+
             if (a == 0 || b == 0 || absA + absB < minNormal)
+            {
                 return diff < epsilon * minNormal;
+            }
+
             return diff / (absA + absB) < epsilon;
         }
     }

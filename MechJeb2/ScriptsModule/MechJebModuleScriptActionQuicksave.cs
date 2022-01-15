@@ -5,9 +5,9 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionQuicksave : MechJebModuleScriptAction
 	{
-		public static String NAME = "Quicksave";
+		public static string NAME = "Quicksave";
 		private int spendTime = 0;
-		private int initTime = 5; //Add a 5s timer after the save action
+		private readonly int initTime = 5; //Add a 5s timer after the save action
 		private float startTime = 0f;
 		private bool saved = false;
 
@@ -15,17 +15,17 @@ namespace MuMech
 		{
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (!this.isExecuted() && this.isStarted() && startTime == 0f)
 			{
@@ -55,7 +55,7 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

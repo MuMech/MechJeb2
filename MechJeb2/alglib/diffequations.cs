@@ -44,7 +44,7 @@ public partial class alglib
             _innerobj = new odesolver.odesolverstate();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new odesolverstate((odesolver.odesolverstate)_innerobj.make_copy());
         }
@@ -53,7 +53,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private odesolver.odesolverstate _innerobj;
+        private readonly odesolver.odesolverstate _innerobj;
         public odesolver.odesolverstate innerobj { get { return _innerobj; } }
         public odesolverstate(odesolver.odesolverstate obj)
         {
@@ -78,7 +78,7 @@ public partial class alglib
             _innerobj = new odesolver.odesolverreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new odesolverreport((odesolver.odesolverreport)_innerobj.make_copy());
         }
@@ -87,7 +87,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private odesolver.odesolverreport _innerobj;
+        private readonly odesolver.odesolverreport _innerobj;
         public odesolver.odesolverreport innerobj { get { return _innerobj; } }
         public odesolverreport(odesolver.odesolverreport obj)
         {
@@ -148,7 +148,7 @@ public partial class alglib
         odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj, null);
     }
     
-    public static void odesolverrkck(double[] y, int n, double[] x, int m, double eps, double h, out odesolverstate state, alglib.xparams _params)
+    public static void odesolverrkck(double[] y, int n, double[] x, int m, double eps, double h, out odesolverstate state, xparams _params)
     {
         state = new odesolverstate();
         odesolver.odesolverrkck(y, n, x, m, eps, h, state.innerobj, _params);
@@ -167,7 +167,7 @@ public partial class alglib
         return;
     }
             
-    public static void odesolverrkck(double[] y, double[] x, double eps, double h, out odesolverstate state, alglib.xparams _params)
+    public static void odesolverrkck(double[] y, double[] x, double eps, double h, out odesolverstate state, xparams _params)
     {
         int n;
         int m;
@@ -191,7 +191,7 @@ public partial class alglib
         return odesolver.odesolveriteration(state.innerobj, null);
     }
     
-    public static bool odesolveriteration(odesolverstate state, alglib.xparams _params)
+    public static bool odesolveriteration(odesolverstate state, xparams _params)
     {
     
         return odesolver.odesolveriteration(state.innerobj, _params);
@@ -213,11 +213,14 @@ public partial class alglib
         odesolversolve(state, diff, obj, null);
     }
     
-    public static void odesolversolve(odesolverstate state, ndimensional_ode_rp diff, object obj, alglib.xparams _params)
+    public static void odesolversolve(odesolverstate state, ndimensional_ode_rp diff, object obj, xparams _params)
     {
         if( diff==null )
+        {
             throw new alglibexception("ALGLIB: error in 'odesolversolve()' (diff is null)");
-        while( alglib.odesolveriteration(state, _params) )
+        }
+
+        while ( alglib.odesolveriteration(state, _params) )
         {
             if( state.needdy )
             {
@@ -262,7 +265,7 @@ public partial class alglib
         odesolver.odesolverresults(state.innerobj, ref m, ref xtbl, ref ytbl, rep.innerobj, null);
     }
     
-    public static void odesolverresults(odesolverstate state, out int m, out double[] xtbl, out double[,] ytbl, out odesolverreport rep, alglib.xparams _params)
+    public static void odesolverresults(odesolverstate state, out int m, out double[] xtbl, out double[,] ytbl, out odesolverreport rep, xparams _params)
     {
         m = 0;
         xtbl = new double[0];
@@ -324,34 +327,36 @@ public partial class alglib
                 rkk = new double[0,0];
                 rstate = new rcommstate();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                odesolverstate _result = new odesolverstate();
-                _result.n = n;
-                _result.m = m;
-                _result.xscale = xscale;
-                _result.h = h;
-                _result.eps = eps;
-                _result.fraceps = fraceps;
-                _result.yc = (double[])yc.Clone();
-                _result.escale = (double[])escale.Clone();
-                _result.xg = (double[])xg.Clone();
-                _result.solvertype = solvertype;
-                _result.needdy = needdy;
-                _result.x = x;
-                _result.y = (double[])y.Clone();
-                _result.dy = (double[])dy.Clone();
-                _result.ytbl = (double[,])ytbl.Clone();
-                _result.repterminationtype = repterminationtype;
-                _result.repnfev = repnfev;
-                _result.yn = (double[])yn.Clone();
-                _result.yns = (double[])yns.Clone();
-                _result.rka = (double[])rka.Clone();
-                _result.rkc = (double[])rkc.Clone();
-                _result.rkcs = (double[])rkcs.Clone();
-                _result.rkb = (double[,])rkb.Clone();
-                _result.rkk = (double[,])rkk.Clone();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                var _result = new odesolverstate
+                {
+                    n = n,
+                    m = m,
+                    xscale = xscale,
+                    h = h,
+                    eps = eps,
+                    fraceps = fraceps,
+                    yc = (double[])yc.Clone(),
+                    escale = (double[])escale.Clone(),
+                    xg = (double[])xg.Clone(),
+                    solvertype = solvertype,
+                    needdy = needdy,
+                    x = x,
+                    y = (double[])y.Clone(),
+                    dy = (double[])dy.Clone(),
+                    ytbl = (double[,])ytbl.Clone(),
+                    repterminationtype = repterminationtype,
+                    repnfev = repnfev,
+                    yn = (double[])yn.Clone(),
+                    yns = (double[])yns.Clone(),
+                    rka = (double[])rka.Clone(),
+                    rkc = (double[])rkc.Clone(),
+                    rkcs = (double[])rkcs.Clone(),
+                    rkb = (double[,])rkb.Clone(),
+                    rkk = (double[,])rkk.Clone(),
+                    rstate = (rcommstate)rstate.make_copy()
+                };
                 return _result;
             }
         };
@@ -368,11 +373,13 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                odesolverreport _result = new odesolverreport();
-                _result.nfev = nfev;
-                _result.terminationtype = terminationtype;
+                var _result = new odesolverreport
+                {
+                    nfev = nfev,
+                    terminationtype = terminationtype
+                };
                 return _result;
             }
         };
@@ -439,7 +446,7 @@ public partial class alglib
             double eps,
             double h,
             odesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(n>=1, "ODESolverRKCK: N<1!");
             alglib.ap.assert(m>=1, "ODESolverRKCK: M<1!");
@@ -460,23 +467,23 @@ public partial class alglib
              Copyright 01.09.2009 by Bochkanov Sergey
         *************************************************************************/
         public static bool odesolveriteration(odesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            int n = 0;
-            int m = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var result = new bool();
+            var n = 0;
+            var m = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
             double xc = 0;
             double v = 0;
             double h = 0;
             double h2 = 0;
-            bool gridpoint = new bool();
+            var gridpoint = new bool();
             double err = 0;
             double maxgrowpow = 0;
-            int klimit = 0;
-            int i_ = 0;
+            var klimit = 0;
+            var i_ = 0;
 
             
             //
@@ -691,7 +698,7 @@ public partial class alglib
             //
             // prepare data for the next update of YN/YNS
             //
-            state.x = state.xscale*(xc+state.rka[k]*h);
+            state.x = state.xscale*(xc+ (state.rka[k]*h));
             for(i_=0; i_<=n-1;i_++)
             {
                 state.y[i_] = state.yc[i_];
@@ -701,7 +708,7 @@ public partial class alglib
                 v = state.rkb[k,j];
                 for(i_=0; i_<=n-1;i_++)
                 {
-                    state.y[i_] = state.y[i_] + v*state.rkk[j,i_];
+                    state.y[i_] = state.y[i_] + (v *state.rkk[j,i_]);
                 }
             }
             state.needdy = true;
@@ -709,7 +716,7 @@ public partial class alglib
             goto lbl_rcomm;
         lbl_0:
             state.needdy = false;
-            state.repnfev = state.repnfev+1;
+            state.repnfev++;
             v = h*state.xscale;
             for(i_=0; i_<=n-1;i_++)
             {
@@ -722,14 +729,14 @@ public partial class alglib
             v = state.rkc[k];
             for(i_=0; i_<=n-1;i_++)
             {
-                state.yn[i_] = state.yn[i_] + v*state.rkk[k,i_];
+                state.yn[i_] = state.yn[i_] + (v *state.rkk[k,i_]);
             }
             v = state.rkcs[k];
             for(i_=0; i_<=n-1;i_++)
             {
-                state.yns[i_] = state.yns[i_] + v*state.rkk[k,i_];
+                state.yns[i_] = state.yns[i_] + (v *state.rkk[k,i_]);
             }
-            k = k+1;
+            k++;
             goto lbl_8;
         lbl_10:
             
@@ -786,7 +793,7 @@ public partial class alglib
             //
             // advance position
             //
-            xc = xc+h;
+            xc += h;
             for(i_=0; i_<=n-1;i_++)
             {
                 state.yc[i_] = state.yn[i_];
@@ -814,7 +821,7 @@ public partial class alglib
             {
                 state.ytbl[i,i_] = state.yc[i_];
             }
-            i = i+1;
+            i++;
             goto lbl_3;
         lbl_5:
             state.repterminationtype = 1;
@@ -874,11 +881,11 @@ public partial class alglib
             ref double[] xtbl,
             ref double[,] ytbl,
             odesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             m = 0;
             xtbl = new double[0];
@@ -922,11 +929,11 @@ public partial class alglib
             double eps,
             double h,
             odesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             
             //

@@ -33,17 +33,19 @@ namespace MuMech
 
         public void ExtendAll()
         {
-            List<Part> vp = vessel.parts;
-            for (int i = 0; i < vp.Count; i++)
+            var vp = vessel.parts;
+            for (var i = 0; i < vp.Count; i++)
             {
-                Part p = vp[i];
+                var p = vp[i];
 
                 if (p.ShieldedFromAirstream)
-                    return;
-                
-                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+                    return;
+                }
+
+                for (var j = 0; j < p.Modules.Count; j++)
+                {
+                    var mdp = p.Modules[j] as ModuleDeployablePart;
                     if (mdp != null && isModules(mdp) && isDeployable(mdp))
                     {
                         mdp.Extend();
@@ -54,16 +56,18 @@ namespace MuMech
         
         public void RetractAll()
         {
-            List<Part> vp = vessel.parts;
-            for (int i = 0; i < vp.Count; i++) {
-                Part p = vp[i];
+            var vp = vessel.parts;
+            for (var i = 0; i < vp.Count; i++) {
+                var p = vp[i];
 
                 if (p.ShieldedFromAirstream)
-                    return;
-
-                for (int j = 0; j < p.Modules.Count; j++)
                 {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+                    return;
+                }
+
+                for (var j = 0; j < p.Modules.Count; j++)
+                {
+                    var mdp = p.Modules[j] as ModuleDeployablePart;
                     if (mdp != null && isModules(mdp) && isDeployable(mdp))
                     {
                         mdp.Retract();
@@ -74,12 +78,12 @@ namespace MuMech
 
         public bool AllRetracted()
         {
-            for (int i = 0; i < vessel.parts.Count; i++)
+            for (var i = 0; i < vessel.parts.Count; i++)
             {
-                Part p = vessel.parts[i];
-                for (int j = 0; j < p.Modules.Count; j++)
+                var p = vessel.parts[i];
+                for (var j = 0; j < p.Modules.Count; j++)
                 {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+                    var mdp = p.Modules[j] as ModuleDeployablePart;
                     if (mdp != null && isModules(mdp) && isDeployable(mdp) && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED)
                     {
                         return false;
@@ -92,26 +96,38 @@ namespace MuMech
         public bool ShouldDeploy()
         {
             if (!mainBody.atmosphere)
+            {
                 return true;
+            }
 
             if (!vessel.LiftedOff())
+            {
                 return false;
+            }
 
             if (vessel.LandedOrSplashed)
+            {
                 return false; // True adds too many complex case
+            }
 
             double dt = 10;
             double min_alt; // minimum altitude between now and now+dt seconds
-            double t = Planetarium.GetUniversalTime();
+            var t = Planetarium.GetUniversalTime();
 
-            double PeT = orbit.NextPeriapsisTime(t) - t;
+            var PeT = orbit.NextPeriapsisTime(t) - t;
             if (PeT > 0 && PeT < dt)
+            {
                 min_alt = orbit.PeA;
+            }
             else
+            {
                 min_alt = Math.Sqrt(Math.Min(orbit.getRelativePositionAtUT(t).sqrMagnitude, orbit.getRelativePositionAtUT(t + dt).sqrMagnitude)) - mainBody.Radius;
+            }
 
             if (min_alt > mainBody.RealMaxAtmosphereAltitude())
+            {
                 return true;
+            }
 
             return false;
         }
@@ -120,15 +136,18 @@ namespace MuMech
         {
             // Let the ascent guidance handle the solar panels to retract them before launch
             if (autoDeploy &&
-                !(core.GetComputerModule<MechJebModuleAscentAutopilot>() != null &&
-                    core.GetComputerModule<MechJebModuleAscentAutopilot>().enabled))
+                !(core.GetComputerModule<MechJebModuleAscentAutopilot>()?.enabled == true))
             {
-                bool tmp = ShouldDeploy();
+                var tmp = ShouldDeploy();
 
                 if (tmp && (!prev_shouldDeploy || (autoDeploy != prev_autoDeploy)))
+                {
                     ExtendAll();
+                }
                 else if (!tmp && (prev_shouldDeploy || (autoDeploy != prev_autoDeploy)))
+                {
                     RetractAll();
+                }
 
                 prev_shouldDeploy = tmp;
                 prev_autoDeploy = true;
@@ -138,23 +157,27 @@ namespace MuMech
                 prev_autoDeploy = false;
             }
 
-            bool allRetracted = AllRetracted();
+            var allRetracted = AllRetracted();
             if (allRetracted)
+            {
                 buttonText = getButtonText(DeployablePartState.RETRACTED);
+            }
             else
+            {
                 buttonText = getButtonText(DeployablePartState.EXTENDED);
+            }
 
             extended = !allRetracted;
         }
 
         protected bool ExtendingOrRetracting()
         {
-            for (int i = 0; i < vessel.parts.Count; i++)
+            for (var i = 0; i < vessel.parts.Count; i++)
             {
-                Part p = vessel.parts[i];
-                for (int j = 0; j < p.Modules.Count; j++)
+                var p = vessel.parts[i];
+                for (var j = 0; j < p.Modules.Count; j++)
                 {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
+                    var mdp = p.Modules[j] as ModuleDeployablePart;
 
                     if (mdp != null && isModules(mdp) && isDeployable(mdp)
                         && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING

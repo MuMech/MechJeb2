@@ -131,7 +131,7 @@ namespace MuMech
         public double[] maximums;
         public double[] minimums;
 
-        private bool paused = false;
+        private readonly bool paused = false;
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("#MechJeb_MarkUT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]//Mark UT
@@ -190,9 +190,9 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_DownrangeDistance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]//Downrange distance
         public double GroundDistanceFromMark()
         {
-            CelestialBody markBody = FlightGlobals.Bodies[markBodyIndex];
-            Vector3d markVector = markBody.GetSurfaceNVector(markLatitude, markLongitude);
-            Vector3d vesselVector = vesselState.CoM - markBody.transform.position;
+            var markBody = FlightGlobals.Bodies[markBodyIndex];
+            var markVector = markBody.GetSurfaceNVector(markLatitude, markLongitude);
+            var vesselVector = vesselState.CoM - markBody.transform.position;
             return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * UtilMath.Deg2Rad;
         }
 
@@ -213,7 +213,7 @@ namespace MuMech
             markBodyIndex = FlightGlobals.Bodies.IndexOf(mainBody);
             maxDragGees = 0;
             timeSinceMark = 0;
-            for (int t = 0; t < maximums.Length; t++)
+            for (var t = 0; t < maximums.Length; t++)
             {
                 minimums[t] = double.MaxValue;
                 maximums[t] = double.MinValue;
@@ -233,7 +233,10 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             if (history.Length != historySize)
+            {
                 history = new record[historySize];
+            }
+
             this.users.Add(this); //flight recorder should always run.
         }
 
@@ -241,7 +244,10 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (markUT == 0) Mark();
+            if (markUT == 0)
+            {
+                Mark();
+            }
 
             timeSinceMark = vesselState.time - markUT;
 
@@ -261,12 +267,14 @@ namespace MuMech
 
             maxDragGees = Math.Max(maxDragGees, vesselState.drag / 9.81);
 
-            double circularPeriod = 2 * Math.PI * vesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
-            double angleTraversed = (vesselState.longitude - markLongitude) + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;
-            phaseAngleFromMark = MuUtils.ClampDegrees360(360 * (vesselState.time - markUT) / circularPeriod - angleTraversed);
+            var circularPeriod = 2 * Math.PI * vesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
+            var angleTraversed = (vesselState.longitude - markLongitude) + (360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod);
+            phaseAngleFromMark = MuUtils.ClampDegrees360((360 * (vesselState.time - markUT) / circularPeriod) - angleTraversed);
 
             if (paused)
+            {
                 return;
+            }
 
             //int oldHistoryIdx = historyIdx;
 
@@ -315,9 +323,9 @@ namespace MuMech
             history[idx].AoA = vesselState.AoA;
             history[idx].AoS = vesselState.AoS;
             history[idx].AoD = vesselState.displacementAngle;
-            for (int t = 0; t < typeCount; t++)
+            for (var t = 0; t < typeCount; t++)
             {
-                double current = history[idx][(recordType)t];
+                var current = history[idx][(recordType)t];
                 minimums[t] = Math.Min(minimums[t], current);
                 maximums[t] = Math.Max(maximums[t], current);
             }
@@ -326,25 +334,27 @@ namespace MuMech
 
         public void DumpCSV()
         {
-            string exportPath = KSPUtil.ApplicationRootPath + "/GameData/MechJeb2/Export/";
+            var exportPath = KSPUtil.ApplicationRootPath + "/GameData/MechJeb2/Export/";
 
             if (!Directory.Exists(exportPath))
+            {
                 Directory.CreateDirectory(exportPath);
+            }
 
-            string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : "";
+            var vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(System.IO.Path.GetInvalidFileNameChars())) : "";
 
-            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
-            string path = exportPath + vesselName + "_" + timestamp + ".csv";
-            using (StreamWriter writer = new StreamWriter(path))
+            var path = exportPath + vesselName + "_" + timestamp + ".csv";
+            using (var writer = new StreamWriter(path))
             {
                 writer.WriteLine(string.Join(",", Enum.GetNames(typeof(recordType))));
 
-                for (int idx = 0; idx <= historyIdx; idx++)
+                for (var idx = 0; idx <= historyIdx; idx++)
                 {
-                    record r = history[idx];
+                    var r = history[idx];
                     writer.Write(r[(recordType)0]);
-                    for (int i = 1; i < typeCount; i++)
+                    for (var i = 1; i < typeCount; i++)
                     {
                         writer.Write(',');
                         writer.Write(r[(recordType)i]);

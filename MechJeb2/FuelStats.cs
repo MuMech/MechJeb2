@@ -36,9 +36,13 @@ namespace MuMech
             public void ComputeTimeStepDeltaV()
             {
                 if (DeltaTime > 0 && StartMass > EndMass && StartMass > 0 && EndMass > 0)
+                {
                     DeltaV = StartThrust * DeltaTime / (StartMass - EndMass) * Math.Log(StartMass / EndMass);
+                }
                 else
+                {
                     DeltaV = 0;
+                }
             }
 
             //Append joins two FuelStats describing adjacent intervals of time into one describing the combined interval

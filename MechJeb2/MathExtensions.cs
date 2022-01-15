@@ -78,29 +78,41 @@ namespace MuMech
                     );
         }
 
-        public static double Clamp(double val, double min, double max)
+        public static double Clamp(this double val, double min, double max)
         {
             if (val <= min)
+            {
                 return min;
+            }
+
             if (val >= max)
+            {
                 return max;
+            }
+
             return val;
         }
 
         // projects the two vectors onto the normal plane and computes the 0 to 360 angle
         public static double AngleInPlane(this Vector3d vector, Vector3d planeNormal, Vector3d other)
         {
-            Vector3d v1 = vector.ProjectOnPlane(planeNormal);
-            Vector3d v2 = other.ProjectOnPlane(planeNormal);
+            var v1 = vector.ProjectOnPlane(planeNormal);
+            var v2 = other.ProjectOnPlane(planeNormal);
 
             if ((v1.magnitude == 0) || (v2.magnitude == 0))
+            {
                 return double.NaN;
+            }
 
-            double angle = MuUtils.ClampDegrees360(Math.Acos( Vector3d.Dot(v1.normalized, v2.normalized) ) * UtilMath.Rad2Deg);
+            var angle = MuUtils.ClampDegrees360(Math.Acos( Vector3d.Dot(v1.normalized, v2.normalized) ) * UtilMath.Rad2Deg);
             if ( Vector3d.Dot(Vector3d.Cross(v1, v2), planeNormal) < 0 )
+            {
                 return -angle;
+            }
             else
+            {
                 return angle;
+            }
         }
 
         public static Quaternion Add(this Quaternion left, Quaternion right)
@@ -132,7 +144,7 @@ namespace MuMech
 
         public static Vector3d Project(this Vector3d vector, Vector3d onNormal)
         {
-            Vector3d normal = onNormal.normalized;
+            var normal = onNormal.normalized;
             return normal * Vector3d.Dot(vector, normal);
         }
 
@@ -145,7 +157,7 @@ namespace MuMech
         // NaN is also not a finite number (not a number)
         public static bool IsFinite(this double v)
         {
-            return !Double.IsNaN(v) && !Double.IsInfinity(v);
+            return !double.IsNaN(v) && !double.IsInfinity(v);
         }
 
         public static double NextGaussian(this System.Random r, double mu = 0, double sigma = 1)
@@ -156,7 +168,7 @@ namespace MuMech
             var rand_std_normal = Math.Sqrt(-2.0 * Math.Log(u1)) *
                 Math.Sin(2.0 * Math.PI * u2);
 
-            var rand_normal = mu + sigma * rand_std_normal;
+            var rand_normal = mu + (sigma * rand_std_normal);
 
             return rand_normal;
         }

@@ -159,28 +159,32 @@ namespace MuMech.AttitudeControllers
 
             deltaEuler = -_error0 * Mathf.Rad2Deg;
 
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
+            {
                 if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
+                {
                     _actuation[i] = 0;
+                }
+            }
 
             act = _actuation;
         }
 
         private void UpdateError()
         {
-            Transform vesselTransform = Vessel.ReferenceTransform;
+            var vesselTransform = Vessel.ReferenceTransform;
 
             // 1. The Euler(-90) here is because the unity transform puts "up" as the pointy end, which is wrong.  The rotation means that
             // "forward" becomes the pointy end, and "up" and "right" correctly define e.g. AoA/pitch and AoS/yaw.  This is just KSP being KSP.
             // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame (we do everything in the ship frame
             // first, and then negate the error to get the error in the target reference frame at the end).
-            Quaternion deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0)) * ac.RequestedAttitude;
+            var deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0)) * ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
             Vector3d ea = deltaRotation.eulerAngles;
-            double pitch = ea[0] * UtilMath.Deg2Rad;
-            double yaw = ea[1] * UtilMath.Deg2Rad;
-            double roll = ea[2] * UtilMath.Deg2Rad;
+            var pitch = ea[0] * UtilMath.Deg2Rad;
+            var yaw = ea[1] * UtilMath.Deg2Rad;
+            var roll = ea[2] * UtilMath.Deg2Rad;
 
             // law of cosines for the "distance" of the miss in radians
             _errorTotal = Math.Acos(MuUtils.Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
@@ -212,23 +216,25 @@ namespace MuMech.AttitudeControllers
             UpdateError();
 
             // lowpass filter on the error input
-            _error0 = _error1.IsFinite() ? _error1 + PosSmoothIn * (_error0 - _error1) : _error0;
+            _error0 = _error1.IsFinite() ? _error1 + (PosSmoothIn * (_error0 - _error1)) : _error0;
 
-            Vector3d controlTorque = ac.torque;
+            var controlTorque = ac.torque;
 
             // needed to stop wiggling at higher phys warp
-            double warpFactor = Math.Pow(ac.vesselState.deltaT / 0.02, 0.90); // the power law here comes ultimately from the simulink PID tuning app
+            var warpFactor = Math.Pow(ac.vesselState.deltaT / 0.02, 0.90); // the power law here comes ultimately from the simulink PID tuning app
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented so we only
             // have the first two PIDs in the cascade.
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
-                double error = _error0[i];
+                var error = _error0[i];
 
                 _maxAlpha[i] = controlTorque[i] / Vessel.MOI[i];
 
                 if (_maxAlpha[i] == 0)
+                {
                     _maxAlpha[i] = 1;
+                }
 
                 if (ac.OmegaTarget[i].IsFinite())
                 {
@@ -237,26 +243,36 @@ namespace MuMech.AttitudeControllers
                 else
                 {
                     // the cube root scaling was determined mostly via experience
-                    double maxAlphaCbrt = Math.Pow(_maxAlpha[i], 1.0 / 3.0);
-                    double effLD = maxAlphaCbrt * PosFactor;
-                    double posKp = Math.Sqrt(_maxAlpha[i] / (2 * effLD));
+                    var maxAlphaCbrt = Math.Pow(_maxAlpha[i], 1.0 / 3.0);
+                    var effLD = maxAlphaCbrt * PosFactor;
+                    var posKp = Math.Sqrt(_maxAlpha[i] / (2 * effLD));
 
                     if (Math.Abs(error) <= 2 * effLD)
+                    {
                         // linear ramp down of acceleration
                         _targetOmega[i] = -posKp * error;
+                    }
                     else
+                    {
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
                         _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
+                    }
 
                     if (useStoppingTime)
                     {
                         _maxOmega[i] = _maxAlpha[i] * maxStoppingTime;
-                        if (useFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / minFlipTime);
+                        if (useFlipTime)
+                        {
+                            _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / minFlipTime);
+                        }
+
                         _targetOmega[i] = MuUtils.Clamp(_targetOmega[i], -_maxOmega[i], _maxOmega[i]);
                     }
 
                     if (useControlRange && _errorTotal * Mathf.Rad2Deg > rollControlRange)
+                    {
                         _targetOmega[1] = 0;
+                    }
                 }
 
                 _pid[i].Kp        = VelKp / (_maxAlpha[i] * warpFactor);
@@ -275,12 +291,16 @@ namespace MuMech.AttitudeControllers
                 _actuation[i] = -_pid[i].Update(_targetOmega[i], _omega0[i]);
 
                 if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
+                {
                     _actuation[i] = 0;
+                }
 
                 _targetTorque[i] = _actuation[i] / ac.torque[i];
 
                 if (ac.ActuationControl[i] == 0)
+                {
                     Reset(i);
+                }
             }
 
             _error1 = _error0;
@@ -312,7 +332,9 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             if (!useStoppingTime)
+            {
                 useFlipTime = false;
+            }
 
             GUILayout.BeginHorizontal();
             useControlRange = GUILayout.Toggle(useControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),
@@ -376,20 +398,38 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("0°")))
+            {
                 PhaseMargin0();
+            }
+
             if (GUILayout.Button(Localizer.Format("30°")))
+            {
                 PhaseMargin30();
+            }
+
             if (GUILayout.Button(Localizer.Format("45° (recommended)")))
+            {
                 PhaseMargin45();
+            }
+
             if (GUILayout.Button(Localizer.Format("60°")))
+            {
                 PhaseMargin60();
+            }
+
             if (GUILayout.Button(Localizer.Format("90°")))
+            {
                 PhaseMargin90();
+            }
+
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("Reset Other Tuning Values")))
+            {
                 OtherDefaults();
+            }
+
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

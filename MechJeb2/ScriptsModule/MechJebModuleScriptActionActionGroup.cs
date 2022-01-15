@@ -7,9 +7,9 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionActionGroup : MechJebModuleScriptAction
 	{
-		public static String NAME = "ActionGroup";
+		public static string NAME = "ActionGroup";
 
-		private List<String> actionGroups = new List<String>();
+		private readonly List<string> actionGroups = new List<string>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedActionId;
 
@@ -35,10 +35,10 @@ namespace MuMech
 			actionGroups.Add("Stage");
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
-			KSPActionGroup selectedGroup = KSPActionGroup.Abort;
+			var selectedGroup = KSPActionGroup.Abort;
 			if (selectedActionId == 0)
 			{
 				selectedGroup = KSPActionGroup.Abort;
@@ -115,12 +115,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

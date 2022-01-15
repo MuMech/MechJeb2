@@ -10,7 +10,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newLAN = 0;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationLongitude ()
         {
@@ -26,10 +26,10 @@ namespace MuMech
 
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
             var dV = OrbitalManeuverCalculator.DeltaVToShiftNodeLongitude(o, UT, target.targetLongitude);
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add( new ManeuverParameters(dV, UT) );
             return NodeList;
         }

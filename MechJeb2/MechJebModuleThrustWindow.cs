@@ -37,10 +37,18 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_Autostage", InfoItem.Category.Misc)]//Autostage
         public void Autostage()
         {
-            bool oldAutostage = core.staging.users.Contains(this);
-            bool newAutostage = GUILayout.Toggle(oldAutostage, Localizer.Format("#MechJeb_Utilities_checkbox1"));//"Autostage"
-            if (newAutostage && !oldAutostage) core.staging.users.Add(this);
-            if (!newAutostage && oldAutostage) core.staging.users.Remove(this);
+            var oldAutostage = core.staging.users.Contains(this);
+            var newAutostage = GUILayout.Toggle(oldAutostage, Localizer.Format("#MechJeb_Utilities_checkbox1"));//"Autostage"
+            if (newAutostage && !oldAutostage)
+            {
+                core.staging.users.Add(this);
+            }
+
+            if (!newAutostage && oldAutostage)
+            {
+                core.staging.users.Remove(this);
+            }
+
             autostageSavedState = newAutostage;
         }
 
@@ -102,11 +110,20 @@ namespace MuMech
 
             Autostage();
 
-            if (!core.staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1"))) core.staging.AutostageOnce(this);//"Autostage once"
+            if (!core.staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1")))
+            {
+                core.staging.AutostageOnce(this);//"Autostage once"
+            }
 
-            if (core.staging.enabled) core.staging.AutostageSettingsInfoItem();
+            if (core.staging.enabled)
+            {
+                core.staging.AutostageSettingsInfoItem();
+            }
 
-            if (core.staging.enabled) GUILayout.Label(core.staging.AutostageStatus());
+            if (core.staging.enabled)
+            {
+                GUILayout.Label(core.staging.AutostageStatus());
+            }
 
             GUILayout.EndVertical();
 

@@ -6,9 +6,9 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionActivateEngine : MechJebModuleScriptAction
 	{
-		public static String NAME = "ActivateEngine";
-		private List<Part> enginePartsList = new List<Part>();
-		private List<String> enginePartsNames = new List<String>();
+		public static string NAME = "ActivateEngine";
+		private readonly List<Part> enginePartsList = new List<Part>();
+		private readonly List<string> enginePartsNames = new List<string>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -19,11 +19,11 @@ namespace MuMech
 		{
 			this.enginePartsList.Clear();
 			this.enginePartsNames.Clear();
-			foreach (Vessel vessel in FlightGlobals.Vessels)
+			foreach (var vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
 				{
-					foreach (Part part in vessel.Parts)
+					foreach (var part in vessel.Parts)
 					{
 						if (part.IsEngine())
 						{
@@ -35,22 +35,19 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
-			if (enginePartsList[selectedPartIndex] != null)
-			{
-				enginePartsList[selectedPartIndex].force_activate();
-			}
+			enginePartsList[selectedPartIndex]?.force_activate();
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -88,12 +85,12 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{
-				int i = 0;
-				foreach (Part part in enginePartsList)
+				var i = 0;
+				foreach (var part in enginePartsList)
 				{
 					if (part.flightID == selectedPartFlightID)
 					{

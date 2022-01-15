@@ -9,7 +9,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationApoapsis ()
         {
@@ -24,14 +24,14 @@ namespace MuMech
 
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
             if (o.referenceBody.Radius + newApA < o.Radius(UT))
             {
-                string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
+                var burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
                 throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",burnAltitude));//new apoapsis cannot be lower than the altitude of the burn (<<1>>)
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + o.referenceBody.Radius), UT));
 
             return NodeList;

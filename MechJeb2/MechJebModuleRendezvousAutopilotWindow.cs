@@ -16,13 +16,16 @@ namespace MuMech
                 return;
             }
 
-            MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
+            var autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
 
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label2"));//"Rendezvous target must be in the same sphere of influence."
                 if (autopilot.enabled)
+                {
                     autopilot.users.Remove(this);
+                }
+
                 base.WindowGUI(windowID);
                 return;
             }
@@ -35,11 +38,17 @@ namespace MuMech
                 
                 if (!autopilot.enabled)
                 {
-                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button1"))) autopilot.users.Add(this);//"Engage autopilot"
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button1")))
+                    {
+                        autopilot.users.Add(this);//"Engage autopilot"
+                    }
                 }
                 else
                 {
-                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button2"))) autopilot.users.Remove(this);//"Disengage autopilot"
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button2")))
+                    {
+                        autopilot.users.Remove(this);//"Disengage autopilot"
+                    }
                 }
 
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RZauto_label4"), autopilot.desiredDistance, "m");//"Desired final distance:"
@@ -48,12 +57,15 @@ namespace MuMech
 
                 if (autopilot.maxPhasingOrbits < 5)
                 {
-                    GUIStyle s = new GUIStyle(GUI.skin.label);
+                    var s = new GUIStyle(GUI.skin.label);
                     s.normal.textColor = Color.yellow;
                     GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label6"), s);//"Max # of phasing orbits must be at least 5."
                 }
 
-                if (autopilot.enabled) GUILayout.Label( Localizer.Format("#MechJeb_RZauto_label7", autopilot.status));//"Status: <<1>>"
+                if (autopilot.enabled)
+                {
+                    GUILayout.Label( Localizer.Format("#MechJeb_RZauto_label7", autopilot.status));//"Status: <<1>>"
+                }
             }
             
             core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1"));//"Auto-warp"

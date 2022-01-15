@@ -6,12 +6,12 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionRendezvous : MechJebModuleScriptAction
 	{
-		public static String NAME = "Rendezvous";
+		public static string NAME = "Rendezvous";
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType;
-		private List<String> actionTypes = new List<String>();
+		private readonly List<string> actionTypes = new List<string>();
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
+		private readonly EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
 		public MechJebModuleScriptActionRendezvous (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -23,16 +23,16 @@ namespace MuMech
 
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
-			Vessel vessel = this.scriptModule.vessel;
-			VesselState vesselState = this.scriptModule.vesselState;
-			Orbit orbit = this.scriptModule.orbit;
-			CelestialBody mainBody = this.scriptModule.mainBody;
+			var vessel = this.scriptModule.vessel;
+			var vesselState = this.scriptModule.vesselState;
+			var orbit = this.scriptModule.orbit;
+			var mainBody = this.scriptModule.mainBody;
 
 			const double leadTime = 30;
-			double closestApproachTime = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+			var closestApproachTime = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
 
 			if (actionType == 0) //Align planes
 			{
@@ -51,55 +51,54 @@ namespace MuMech
 			}
 			else if (actionType == 1) //Establish new orbit
 			{
-				double phasingOrbitRadius = phasingOrbitAltitude + mainBody.Radius;
+				var phasingOrbitRadius = phasingOrbitAltitude + mainBody.Radius;
 
 				vessel.RemoveAllManeuverNodes();
 				if (orbit.ApR < phasingOrbitRadius)
 				{
-					double UT1 = vesselState.time + leadTime;
-					Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(orbit, UT1, phasingOrbitRadius);
+					var UT1 = vesselState.time + leadTime;
+					var dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(orbit, UT1, phasingOrbitRadius);
 					vessel.PlaceManeuverNode(orbit, dV1, UT1);
-					Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-					double UT2 = transferOrbit.NextApoapsisTime(UT1);
-					Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
+					var transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
+					var UT2 = transferOrbit.NextApoapsisTime(UT1);
+					var dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
 					vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
 				}
 				else if (orbit.PeR > phasingOrbitRadius)
 				{
-					double UT1 = vesselState.time + leadTime;
-					Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(orbit, UT1, phasingOrbitRadius);
+					var UT1 = vesselState.time + leadTime;
+					var dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(orbit, UT1, phasingOrbitRadius);
 					vessel.PlaceManeuverNode(orbit, dV1, UT1);
-					Orbit transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-					double UT2 = transferOrbit.NextPeriapsisTime(UT1);
-					Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
+					var transferOrbit = vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
+					var UT2 = transferOrbit.NextPeriapsisTime(UT1);
+					var dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
 					vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
 				}
 				else
 				{
-					double UT = orbit.NextTimeOfRadius(vesselState.time, phasingOrbitRadius);
-					Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
+					var UT = orbit.NextTimeOfRadius(vesselState.time, phasingOrbitRadius);
+					var dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
 					vessel.PlaceManeuverNode(orbit, dV, UT);
 				}
 			}
 			else if (actionType == 2) //Intercept with Hohmann transfer
 			{
-				double UT;
-				Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out UT);
-				vessel.RemoveAllManeuverNodes();
+                var dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out var UT);
+                vessel.RemoveAllManeuverNodes();
 				vessel.PlaceManeuverNode(orbit, dV, UT);
 			}
 			else if (actionType == 3) //Match velocities at closest approach
 			{
-				double UT = closestApproachTime;
-				Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
+				var UT = closestApproachTime;
+				var dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
 				vessel.RemoveAllManeuverNodes();
 				vessel.PlaceManeuverNode(orbit, dV, UT);
 			}
 			else if (actionType == 4) //Get closer
 			{
-				double UT = vesselState.time;
-				double interceptUT = UT + 100;
-				Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT, 10);
+				var UT = vesselState.time;
+				var interceptUT = UT + 100;
+				var dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT, 10);
 				vessel.RemoveAllManeuverNodes();
 				vessel.PlaceManeuverNode(orbit, dV, UT);
 			}
@@ -107,12 +106,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

@@ -8,7 +8,7 @@ namespace MuMech
     public class MechJebModuleWarpHelper : DisplayModule
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
-        static string[] warpTargetStrings = new string[] { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") };//"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
+        static readonly string[] warpTargetStrings = new string[] { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") };//"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
 
@@ -16,13 +16,12 @@ namespace MuMech
         public EditableTime leadTime = 0;
 
         public bool warping = false;
-
-        EditableTime timeOffset = 0;
+        readonly EditableTime timeOffset = 0;
 
         double targetUT = 0;
 
         [Persistent(pass = (int)(Pass.Local|Pass.Type|Pass.Global))]
-        EditableDouble phaseAngle = 0;
+        readonly EditableDouble phaseAngle = 0;
 
         protected override void WindowGUI(int windowID)
         {
@@ -44,9 +43,13 @@ namespace MuMech
             {
                 // I wonder if I should check for target that don't make sense
                 if (!core.target.NormalTargetExists)
+                {
                     GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label3"));//"You need a target"
+                }
                 else
+                {
                     GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label4"), phaseAngle, "º", 60);//"Phase Angle:"
+                }
             }
 
             GUILayout.BeginHorizontal();
@@ -74,15 +77,27 @@ namespace MuMech
                             break;
 
                         case WarpTarget.Apoapsis:
-                            if (orbit.eccentricity < 1) targetUT = orbit.NextApoapsisTime(vesselState.time);
+                            if (orbit.eccentricity < 1)
+                            {
+                                targetUT = orbit.NextApoapsisTime(vesselState.time);
+                            }
+
                             break;
 
                         case WarpTarget.SoI:
-                            if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL) targetUT = orbit.EndUT;
+                            if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL)
+                            {
+                                targetUT = orbit.EndUT;
+                            }
+
                             break;
 
                         case WarpTarget.Node:
-                            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
+                            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
+                            {
+                                targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
+                            }
+
                             break;
 
                         case WarpTarget.Time:
@@ -93,19 +108,29 @@ namespace MuMech
                             if (core.target.NormalTargetExists)
                             {
                                 Orbit reference;
-                                if (core.target.TargetOrbit.referenceBody == orbit.referenceBody) 
+                                if (core.target.TargetOrbit.referenceBody == orbit.referenceBody)
+                                {
                                     reference = orbit; // we orbit arround the same body
+                                }
                                 else
-                                    reference = orbit.referenceBody.orbit; 
+                                {
+                                    reference = orbit.referenceBody.orbit;
+                                }
                                 // From Kerbal Alarm Clock
-                                double angleChangePerSec = (360 / core.target.TargetOrbit.period) - (360 / reference.period);
-                                double currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
-                                double angleDigff = currentAngle - phaseAngle;
+                                var angleChangePerSec = (360 / core.target.TargetOrbit.period) - (360 / reference.period);
+                                var currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
+                                var angleDigff = currentAngle - phaseAngle;
                                 if (angleDigff > 0 && angleChangePerSec > 0)
+                                {
                                     angleDigff -= 360;
+                                }
+
                                 if (angleDigff < 0 && angleChangePerSec < 0)
+                                {
                                     angleDigff += 360;
-                                double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
+                                }
+
+                                var TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
                                 targetUT = vesselState.time + TimeToTarget;
                             }
                             break;
@@ -143,7 +168,10 @@ namespace MuMech
 
             core.warp.useQuickWarpInfoItem();
 
-            if (warping) GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");//"Warping to "
+            if (warping)
+            {
+                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");//"Warping to "
+            }
 
             core.warp.ControlWarpButton();
 
@@ -154,7 +182,10 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (!warping) return;
+            if (!warping)
+            {
+                return;
+            }
 
             if (warpTarget == WarpTarget.SuicideBurn)
             {
@@ -168,7 +199,7 @@ namespace MuMech
                 }
             }
 
-            double target = targetUT - leadTime;
+            var target = targetUT - leadTime;
 
             if (target < vesselState.time + 1)
             {
@@ -181,7 +212,7 @@ namespace MuMech
             }
         }
 
-        public override UnityEngine.GUILayoutOption[] WindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
             return new GUILayoutOption[] { GUILayout.Width(240), GUILayout.Height(50) };
         }

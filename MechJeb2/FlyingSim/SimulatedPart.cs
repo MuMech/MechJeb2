@@ -28,7 +28,7 @@ namespace MuMech
 
         private static SimulatedPart Create()
         {
-            SimulatedPart part = new SimulatedPart();
+            var part = new SimulatedPart();
             part.cubes.BodyLiftCurve = new PhysicsGlobals.LiftingSurfaceCurve();
             part.cubes.SurfaceCurves = new PhysicsGlobals.SurfaceCurvesList();
             return part;
@@ -36,7 +36,7 @@ namespace MuMech
 
         public virtual void Release()
         {
-            foreach (DragCube cube in cubes.Cubes)
+            foreach (var cube in cubes.Cubes)
             {
                 DragCubePool.Instance.Release(cube);
             }
@@ -45,7 +45,7 @@ namespace MuMech
 
         public static void Release(List<SimulatedPart> objList)
         {
-            for (int i = 0; i < objList.Count; ++i)
+            for (var i = 0; i < objList.Count; ++i)
             {
                 objList[i].Release();
             }
@@ -57,14 +57,14 @@ namespace MuMech
 
         public static SimulatedPart Borrow(Part p, ReentrySimulation.SimCurves simCurve)
         {
-            SimulatedPart part = pool.Borrow();
+            var part = pool.Borrow();
             part.Init(p, simCurve);
             return part;
         }
 
         protected void Init(Part p, ReentrySimulation.SimCurves _simCurves)
         {
-            Rigidbody rigidbody = p.rb;
+            var rigidbody = p.rb;
 
             totalMass = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
             shieldedFromAirstream = p.ShieldedFromAirstream;
@@ -98,13 +98,15 @@ namespace MuMech
         public virtual Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
         {
             if (shieldedFromAirstream || noDrag)
+            {
                 return Vector3d.zero;
+            }
 
-            Vector3d dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
+            var dragVectorDirLocal = -(vesselToPart * vesselVelocity).normalized;
 
             cubes.SetDrag(dragVectorDirLocal, mach);
 
-            Vector3d drag = -vesselVelocity.normalized * cubes.AreaDrag * dragFactor;
+            var drag = -vesselVelocity.normalized * cubes.AreaDrag * dragFactor;
 
             //bool delta = false;
             //string msg = oPart.name;
@@ -160,12 +162,14 @@ namespace MuMech
         public virtual Vector3d Lift(Vector3d vesselVelocity, double liftFactor)
         {
             if (shieldedFromAirstream || hasLiftModule)
+            {
                 return Vector3d.zero;
+            }
 
             // direction of the lift in a vessel centric reference
-            Vector3d liftV = partToVessel * ((Vector3d)cubes.LiftForce * bodyLiftMultiplier * liftFactor);
+            var liftV = partToVessel * ((Vector3d)cubes.LiftForce * bodyLiftMultiplier * liftFactor);
 
-            Vector3d liftVector = liftV.ProjectOnPlane(vesselVelocity);
+            var liftVector = liftV.ProjectOnPlane(vesselVelocity);
 
             //if (vesselVelocity.sqrMagnitude > 1 && oPart.DragCubes.LiftForce.sqrMagnitude > 0.001)
             //{
@@ -220,16 +224,16 @@ namespace MuMech
             // Procedural need access to part so things gets bad quick.
             dest.Procedural = false;
 
-            for (int i = 0; i < source.Cubes.Count; i++)
+            for (var i = 0; i < source.Cubes.Count; i++)
             {
-                DragCube c = DragCubePool.Instance.Borrow();
+                var c = DragCubePool.Instance.Borrow();
                 CopyDragCube(source.Cubes[i], c);
                 dest.Cubes.Add(c);
             }
 
             dest.SetDragWeights();
 
-            for (int i=0; i<6; i++)
+            for (var i=0; i<6; i++)
             {
                 dest.WeightedArea[i] = source.WeightedArea[i];
                 dest.WeightedDrag[i] = source.WeightedDrag[i];
@@ -260,7 +264,7 @@ namespace MuMech
             dest.Weight = source.Weight;
             dest.Center = source.Center;
             dest.Size = source.Size;
-            for (int i = 0; i < source.Drag.Length; i++)
+            for (var i = 0; i < source.Drag.Length; i++)
             {
                 dest.Drag[i] = source.Drag[i];
                 dest.Area[i] = source.Area[i];
@@ -271,14 +275,14 @@ namespace MuMech
 
         protected void SetCubeWeight(string name, float newWeight)
         {
-            int count = cubes.Cubes.Count;
+            var count = cubes.Cubes.Count;
             if (count == 0)
             {
                 return;
             }
 
-            bool noChange = true;
-            for (int i = count - 1; i >= 0; i--)
+            var noChange = true;
+            for (var i = count - 1; i >= 0; i--)
             {
                 if (cubes.Cubes[i].Name == name && cubes.Cubes[i].Weight != newWeight)
                 {
@@ -288,7 +292,9 @@ namespace MuMech
             }
 
             if (noChange)
+            {
                 return;
+            }
 
             cubes.SetDragWeights();
         }

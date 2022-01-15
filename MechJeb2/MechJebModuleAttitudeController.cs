@@ -72,7 +72,10 @@ namespace MuMech
             get => _attitudeReference;
             private set
             {
-                if (_attitudeReference == value) return;
+                if (_attitudeReference == value)
+                {
+                    return;
+                }
 
                 _attitudeReference = value;
                 attitudeChanged    = true;
@@ -125,7 +128,11 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            if (useSAS) part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+            if (useSAS)
+            {
+                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+            }
+
             Controller.OnModuleDisabled();
         }
 
@@ -133,7 +140,10 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
-            foreach (BaseAttitudeController attitudeController in _controllers) attitudeController.OnLoad(local, type, global);
+            foreach (var attitudeController in _controllers)
+            {
+                attitudeController.OnLoad(local, type, global);
+            }
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -144,7 +154,10 @@ namespace MuMech
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnSave(local, type, global);
-            foreach (BaseAttitudeController attitudeController in _controllers) attitudeController.OnSave(local, type, global);
+            foreach (var attitudeController in _controllers)
+            {
+                attitudeController.OnSave(local, type, global);
+            }
         }
 
         public void SetAxisControl(bool pitch, bool yaw, bool roll)
@@ -165,7 +178,7 @@ namespace MuMech
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
         {
             Vector3 fwd, up;
-            Quaternion rotRef = Quaternion.identity;
+            var rotRef = Quaternion.identity;
 
             if (core.target.Target == null && (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION ||
                                                reference == AttitudeReference.RELATIVE_VELOCITY))
@@ -181,11 +194,13 @@ namespace MuMech
                 return rotRef;
             }
 
-            Vector3d thrustForward = vesselState.thrustForward;
+            var thrustForward = vesselState.thrustForward;
 
             // the off-axis thrust modifications get into a fight with the differential throttle so do not use them when diffthrottle is used
             if (core.thrust.differentialThrottle)
+            {
                 thrustForward = vesselState.forward;
+            }
 
             switch (reference)
             {
@@ -221,8 +236,8 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.TARGET_ORIENTATION:
-                    Transform targetTransform = core.target.Transform;
-                    Vector3 targetUp = targetTransform.up;
+                    var targetTransform = core.target.Transform;
+                    var targetUp = targetTransform.up;
                     rotRef = core.target.CanAlign
                         ? Quaternion.LookRotation(targetTransform.forward, targetUp)
                         : Quaternion.LookRotation(targetUp, targetTransform.right);
@@ -241,7 +256,7 @@ namespace MuMech
                     rotRef = Quaternion.FromToRotation(thrustForward, vesselState.forward) * rotRef;
                     break;
                 case AttitudeReference.SUN:
-                    Orbit baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
+                    var baseOrbit = vessel.mainBody == Planetarium.fetch.Sun ? vessel.orbit : orbit.TopParentOrbit();
                     up     = vesselState.CoM - Planetarium.fetch.Sun.transform.position;
                     fwd    = Vector3d.Cross(-baseOrbit.GetOrbitNormal().xzy.normalized, up);
                     rotRef = Quaternion.LookRotation(fwd, up);
@@ -280,9 +295,14 @@ namespace MuMech
             Vector3 up, dir = direction;
 
             if (!enabled)
+            {
                 up = attitudeWorldToReference(-vessel.GetTransform().forward, reference);
+            }
             else
+            {
                 up = attitudeWorldToReference(attitudeReferenceToWorld(attitudeTarget * Vector3d.up, reference), reference);
+            }
+
             Vector3.OrthoNormalize(ref dir, ref up);
             attitudeTo(Quaternion.LookRotation(dir, up), reference, controller);
             SetAxisControl(true, true, false);
@@ -291,9 +311,9 @@ namespace MuMech
         public void attitudeTo(double heading, double pitch, double roll, object controller, bool AxisCtrlPitch = true, bool AxisCtrlYaw = true,
             bool AxisCtrlRoll = true, bool fixCOT = false)
         {
-            Quaternion attitude = Quaternion.AngleAxis((float) heading, Vector3.up) * Quaternion.AngleAxis(-(float) pitch, Vector3.right) *
+            var attitude = Quaternion.AngleAxis((float) heading, Vector3.up) * Quaternion.AngleAxis(-(float) pitch, Vector3.right) *
                                   Quaternion.AngleAxis(-(float) roll, Vector3.forward);
-            AttitudeReference reference = fixCOT ? AttitudeReference.SURFACE_NORTH_COT : AttitudeReference.SURFACE_NORTH;
+            var reference = fixCOT ? AttitudeReference.SURFACE_NORTH_COT : AttitudeReference.SURFACE_NORTH;
             attitudeTo(attitude, reference, controller, AxisCtrlPitch,
                 AxisCtrlYaw, AxisCtrlRoll);
         }
@@ -317,12 +337,16 @@ namespace MuMech
             steeringError.value = attitudeError = attitudeAngleFromTarget();
 
             if (useSAS)
+            {
                 return;
+            }
 
             torque = vesselState.torqueAvailable;
             if (core.thrust.differentialThrottle &&
                 core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+            {
                 torque += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+            }
 
             // Inertia is a bad name. It's the "angular distance to stop"
             inertia = 0.5 * Vector3d.Scale(
@@ -339,7 +363,10 @@ namespace MuMech
         {
             if (attitudeChanged)
             {
-                if (attitudeReference != AttitudeReference.INERTIAL && attitudeReference != AttitudeReference.INERTIAL_COT) attitudeKILLROT = false;
+                if (attitudeReference != AttitudeReference.INERTIAL && attitudeReference != AttitudeReference.INERTIAL_COT)
+                {
+                    attitudeKILLROT = false;
+                }
 
                 Controller.Reset();
 
@@ -379,9 +406,7 @@ namespace MuMech
             }
             else
             {
-                Vector3d act;
-                Vector3d deltaEuler;
-                Controller.DrivePre(s, out act, out deltaEuler);
+                Controller.DrivePre(s, out var act, out var deltaEuler);
 
                 act.Scale(ActuationControl);
 
@@ -391,45 +416,65 @@ namespace MuMech
 
                 // Feed the control torque to the differential throttle
                 if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+                {
                     core.thrust.differentialThrottleDemandedTorque =
                         -Vector3d.Scale(act, vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle);
+                }
             }
         }
 
         private void SetFlightCtrlState(Vector3d act, Vector3d deltaEuler, FlightCtrlState s, float drive_limit)
         {
-            bool userCommandingPitch = !Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F);
-            bool userCommandingYaw = !Mathfx.Approx(s.yaw, s.yawTrim, 0.1F);
-            bool userCommandingRoll = !Mathfx.Approx(s.roll, s.rollTrim, 0.1F);
+            var userCommandingPitch = !Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F);
+            var userCommandingYaw = !Mathfx.Approx(s.yaw, s.yawTrim, 0.1F);
+            var userCommandingRoll = !Mathfx.Approx(s.roll, s.rollTrim, 0.1F);
 
             // Disable the new SAS so it won't interfere. But enable it while in timewarp for compatibility with PersistentRotation
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRateIndex == 0)
+            {
                 part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+            }
 
             if (attitudeKILLROT)
+            {
                 if (lastReferencePart != vessel.GetReferenceTransformPart() || userCommandingPitch || userCommandingYaw || userCommandingRoll)
                 {
                     attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward), AttitudeReference.INERTIAL, null);
                     lastReferencePart = vessel.GetReferenceTransformPart();
                 }
+            }
 
             if (userCommandingPitch)
+            {
                 Controller.Reset(0);
+            }
 
             if (userCommandingRoll)
+            {
                 Controller.Reset(1);
+            }
 
             if (userCommandingYaw)
+            {
                 Controller.Reset(2);
+            }
 
-            if (!userCommandingRoll)
-                if (!double.IsNaN(act.y))
-                    s.roll = Mathf.Clamp((float) act.y, -drive_limit, drive_limit);
+            if (!userCommandingRoll && !double.IsNaN(act.y))
+            {
+                s.roll = Mathf.Clamp((float)act.y, -drive_limit, drive_limit);
+            }
 
             if (!userCommandingPitch && !userCommandingYaw)
             {
-                if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float) act.x, -drive_limit, drive_limit);
-                if (!double.IsNaN(act.z)) s.yaw   = Mathf.Clamp((float) act.z, -drive_limit, drive_limit);
+                if (!double.IsNaN(act.x))
+                {
+                    s.pitch = Mathf.Clamp((float) act.x, -drive_limit, drive_limit);
+                }
+
+                if (!double.IsNaN(act.z))
+                {
+                    s.yaw   = Mathf.Clamp((float) act.z, -drive_limit, drive_limit);
+                }
             }
 
             // RCS and SAS control:
@@ -446,18 +491,20 @@ namespace MuMech
                 }
                 else
                 {
-                    if (RCS_auto)
-                        if (attitudeRCScontrol && core.rcs.users.Count == 0)
-                            part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+                    if (RCS_auto && attitudeRCScontrol && core.rcs.users.Count == 0)
+                    {
+                        part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+                    }
                 }
             }
             else if (absErr.x > 1.0 || absErr.y > 1.0 || absErr.z > 1.0)
             {
                 timeCount = 0;
                 if (RCS_auto && (absErr.x > 3.0 || absErr.y > 3.0 || absErr.z > 3.0) &&
-                    core.thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition)
-                    if (attitudeRCScontrol)
-                        part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                    core.thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition && attitudeRCScontrol)
+                {
+                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                }
             }
         } // end of SetFlightCtrlState
     }

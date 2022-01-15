@@ -62,9 +62,9 @@ namespace MuMech
         private CelestialBody oldMainBody;
         private static readonly int typeCount = Enum.GetValues(typeof(recordType)).Length;
 
-        private graphState[] graphStates;
+        private readonly graphState[] graphStates;
         private double lastMaximumAltitude;
-        private double precision = 0.2;
+        private readonly double precision = 0.2;
 
         private int width = 512;
         private int height = 256;
@@ -87,7 +87,9 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             if (HighLogic.LoadedSceneIsEditor)
+            {
                 return;
+            }
 
             width = 128 * hSize;
             height = 128 * vSize;
@@ -157,28 +159,36 @@ namespace MuMech
             if (!autoScale && GUILayout.Button("-", GUILayout.ExpandWidth(false)))
             {
                 if (downrange)
+                {
                     downrangeScale--;
+                }
                 else
+                {
                     timeScale--;
+                }
             }
 
-            float maxX = (float)(downrange ? recorder.maximums[(int)recordType.DownRange] : recorder.maximums[(int)recordType.TimeSinceMark]);
+            var maxX = (float)(downrange ? recorder.maximums[(int)recordType.DownRange] : recorder.maximums[(int)recordType.TimeSinceMark]);
 
-            double maxXScaled = (downrange ? maxX : maxX / precision) / width;
-            double autoScaleX = Math.Max(Math.Ceiling(Math.Log(maxXScaled, 2)), 0);
+            var maxXScaled = (downrange ? maxX : maxX / precision) / width;
+            var autoScaleX = Math.Max(Math.Ceiling(Math.Log(maxXScaled, 2)), 0);
             double manualScaleX = downrange ? downrangeScale : timeScale;
-            double activeScaleX = autoScale ? autoScaleX : manualScaleX;
+            var activeScaleX = autoScale ? autoScaleX : manualScaleX;
 
-            double scaleX = downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
+            var scaleX = downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
 
             GUILayout.Label((downrange ? MuUtils.ToSI(scaleX, -1, 2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, 1) + "/px"), GUILayout.ExpandWidth(false));
 
             if (!autoScale && GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 if (downrange)
+                {
                     downrangeScale++;
+                }
                 else
+                {
                     timeScale++;
+                }
             }
 
             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
@@ -212,12 +222,14 @@ namespace MuMech
             hSize = Mathf.Clamp(hSize, 1, 20);
             vSize = Mathf.Clamp(vSize, 1, 10);
 
-            bool oldRealAtmo = realAtmo;
+            var oldRealAtmo = realAtmo;
 
             realAtmo = GUILayout.Toggle(realAtmo, Localizer.Format("#MechJeb_Flightrecord_checkbox2"), GUILayout.ExpandWidth(false));//Real Atmo
 
             if (oldRealAtmo != realAtmo)
+            {
                 MechJebModuleAscentClassicMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
+            }
 
             //GUILayout.Label("", GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
@@ -233,7 +245,7 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
 
-            Color color = GUI.color;
+            var color = GUI.color;
 
             // Blue, Navy, Teal, Magenta, Purple all have poor contrast on black or against other colors here
             // Maybe some of them could be lightened up, but many of the lighter variants are already in this list.
@@ -300,7 +312,7 @@ namespace MuMech
             GUILayout.Space(50);
 
             GUILayout.Box(Texture2D.blackTexture, GUILayout.Width(width), GUILayout.Height(height));
-            Rect r = GUILayoutUtility.GetLastRect();
+            var r = GUILayoutUtility.GetLastRect();
 
             DrawScaleLabels(r);
 
@@ -312,13 +324,16 @@ namespace MuMech
 
             if (!graphStates[scaleIdx].display)
             {
-                int newIdx = 0;
+                var newIdx = 0;
                 while (newIdx < typeCount && !graphStates[newIdx].display)
                 {
                     newIdx++;
                 }
                 if (newIdx == typeCount)
+                {
                     newIdx = 0;
+                }
+
                 scaleIdx = newIdx;
             }
 
@@ -327,7 +342,9 @@ namespace MuMech
                 GUI.color = XKCDColors.White;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.AltitudeASL, "ASL " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeASL].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeASL].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.AltitudeASL, Localizer.Format("#MechJeb_Flightrecord_checkbox18"), GUILayout.ExpandWidth(true)))//"ASL"
+                {
                     scaleIdx = (int)recordType.AltitudeASL;
+                }
             }
 
             if (graphStates[(int)recordType.AltitudeTrue].display)
@@ -335,98 +352,126 @@ namespace MuMech
                 GUI.color = XKCDColors.Grey;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.AltitudeTrue, "AGL " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeTrue].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeTrue].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.AltitudeTrue, Localizer.Format("#MechJeb_Flightrecord_checkbox19"), GUILayout.ExpandWidth(true)))//"AGL"
+                {
                     scaleIdx = (int)recordType.AltitudeTrue;
+                }
             }
             if (graphStates[(int)recordType.Acceleration].display)
             {
                 GUI.color = XKCDColors.LightRed;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.Acceleration, "Acc " + MuUtils.ToSI(graphStates[(int)recordType.Acceleration].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Acceleration].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.Acceleration, Localizer.Format("#MechJeb_Flightrecord_checkbox20"), GUILayout.ExpandWidth(true)))// "Acc"
+                {
                     scaleIdx = (int)recordType.Acceleration;
+                }
             }
             if (graphStates[(int)recordType.SpeedSurface].display)
             {
                 GUI.color = XKCDColors.Yellow;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.SpeedSurface, "SrfVel " + MuUtils.ToSI(graphStates[(int)recordType.SpeedSurface].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.SpeedSurface].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.SpeedSurface, Localizer.Format("#MechJeb_Flightrecord_checkbox21"), GUILayout.ExpandWidth(true)))//"SrfVel"
+                {
                     scaleIdx = (int)recordType.SpeedSurface;
+                }
             }
             if (graphStates[(int)recordType.SpeedOrbital].display)
             {
                 GUI.color = XKCDColors.Apricot;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.SpeedOrbital, "ObtVel " + MuUtils.ToSI(graphStates[(int)recordType.SpeedOrbital].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.SpeedOrbital].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.SpeedOrbital, Localizer.Format("#MechJeb_Flightrecord_checkbox22"), GUILayout.ExpandWidth(true)))//"ObtVel"
+                {
                     scaleIdx = (int)recordType.SpeedOrbital;
+                }
             }
             if (graphStates[(int)recordType.Mass].display)
             {
                 GUI.color = XKCDColors.Pink;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.Mass, "Mass " + MuUtils.ToSI(graphStates[(int)recordType.Mass].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Mass].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.Mass, Localizer.Format("#MechJeb_Flightrecord_checkbox23"), GUILayout.ExpandWidth(true)))//"Mass"
+                {
                     scaleIdx = (int)recordType.Mass;
+                }
             }
             if (graphStates[(int)recordType.Q].display)
             {
                 GUI.color = XKCDColors.Cyan;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.Q, "Q " + MuUtils.ToSI(graphStates[(int)recordType.Q].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Q].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.Q, Localizer.Format("#MechJeb_Flightrecord_checkbox24"), GUILayout.ExpandWidth(true)))//"Q"
+                {
                     scaleIdx = (int)recordType.Q;
+                }
             }
             if (graphStates[(int)recordType.AoA].display)
             {
                 GUI.color = XKCDColors.Lavender;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoA, "AoA " + MuUtils.ToSI(graphStates[(int)recordType.AoA].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoA].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.AoA, Localizer.Format("#MechJeb_Flightrecord_checkbox25"), GUILayout.ExpandWidth(true)))//"AoA"
+                {
                     scaleIdx = (int)recordType.AoA;
+                }
             }
             if (graphStates[(int)recordType.AoS].display)
             {
                 GUI.color = XKCDColors.Lime;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoS, "AoS " + MuUtils.ToSI(graphStates[(int)recordType.AoS].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoS].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.AoS, Localizer.Format("#MechJeb_Flightrecord_checkbox26"), GUILayout.ExpandWidth(true)))//"AoS"
+                {
                     scaleIdx = (int)recordType.AoS;
+                }
             }
             if (graphStates[(int)recordType.AoD].display)
             {
                 GUI.color = XKCDColors.Orange;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoD, "AoD " + MuUtils.ToSI(graphStates[(int)recordType.AoD].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoD].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.AoD, Localizer.Format("#MechJeb_Flightrecord_checkbox27"), GUILayout.ExpandWidth(true)))//"AoD"
+                {
                     scaleIdx = (int)recordType.AoD;
+                }
             }
             if (graphStates[(int)recordType.Pitch].display)
             {
                 GUI.color = XKCDColors.Mint;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.Pitch, "Pitch " + MuUtils.ToSI(graphStates[(int)recordType.Pitch].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Pitch].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.Pitch, Localizer.Format("#MechJeb_Flightrecord_checkbox28"), GUILayout.ExpandWidth(true)))//"Pitch"
+                {
                     scaleIdx = (int)recordType.Pitch;
+                }
             }
             if (graphStates[(int)recordType.DeltaVExpended].display)
             {
                 GUI.color = XKCDColors.Beige;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.DeltaVExpended, "DeltaVExpended " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.DeltaVExpended, "∆V", GUILayout.ExpandWidth(true)))
+                {
                     scaleIdx = (int)recordType.DeltaVExpended;
+                }
             }
             if (graphStates[(int)recordType.GravityLosses].display)
             {
                 GUI.color = XKCDColors.Green;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.GravityLosses, "GravityLosses " + MuUtils.ToSI(graphStates[(int)recordType.GravityLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.GravityLosses].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.GravityLosses, Localizer.Format("#MechJeb_Flightrecord_checkbox29"), GUILayout.ExpandWidth(true)))//"Gravity Loss"
+                {
                     scaleIdx = (int)recordType.GravityLosses;
+                }
             }
             if (graphStates[(int)recordType.DragLosses].display)
             {
                 GUI.color = XKCDColors.LightBrown;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.DragLosses, "DragLosses " + MuUtils.ToSI(graphStates[(int)recordType.DragLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.DragLosses].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.DragLosses, Localizer.Format("#MechJeb_Flightrecord_checkbox30"), GUILayout.ExpandWidth(true)))//"Drag Loss"
+                {
                     scaleIdx = (int)recordType.DragLosses;
+                }
             }
             if (graphStates[(int)recordType.SteeringLosses].display)
             {
                 GUI.color = XKCDColors.Cerise;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.SteeringLosses, "SteeringLosses " + MuUtils.ToSI(graphStates[(int)recordType.SteeringLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.SteeringLosses].maximum, -1, 3), GUILayout.ExpandWidth(true)))
                 if (GUILayout.Toggle(scaleIdx == (int)recordType.SteeringLosses, Localizer.Format("#MechJeb_Flightrecord_checkbox31"), GUILayout.ExpandWidth(true)))//"Steering Loss"
+                {
                     scaleIdx = (int)recordType.SteeringLosses;
+                }
             }
 
             GUI.color = color;
@@ -439,11 +484,14 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
 
-            float visibleX = (float)(width * scaleX);
-            float rightValue = Mathf.Max(visibleX, maxX);
+            var visibleX = (float)(width * scaleX);
+            var rightValue = Mathf.Max(visibleX, maxX);
 
             if (follow)
+            {
                 hPos = rightValue - visibleX;
+            }
+
             hPos = GUILayout.HorizontalScrollbar(hPos, visibleX, 0, rightValue);
             follow = GUILayout.Toggle(follow, "", GUILayout.ExpandWidth(false));
 
@@ -454,41 +502,89 @@ namespace MuMech
                 UpdateScale();
 
                 if (graphStates[(int)recordType.AltitudeASL].display || graphStates[(int)recordType.AltitudeTrue].display)
+                {
                     GUI.DrawTexture(r, backgroundTexture, ScaleMode.StretchToFill);
+                }
 
                 if (stages)
+                {
                     DrawnStages(r, scaleX, downrange);
+                }
 
                 if (graphStates[(int)recordType.AltitudeASL].display)
+                {
                     DrawnPath(r, recordType.AltitudeASL, hPos, scaleX, downrange, XKCDColors.White);
+                }
+
                 if (graphStates[(int)recordType.AltitudeTrue].display)
+                {
                     DrawnPath(r, recordType.AltitudeTrue, hPos, scaleX, downrange, XKCDColors.Grey);
+                }
+
                 if (graphStates[(int)recordType.Acceleration].display)
+                {
                     DrawnPath(r, recordType.Acceleration, hPos, scaleX, downrange, XKCDColors.LightRed);
+                }
+
                 if (graphStates[(int)recordType.SpeedSurface].display)
+                {
                     DrawnPath(r, recordType.SpeedSurface, hPos, scaleX, downrange, XKCDColors.Yellow);
+                }
+
                 if (graphStates[(int)recordType.SpeedOrbital].display)
+                {
                     DrawnPath(r, recordType.SpeedOrbital, hPos, scaleX, downrange, XKCDColors.Apricot);
+                }
+
                 if (graphStates[(int)recordType.Mass].display)
+                {
                     DrawnPath(r, recordType.Mass, hPos, scaleX, downrange, XKCDColors.Pink);
+                }
+
                 if (graphStates[(int)recordType.Q].display)
+                {
                     DrawnPath(r, recordType.Q, hPos, scaleX, downrange, XKCDColors.Cyan);
+                }
+
                 if (graphStates[(int)recordType.AoA].display)
+                {
                     DrawnPath(r, recordType.AoA, hPos, scaleX, downrange, XKCDColors.Lavender);
+                }
+
                 if (graphStates[(int)recordType.AoS].display)
+                {
                     DrawnPath(r, recordType.AoS, hPos, scaleX, downrange, XKCDColors.Lime);
+                }
+
                 if (graphStates[(int)recordType.AoD].display)
+                {
                     DrawnPath(r, recordType.AoD, hPos, scaleX, downrange, XKCDColors.Orange);
+                }
+
                 if (graphStates[(int)recordType.Pitch].display)
+                {
                     DrawnPath(r, recordType.Pitch, hPos, scaleX, downrange, XKCDColors.Mint);
+                }
+
                 if (graphStates[(int)recordType.DeltaVExpended].display)
+                {
                     DrawnPath(r, recordType.DeltaVExpended, hPos, scaleX, downrange, XKCDColors.Beige);
+                }
+
                 if (graphStates[(int)recordType.GravityLosses].display)
+                {
                     DrawnPath(r, recordType.GravityLosses, hPos, scaleX, downrange, XKCDColors.Green);
+                }
+
                 if (graphStates[(int)recordType.DragLosses].display)
+                {
                     DrawnPath(r, recordType.DragLosses, hPos, scaleX, downrange, XKCDColors.LightBrown);
+                }
+
                 if (graphStates[(int)recordType.SteeringLosses].display)
+                {
                     DrawnPath(r, recordType.SteeringLosses, hPos, scaleX, downrange, XKCDColors.Cerise);
+                }
 
                 // Fix : the scales are different so the result is not useful
                 //if (ascentPath)
@@ -506,49 +602,55 @@ namespace MuMech
         private void DrawScaleLabels(Rect r)
         {
             if (scaleIdx == 0)
+            {
                 return;
+            }
 
             const int w = 80;
             const int h = 20;
-            GUIStyle centeredStyle = new GUIStyle(GUI.skin.label) {alignment = TextAnchor.MiddleRight};
+            var centeredStyle = new GUIStyle(GUI.skin.label) {alignment = TextAnchor.MiddleRight};
 
-            graphState state = graphStates[scaleIdx];
+            var state = graphStates[scaleIdx];
             if (state.labels == null)
-                return;
-
-            int count = state.labelsActive;
-            double invScaleY = height / (state.maximum - state.minimum);
-            float yBase = r.yMax + (float) (state.minimum * invScaleY);
-            for (int i = 0; i < count; i++)
             {
-                GUI.Label(new Rect(r.xMin - w, yBase - (float)(invScaleY * state.labelsPos[i]) - h * 0.5f, w, h), state.labels[i], centeredStyle);
+                return;
+            }
+
+            var count = state.labelsActive;
+            var invScaleY = height / (state.maximum - state.minimum);
+            var yBase = r.yMax + (float) (state.minimum * invScaleY);
+            for (var i = 0; i < count; i++)
+            {
+                GUI.Label(new Rect(r.xMin - w, yBase - (float)(invScaleY * state.labelsPos[i]) - (h * 0.5f), w, h), state.labels[i], centeredStyle);
             }
         }
 
         private void DrawnPath(Rect r, recordType type, float minimum, double scaleX, bool downRange, Color color)
         {
             if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
+            {
                 return;
+            }
 
-            graphState graphState = graphStates[(int)type];
+            var graphState = graphStates[(int)type];
 
-            double scaleY = (graphState.maximum - graphState.minimum) / height;
+            var scaleY = (graphState.maximum - graphState.minimum) / height;
 
-            double invScaleX = 1 / scaleX;
-            double invScaleY = 1 / scaleY;
+            var invScaleX = 1 / scaleX;
+            var invScaleY = 1 / scaleY;
 
-            float xBase = (float) (r.xMin - (minimum * invScaleX));
-            float yBase = r.yMax + (float)(graphState.minimum * invScaleY);
+            var xBase = (float) (r.xMin - (minimum * invScaleX));
+            var yBase = r.yMax + (float)(graphState.minimum * invScaleY);
 
-            int t = 0;
+            var t = 0;
             while (t < recorder.historyIdx && t < recorder.history.Length &&
                 (xBase + (float)((downRange ? recorder.history[t].downRange : recorder.history[t].timeSinceMark) * invScaleX)) <= r.xMin)
             {
                 t++;
             }
 
-            Vector2 p1 = new Vector2(xBase + (float)((downRange ? recorder.history[t].downRange : recorder.history[t].timeSinceMark) * invScaleX), yBase - (float)(recorder.history[t][type] * invScaleY));
-            Vector2 p2 = new Vector2();
+            var p1 = new Vector2(xBase + (float)((downRange ? recorder.history[t].downRange : recorder.history[t].timeSinceMark) * invScaleX), yBase - (float)(recorder.history[t][type] * invScaleY));
+            var p2 = new Vector2();
 
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
@@ -570,15 +672,16 @@ namespace MuMech
         private void DrawnStages(Rect r, double scaleX, bool downRange)
         {
             if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
+            {
                 return;
+            }
 
-            int lastStage = recorder.history[0].currentStage;
+            var lastStage = recorder.history[0].currentStage;
 
-            Vector2 p1 = new Vector2(0, r.yMin);
-            Vector2 p2 = new Vector2(0, r.yMax);
+            var p1 = new Vector2(0, r.yMin);
+            var p2 = new Vector2(0, r.yMax);
 
-            int t = 1;
-            while (t <= recorder.historyIdx && t < recorder.history.Length)
+            for (var t = 1; t <= recorder.historyIdx && t < recorder.history.Length; t++)
             {
                 var rec = recorder.history[t];
                 if (rec.currentStage != lastStage)
@@ -592,18 +695,19 @@ namespace MuMech
                         Drawing.DrawLine(p1, p2, new Color(0.5f, 0.5f, 0.5f), 1, false);
                     }
                 }
-                t++;
             }
         }
 
         private void UpdateScale()
         {
             if (recorder.historyIdx == 0)
-                ResetScale();
-
-            for (int t = 0; t < typeCount; t++)
             {
-                bool change = false;
+                ResetScale();
+            }
+
+            for (var t = 0; t < typeCount; t++)
+            {
+                var change = false;
 
                 if (graphStates[t].maximum < recorder.maximums[t])
                 {
@@ -626,18 +730,18 @@ namespace MuMech
 
                 if (change)
                 {
-                    double maximum = graphStates[t].maximum;
-                    double minimum = graphStates[t].minimum;
-                    double range = heckbertNiceNum(maximum - minimum, false);
-                    double step = heckbertNiceNum(range / (ScaleTicks - 1), true);
+                    var maximum = graphStates[t].maximum;
+                    var minimum = graphStates[t].minimum;
+                    var range = heckbertNiceNum(maximum - minimum, false);
+                    var step = heckbertNiceNum(range / (ScaleTicks - 1), true);
 
                     minimum = Math.Floor(minimum / step) * step;
                     maximum = Math.Ceiling(maximum / step) * step;
-                    int digit = (int)Math.Max(-Math.Floor(Math.Log10(step)), 0);
+                    var digit = (int)Math.Max(-Math.Floor(Math.Log10(step)), 0);
 
-                    double currX = minimum;
-                    int i = 0;
-                    while (currX <= maximum + 0.5 * step)
+                    var currX = minimum;
+                    var i = 0;
+                    while (currX <= maximum + (0.5 * step))
                     {
                         graphStates[t].labels[i] = currX.ToString("F" + digit);
                         graphStates[t].labelsPos[i] = currX;
@@ -672,7 +776,7 @@ namespace MuMech
             graphStates[(int)recordType.DragLosses].minimum = 0;
             graphStates[(int)recordType.SteeringLosses].minimum = 0;
 
-            graphStates[(int)recordType.AltitudeASL].maximum = mainBody != null && mainBody.atmosphere ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
+            graphStates[(int)recordType.AltitudeASL].maximum = mainBody?.atmosphere == true ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
             graphStates[(int)recordType.DownRange].maximum = 500;
             graphStates[(int)recordType.Acceleration].maximum = 2;
             graphStates[(int)recordType.SpeedSurface].maximum = 300;
@@ -692,31 +796,47 @@ namespace MuMech
 
         private double heckbertNiceNum(double x, bool round)
         {
-            int exp = (int)Math.Log10(x);
-            double f = x / (Math.Pow(10.0, exp));
+            var exp = (int)Math.Log10(x);
+            var f = x / (Math.Pow(10.0, exp));
             double nf = 1;
 
             if (round)
             {
                 if (f < 1.5)
+                {
                     nf = 1;
+                }
                 else if (f < 3)
+                {
                     nf = 2;
+                }
                 else if (f < 7)
+                {
                     nf = 5;
+                }
                 else
+                {
                     nf = 10;
+                }
             }
             else
             {
                 if (f <= 1)
+                {
                     nf = 1;
+                }
                 else if (f <= 2)
+                {
                     nf = 2;
+                }
                 else if (f <= 5)
+                {
                     nf = 5;
+                }
                 else
+                {
                     nf = 10;
+                }
             }
             return nf * Math.Pow(10.0, exp);
 

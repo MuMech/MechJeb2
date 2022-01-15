@@ -81,20 +81,36 @@ namespace MuMech
 
         void DriveVerticalAscent(FlightCtrlState s)
         {
-            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) mode = AscentMode.INITIATE_TURN;
-            if (autopilot.autoThrottle && orbit.ApA > intermediateAltitude) mode = AscentMode.GRAVITY_TURN;
+            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface))
+            {
+                mode = AscentMode.INITIATE_TURN;
+            }
+
+            if (autopilot.autoThrottle && orbit.ApA > intermediateAltitude)
+            {
+                mode = AscentMode.GRAVITY_TURN;
+            }
 
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90);
 
-            bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
+            var liftedOff = vessel.LiftedOff() && !vessel.Landed;
 
             core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
 
-            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
+            if (autopilot.autoThrottle)
+            {
+                core.thrust.targetThrottle = 1.0F;
+            }
 
-            if (!vessel.LiftedOff() || vessel.Landed) status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
-            else status = Localizer.Format("#MechJeb_Ascent_status18");//"Vertical ascent"
+            if (!vessel.LiftedOff() || vessel.Landed)
+            {
+                status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
+            }
+            else
+            {
+                status = Localizer.Format("#MechJeb_Ascent_status18");//"Vertical ascent"
+            }
         }
 
         void DriveInitiateTurn(FlightCtrlState s)
@@ -143,9 +159,13 @@ namespace MuMech
         double fixedTimeToAp()
         {
             if ( vessel.orbit.timeToPe < vessel.orbit.timeToAp )
+            {
                 return vessel.orbit.timeToAp - vessel.orbit.period;
+            }
             else
+            {
                 return vessel.orbit.timeToAp;
+            }
         }
 
         double maxholdAPTime = 0;
@@ -169,7 +189,7 @@ namespace MuMech
             maxholdAPTime = Math.Max(maxholdAPTime, fixedTimeToAp());
 
             // fade pitch from AoA at 90% of intermediateAltitude to 0 at 95% of intermediateAltitude
-            double pitchfade = MuUtils.Clamp(- 20 * vesselState.altitudeASL / intermediateAltitude + 19, 0.0, 1.0);
+            var pitchfade = MuUtils.Clamp((- 20 * vesselState.altitudeASL / intermediateAltitude) + 19, 0.0, 1.0);
 
             // srfvelPitch == zero AoA
             attitudeTo(srfvelPitch() * pitchfade);
@@ -221,7 +241,7 @@ namespace MuMech
         {
             core.thrust.targetThrottle = 0;
 
-            double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
+            var apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
 
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {

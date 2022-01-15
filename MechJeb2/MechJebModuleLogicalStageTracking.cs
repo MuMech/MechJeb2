@@ -27,7 +27,10 @@ namespace MuMech
             public override string ToString()
             {
                 var sb = new StringBuilder();
-                foreach (Stage stage in this) sb.AppendLine(stage.ToString());
+                foreach (var stage in this)
+                {
+                    sb.AppendLine(stage.ToString());
+                }
 
                 return sb.ToString();
             }
@@ -64,13 +67,15 @@ namespace MuMech
              * Handle staging events: if we just staged and have one less nonzero-stage then remove a stage
              */
 
-            int currentNonZeroStages = 0;
+            var currentNonZeroStages = 0;
 
-            for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
+            for (var i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
             {
-                FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
+                var fuelStats = core.stageStats.vacStats[i];
                 if (fuelStats.DeltaV <= 0)
+                {
                     continue;
+                }
 
                 currentNonZeroStages++;
             }
@@ -87,14 +92,16 @@ namespace MuMech
              * Deal with resynchronization and with user reconfiguration.
              */
 
-            int j = 0;
+            var j = 0;
 
-            for (int i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
+            for (var i = core.stageStats.vacStats.Length - 1; i >= 0; i--)
             {
-                FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
+                var fuelStats = core.stageStats.vacStats[i];
 
                 if (fuelStats.DeltaV <= 0)
+                {
                     continue;
+                }
 
                 if (j >= Stages.Count)
                 {
@@ -172,7 +179,9 @@ namespace MuMech
             public void Sync()
             {
                 if (KspStage > _parent.core.stageStats.vacStats.Length - 1)
+                {
                     return;
+                }
 
                 _vacFuelStats = _parent.core.stageStats.vacStats[KspStage];
                 DeltaV        = _vacFuelStats.DeltaV;
@@ -184,7 +193,10 @@ namespace MuMech
                 EndMass       = _vacFuelStats.EndMass * 1000;
 
                 _parts.Clear();
-                for (int i = 0; i < _vacFuelStats.Parts.Count; i++) _parts.Add(_vacFuelStats.Parts[i]);
+                for (var i = 0; i < _vacFuelStats.Parts.Count; i++)
+                {
+                    _parts.Add(_vacFuelStats.Parts[i]);
+                }
             }
 
             public override string ToString()

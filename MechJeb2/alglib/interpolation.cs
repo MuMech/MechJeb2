@@ -40,7 +40,7 @@ public partial class alglib
             _innerobj = new ratint.barycentricinterpolant();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new barycentricinterpolant((ratint.barycentricinterpolant)_innerobj.make_copy());
         }
@@ -49,7 +49,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private ratint.barycentricinterpolant _innerobj;
+        private readonly ratint.barycentricinterpolant _innerobj;
         public ratint.barycentricinterpolant innerobj { get { return _innerobj; } }
         public barycentricinterpolant(ratint.barycentricinterpolant obj)
         {
@@ -79,7 +79,7 @@ public partial class alglib
         return ratint.barycentriccalc(b.innerobj, t, null);
     }
     
-    public static double barycentriccalc(barycentricinterpolant b, double t, alglib.xparams _params)
+    public static double barycentriccalc(barycentricinterpolant b, double t, xparams _params)
     {
     
         return ratint.barycentriccalc(b.innerobj, t, _params);
@@ -114,7 +114,7 @@ public partial class alglib
         ratint.barycentricdiff1(b.innerobj, t, ref f, ref df, null);
     }
     
-    public static void barycentricdiff1(barycentricinterpolant b, double t, out double f, out double df, alglib.xparams _params)
+    public static void barycentricdiff1(barycentricinterpolant b, double t, out double f, out double df, xparams _params)
     {
         f = 0;
         df = 0;
@@ -150,7 +150,7 @@ public partial class alglib
         ratint.barycentricdiff2(b.innerobj, t, ref f, ref df, ref d2f, null);
     }
     
-    public static void barycentricdiff2(barycentricinterpolant b, double t, out double f, out double df, out double d2f, alglib.xparams _params)
+    public static void barycentricdiff2(barycentricinterpolant b, double t, out double f, out double df, out double d2f, xparams _params)
     {
         f = 0;
         df = 0;
@@ -177,7 +177,7 @@ public partial class alglib
         ratint.barycentriclintransx(b.innerobj, ca, cb, null);
     }
     
-    public static void barycentriclintransx(barycentricinterpolant b, double ca, double cb, alglib.xparams _params)
+    public static void barycentriclintransx(barycentricinterpolant b, double ca, double cb, xparams _params)
     {
     
         ratint.barycentriclintransx(b.innerobj, ca, cb, _params);
@@ -203,7 +203,7 @@ public partial class alglib
         ratint.barycentriclintransy(b.innerobj, ca, cb, null);
     }
     
-    public static void barycentriclintransy(barycentricinterpolant b, double ca, double cb, alglib.xparams _params)
+    public static void barycentriclintransy(barycentricinterpolant b, double ca, double cb, xparams _params)
     {
     
         ratint.barycentriclintransy(b.innerobj, ca, cb, _params);
@@ -233,7 +233,7 @@ public partial class alglib
         ratint.barycentricunpack(b.innerobj, ref n, ref x, ref y, ref w, null);
     }
     
-    public static void barycentricunpack(barycentricinterpolant b, out int n, out double[] x, out double[] y, out double[] w, alglib.xparams _params)
+    public static void barycentricunpack(barycentricinterpolant b, out int n, out double[] x, out double[] y, out double[] w, xparams _params)
     {
         n = 0;
         x = new double[0];
@@ -265,7 +265,7 @@ public partial class alglib
         ratint.barycentricbuildxyw(x, y, w, n, b.innerobj, null);
     }
     
-    public static void barycentricbuildxyw(double[] x, double[] y, double[] w, int n, out barycentricinterpolant b, alglib.xparams _params)
+    public static void barycentricbuildxyw(double[] x, double[] y, double[] w, int n, out barycentricinterpolant b, xparams _params)
     {
         b = new barycentricinterpolant();
         ratint.barycentricbuildxyw(x, y, w, n, b.innerobj, _params);
@@ -304,7 +304,7 @@ public partial class alglib
         ratint.barycentricbuildfloaterhormann(x, y, n, d, b.innerobj, null);
     }
     
-    public static void barycentricbuildfloaterhormann(double[] x, double[] y, int n, int d, out barycentricinterpolant b, alglib.xparams _params)
+    public static void barycentricbuildfloaterhormann(double[] x, double[] y, int n, int d, out barycentricinterpolant b, xparams _params)
     {
         b = new barycentricinterpolant();
         ratint.barycentricbuildfloaterhormann(x, y, n, d, b.innerobj, _params);
@@ -332,7 +332,7 @@ public partial class alglib
             _innerobj = new idw.idwcalcbuffer();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new idwcalcbuffer((idw.idwcalcbuffer)_innerobj.make_copy());
         }
@@ -341,7 +341,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwcalcbuffer _innerobj;
+        private readonly idw.idwcalcbuffer _innerobj;
         public idw.idwcalcbuffer innerobj { get { return _innerobj; } }
         public idwcalcbuffer(idw.idwcalcbuffer obj)
         {
@@ -364,7 +364,7 @@ public partial class alglib
             _innerobj = new idw.idwmodel();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new idwmodel((idw.idwmodel)_innerobj.make_copy());
         }
@@ -373,7 +373,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwmodel _innerobj;
+        private readonly idw.idwmodel _innerobj;
         public idw.idwmodel innerobj { get { return _innerobj; } }
         public idwmodel(idw.idwmodel obj)
         {
@@ -396,7 +396,7 @@ public partial class alglib
             _innerobj = new idw.idwbuilder();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new idwbuilder((idw.idwbuilder)_innerobj.make_copy());
         }
@@ -405,7 +405,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwbuilder _innerobj;
+        private readonly idw.idwbuilder _innerobj;
         public idw.idwbuilder innerobj { get { return _innerobj; } }
         public idwbuilder(idw.idwbuilder obj)
         {
@@ -436,7 +436,7 @@ public partial class alglib
             _innerobj = new idw.idwreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new idwreport((idw.idwreport)_innerobj.make_copy());
         }
@@ -445,7 +445,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwreport _innerobj;
+        private readonly idw.idwreport _innerobj;
         public idw.idwreport innerobj { get { return _innerobj; } }
         public idwreport(idw.idwreport obj)
         {
@@ -476,7 +476,7 @@ public partial class alglib
     *************************************************************************/
     public static void idwserialize(idwmodel obj, out string s_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         idw.idwalloc(s, obj.innerobj, null);
         s.sstart_str();
@@ -491,7 +491,7 @@ public partial class alglib
     *************************************************************************/
     public static void idwunserialize(string s_in, out idwmodel obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new idwmodel();
         s.ustart_str(s_in);
         idw.idwunserialize(s, obj.innerobj, null);
@@ -512,7 +512,7 @@ public partial class alglib
     *************************************************************************/
     public static void idwserialize(idwmodel obj, System.IO.Stream stream_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         idw.idwalloc(s, obj.innerobj, null);
         s.sstart_stream(stream_out);
@@ -526,7 +526,7 @@ public partial class alglib
     *************************************************************************/
     public static void idwunserialize(System.IO.Stream stream_in, out idwmodel obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new idwmodel();
         s.ustart_stream(stream_in);
         idw.idwunserialize(s, obj.innerobj, null);
@@ -579,7 +579,7 @@ public partial class alglib
         idw.idwcreatecalcbuffer(s.innerobj, buf.innerobj, null);
     }
     
-    public static void idwcreatecalcbuffer(idwmodel s, out idwcalcbuffer buf, alglib.xparams _params)
+    public static void idwcreatecalcbuffer(idwmodel s, out idwcalcbuffer buf, xparams _params)
     {
         buf = new idwcalcbuffer();
         idw.idwcreatecalcbuffer(s.innerobj, buf.innerobj, _params);
@@ -629,7 +629,7 @@ public partial class alglib
         idw.idwbuildercreate(nx, ny, state.innerobj, null);
     }
     
-    public static void idwbuildercreate(int nx, int ny, out idwbuilder state, alglib.xparams _params)
+    public static void idwbuildercreate(int nx, int ny, out idwbuilder state, xparams _params)
     {
         state = new idwbuilder();
         idw.idwbuildercreate(nx, ny, state.innerobj, _params);
@@ -661,7 +661,7 @@ public partial class alglib
         idw.idwbuildersetnlayers(state.innerobj, nlayers, null);
     }
     
-    public static void idwbuildersetnlayers(idwbuilder state, int nlayers, alglib.xparams _params)
+    public static void idwbuildersetnlayers(idwbuilder state, int nlayers, xparams _params)
     {
     
         idw.idwbuildersetnlayers(state.innerobj, nlayers, _params);
@@ -691,7 +691,7 @@ public partial class alglib
         idw.idwbuildersetpoints(state.innerobj, xy, n, null);
     }
     
-    public static void idwbuildersetpoints(idwbuilder state, double[,] xy, int n, alglib.xparams _params)
+    public static void idwbuildersetpoints(idwbuilder state, double[,] xy, int n, xparams _params)
     {
     
         idw.idwbuildersetpoints(state.innerobj, xy, n, _params);
@@ -708,7 +708,7 @@ public partial class alglib
         return;
     }
             
-    public static void idwbuildersetpoints(idwbuilder state, double[,] xy, alglib.xparams _params)
+    public static void idwbuildersetpoints(idwbuilder state, double[,] xy, xparams _params)
     {
         int n;
     
@@ -806,7 +806,7 @@ public partial class alglib
         idw.idwbuildersetalgomstab(state.innerobj, srad, null);
     }
     
-    public static void idwbuildersetalgomstab(idwbuilder state, double srad, alglib.xparams _params)
+    public static void idwbuildersetalgomstab(idwbuilder state, double srad, xparams _params)
     {
     
         idw.idwbuildersetalgomstab(state.innerobj, srad, _params);
@@ -836,7 +836,7 @@ public partial class alglib
         idw.idwbuildersetalgotextbookshepard(state.innerobj, p, null);
     }
     
-    public static void idwbuildersetalgotextbookshepard(idwbuilder state, double p, alglib.xparams _params)
+    public static void idwbuildersetalgotextbookshepard(idwbuilder state, double p, xparams _params)
     {
     
         idw.idwbuildersetalgotextbookshepard(state.innerobj, p, _params);
@@ -866,7 +866,7 @@ public partial class alglib
         idw.idwbuildersetalgotextbookmodshepard(state.innerobj, r, null);
     }
     
-    public static void idwbuildersetalgotextbookmodshepard(idwbuilder state, double r, alglib.xparams _params)
+    public static void idwbuildersetalgotextbookmodshepard(idwbuilder state, double r, xparams _params)
     {
     
         idw.idwbuildersetalgotextbookmodshepard(state.innerobj, r, _params);
@@ -892,7 +892,7 @@ public partial class alglib
         idw.idwbuildersetuserterm(state.innerobj, v, null);
     }
     
-    public static void idwbuildersetuserterm(idwbuilder state, double v, alglib.xparams _params)
+    public static void idwbuildersetuserterm(idwbuilder state, double v, xparams _params)
     {
     
         idw.idwbuildersetuserterm(state.innerobj, v, _params);
@@ -915,7 +915,7 @@ public partial class alglib
         idw.idwbuildersetconstterm(state.innerobj, null);
     }
     
-    public static void idwbuildersetconstterm(idwbuilder state, alglib.xparams _params)
+    public static void idwbuildersetconstterm(idwbuilder state, xparams _params)
     {
     
         idw.idwbuildersetconstterm(state.innerobj, _params);
@@ -936,7 +936,7 @@ public partial class alglib
         idw.idwbuildersetzeroterm(state.innerobj, null);
     }
     
-    public static void idwbuildersetzeroterm(idwbuilder state, alglib.xparams _params)
+    public static void idwbuildersetzeroterm(idwbuilder state, xparams _params)
     {
     
         idw.idwbuildersetzeroterm(state.innerobj, _params);
@@ -966,7 +966,7 @@ public partial class alglib
         return idw.idwcalc1(s.innerobj, x0, null);
     }
     
-    public static double idwcalc1(idwmodel s, double x0, alglib.xparams _params)
+    public static double idwcalc1(idwmodel s, double x0, xparams _params)
     {
     
         return idw.idwcalc1(s.innerobj, x0, _params);
@@ -996,7 +996,7 @@ public partial class alglib
         return idw.idwcalc2(s.innerobj, x0, x1, null);
     }
     
-    public static double idwcalc2(idwmodel s, double x0, double x1, alglib.xparams _params)
+    public static double idwcalc2(idwmodel s, double x0, double x1, xparams _params)
     {
     
         return idw.idwcalc2(s.innerobj, x0, x1, _params);
@@ -1026,7 +1026,7 @@ public partial class alglib
         return idw.idwcalc3(s.innerobj, x0, x1, x2, null);
     }
     
-    public static double idwcalc3(idwmodel s, double x0, double x1, double x2, alglib.xparams _params)
+    public static double idwcalc3(idwmodel s, double x0, double x1, double x2, xparams _params)
     {
     
         return idw.idwcalc3(s.innerobj, x0, x1, x2, _params);
@@ -1065,7 +1065,7 @@ public partial class alglib
         idw.idwcalc(s.innerobj, x, ref y, null);
     }
     
-    public static void idwcalc(idwmodel s, double[] x, out double[] y, alglib.xparams _params)
+    public static void idwcalc(idwmodel s, double[] x, out double[] y, xparams _params)
     {
         y = new double[0];
         idw.idwcalc(s.innerobj, x, ref y, _params);
@@ -1101,7 +1101,7 @@ public partial class alglib
         idw.idwcalcbuf(s.innerobj, x, ref y, null);
     }
     
-    public static void idwcalcbuf(idwmodel s, double[] x, ref double[] y, alglib.xparams _params)
+    public static void idwcalcbuf(idwmodel s, double[] x, ref double[] y, xparams _params)
     {
     
         idw.idwcalcbuf(s.innerobj, x, ref y, _params);
@@ -1137,7 +1137,7 @@ public partial class alglib
         idw.idwtscalcbuf(s.innerobj, buf.innerobj, x, ref y, null);
     }
     
-    public static void idwtscalcbuf(idwmodel s, idwcalcbuffer buf, double[] x, ref double[] y, alglib.xparams _params)
+    public static void idwtscalcbuf(idwmodel s, idwcalcbuffer buf, double[] x, ref double[] y, xparams _params)
     {
     
         idw.idwtscalcbuf(s.innerobj, buf.innerobj, x, ref y, _params);
@@ -1170,7 +1170,7 @@ public partial class alglib
         idw.idwfit(state.innerobj, model.innerobj, rep.innerobj, null);
     }
     
-    public static void idwfit(idwbuilder state, out idwmodel model, out idwreport rep, alglib.xparams _params)
+    public static void idwfit(idwbuilder state, out idwmodel model, out idwreport rep, xparams _params)
     {
         model = new idwmodel();
         rep = new idwreport();
@@ -1218,7 +1218,7 @@ public partial class alglib
         polint.polynomialbar2cheb(p.innerobj, a, b, ref t, null);
     }
     
-    public static void polynomialbar2cheb(barycentricinterpolant p, double a, double b, out double[] t, alglib.xparams _params)
+    public static void polynomialbar2cheb(barycentricinterpolant p, double a, double b, out double[] t, xparams _params)
     {
         t = new double[0];
         polint.polynomialbar2cheb(p.innerobj, a, b, ref t, _params);
@@ -1250,7 +1250,7 @@ public partial class alglib
         polint.polynomialcheb2bar(t, n, a, b, p.innerobj, null);
     }
     
-    public static void polynomialcheb2bar(double[] t, int n, double a, double b, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialcheb2bar(double[] t, int n, double a, double b, out barycentricinterpolant p, xparams _params)
     {
         p = new barycentricinterpolant();
         polint.polynomialcheb2bar(t, n, a, b, p.innerobj, _params);
@@ -1267,7 +1267,7 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialcheb2bar(double[] t, double a, double b, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialcheb2bar(double[] t, double a, double b, out barycentricinterpolant p, xparams _params)
     {
         int n;
     
@@ -1324,7 +1324,7 @@ public partial class alglib
         polint.polynomialbar2pow(p.innerobj, c, s, ref a, null);
     }
     
-    public static void polynomialbar2pow(barycentricinterpolant p, double c, double s, out double[] a, alglib.xparams _params)
+    public static void polynomialbar2pow(barycentricinterpolant p, double c, double s, out double[] a, xparams _params)
     {
         a = new double[0];
         polint.polynomialbar2pow(p.innerobj, c, s, ref a, _params);
@@ -1343,7 +1343,7 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialbar2pow(barycentricinterpolant p, out double[] a, alglib.xparams _params)
+    public static void polynomialbar2pow(barycentricinterpolant p, out double[] a, xparams _params)
     {
         double c;
         double s;
@@ -1398,7 +1398,7 @@ public partial class alglib
         polint.polynomialpow2bar(a, n, c, s, p.innerobj, null);
     }
     
-    public static void polynomialpow2bar(double[] a, int n, double c, double s, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialpow2bar(double[] a, int n, double c, double s, out barycentricinterpolant p, xparams _params)
     {
         p = new barycentricinterpolant();
         polint.polynomialpow2bar(a, n, c, s, p.innerobj, _params);
@@ -1419,7 +1419,7 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialpow2bar(double[] a, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialpow2bar(double[] a, out barycentricinterpolant p, xparams _params)
     {
         int n;
         double c;
@@ -1457,7 +1457,7 @@ public partial class alglib
         polint.polynomialbuild(x, y, n, p.innerobj, null);
     }
     
-    public static void polynomialbuild(double[] x, double[] y, int n, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuild(double[] x, double[] y, int n, out barycentricinterpolant p, xparams _params)
     {
         p = new barycentricinterpolant();
         polint.polynomialbuild(x, y, n, p.innerobj, _params);
@@ -1467,7 +1467,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'polynomialbuild': looks like one of arguments has wrong size");
+        }
+
         p = new barycentricinterpolant();
         n = ap.len(x);
         polint.polynomialbuild(x, y, n, p.innerobj, null);
@@ -1475,11 +1478,14 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialbuild(double[] x, double[] y, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuild(double[] x, double[] y, out barycentricinterpolant p, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'polynomialbuild': looks like one of arguments has wrong size");
+        }
+
         p = new barycentricinterpolant();
         n = ap.len(x);
         polint.polynomialbuild(x, y, n, p.innerobj, _params);
@@ -1512,7 +1518,7 @@ public partial class alglib
         polint.polynomialbuildeqdist(a, b, y, n, p.innerobj, null);
     }
     
-    public static void polynomialbuildeqdist(double a, double b, double[] y, int n, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuildeqdist(double a, double b, double[] y, int n, out barycentricinterpolant p, xparams _params)
     {
         p = new barycentricinterpolant();
         polint.polynomialbuildeqdist(a, b, y, n, p.innerobj, _params);
@@ -1529,7 +1535,7 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialbuildeqdist(double a, double b, double[] y, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuildeqdist(double a, double b, double[] y, out barycentricinterpolant p, xparams _params)
     {
         int n;
     
@@ -1566,7 +1572,7 @@ public partial class alglib
         polint.polynomialbuildcheb1(a, b, y, n, p.innerobj, null);
     }
     
-    public static void polynomialbuildcheb1(double a, double b, double[] y, int n, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuildcheb1(double a, double b, double[] y, int n, out barycentricinterpolant p, xparams _params)
     {
         p = new barycentricinterpolant();
         polint.polynomialbuildcheb1(a, b, y, n, p.innerobj, _params);
@@ -1583,7 +1589,7 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialbuildcheb1(double a, double b, double[] y, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuildcheb1(double a, double b, double[] y, out barycentricinterpolant p, xparams _params)
     {
         int n;
     
@@ -1620,7 +1626,7 @@ public partial class alglib
         polint.polynomialbuildcheb2(a, b, y, n, p.innerobj, null);
     }
     
-    public static void polynomialbuildcheb2(double a, double b, double[] y, int n, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuildcheb2(double a, double b, double[] y, int n, out barycentricinterpolant p, xparams _params)
     {
         p = new barycentricinterpolant();
         polint.polynomialbuildcheb2(a, b, y, n, p.innerobj, _params);
@@ -1637,7 +1643,7 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialbuildcheb2(double a, double b, double[] y, out barycentricinterpolant p, alglib.xparams _params)
+    public static void polynomialbuildcheb2(double a, double b, double[] y, out barycentricinterpolant p, xparams _params)
     {
         int n;
     
@@ -1678,7 +1684,7 @@ public partial class alglib
         return polint.polynomialcalceqdist(a, b, f, n, t, null);
     }
     
-    public static double polynomialcalceqdist(double a, double b, double[] f, int n, double t, alglib.xparams _params)
+    public static double polynomialcalceqdist(double a, double b, double[] f, int n, double t, xparams _params)
     {
     
         return polint.polynomialcalceqdist(a, b, f, n, t, _params);
@@ -1690,18 +1696,18 @@ public partial class alglib
     
     
         n = ap.len(f);
-        double result = polint.polynomialcalceqdist(a, b, f, n, t, null);
+        var result = polint.polynomialcalceqdist(a, b, f, n, t, null);
     
         return result;
     }
             
-    public static double polynomialcalceqdist(double a, double b, double[] f, double t, alglib.xparams _params)
+    public static double polynomialcalceqdist(double a, double b, double[] f, double t, xparams _params)
     {
         int n;
     
     
         n = ap.len(f);
-        double result = polint.polynomialcalceqdist(a, b, f, n, t, _params);
+        var result = polint.polynomialcalceqdist(a, b, f, n, t, _params);
     
         return result;
     }
@@ -1738,7 +1744,7 @@ public partial class alglib
         return polint.polynomialcalccheb1(a, b, f, n, t, null);
     }
     
-    public static double polynomialcalccheb1(double a, double b, double[] f, int n, double t, alglib.xparams _params)
+    public static double polynomialcalccheb1(double a, double b, double[] f, int n, double t, xparams _params)
     {
     
         return polint.polynomialcalccheb1(a, b, f, n, t, _params);
@@ -1750,18 +1756,18 @@ public partial class alglib
     
     
         n = ap.len(f);
-        double result = polint.polynomialcalccheb1(a, b, f, n, t, null);
+        var result = polint.polynomialcalccheb1(a, b, f, n, t, null);
     
         return result;
     }
             
-    public static double polynomialcalccheb1(double a, double b, double[] f, double t, alglib.xparams _params)
+    public static double polynomialcalccheb1(double a, double b, double[] f, double t, xparams _params)
     {
         int n;
     
     
         n = ap.len(f);
-        double result = polint.polynomialcalccheb1(a, b, f, n, t, _params);
+        var result = polint.polynomialcalccheb1(a, b, f, n, t, _params);
     
         return result;
     }
@@ -1798,7 +1804,7 @@ public partial class alglib
         return polint.polynomialcalccheb2(a, b, f, n, t, null);
     }
     
-    public static double polynomialcalccheb2(double a, double b, double[] f, int n, double t, alglib.xparams _params)
+    public static double polynomialcalccheb2(double a, double b, double[] f, int n, double t, xparams _params)
     {
     
         return polint.polynomialcalccheb2(a, b, f, n, t, _params);
@@ -1810,18 +1816,18 @@ public partial class alglib
     
     
         n = ap.len(f);
-        double result = polint.polynomialcalccheb2(a, b, f, n, t, null);
+        var result = polint.polynomialcalccheb2(a, b, f, n, t, null);
     
         return result;
     }
             
-    public static double polynomialcalccheb2(double a, double b, double[] f, double t, alglib.xparams _params)
+    public static double polynomialcalccheb2(double a, double b, double[] f, double t, xparams _params)
     {
         int n;
     
     
         n = ap.len(f);
-        double result = polint.polynomialcalccheb2(a, b, f, n, t, _params);
+        var result = polint.polynomialcalccheb2(a, b, f, n, t, _params);
     
         return result;
     }
@@ -1845,7 +1851,7 @@ public partial class alglib
             _innerobj = new spline1d.spline1dinterpolant();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new spline1dinterpolant((spline1d.spline1dinterpolant)_innerobj.make_copy());
         }
@@ -1854,7 +1860,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline1d.spline1dinterpolant _innerobj;
+        private readonly spline1d.spline1dinterpolant _innerobj;
         public spline1d.spline1dinterpolant innerobj { get { return _innerobj; } }
         public spline1dinterpolant(spline1d.spline1dinterpolant obj)
         {
@@ -1890,7 +1896,7 @@ public partial class alglib
             _innerobj = new spline1d.spline1dfitreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new spline1dfitreport((spline1d.spline1dfitreport)_innerobj.make_copy());
         }
@@ -1899,7 +1905,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline1d.spline1dfitreport _innerobj;
+        private readonly spline1d.spline1dfitreport _innerobj;
         public spline1d.spline1dfitreport innerobj { get { return _innerobj; } }
         public spline1dfitreport(spline1d.spline1dfitreport obj)
         {
@@ -1936,7 +1942,7 @@ public partial class alglib
         spline1d.spline1dbuildlinear(x, y, n, c.innerobj, null);
     }
     
-    public static void spline1dbuildlinear(double[] x, double[] y, int n, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildlinear(double[] x, double[] y, int n, out spline1dinterpolant c, xparams _params)
     {
         c = new spline1dinterpolant();
         spline1d.spline1dbuildlinear(x, y, n, c.innerobj, _params);
@@ -1946,7 +1952,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildlinear': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildlinear(x, y, n, c.innerobj, null);
@@ -1954,11 +1963,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dbuildlinear(double[] x, double[] y, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildlinear(double[] x, double[] y, out spline1dinterpolant c, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildlinear': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildlinear(x, y, n, c.innerobj, _params);
@@ -2025,7 +2037,7 @@ public partial class alglib
         spline1d.spline1dbuildcubic(x, y, n, boundltype, boundl, boundrtype, boundr, c.innerobj, null);
     }
     
-    public static void spline1dbuildcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, out spline1dinterpolant c, xparams _params)
     {
         c = new spline1dinterpolant();
         spline1d.spline1dbuildcubic(x, y, n, boundltype, boundl, boundrtype, boundr, c.innerobj, _params);
@@ -2039,7 +2051,10 @@ public partial class alglib
         int boundrtype;
         double boundr;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildcubic': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         boundltype = 0;
@@ -2051,7 +2066,7 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dbuildcubic(double[] x, double[] y, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildcubic(double[] x, double[] y, out spline1dinterpolant c, xparams _params)
     {
         int n;
         int boundltype;
@@ -2059,7 +2074,10 @@ public partial class alglib
         int boundrtype;
         double boundr;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildcubic': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         boundltype = 0;
@@ -2138,7 +2156,7 @@ public partial class alglib
         spline1d.spline1dgriddiffcubic(x, y, n, boundltype, boundl, boundrtype, boundr, ref d, null);
     }
     
-    public static void spline1dgriddiffcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, out double[] d, alglib.xparams _params)
+    public static void spline1dgriddiffcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, out double[] d, xparams _params)
     {
         d = new double[0];
         spline1d.spline1dgriddiffcubic(x, y, n, boundltype, boundl, boundrtype, boundr, ref d, _params);
@@ -2152,7 +2170,10 @@ public partial class alglib
         int boundrtype;
         double boundr;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dgriddiffcubic': looks like one of arguments has wrong size");
+        }
+
         d = new double[0];
         n = ap.len(x);
         boundltype = 0;
@@ -2164,7 +2185,7 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dgriddiffcubic(double[] x, double[] y, out double[] d, alglib.xparams _params)
+    public static void spline1dgriddiffcubic(double[] x, double[] y, out double[] d, xparams _params)
     {
         int n;
         int boundltype;
@@ -2172,7 +2193,10 @@ public partial class alglib
         int boundrtype;
         double boundr;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dgriddiffcubic': looks like one of arguments has wrong size");
+        }
+
         d = new double[0];
         n = ap.len(x);
         boundltype = 0;
@@ -2253,7 +2277,7 @@ public partial class alglib
         spline1d.spline1dgriddiff2cubic(x, y, n, boundltype, boundl, boundrtype, boundr, ref d1, ref d2, null);
     }
     
-    public static void spline1dgriddiff2cubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, out double[] d1, out double[] d2, alglib.xparams _params)
+    public static void spline1dgriddiff2cubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, out double[] d1, out double[] d2, xparams _params)
     {
         d1 = new double[0];
         d2 = new double[0];
@@ -2268,7 +2292,10 @@ public partial class alglib
         int boundrtype;
         double boundr;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dgriddiff2cubic': looks like one of arguments has wrong size");
+        }
+
         d1 = new double[0];
         d2 = new double[0];
         n = ap.len(x);
@@ -2281,7 +2308,7 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dgriddiff2cubic(double[] x, double[] y, out double[] d1, out double[] d2, alglib.xparams _params)
+    public static void spline1dgriddiff2cubic(double[] x, double[] y, out double[] d1, out double[] d2, xparams _params)
     {
         int n;
         int boundltype;
@@ -2289,7 +2316,10 @@ public partial class alglib
         int boundrtype;
         double boundr;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dgriddiff2cubic': looks like one of arguments has wrong size");
+        }
+
         d1 = new double[0];
         d2 = new double[0];
         n = ap.len(x);
@@ -2374,7 +2404,7 @@ public partial class alglib
         spline1d.spline1dconvcubic(x, y, n, boundltype, boundl, boundrtype, boundr, x2, n2, ref y2, null);
     }
     
-    public static void spline1dconvcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, double[] x2, int n2, out double[] y2, alglib.xparams _params)
+    public static void spline1dconvcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, double[] x2, int n2, out double[] y2, xparams _params)
     {
         y2 = new double[0];
         spline1d.spline1dconvcubic(x, y, n, boundltype, boundl, boundrtype, boundr, x2, n2, ref y2, _params);
@@ -2389,7 +2419,10 @@ public partial class alglib
         double boundr;
         int n2;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dconvcubic': looks like one of arguments has wrong size");
+        }
+
         y2 = new double[0];
         n = ap.len(x);
         boundltype = 0;
@@ -2402,7 +2435,7 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dconvcubic(double[] x, double[] y, double[] x2, out double[] y2, alglib.xparams _params)
+    public static void spline1dconvcubic(double[] x, double[] y, double[] x2, out double[] y2, xparams _params)
     {
         int n;
         int boundltype;
@@ -2411,7 +2444,10 @@ public partial class alglib
         double boundr;
         int n2;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dconvcubic': looks like one of arguments has wrong size");
+        }
+
         y2 = new double[0];
         n = ap.len(x);
         boundltype = 0;
@@ -2498,7 +2534,7 @@ public partial class alglib
         spline1d.spline1dconvdiffcubic(x, y, n, boundltype, boundl, boundrtype, boundr, x2, n2, ref y2, ref d2, null);
     }
     
-    public static void spline1dconvdiffcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, double[] x2, int n2, out double[] y2, out double[] d2, alglib.xparams _params)
+    public static void spline1dconvdiffcubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, double[] x2, int n2, out double[] y2, out double[] d2, xparams _params)
     {
         y2 = new double[0];
         d2 = new double[0];
@@ -2514,7 +2550,10 @@ public partial class alglib
         double boundr;
         int n2;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dconvdiffcubic': looks like one of arguments has wrong size");
+        }
+
         y2 = new double[0];
         d2 = new double[0];
         n = ap.len(x);
@@ -2528,7 +2567,7 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dconvdiffcubic(double[] x, double[] y, double[] x2, out double[] y2, out double[] d2, alglib.xparams _params)
+    public static void spline1dconvdiffcubic(double[] x, double[] y, double[] x2, out double[] y2, out double[] d2, xparams _params)
     {
         int n;
         int boundltype;
@@ -2537,7 +2576,10 @@ public partial class alglib
         double boundr;
         int n2;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dconvdiffcubic': looks like one of arguments has wrong size");
+        }
+
         y2 = new double[0];
         d2 = new double[0];
         n = ap.len(x);
@@ -2628,7 +2670,7 @@ public partial class alglib
         spline1d.spline1dconvdiff2cubic(x, y, n, boundltype, boundl, boundrtype, boundr, x2, n2, ref y2, ref d2, ref dd2, null);
     }
     
-    public static void spline1dconvdiff2cubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, double[] x2, int n2, out double[] y2, out double[] d2, out double[] dd2, alglib.xparams _params)
+    public static void spline1dconvdiff2cubic(double[] x, double[] y, int n, int boundltype, double boundl, int boundrtype, double boundr, double[] x2, int n2, out double[] y2, out double[] d2, out double[] dd2, xparams _params)
     {
         y2 = new double[0];
         d2 = new double[0];
@@ -2645,7 +2687,10 @@ public partial class alglib
         double boundr;
         int n2;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dconvdiff2cubic': looks like one of arguments has wrong size");
+        }
+
         y2 = new double[0];
         d2 = new double[0];
         dd2 = new double[0];
@@ -2660,7 +2705,7 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dconvdiff2cubic(double[] x, double[] y, double[] x2, out double[] y2, out double[] d2, out double[] dd2, alglib.xparams _params)
+    public static void spline1dconvdiff2cubic(double[] x, double[] y, double[] x2, out double[] y2, out double[] d2, out double[] dd2, xparams _params)
     {
         int n;
         int boundltype;
@@ -2669,7 +2714,10 @@ public partial class alglib
         double boundr;
         int n2;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dconvdiff2cubic': looks like one of arguments has wrong size");
+        }
+
         y2 = new double[0];
         d2 = new double[0];
         dd2 = new double[0];
@@ -2730,7 +2778,7 @@ public partial class alglib
         spline1d.spline1dbuildcatmullrom(x, y, n, boundtype, tension, c.innerobj, null);
     }
     
-    public static void spline1dbuildcatmullrom(double[] x, double[] y, int n, int boundtype, double tension, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildcatmullrom(double[] x, double[] y, int n, int boundtype, double tension, out spline1dinterpolant c, xparams _params)
     {
         c = new spline1dinterpolant();
         spline1d.spline1dbuildcatmullrom(x, y, n, boundtype, tension, c.innerobj, _params);
@@ -2742,7 +2790,10 @@ public partial class alglib
         int boundtype;
         double tension;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildcatmullrom': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         boundtype = 0;
@@ -2752,13 +2803,16 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dbuildcatmullrom(double[] x, double[] y, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildcatmullrom(double[] x, double[] y, out spline1dinterpolant c, xparams _params)
     {
         int n;
         int boundtype;
         double tension;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildcatmullrom': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         boundtype = 0;
@@ -2798,7 +2852,7 @@ public partial class alglib
         spline1d.spline1dbuildhermite(x, y, d, n, c.innerobj, null);
     }
     
-    public static void spline1dbuildhermite(double[] x, double[] y, double[] d, int n, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildhermite(double[] x, double[] y, double[] d, int n, out spline1dinterpolant c, xparams _params)
     {
         c = new spline1dinterpolant();
         spline1d.spline1dbuildhermite(x, y, d, n, c.innerobj, _params);
@@ -2808,7 +2862,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(d)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildhermite': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildhermite(x, y, d, n, c.innerobj, null);
@@ -2816,11 +2873,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dbuildhermite(double[] x, double[] y, double[] d, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildhermite(double[] x, double[] y, double[] d, out spline1dinterpolant c, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(d)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildhermite': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildhermite(x, y, d, n, c.innerobj, _params);
@@ -2857,7 +2917,7 @@ public partial class alglib
         spline1d.spline1dbuildakima(x, y, n, c.innerobj, null);
     }
     
-    public static void spline1dbuildakima(double[] x, double[] y, int n, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildakima(double[] x, double[] y, int n, out spline1dinterpolant c, xparams _params)
     {
         c = new spline1dinterpolant();
         spline1d.spline1dbuildakima(x, y, n, c.innerobj, _params);
@@ -2867,7 +2927,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildakima': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildakima(x, y, n, c.innerobj, null);
@@ -2875,11 +2938,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dbuildakima(double[] x, double[] y, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildakima(double[] x, double[] y, out spline1dinterpolant c, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildakima': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildakima(x, y, n, c.innerobj, _params);
@@ -2906,7 +2972,7 @@ public partial class alglib
         return spline1d.spline1dcalc(c.innerobj, x, null);
     }
     
-    public static double spline1dcalc(spline1dinterpolant c, double x, alglib.xparams _params)
+    public static double spline1dcalc(spline1dinterpolant c, double x, xparams _params)
     {
     
         return spline1d.spline1dcalc(c.innerobj, x, _params);
@@ -2935,7 +3001,7 @@ public partial class alglib
         spline1d.spline1ddiff(c.innerobj, x, ref s, ref ds, ref d2s, null);
     }
     
-    public static void spline1ddiff(spline1dinterpolant c, double x, out double s, out double ds, out double d2s, alglib.xparams _params)
+    public static void spline1ddiff(spline1dinterpolant c, double x, out double s, out double ds, out double d2s, xparams _params)
     {
         s = 0;
         ds = 0;
@@ -2978,7 +3044,7 @@ public partial class alglib
         spline1d.spline1dunpack(c.innerobj, ref n, ref tbl, null);
     }
     
-    public static void spline1dunpack(spline1dinterpolant c, out int n, out double[,] tbl, alglib.xparams _params)
+    public static void spline1dunpack(spline1dinterpolant c, out int n, out double[,] tbl, xparams _params)
     {
         n = 0;
         tbl = new double[0,0];
@@ -3003,7 +3069,7 @@ public partial class alglib
         spline1d.spline1dlintransx(c.innerobj, a, b, null);
     }
     
-    public static void spline1dlintransx(spline1dinterpolant c, double a, double b, alglib.xparams _params)
+    public static void spline1dlintransx(spline1dinterpolant c, double a, double b, xparams _params)
     {
     
         spline1d.spline1dlintransx(c.innerobj, a, b, _params);
@@ -3027,7 +3093,7 @@ public partial class alglib
         spline1d.spline1dlintransy(c.innerobj, a, b, null);
     }
     
-    public static void spline1dlintransy(spline1dinterpolant c, double a, double b, alglib.xparams _params)
+    public static void spline1dlintransy(spline1dinterpolant c, double a, double b, xparams _params)
     {
     
         spline1d.spline1dlintransy(c.innerobj, a, b, _params);
@@ -3052,7 +3118,7 @@ public partial class alglib
         return spline1d.spline1dintegrate(c.innerobj, x, null);
     }
     
-    public static double spline1dintegrate(spline1dinterpolant c, double x, alglib.xparams _params)
+    public static double spline1dintegrate(spline1dinterpolant c, double x, xparams _params)
     {
     
         return spline1d.spline1dintegrate(c.innerobj, x, _params);
@@ -3112,7 +3178,7 @@ public partial class alglib
         spline1d.spline1dfit(x, y, n, m, lambdans, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline1dfit(double[] x, double[] y, int n, int m, double lambdans, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfit(double[] x, double[] y, int n, int m, double lambdans, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -3123,7 +3189,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfit': looks like one of arguments has wrong size");
+        }
+
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
         n = ap.len(x);
@@ -3132,11 +3201,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dfit(double[] x, double[] y, int m, double lambdans, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfit(double[] x, double[] y, int m, double lambdans, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfit': looks like one of arguments has wrong size");
+        }
+
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
         n = ap.len(x);
@@ -3171,7 +3243,7 @@ public partial class alglib
         spline1d.spline1dbuildmonotone(x, y, n, c.innerobj, null);
     }
     
-    public static void spline1dbuildmonotone(double[] x, double[] y, int n, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildmonotone(double[] x, double[] y, int n, out spline1dinterpolant c, xparams _params)
     {
         c = new spline1dinterpolant();
         spline1d.spline1dbuildmonotone(x, y, n, c.innerobj, _params);
@@ -3181,7 +3253,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildmonotone': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildmonotone(x, y, n, c.innerobj, null);
@@ -3189,11 +3264,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dbuildmonotone(double[] x, double[] y, out spline1dinterpolant c, alglib.xparams _params)
+    public static void spline1dbuildmonotone(double[] x, double[] y, out spline1dinterpolant c, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dbuildmonotone': looks like one of arguments has wrong size");
+        }
+
         c = new spline1dinterpolant();
         n = ap.len(x);
         spline1d.spline1dbuildmonotone(x, y, n, c.innerobj, _params);
@@ -3230,7 +3308,7 @@ public partial class alglib
             _innerobj = new lsfit.polynomialfitreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new polynomialfitreport((lsfit.polynomialfitreport)_innerobj.make_copy());
         }
@@ -3239,7 +3317,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.polynomialfitreport _innerobj;
+        private readonly lsfit.polynomialfitreport _innerobj;
         public lsfit.polynomialfitreport innerobj { get { return _innerobj; } }
         public polynomialfitreport(lsfit.polynomialfitreport obj)
         {
@@ -3273,7 +3351,7 @@ public partial class alglib
             _innerobj = new lsfit.barycentricfitreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new barycentricfitreport((lsfit.barycentricfitreport)_innerobj.make_copy());
         }
@@ -3282,7 +3360,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.barycentricfitreport _innerobj;
+        private readonly lsfit.barycentricfitreport _innerobj;
         public lsfit.barycentricfitreport innerobj { get { return _innerobj; } }
         public barycentricfitreport(lsfit.barycentricfitreport obj)
         {
@@ -3347,7 +3425,7 @@ public partial class alglib
             _innerobj = new lsfit.lsfitreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new lsfitreport((lsfit.lsfitreport)_innerobj.make_copy());
         }
@@ -3356,7 +3434,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.lsfitreport _innerobj;
+        private readonly lsfit.lsfitreport _innerobj;
         public lsfit.lsfitreport innerobj { get { return _innerobj; } }
         public lsfitreport(lsfit.lsfitreport obj)
         {
@@ -3391,7 +3469,7 @@ public partial class alglib
             _innerobj = new lsfit.lsfitstate();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new lsfitstate((lsfit.lsfitstate)_innerobj.make_copy());
         }
@@ -3400,7 +3478,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.lsfitstate _innerobj;
+        private readonly lsfit.lsfitstate _innerobj;
         public lsfit.lsfitstate innerobj { get { return _innerobj; } }
         public lsfitstate(lsfit.lsfitstate obj)
         {
@@ -3462,7 +3540,7 @@ public partial class alglib
         lsfit.lstfitpiecewiselinearrdpfixed(x, y, n, m, ref x2, ref y2, ref nsections, null);
     }
     
-    public static void lstfitpiecewiselinearrdpfixed(double[] x, double[] y, int n, int m, out double[] x2, out double[] y2, out int nsections, alglib.xparams _params)
+    public static void lstfitpiecewiselinearrdpfixed(double[] x, double[] y, int n, int m, out double[] x2, out double[] y2, out int nsections, xparams _params)
     {
         x2 = new double[0];
         y2 = new double[0];
@@ -3521,7 +3599,7 @@ public partial class alglib
         lsfit.lstfitpiecewiselinearrdp(x, y, n, eps, ref x2, ref y2, ref nsections, null);
     }
     
-    public static void lstfitpiecewiselinearrdp(double[] x, double[] y, int n, double eps, out double[] x2, out double[] y2, out int nsections, alglib.xparams _params)
+    public static void lstfitpiecewiselinearrdp(double[] x, double[] y, int n, double eps, out double[] x2, out double[] y2, out int nsections, xparams _params)
     {
         x2 = new double[0];
         y2 = new double[0];
@@ -3603,7 +3681,7 @@ public partial class alglib
         lsfit.polynomialfit(x, y, n, m, ref info, p.innerobj, rep.innerobj, null);
     }
     
-    public static void polynomialfit(double[] x, double[] y, int n, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, alglib.xparams _params)
+    public static void polynomialfit(double[] x, double[] y, int n, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, xparams _params)
     {
         info = 0;
         p = new barycentricinterpolant();
@@ -3615,7 +3693,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'polynomialfit': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         p = new barycentricinterpolant();
         rep = new polynomialfitreport();
@@ -3625,11 +3706,14 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialfit(double[] x, double[] y, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, alglib.xparams _params)
+    public static void polynomialfit(double[] x, double[] y, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'polynomialfit': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         p = new barycentricinterpolant();
         rep = new polynomialfitreport();
@@ -3750,7 +3834,7 @@ public partial class alglib
         lsfit.polynomialfitwc(x, y, w, n, xc, yc, dc, k, m, ref info, p.innerobj, rep.innerobj, null);
     }
     
-    public static void polynomialfitwc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, alglib.xparams _params)
+    public static void polynomialfitwc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, xparams _params)
     {
         info = 0;
         p = new barycentricinterpolant();
@@ -3763,9 +3847,15 @@ public partial class alglib
         int n;
         int k;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'polynomialfitwc': looks like one of arguments has wrong size");
-        if( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        }
+
+        if ( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        {
             throw new alglibexception("Error while calling 'polynomialfitwc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         p = new barycentricinterpolant();
         rep = new polynomialfitreport();
@@ -3776,14 +3866,20 @@ public partial class alglib
         return;
     }
             
-    public static void polynomialfitwc(double[] x, double[] y, double[] w, double[] xc, double[] yc, int[] dc, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, alglib.xparams _params)
+    public static void polynomialfitwc(double[] x, double[] y, double[] w, double[] xc, double[] yc, int[] dc, int m, out int info, out barycentricinterpolant p, out polynomialfitreport rep, xparams _params)
     {
         int n;
         int k;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'polynomialfitwc': looks like one of arguments has wrong size");
-        if( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        }
+
+        if ( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        {
             throw new alglibexception("Error while calling 'polynomialfitwc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         p = new barycentricinterpolant();
         rep = new polynomialfitreport();
@@ -3834,7 +3930,7 @@ public partial class alglib
         return lsfit.logisticcalc4(x, a, b, c, d, null);
     }
     
-    public static double logisticcalc4(double x, double a, double b, double c, double d, alglib.xparams _params)
+    public static double logisticcalc4(double x, double a, double b, double c, double d, xparams _params)
     {
     
         return lsfit.logisticcalc4(x, a, b, c, d, _params);
@@ -3881,7 +3977,7 @@ public partial class alglib
         return lsfit.logisticcalc5(x, a, b, c, d, g, null);
     }
     
-    public static double logisticcalc5(double x, double a, double b, double c, double d, double g, alglib.xparams _params)
+    public static double logisticcalc5(double x, double a, double b, double c, double d, double g, xparams _params)
     {
     
         return lsfit.logisticcalc5(x, a, b, c, d, g, _params);
@@ -3975,7 +4071,7 @@ public partial class alglib
         lsfit.logisticfit4(x, y, n, ref a, ref b, ref c, ref d, rep.innerobj, null);
     }
     
-    public static void logisticfit4(double[] x, double[] y, int n, out double a, out double b, out double c, out double d, out lsfitreport rep, alglib.xparams _params)
+    public static void logisticfit4(double[] x, double[] y, int n, out double a, out double b, out double c, out double d, out lsfitreport rep, xparams _params)
     {
         a = 0;
         b = 0;
@@ -4099,7 +4195,7 @@ public partial class alglib
         lsfit.logisticfit4ec(x, y, n, cnstrleft, cnstrright, ref a, ref b, ref c, ref d, rep.innerobj, null);
     }
     
-    public static void logisticfit4ec(double[] x, double[] y, int n, double cnstrleft, double cnstrright, out double a, out double b, out double c, out double d, out lsfitreport rep, alglib.xparams _params)
+    public static void logisticfit4ec(double[] x, double[] y, int n, double cnstrleft, double cnstrright, out double a, out double b, out double c, out double d, out lsfitreport rep, xparams _params)
     {
         a = 0;
         b = 0;
@@ -4201,7 +4297,7 @@ public partial class alglib
         lsfit.logisticfit5(x, y, n, ref a, ref b, ref c, ref d, ref g, rep.innerobj, null);
     }
     
-    public static void logisticfit5(double[] x, double[] y, int n, out double a, out double b, out double c, out double d, out double g, out lsfitreport rep, alglib.xparams _params)
+    public static void logisticfit5(double[] x, double[] y, int n, out double a, out double b, out double c, out double d, out double g, out lsfitreport rep, xparams _params)
     {
         a = 0;
         b = 0;
@@ -4337,7 +4433,7 @@ public partial class alglib
         lsfit.logisticfit5ec(x, y, n, cnstrleft, cnstrright, ref a, ref b, ref c, ref d, ref g, rep.innerobj, null);
     }
     
-    public static void logisticfit5ec(double[] x, double[] y, int n, double cnstrleft, double cnstrright, out double a, out double b, out double c, out double d, out double g, out lsfitreport rep, alglib.xparams _params)
+    public static void logisticfit5ec(double[] x, double[] y, int n, double cnstrleft, double cnstrright, out double a, out double b, out double c, out double d, out double g, out lsfitreport rep, xparams _params)
     {
         a = 0;
         b = 0;
@@ -4466,7 +4562,7 @@ public partial class alglib
         lsfit.logisticfit45x(x, y, n, cnstrleft, cnstrright, is4pl, lambdav, epsx, rscnt, ref a, ref b, ref c, ref d, ref g, rep.innerobj, null);
     }
     
-    public static void logisticfit45x(double[] x, double[] y, int n, double cnstrleft, double cnstrright, bool is4pl, double lambdav, double epsx, int rscnt, out double a, out double b, out double c, out double d, out double g, out lsfitreport rep, alglib.xparams _params)
+    public static void logisticfit45x(double[] x, double[] y, int n, double cnstrleft, double cnstrright, bool is4pl, double lambdav, double epsx, int rscnt, out double a, out double b, out double c, out double d, out double g, out lsfitreport rep, xparams _params)
     {
         a = 0;
         b = 0;
@@ -4593,7 +4689,7 @@ public partial class alglib
         lsfit.barycentricfitfloaterhormannwc(x, y, w, n, xc, yc, dc, k, m, ref info, b.innerobj, rep.innerobj, null);
     }
     
-    public static void barycentricfitfloaterhormannwc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out barycentricinterpolant b, out barycentricfitreport rep, alglib.xparams _params)
+    public static void barycentricfitfloaterhormannwc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out barycentricinterpolant b, out barycentricfitreport rep, xparams _params)
     {
         info = 0;
         b = new barycentricinterpolant();
@@ -4668,7 +4764,7 @@ public partial class alglib
         lsfit.barycentricfitfloaterhormann(x, y, n, m, ref info, b.innerobj, rep.innerobj, null);
     }
     
-    public static void barycentricfitfloaterhormann(double[] x, double[] y, int n, int m, out int info, out barycentricinterpolant b, out barycentricfitreport rep, alglib.xparams _params)
+    public static void barycentricfitfloaterhormann(double[] x, double[] y, int n, int m, out int info, out barycentricinterpolant b, out barycentricfitreport rep, xparams _params)
     {
         info = 0;
         b = new barycentricinterpolant();
@@ -4806,7 +4902,7 @@ public partial class alglib
         lsfit.spline1dfitcubicwc(x, y, w, n, xc, yc, dc, k, m, ref info, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline1dfitcubicwc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitcubicwc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         info = 0;
         s = new spline1dinterpolant();
@@ -4819,9 +4915,15 @@ public partial class alglib
         int n;
         int k;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitcubicwc': looks like one of arguments has wrong size");
-        if( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        }
+
+        if ( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitcubicwc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -4832,14 +4934,20 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dfitcubicwc(double[] x, double[] y, double[] w, double[] xc, double[] yc, int[] dc, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitcubicwc(double[] x, double[] y, double[] w, double[] xc, double[] yc, int[] dc, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         int n;
         int k;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitcubicwc': looks like one of arguments has wrong size");
-        if( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        }
+
+        if ( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitcubicwc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -4986,7 +5094,7 @@ public partial class alglib
         lsfit.spline1dfithermitewc(x, y, w, n, xc, yc, dc, k, m, ref info, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline1dfithermitewc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfithermitewc(double[] x, double[] y, double[] w, int n, double[] xc, double[] yc, int[] dc, int k, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         info = 0;
         s = new spline1dinterpolant();
@@ -4999,9 +5107,15 @@ public partial class alglib
         int n;
         int k;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'spline1dfithermitewc': looks like one of arguments has wrong size");
-        if( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        }
+
+        if ( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        {
             throw new alglibexception("Error while calling 'spline1dfithermitewc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -5012,14 +5126,20 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dfithermitewc(double[] x, double[] y, double[] w, double[] xc, double[] yc, int[] dc, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfithermitewc(double[] x, double[] y, double[] w, double[] xc, double[] yc, int[] dc, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         int n;
         int k;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'spline1dfithermitewc': looks like one of arguments has wrong size");
-        if( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        }
+
+        if ( (ap.len(xc)!=ap.len(yc)) || (ap.len(xc)!=ap.len(dc)))
+        {
             throw new alglibexception("Error while calling 'spline1dfithermitewc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -5072,7 +5192,7 @@ public partial class alglib
         lsfit.spline1dfitcubic(x, y, n, m, ref info, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline1dfitcubic(double[] x, double[] y, int n, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitcubic(double[] x, double[] y, int n, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         info = 0;
         s = new spline1dinterpolant();
@@ -5084,7 +5204,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitcubic': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -5094,11 +5217,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dfitcubic(double[] x, double[] y, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitcubic(double[] x, double[] y, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitcubic': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -5151,7 +5277,7 @@ public partial class alglib
         lsfit.spline1dfithermite(x, y, n, m, ref info, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline1dfithermite(double[] x, double[] y, int n, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfithermite(double[] x, double[] y, int n, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         info = 0;
         s = new spline1dinterpolant();
@@ -5163,7 +5289,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfithermite': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -5173,11 +5302,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dfithermite(double[] x, double[] y, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfithermite(double[] x, double[] y, int m, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfithermite': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -5299,7 +5431,7 @@ public partial class alglib
         lsfit.lsfitlinearw(y, w, fmatrix, n, m, ref info, ref c, rep.innerobj, null);
     }
     
-    public static void lsfitlinearw(double[] y, double[] w, double[,] fmatrix, int n, int m, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinearw(double[] y, double[] w, double[,] fmatrix, int n, int m, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         info = 0;
         c = new double[0];
@@ -5312,7 +5444,10 @@ public partial class alglib
         int n;
         int m;
         if( (ap.len(y)!=ap.len(w)) || (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearw': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5323,12 +5458,15 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitlinearw(double[] y, double[] w, double[,] fmatrix, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinearw(double[] y, double[] w, double[,] fmatrix, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         int n;
         int m;
         if( (ap.len(y)!=ap.len(w)) || (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearw': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5467,7 +5605,7 @@ public partial class alglib
         lsfit.lsfitlinearwc(y, w, fmatrix, cmatrix, n, m, k, ref info, ref c, rep.innerobj, null);
     }
     
-    public static void lsfitlinearwc(double[] y, double[] w, double[,] fmatrix, double[,] cmatrix, int n, int m, int k, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinearwc(double[] y, double[] w, double[,] fmatrix, double[,] cmatrix, int n, int m, int k, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         info = 0;
         c = new double[0];
@@ -5481,9 +5619,15 @@ public partial class alglib
         int m;
         int k;
         if( (ap.len(y)!=ap.len(w)) || (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearwc': looks like one of arguments has wrong size");
-        if( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        }
+
+        if ( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearwc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5495,15 +5639,21 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitlinearwc(double[] y, double[] w, double[,] fmatrix, double[,] cmatrix, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinearwc(double[] y, double[] w, double[,] fmatrix, double[,] cmatrix, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.len(y)!=ap.len(w)) || (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearwc': looks like one of arguments has wrong size");
-        if( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        }
+
+        if ( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearwc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5622,7 +5772,7 @@ public partial class alglib
         lsfit.lsfitlinear(y, fmatrix, n, m, ref info, ref c, rep.innerobj, null);
     }
     
-    public static void lsfitlinear(double[] y, double[,] fmatrix, int n, int m, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinear(double[] y, double[,] fmatrix, int n, int m, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         info = 0;
         c = new double[0];
@@ -5635,7 +5785,10 @@ public partial class alglib
         int n;
         int m;
         if( (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinear': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5646,12 +5799,15 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitlinear(double[] y, double[,] fmatrix, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinear(double[] y, double[,] fmatrix, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         int n;
         int m;
         if( (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinear': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5786,7 +5942,7 @@ public partial class alglib
         lsfit.lsfitlinearc(y, fmatrix, cmatrix, n, m, k, ref info, ref c, rep.innerobj, null);
     }
     
-    public static void lsfitlinearc(double[] y, double[,] fmatrix, double[,] cmatrix, int n, int m, int k, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinearc(double[] y, double[,] fmatrix, double[,] cmatrix, int n, int m, int k, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         info = 0;
         c = new double[0];
@@ -5800,9 +5956,15 @@ public partial class alglib
         int m;
         int k;
         if( (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearc': looks like one of arguments has wrong size");
-        if( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        }
+
+        if ( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5814,15 +5976,21 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitlinearc(double[] y, double[,] fmatrix, double[,] cmatrix, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitlinearc(double[] y, double[,] fmatrix, double[,] cmatrix, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.len(y)!=ap.rows(fmatrix)))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearc': looks like one of arguments has wrong size");
-        if( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        }
+
+        if ( (ap.cols(fmatrix)!=ap.cols(cmatrix)-1))
+        {
             throw new alglibexception("Error while calling 'lsfitlinearc': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         c = new double[0];
         rep = new lsfitreport();
@@ -5878,7 +6046,7 @@ public partial class alglib
         lsfit.lsfitcreatewf(x, y, w, c, n, m, k, diffstep, state.innerobj, null);
     }
     
-    public static void lsfitcreatewf(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, double diffstep, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewf(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, double diffstep, out lsfitstate state, xparams _params)
     {
         state = new lsfitstate();
         lsfit.lsfitcreatewf(x, y, w, c, n, m, k, diffstep, state.innerobj, _params);
@@ -5890,7 +6058,10 @@ public partial class alglib
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatewf': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -5900,13 +6071,16 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitcreatewf(double[,] x, double[] y, double[] w, double[] c, double diffstep, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewf(double[,] x, double[] y, double[] w, double[] c, double diffstep, out lsfitstate state, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatewf': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -5959,7 +6133,7 @@ public partial class alglib
         lsfit.lsfitcreatef(x, y, c, n, m, k, diffstep, state.innerobj, null);
     }
     
-    public static void lsfitcreatef(double[,] x, double[] y, double[] c, int n, int m, int k, double diffstep, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatef(double[,] x, double[] y, double[] c, int n, int m, int k, double diffstep, out lsfitstate state, xparams _params)
     {
         state = new lsfitstate();
         lsfit.lsfitcreatef(x, y, c, n, m, k, diffstep, state.innerobj, _params);
@@ -5971,7 +6145,10 @@ public partial class alglib
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatef': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -5981,13 +6158,16 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitcreatef(double[,] x, double[] y, double[] c, double diffstep, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatef(double[,] x, double[] y, double[] c, double diffstep, out lsfitstate state, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatef': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6048,7 +6228,7 @@ public partial class alglib
         lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, cheapfg, state.innerobj, null);
     }
     
-    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state, xparams _params)
     {
         state = new lsfitstate();
         lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, cheapfg, state.innerobj, _params);
@@ -6060,7 +6240,10 @@ public partial class alglib
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatewfg': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6070,13 +6253,16 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, bool cheapfg, out lsfitstate state, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatewfg': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6130,7 +6316,7 @@ public partial class alglib
         lsfit.lsfitcreatefg(x, y, c, n, m, k, cheapfg, state.innerobj, null);
     }
     
-    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state, xparams _params)
     {
         state = new lsfitstate();
         lsfit.lsfitcreatefg(x, y, c, n, m, k, cheapfg, state.innerobj, _params);
@@ -6142,7 +6328,10 @@ public partial class alglib
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatefg': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6152,13 +6341,16 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, bool cheapfg, out lsfitstate state, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatefg': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6205,7 +6397,7 @@ public partial class alglib
         lsfit.lsfitcreatewfgh(x, y, w, c, n, m, k, state.innerobj, null);
     }
     
-    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, out lsfitstate state, xparams _params)
     {
         state = new lsfitstate();
         lsfit.lsfitcreatewfgh(x, y, w, c, n, m, k, state.innerobj, _params);
@@ -6217,7 +6409,10 @@ public partial class alglib
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatewfgh': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6227,13 +6422,16 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, out lsfitstate state, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatewfgh': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6280,7 +6478,7 @@ public partial class alglib
         lsfit.lsfitcreatefgh(x, y, c, n, m, k, state.innerobj, null);
     }
     
-    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, int n, int m, int k, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, int n, int m, int k, out lsfitstate state, xparams _params)
     {
         state = new lsfitstate();
         lsfit.lsfitcreatefgh(x, y, c, n, m, k, state.innerobj, _params);
@@ -6292,7 +6490,10 @@ public partial class alglib
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatefgh': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6302,13 +6503,16 @@ public partial class alglib
         return;
     }
             
-    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, out lsfitstate state, xparams _params)
     {
         int n;
         int m;
         int k;
         if( (ap.rows(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'lsfitcreatefgh': looks like one of arguments has wrong size");
+        }
+
         state = new lsfitstate();
         n = ap.rows(x);
         m = ap.cols(x);
@@ -6351,7 +6555,7 @@ public partial class alglib
         lsfit.lsfitsetcond(state.innerobj, epsx, maxits, null);
     }
     
-    public static void lsfitsetcond(lsfitstate state, double epsx, int maxits, alglib.xparams _params)
+    public static void lsfitsetcond(lsfitstate state, double epsx, int maxits, xparams _params)
     {
     
         lsfit.lsfitsetcond(state.innerobj, epsx, maxits, _params);
@@ -6384,7 +6588,7 @@ public partial class alglib
         lsfit.lsfitsetstpmax(state.innerobj, stpmax, null);
     }
     
-    public static void lsfitsetstpmax(lsfitstate state, double stpmax, alglib.xparams _params)
+    public static void lsfitsetstpmax(lsfitstate state, double stpmax, xparams _params)
     {
     
         lsfit.lsfitsetstpmax(state.innerobj, stpmax, _params);
@@ -6410,7 +6614,7 @@ public partial class alglib
         lsfit.lsfitsetxrep(state.innerobj, needxrep, null);
     }
     
-    public static void lsfitsetxrep(lsfitstate state, bool needxrep, alglib.xparams _params)
+    public static void lsfitsetxrep(lsfitstate state, bool needxrep, xparams _params)
     {
     
         lsfit.lsfitsetxrep(state.innerobj, needxrep, _params);
@@ -6449,7 +6653,7 @@ public partial class alglib
         lsfit.lsfitsetscale(state.innerobj, s, null);
     }
     
-    public static void lsfitsetscale(lsfitstate state, double[] s, alglib.xparams _params)
+    public static void lsfitsetscale(lsfitstate state, double[] s, xparams _params)
     {
     
         lsfit.lsfitsetscale(state.innerobj, s, _params);
@@ -6489,7 +6693,7 @@ public partial class alglib
         lsfit.lsfitsetbc(state.innerobj, bndl, bndu, null);
     }
     
-    public static void lsfitsetbc(lsfitstate state, double[] bndl, double[] bndu, alglib.xparams _params)
+    public static void lsfitsetbc(lsfitstate state, double[] bndl, double[] bndu, xparams _params)
     {
     
         lsfit.lsfitsetbc(state.innerobj, bndl, bndu, _params);
@@ -6543,7 +6747,7 @@ public partial class alglib
         lsfit.lsfitsetlc(state.innerobj, c, ct, k, null);
     }
     
-    public static void lsfitsetlc(lsfitstate state, double[,] c, int[] ct, int k, alglib.xparams _params)
+    public static void lsfitsetlc(lsfitstate state, double[,] c, int[] ct, int k, xparams _params)
     {
     
         lsfit.lsfitsetlc(state.innerobj, c, ct, k, _params);
@@ -6553,20 +6757,24 @@ public partial class alglib
     {
         int k;
         if( (ap.rows(c)!=ap.len(ct)))
+        {
             throw new alglibexception("Error while calling 'lsfitsetlc': looks like one of arguments has wrong size");
-    
+        }
+
         k = ap.rows(c);
         lsfit.lsfitsetlc(state.innerobj, c, ct, k, null);
     
         return;
     }
             
-    public static void lsfitsetlc(lsfitstate state, double[,] c, int[] ct, alglib.xparams _params)
+    public static void lsfitsetlc(lsfitstate state, double[,] c, int[] ct, xparams _params)
     {
         int k;
         if( (ap.rows(c)!=ap.len(ct)))
+        {
             throw new alglibexception("Error while calling 'lsfitsetlc': looks like one of arguments has wrong size");
-    
+        }
+
         k = ap.rows(c);
         lsfit.lsfitsetlc(state.innerobj, c, ct, k, _params);
     
@@ -6584,7 +6792,7 @@ public partial class alglib
         return lsfit.lsfititeration(state.innerobj, null);
     }
     
-    public static bool lsfititeration(lsfitstate state, alglib.xparams _params)
+    public static bool lsfititeration(lsfitstate state, xparams _params)
     {
     
         return lsfit.lsfititeration(state.innerobj, _params);
@@ -6647,11 +6855,14 @@ public partial class alglib
         lsfitfit(state, func, rep, obj, null);
     }
     
-    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_rep rep, object obj, alglib.xparams _params)
+    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_rep rep, object obj, xparams _params)
     {
         if( func==null )
+        {
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (func is null)");
-        while( alglib.lsfititeration(state, _params) )
+        }
+
+        while ( alglib.lsfititeration(state, _params) )
         {
             if( state.needf )
             {
@@ -6661,7 +6872,10 @@ public partial class alglib
             if( state.innerobj.xupdated )
             {
                 if( rep!=null )
+                {
                     rep(state.innerobj.c, state.innerobj.f, obj);
+                }
+
                 continue;
             }
             throw new alglibexception("ALGLIB: error in 'lsfitfit' (some derivatives were not provided?)");
@@ -6674,13 +6888,19 @@ public partial class alglib
         lsfitfit(state, func, grad, rep, obj, null);
     }
     
-    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_pgrad grad, ndimensional_rep rep, object obj, alglib.xparams _params)
+    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_pgrad grad, ndimensional_rep rep, object obj, xparams _params)
     {
         if( func==null )
+        {
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (func is null)");
-        if( grad==null )
+        }
+
+        if ( grad==null )
+        {
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (grad is null)");
-        while( alglib.lsfititeration(state, _params) )
+        }
+
+        while ( alglib.lsfititeration(state, _params) )
         {
             if( state.needf )
             {
@@ -6695,7 +6915,10 @@ public partial class alglib
             if( state.innerobj.xupdated )
             {
                 if( rep!=null )
+                {
                     rep(state.innerobj.c, state.innerobj.f, obj);
+                }
+
                 continue;
             }
             throw new alglibexception("ALGLIB: error in 'lsfitfit' (some derivatives were not provided?)");
@@ -6708,15 +6931,24 @@ public partial class alglib
         lsfitfit(state, func, grad, hess, rep, obj, null);
     }
     
-    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_pgrad grad, ndimensional_phess hess, ndimensional_rep rep, object obj, alglib.xparams _params)
+    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_pgrad grad, ndimensional_phess hess, ndimensional_rep rep, object obj, xparams _params)
     {
         if( func==null )
+        {
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (func is null)");
-        if( grad==null )
+        }
+
+        if ( grad==null )
+        {
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (grad is null)");
-        if( hess==null )
+        }
+
+        if ( hess==null )
+        {
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (hess is null)");
-        while( alglib.lsfititeration(state, _params) )
+        }
+
+        while ( alglib.lsfititeration(state, _params) )
         {
             if( state.needf )
             {
@@ -6736,7 +6968,10 @@ public partial class alglib
             if( state.innerobj.xupdated )
             {
                 if( rep!=null )
+                {
                     rep(state.innerobj.c, state.innerobj.f, obj);
+                }
+
                 continue;
             }
             throw new alglibexception("ALGLIB: error in 'lsfitfit' (some derivatives were not provided?)");
@@ -6827,7 +7062,7 @@ public partial class alglib
         lsfit.lsfitresults(state.innerobj, ref info, ref c, rep.innerobj, null);
     }
     
-    public static void lsfitresults(lsfitstate state, out int info, out double[] c, out lsfitreport rep, alglib.xparams _params)
+    public static void lsfitresults(lsfitstate state, out int info, out double[] c, out lsfitreport rep, xparams _params)
     {
         info = 0;
         c = new double[0];
@@ -6892,7 +7127,7 @@ public partial class alglib
         lsfit.lsfitsetgradientcheck(state.innerobj, teststep, null);
     }
     
-    public static void lsfitsetgradientcheck(lsfitstate state, double teststep, alglib.xparams _params)
+    public static void lsfitsetgradientcheck(lsfitstate state, double teststep, xparams _params)
     {
     
         lsfit.lsfitsetgradientcheck(state.innerobj, teststep, _params);
@@ -6931,7 +7166,7 @@ public partial class alglib
         fitsphere.fitspherels(xy, npoints, nx, ref cx, ref r, null);
     }
     
-    public static void fitspherels(double[,] xy, int npoints, int nx, out double[] cx, out double r, alglib.xparams _params)
+    public static void fitspherels(double[,] xy, int npoints, int nx, out double[] cx, out double r, xparams _params)
     {
         cx = new double[0];
         r = 0;
@@ -6974,7 +7209,7 @@ public partial class alglib
         fitsphere.fitspheremc(xy, npoints, nx, ref cx, ref rhi, null);
     }
     
-    public static void fitspheremc(double[,] xy, int npoints, int nx, out double[] cx, out double rhi, alglib.xparams _params)
+    public static void fitspheremc(double[,] xy, int npoints, int nx, out double[] cx, out double rhi, xparams _params)
     {
         cx = new double[0];
         rhi = 0;
@@ -7017,7 +7252,7 @@ public partial class alglib
         fitsphere.fitspheremi(xy, npoints, nx, ref cx, ref rlo, null);
     }
     
-    public static void fitspheremi(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, alglib.xparams _params)
+    public static void fitspheremi(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, xparams _params)
     {
         cx = new double[0];
         rlo = 0;
@@ -7062,7 +7297,7 @@ public partial class alglib
         fitsphere.fitspheremz(xy, npoints, nx, ref cx, ref rlo, ref rhi, null);
     }
     
-    public static void fitspheremz(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, out double rhi, alglib.xparams _params)
+    public static void fitspheremz(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, out double rhi, xparams _params)
     {
         cx = new double[0];
         rlo = 0;
@@ -7229,7 +7464,7 @@ public partial class alglib
         fitsphere.fitspherex(xy, npoints, nx, problemtype, epsx, aulits, penalty, ref cx, ref rlo, ref rhi, null);
     }
     
-    public static void fitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, double penalty, out double[] cx, out double rlo, out double rhi, alglib.xparams _params)
+    public static void fitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, double penalty, out double[] cx, out double rlo, out double rhi, xparams _params)
     {
         cx = new double[0];
         rlo = 0;
@@ -7259,7 +7494,7 @@ public partial class alglib
             _innerobj = new parametric.pspline2interpolant();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new pspline2interpolant((parametric.pspline2interpolant)_innerobj.make_copy());
         }
@@ -7268,7 +7503,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private parametric.pspline2interpolant _innerobj;
+        private readonly parametric.pspline2interpolant _innerobj;
         public parametric.pspline2interpolant innerobj { get { return _innerobj; } }
         public pspline2interpolant(parametric.pspline2interpolant obj)
         {
@@ -7294,7 +7529,7 @@ public partial class alglib
             _innerobj = new parametric.pspline3interpolant();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new pspline3interpolant((parametric.pspline3interpolant)_innerobj.make_copy());
         }
@@ -7303,7 +7538,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private parametric.pspline3interpolant _innerobj;
+        private readonly parametric.pspline3interpolant _innerobj;
         public parametric.pspline3interpolant innerobj { get { return _innerobj; } }
         public pspline3interpolant(parametric.pspline3interpolant obj)
         {
@@ -7349,7 +7584,7 @@ public partial class alglib
         parametric.pspline2build(xy, n, st, pt, p.innerobj, null);
     }
     
-    public static void pspline2build(double[,] xy, int n, int st, int pt, out pspline2interpolant p, alglib.xparams _params)
+    public static void pspline2build(double[,] xy, int n, int st, int pt, out pspline2interpolant p, xparams _params)
     {
         p = new pspline2interpolant();
         parametric.pspline2build(xy, n, st, pt, p.innerobj, _params);
@@ -7371,7 +7606,7 @@ public partial class alglib
         parametric.pspline3build(xy, n, st, pt, p.innerobj, null);
     }
     
-    public static void pspline3build(double[,] xy, int n, int st, int pt, out pspline3interpolant p, alglib.xparams _params)
+    public static void pspline3build(double[,] xy, int n, int st, int pt, out pspline3interpolant p, xparams _params)
     {
         p = new pspline3interpolant();
         parametric.pspline3build(xy, n, st, pt, p.innerobj, _params);
@@ -7417,7 +7652,7 @@ public partial class alglib
         parametric.pspline2buildperiodic(xy, n, st, pt, p.innerobj, null);
     }
     
-    public static void pspline2buildperiodic(double[,] xy, int n, int st, int pt, out pspline2interpolant p, alglib.xparams _params)
+    public static void pspline2buildperiodic(double[,] xy, int n, int st, int pt, out pspline2interpolant p, xparams _params)
     {
         p = new pspline2interpolant();
         parametric.pspline2buildperiodic(xy, n, st, pt, p.innerobj, _params);
@@ -7440,7 +7675,7 @@ public partial class alglib
         parametric.pspline3buildperiodic(xy, n, st, pt, p.innerobj, null);
     }
     
-    public static void pspline3buildperiodic(double[,] xy, int n, int st, int pt, out pspline3interpolant p, alglib.xparams _params)
+    public static void pspline3buildperiodic(double[,] xy, int n, int st, int pt, out pspline3interpolant p, xparams _params)
     {
         p = new pspline3interpolant();
         parametric.pspline3buildperiodic(xy, n, st, pt, p.innerobj, _params);
@@ -7478,7 +7713,7 @@ public partial class alglib
         parametric.pspline2parametervalues(p.innerobj, ref n, ref t, null);
     }
     
-    public static void pspline2parametervalues(pspline2interpolant p, out int n, out double[] t, alglib.xparams _params)
+    public static void pspline2parametervalues(pspline2interpolant p, out int n, out double[] t, xparams _params)
     {
         n = 0;
         t = new double[0];
@@ -7500,7 +7735,7 @@ public partial class alglib
         parametric.pspline3parametervalues(p.innerobj, ref n, ref t, null);
     }
     
-    public static void pspline3parametervalues(pspline3interpolant p, out int n, out double[] t, alglib.xparams _params)
+    public static void pspline3parametervalues(pspline3interpolant p, out int n, out double[] t, xparams _params)
     {
         n = 0;
         t = new double[0];
@@ -7535,7 +7770,7 @@ public partial class alglib
         parametric.pspline2calc(p.innerobj, t, ref x, ref y, null);
     }
     
-    public static void pspline2calc(pspline2interpolant p, double t, out double x, out double y, alglib.xparams _params)
+    public static void pspline2calc(pspline2interpolant p, double t, out double x, out double y, xparams _params)
     {
         x = 0;
         y = 0;
@@ -7572,7 +7807,7 @@ public partial class alglib
         parametric.pspline3calc(p.innerobj, t, ref x, ref y, ref z, null);
     }
     
-    public static void pspline3calc(pspline3interpolant p, double t, out double x, out double y, out double z, alglib.xparams _params)
+    public static void pspline3calc(pspline3interpolant p, double t, out double x, out double y, out double z, xparams _params)
     {
         x = 0;
         y = 0;
@@ -7610,7 +7845,7 @@ public partial class alglib
         parametric.pspline2tangent(p.innerobj, t, ref x, ref y, null);
     }
     
-    public static void pspline2tangent(pspline2interpolant p, double t, out double x, out double y, alglib.xparams _params)
+    public static void pspline2tangent(pspline2interpolant p, double t, out double x, out double y, xparams _params)
     {
         x = 0;
         y = 0;
@@ -7649,7 +7884,7 @@ public partial class alglib
         parametric.pspline3tangent(p.innerobj, t, ref x, ref y, ref z, null);
     }
     
-    public static void pspline3tangent(pspline3interpolant p, double t, out double x, out double y, out double z, alglib.xparams _params)
+    public static void pspline3tangent(pspline3interpolant p, double t, out double x, out double y, out double z, xparams _params)
     {
         x = 0;
         y = 0;
@@ -7688,7 +7923,7 @@ public partial class alglib
         parametric.pspline2diff(p.innerobj, t, ref x, ref dx, ref y, ref dy, null);
     }
     
-    public static void pspline2diff(pspline2interpolant p, double t, out double x, out double dx, out double y, out double dy, alglib.xparams _params)
+    public static void pspline2diff(pspline2interpolant p, double t, out double x, out double dx, out double y, out double dy, xparams _params)
     {
         x = 0;
         dx = 0;
@@ -7732,7 +7967,7 @@ public partial class alglib
         parametric.pspline3diff(p.innerobj, t, ref x, ref dx, ref y, ref dy, ref z, ref dz, null);
     }
     
-    public static void pspline3diff(pspline3interpolant p, double t, out double x, out double dx, out double y, out double dy, out double z, out double dz, alglib.xparams _params)
+    public static void pspline3diff(pspline3interpolant p, double t, out double x, out double dx, out double y, out double dy, out double z, out double dz, xparams _params)
     {
         x = 0;
         dx = 0;
@@ -7778,7 +8013,7 @@ public partial class alglib
         parametric.pspline2diff2(p.innerobj, t, ref x, ref dx, ref d2x, ref y, ref dy, ref d2y, null);
     }
     
-    public static void pspline2diff2(pspline2interpolant p, double t, out double x, out double dx, out double d2x, out double y, out double dy, out double d2y, alglib.xparams _params)
+    public static void pspline2diff2(pspline2interpolant p, double t, out double x, out double dx, out double d2x, out double y, out double dy, out double d2y, xparams _params)
     {
         x = 0;
         dx = 0;
@@ -7830,7 +8065,7 @@ public partial class alglib
         parametric.pspline3diff2(p.innerobj, t, ref x, ref dx, ref d2x, ref y, ref dy, ref d2y, ref z, ref dz, ref d2z, null);
     }
     
-    public static void pspline3diff2(pspline3interpolant p, double t, out double x, out double dx, out double d2x, out double y, out double dy, out double d2y, out double z, out double dz, out double d2z, alglib.xparams _params)
+    public static void pspline3diff2(pspline3interpolant p, double t, out double x, out double dx, out double d2x, out double y, out double dy, out double d2y, out double z, out double dz, out double d2z, xparams _params)
     {
         x = 0;
         dx = 0;
@@ -7867,7 +8102,7 @@ public partial class alglib
         return parametric.pspline2arclength(p.innerobj, a, b, null);
     }
     
-    public static double pspline2arclength(pspline2interpolant p, double a, double b, alglib.xparams _params)
+    public static double pspline2arclength(pspline2interpolant p, double a, double b, xparams _params)
     {
     
         return parametric.pspline2arclength(p.innerobj, a, b, _params);
@@ -7896,7 +8131,7 @@ public partial class alglib
         return parametric.pspline3arclength(p.innerobj, a, b, null);
     }
     
-    public static double pspline3arclength(pspline3interpolant p, double a, double b, alglib.xparams _params)
+    public static double pspline3arclength(pspline3interpolant p, double a, double b, xparams _params)
     {
     
         return parametric.pspline3arclength(p.innerobj, a, b, _params);
@@ -7970,7 +8205,7 @@ public partial class alglib
         parametric.parametricrdpfixed(x, n, d, stopm, stopeps, ref x2, ref idx2, ref nsections, null);
     }
     
-    public static void parametricrdpfixed(double[,] x, int n, int d, int stopm, double stopeps, out double[,] x2, out int[] idx2, out int nsections, alglib.xparams _params)
+    public static void parametricrdpfixed(double[,] x, int n, int d, int stopm, double stopeps, out double[,] x2, out int[] idx2, out int nsections, xparams _params)
     {
         x2 = new double[0,0];
         idx2 = new int[0];
@@ -8003,7 +8238,7 @@ public partial class alglib
             _innerobj = new spline2d.spline2dinterpolant();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new spline2dinterpolant((spline2d.spline2dinterpolant)_innerobj.make_copy());
         }
@@ -8012,7 +8247,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline2d.spline2dinterpolant _innerobj;
+        private readonly spline2d.spline2dinterpolant _innerobj;
         public spline2d.spline2dinterpolant innerobj { get { return _innerobj; } }
         public spline2dinterpolant(spline2d.spline2dinterpolant obj)
         {
@@ -8035,7 +8270,7 @@ public partial class alglib
             _innerobj = new spline2d.spline2dbuilder();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new spline2dbuilder((spline2d.spline2dbuilder)_innerobj.make_copy());
         }
@@ -8044,7 +8279,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline2d.spline2dbuilder _innerobj;
+        private readonly spline2d.spline2dbuilder _innerobj;
         public spline2d.spline2dbuilder innerobj { get { return _innerobj; } }
         public spline2dbuilder(spline2d.spline2dbuilder obj)
         {
@@ -8075,7 +8310,7 @@ public partial class alglib
             _innerobj = new spline2d.spline2dfitreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new spline2dfitreport((spline2d.spline2dfitreport)_innerobj.make_copy());
         }
@@ -8084,7 +8319,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline2d.spline2dfitreport _innerobj;
+        private readonly spline2d.spline2dfitreport _innerobj;
         public spline2d.spline2dfitreport innerobj { get { return _innerobj; } }
         public spline2dfitreport(spline2d.spline2dfitreport obj)
         {
@@ -8115,7 +8350,7 @@ public partial class alglib
     *************************************************************************/
     public static void spline2dserialize(spline2dinterpolant obj, out string s_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         spline2d.spline2dalloc(s, obj.innerobj, null);
         s.sstart_str();
@@ -8130,7 +8365,7 @@ public partial class alglib
     *************************************************************************/
     public static void spline2dunserialize(string s_in, out spline2dinterpolant obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new spline2dinterpolant();
         s.ustart_str(s_in);
         spline2d.spline2dunserialize(s, obj.innerobj, null);
@@ -8151,7 +8386,7 @@ public partial class alglib
     *************************************************************************/
     public static void spline2dserialize(spline2dinterpolant obj, System.IO.Stream stream_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         spline2d.spline2dalloc(s, obj.innerobj, null);
         s.sstart_stream(stream_out);
@@ -8165,7 +8400,7 @@ public partial class alglib
     *************************************************************************/
     public static void spline2dunserialize(System.IO.Stream stream_in, out spline2dinterpolant obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new spline2dinterpolant();
         s.ustart_stream(stream_in);
         spline2d.spline2dunserialize(s, obj.innerobj, null);
@@ -8193,7 +8428,7 @@ public partial class alglib
         return spline2d.spline2dcalc(c.innerobj, x, y, null);
     }
     
-    public static double spline2dcalc(spline2dinterpolant c, double x, double y, alglib.xparams _params)
+    public static double spline2dcalc(spline2dinterpolant c, double x, double y, xparams _params)
     {
     
         return spline2d.spline2dcalc(c.innerobj, x, y, _params);
@@ -8225,7 +8460,7 @@ public partial class alglib
         spline2d.spline2ddiff(c.innerobj, x, y, ref f, ref fx, ref fy, ref fxy, null);
     }
     
-    public static void spline2ddiff(spline2dinterpolant c, double x, double y, out double f, out double fx, out double fy, out double fxy, alglib.xparams _params)
+    public static void spline2ddiff(spline2dinterpolant c, double x, double y, out double f, out double fx, out double fy, out double fxy, xparams _params)
     {
         f = 0;
         fx = 0;
@@ -8260,7 +8495,7 @@ public partial class alglib
         spline2d.spline2dcalcvbuf(c.innerobj, x, y, ref f, null);
     }
     
-    public static void spline2dcalcvbuf(spline2dinterpolant c, double x, double y, ref double[] f, alglib.xparams _params)
+    public static void spline2dcalcvbuf(spline2dinterpolant c, double x, double y, ref double[] f, xparams _params)
     {
     
         spline2d.spline2dcalcvbuf(c.innerobj, x, y, ref f, _params);
@@ -8288,7 +8523,7 @@ public partial class alglib
         return spline2d.spline2dcalcvi(c.innerobj, x, y, i, null);
     }
     
-    public static double spline2dcalcvi(spline2dinterpolant c, double x, double y, int i, alglib.xparams _params)
+    public static double spline2dcalcvi(spline2dinterpolant c, double x, double y, int i, xparams _params)
     {
     
         return spline2d.spline2dcalcvi(c.innerobj, x, y, i, _params);
@@ -8318,7 +8553,7 @@ public partial class alglib
         spline2d.spline2dcalcv(c.innerobj, x, y, ref f, null);
     }
     
-    public static void spline2dcalcv(spline2dinterpolant c, double x, double y, out double[] f, alglib.xparams _params)
+    public static void spline2dcalcv(spline2dinterpolant c, double x, double y, out double[] f, xparams _params)
     {
         f = new double[0];
         spline2d.spline2dcalcv(c.innerobj, x, y, ref f, _params);
@@ -8351,7 +8586,7 @@ public partial class alglib
         spline2d.spline2ddiffvi(c.innerobj, x, y, i, ref f, ref fx, ref fy, ref fxy, null);
     }
     
-    public static void spline2ddiffvi(spline2dinterpolant c, double x, double y, int i, out double f, out double fx, out double fy, out double fxy, alglib.xparams _params)
+    public static void spline2ddiffvi(spline2dinterpolant c, double x, double y, int i, out double f, out double fx, out double fy, out double fxy, xparams _params)
     {
         f = 0;
         fx = 0;
@@ -8379,7 +8614,7 @@ public partial class alglib
         spline2d.spline2dlintransxy(c.innerobj, ax, bx, ay, by, null);
     }
     
-    public static void spline2dlintransxy(spline2dinterpolant c, double ax, double bx, double ay, double by, alglib.xparams _params)
+    public static void spline2dlintransxy(spline2dinterpolant c, double ax, double bx, double ay, double by, xparams _params)
     {
     
         spline2d.spline2dlintransxy(c.innerobj, ax, bx, ay, by, _params);
@@ -8404,7 +8639,7 @@ public partial class alglib
         spline2d.spline2dlintransf(c.innerobj, a, b, null);
     }
     
-    public static void spline2dlintransf(spline2dinterpolant c, double a, double b, alglib.xparams _params)
+    public static void spline2dlintransf(spline2dinterpolant c, double a, double b, xparams _params)
     {
     
         spline2d.spline2dlintransf(c.innerobj, a, b, _params);
@@ -8428,7 +8663,7 @@ public partial class alglib
         spline2d.spline2dcopy(c.innerobj, cc.innerobj, null);
     }
     
-    public static void spline2dcopy(spline2dinterpolant c, out spline2dinterpolant cc, alglib.xparams _params)
+    public static void spline2dcopy(spline2dinterpolant c, out spline2dinterpolant cc, xparams _params)
     {
         cc = new spline2dinterpolant();
         spline2d.spline2dcopy(c.innerobj, cc.innerobj, _params);
@@ -8459,7 +8694,7 @@ public partial class alglib
         spline2d.spline2dresamplebicubic(a, oldheight, oldwidth, ref b, newheight, newwidth, null);
     }
     
-    public static void spline2dresamplebicubic(double[,] a, int oldheight, int oldwidth, out double[,] b, int newheight, int newwidth, alglib.xparams _params)
+    public static void spline2dresamplebicubic(double[,] a, int oldheight, int oldwidth, out double[,] b, int newheight, int newwidth, xparams _params)
     {
         b = new double[0,0];
         spline2d.spline2dresamplebicubic(a, oldheight, oldwidth, ref b, newheight, newwidth, _params);
@@ -8490,7 +8725,7 @@ public partial class alglib
         spline2d.spline2dresamplebilinear(a, oldheight, oldwidth, ref b, newheight, newwidth, null);
     }
     
-    public static void spline2dresamplebilinear(double[,] a, int oldheight, int oldwidth, out double[,] b, int newheight, int newwidth, alglib.xparams _params)
+    public static void spline2dresamplebilinear(double[,] a, int oldheight, int oldwidth, out double[,] b, int newheight, int newwidth, xparams _params)
     {
         b = new double[0,0];
         spline2d.spline2dresamplebilinear(a, oldheight, oldwidth, ref b, newheight, newwidth, _params);
@@ -8522,7 +8757,7 @@ public partial class alglib
         spline2d.spline2dbuildbilinearv(x, n, y, m, f, d, c.innerobj, null);
     }
     
-    public static void spline2dbuildbilinearv(double[] x, int n, double[] y, int m, double[] f, int d, out spline2dinterpolant c, alglib.xparams _params)
+    public static void spline2dbuildbilinearv(double[] x, int n, double[] y, int m, double[] f, int d, out spline2dinterpolant c, xparams _params)
     {
         c = new spline2dinterpolant();
         spline2d.spline2dbuildbilinearv(x, n, y, m, f, d, c.innerobj, _params);
@@ -8554,7 +8789,7 @@ public partial class alglib
         spline2d.spline2dbuildbicubicv(x, n, y, m, f, d, c.innerobj, null);
     }
     
-    public static void spline2dbuildbicubicv(double[] x, int n, double[] y, int m, double[] f, int d, out spline2dinterpolant c, alglib.xparams _params)
+    public static void spline2dbuildbicubicv(double[] x, int n, double[] y, int m, double[] f, int d, out spline2dinterpolant c, xparams _params)
     {
         c = new spline2dinterpolant();
         spline2d.spline2dbuildbicubicv(x, n, y, m, f, d, c.innerobj, _params);
@@ -8607,7 +8842,7 @@ public partial class alglib
         spline2d.spline2dunpackv(c.innerobj, ref m, ref n, ref d, ref tbl, null);
     }
     
-    public static void spline2dunpackv(spline2dinterpolant c, out int m, out int n, out int d, out double[,] tbl, alglib.xparams _params)
+    public static void spline2dunpackv(spline2dinterpolant c, out int m, out int n, out int d, out double[,] tbl, xparams _params)
     {
         m = 0;
         n = 0;
@@ -8631,7 +8866,7 @@ public partial class alglib
         spline2d.spline2dbuildbilinear(x, y, f, m, n, c.innerobj, null);
     }
     
-    public static void spline2dbuildbilinear(double[] x, double[] y, double[,] f, int m, int n, out spline2dinterpolant c, alglib.xparams _params)
+    public static void spline2dbuildbilinear(double[] x, double[] y, double[,] f, int m, int n, out spline2dinterpolant c, xparams _params)
     {
         c = new spline2dinterpolant();
         spline2d.spline2dbuildbilinear(x, y, f, m, n, c.innerobj, _params);
@@ -8652,7 +8887,7 @@ public partial class alglib
         spline2d.spline2dbuildbicubic(x, y, f, m, n, c.innerobj, null);
     }
     
-    public static void spline2dbuildbicubic(double[] x, double[] y, double[,] f, int m, int n, out spline2dinterpolant c, alglib.xparams _params)
+    public static void spline2dbuildbicubic(double[] x, double[] y, double[,] f, int m, int n, out spline2dinterpolant c, xparams _params)
     {
         c = new spline2dinterpolant();
         spline2d.spline2dbuildbicubic(x, y, f, m, n, c.innerobj, _params);
@@ -8675,7 +8910,7 @@ public partial class alglib
         spline2d.spline2dunpack(c.innerobj, ref m, ref n, ref tbl, null);
     }
     
-    public static void spline2dunpack(spline2dinterpolant c, out int m, out int n, out double[,] tbl, alglib.xparams _params)
+    public static void spline2dunpack(spline2dinterpolant c, out int m, out int n, out double[,] tbl, xparams _params)
     {
         m = 0;
         n = 0;
@@ -8740,7 +8975,7 @@ public partial class alglib
         spline2d.spline2dbuildercreate(d, state.innerobj, null);
     }
     
-    public static void spline2dbuildercreate(int d, out spline2dbuilder state, alglib.xparams _params)
+    public static void spline2dbuildercreate(int d, out spline2dbuilder state, xparams _params)
     {
         state = new spline2dbuilder();
         spline2d.spline2dbuildercreate(d, state.innerobj, _params);
@@ -8766,7 +9001,7 @@ public partial class alglib
         spline2d.spline2dbuildersetuserterm(state.innerobj, v, null);
     }
     
-    public static void spline2dbuildersetuserterm(spline2dbuilder state, double v, alglib.xparams _params)
+    public static void spline2dbuildersetuserterm(spline2dbuilder state, double v, xparams _params)
     {
     
         spline2d.spline2dbuildersetuserterm(state.innerobj, v, _params);
@@ -8791,7 +9026,7 @@ public partial class alglib
         spline2d.spline2dbuildersetlinterm(state.innerobj, null);
     }
     
-    public static void spline2dbuildersetlinterm(spline2dbuilder state, alglib.xparams _params)
+    public static void spline2dbuildersetlinterm(spline2dbuilder state, xparams _params)
     {
     
         spline2d.spline2dbuildersetlinterm(state.innerobj, _params);
@@ -8816,7 +9051,7 @@ public partial class alglib
         spline2d.spline2dbuildersetconstterm(state.innerobj, null);
     }
     
-    public static void spline2dbuildersetconstterm(spline2dbuilder state, alglib.xparams _params)
+    public static void spline2dbuildersetconstterm(spline2dbuilder state, xparams _params)
     {
     
         spline2d.spline2dbuildersetconstterm(state.innerobj, _params);
@@ -8839,7 +9074,7 @@ public partial class alglib
         spline2d.spline2dbuildersetzeroterm(state.innerobj, null);
     }
     
-    public static void spline2dbuildersetzeroterm(spline2dbuilder state, alglib.xparams _params)
+    public static void spline2dbuildersetzeroterm(spline2dbuilder state, xparams _params)
     {
     
         spline2d.spline2dbuildersetzeroterm(state.innerobj, _params);
@@ -8869,7 +9104,7 @@ public partial class alglib
         spline2d.spline2dbuildersetpoints(state.innerobj, xy, n, null);
     }
     
-    public static void spline2dbuildersetpoints(spline2dbuilder state, double[,] xy, int n, alglib.xparams _params)
+    public static void spline2dbuildersetpoints(spline2dbuilder state, double[,] xy, int n, xparams _params)
     {
     
         spline2d.spline2dbuildersetpoints(state.innerobj, xy, n, _params);
@@ -8891,7 +9126,7 @@ public partial class alglib
         spline2d.spline2dbuildersetareaauto(state.innerobj, null);
     }
     
-    public static void spline2dbuildersetareaauto(spline2dbuilder state, alglib.xparams _params)
+    public static void spline2dbuildersetareaauto(spline2dbuilder state, xparams _params)
     {
     
         spline2d.spline2dbuildersetareaauto(state.innerobj, _params);
@@ -8915,7 +9150,7 @@ public partial class alglib
         spline2d.spline2dbuildersetarea(state.innerobj, xa, xb, ya, yb, null);
     }
     
-    public static void spline2dbuildersetarea(spline2dbuilder state, double xa, double xb, double ya, double yb, alglib.xparams _params)
+    public static void spline2dbuildersetarea(spline2dbuilder state, double xa, double xb, double ya, double yb, xparams _params)
     {
     
         spline2d.spline2dbuildersetarea(state.innerobj, xa, xb, ya, yb, _params);
@@ -8947,7 +9182,7 @@ public partial class alglib
         spline2d.spline2dbuildersetgrid(state.innerobj, kx, ky, null);
     }
     
-    public static void spline2dbuildersetgrid(spline2dbuilder state, int kx, int ky, alglib.xparams _params)
+    public static void spline2dbuildersetgrid(spline2dbuilder state, int kx, int ky, xparams _params)
     {
     
         spline2d.spline2dbuildersetgrid(state.innerobj, kx, ky, _params);
@@ -9044,7 +9279,7 @@ public partial class alglib
         spline2d.spline2dbuildersetalgofastddm(state.innerobj, nlayers, lambdav, null);
     }
     
-    public static void spline2dbuildersetalgofastddm(spline2dbuilder state, int nlayers, double lambdav, alglib.xparams _params)
+    public static void spline2dbuildersetalgofastddm(spline2dbuilder state, int nlayers, double lambdav, xparams _params)
     {
     
         spline2d.spline2dbuildersetalgofastddm(state.innerobj, nlayers, lambdav, _params);
@@ -9109,7 +9344,7 @@ public partial class alglib
         spline2d.spline2dbuildersetalgoblocklls(state.innerobj, lambdans, null);
     }
     
-    public static void spline2dbuildersetalgoblocklls(spline2dbuilder state, double lambdans, alglib.xparams _params)
+    public static void spline2dbuildersetalgoblocklls(spline2dbuilder state, double lambdans, xparams _params)
     {
     
         spline2d.spline2dbuildersetalgoblocklls(state.innerobj, lambdans, _params);
@@ -9147,7 +9382,7 @@ public partial class alglib
         spline2d.spline2dbuildersetalgonaivells(state.innerobj, lambdans, null);
     }
     
-    public static void spline2dbuildersetalgonaivells(spline2dbuilder state, double lambdans, alglib.xparams _params)
+    public static void spline2dbuildersetalgonaivells(spline2dbuilder state, double lambdans, xparams _params)
     {
     
         spline2d.spline2dbuildersetalgonaivells(state.innerobj, lambdans, _params);
@@ -9188,7 +9423,7 @@ public partial class alglib
         spline2d.spline2dfit(state.innerobj, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline2dfit(spline2dbuilder state, out spline2dinterpolant s, out spline2dfitreport rep, alglib.xparams _params)
+    public static void spline2dfit(spline2dbuilder state, out spline2dinterpolant s, out spline2dfitreport rep, xparams _params)
     {
         s = new spline2dinterpolant();
         rep = new spline2dfitreport();
@@ -9220,7 +9455,7 @@ public partial class alglib
             _innerobj = new spline3d.spline3dinterpolant();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new spline3dinterpolant((spline3d.spline3dinterpolant)_innerobj.make_copy());
         }
@@ -9229,7 +9464,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline3d.spline3dinterpolant _innerobj;
+        private readonly spline3d.spline3dinterpolant _innerobj;
         public spline3d.spline3dinterpolant innerobj { get { return _innerobj; } }
         public spline3dinterpolant(spline3d.spline3dinterpolant obj)
         {
@@ -9259,7 +9494,7 @@ public partial class alglib
         return spline3d.spline3dcalc(c.innerobj, x, y, z, null);
     }
     
-    public static double spline3dcalc(spline3dinterpolant c, double x, double y, double z, alglib.xparams _params)
+    public static double spline3dcalc(spline3dinterpolant c, double x, double y, double z, xparams _params)
     {
     
         return spline3d.spline3dcalc(c.innerobj, x, y, z, _params);
@@ -9286,7 +9521,7 @@ public partial class alglib
         spline3d.spline3dlintransxyz(c.innerobj, ax, bx, ay, by, az, bz, null);
     }
     
-    public static void spline3dlintransxyz(spline3dinterpolant c, double ax, double bx, double ay, double by, double az, double bz, alglib.xparams _params)
+    public static void spline3dlintransxyz(spline3dinterpolant c, double ax, double bx, double ay, double by, double az, double bz, xparams _params)
     {
     
         spline3d.spline3dlintransxyz(c.innerobj, ax, bx, ay, by, az, bz, _params);
@@ -9311,7 +9546,7 @@ public partial class alglib
         spline3d.spline3dlintransf(c.innerobj, a, b, null);
     }
     
-    public static void spline3dlintransf(spline3dinterpolant c, double a, double b, alglib.xparams _params)
+    public static void spline3dlintransf(spline3dinterpolant c, double a, double b, xparams _params)
     {
     
         spline3d.spline3dlintransf(c.innerobj, a, b, _params);
@@ -9358,7 +9593,7 @@ public partial class alglib
         spline3d.spline3dresampletrilinear(a, oldzcount, oldycount, oldxcount, newzcount, newycount, newxcount, ref b, null);
     }
     
-    public static void spline3dresampletrilinear(double[] a, int oldzcount, int oldycount, int oldxcount, int newzcount, int newycount, int newxcount, out double[] b, alglib.xparams _params)
+    public static void spline3dresampletrilinear(double[] a, int oldzcount, int oldycount, int oldxcount, int newzcount, int newycount, int newxcount, out double[] b, xparams _params)
     {
         b = new double[0];
         spline3d.spline3dresampletrilinear(a, oldzcount, oldycount, oldxcount, newzcount, newycount, newxcount, ref b, _params);
@@ -9402,7 +9637,7 @@ public partial class alglib
         spline3d.spline3dbuildtrilinearv(x, n, y, m, z, l, f, d, c.innerobj, null);
     }
     
-    public static void spline3dbuildtrilinearv(double[] x, int n, double[] y, int m, double[] z, int l, double[] f, int d, out spline3dinterpolant c, alglib.xparams _params)
+    public static void spline3dbuildtrilinearv(double[] x, int n, double[] y, int m, double[] z, int l, double[] f, int d, out spline3dinterpolant c, xparams _params)
     {
         c = new spline3dinterpolant();
         spline3d.spline3dbuildtrilinearv(x, n, y, m, z, l, f, d, c.innerobj, _params);
@@ -9432,7 +9667,7 @@ public partial class alglib
         spline3d.spline3dcalcvbuf(c.innerobj, x, y, z, ref f, null);
     }
     
-    public static void spline3dcalcvbuf(spline3dinterpolant c, double x, double y, double z, ref double[] f, alglib.xparams _params)
+    public static void spline3dcalcvbuf(spline3dinterpolant c, double x, double y, double z, ref double[] f, xparams _params)
     {
     
         spline3d.spline3dcalcvbuf(c.innerobj, x, y, z, ref f, _params);
@@ -9463,7 +9698,7 @@ public partial class alglib
         spline3d.spline3dcalcv(c.innerobj, x, y, z, ref f, null);
     }
     
-    public static void spline3dcalcv(spline3dinterpolant c, double x, double y, double z, out double[] f, alglib.xparams _params)
+    public static void spline3dcalcv(spline3dinterpolant c, double x, double y, double z, out double[] f, xparams _params)
     {
         f = new double[0];
         spline3d.spline3dcalcv(c.innerobj, x, y, z, ref f, _params);
@@ -9529,7 +9764,7 @@ public partial class alglib
         spline3d.spline3dunpackv(c.innerobj, ref n, ref m, ref l, ref d, ref stype, ref tbl, null);
     }
     
-    public static void spline3dunpackv(spline3dinterpolant c, out int n, out int m, out int l, out int d, out int stype, out double[,] tbl, alglib.xparams _params)
+    public static void spline3dunpackv(spline3dinterpolant c, out int n, out int m, out int l, out int d, out int stype, out double[,] tbl, xparams _params)
     {
         n = 0;
         m = 0;
@@ -9560,7 +9795,7 @@ public partial class alglib
         intcomp.nsfitspheremcc(xy, npoints, nx, ref cx, ref rhi, null);
     }
     
-    public static void nsfitspheremcc(double[,] xy, int npoints, int nx, out double[] cx, out double rhi, alglib.xparams _params)
+    public static void nsfitspheremcc(double[,] xy, int npoints, int nx, out double[] cx, out double rhi, xparams _params)
     {
         cx = new double[0];
         rhi = 0;
@@ -9581,7 +9816,7 @@ public partial class alglib
         intcomp.nsfitspheremic(xy, npoints, nx, ref cx, ref rlo, null);
     }
     
-    public static void nsfitspheremic(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, alglib.xparams _params)
+    public static void nsfitspheremic(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, xparams _params)
     {
         cx = new double[0];
         rlo = 0;
@@ -9603,7 +9838,7 @@ public partial class alglib
         intcomp.nsfitspheremzc(xy, npoints, nx, ref cx, ref rlo, ref rhi, null);
     }
     
-    public static void nsfitspheremzc(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, out double rhi, alglib.xparams _params)
+    public static void nsfitspheremzc(double[,] xy, int npoints, int nx, out double[] cx, out double rlo, out double rhi, xparams _params)
     {
         cx = new double[0];
         rlo = 0;
@@ -9626,7 +9861,7 @@ public partial class alglib
         intcomp.nsfitspherex(xy, npoints, nx, problemtype, epsx, aulits, penalty, ref cx, ref rlo, ref rhi, null);
     }
     
-    public static void nsfitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, double penalty, out double[] cx, out double rlo, out double rhi, alglib.xparams _params)
+    public static void nsfitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, double penalty, out double[] cx, out double rlo, out double rhi, xparams _params)
     {
         cx = new double[0];
         rlo = 0;
@@ -9654,7 +9889,7 @@ public partial class alglib
         intcomp.spline1dfitpenalized(x, y, n, m, rho, ref info, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline1dfitpenalized(double[] x, double[] y, int n, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitpenalized(double[] x, double[] y, int n, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         info = 0;
         s = new spline1dinterpolant();
@@ -9666,7 +9901,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitpenalized': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -9676,11 +9914,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dfitpenalized(double[] x, double[] y, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitpenalized(double[] x, double[] y, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitpenalized': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -9710,7 +9951,7 @@ public partial class alglib
         intcomp.spline1dfitpenalizedw(x, y, w, n, m, rho, ref info, s.innerobj, rep.innerobj, null);
     }
     
-    public static void spline1dfitpenalizedw(double[] x, double[] y, double[] w, int n, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitpenalizedw(double[] x, double[] y, double[] w, int n, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         info = 0;
         s = new spline1dinterpolant();
@@ -9722,7 +9963,10 @@ public partial class alglib
     {
         int n;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitpenalizedw': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -9732,11 +9976,14 @@ public partial class alglib
         return;
     }
             
-    public static void spline1dfitpenalizedw(double[] x, double[] y, double[] w, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, alglib.xparams _params)
+    public static void spline1dfitpenalizedw(double[] x, double[] y, double[] w, int m, double rho, out int info, out spline1dinterpolant s, out spline1dfitreport rep, xparams _params)
     {
         int n;
         if( (ap.len(x)!=ap.len(y)) || (ap.len(x)!=ap.len(w)))
+        {
             throw new alglibexception("Error while calling 'spline1dfitpenalizedw': looks like one of arguments has wrong size");
+        }
+
         info = 0;
         s = new spline1dinterpolant();
         rep = new spline1dfitreport();
@@ -9768,7 +10015,7 @@ public partial class alglib
             _innerobj = new rbf.rbfcalcbuffer();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new rbfcalcbuffer((rbf.rbfcalcbuffer)_innerobj.make_copy());
         }
@@ -9777,7 +10024,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private rbf.rbfcalcbuffer _innerobj;
+        private readonly rbf.rbfcalcbuffer _innerobj;
         public rbf.rbfcalcbuffer innerobj { get { return _innerobj; } }
         public rbfcalcbuffer(rbf.rbfcalcbuffer obj)
         {
@@ -9803,7 +10050,7 @@ public partial class alglib
             _innerobj = new rbf.rbfmodel();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new rbfmodel((rbf.rbfmodel)_innerobj.make_copy());
         }
@@ -9812,7 +10059,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private rbf.rbfmodel _innerobj;
+        private readonly rbf.rbfmodel _innerobj;
         public rbf.rbfmodel innerobj { get { return _innerobj; } }
         public rbfmodel(rbf.rbfmodel obj)
         {
@@ -9849,7 +10096,7 @@ public partial class alglib
             _innerobj = new rbf.rbfreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new rbfreport((rbf.rbfreport)_innerobj.make_copy());
         }
@@ -9858,7 +10105,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private rbf.rbfreport _innerobj;
+        private readonly rbf.rbfreport _innerobj;
         public rbf.rbfreport innerobj { get { return _innerobj; } }
         public rbfreport(rbf.rbfreport obj)
         {
@@ -9889,7 +10136,7 @@ public partial class alglib
     *************************************************************************/
     public static void rbfserialize(rbfmodel obj, out string s_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         rbf.rbfalloc(s, obj.innerobj, null);
         s.sstart_str();
@@ -9904,7 +10151,7 @@ public partial class alglib
     *************************************************************************/
     public static void rbfunserialize(string s_in, out rbfmodel obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new rbfmodel();
         s.ustart_str(s_in);
         rbf.rbfunserialize(s, obj.innerobj, null);
@@ -9925,7 +10172,7 @@ public partial class alglib
     *************************************************************************/
     public static void rbfserialize(rbfmodel obj, System.IO.Stream stream_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         rbf.rbfalloc(s, obj.innerobj, null);
         s.sstart_stream(stream_out);
@@ -9939,7 +10186,7 @@ public partial class alglib
     *************************************************************************/
     public static void rbfunserialize(System.IO.Stream stream_in, out rbfmodel obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new rbfmodel();
         s.ustart_stream(stream_in);
         rbf.rbfunserialize(s, obj.innerobj, null);
@@ -10022,7 +10269,7 @@ public partial class alglib
         rbf.rbfcreate(nx, ny, s.innerobj, null);
     }
     
-    public static void rbfcreate(int nx, int ny, out rbfmodel s, alglib.xparams _params)
+    public static void rbfcreate(int nx, int ny, out rbfmodel s, xparams _params)
     {
         s = new rbfmodel();
         rbf.rbfcreate(nx, ny, s.innerobj, _params);
@@ -10077,7 +10324,7 @@ public partial class alglib
         rbf.rbfcreatecalcbuffer(s.innerobj, buf.innerobj, null);
     }
     
-    public static void rbfcreatecalcbuffer(rbfmodel s, out rbfcalcbuffer buf, alglib.xparams _params)
+    public static void rbfcreatecalcbuffer(rbfmodel s, out rbfcalcbuffer buf, xparams _params)
     {
         buf = new rbfcalcbuffer();
         rbf.rbfcreatecalcbuffer(s.innerobj, buf.innerobj, _params);
@@ -10130,7 +10377,7 @@ public partial class alglib
         rbf.rbfsetpoints(s.innerobj, xy, n, null);
     }
     
-    public static void rbfsetpoints(rbfmodel s, double[,] xy, int n, alglib.xparams _params)
+    public static void rbfsetpoints(rbfmodel s, double[,] xy, int n, xparams _params)
     {
     
         rbf.rbfsetpoints(s.innerobj, xy, n, _params);
@@ -10147,7 +10394,7 @@ public partial class alglib
         return;
     }
             
-    public static void rbfsetpoints(rbfmodel s, double[,] xy, alglib.xparams _params)
+    public static void rbfsetpoints(rbfmodel s, double[,] xy, xparams _params)
     {
         int n;
     
@@ -10214,7 +10461,7 @@ public partial class alglib
         rbf.rbfsetpointsandscales(r.innerobj, xy, n, s, null);
     }
     
-    public static void rbfsetpointsandscales(rbfmodel r, double[,] xy, int n, double[] s, alglib.xparams _params)
+    public static void rbfsetpointsandscales(rbfmodel r, double[,] xy, int n, double[] s, xparams _params)
     {
     
         rbf.rbfsetpointsandscales(r.innerobj, xy, n, s, _params);
@@ -10231,7 +10478,7 @@ public partial class alglib
         return;
     }
             
-    public static void rbfsetpointsandscales(rbfmodel r, double[,] xy, double[] s, alglib.xparams _params)
+    public static void rbfsetpointsandscales(rbfmodel r, double[,] xy, double[] s, xparams _params)
     {
         int n;
     
@@ -10309,7 +10556,7 @@ public partial class alglib
         rbf.rbfsetalgoqnn(s.innerobj, q, z, null);
     }
     
-    public static void rbfsetalgoqnn(rbfmodel s, double q, double z, alglib.xparams _params)
+    public static void rbfsetalgoqnn(rbfmodel s, double q, double z, xparams _params)
     {
     
         rbf.rbfsetalgoqnn(s.innerobj, q, z, _params);
@@ -10328,7 +10575,7 @@ public partial class alglib
         return;
     }
             
-    public static void rbfsetalgoqnn(rbfmodel s, alglib.xparams _params)
+    public static void rbfsetalgoqnn(rbfmodel s, xparams _params)
     {
         double q;
         double z;
@@ -10445,7 +10692,7 @@ public partial class alglib
         rbf.rbfsetalgomultilayer(s.innerobj, rbase, nlayers, lambdav, null);
     }
     
-    public static void rbfsetalgomultilayer(rbfmodel s, double rbase, int nlayers, double lambdav, alglib.xparams _params)
+    public static void rbfsetalgomultilayer(rbfmodel s, double rbase, int nlayers, double lambdav, xparams _params)
     {
     
         rbf.rbfsetalgomultilayer(s.innerobj, rbase, nlayers, lambdav, _params);
@@ -10462,7 +10709,7 @@ public partial class alglib
         return;
     }
             
-    public static void rbfsetalgomultilayer(rbfmodel s, double rbase, int nlayers, alglib.xparams _params)
+    public static void rbfsetalgomultilayer(rbfmodel s, double rbase, int nlayers, xparams _params)
     {
         double lambdav;
     
@@ -10570,7 +10817,7 @@ public partial class alglib
         rbf.rbfsetalgohierarchical(s.innerobj, rbase, nlayers, lambdans, null);
     }
     
-    public static void rbfsetalgohierarchical(rbfmodel s, double rbase, int nlayers, double lambdans, alglib.xparams _params)
+    public static void rbfsetalgohierarchical(rbfmodel s, double rbase, int nlayers, double lambdans, xparams _params)
     {
     
         rbf.rbfsetalgohierarchical(s.innerobj, rbase, nlayers, lambdans, _params);
@@ -10597,7 +10844,7 @@ public partial class alglib
         rbf.rbfsetlinterm(s.innerobj, null);
     }
     
-    public static void rbfsetlinterm(rbfmodel s, alglib.xparams _params)
+    public static void rbfsetlinterm(rbfmodel s, xparams _params)
     {
     
         rbf.rbfsetlinterm(s.innerobj, _params);
@@ -10624,7 +10871,7 @@ public partial class alglib
         rbf.rbfsetconstterm(s.innerobj, null);
     }
     
-    public static void rbfsetconstterm(rbfmodel s, alglib.xparams _params)
+    public static void rbfsetconstterm(rbfmodel s, xparams _params)
     {
     
         rbf.rbfsetconstterm(s.innerobj, _params);
@@ -10651,7 +10898,7 @@ public partial class alglib
         rbf.rbfsetzeroterm(s.innerobj, null);
     }
     
-    public static void rbfsetzeroterm(rbfmodel s, alglib.xparams _params)
+    public static void rbfsetzeroterm(rbfmodel s, xparams _params)
     {
     
         rbf.rbfsetzeroterm(s.innerobj, _params);
@@ -10678,7 +10925,7 @@ public partial class alglib
         rbf.rbfsetv2bf(s.innerobj, bf, null);
     }
     
-    public static void rbfsetv2bf(rbfmodel s, int bf, alglib.xparams _params)
+    public static void rbfsetv2bf(rbfmodel s, int bf, xparams _params)
     {
     
         rbf.rbfsetv2bf(s.innerobj, bf, _params);
@@ -10704,7 +10951,7 @@ public partial class alglib
         rbf.rbfsetv2its(s.innerobj, maxits, null);
     }
     
-    public static void rbfsetv2its(rbfmodel s, int maxits, alglib.xparams _params)
+    public static void rbfsetv2its(rbfmodel s, int maxits, xparams _params)
     {
     
         rbf.rbfsetv2its(s.innerobj, maxits, _params);
@@ -10740,7 +10987,7 @@ public partial class alglib
         rbf.rbfsetv2supportr(s.innerobj, r, null);
     }
     
-    public static void rbfsetv2supportr(rbfmodel s, double r, alglib.xparams _params)
+    public static void rbfsetv2supportr(rbfmodel s, double r, xparams _params)
     {
     
         rbf.rbfsetv2supportr(s.innerobj, r, _params);
@@ -10801,7 +11048,7 @@ public partial class alglib
         rbf.rbfbuildmodel(s.innerobj, rep.innerobj, null);
     }
     
-    public static void rbfbuildmodel(rbfmodel s, out rbfreport rep, alglib.xparams _params)
+    public static void rbfbuildmodel(rbfmodel s, out rbfreport rep, xparams _params)
     {
         rep = new rbfreport();
         rbf.rbfbuildmodel(s.innerobj, rep.innerobj, _params);
@@ -10844,7 +11091,7 @@ public partial class alglib
         return rbf.rbfcalc1(s.innerobj, x0, null);
     }
     
-    public static double rbfcalc1(rbfmodel s, double x0, alglib.xparams _params)
+    public static double rbfcalc1(rbfmodel s, double x0, xparams _params)
     {
     
         return rbf.rbfcalc1(s.innerobj, x0, _params);
@@ -10887,7 +11134,7 @@ public partial class alglib
         return rbf.rbfcalc2(s.innerobj, x0, x1, null);
     }
     
-    public static double rbfcalc2(rbfmodel s, double x0, double x1, alglib.xparams _params)
+    public static double rbfcalc2(rbfmodel s, double x0, double x1, xparams _params)
     {
     
         return rbf.rbfcalc2(s.innerobj, x0, x1, _params);
@@ -10931,7 +11178,7 @@ public partial class alglib
         return rbf.rbfcalc3(s.innerobj, x0, x1, x2, null);
     }
     
-    public static double rbfcalc3(rbfmodel s, double x0, double x1, double x2, alglib.xparams _params)
+    public static double rbfcalc3(rbfmodel s, double x0, double x1, double x2, xparams _params)
     {
     
         return rbf.rbfcalc3(s.innerobj, x0, x1, x2, _params);
@@ -10971,7 +11218,7 @@ public partial class alglib
         rbf.rbfcalc(s.innerobj, x, ref y, null);
     }
     
-    public static void rbfcalc(rbfmodel s, double[] x, out double[] y, alglib.xparams _params)
+    public static void rbfcalc(rbfmodel s, double[] x, out double[] y, xparams _params)
     {
         y = new double[0];
         rbf.rbfcalc(s.innerobj, x, ref y, _params);
@@ -11006,7 +11253,7 @@ public partial class alglib
         rbf.rbfcalcbuf(s.innerobj, x, ref y, null);
     }
     
-    public static void rbfcalcbuf(rbfmodel s, double[] x, ref double[] y, alglib.xparams _params)
+    public static void rbfcalcbuf(rbfmodel s, double[] x, ref double[] y, xparams _params)
     {
     
         rbf.rbfcalcbuf(s.innerobj, x, ref y, _params);
@@ -11043,7 +11290,7 @@ public partial class alglib
         rbf.rbftscalcbuf(s.innerobj, buf.innerobj, x, ref y, null);
     }
     
-    public static void rbftscalcbuf(rbfmodel s, rbfcalcbuffer buf, double[] x, ref double[] y, alglib.xparams _params)
+    public static void rbftscalcbuf(rbfmodel s, rbfcalcbuffer buf, double[] x, ref double[] y, xparams _params)
     {
     
         rbf.rbftscalcbuf(s.innerobj, buf.innerobj, x, ref y, _params);
@@ -11063,7 +11310,7 @@ public partial class alglib
         rbf.rbfgridcalc2(s.innerobj, x0, n0, x1, n1, ref y, null);
     }
     
-    public static void rbfgridcalc2(rbfmodel s, double[] x0, int n0, double[] x1, int n1, out double[,] y, alglib.xparams _params)
+    public static void rbfgridcalc2(rbfmodel s, double[] x0, int n0, double[] x1, int n1, out double[,] y, xparams _params)
     {
         y = new double[0,0];
         rbf.rbfgridcalc2(s.innerobj, x0, n0, x1, n1, ref y, _params);
@@ -11140,7 +11387,7 @@ public partial class alglib
         rbf.rbfgridcalc2v(s.innerobj, x0, n0, x1, n1, ref y, null);
     }
     
-    public static void rbfgridcalc2v(rbfmodel s, double[] x0, int n0, double[] x1, int n1, out double[] y, alglib.xparams _params)
+    public static void rbfgridcalc2v(rbfmodel s, double[] x0, int n0, double[] x1, int n1, out double[] y, xparams _params)
     {
         y = new double[0];
         rbf.rbfgridcalc2v(s.innerobj, x0, n0, x1, n1, ref y, _params);
@@ -11227,7 +11474,7 @@ public partial class alglib
         rbf.rbfgridcalc2vsubset(s.innerobj, x0, n0, x1, n1, flagy, ref y, null);
     }
     
-    public static void rbfgridcalc2vsubset(rbfmodel s, double[] x0, int n0, double[] x1, int n1, bool[] flagy, out double[] y, alglib.xparams _params)
+    public static void rbfgridcalc2vsubset(rbfmodel s, double[] x0, int n0, double[] x1, int n1, bool[] flagy, out double[] y, xparams _params)
     {
         y = new double[0];
         rbf.rbfgridcalc2vsubset(s.innerobj, x0, n0, x1, n1, flagy, ref y, _params);
@@ -11310,7 +11557,7 @@ public partial class alglib
         rbf.rbfgridcalc3v(s.innerobj, x0, n0, x1, n1, x2, n2, ref y, null);
     }
     
-    public static void rbfgridcalc3v(rbfmodel s, double[] x0, int n0, double[] x1, int n1, double[] x2, int n2, out double[] y, alglib.xparams _params)
+    public static void rbfgridcalc3v(rbfmodel s, double[] x0, int n0, double[] x1, int n1, double[] x2, int n2, out double[] y, xparams _params)
     {
         y = new double[0];
         rbf.rbfgridcalc3v(s.innerobj, x0, n0, x1, n1, x2, n2, ref y, _params);
@@ -11402,7 +11649,7 @@ public partial class alglib
         rbf.rbfgridcalc3vsubset(s.innerobj, x0, n0, x1, n1, x2, n2, flagy, ref y, null);
     }
     
-    public static void rbfgridcalc3vsubset(rbfmodel s, double[] x0, int n0, double[] x1, int n1, double[] x2, int n2, bool[] flagy, out double[] y, alglib.xparams _params)
+    public static void rbfgridcalc3vsubset(rbfmodel s, double[] x0, int n0, double[] x1, int n1, double[] x2, int n2, bool[] flagy, out double[] y, xparams _params)
     {
         y = new double[0];
         rbf.rbfgridcalc3vsubset(s.innerobj, x0, n0, x1, n1, x2, n2, flagy, ref y, _params);
@@ -11452,7 +11699,7 @@ public partial class alglib
         rbf.rbfunpack(s.innerobj, ref nx, ref ny, ref xwr, ref nc, ref v, ref modelversion, null);
     }
     
-    public static void rbfunpack(rbfmodel s, out int nx, out int ny, out double[,] xwr, out int nc, out double[,] v, out int modelversion, alglib.xparams _params)
+    public static void rbfunpack(rbfmodel s, out int nx, out int ny, out double[,] xwr, out int nc, out double[,] v, out int modelversion, xparams _params)
     {
         nx = 0;
         ny = 0;
@@ -11484,7 +11731,7 @@ public partial class alglib
         return rbf.rbfgetmodelversion(s.innerobj, null);
     }
     
-    public static int rbfgetmodelversion(rbfmodel s, alglib.xparams _params)
+    public static int rbfgetmodelversion(rbfmodel s, xparams _params)
     {
     
         return rbf.rbfgetmodelversion(s.innerobj, _params);
@@ -11514,7 +11761,7 @@ public partial class alglib
         return rbf.rbfpeekprogress(s.innerobj, null);
     }
     
-    public static double rbfpeekprogress(rbfmodel s, alglib.xparams _params)
+    public static double rbfpeekprogress(rbfmodel s, xparams _params)
     {
     
         return rbf.rbfpeekprogress(s.innerobj, _params);
@@ -11549,7 +11796,7 @@ public partial class alglib
         rbf.rbfrequesttermination(s.innerobj, null);
     }
     
-    public static void rbfrequesttermination(rbfmodel s, alglib.xparams _params)
+    public static void rbfrequesttermination(rbfmodel s, xparams _params)
     {
     
         rbf.rbfrequesttermination(s.innerobj, _params);
@@ -11580,14 +11827,16 @@ public partial class alglib
                 y = new double[0];
                 w = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                barycentricinterpolant _result = new barycentricinterpolant();
-                _result.n = n;
-                _result.sy = sy;
-                _result.x = (double[])x.Clone();
-                _result.y = (double[])y.Clone();
-                _result.w = (double[])w.Clone();
+                var _result = new barycentricinterpolant
+                {
+                    n = n,
+                    sy = sy,
+                    x = (double[])x.Clone(),
+                    y = (double[])y.Clone(),
+                    w = (double[])w.Clone()
+                };
                 return _result;
             }
         };
@@ -11613,23 +11862,23 @@ public partial class alglib
         *************************************************************************/
         public static double barycentriccalc(barycentricinterpolant b,
             double t,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double s1 = 0;
             double s2 = 0;
             double s = 0;
             double v = 0;
-            int i = 0;
+            var i = 0;
 
-            alglib.ap.assert(!Double.IsInfinity(t), "BarycentricCalc: infinite T!");
+            alglib.ap.assert(!double.IsInfinity(t), "BarycentricCalc: infinite T!");
             
             //
             // special case: NaN
             //
-            if( Double.IsNaN(t) )
+            if(double.IsNaN(t) )
             {
-                result = Double.NaN;
+                result = double.NaN;
                 return result;
             }
             
@@ -11668,9 +11917,9 @@ public partial class alglib
             for(i=0; i<=b.n-1; i++)
             {
                 v = s/(t-b.x[i]);
-                v = v*b.w[i];
-                s1 = s1+v*b.y[i];
-                s2 = s2+v;
+                v *= b.w[i];
+                s1 += (v *b.y[i]);
+                s2 += v;
             }
             result = b.sy*s1/s2;
             return result;
@@ -11703,12 +11952,12 @@ public partial class alglib
             double t,
             ref double f,
             ref double df,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
             double vv = 0;
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
             double n0 = 0;
             double n1 = 0;
             double d0 = 0;
@@ -11728,15 +11977,15 @@ public partial class alglib
             f = 0;
             df = 0;
 
-            alglib.ap.assert(!Double.IsInfinity(t), "BarycentricDiff1: infinite T!");
+            alglib.ap.assert(!double.IsInfinity(t), "BarycentricDiff1: infinite T!");
             
             //
             // special case: NaN
             //
-            if( Double.IsNaN(t) )
+            if(double.IsNaN(t) )
             {
-                f = Double.NaN;
-                df = Double.NaN;
+                f = double.NaN;
+                df = double.NaN;
                 return;
             }
             
@@ -11785,11 +12034,11 @@ public partial class alglib
             xoffs1 = -(xmin/(xmax-xmin))+1;
             xscale2 = 2;
             xoffs2 = -3;
-            t = t*xscale1+xoffs1;
-            t = t*xscale2+xoffs2;
+            t = (t * xscale1) + xoffs1;
+            t = (t * xscale2) + xoffs2;
             xk = b.x[k];
-            xk = xk*xscale1+xoffs1;
-            xk = xk*xscale2+xoffs2;
+            xk = (xk * xscale1) + xoffs1;
+            xk = (xk * xscale2) + xoffs2;
             v = t-xk;
             n0 = 0;
             n1 = 0;
@@ -11799,8 +12048,8 @@ public partial class alglib
             for(i=0; i<=b.n-1; i++)
             {
                 xi = b.x[i];
-                xi = xi*xscale1+xoffs1;
-                xi = xi*xscale2+xoffs2;
+                xi = (xi * xscale1) + xoffs1;
+                xi = (xi * xscale2) + xoffs2;
                 alglib.ap.assert((double)(xi)>(double)(xprev), "BarycentricDiff1: points are too close!");
                 xprev = xi;
                 if( i!=k )
@@ -11815,14 +12064,14 @@ public partial class alglib
                     s1 = 0;
                 }
                 vv = b.w[i]*b.y[i];
-                n0 = n0+s0*vv;
-                n1 = n1+s1*vv;
+                n0 += (s0 * vv);
+                n1 += (s1 * vv);
                 vv = b.w[i];
-                d0 = d0+s0*vv;
-                d1 = d1+s1*vv;
+                d0 += (s0 * vv);
+                d1 += (s1 * vv);
             }
             f = b.sy*n0/d0;
-            df = (n1*d0-n0*d1)/math.sqr(d0);
+            df = ((n1 * d0) - n0*d1)/math.sqr(d0);
             if( (double)(df)!=(double)(0) )
             {
                 df = Math.Sign(df)*Math.Exp(Math.Log(Math.Abs(df))+Math.Log(b.sy)+Math.Log(xscale1)+Math.Log(xscale2));
@@ -11856,12 +12105,12 @@ public partial class alglib
             ref double f,
             ref double df,
             ref double d2f,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
             double vv = 0;
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
             double n0 = 0;
             double n1 = 0;
             double n2 = 0;
@@ -11878,16 +12127,16 @@ public partial class alglib
             df = 0;
             d2f = 0;
 
-            alglib.ap.assert(!Double.IsInfinity(t), "BarycentricDiff1: infinite T!");
+            alglib.ap.assert(!double.IsInfinity(t), "BarycentricDiff1: infinite T!");
             
             //
             // special case: NaN
             //
-            if( Double.IsNaN(t) )
+            if(double.IsNaN(t) )
             {
-                f = Double.NaN;
-                df = Double.NaN;
-                d2f = Double.NaN;
+                f = double.NaN;
+                df = double.NaN;
+                d2f = double.NaN;
                 return;
             }
             
@@ -11958,17 +12207,17 @@ public partial class alglib
                     s2 = 0;
                 }
                 vv = b.w[i]*b.y[i];
-                n0 = n0+s0*vv;
-                n1 = n1+s1*vv;
-                n2 = n2+s2*vv;
+                n0 += (s0 * vv);
+                n1 += (s1 * vv);
+                n2 += (s2 * vv);
                 vv = b.w[i];
-                d0 = d0+s0*vv;
-                d1 = d1+s1*vv;
-                d2 = d2+s2*vv;
+                d0 += (s0 * vv);
+                d1 += (s1 * vv);
+                d2 += (s2 * vv);
             }
             f = b.sy*n0/d0;
-            df = b.sy*(n1*d0-n0*d1)/math.sqr(d0);
-            d2f = b.sy*((n2*d0-n0*d2)*math.sqr(d0)-(n1*d0-n0*d1)*2*d0*d1)/math.sqr(math.sqr(d0));
+            df = b.sy*((n1 * d0) - n0*d1)/math.sqr(d0);
+            d2f = b.sy*((((n2 * d0) - (n0 * d2)) *math.sqr(d0)) - (((n1 * d0) - (n0 * d1)) *2*d0*d1)) /math.sqr(math.sqr(d0));
         }
 
 
@@ -11988,10 +12237,10 @@ public partial class alglib
         public static void barycentriclintransx(barycentricinterpolant b,
             double ca,
             double cb,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
 
             
@@ -12061,15 +12310,15 @@ public partial class alglib
         public static void barycentriclintransy(barycentricinterpolant b,
             double ca,
             double cb,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             for(i=0; i<=b.n-1; i++)
             {
-                b.y[i] = ca*b.sy*b.y[i]+cb;
+                b.y[i] = (ca *b.sy*b.y[i]) + cb;
             }
             b.sy = 0;
             for(i=0; i<=b.n-1; i++)
@@ -12107,10 +12356,10 @@ public partial class alglib
             ref double[] x,
             ref double[] y,
             ref double[] w,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             n = 0;
             x = new double[0];
@@ -12159,9 +12408,9 @@ public partial class alglib
             double[] w,
             int n,
             barycentricinterpolant b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>0, "BarycentricBuildXYW: incorrect N!");
             
@@ -12224,19 +12473,19 @@ public partial class alglib
             int n,
             int d,
             barycentricinterpolant b,
-            alglib.xparams _params)
+            xparams _params)
         {
             double s0 = 0;
             double s = 0;
             double v = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int[] perm = new int[0];
-            double[] wtemp = new double[0];
-            double[] sortrbuf = new double[0];
-            double[] sortrbuf2 = new double[0];
-            int i_ = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var perm = new int[0];
+            var wtemp = new double[0];
+            var sortrbuf = new double[0];
+            var sortrbuf2 = new double[0];
+            var i_ = 0;
 
             alglib.ap.assert(n>0, "BarycentricFloaterHormann: N<=0!");
             alglib.ap.assert(d>=0, "BarycentricFloaterHormann: incorrect D!");
@@ -12303,10 +12552,10 @@ public partial class alglib
                     {
                         if( j!=k )
                         {
-                            v = v/Math.Abs(b.x[k]-b.x[j]);
+                            v /= Math.Abs(b.x[k]-b.x[j]);
                         }
                     }
-                    s = s+v;
+                    s += v;
                 }
                 b.w[k] = s0*s;
                 
@@ -12337,9 +12586,9 @@ public partial class alglib
         *************************************************************************/
         public static void barycentriccopy(barycentricinterpolant b,
             barycentricinterpolant b2,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             b2.n = b.n;
             b2.sy = b.sy;
@@ -12372,15 +12621,15 @@ public partial class alglib
         Internal subroutine.
         *************************************************************************/
         private static void barycentricnormalize(barycentricinterpolant b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int[] p1 = new int[0];
-            int[] p2 = new int[0];
-            int i = 0;
-            int j = 0;
-            int j2 = 0;
+            var p1 = new int[0];
+            var p2 = new int[0];
+            var i = 0;
+            var j = 0;
+            var j2 = 0;
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             
             //
@@ -12465,16 +12714,18 @@ public partial class alglib
                 tsdist = new double[0];
                 requestbuffer = new nearestneighbor.kdtreerequestbuffer();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                idwcalcbuffer _result = new idwcalcbuffer();
-                _result.x = (double[])x.Clone();
-                _result.y = (double[])y.Clone();
-                _result.tsyw = (double[])tsyw.Clone();
-                _result.tsw = (double[])tsw.Clone();
-                _result.tsxy = (double[,])tsxy.Clone();
-                _result.tsdist = (double[])tsdist.Clone();
-                _result.requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy();
+                var _result = new idwcalcbuffer
+                {
+                    x = (double[])x.Clone(),
+                    y = (double[])y.Clone(),
+                    tsyw = (double[])tsyw.Clone(),
+                    tsw = (double[])tsw.Clone(),
+                    tsxy = (double[,])tsxy.Clone(),
+                    tsdist = (double[])tsdist.Clone(),
+                    requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy()
+                };
                 return _result;
             }
         };
@@ -12511,24 +12762,26 @@ public partial class alglib
                 shepardxy = new double[0];
                 buffer = new idwcalcbuffer();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                idwmodel _result = new idwmodel();
-                _result.nx = nx;
-                _result.ny = ny;
-                _result.globalprior = (double[])globalprior.Clone();
-                _result.algotype = algotype;
-                _result.nlayers = nlayers;
-                _result.r0 = r0;
-                _result.rdecay = rdecay;
-                _result.lambda0 = lambda0;
-                _result.lambdalast = lambdalast;
-                _result.lambdadecay = lambdadecay;
-                _result.shepardp = shepardp;
-                _result.tree = (nearestneighbor.kdtree)tree.make_copy();
-                _result.npoints = npoints;
-                _result.shepardxy = (double[])shepardxy.Clone();
-                _result.buffer = (idwcalcbuffer)buffer.make_copy();
+                var _result = new idwmodel
+                {
+                    nx = nx,
+                    ny = ny,
+                    globalprior = (double[])globalprior.Clone(),
+                    algotype = algotype,
+                    nlayers = nlayers,
+                    r0 = r0,
+                    rdecay = rdecay,
+                    lambda0 = lambda0,
+                    lambdalast = lambdalast,
+                    lambdadecay = lambdadecay,
+                    shepardp = shepardp,
+                    tree = (nearestneighbor.kdtree)tree.make_copy(),
+                    npoints = npoints,
+                    shepardxy = (double[])shepardxy.Clone(),
+                    buffer = (idwcalcbuffer)buffer.make_copy()
+                };
                 return _result;
             }
         };
@@ -12580,32 +12833,34 @@ public partial class alglib
                 tmptree = new nearestneighbor.kdtree();
                 tmpmean = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                idwbuilder _result = new idwbuilder();
-                _result.priortermtype = priortermtype;
-                _result.priortermval = (double[])priortermval.Clone();
-                _result.algotype = algotype;
-                _result.nlayers = nlayers;
-                _result.r0 = r0;
-                _result.rdecay = rdecay;
-                _result.lambda0 = lambda0;
-                _result.lambdalast = lambdalast;
-                _result.lambdadecay = lambdadecay;
-                _result.shepardp = shepardp;
-                _result.xy = (double[])xy.Clone();
-                _result.npoints = npoints;
-                _result.nx = nx;
-                _result.ny = ny;
-                _result.tmpxy = (double[,])tmpxy.Clone();
-                _result.tmplayers = (double[,])tmplayers.Clone();
-                _result.tmptags = (int[])tmptags.Clone();
-                _result.tmpdist = (double[])tmpdist.Clone();
-                _result.tmpx = (double[])tmpx.Clone();
-                _result.tmpwy = (double[])tmpwy.Clone();
-                _result.tmpw = (double[])tmpw.Clone();
-                _result.tmptree = (nearestneighbor.kdtree)tmptree.make_copy();
-                _result.tmpmean = (double[])tmpmean.Clone();
+                var _result = new idwbuilder
+                {
+                    priortermtype = priortermtype,
+                    priortermval = (double[])priortermval.Clone(),
+                    algotype = algotype,
+                    nlayers = nlayers,
+                    r0 = r0,
+                    rdecay = rdecay,
+                    lambda0 = lambda0,
+                    lambdalast = lambdalast,
+                    lambdadecay = lambdadecay,
+                    shepardp = shepardp,
+                    xy = (double[])xy.Clone(),
+                    npoints = npoints,
+                    nx = nx,
+                    ny = ny,
+                    tmpxy = (double[,])tmpxy.Clone(),
+                    tmplayers = (double[,])tmplayers.Clone(),
+                    tmptags = (int[])tmptags.Clone(),
+                    tmpdist = (double[])tmpdist.Clone(),
+                    tmpx = (double[])tmpx.Clone(),
+                    tmpwy = (double[])tmpwy.Clone(),
+                    tmpw = (double[])tmpw.Clone(),
+                    tmptree = (nearestneighbor.kdtree)tmptree.make_copy(),
+                    tmpmean = (double[])tmpmean.Clone()
+                };
                 return _result;
             }
         };
@@ -12631,13 +12886,15 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                idwreport _result = new idwreport();
-                _result.rmserror = rmserror;
-                _result.avgerror = avgerror;
-                _result.maxerror = maxerror;
-                _result.r2 = r2;
+                var _result = new idwreport
+                {
+                    rmserror = rmserror,
+                    avgerror = avgerror,
+                    maxerror = maxerror,
+                    r2 = r2
+                };
                 return _result;
             }
         };
@@ -12693,7 +12950,7 @@ public partial class alglib
         *************************************************************************/
         public static void idwcreatecalcbuffer(idwmodel s,
             idwcalcbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(s.nx>=1, "IDWCreateCalcBuffer: integrity check failed");
             alglib.ap.assert(s.ny>=1, "IDWCreateCalcBuffer: integrity check failed");
@@ -12751,7 +13008,7 @@ public partial class alglib
         public static void idwbuildercreate(int nx,
             int ny,
             idwbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(nx>=1, "IDWBuilderCreate: NX<=0");
             alglib.ap.assert(ny>=1, "IDWBuilderCreate: NY<=0");
@@ -12809,7 +13066,7 @@ public partial class alglib
         *************************************************************************/
         public static void idwbuildersetnlayers(idwbuilder state,
             int nlayers,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(nlayers>=1, "IDWBuilderSetNLayers: N<1");
             state.nlayers = nlayers;
@@ -12837,11 +13094,11 @@ public partial class alglib
         public static void idwbuildersetpoints(idwbuilder state,
             double[,] xy,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int ew = 0;
+            var i = 0;
+            var j = 0;
+            var ew = 0;
 
             alglib.ap.assert(n>=0, "IDWBuilderSetPoints: N<0");
             alglib.ap.assert(alglib.ap.rows(xy)>=n, "IDWBuilderSetPoints: Rows(XY)<N");
@@ -12854,7 +13111,7 @@ public partial class alglib
             {
                 for(j=0; j<=ew-1; j++)
                 {
-                    state.xy[i*ew+j] = xy[i,j];
+                    state.xy[(i * ew) + j] = xy[i,j];
                 }
             }
         }
@@ -12943,7 +13200,7 @@ public partial class alglib
         *************************************************************************/
         public static void idwbuildersetalgomstab(idwbuilder state,
             double srad,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(srad), "IDWBuilderSetAlgoMSTAB: SRad is not finite");
             alglib.ap.assert((double)(srad)>(double)(0), "IDWBuilderSetAlgoMSTAB: SRad<=0");
@@ -12984,7 +13241,7 @@ public partial class alglib
         *************************************************************************/
         public static void idwbuildersetalgotextbookshepard(idwbuilder state,
             double p,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(p), "IDWBuilderSetAlgoShepard: P is not finite");
             alglib.ap.assert((double)(p)>(double)(0), "IDWBuilderSetAlgoShepard: P<=0");
@@ -13017,7 +13274,7 @@ public partial class alglib
         *************************************************************************/
         public static void idwbuildersetalgotextbookmodshepard(idwbuilder state,
             double r,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(r), "IDWBuilderSetAlgoModShepard: R is not finite");
             alglib.ap.assert((double)(r)>(double)(0), "IDWBuilderSetAlgoModShepard: R<=0");
@@ -13046,9 +13303,9 @@ public partial class alglib
         *************************************************************************/
         public static void idwbuildersetuserterm(idwbuilder state,
             double v,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
 
             alglib.ap.assert(math.isfinite(v), "IDWBuilderSetUserTerm: infinite/NAN value passed");
             state.priortermtype = 0;
@@ -13071,7 +13328,7 @@ public partial class alglib
              Copyright 29.10.2018 by Bochkanov Sergey
         *************************************************************************/
         public static void idwbuildersetconstterm(idwbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.priortermtype = 2;
         }
@@ -13087,7 +13344,7 @@ public partial class alglib
              Copyright 29.10.2018 by Bochkanov Sergey
         *************************************************************************/
         public static void idwbuildersetzeroterm(idwbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.priortermtype = 3;
         }
@@ -13113,7 +13370,7 @@ public partial class alglib
         *************************************************************************/
         public static double idwcalc1(idwmodel s,
             double x0,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -13148,7 +13405,7 @@ public partial class alglib
         public static double idwcalc2(idwmodel s,
             double x0,
             double x1,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -13186,7 +13443,7 @@ public partial class alglib
             double x0,
             double x1,
             double x2,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -13234,7 +13491,7 @@ public partial class alglib
         public static void idwcalc(idwmodel s,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
             y = new double[0];
 
@@ -13269,7 +13526,7 @@ public partial class alglib
         public static void idwcalcbuf(idwmodel s,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
             idwtscalcbuf(s, s.buffer, x, ref y, _params);
         }
@@ -13303,16 +13560,16 @@ public partial class alglib
             idwcalcbuffer buf,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int ew = 0;
-            int k = 0;
-            int layeridx = 0;
-            int nx = 0;
-            int ny = 0;
-            int npoints = 0;
+            var i = 0;
+            var j = 0;
+            var ew = 0;
+            var k = 0;
+            var layeridx = 0;
+            var nx = 0;
+            var ny = 0;
+            var npoints = 0;
             double v = 0;
             double vv = 0;
             double f = 0;
@@ -13323,7 +13580,7 @@ public partial class alglib
             double lambdadecay = 0;
             double invrdecay = 0;
             double invr = 0;
-            bool fastcalcpossible = new bool();
+            var fastcalcpossible = new bool();
             double wf0 = 0;
             double ws0 = 0;
             double wf1 = 0;
@@ -13386,8 +13643,8 @@ public partial class alglib
                     v = 0;
                     for(j=0; j<=nx-1; j++)
                     {
-                        vv = s.shepardxy[i*ew+j]-x[j];
-                        v = v+vv*vv;
+                        vv = s.shepardxy[(i * ew) + j]-x[j];
+                        v += (vv * vv);
                     }
                     
                     //
@@ -13401,13 +13658,13 @@ public partial class alglib
                     //
                     for(j=0; j<=ny-1; j++)
                     {
-                        y[j] = y[j]+v*s.shepardxy[i*ew+nx+j];
+                        y[j] = y[j]+ (v *s.shepardxy[(i * ew) + nx+j]);
                         buf.tsyw[j] = buf.tsyw[j]+v;
                     }
                 }
                 for(j=0; j<=ny-1; j++)
                 {
-                    y[j] = y[j]/buf.tsyw[j]+s.globalprior[j];
+                    y[j] = (y[j]/buf.tsyw[j]) + s.globalprior[j];
                 }
                 return;
             }
@@ -13430,17 +13687,17 @@ public partial class alglib
                 for(i=0; i<=k-1; i++)
                 {
                     v = buf.tsdist[i];
-                    v = (r-v)/(r*v+eps);
-                    v = v*v;
+                    v = (r-v)/((r * v) + eps);
+                    v *= v;
                     for(j=0; j<=ny-1; j++)
                     {
-                        y[j] = y[j]+v*buf.tsxy[i,nx+j];
+                        y[j] = y[j]+ (v *buf.tsxy[i,nx+j]);
                         buf.tsyw[j] = buf.tsyw[j]+v;
                     }
                 }
                 for(j=0; j<=ny-1; j++)
                 {
-                    y[j] = y[j]/buf.tsyw[j]+s.globalprior[j];
+                    y[j] = (y[j]/buf.tsyw[j]) + s.globalprior[j];
                 }
                 return;
             }
@@ -13478,7 +13735,7 @@ public partial class alglib
                     //
                     // Setup variables for generic evaluation path
                     //
-                    for(j=0; j<=ny*s.nlayers-1; j++)
+                    for(j=0; j<= (ny *s.nlayers) - 1; j++)
                     {
                         buf.tsyw[j] = 0;
                     }
@@ -13503,9 +13760,9 @@ public partial class alglib
                         v = vv*vv;
                         v = (1-v)*(1-v)/(v+lambdacur);
                         f = buf.tsxy[i,nx+0];
-                        wf0 = wf0+v*f;
-                        ws0 = ws0+v;
-                        vv = vv*invrdecay;
+                        wf0 += (v * f);
+                        ws0 += v;
+                        vv *= invrdecay;
                         if( vv>=1.0 )
                         {
                             continue;
@@ -13513,9 +13770,9 @@ public partial class alglib
                         v = vv*vv;
                         v = (1-v)*(1-v)/(v+lambdacur);
                         f = buf.tsxy[i,nx+1];
-                        wf1 = wf1+v*f;
-                        ws1 = ws1+v;
-                        vv = vv*invrdecay;
+                        wf1 += (v * f);
+                        ws1 += v;
+                        vv *= invrdecay;
                         if( vv>=1.0 )
                         {
                             continue;
@@ -13529,9 +13786,9 @@ public partial class alglib
                             v = vv*vv;
                             v = (1-v)*(1-v)/(v+lambdacur);
                             f = buf.tsxy[i,nx+layeridx];
-                            buf.tsyw[layeridx] = buf.tsyw[layeridx]+v*f;
+                            buf.tsyw[layeridx] = buf.tsyw[layeridx]+ (v * f);
                             buf.tsw[layeridx] = buf.tsw[layeridx]+v;
-                            vv = vv*invrdecay;
+                            vv *= invrdecay;
                             if( vv>=1.0 )
                             {
                                 break;
@@ -13558,12 +13815,12 @@ public partial class alglib
                             v = (1-v)*(1-v)/(v+lambdacur);
                             for(j=0; j<=ny-1; j++)
                             {
-                                f = buf.tsxy[i,nx+layeridx*ny+j];
-                                buf.tsyw[layeridx*ny+j] = buf.tsyw[layeridx*ny+j]+v*f;
+                                f = buf.tsxy[i,nx+ (layeridx * ny) + j];
+                                buf.tsyw[(layeridx * ny) + j] = buf.tsyw[(layeridx * ny) + j]+ (v * f);
                             }
                             buf.tsw[layeridx] = buf.tsw[layeridx]+v;
-                            lambdacur = lambdacur*lambdadecay;
-                            vv = vv*invrdecay;
+                            lambdacur *= lambdadecay;
+                            vv *= invrdecay;
                         }
                     }
                 }
@@ -13586,7 +13843,7 @@ public partial class alglib
                 {
                     for(j=0; j<=ny-1; j++)
                     {
-                        y[j] = y[j]+buf.tsyw[layeridx*ny+j]/buf.tsw[layeridx];
+                        y[j] = y[j]+ (buf.tsyw[(layeridx * ny) + j]/buf.tsw[layeridx]);
                     }
                 }
                 return;
@@ -13622,19 +13879,19 @@ public partial class alglib
         public static void idwfit(idwbuilder state,
             idwmodel model,
             idwreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i0 = 0;
-            int j = 0;
-            int k = 0;
-            int layeridx = 0;
-            int srcidx = 0;
+            var i = 0;
+            var i0 = 0;
+            var j = 0;
+            var k = 0;
+            var layeridx = 0;
+            var srcidx = 0;
             double v = 0;
             double vv = 0;
-            int npoints = 0;
-            int nx = 0;
-            int ny = 0;
+            var npoints = 0;
+            var nx = 0;
+            var ny = 0;
             double rcur = 0;
             double lambdacur = 0;
             double rss = 0;
@@ -13691,7 +13948,7 @@ public partial class alglib
             {
                 for(j=0; j<=ny-1; j++)
                 {
-                    state.tmpmean[j] = state.tmpmean[j]+state.xy[i*(nx+ny)+nx+j];
+                    state.tmpmean[j] = state.tmpmean[j]+state.xy[(i *(nx+ny)) + nx+j];
                 }
             }
             for(j=0; j<=ny-1; j++)
@@ -13768,11 +14025,11 @@ public partial class alglib
                 {
                     for(j=0; j<=nx-1; j++)
                     {
-                        model.shepardxy[i*(nx+ny)+j] = state.xy[i*(nx+ny)+j];
+                        model.shepardxy[(i *(nx+ny)) + j] = state.xy[(i *(nx+ny)) + j];
                     }
                     for(j=0; j<=ny-1; j++)
                     {
-                        model.shepardxy[i*(nx+ny)+nx+j] = state.xy[i*(nx+ny)+nx+j]-model.globalprior[j];
+                        model.shepardxy[(i *(nx+ny)) + nx+j] = state.xy[(i *(nx+ny)) + nx+j]-model.globalprior[j];
                     }
                 }
                 model.npoints = npoints;
@@ -13814,11 +14071,11 @@ public partial class alglib
                 {
                     for(j=0; j<=nx-1; j++)
                     {
-                        state.tmpxy[i,j] = state.xy[i*(nx+ny)+j];
+                        state.tmpxy[i,j] = state.xy[(i *(nx+ny)) + j];
                     }
                     for(j=0; j<=ny-1; j++)
                     {
-                        state.tmpxy[i,nx+j] = state.xy[i*(nx+ny)+nx+j]-model.globalprior[j];
+                        state.tmpxy[i,nx+j] = state.xy[(i *(nx+ny)) + nx+j]-model.globalprior[j];
                     }
                 }
                 nearestneighbor.kdtreebuild(state.tmpxy, npoints, nx, ny, 2, model.tree, _params);
@@ -13858,20 +14115,20 @@ public partial class alglib
                 // prepare input residuals for the first layer of the model
                 //
                 apserv.rmatrixsetlengthatleast(ref state.tmpxy, npoints, nx, _params);
-                apserv.rmatrixsetlengthatleast(ref state.tmplayers, npoints, nx+ny*(state.nlayers+1), _params);
+                apserv.rmatrixsetlengthatleast(ref state.tmplayers, npoints, nx+ (ny *(state.nlayers+1)), _params);
                 apserv.ivectorsetlengthatleast(ref state.tmptags, npoints, _params);
                 for(i=0; i<=npoints-1; i++)
                 {
                     for(j=0; j<=nx-1; j++)
                     {
-                        v = state.xy[i*(nx+ny)+j];
+                        v = state.xy[(i *(nx+ny)) + j];
                         state.tmpxy[i,j] = v;
                         state.tmplayers[i,j] = v;
                     }
                     state.tmptags[i] = i;
                     for(j=0; j<=ny-1; j++)
                     {
-                        state.tmplayers[i,nx+j] = state.xy[i*(nx+ny)+nx+j]-model.globalprior[j];
+                        state.tmplayers[i,nx+j] = state.xy[(i *(nx+ny)) + nx+j]-model.globalprior[j];
                     }
                 }
                 nearestneighbor.kdtreebuildtagged(state.tmpxy, state.tmptags, npoints, nx, 0, 2, state.tmptree, _params);
@@ -13915,19 +14172,19 @@ public partial class alglib
                         for(i0=0; i0<=k-1; i0++)
                         {
                             vv = state.tmpdist[i0]/rcur;
-                            vv = vv*vv;
+                            vv *= vv;
                             v = (1-vv)*(1-vv)/(vv+lambdacur);
                             srcidx = state.tmptags[i0];
                             for(j=0; j<=ny-1; j++)
                             {
-                                state.tmpwy[j] = state.tmpwy[j]+v*state.tmplayers[srcidx,nx+layeridx*ny+j];
+                                state.tmpwy[j] = state.tmpwy[j]+ (v *state.tmplayers[srcidx,nx+ (layeridx * ny) + j]);
                                 state.tmpw[j] = state.tmpw[j]+v;
                             }
                         }
                         for(j=0; j<=ny-1; j++)
                         {
-                            v = state.tmplayers[i,nx+layeridx*ny+j];
-                            state.tmplayers[i,nx+(layeridx+1)*ny+j] = v-state.tmpwy[j]/state.tmpw[j];
+                            v = state.tmplayers[i,nx+ (layeridx * ny) + j];
+                            state.tmplayers[i,nx+ ((layeridx+1)*ny) + j] = v- (state.tmpwy[j]/state.tmpw[j]);
                         }
                     }
                 }
@@ -13945,17 +14202,17 @@ public partial class alglib
                 {
                     for(j=0; j<=ny-1; j++)
                     {
-                        v = Math.Abs(state.tmplayers[i,nx+state.nlayers*ny+j]);
-                        rep.rmserror = rep.rmserror+v*v;
-                        rep.avgerror = rep.avgerror+v;
+                        v = Math.Abs(state.tmplayers[i,nx+ (state.nlayers*ny) + j]);
+                        rep.rmserror += (v * v);
+                        rep.avgerror += v;
                         rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v));
-                        rss = rss+v*v;
-                        tss = tss+math.sqr(state.xy[i*(nx+ny)+nx+j]-state.tmpmean[j]);
+                        rss += (v * v);
+                        tss += math.sqr(state.xy[(i *(nx+ny)) + nx+j]-state.tmpmean[j]);
                     }
                 }
                 rep.rmserror = Math.Sqrt(rep.rmserror/(npoints*ny));
-                rep.avgerror = rep.avgerror/(npoints*ny);
-                rep.r2 = 1.0-rss/apserv.coalesce(tss, 1.0, _params);
+                rep.avgerror /= (npoints*ny);
+                rep.r2 = 1.0- (rss /apserv.coalesce(tss, 1.0, _params));
                 
                 //
                 // Prepare internal buffer
@@ -13977,11 +14234,11 @@ public partial class alglib
           -- ALGLIB --
              Copyright 28.02.2018 by Bochkanov Sergey
         *************************************************************************/
-        public static void idwalloc(alglib.serializer s,
+        public static void idwalloc(serializer s,
             idwmodel model,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool processed = new bool();
+            var processed = new bool();
 
             
             //
@@ -14029,11 +14286,11 @@ public partial class alglib
           -- ALGLIB --
              Copyright 28.02.2018 by Bochkanov Sergey
         *************************************************************************/
-        public static void idwserialize(alglib.serializer s,
+        public static void idwserialize(serializer s,
             idwmodel model,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool processed = new bool();
+            var processed = new bool();
 
             
             //
@@ -14081,12 +14338,12 @@ public partial class alglib
           -- ALGLIB --
              Copyright 28.02.2018 by Bochkanov Sergey
         *************************************************************************/
-        public static void idwunserialize(alglib.serializer s,
+        public static void idwunserialize(serializer s,
             idwmodel model,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool processed = new bool();
-            int scode = 0;
+            var processed = new bool();
+            var scode = 0;
 
             
             //
@@ -14154,13 +14411,13 @@ public partial class alglib
         private static void errormetricsviacalc(idwbuilder state,
             idwmodel model,
             idwreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int npoints = 0;
-            int nx = 0;
-            int ny = 0;
-            int i = 0;
-            int j = 0;
+            var npoints = 0;
+            var nx = 0;
+            var ny = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
             double vv = 0;
             double rss = 0;
@@ -14186,23 +14443,23 @@ public partial class alglib
             {
                 for(j=0; j<=nx-1; j++)
                 {
-                    model.buffer.x[j] = state.xy[i*(nx+ny)+j];
+                    model.buffer.x[j] = state.xy[(i *(nx+ny)) + j];
                 }
                 idwtscalcbuf(model, model.buffer, model.buffer.x, ref model.buffer.y, _params);
                 for(j=0; j<=ny-1; j++)
                 {
-                    vv = state.xy[i*(nx+ny)+nx+j];
+                    vv = state.xy[(i *(nx+ny)) + nx+j];
                     v = Math.Abs(vv-model.buffer.y[j]);
-                    rep.rmserror = rep.rmserror+v*v;
-                    rep.avgerror = rep.avgerror+v;
+                    rep.rmserror += (v * v);
+                    rep.avgerror += v;
                     rep.maxerror = Math.Max(rep.maxerror, v);
-                    rss = rss+v*v;
-                    tss = tss+math.sqr(vv-state.tmpmean[j]);
+                    rss += (v * v);
+                    tss += math.sqr(vv-state.tmpmean[j]);
                 }
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/(npoints*ny));
-            rep.avgerror = rep.avgerror/(npoints*ny);
-            rep.r2 = 1.0-rss/apserv.coalesce(tss, 1.0, _params);
+            rep.avgerror /= (npoints*ny);
+            rep.r2 = 1.0- (rss /apserv.coalesce(tss, 1.0, _params));
         }
 
 
@@ -14242,13 +14499,13 @@ public partial class alglib
             ref double sb,
             ref double[] xoriginal,
             ref double[] yoriginal,
-            alglib.xparams _params)
+            xparams _params)
         {
             double xmin = 0;
             double xmax = 0;
-            int i = 0;
+            var i = 0;
             double mx = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             xa = 0;
             xb = 0;
@@ -14299,12 +14556,12 @@ public partial class alglib
             xb = xmax;
             for(i=0; i<=n-1; i++)
             {
-                x[i] = 2*(x[i]-0.5*(xa+xb))/(xb-xa);
+                x[i] = 2*(x[i]- (0.5 *(xa+xb))) /(xb-xa);
             }
             for(i=0; i<=k-1; i++)
             {
                 alglib.ap.assert(dc[i]>=0, "LSFitScaleXY: internal error!");
-                xc[i] = 2*(xc[i]-0.5*(xa+xb))/(xb-xa);
+                xc[i] = 2*(xc[i]- (0.5 *(xa+xb))) /(xb-xa);
                 yc[i] = yc[i]*Math.Pow(0.5*(xb-xa), dc[i]);
             }
             yoriginal = new double[n];
@@ -14315,13 +14572,13 @@ public partial class alglib
             sa = 0;
             for(i=0; i<=n-1; i++)
             {
-                sa = sa+y[i];
+                sa += y[i];
             }
-            sa = sa/n;
+            sa /= n;
             sb = 0;
             for(i=0; i<=n-1; i++)
             {
-                sb = sb+math.sqr(y[i]-sa);
+                sb += math.sqr(y[i]-sa);
             }
             sb = Math.Sqrt(sb/n)+sa;
             if( (double)(sb)==(double)(sa) )
@@ -14369,19 +14626,19 @@ public partial class alglib
             int modeltype,
             double priorval,
             ref double[,] v,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int j0 = 0;
-            int j1 = 0;
+            var i = 0;
+            var j = 0;
+            var j0 = 0;
+            var j1 = 0;
             double rj = 0;
-            double[,] araw = new double[0,0];
-            double[,] amod = new double[0,0];
-            double[,] braw = new double[0,0];
-            double[] tmp0 = new double[0];
+            var araw = new double[0,0];
+            var amod = new double[0,0];
+            var braw = new double[0,0];
+            var tmp0 = new double[0];
             double lambdareg = 0;
-            int rfsits = 0;
+            var rfsits = 0;
 
             v = new double[0,0];
 
@@ -14485,7 +14742,7 @@ public partial class alglib
                 {
                     for(j1=0; j1<=nx; j1++)
                     {
-                        araw[j0,j1] = araw[j0,j1]+tmp0[j0]*tmp0[j1];
+                        araw[j0,j1] = araw[j0,j1]+ (tmp0[j0]*tmp0[j1]);
                     }
                 }
             }
@@ -14510,11 +14767,11 @@ public partial class alglib
                         rj = xy[i,nx+j];
                         for(j0=0; j0<=nx; j0++)
                         {
-                            rj = rj-tmp0[j0]*v[j,j0];
+                            rj -= (tmp0[j0]*v[j,j0]);
                         }
                         for(j0=0; j0<=nx; j0++)
                         {
-                            braw[j0,j] = braw[j0,j]+rj*tmp0[j0];
+                            braw[j0,j] = braw[j0,j]+ (rj *tmp0[j0]);
                         }
                     }
                 }
@@ -14526,7 +14783,7 @@ public partial class alglib
                         {
                             amod[i,j] = araw[i,j];
                         }
-                        amod[i,i] = amod[i,i]+lambdareg*apserv.coalesce(amod[i,i], 1, _params);
+                        amod[i,i] = amod[i,i]+ (lambdareg *apserv.coalesce(amod[i,i], 1, _params));
                     }
                     if( trfac.spdmatrixcholesky(ref amod, nx+1, true, _params) )
                     {
@@ -14556,7 +14813,7 @@ public partial class alglib
                     rj = 0.0;
                     for(j0=0; j0<=nx; j0++)
                     {
-                        rj = rj+tmp0[j0]*v[j,j0];
+                        rj += (tmp0[j0]*v[j,j0]);
                     }
                     xy[i,nx+j] = xy[i,nx+j]-rj;
                 }
@@ -14571,20 +14828,20 @@ public partial class alglib
             int modeltype,
             double priorval,
             ref double[,] v,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int ew = 0;
+            var i = 0;
+            var j = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var ew = 0;
             double rj = 0;
-            double[,] araw = new double[0,0];
-            double[,] amod = new double[0,0];
-            double[,] braw = new double[0,0];
-            double[] tmp0 = new double[0];
+            var araw = new double[0,0];
+            var amod = new double[0,0];
+            var braw = new double[0,0];
+            var tmp0 = new double[0];
             double lambdareg = 0;
-            int rfsits = 0;
+            var rfsits = 0;
 
             v = new double[0,0];
 
@@ -14634,7 +14891,7 @@ public partial class alglib
                 {
                     for(j=0; j<=ny-1; j++)
                     {
-                        xy1[i*ew+nx+j] = xy1[i*ew+nx+j]-priorval;
+                        xy1[(i * ew) + nx+j] = xy1[(i * ew) + nx+j]-priorval;
                     }
                 }
                 return;
@@ -14645,7 +14902,7 @@ public partial class alglib
                 {
                     for(j=0; j<=ny-1; j++)
                     {
-                        v[j,nx] = v[j,nx]+xy1[i*ew+nx+j];
+                        v[j,nx] = v[j,nx]+xy1[(i * ew) + nx+j];
                     }
                 }
                 for(j=0; j<=ny-1; j++)
@@ -14656,7 +14913,7 @@ public partial class alglib
                 {
                     for(j=0; j<=ny-1; j++)
                     {
-                        xy1[i*ew+nx+j] = xy1[i*ew+nx+j]-v[j,nx];
+                        xy1[(i * ew) + nx+j] = xy1[(i * ew) + nx+j]-v[j,nx];
                     }
                 }
                 return;
@@ -14682,14 +14939,14 @@ public partial class alglib
             {
                 for(j=0; j<=nx-1; j++)
                 {
-                    tmp0[j] = xy1[i*ew+j];
+                    tmp0[j] = xy1[(i * ew) + j];
                 }
                 tmp0[nx] = 1.0;
                 for(j0=0; j0<=nx; j0++)
                 {
                     for(j1=0; j1<=nx; j1++)
                     {
-                        araw[j0,j1] = araw[j0,j1]+tmp0[j0]*tmp0[j1];
+                        araw[j0,j1] = araw[j0,j1]+ (tmp0[j0]*tmp0[j1]);
                     }
                 }
             }
@@ -14706,19 +14963,19 @@ public partial class alglib
                 {
                     for(j=0; j<=nx-1; j++)
                     {
-                        tmp0[j] = xy1[i*ew+j];
+                        tmp0[j] = xy1[(i * ew) + j];
                     }
                     tmp0[nx] = 1.0;
                     for(j=0; j<=ny-1; j++)
                     {
-                        rj = xy1[i*ew+nx+j];
+                        rj = xy1[(i * ew) + nx+j];
                         for(j0=0; j0<=nx; j0++)
                         {
-                            rj = rj-tmp0[j0]*v[j,j0];
+                            rj -= (tmp0[j0]*v[j,j0]);
                         }
                         for(j0=0; j0<=nx; j0++)
                         {
-                            braw[j0,j] = braw[j0,j]+rj*tmp0[j0];
+                            braw[j0,j] = braw[j0,j]+ (rj *tmp0[j0]);
                         }
                     }
                 }
@@ -14730,7 +14987,7 @@ public partial class alglib
                         {
                             amod[i,j] = araw[i,j];
                         }
-                        amod[i,i] = amod[i,i]+lambdareg*apserv.coalesce(amod[i,i], 1, _params);
+                        amod[i,i] = amod[i,i]+ (lambdareg *apserv.coalesce(amod[i,i], 1, _params));
                     }
                     if( trfac.spdmatrixcholesky(ref amod, nx+1, true, _params) )
                     {
@@ -14752,7 +15009,7 @@ public partial class alglib
             {
                 for(j=0; j<=nx-1; j++)
                 {
-                    tmp0[j] = xy1[i*ew+j];
+                    tmp0[j] = xy1[(i * ew) + j];
                 }
                 tmp0[nx] = 1.0;
                 for(j=0; j<=ny-1; j++)
@@ -14760,9 +15017,9 @@ public partial class alglib
                     rj = 0.0;
                     for(j0=0; j0<=nx; j0++)
                     {
-                        rj = rj+tmp0[j0]*v[j,j0];
+                        rj += (tmp0[j0]*v[j,j0]);
                     }
-                    xy1[i*ew+nx+j] = xy1[i*ew+nx+j]-rj;
+                    xy1[(i * ew) + nx+j] = xy1[(i * ew) + nx+j]-rj;
                 }
             }
         }
@@ -14799,16 +15056,16 @@ public partial class alglib
             double a,
             double b,
             ref double[] t,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
-            double[] vp = new double[0];
-            double[] vx = new double[0];
-            double[] tk = new double[0];
-            double[] tk1 = new double[0];
+            var i = 0;
+            var k = 0;
+            var vp = new double[0];
+            var vx = new double[0];
+            var tk = new double[0];
+            var tk1 = new double[0];
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             t = new double[0];
 
@@ -14825,7 +15082,7 @@ public partial class alglib
             for(i=0; i<=p.n-1; i++)
             {
                 vx[i] = Math.Cos(Math.PI*(i+0.5)/p.n);
-                vp[i] = ratint.barycentriccalc(p, 0.5*(vx[i]+1)*(b-a)+a, _params);
+                vp[i] = ratint.barycentriccalc(p, (0.5 *(vx[i]+1)*(b-a)) + a, _params);
             }
             
             //
@@ -14835,7 +15092,7 @@ public partial class alglib
             v = 0;
             for(i=0; i<=p.n-1; i++)
             {
-                v = v+vp[i];
+                v += vp[i];
             }
             t[0] = v/p.n;
             
@@ -14876,7 +15133,7 @@ public partial class alglib
                     //
                     for(i=0; i<=p.n-1; i++)
                     {
-                        v = 2*vx[i]*tk[i]-tk1[i];
+                        v = (2 *vx[i]*tk[i]) - tk1[i];
                         tk1[i] = tk[i];
                         tk[i] = v;
                     }
@@ -14910,11 +15167,11 @@ public partial class alglib
             double a,
             double b,
             ratint.barycentricinterpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
-            double[] y = new double[0];
+            var i = 0;
+            var k = 0;
+            var y = new double[0];
             double tk = 0;
             double tk1 = 0;
             double vx = 0;
@@ -14944,8 +15201,8 @@ public partial class alglib
                 tk = vx;
                 for(k=1; k<=n-1; k++)
                 {
-                    vy = vy+t[k]*tk;
-                    v = 2*vx*tk-tk1;
+                    vy += (t[k]*tk);
+                    v = (2 *vx*tk) - tk1;
                     tk1 = tk;
                     tk = v;
                 }
@@ -15003,27 +15260,27 @@ public partial class alglib
             double c,
             double s,
             ref double[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
             double e = 0;
             double d = 0;
-            double[] vp = new double[0];
-            double[] vx = new double[0];
-            double[] tk = new double[0];
-            double[] tk1 = new double[0];
-            double[] t = new double[0];
+            var vp = new double[0];
+            var vx = new double[0];
+            var tk = new double[0];
+            var tk1 = new double[0];
+            var t = new double[0];
             double v = 0;
             double c0 = 0;
             double s0 = 0;
             double va = 0;
             double vb = 0;
-            double[] vai = new double[0];
-            double[] vbi = new double[0];
+            var vai = new double[0];
+            var vbi = new double[0];
             double minx = 0;
             double maxx = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             a = new double[0];
 
@@ -15088,7 +15345,7 @@ public partial class alglib
             for(i=0; i<=p.n-1; i++)
             {
                 vx[i] = Math.Cos(Math.PI*(i+0.5)/p.n);
-                vp[i] = ratint.barycentriccalc(p, s0*vx[i]+c0, _params);
+                vp[i] = ratint.barycentriccalc(p, (s0 *vx[i]) + c0, _params);
             }
             
             //
@@ -15098,7 +15355,7 @@ public partial class alglib
             v = 0;
             for(i=0; i<=p.n-1; i++)
             {
-                v = v+vp[i];
+                v += vp[i];
             }
             t[0] = v/p.n;
             
@@ -15139,7 +15396,7 @@ public partial class alglib
                     //
                     for(i=0; i<=p.n-1; i++)
                     {
-                        v = 2*vx[i]*tk[i]-tk1[i];
+                        v = (2 *vx[i]*tk[i]) - tk1[i];
                         tk1[i] = tk[i];
                         tk[i] = v;
                     }
@@ -15183,8 +15440,8 @@ public partial class alglib
                 k = i;
                 while( k<=p.n-1 )
                 {
-                    e = e+a[k]*t[k];
-                    k = k+2;
+                    e += (a[k]*t[k]);
+                    k += 2;
                 }
                 a[i] = e;
             }
@@ -15204,7 +15461,7 @@ public partial class alglib
                 t[i] = 0.0;
             }
             va = s/s0;
-            vb = c/s0-c0/s0;
+            vb = (c / s0) - c0/s0;
             vai = new double[p.n];
             vbi = new double[p.n];
             vai[0] = 1;
@@ -15239,7 +15496,7 @@ public partial class alglib
                 //
                 for(i=0; i<=k; i++)
                 {
-                    t[i] = t[i]+a[k]*vai[i]*vbi[k-i]*vp[i];
+                    t[i] = t[i]+ (a[k]*vai[i]*vbi[k-i]*vp[i]);
                 }
             }
             for(k=0; k<=p.n-1; k++)
@@ -15290,11 +15547,11 @@ public partial class alglib
             double c,
             double s,
             ratint.barycentricinterpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
-            double[] y = new double[0];
+            var i = 0;
+            var k = 0;
+            var y = new double[0];
             double vx = 0;
             double vy = 0;
             double px = 0;
@@ -15321,8 +15578,8 @@ public partial class alglib
                 px = vx;
                 for(k=1; k<=n-1; k++)
                 {
-                    vy = vy+px*a[k];
-                    px = px*vx;
+                    vy += (px *a[k]);
+                    px *= vx;
                 }
                 y[i] = vy;
             }
@@ -15355,18 +15612,18 @@ public partial class alglib
             double[] y,
             int n,
             ratint.barycentricinterpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
-            int k = 0;
-            double[] w = new double[0];
+            var j = 0;
+            var k = 0;
+            var w = new double[0];
             double b = 0;
             double a = 0;
             double v = 0;
             double mx = 0;
-            double[] sortrbuf = new double[0];
-            double[] sortrbuf2 = new double[0];
-            int i_ = 0;
+            var sortrbuf = new double[0];
+            var sortrbuf2 = new double[0];
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -15451,11 +15708,11 @@ public partial class alglib
             double[] y,
             int n,
             ratint.barycentricinterpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] w = new double[0];
-            double[] x = new double[0];
+            var i = 0;
+            var w = new double[0];
+            var x = new double[0];
             double v = 0;
 
             alglib.ap.assert(n>0, "PolynomialBuildEqDist: N<=0!");
@@ -15464,7 +15721,7 @@ public partial class alglib
             alglib.ap.assert(math.isfinite(b), "PolynomialBuildEqDist: B is infinite or NaN!");
             alglib.ap.assert(apserv.isfinitevector(y, n, _params), "PolynomialBuildEqDist: Y contains infinite or NaN values!");
             alglib.ap.assert((double)(b)!=(double)(a), "PolynomialBuildEqDist: B=A!");
-            alglib.ap.assert((double)(a+(b-a)/n)!=(double)(a), "PolynomialBuildEqDist: B is too close to A!");
+            alglib.ap.assert((double)(a+ ((b-a)/n)) !=(double)(a), "PolynomialBuildEqDist: B is too close to A!");
             
             //
             // Special case: N=1
@@ -15488,9 +15745,9 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 w[i] = v;
-                x[i] = a+(b-a)*i/(n-1);
+                x[i] = a+ ((b-a)*i/(n-1));
                 v = -(v*(n-1-i));
-                v = v/(i+1);
+                v /= (i+1);
             }
             ratint.barycentricbuildxyw(x, y, w, n, p, _params);
         }
@@ -15521,11 +15778,11 @@ public partial class alglib
             double[] y,
             int n,
             ratint.barycentricinterpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] w = new double[0];
-            double[] x = new double[0];
+            var i = 0;
+            var w = new double[0];
+            var x = new double[0];
             double v = 0;
             double t = 0;
 
@@ -15557,9 +15814,9 @@ public partial class alglib
             v = 1;
             for(i=0; i<=n-1; i++)
             {
-                t = Math.Tan(0.5*Math.PI*(2*i+1)/(2*n));
+                t = Math.Tan(0.5*Math.PI*((2 * i) + 1)/(2*n));
                 w[i] = 2*v*t/(1+math.sqr(t));
-                x[i] = 0.5*(b+a)+0.5*(b-a)*(1-math.sqr(t))/(1+math.sqr(t));
+                x[i] = (0.5 *(b+a)) + 0.5*(b-a)*(1-math.sqr(t))/(1+math.sqr(t));
                 v = -v;
             }
             ratint.barycentricbuildxyw(x, y, w, n, p, _params);
@@ -15591,11 +15848,11 @@ public partial class alglib
             double[] y,
             int n,
             ratint.barycentricinterpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] w = new double[0];
-            double[] x = new double[0];
+            var i = 0;
+            var w = new double[0];
+            var x = new double[0];
             double v = 0;
 
             alglib.ap.assert(n>0, "PolynomialBuildCheb2: N<=0!");
@@ -15634,7 +15891,7 @@ public partial class alglib
                 {
                     w[i] = v;
                 }
-                x[i] = 0.5*(b+a)+0.5*(b-a)*Math.Cos(Math.PI*i/(n-1));
+                x[i] = (0.5 *(b+a)) + 0.5*(b-a)*Math.Cos(Math.PI*i/(n-1));
                 v = -v;
             }
             ratint.barycentricbuildxyw(x, y, w, n, p, _params);
@@ -15670,7 +15927,7 @@ public partial class alglib
             double[] f,
             int n,
             double t,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double s1 = 0;
@@ -15679,8 +15936,8 @@ public partial class alglib
             double threshold = 0;
             double s = 0;
             double h = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double w = 0;
             double x = 0;
 
@@ -15690,14 +15947,14 @@ public partial class alglib
             alglib.ap.assert(math.isfinite(b), "PolynomialCalcEqDist: B is infinite or NaN!");
             alglib.ap.assert(apserv.isfinitevector(f, n, _params), "PolynomialCalcEqDist: F contains infinite or NaN values!");
             alglib.ap.assert((double)(b)!=(double)(a), "PolynomialCalcEqDist: B=A!");
-            alglib.ap.assert(!Double.IsInfinity(t), "PolynomialCalcEqDist: T is infinite!");
+            alglib.ap.assert(!double.IsInfinity(t), "PolynomialCalcEqDist: T is infinite!");
             
             //
             // Special case: T is NAN
             //
-            if( Double.IsNaN(t) )
+            if(double.IsNaN(t) )
             {
-                result = Double.NaN;
+                result = double.NaN;
                 return result;
             }
             
@@ -15719,7 +15976,7 @@ public partial class alglib
             s = t-a;
             for(i=1; i<=n-1; i++)
             {
-                x = a+(double)i/(double)(n-1)*(b-a);
+                x = a+ ((double)i/(double)(n-1)*(b-a));
                 if( (double)(Math.Abs(t-x))<(double)(Math.Abs(s)) )
                 {
                     s = t-x;
@@ -15752,18 +16009,18 @@ public partial class alglib
             {
                 if( i!=j )
                 {
-                    v = s*w/(t-(a+i*h));
-                    s1 = s1+v*f[i];
-                    s2 = s2+v;
+                    v = s*w/(t-(a+ (i * h)));
+                    s1 += (v *f[i]);
+                    s2 += v;
                 }
                 else
                 {
                     v = w;
-                    s1 = s1+v*f[i];
-                    s2 = s2+v;
+                    s1 += (v *f[i]);
+                    s2 += v;
                 }
                 w = -(w*(n-1-i));
-                w = w/(i+1);
+                w /= (i+1);
             }
             result = s1/s2;
             return result;
@@ -15801,7 +16058,7 @@ public partial class alglib
             double[] f,
             int n,
             double t,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double s1 = 0;
@@ -15809,8 +16066,8 @@ public partial class alglib
             double v = 0;
             double threshold = 0;
             double s = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double a0 = 0;
             double delta = 0;
             double alpha = 0;
@@ -15829,14 +16086,14 @@ public partial class alglib
             alglib.ap.assert(math.isfinite(b), "PolynomialCalcCheb1: B is infinite or NaN!");
             alglib.ap.assert(apserv.isfinitevector(f, n, _params), "PolynomialCalcCheb1: F contains infinite or NaN values!");
             alglib.ap.assert((double)(b)!=(double)(a), "PolynomialCalcCheb1: B=A!");
-            alglib.ap.assert(!Double.IsInfinity(t), "PolynomialCalcCheb1: T is infinite!");
+            alglib.ap.assert(!double.IsInfinity(t), "PolynomialCalcCheb1: T is infinite!");
             
             //
             // Special case: T is NAN
             //
-            if( Double.IsNaN(t) )
+            if(double.IsNaN(t) )
             {
-                result = Double.NaN;
+                result = double.NaN;
                 return result;
             }
             
@@ -15868,9 +16125,9 @@ public partial class alglib
             // to repeatedly calculate sin(..) and cos(..).
             //
             threshold = Math.Sqrt(math.minrealnumber);
-            t = (t-0.5*(a+b))/(0.5*(b-a));
-            a0 = Math.PI/(2*(n-1)+2);
-            delta = 2*Math.PI/(2*(n-1)+2);
+            t = (t- (0.5 *(a+b))) /(0.5*(b-a));
+            a0 = Math.PI/((2 *(n-1)) + 2);
+            delta = 2*Math.PI/((2 *(n-1)) + 2);
             alpha = 2*math.sqr(Math.Sin(delta/2));
             beta = Math.Sin(delta);
             
@@ -15889,8 +16146,8 @@ public partial class alglib
                 //
                 // Next X[i]
                 //
-                temps = sa-(alpha*sa-beta*ca);
-                tempc = ca-(alpha*ca+beta*sa);
+                temps = sa-((alpha * sa) - beta*ca);
+                tempc = ca-((alpha * ca) + beta*sa);
                 sa = temps;
                 ca = tempc;
                 x = ca;
@@ -15942,21 +16199,21 @@ public partial class alglib
                 if( i!=j )
                 {
                     v = s*w/(t-x);
-                    s1 = s1+v*f[i];
-                    s2 = s2+v;
+                    s1 += (v *f[i]);
+                    s2 += v;
                 }
                 else
                 {
                     v = w;
-                    s1 = s1+v*f[i];
-                    s2 = s2+v;
+                    s1 += (v *f[i]);
+                    s2 += v;
                 }
                 
                 //
                 // Next CA, SA, P1
                 //
-                temps = sa-(alpha*sa-beta*ca);
-                tempc = ca-(alpha*ca+beta*sa);
+                temps = sa-((alpha * sa) - beta*ca);
+                tempc = ca-((alpha * ca) + beta*sa);
                 sa = temps;
                 ca = tempc;
                 p1 = -p1;
@@ -15997,7 +16254,7 @@ public partial class alglib
             double[] f,
             int n,
             double t,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double s1 = 0;
@@ -16005,8 +16262,8 @@ public partial class alglib
             double v = 0;
             double threshold = 0;
             double s = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double a0 = 0;
             double delta = 0;
             double alpha = 0;
@@ -16025,14 +16282,14 @@ public partial class alglib
             alglib.ap.assert(math.isfinite(b), "PolynomialCalcCheb2: B is infinite or NaN!");
             alglib.ap.assert((double)(b)!=(double)(a), "PolynomialCalcCheb2: B=A!");
             alglib.ap.assert(apserv.isfinitevector(f, n, _params), "PolynomialCalcCheb2: F contains infinite or NaN values!");
-            alglib.ap.assert(!Double.IsInfinity(t), "PolynomialCalcEqDist: T is infinite!");
+            alglib.ap.assert(!double.IsInfinity(t), "PolynomialCalcEqDist: T is infinite!");
             
             //
             // Special case: T is NAN
             //
-            if( Double.IsNaN(t) )
+            if(double.IsNaN(t) )
             {
-                result = Double.NaN;
+                result = double.NaN;
                 return result;
             }
             
@@ -16064,7 +16321,7 @@ public partial class alglib
             // to repeatedly calculate sin(..) and cos(..).
             //
             threshold = Math.Sqrt(math.minrealnumber);
-            t = (t-0.5*(a+b))/(0.5*(b-a));
+            t = (t- (0.5 *(a+b))) /(0.5*(b-a));
             a0 = 0.0;
             delta = Math.PI/(n-1);
             alpha = 2*math.sqr(Math.Sin(delta/2));
@@ -16085,8 +16342,8 @@ public partial class alglib
                 //
                 // Next X[i]
                 //
-                temps = sa-(alpha*sa-beta*ca);
-                tempc = ca-(alpha*ca+beta*sa);
+                temps = sa-((alpha * sa) - beta*ca);
+                tempc = ca-((alpha * ca) + beta*sa);
                 sa = temps;
                 ca = tempc;
                 x = ca;
@@ -16145,21 +16402,21 @@ public partial class alglib
                 if( i!=j )
                 {
                     v = s*w/(t-x);
-                    s1 = s1+v*f[i];
-                    s2 = s2+v;
+                    s1 += (v *f[i]);
+                    s2 += v;
                 }
                 else
                 {
                     v = w;
-                    s1 = s1+v*f[i];
-                    s2 = s2+v;
+                    s1 += (v *f[i]);
+                    s2 += v;
                 }
                 
                 //
                 // Next CA, SA, P1
                 //
-                temps = sa-(alpha*sa-beta*ca);
-                tempc = ca-(alpha*ca+beta*sa);
+                temps = sa-((alpha * sa) - beta*ca);
+                tempc = ca-((alpha * ca) + beta*sa);
                 sa = temps;
                 ca = tempc;
                 p1 = -p1;
@@ -16192,15 +16449,17 @@ public partial class alglib
                 x = new double[0];
                 c = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline1dinterpolant _result = new spline1dinterpolant();
-                _result.periodic = periodic;
-                _result.n = n;
-                _result.k = k;
-                _result.continuity = continuity;
-                _result.x = (double[])x.Clone();
-                _result.c = (double[])c.Clone();
+                var _result = new spline1dinterpolant
+                {
+                    periodic = periodic,
+                    n = n,
+                    k = k,
+                    continuity = continuity,
+                    x = (double[])x.Clone(),
+                    c = (double[])c.Clone()
+                };
                 return _result;
             }
         };
@@ -16231,14 +16490,16 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline1dfitreport _result = new spline1dfitreport();
-                _result.taskrcond = taskrcond;
-                _result.rmserror = rmserror;
-                _result.avgerror = avgerror;
-                _result.avgrelerror = avgrelerror;
-                _result.maxerror = maxerror;
+                var _result = new spline1dfitreport
+                {
+                    taskrcond = taskrcond,
+                    rmserror = rmserror,
+                    avgerror = avgerror,
+                    avgrelerror = avgrelerror,
+                    maxerror = maxerror
+                };
                 return _result;
             }
         };
@@ -16277,9 +16538,9 @@ public partial class alglib
             double[] y,
             int n,
             spline1dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -16304,20 +16565,20 @@ public partial class alglib
             c.k = 3;
             c.continuity = 0;
             c.x = new double[n];
-            c.c = new double[4*(n-1)+2];
+            c.c = new double[(4 *(n-1)) + 2];
             for(i=0; i<=n-1; i++)
             {
                 c.x[i] = x[i];
             }
             for(i=0; i<=n-2; i++)
             {
-                c.c[4*i+0] = y[i];
-                c.c[4*i+1] = (y[i+1]-y[i])/(x[i+1]-x[i]);
-                c.c[4*i+2] = 0;
-                c.c[4*i+3] = 0;
+                c.c[(4 * i) + 0] = y[i];
+                c.c[(4 * i) + 1] = (y[i+1]-y[i])/(x[i+1]-x[i]);
+                c.c[(4 * i) + 2] = 0;
+                c.c[(4 * i) + 3] = 0;
             }
-            c.c[4*(n-1)+0] = y[n-1];
-            c.c[4*(n-1)+1] = c.c[4*(n-2)+1];
+            c.c[(4 *(n-1)) + 0] = y[n-1];
+            c.c[(4 *(n-1)) + 1] = c.c[(4 *(n-2)) + 1];
         }
 
 
@@ -16382,16 +16643,16 @@ public partial class alglib
             int boundrtype,
             double boundr,
             spline1dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] a1 = new double[0];
-            double[] a2 = new double[0];
-            double[] a3 = new double[0];
-            double[] b = new double[0];
-            double[] dt = new double[0];
-            double[] d = new double[0];
-            int[] p = new int[0];
-            int ylen = 0;
+            var a1 = new double[0];
+            var a2 = new double[0];
+            var a3 = new double[0];
+            var b = new double[0];
+            var dt = new double[0];
+            var d = new double[0];
+            var p = new int[0];
+            var ylen = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -16517,17 +16778,17 @@ public partial class alglib
             int boundrtype,
             double boundr,
             ref double[] d,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] a1 = new double[0];
-            double[] a2 = new double[0];
-            double[] a3 = new double[0];
-            double[] b = new double[0];
-            double[] dt = new double[0];
-            int[] p = new int[0];
-            int i = 0;
-            int ylen = 0;
-            int i_ = 0;
+            var a1 = new double[0];
+            var a2 = new double[0];
+            var a3 = new double[0];
+            var b = new double[0];
+            var dt = new double[0];
+            var p = new int[0];
+            var i = 0;
+            var ylen = 0;
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -16665,22 +16926,22 @@ public partial class alglib
             double boundr,
             ref double[] d1,
             ref double[] d2,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] a1 = new double[0];
-            double[] a2 = new double[0];
-            double[] a3 = new double[0];
-            double[] b = new double[0];
-            double[] dt = new double[0];
-            int[] p = new int[0];
-            int i = 0;
-            int ylen = 0;
+            var a1 = new double[0];
+            var a2 = new double[0];
+            var a3 = new double[0];
+            var b = new double[0];
+            var dt = new double[0];
+            var p = new int[0];
+            var i = 0;
+            var ylen = 0;
             double delta = 0;
             double delta2 = 0;
             double delta3 = 0;
             double s2 = 0;
             double s3 = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -16751,11 +17012,11 @@ public partial class alglib
                 delta = x[i+1]-x[i];
                 delta2 = math.sqr(delta);
                 delta3 = delta*delta2;
-                s2 = (3*(y[i+1]-y[i])-2*d1[i]*delta-d1[i+1]*delta)/delta2;
-                s3 = (2*(y[i]-y[i+1])+d1[i]*delta+d1[i+1]*delta)/delta3;
+                s2 = ((3 *(y[i+1]-y[i])) - 2*d1[i]*delta- (d1[i+1]*delta)) /delta2;
+                s3 = ((2 *(y[i]-y[i+1])) + d1[i]*delta+ (d1[i+1]*delta)) /delta3;
                 d2[i] = 2*s2;
             }
-            d2[n-1] = 2*s2+6*s3*delta;
+            d2[n-1] = (2 * s2) + 6*s3*delta;
             
             //
             // Remember that HeapSortPPoints() call?
@@ -16860,23 +17121,23 @@ public partial class alglib
             double[] x2,
             int n2,
             ref double[] y2,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] a1 = new double[0];
-            double[] a2 = new double[0];
-            double[] a3 = new double[0];
-            double[] b = new double[0];
-            double[] d = new double[0];
-            double[] dt = new double[0];
-            double[] d1 = new double[0];
-            double[] d2 = new double[0];
-            int[] p = new int[0];
-            int[] p2 = new int[0];
-            int i = 0;
-            int ylen = 0;
+            var a1 = new double[0];
+            var a2 = new double[0];
+            var a3 = new double[0];
+            var b = new double[0];
+            var d = new double[0];
+            var dt = new double[0];
+            var d1 = new double[0];
+            var d2 = new double[0];
+            var p = new int[0];
+            var p2 = new int[0];
+            var i = 0;
+            var ylen = 0;
             double t = 0;
             double t2 = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -17042,22 +17303,22 @@ public partial class alglib
             int n2,
             ref double[] y2,
             ref double[] d2,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] a1 = new double[0];
-            double[] a2 = new double[0];
-            double[] a3 = new double[0];
-            double[] b = new double[0];
-            double[] d = new double[0];
-            double[] dt = new double[0];
-            double[] rt1 = new double[0];
-            int[] p = new int[0];
-            int[] p2 = new int[0];
-            int i = 0;
-            int ylen = 0;
+            var a1 = new double[0];
+            var a2 = new double[0];
+            var a3 = new double[0];
+            var b = new double[0];
+            var d = new double[0];
+            var dt = new double[0];
+            var rt1 = new double[0];
+            var p = new int[0];
+            var p2 = new int[0];
+            var i = 0;
+            var ylen = 0;
             double t = 0;
             double t2 = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -17235,21 +17496,21 @@ public partial class alglib
             ref double[] y2,
             ref double[] d2,
             ref double[] dd2,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] a1 = new double[0];
-            double[] a2 = new double[0];
-            double[] a3 = new double[0];
-            double[] b = new double[0];
-            double[] d = new double[0];
-            double[] dt = new double[0];
-            int[] p = new int[0];
-            int[] p2 = new int[0];
-            int i = 0;
-            int ylen = 0;
+            var a1 = new double[0];
+            var a2 = new double[0];
+            var a3 = new double[0];
+            var b = new double[0];
+            var d = new double[0];
+            var dt = new double[0];
+            var p = new int[0];
+            var p2 = new int[0];
+            var i = 0;
+            var ylen = 0;
             double t = 0;
             double t2 = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -17401,10 +17662,10 @@ public partial class alglib
             int boundtype,
             double tension,
             spline1dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] d = new double[0];
-            int i = 0;
+            var d = new double[0];
+            var i = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -17483,8 +17744,8 @@ public partial class alglib
                 {
                     d[i] = (1-tension)*(y[i+1]-y[i-1])/(x[i+1]-x[i-1]);
                 }
-                d[0] = 2*(y[1]-y[0])/(x[1]-x[0])-d[1];
-                d[n-1] = 2*(y[n-1]-y[n-2])/(x[n-1]-x[n-2])-d[n-2];
+                d[0] = (2 *(y[1]-y[0])/(x[1]-x[0])) - d[1];
+                d[n-1] = (2 *(y[n-1]-y[n-2])/(x[n-1]-x[n-2])) - d[n-2];
                 
                 //
                 // Now problem is reduced to the cubic Hermite spline
@@ -17523,9 +17784,9 @@ public partial class alglib
             double[] d,
             int n,
             spline1dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double delta = 0;
             double delta2 = 0;
             double delta3 = 0;
@@ -17552,7 +17813,7 @@ public partial class alglib
             // Build
             //
             c.x = new double[n];
-            c.c = new double[4*(n-1)+2];
+            c.c = new double[(4 *(n-1)) + 2];
             c.periodic = false;
             c.k = 3;
             c.n = n;
@@ -17566,13 +17827,13 @@ public partial class alglib
                 delta = x[i+1]-x[i];
                 delta2 = math.sqr(delta);
                 delta3 = delta*delta2;
-                c.c[4*i+0] = y[i];
-                c.c[4*i+1] = d[i];
-                c.c[4*i+2] = (3*(y[i+1]-y[i])-2*d[i]*delta-d[i+1]*delta)/delta2;
-                c.c[4*i+3] = (2*(y[i]-y[i+1])+d[i]*delta+d[i+1]*delta)/delta3;
+                c.c[(4 * i) + 0] = y[i];
+                c.c[(4 * i) + 1] = d[i];
+                c.c[(4 * i) + 2] = ((3 *(y[i+1]-y[i])) - 2*d[i]*delta- (d[i+1]*delta)) /delta2;
+                c.c[(4 * i) + 3] = ((2 *(y[i]-y[i+1])) + d[i]*delta+ (d[i+1]*delta)) /delta3;
             }
-            c.c[4*(n-1)+0] = y[n-1];
-            c.c[4*(n-1)+1] = d[n-1];
+            c.c[(4 *(n-1)) + 0] = y[n-1];
+            c.c[(4 *(n-1)) + 1] = d[n-1];
         }
 
 
@@ -17603,12 +17864,12 @@ public partial class alglib
             double[] y,
             int n,
             spline1dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] d = new double[0];
-            double[] w = new double[0];
-            double[] diff = new double[0];
+            var i = 0;
+            var d = new double[0];
+            var w = new double[0];
+            var diff = new double[0];
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -17656,11 +17917,11 @@ public partial class alglib
             {
                 if( (double)(Math.Abs(w[i-1])+Math.Abs(w[i+1]))!=(double)(0) )
                 {
-                    d[i] = (w[i+1]*diff[i-1]+w[i-1]*diff[i])/(w[i+1]+w[i-1]);
+                    d[i] = ((w[i+1]*diff[i-1]) + w[i-1]*diff[i])/(w[i+1]+w[i-1]);
                 }
                 else
                 {
-                    d[i] = ((x[i+1]-x[i])*diff[i-1]+(x[i]-x[i-1])*diff[i])/(x[i+1]-x[i-1]);
+                    d[i] = (((x[i+1]-x[i])*diff[i-1]) + (x[i]-x[i-1])*diff[i])/(x[i+1]-x[i-1]);
                 }
             }
             d[0] = diffthreepoint(x[0], x[0], y[0], x[1], y[1], x[2], y[2], _params);
@@ -17690,23 +17951,23 @@ public partial class alglib
         *************************************************************************/
         public static double spline1dcalc(spline1dinterpolant c,
             double x,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int l = 0;
-            int r = 0;
-            int m = 0;
+            var l = 0;
+            var r = 0;
+            var m = 0;
             double t = 0;
 
             alglib.ap.assert(c.k==3, "Spline1DCalc: internal error");
-            alglib.ap.assert(!Double.IsInfinity(x), "Spline1DCalc: infinite X!");
+            alglib.ap.assert(!double.IsInfinity(x), "Spline1DCalc: infinite X!");
             
             //
             // special case: NaN
             //
-            if( Double.IsNaN(x) )
+            if(double.IsNaN(x) )
             {
-                result = Double.NaN;
+                result = double.NaN;
                 return result;
             }
             
@@ -17739,9 +18000,9 @@ public partial class alglib
             //
             // Interpolation
             //
-            x = x-c.x[l];
+            x -= c.x[l];
             m = 4*l;
-            result = c.c[m]+x*(c.c[m+1]+x*(c.c[m+2]+x*c.c[m+3]));
+            result = c.c[m]+ (x *(c.c[m+1]+ (x *(c.c[m+2]+ (x *c.c[m+3])))));
             return result;
         }
 
@@ -17766,11 +18027,11 @@ public partial class alglib
             ref double s,
             ref double ds,
             ref double d2s,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int l = 0;
-            int r = 0;
-            int m = 0;
+            var l = 0;
+            var r = 0;
+            var m = 0;
             double t = 0;
 
             s = 0;
@@ -17778,16 +18039,16 @@ public partial class alglib
             d2s = 0;
 
             alglib.ap.assert(c.k==3, "Spline1DDiff: internal error");
-            alglib.ap.assert(!Double.IsInfinity(x), "Spline1DDiff: infinite X!");
+            alglib.ap.assert(!double.IsInfinity(x), "Spline1DDiff: infinite X!");
             
             //
             // special case: NaN
             //
-            if( Double.IsNaN(x) )
+            if(double.IsNaN(x) )
             {
-                s = Double.NaN;
-                ds = Double.NaN;
-                d2s = Double.NaN;
+                s = double.NaN;
+                ds = double.NaN;
+                d2s = double.NaN;
                 return;
             }
             
@@ -17820,11 +18081,11 @@ public partial class alglib
             //
             // Differentiation
             //
-            x = x-c.x[l];
+            x -= c.x[l];
             m = 4*l;
-            s = c.c[m]+x*(c.c[m+1]+x*(c.c[m+2]+x*c.c[m+3]));
-            ds = c.c[m+1]+2*x*c.c[m+2]+3*math.sqr(x)*c.c[m+3];
-            d2s = 2*c.c[m+2]+6*x*c.c[m+3];
+            s = c.c[m]+ (x *(c.c[m+1]+ (x *(c.c[m+2]+ (x *c.c[m+3])))));
+            ds = c.c[m+1]+ (2 *x*c.c[m+2]) + 3*math.sqr(x)*c.c[m+3];
+            d2s = (2 *c.c[m+2]) + 6*x*c.c[m+3];
         }
 
 
@@ -17842,10 +18103,10 @@ public partial class alglib
         *************************************************************************/
         public static void spline1dcopy(spline1dinterpolant c,
             spline1dinterpolant cc,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int s = 0;
-            int i_ = 0;
+            var s = 0;
+            var i_ = 0;
 
             cc.periodic = c.periodic;
             cc.n = c.n;
@@ -17896,10 +18157,10 @@ public partial class alglib
         public static void spline1dunpack(spline1dinterpolant c,
             ref int n,
             ref double[,] tbl,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             n = 0;
             tbl = new double[0,0];
@@ -17916,7 +18177,7 @@ public partial class alglib
                 tbl[i,1] = c.x[i+1];
                 for(j=0; j<=c.k; j++)
                 {
-                    tbl[i,2+j] = c.c[(c.k+1)*i+j];
+                    tbl[i,2+j] = c.c[((c.k+1)*i) + j];
                 }
             }
         }
@@ -17937,18 +18198,18 @@ public partial class alglib
         public static void spline1dlintransx(spline1dinterpolant c,
             double a,
             double b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int n = 0;
+            var i = 0;
+            var n = 0;
             double v = 0;
             double dv = 0;
             double d2v = 0;
-            double[] x = new double[0];
-            double[] y = new double[0];
-            double[] d = new double[0];
-            bool isperiodic = new bool();
-            int contval = 0;
+            var x = new double[0];
+            var y = new double[0];
+            var d = new double[0];
+            var isperiodic = new bool();
+            var contval = 0;
 
             alglib.ap.assert(c.k==3, "Spline1DLinTransX: internal error");
             n = c.n;
@@ -18019,24 +18280,24 @@ public partial class alglib
         public static void spline1dlintransy(spline1dinterpolant c,
             double a,
             double b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int n = 0;
+            var i = 0;
+            var j = 0;
+            var n = 0;
 
             alglib.ap.assert(c.k==3, "Spline1DLinTransX: internal error");
             n = c.n;
             for(i=0; i<=n-2; i++)
             {
-                c.c[4*i] = a*c.c[4*i]+b;
+                c.c[4*i] = (a *c.c[4*i]) + b;
                 for(j=1; j<=3; j++)
                 {
-                    c.c[4*i+j] = a*c.c[4*i+j];
+                    c.c[(4 * i) + j] = a*c.c[(4 * i) + j];
                 }
             }
-            c.c[4*(n-1)+0] = a*c.c[4*(n-1)+0]+b;
-            c.c[4*(n-1)+1] = a*c.c[4*(n-1)+1];
+            c.c[(4 *(n-1)) + 0] = (a *c.c[(4 *(n-1)) + 0]) + b;
+            c.c[(4 *(n-1)) + 1] = a*c.c[(4 *(n-1)) + 1];
         }
 
 
@@ -18055,15 +18316,15 @@ public partial class alglib
         *************************************************************************/
         public static double spline1dintegrate(spline1dinterpolant c,
             double x,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int n = 0;
-            int i = 0;
-            int j = 0;
-            int l = 0;
-            int r = 0;
-            int m = 0;
+            var n = 0;
+            var i = 0;
+            var j = 0;
+            var l = 0;
+            var r = 0;
+            var m = 0;
             double w = 0;
             double v = 0;
             double t = 0;
@@ -18093,12 +18354,12 @@ public partial class alglib
                 {
                     w = c.x[i+1]-c.x[i];
                     m = (c.k+1)*i;
-                    intab = intab+c.c[m]*w;
+                    intab += (c.c[m]*w);
                     v = w;
                     for(j=1; j<=c.k; j++)
                     {
-                        v = v*w;
-                        intab = intab+c.c[m+j]*v/(j+1);
+                        v *= w;
+                        intab += (c.c[m+j]*v/(j+1));
                     }
                 }
                 
@@ -18139,24 +18400,24 @@ public partial class alglib
             {
                 w = c.x[i+1]-c.x[i];
                 m = (c.k+1)*i;
-                result = result+c.c[m]*w;
+                result += (c.c[m]*w);
                 v = w;
                 for(j=1; j<=c.k; j++)
                 {
-                    v = v*w;
-                    result = result+c.c[m+j]*v/(j+1);
+                    v *= w;
+                    result += (c.c[m+j]*v/(j+1));
                 }
             }
             w = x-c.x[l];
             m = (c.k+1)*l;
             v = w;
-            result = result+c.c[m]*w;
+            result += (c.c[m]*w);
             for(j=1; j<=c.k; j++)
             {
-                v = v*w;
-                result = result+c.c[m+j]*v/(j+1);
+                v *= w;
+                result += (c.c[m+j]*v/(j+1));
             }
-            result = result+additionalterm;
+            result += additionalterm;
             return result;
         }
 
@@ -18215,48 +18476,48 @@ public partial class alglib
             double lambdans,
             spline1dinterpolant s,
             spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int bfrad = 0;
+            var bfrad = 0;
             double xa = 0;
             double xb = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int k0 = 0;
-            int k1 = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var k0 = 0;
+            var k1 = 0;
             double v = 0;
             double dv = 0;
             double d2v = 0;
-            int gridexpansion = 0;
-            double[] xywork = new double[0];
-            double[,] vterm = new double[0,0];
-            double[] sx = new double[0];
-            double[] sy = new double[0];
-            double[] sdy = new double[0];
-            double[] tmpx = new double[0];
-            double[] tmpy = new double[0];
-            spline1dinterpolant basis1 = new spline1dinterpolant();
-            sparse.sparsematrix av = new sparse.sparsematrix();
-            sparse.sparsematrix ah = new sparse.sparsematrix();
-            sparse.sparsematrix ata = new sparse.sparsematrix();
-            double[] targets = new double[0];
+            var gridexpansion = 0;
+            var xywork = new double[0];
+            var vterm = new double[0,0];
+            var sx = new double[0];
+            var sy = new double[0];
+            var sdy = new double[0];
+            var tmpx = new double[0];
+            var tmpy = new double[0];
+            var basis1 = new spline1dinterpolant();
+            var av = new sparse.sparsematrix();
+            var ah = new sparse.sparsematrix();
+            var ata = new sparse.sparsematrix();
+            var targets = new double[0];
             double meany = 0;
-            int lsqrcnt = 0;
-            int nrel = 0;
+            var lsqrcnt = 0;
+            var nrel = 0;
             double rss = 0;
             double tss = 0;
-            int arows = 0;
-            double[] tmp0 = new double[0];
-            double[] tmp1 = new double[0];
-            linlsqr.linlsqrstate solver = new linlsqr.linlsqrstate();
-            linlsqr.linlsqrreport srep = new linlsqr.linlsqrreport();
+            var arows = 0;
+            var tmp0 = new double[0];
+            var tmp1 = new double[0];
+            var solver = new linlsqr.linlsqrstate();
+            var srep = new linlsqr.linlsqrreport();
             double creg = 0;
             double mxata = 0;
-            int bw = 0;
-            int[] nzidx = new int[0];
-            double[] nzval = new double[0];
-            int nzcnt = 0;
+            var bw = 0;
+            var nzidx = new int[0];
+            var nzval = new double[0];
+            var nzcnt = 0;
             double scaletargetsby = 0;
             double scalepenaltyby = 0;
 
@@ -18286,13 +18547,13 @@ public partial class alglib
                 v = xa;
                 if( (double)(v)>=(double)(0) )
                 {
-                    xa = v/2-1;
-                    xb = v*2+1;
+                    xa = (v / 2) - 1;
+                    xb = (v * 2) + 1;
                 }
                 else
                 {
-                    xa = v*2-1;
-                    xb = v/2+1;
+                    xa = (v * 2) - 1;
+                    xb = (v / 2) + 1;
                 }
             }
             alglib.ap.assert((double)(xa)<(double)(xb), "Spline1DFit: integrity error");
@@ -18303,9 +18564,9 @@ public partial class alglib
             m = Math.Max(m, 4);
             gridexpansion = 1;
             v = (xb-xa)/m;
-            xa = xa-v*gridexpansion;
-            xb = xb+v*gridexpansion;
-            m = m+2*gridexpansion;
+            xa -= (v * gridexpansion);
+            xb += (v * gridexpansion);
+            m += (2 * gridexpansion);
             
             //
             // Convert X/Y to work representation, remove linear trend (in
@@ -18316,20 +18577,20 @@ public partial class alglib
             xywork = new double[2*n];
             for(i=0; i<=n-1; i++)
             {
-                xywork[2*i+0] = (x[i]-xa)/(xb-xa);
-                xywork[2*i+1] = y[i];
+                xywork[(2 * i) + 0] = (x[i]-xa)/(xb-xa);
+                xywork[(2 * i) + 1] = y[i];
             }
             intfitserv.buildpriorterm1(xywork, n, 1, 1, 1, 0.0, ref vterm, _params);
             meany = 0;
             for(i=0; i<=n-1; i++)
             {
-                meany = meany+y[i];
+                meany += y[i];
             }
-            meany = meany/n;
+            meany /= n;
             tss = 0;
             for(i=0; i<=n-1; i++)
             {
-                tss = tss+math.sqr(y[i]-meany);
+                tss += math.sqr(y[i]-meany);
             }
             
             //
@@ -18353,7 +18614,7 @@ public partial class alglib
             tmpy[5] = 0;
             tmpy[6] = 0;
             spline1dbuildcubic(tmpx, tmpy, alglib.ap.len(tmpx), 2, 0.0, 2, 0.0, basis1, _params);
-            arows = n+2*m;
+            arows = n+ (2 * m);
             sparse.sparsecreate(arows, m, 0, av, _params);
             apserv.setlengthzero(ref targets, arows, _params);
             scaletargetsby = 1/Math.Sqrt(n);
@@ -18364,14 +18625,14 @@ public partial class alglib
                 //
                 // Generate design matrix row #I which corresponds to I-th dataset point
                 //
-                k = (int)Math.Floor(apserv.boundval(xywork[2*i+0]*(m-1), 0, m-1, _params));
+                k = (int)Math.Floor(apserv.boundval(xywork[(2 * i) + 0]*(m-1), 0, m-1, _params));
                 k0 = Math.Max(k-(bfrad-1), 0);
                 k1 = Math.Min(k+bfrad, m-1);
                 for(j=k0; j<=k1; j++)
                 {
-                    sparse.sparseset(av, i, j, spline1dcalc(basis1, xywork[2*i+0]-(double)j/(double)(m-1), _params)*scaletargetsby, _params);
+                    sparse.sparseset(av, i, j, spline1dcalc(basis1, xywork[(2 * i) + 0]- ((double)j/(double)(m-1)), _params)*scaletargetsby, _params);
                 }
-                targets[i] = xywork[2*i+1]*scaletargetsby;
+                targets[i] = xywork[(2 * i) + 1]*scaletargetsby;
             }
             for(i=0; i<=m-1; i++)
             {
@@ -18383,7 +18644,7 @@ public partial class alglib
                 k1 = Math.Min(i+(bfrad-1), m-1);
                 for(j=k0; j<=k1; j++)
                 {
-                    spline1ddiff(basis1, (double)i/(double)(m-1)-(double)j/(double)(m-1), ref v, ref dv, ref d2v, _params);
+                    spline1ddiff(basis1, ((double)i/(double)(m-1)) - (double)j/(double)(m-1), ref v, ref dv, ref d2v, _params);
                     sparse.sparseset(av, n+i, j, lambdans*d2v*scalepenaltyby, _params);
                 }
             }
@@ -18418,7 +18679,7 @@ public partial class alglib
                     v = 0;
                     for(k=0; k<=nzcnt-1; k++)
                     {
-                        v = v+sparse.sparseget(ah, i, nzidx[k], _params)*sparse.sparseget(ah, j, nzidx[k], _params);
+                        v += (sparse.sparseget(ah, i, nzidx[k], _params)*sparse.sparseget(ah, j, nzidx[k], _params));
                     }
                     
                     //
@@ -18441,7 +18702,7 @@ public partial class alglib
                 //
                 for(i=0; i<=m-1; i++)
                 {
-                    sparse.sparseset(ata, i, i, sparse.sparseget(ata, i, i, _params)+mxata*creg, _params);
+                    sparse.sparseset(ata, i, i, sparse.sparseget(ata, i, i, _params)+ (mxata * creg), _params);
                 }
                 
                 //
@@ -18531,9 +18792,9 @@ public partial class alglib
                 k1 = Math.Min(i+bfrad, m-1);
                 for(j=k0; j<=k1; j++)
                 {
-                    spline1ddiff(basis1, (double)j/(double)(m-1)-(double)i/(double)(m-1), ref v, ref dv, ref d2v, _params);
-                    sy[j] = sy[j]+tmp1[i]*v;
-                    sdy[j] = sdy[j]+tmp1[i]*dv;
+                    spline1ddiff(basis1, ((double)j/(double)(m-1)) - (double)i/(double)(m-1), ref v, ref dv, ref d2v, _params);
+                    sy[j] = sy[j]+ (tmp1[i]*v);
+                    sdy[j] = sdy[j]+ (tmp1[i]*dv);
                 }
             }
             
@@ -18553,20 +18814,20 @@ public partial class alglib
             rep.avgrelerror = 0;
             for(i=0; i<=n-1; i++)
             {
-                v = xywork[2*i+1]-tmp0[i];
-                rss = rss+v*v;
-                rep.rmserror = rep.rmserror+math.sqr(v);
-                rep.avgerror = rep.avgerror+Math.Abs(v);
+                v = xywork[(2 * i) + 1]-tmp0[i];
+                rss += (v * v);
+                rep.rmserror += math.sqr(v);
+                rep.avgerror += Math.Abs(v);
                 rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v));
                 if( (double)(y[i])!=(double)(0) )
                 {
-                    rep.avgrelerror = rep.avgrelerror+Math.Abs(v/y[i]);
-                    nrel = nrel+1;
+                    rep.avgrelerror += Math.Abs(v/y[i]);
+                    nrel++;
                 }
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/n);
-            rep.avgerror = rep.avgerror/n;
-            rep.avgrelerror = rep.avgrelerror/apserv.coalesce(nrel, 1.0, _params);
+            rep.avgerror /= n;
+            rep.avgrelerror /= apserv.coalesce(nrel, 1.0, _params);
             
             //
             // Append prior term.
@@ -18575,12 +18836,12 @@ public partial class alglib
             //
             for(i=0; i<=m-1; i++)
             {
-                sy[i] = sy[i]+vterm[0,0]*sx[i]+vterm[0,1];
+                sy[i] = sy[i]+ (vterm[0,0]*sx[i]) + vterm[0,1];
                 sdy[i] = sdy[i]+vterm[0,0];
             }
             for(i=0; i<=m-1; i++)
             {
-                sx[i] = sx[i]*(xb-xa)+xa;
+                sx[i] = (sx[i]*(xb-xa)) + xa;
                 sdy[i] = sdy[i]/(xb-xa);
             }
             spline1dbuildhermite(sx, sy, sdy, m, s, _params);
@@ -18629,11 +18890,11 @@ public partial class alglib
             bool needd1,
             ref double[] d2,
             bool needd2,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int intervalindex = 0;
-            int pointindex = 0;
-            bool havetoadvance = new bool();
+            var intervalindex = 0;
+            var pointindex = 0;
+            var havetoadvance = new bool();
             double c0 = 0;
             double c1 = 0;
             double c2 = 0;
@@ -18683,69 +18944,61 @@ public partial class alglib
             //
             intervalindex = -1;
             pointindex = 0;
-            while( true )
+            while (pointindex < n2)
             {
-                
-                //
-                // are we ready to exit?
-                //
-                if( pointindex>=n2 )
-                {
-                    break;
-                }
                 t = x2[pointindex];
-                
+
                 //
                 // do we need to advance interval?
                 //
                 havetoadvance = false;
-                if( intervalindex==-1 )
+                if (intervalindex == -1)
                 {
                     havetoadvance = true;
                 }
                 else
                 {
-                    if( intervalindex<n-2 )
+                    if (intervalindex < n - 2)
                     {
-                        havetoadvance = (double)(t)>=(double)(b);
+                        havetoadvance = (double)(t) >= (double)(b);
                     }
                 }
-                if( havetoadvance )
+                if (havetoadvance)
                 {
-                    intervalindex = intervalindex+1;
+                    intervalindex++;
                     a = xold[intervalindex];
-                    b = xold[intervalindex+1];
-                    w = b-a;
-                    w2 = w*w;
-                    w3 = w*w2;
+                    b = xold[intervalindex + 1];
+                    w = b - a;
+                    w2 = w * w;
+                    w3 = w * w2;
                     fa = yold[intervalindex];
-                    fb = yold[intervalindex+1];
+                    fb = yold[intervalindex + 1];
                     da = dold[intervalindex];
-                    db = dold[intervalindex+1];
+                    db = dold[intervalindex + 1];
                     c0 = fa;
                     c1 = da;
-                    c2 = (3*(fb-fa)-2*da*w-db*w)/w2;
-                    c3 = (2*(fa-fb)+da*w+db*w)/w3;
+                    c2 = ((3 * (fb - fa)) - 2 * da * w - (db * w)) / w2;
+                    c3 = ((2 * (fa - fb)) + da * w + (db * w)) / w3;
                     continue;
                 }
-                
+
                 //
                 // Calculate spline and its derivatives using power basis
                 //
-                t = t-a;
-                if( needy )
+                t -= a;
+                if (needy)
                 {
-                    y[pointindex] = c0+t*(c1+t*(c2+t*c3));
+                    y[pointindex] = c0 + (t * (c1 + (t * (c2 + (t * c3)))));
                 }
-                if( needd1 )
+                if (needd1)
                 {
-                    d1[pointindex] = c1+2*t*c2+3*t*t*c3;
+                    d1[pointindex] = c1 + (2 * t * c2) + 3 * t * t * c3;
                 }
-                if( needd2 )
+                if (needd2)
                 {
-                    d2[pointindex] = 2*c2+6*t*c3;
+                    d2[pointindex] = (2 * c2) + 6 * t * c3;
                 }
-                pointindex = pointindex+1;
+                pointindex++;
             }
         }
 
@@ -18800,28 +19053,28 @@ public partial class alglib
             ref int[] et,
             ref int ne,
             ref bool de,
-            alglib.xparams _params)
+            xparams _params)
         {
             double pl = 0;
             double ml = 0;
             double pll = 0;
             double pr = 0;
             double mr = 0;
-            double[] tr = new double[0];
-            double[] tmpr = new double[0];
-            double[] tmpe = new double[0];
-            int[] tmpet = new int[0];
-            double[] tmpc = new double[0];
+            var tr = new double[0];
+            var tmpr = new double[0];
+            var tmpe = new double[0];
+            var tmpet = new int[0];
+            var tmpc = new double[0];
             double x0 = 0;
             double x1 = 0;
             double x2 = 0;
             double ex0 = 0;
             double ex1 = 0;
-            int tne = 0;
-            int tnr = 0;
-            int i = 0;
-            int j = 0;
-            bool nstep = new bool();
+            var tne = 0;
+            var tnr = 0;
+            var i = 0;
+            var j = 0;
+            var nstep = new bool();
 
             r = new double[0];
             nr = 0;
@@ -18873,9 +19126,9 @@ public partial class alglib
                     //initialization pL, mL, pR, mR
                     //
                     pl = c.c[4*i];
-                    ml = c.c[4*i+1];
+                    ml = c.c[(4 * i) + 1];
                     pr = c.c[4*(i+1)];
-                    mr = c.c[4*i+1]+2*c.c[4*i+2]*(c.x[i+1]-c.x[i])+3*c.c[4*i+3]*(c.x[i+1]-c.x[i])*(c.x[i+1]-c.x[i]);
+                    mr = c.c[(4 * i) + 1]+ (2 *c.c[(4 * i) + 2]*(c.x[i+1]-c.x[i])) + 3*c.c[4*i+3]*(c.x[i+1]-c.x[i])*(c.x[i+1]-c.x[i]);
                     
                     //
                     //pre-searching roots and extremums
@@ -18903,7 +19156,7 @@ public partial class alglib
                             if( (double)(x0)!=(double)(tmpr[nr-1]) )
                             {
                                 tmpr[nr] = x0;
-                                nr = nr+1;
+                                nr++;
                             }
                         }
                         else
@@ -18913,7 +19166,7 @@ public partial class alglib
                             //write a first root
                             //
                             tmpr[nr] = x0;
-                            nr = nr+1;
+                            nr++;
                         }
                     }
                     else
@@ -18934,22 +19187,19 @@ public partial class alglib
                             {
                                 nstep = false;
                             }
-                            
+
                             //
                             //clear the root, if there is
                             //
-                            if( nr>0 )
+                            if (nr > 0 && (double)(c.x[i]) == (double)(tmpr[nr - 1]))
                             {
-                                if( (double)(c.x[i])==(double)(tmpr[nr-1]) )
-                                {
-                                    nr = nr-1;
-                                }
+                                nr--;
                             }
-                            
+
                             //
                             //change state for 'DR'
                             //
-                            if( !dr )
+                            if ( !dr )
                             {
                                 dr = true;
                             }
@@ -18987,7 +19237,7 @@ public partial class alglib
                                 //
                                 tmpet[ne] = -1;
                                 tmpe[ne] = c.x[i];
-                                ne = ne+1;
+                                ne++;
                             }
                             else
                             {
@@ -18999,7 +19249,7 @@ public partial class alglib
                                     //
                                     tmpet[ne] = 1;
                                     tmpe[ne] = c.x[i];
-                                    ne = ne+1;
+                                    ne++;
                                 }
                             }
                         }
@@ -19041,7 +19291,7 @@ public partial class alglib
                 //'TmpE' - it stores a time value for extremums only
                 //'TmpET'- it stores a time value for extremums type
                 //
-                apserv.rvectorsetlengthatleast(ref tmpr, 2*c.n-1, _params);
+                apserv.rvectorsetlengthatleast(ref tmpr, (2 *c.n) - 1, _params);
                 apserv.rvectorsetlengthatleast(ref tmpc, 4*c.n, _params);
                 apserv.rvectorsetlengthatleast(ref tmpe, 2*c.n, _params);
                 apserv.ivectorsetlengthatleast(ref tmpet, 2*c.n, _params);
@@ -19056,9 +19306,9 @@ public partial class alglib
                     //we calculate pL,mL, pR,mR as Fi+1(F'i+1) at left border
                     //
                     pl = c.c[4*i];
-                    ml = c.c[4*i+1];
+                    ml = c.c[(4 * i) + 1];
                     pr = c.c[4*(i+1)];
-                    mr = c.c[4*(i+1)+1];
+                    mr = c.c[(4 *(i+1)) + 1];
                     
                     //
                     //calculating roots and extremums at [X[i],X[i+1]]
@@ -19104,7 +19354,7 @@ public partial class alglib
                                     {
                                         tmpr[nr+j] = tr[j];
                                     }
-                                    nr = nr+tnr;
+                                    nr += tnr;
                                 }
                                 else
                                 {
@@ -19140,7 +19390,7 @@ public partial class alglib
                             {
                                 tmpr[nr+j] = tr[j];
                             }
-                            nr = nr+tnr;
+                            nr += tnr;
                         }
                     }
                     else
@@ -19154,7 +19404,7 @@ public partial class alglib
                             //
                             if( nr>0 && nstep )
                             {
-                                nr = nr-1;
+                                nr--;
                             }
                             
                             //
@@ -19191,8 +19441,8 @@ public partial class alglib
                             if( (double)(tmpc[ne-2])!=(double)(ex0) )
                             {
                                 tmpc[ne] = ex0;
-                                tmpc[ne+1] = c.c[4*i]+c.c[4*i+1]*(ex0-c.x[i])+c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+c.c[4*i+3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]);
-                                ne = ne+2;
+                                tmpc[ne+1] = c.c[4*i]+ (c.c[(4 * i) + 1]*(ex0-c.x[i])) + c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+ (c.c[(4 * i) + 3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]));
+                                ne += 2;
                             }
                         }
                         else
@@ -19202,8 +19452,8 @@ public partial class alglib
                             //write first extremum and it function value
                             //
                             tmpc[ne] = ex0;
-                            tmpc[ne+1] = c.c[4*i]+c.c[4*i+1]*(ex0-c.x[i])+c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+c.c[4*i+3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]);
-                            ne = ne+2;
+                            tmpc[ne+1] = c.c[4*i]+ (c.c[(4 * i) + 1]*(ex0-c.x[i])) + c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+ (c.c[(4 * i) + 3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]));
+                            ne += 2;
                         }
                     }
                     else
@@ -19219,8 +19469,8 @@ public partial class alglib
                                 if( (double)(tmpc[ne-2])!=(double)(ex0) )
                                 {
                                     tmpc[ne] = ex0;
-                                    tmpc[ne+1] = c.c[4*i]+c.c[4*i+1]*(ex0-c.x[i])+c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+c.c[4*i+3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]);
-                                    ne = ne+2;
+                                    tmpc[ne+1] = c.c[4*i]+ (c.c[(4 * i) + 1]*(ex0-c.x[i])) + c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+ (c.c[(4 * i) + 3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]));
+                                    ne += 2;
                                 }
                             }
                             else
@@ -19230,25 +19480,22 @@ public partial class alglib
                                 //write first extremum
                                 //
                                 tmpc[ne] = ex0;
-                                tmpc[ne+1] = c.c[4*i]+c.c[4*i+1]*(ex0-c.x[i])+c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+c.c[4*i+3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]);
-                                ne = ne+2;
+                                tmpc[ne+1] = c.c[4*i]+ (c.c[(4 * i) + 1]*(ex0-c.x[i])) + c.c[4*i+2]*(ex0-c.x[i])*(ex0-c.x[i])+ (c.c[(4 * i) + 3]*(ex0-c.x[i])*(ex0-c.x[i])*(ex0-c.x[i]));
+                                ne += 2;
                             }
                             
                             //
                             //write second extremum
                             //
                             tmpc[ne] = ex1;
-                            tmpc[ne+1] = c.c[4*i]+c.c[4*i+1]*(ex1-c.x[i])+c.c[4*i+2]*(ex1-c.x[i])*(ex1-c.x[i])+c.c[4*i+3]*(ex1-c.x[i])*(ex1-c.x[i])*(ex1-c.x[i]);
-                            ne = ne+2;
+                            tmpc[ne+1] = c.c[4*i]+ (c.c[(4 * i) + 1]*(ex1-c.x[i])) + c.c[4*i+2]*(ex1-c.x[i])*(ex1-c.x[i])+ (c.c[(4 * i) + 3]*(ex1-c.x[i])*(ex1-c.x[i])*(ex1-c.x[i]));
+                            ne += 2;
                         }
                         else
                         {
-                            if( tne==-1 )
+                            if (tne == -1 && !de)
                             {
-                                if( !de )
-                                {
-                                    de = true;
-                                }
+                                de = true;
                             }
                         }
                     }
@@ -19268,7 +19515,7 @@ public partial class alglib
                 {
                     if( i>0 && i<tne-1 )
                     {
-                        if( (double)(tmpc[2*i+1])>(double)(tmpc[2*(i-1)+1]) && (double)(tmpc[2*i+1])>(double)(tmpc[2*(i+1)+1]) )
+                        if( (double)(tmpc[(2 * i) + 1])>(double)(tmpc[(2 *(i-1)) + 1]) && (double)(tmpc[(2 * i) + 1])>(double)(tmpc[(2 *(i+1)) + 1]) )
                         {
                             
                             //
@@ -19276,11 +19523,11 @@ public partial class alglib
                             //
                             tmpe[ne] = tmpc[2*i];
                             tmpet[ne] = -1;
-                            ne = ne+1;
+                            ne++;
                         }
                         else
                         {
-                            if( (double)(tmpc[2*i+1])<(double)(tmpc[2*(i-1)+1]) && (double)(tmpc[2*i+1])<(double)(tmpc[2*(i+1)+1]) )
+                            if( (double)(tmpc[(2 * i) + 1])<(double)(tmpc[(2 *(i-1)) + 1]) && (double)(tmpc[(2 * i) + 1])<(double)(tmpc[(2 *(i+1)) + 1]) )
                             {
                                 
                                 //
@@ -19288,7 +19535,7 @@ public partial class alglib
                                 //
                                 tmpe[ne] = tmpc[2*i];
                                 tmpet[ne] = 1;
-                                ne = ne+1;
+                                ne++;
                             }
                         }
                     }
@@ -19298,7 +19545,7 @@ public partial class alglib
                         {
                             if( (double)(tmpc[2*i])!=(double)(c.x[0]) )
                             {
-                                if( (double)(tmpc[2*i+1])>(double)(pl) && (double)(tmpc[2*i+1])>(double)(tmpc[2*(i+1)+1]) )
+                                if( (double)(tmpc[(2 * i) + 1])>(double)(pl) && (double)(tmpc[(2 * i) + 1])>(double)(tmpc[(2 *(i+1)) + 1]) )
                                 {
                                     
                                     //
@@ -19306,11 +19553,11 @@ public partial class alglib
                                     //
                                     tmpe[ne] = tmpc[2*i];
                                     tmpet[ne] = -1;
-                                    ne = ne+1;
+                                    ne++;
                                 }
                                 else
                                 {
-                                    if( (double)(tmpc[2*i+1])<(double)(pl) && (double)(tmpc[2*i+1])<(double)(tmpc[2*(i+1)+1]) )
+                                    if( (double)(tmpc[(2 * i) + 1])<(double)(pl) && (double)(tmpc[(2 * i) + 1])<(double)(tmpc[(2 *(i+1)) + 1]) )
                                     {
                                         
                                         //
@@ -19318,39 +19565,36 @@ public partial class alglib
                                         //
                                         tmpe[ne] = tmpc[2*i];
                                         tmpet[ne] = 1;
-                                        ne = ne+1;
+                                        ne++;
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            if( i==tne-1 )
+                            if (i == tne - 1 && (double)(tmpc[2 * i]) != (double)(c.x[c.n - 1]))
                             {
-                                if( (double)(tmpc[2*i])!=(double)(c.x[c.n-1]) )
+                                if ((double)(tmpc[(2 * i) + 1]) > (double)(tmpc[(2 * (i - 1)) + 1]) && (double)(tmpc[(2 * i) + 1]) > (double)(pr))
                                 {
-                                    if( (double)(tmpc[2*i+1])>(double)(tmpc[2*(i-1)+1]) && (double)(tmpc[2*i+1])>(double)(pr) )
+
+                                    //
+                                    //maximum
+                                    //
+                                    tmpe[ne] = tmpc[2 * i];
+                                    tmpet[ne] = -1;
+                                    ne++;
+                                }
+                                else
+                                {
+                                    if ((double)(tmpc[(2 * i) + 1]) < (double)(tmpc[(2 * (i - 1)) + 1]) && (double)(tmpc[(2 * i) + 1]) < (double)(pr))
                                     {
-                                        
+
                                         //
-                                        //maximum
+                                        //minimum
                                         //
-                                        tmpe[ne] = tmpc[2*i];
-                                        tmpet[ne] = -1;
-                                        ne = ne+1;
-                                    }
-                                    else
-                                    {
-                                        if( (double)(tmpc[2*i+1])<(double)(tmpc[2*(i-1)+1]) && (double)(tmpc[2*i+1])<(double)(pr) )
-                                        {
-                                            
-                                            //
-                                            //minimum
-                                            //
-                                            tmpe[ne] = tmpc[2*i];
-                                            tmpet[ne] = 1;
-                                            ne = ne+1;
-                                        }
+                                        tmpe[ne] = tmpc[2 * i];
+                                        tmpet[ne] = 1;
+                                        ne++;
                                     }
                                 }
                             }
@@ -19393,14 +19637,14 @@ public partial class alglib
             ref double[] y,
             ref double[] d,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] rbuf = new double[0];
-            int[] ibuf = new int[0];
-            double[] rbuf2 = new double[0];
-            int[] ibuf2 = new int[0];
-            int i = 0;
-            int i_ = 0;
+            var rbuf = new double[0];
+            var ibuf = new int[0];
+            var rbuf2 = new double[0];
+            var ibuf2 = new int[0];
+            var i = 0;
+            var i_ = 0;
 
             ibuf = new int[n];
             rbuf = new double[n];
@@ -19464,7 +19708,7 @@ public partial class alglib
             ref double x0,
             ref double x1,
             ref int nr,
-            alglib.xparams _params)
+            xparams _params)
         {
             double a = 0;
             double b = 0;
@@ -19482,8 +19726,8 @@ public partial class alglib
             //
             //calculate parameters for equation: A, B  and C
             //
-            a = 6*p0+3*m0-6*p1+3*m1;
-            b = -(6*p0)-4*m0+6*p1-2*m1;
+            a = (6 * p0) + 3*m0- (6 * p1) + 3*m1;
+            b = -(6*p0)- (4 * m0) + 6*p1- (2 * m1);
             c = m0;
             
             //
@@ -19530,7 +19774,7 @@ public partial class alglib
                 {
                     nr = 1;
                     extr = -(b/(2*a));
-                    dd = b*b-4*a*c;
+                    dd = (b * b) - 4*a*c;
                     if( (double)(dd)<(double)(0) )
                     {
                         return;
@@ -19579,7 +19823,7 @@ public partial class alglib
                 //
                 if( (double)(m0)==(double)(0) && (double)(m1)!=(double)(0) )
                 {
-                    dd = b*b-4*a*c;
+                    dd = (b * b) - 4*a*c;
                     if( (double)(dd)<(double)(0) )
                     {
                         x0 = 0;
@@ -19589,7 +19833,7 @@ public partial class alglib
                     x0 = (-b-Math.Sqrt(dd))/(2*a);
                     x1 = (-b+Math.Sqrt(dd))/(2*a);
                     extr = -(b/(2*a));
-                    exf = a*extr*extr+b*extr+c;
+                    exf = (a *extr*extr) + b*extr+c;
                     if( Math.Sign(exf)*Math.Sign(m1)>0 )
                     {
                         x0 = 0;
@@ -19622,7 +19866,7 @@ public partial class alglib
                 }
                 if( (double)(m1)==(double)(0) && (double)(m0)!=(double)(0) )
                 {
-                    dd = b*b-4*a*c;
+                    dd = (b * b) - 4*a*c;
                     if( (double)(dd)<(double)(0) )
                     {
                         x0 = 1;
@@ -19632,7 +19876,7 @@ public partial class alglib
                     x0 = (-b-Math.Sqrt(dd))/(2*a);
                     x1 = (-b+Math.Sqrt(dd))/(2*a);
                     extr = -(b/(2*a));
-                    exf = a*extr*extr+b*extr+c;
+                    exf = (a *extr*extr) + b*extr+c;
                     if( Math.Sign(exf)*Math.Sign(m0)>0 )
                     {
                         x0 = 1;
@@ -19666,13 +19910,13 @@ public partial class alglib
                 else
                 {
                     extr = -(b/(2*a));
-                    exf = a*extr*extr+b*extr+c;
+                    exf = (a *extr*extr) + b*extr+c;
                     if( Math.Sign(exf)*Math.Sign(m0)>0 && Math.Sign(exf)*Math.Sign(m1)>0 )
                     {
                         nr = 0;
                         return;
                     }
-                    dd = b*b-4*a*c;
+                    dd = (b * b) - 4*a*c;
                     if( (double)(dd)<(double)(0) )
                     {
                         nr = 0;
@@ -19772,9 +20016,9 @@ public partial class alglib
             ref int nr,
             ref int ne,
             ref double[] tempdata,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double tmpma = 0;
             double tmpmb = 0;
             double tex0 = 0;
@@ -19855,7 +20099,7 @@ public partial class alglib
                     if( nr>i )
                     {
                         tempdata[i] = rescaleval(0, tex0, a, ex0, x0, _params);
-                        i = i+1;
+                        i++;
                     }
                     nr = bisectmethod(pa, tmpma, pb, tmpmb, tex0, 1, ref x0, _params)+nr;
                     if( nr>i )
@@ -19866,17 +20110,17 @@ public partial class alglib
                             if( (double)(x0)!=(double)(tempdata[i-1]) )
                             {
                                 tempdata[i] = x0;
-                                i = i+1;
+                                i++;
                             }
                             else
                             {
-                                nr = nr-1;
+                                nr--;
                             }
                         }
                         else
                         {
                             tempdata[i] = x0;
-                            i = i+1;
+                            i++;
                         }
                     }
                     if( nr>0 )
@@ -19920,7 +20164,7 @@ public partial class alglib
                     if( nr>i )
                     {
                         tempdata[i] = rescaleval(0, tex1, a, ex1, x0, _params);
-                        i = i+1;
+                        i++;
                     }
                     nr = bisectmethod(pa, tmpma, pb, tmpmb, tex1, 1, ref x0, _params)+nr;
                     if( nr>i )
@@ -19929,11 +20173,11 @@ public partial class alglib
                         if( (double)(x0)!=(double)(tempdata[i-1]) )
                         {
                             tempdata[i] = x0;
-                            i = i+1;
+                            i++;
                         }
                         else
                         {
-                            nr = nr-1;
+                            nr--;
                         }
                     }
                     if( nr>0 )
@@ -19955,7 +20199,7 @@ public partial class alglib
                     if( nr>i )
                     {
                         tempdata[i] = rescaleval(0, tex0, a, ex0, x0, _params);
-                        i = i+1;
+                        i++;
                     }
                     nr = bisectmethod(pa, tmpma, pb, tmpmb, tex0, 1, ref x0, _params)+nr;
                     if( nr>i )
@@ -19966,17 +20210,17 @@ public partial class alglib
                             if( (double)(x0)!=(double)(tempdata[i-1]) )
                             {
                                 tempdata[i] = x0;
-                                i = i+1;
+                                i++;
                             }
                             else
                             {
-                                nr = nr-1;
+                                nr--;
                             }
                         }
                         else
                         {
                             tempdata[i] = x0;
-                            i = i+1;
+                            i++;
                         }
                     }
                     if( nr>0 )
@@ -20004,7 +20248,7 @@ public partial class alglib
                     if( nr>i )
                     {
                         tempdata[i] = rescaleval(0, tex0, a, ex0, x0, _params);
-                        i = i+1;
+                        i++;
                     }
                     nr = bisectmethod(pa, tmpma, pb, tmpmb, tex0, tex1, ref x0, _params)+nr;
                     if( nr>i )
@@ -20015,17 +20259,17 @@ public partial class alglib
                             if( (double)(x0)!=(double)(tempdata[i-1]) )
                             {
                                 tempdata[i] = x0;
-                                i = i+1;
+                                i++;
                             }
                             else
                             {
-                                nr = nr-1;
+                                nr--;
                             }
                         }
                         else
                         {
                             tempdata[i] = x0;
-                            i = i+1;
+                            i++;
                         }
                     }
                     nr = bisectmethod(pa, tmpma, pb, tmpmb, tex1, 1, ref x0, _params)+nr;
@@ -20037,17 +20281,17 @@ public partial class alglib
                             if( (double)(x0)!=(double)(tempdata[i-1]) )
                             {
                                 tempdata[i] = x0;
-                                i = i+1;
+                                i++;
                             }
                             else
                             {
-                                nr = nr-1;
+                                nr--;
                             }
                         }
                         else
                         {
                             tempdata[i] = x0;
-                            i = i+1;
+                            i++;
                         }
                     }
                     
@@ -20105,9 +20349,9 @@ public partial class alglib
             double a,
             double b,
             ref double x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
             double vacuum = 0;
             double eps = 0;
             double a0 = 0;
@@ -20238,22 +20482,22 @@ public partial class alglib
             double[] y,
             int n,
             spline1dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] d = new double[0];
-            double[] ex = new double[0];
-            double[] ey = new double[0];
-            int[] p = new int[0];
+            var d = new double[0];
+            var ex = new double[0];
+            var ey = new double[0];
+            var p = new int[0];
             double delta = 0;
             double alpha = 0;
             double beta = 0;
-            int tmpn = 0;
-            int sn = 0;
+            var tmpn = 0;
+            var sn = 0;
             double ca = 0;
             double cb = 0;
             double epsilon = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -20274,7 +20518,7 @@ public partial class alglib
             heapsortppoints(ref x, ref y, ref p, n, _params);
             alglib.ap.assert(apserv.aredistinct(x, n, _params), "Spline1DBuildMonotone: at least two consequent points are too close");
             epsilon = math.machineepsilon;
-            n = n+2;
+            n += 2;
             d = new double[n];
             ex = new double[n];
             ey = new double[n];
@@ -20296,12 +20540,12 @@ public partial class alglib
             do
             {
                 ca = ey[i+1]-ey[i];
-                i = i+1;
+                i++;
             }
             while( !((double)(ca)!=(double)(0) || i>n-2) );
             if( (double)(ca)!=(double)(0) )
             {
-                ca = ca/Math.Abs(ca);
+                ca /= Math.Abs(ca);
             }
             i = 0;
             while( i<n-1 )
@@ -20316,7 +20560,7 @@ public partial class alglib
                     cb = ey[j+1]-ey[j];
                     if( (double)(ca*cb)>=(double)(0) )
                     {
-                        tmpn = tmpn+1;
+                        tmpn++;
                     }
                     else
                     {
@@ -20334,7 +20578,7 @@ public partial class alglib
                 d[sn-1] = 0;
                 for(j=i+1; j<=sn-2; j++)
                 {
-                    d[j] = ((ey[j]-ey[j-1])/(ex[j]-ex[j-1])+(ey[j+1]-ey[j])/(ex[j+1]-ex[j]))/2;
+                    d[j] = (((ey[j]-ey[j-1])/(ex[j]-ex[j-1])) + (ey[j+1]-ey[j])/(ex[j+1]-ex[j]))/2;
                 }
                 for(j=i; j<=sn-2; j++)
                 {
@@ -20407,10 +20651,10 @@ public partial class alglib
             ref double[] a3,
             ref double[] b,
             ref double[] dt,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             
             //
@@ -20478,7 +20722,7 @@ public partial class alglib
                 a1[0] = x[1]-x[0];
                 a2[0] = 2*(x[1]-x[0]+x[n-1]-x[n-2]);
                 a3[0] = x[n-1]-x[n-2];
-                b[0] = 3*(y[n-1]-y[n-2])/(x[n-1]-x[n-2])*(x[1]-x[0])+3*(y[1]-y[0])/(x[1]-x[0])*(x[n-1]-x[n-2]);
+                b[0] = (3 *(y[n-1]-y[n-2])/(x[n-1]-x[n-2])*(x[1]-x[0])) + 3*(y[1]-y[0])/(x[1]-x[0])*(x[n-1]-x[n-2]);
                 for(i=1; i<=n-2; i++)
                 {
                     
@@ -20489,7 +20733,7 @@ public partial class alglib
                     a1[i] = x[i+1]-x[i];
                     a2[i] = 2*(x[i+1]-x[i-1]);
                     a3[i] = x[i]-x[i-1];
-                    b[i] = 3*(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])+3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
+                    b[i] = (3 *(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])) + 3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
                 }
                 
                 //
@@ -20528,7 +20772,7 @@ public partial class alglib
                     a1[0] = 0;
                     a2[0] = 2;
                     a3[0] = 1;
-                    b[0] = 3*(y[1]-y[0])/(x[1]-x[0])-0.5*boundl*(x[1]-x[0]);
+                    b[0] = (3 *(y[1]-y[0])/(x[1]-x[0])) - 0.5*boundl*(x[1]-x[0]);
                 }
                 
                 //
@@ -20539,7 +20783,7 @@ public partial class alglib
                     a1[i] = x[i+1]-x[i];
                     a2[i] = 2*(x[i+1]-x[i-1]);
                     a3[i] = x[i]-x[i-1];
-                    b[i] = 3*(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])+3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
+                    b[i] = (3 *(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])) + 3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
                 }
                 
                 //
@@ -20564,7 +20808,7 @@ public partial class alglib
                     a1[n-1] = 1;
                     a2[n-1] = 2;
                     a3[n-1] = 0;
-                    b[n-1] = 3*(y[n-1]-y[n-2])/(x[n-1]-x[n-2])+0.5*boundr*(x[n-1]-x[n-2]);
+                    b[n-1] = (3 *(y[n-1]-y[n-2])/(x[n-1]-x[n-2])) + 0.5*boundr*(x[n-1]-x[n-2]);
                 }
                 
                 //
@@ -20581,10 +20825,10 @@ public partial class alglib
         private static void heapsortpoints(ref double[] x,
             ref double[] y,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] bufx = new double[0];
-            double[] bufy = new double[0];
+            var bufx = new double[0];
+            var bufy = new double[0];
 
             tsort.tagsortfastr(ref x, ref y, ref bufx, ref bufy, n, _params);
         }
@@ -20606,12 +20850,12 @@ public partial class alglib
             ref double[] y,
             ref int[] p,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] rbuf = new double[0];
-            int[] ibuf = new int[0];
-            int i = 0;
-            int i_ = 0;
+            var rbuf = new double[0];
+            var ibuf = new int[0];
+            var i = 0;
+            var i_ = 0;
 
             if( alglib.ap.len(p)<n )
             {
@@ -20652,9 +20896,9 @@ public partial class alglib
             double[] d,
             int n,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int k = 0;
+            var k = 0;
             double t = 0;
 
             b = (double[])b.Clone();
@@ -20667,13 +20911,13 @@ public partial class alglib
             for(k=1; k<=n-1; k++)
             {
                 t = a[k]/b[k-1];
-                b[k] = b[k]-t*c[k-1];
-                d[k] = d[k]-t*d[k-1];
+                b[k] = b[k]- (t *c[k-1]);
+                d[k] = d[k]- (t *d[k-1]);
             }
             x[n-1] = d[n-1]/b[n-1];
             for(k=n-2; k>=0; k--)
             {
-                x[k] = (d[k]-c[k]*x[k+1])/b[k];
+                x[k] = (d[k]- (c[k]*x[k+1])) /b[k];
             }
         }
 
@@ -20695,15 +20939,15 @@ public partial class alglib
             double[] d,
             int n,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int k = 0;
+            var k = 0;
             double alpha = 0;
             double beta = 0;
             double gamma = 0;
-            double[] y = new double[0];
-            double[] z = new double[0];
-            double[] u = new double[0];
+            var y = new double[0];
+            var z = new double[0];
+            var u = new double[0];
 
             b = (double[])b.Clone();
 
@@ -20715,7 +20959,7 @@ public partial class alglib
             alpha = c[n-1];
             gamma = -b[0];
             b[0] = 2*b[0];
-            b[n-1] = b[n-1]-alpha*beta/gamma;
+            b[n-1] = b[n-1]- (alpha *beta/gamma);
             u = new double[n];
             for(k=0; k<=n-1; k++)
             {
@@ -20727,7 +20971,7 @@ public partial class alglib
             solvetridiagonal(a, b, c, u, n, ref z, _params);
             for(k=0; k<=n-1; k++)
             {
-                x[k] = y[k]-(y[0]+beta/gamma*y[n-1])/(1+z[0]+beta/gamma*z[n-1])*z[k];
+                x[k] = y[k]- ((y[0]+ (beta /gamma*y[n-1])) /(1+z[0]+ (beta /gamma*z[n-1])) *z[k]);
             }
         }
 
@@ -20742,18 +20986,18 @@ public partial class alglib
             double f1,
             double x2,
             double f2,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double a = 0;
             double b = 0;
 
-            t = t-x0;
-            x1 = x1-x0;
-            x2 = x2-x0;
-            a = (f2-f0-x2/x1*(f1-f0))/(math.sqr(x2)-x1*x2);
-            b = (f1-f0-a*math.sqr(x1))/x1;
-            result = 2*a*t+b;
+            t -= x0;
+            x1 -= x0;
+            x2 -= x0;
+            a = (f2-f0- (x2 /x1*(f1-f0))) /(math.sqr(x2)- (x1 * x2));
+            b = (f1-f0- (a *math.sqr(x1))) /x1;
+            result = (2 *a*t) + b;
             return result;
         }
 
@@ -20783,13 +21027,13 @@ public partial class alglib
             double t,
             ref double s,
             ref double ds,
-            alglib.xparams _params)
+            xparams _params)
         {
             s = 0;
             ds = 0;
 
-            s = p0*(1+2*t)*(1-t)*(1-t)+m0*t*(1-t)*(1-t)+p1*(3-2*t)*t*t+m1*t*t*(t-1);
-            ds = -(p0*6*t*(1-t))+m0*(1-t)*(1-3*t)+p1*6*t*(1-t)+m1*t*(3*t-2);
+            s = (p0 *(1+ (2 * t)) *(1-t)*(1-t)) + m0*t*(1-t)*(1-t)+ (p1 *(3- (2 * t)) *t*t) + m1*t*t*(t-1);
+            ds = -(p0*6*t*(1-t))+ (m0 *(1-t)*(1- (3 * t))) + p1*6*t*(1-t)+ (m1 *t*((3 * t) - 2));
         }
 
 
@@ -20830,7 +21074,7 @@ public partial class alglib
             double a1,
             double b1,
             double t,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -20856,7 +21100,7 @@ public partial class alglib
             //
             //return value between left and right borders
             //
-            result = (b1-a1)*(t-a0)/(b0-a0)+a1;
+            result = ((b1-a1)*(t-a0)/(b0-a0)) + a1;
             return result;
         }
 
@@ -20886,14 +21130,16 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                polynomialfitreport _result = new polynomialfitreport();
-                _result.taskrcond = taskrcond;
-                _result.rmserror = rmserror;
-                _result.avgerror = avgerror;
-                _result.avgrelerror = avgrelerror;
-                _result.maxerror = maxerror;
+                var _result = new polynomialfitreport
+                {
+                    taskrcond = taskrcond,
+                    rmserror = rmserror,
+                    avgerror = avgerror,
+                    avgrelerror = avgrelerror,
+                    maxerror = maxerror
+                };
                 return _result;
             }
         };
@@ -20922,15 +21168,17 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                barycentricfitreport _result = new barycentricfitreport();
-                _result.taskrcond = taskrcond;
-                _result.dbest = dbest;
-                _result.rmserror = rmserror;
-                _result.avgerror = avgerror;
-                _result.avgrelerror = avgrelerror;
-                _result.maxerror = maxerror;
+                var _result = new barycentricfitreport
+                {
+                    taskrcond = taskrcond,
+                    dbest = dbest,
+                    rmserror = rmserror,
+                    avgerror = avgerror,
+                    avgrelerror = avgrelerror,
+                    maxerror = maxerror
+                };
                 return _result;
             }
         };
@@ -20994,22 +21242,24 @@ public partial class alglib
                 errcurve = new double[0];
                 noise = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                lsfitreport _result = new lsfitreport();
-                _result.taskrcond = taskrcond;
-                _result.iterationscount = iterationscount;
-                _result.varidx = varidx;
-                _result.rmserror = rmserror;
-                _result.avgerror = avgerror;
-                _result.avgrelerror = avgrelerror;
-                _result.maxerror = maxerror;
-                _result.wrmserror = wrmserror;
-                _result.covpar = (double[,])covpar.Clone();
-                _result.errpar = (double[])errpar.Clone();
-                _result.errcurve = (double[])errcurve.Clone();
-                _result.noise = (double[])noise.Clone();
-                _result.r2 = r2;
+                var _result = new lsfitreport
+                {
+                    taskrcond = taskrcond,
+                    iterationscount = iterationscount,
+                    varidx = varidx,
+                    rmserror = rmserror,
+                    avgerror = avgerror,
+                    avgrelerror = avgrelerror,
+                    maxerror = maxerror,
+                    wrmserror = wrmserror,
+                    covpar = (double[,])covpar.Clone(),
+                    errpar = (double[])errpar.Clone(),
+                    errcurve = (double[])errcurve.Clone(),
+                    noise = (double[])noise.Clone(),
+                    r2 = r2
+                };
                 return _result;
             }
         };
@@ -21110,65 +21360,67 @@ public partial class alglib
                 optrep = new minlm.minlmreport();
                 rstate = new rcommstate();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                lsfitstate _result = new lsfitstate();
-                _result.optalgo = optalgo;
-                _result.m = m;
-                _result.k = k;
-                _result.epsx = epsx;
-                _result.maxits = maxits;
-                _result.stpmax = stpmax;
-                _result.xrep = xrep;
-                _result.c0 = (double[])c0.Clone();
-                _result.c1 = (double[])c1.Clone();
-                _result.s = (double[])s.Clone();
-                _result.bndl = (double[])bndl.Clone();
-                _result.bndu = (double[])bndu.Clone();
-                _result.taskx = (double[,])taskx.Clone();
-                _result.tasky = (double[])tasky.Clone();
-                _result.npoints = npoints;
-                _result.taskw = (double[])taskw.Clone();
-                _result.nweights = nweights;
-                _result.wkind = wkind;
-                _result.wits = wits;
-                _result.diffstep = diffstep;
-                _result.teststep = teststep;
-                _result.cleic = (double[,])cleic.Clone();
-                _result.nec = nec;
-                _result.nic = nic;
-                _result.xupdated = xupdated;
-                _result.needf = needf;
-                _result.needfg = needfg;
-                _result.needfgh = needfgh;
-                _result.pointindex = pointindex;
-                _result.x = (double[])x.Clone();
-                _result.c = (double[])c.Clone();
-                _result.f = f;
-                _result.g = (double[])g.Clone();
-                _result.h = (double[,])h.Clone();
-                _result.wcur = (double[])wcur.Clone();
-                _result.tmpct = (int[])tmpct.Clone();
-                _result.tmp = (double[])tmp.Clone();
-                _result.tmpf = (double[])tmpf.Clone();
-                _result.tmpjac = (double[,])tmpjac.Clone();
-                _result.tmpjacw = (double[,])tmpjacw.Clone();
-                _result.tmpnoise = tmpnoise;
-                _result.invrep = (matinv.matinvreport)invrep.make_copy();
-                _result.repiterationscount = repiterationscount;
-                _result.repterminationtype = repterminationtype;
-                _result.repvaridx = repvaridx;
-                _result.reprmserror = reprmserror;
-                _result.repavgerror = repavgerror;
-                _result.repavgrelerror = repavgrelerror;
-                _result.repmaxerror = repmaxerror;
-                _result.repwrmserror = repwrmserror;
-                _result.rep = (lsfitreport)rep.make_copy();
-                _result.optstate = (minlm.minlmstate)optstate.make_copy();
-                _result.optrep = (minlm.minlmreport)optrep.make_copy();
-                _result.prevnpt = prevnpt;
-                _result.prevalgo = prevalgo;
-                _result.rstate = (rcommstate)rstate.make_copy();
+                var _result = new lsfitstate
+                {
+                    optalgo = optalgo,
+                    m = m,
+                    k = k,
+                    epsx = epsx,
+                    maxits = maxits,
+                    stpmax = stpmax,
+                    xrep = xrep,
+                    c0 = (double[])c0.Clone(),
+                    c1 = (double[])c1.Clone(),
+                    s = (double[])s.Clone(),
+                    bndl = (double[])bndl.Clone(),
+                    bndu = (double[])bndu.Clone(),
+                    taskx = (double[,])taskx.Clone(),
+                    tasky = (double[])tasky.Clone(),
+                    npoints = npoints,
+                    taskw = (double[])taskw.Clone(),
+                    nweights = nweights,
+                    wkind = wkind,
+                    wits = wits,
+                    diffstep = diffstep,
+                    teststep = teststep,
+                    cleic = (double[,])cleic.Clone(),
+                    nec = nec,
+                    nic = nic,
+                    xupdated = xupdated,
+                    needf = needf,
+                    needfg = needfg,
+                    needfgh = needfgh,
+                    pointindex = pointindex,
+                    x = (double[])x.Clone(),
+                    c = (double[])c.Clone(),
+                    f = f,
+                    g = (double[])g.Clone(),
+                    h = (double[,])h.Clone(),
+                    wcur = (double[])wcur.Clone(),
+                    tmpct = (int[])tmpct.Clone(),
+                    tmp = (double[])tmp.Clone(),
+                    tmpf = (double[])tmpf.Clone(),
+                    tmpjac = (double[,])tmpjac.Clone(),
+                    tmpjacw = (double[,])tmpjacw.Clone(),
+                    tmpnoise = tmpnoise,
+                    invrep = (matinv.matinvreport)invrep.make_copy(),
+                    repiterationscount = repiterationscount,
+                    repterminationtype = repterminationtype,
+                    repvaridx = repvaridx,
+                    reprmserror = reprmserror,
+                    repavgerror = repavgerror,
+                    repavgrelerror = repavgrelerror,
+                    repmaxerror = repmaxerror,
+                    repwrmserror = repwrmserror,
+                    rep = (lsfitreport)rep.make_copy(),
+                    optstate = (minlm.minlmstate)optstate.make_copy(),
+                    optrep = (minlm.minlmreport)optrep.make_copy(),
+                    prevnpt = prevnpt,
+                    prevalgo = prevalgo,
+                    rstate = (rcommstate)rstate.make_copy()
+                };
                 return _result;
             }
         };
@@ -21229,27 +21481,27 @@ public partial class alglib
             ref double[] x2,
             ref double[] y2,
             ref int nsections,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int k0 = 0;
-            int k1 = 0;
-            int k2 = 0;
-            double[] buf0 = new double[0];
-            double[] buf1 = new double[0];
-            double[,] sections = new double[0,0];
-            double[] points = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var k0 = 0;
+            var k1 = 0;
+            var k2 = 0;
+            var buf0 = new double[0];
+            var buf1 = new double[0];
+            var sections = new double[0,0];
+            var points = new double[0];
             double v = 0;
-            int worstidx = 0;
+            var worstidx = 0;
             double worsterror = 0;
-            int idx0 = 0;
-            int idx1 = 0;
+            var idx0 = 0;
+            var idx1 = 0;
             double e0 = 0;
             double e1 = 0;
-            double[] heaperrors = new double[0];
-            int[] heaptags = new int[0];
+            var heaperrors = new double[0];
+            var heaptags = new int[0];
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -21279,10 +21531,10 @@ public partial class alglib
                 v = y[i];
                 while( j<=n-1 && (double)(x[j])==(double)(x[i]) )
                 {
-                    v = v+y[j];
-                    j = j+1;
+                    v += y[j];
+                    j++;
                 }
-                v = v/(j-i);
+                v /= (j-i);
                 for(k=i; k<=j-1; k++)
                 {
                     y[k] = v;
@@ -21440,17 +21692,17 @@ public partial class alglib
             ref double[] x2,
             ref double[] y2,
             ref int nsections,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            double[] buf0 = new double[0];
-            double[] buf1 = new double[0];
-            double[] xtmp = new double[0];
-            double[] ytmp = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var buf0 = new double[0];
+            var buf1 = new double[0];
+            var xtmp = new double[0];
+            var ytmp = new double[0];
             double v = 0;
-            int npts = 0;
+            var npts = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -21480,10 +21732,10 @@ public partial class alglib
                 v = y[i];
                 while( j<=n-1 && (double)(x[j])==(double)(x[i]) )
                 {
-                    v = v+y[j];
-                    j = j+1;
+                    v += y[j];
+                    j++;
                 }
-                v = v/(j-i);
+                v /= (j-i);
                 for(k=i; k<=j-1; k++)
                 {
                     y[k] = v;
@@ -21603,13 +21855,13 @@ public partial class alglib
             ref int info,
             ratint.barycentricinterpolant p,
             polynomialfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] w = new double[0];
-            double[] xc = new double[0];
-            double[] yc = new double[0];
-            int[] dc = new int[0];
+            var i = 0;
+            var w = new double[0];
+            var xc = new double[0];
+            var yc = new double[0];
+            var dc = new int[0];
 
             info = 0;
 
@@ -21743,28 +21995,28 @@ public partial class alglib
             ref int info,
             ratint.barycentricinterpolant p,
             polynomialfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             double xa = 0;
             double xb = 0;
             double sa = 0;
             double sb = 0;
-            double[] xoriginal = new double[0];
-            double[] yoriginal = new double[0];
-            double[] y2 = new double[0];
-            double[] w2 = new double[0];
-            double[] tmp = new double[0];
-            double[] tmp2 = new double[0];
-            double[] bx = new double[0];
-            double[] by = new double[0];
-            double[] bw = new double[0];
-            int i = 0;
-            int j = 0;
+            var xoriginal = new double[0];
+            var yoriginal = new double[0];
+            var y2 = new double[0];
+            var w2 = new double[0];
+            var tmp = new double[0];
+            var tmp2 = new double[0];
+            var bx = new double[0];
+            var by = new double[0];
+            var bw = new double[0];
+            var i = 0;
+            var j = 0;
             double u = 0;
             double v = 0;
             double s = 0;
-            int relcnt = 0;
-            lsfitreport lrep = new lsfitreport();
+            var relcnt = 0;
+            var lrep = new lsfitreport();
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -21843,10 +22095,10 @@ public partial class alglib
                         }
                         else
                         {
-                            tmp2[j] = 2*u*tmp2[j-1]-tmp2[j-2];
+                            tmp2[j] = (2 *u*tmp2[j-1]) - tmp2[j-2];
                         }
                     }
-                    v = v+tmp[j]*tmp2[j];
+                    v += (tmp[j]*tmp2[j]);
                 }
                 bx[i] = u;
                 by[i] = v;
@@ -21876,13 +22128,13 @@ public partial class alglib
             {
                 if( (double)(yoriginal[i])!=(double)(0) )
                 {
-                    rep.avgrelerror = rep.avgrelerror+Math.Abs(ratint.barycentriccalc(p, xoriginal[i], _params)-yoriginal[i])/Math.Abs(yoriginal[i]);
-                    relcnt = relcnt+1;
+                    rep.avgrelerror += (Math.Abs(ratint.barycentriccalc(p, xoriginal[i], _params)-yoriginal[i])/Math.Abs(yoriginal[i]));
+                    relcnt++;
                 }
             }
             if( relcnt!=0 )
             {
-                rep.avgrelerror = rep.avgrelerror/relcnt;
+                rep.avgrelerror /= relcnt;
             }
         }
 
@@ -21926,7 +22178,7 @@ public partial class alglib
             double b,
             double c,
             double d,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -21962,7 +22214,7 @@ public partial class alglib
             //
             // General case
             //
-            result = d+(a-d)/(1.0+Math.Pow(x/c, b));
+            result = d+ ((a-d)/(1.0+Math.Pow(x/c, b)));
             alglib.ap.assert(math.isfinite(result), "LogisticCalc4: overflow during calculations");
             return result;
         }
@@ -22009,7 +22261,7 @@ public partial class alglib
             double c,
             double d,
             double g,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -22028,7 +22280,7 @@ public partial class alglib
             //
             if( (double)(b)==(double)(0) )
             {
-                result = d+(a-d)/Math.Pow(2.0, g);
+                result = d+ ((a-d)/Math.Pow(2.0, g));
                 return result;
             }
             if( (double)(x)==(double)(0) )
@@ -22047,7 +22299,7 @@ public partial class alglib
             //
             // General case
             //
-            result = d+(a-d)/Math.Pow(1.0+Math.Pow(x/c, b), g);
+            result = d+ ((a-d)/Math.Pow(1.0+Math.Pow(x/c, b), g));
             alglib.ap.assert(math.isfinite(result), "LogisticCalc5: overflow during calculations");
             return result;
         }
@@ -22139,7 +22391,7 @@ public partial class alglib
             ref double c,
             ref double d,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             double g = 0;
 
@@ -22150,7 +22402,7 @@ public partial class alglib
             c = 0;
             d = 0;
 
-            logisticfit45x(x, y, n, Double.NaN, Double.NaN, true, 0.0, 0.0, 0, ref a, ref b, ref c, ref d, ref g, rep, _params);
+            logisticfit45x(x, y, n, double.NaN, double.NaN, true, 0.0, 0.0, 0, ref a, ref b, ref c, ref d, ref g, rep, _params);
         }
 
 
@@ -22268,7 +22520,7 @@ public partial class alglib
             ref double c,
             ref double d,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             double g = 0;
 
@@ -22373,7 +22625,7 @@ public partial class alglib
             ref double d,
             ref double g,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -22383,7 +22635,7 @@ public partial class alglib
             d = 0;
             g = 0;
 
-            logisticfit45x(x, y, n, Double.NaN, Double.NaN, false, 0.0, 0.0, 0, ref a, ref b, ref c, ref d, ref g, rep, _params);
+            logisticfit45x(x, y, n, double.NaN, double.NaN, false, 0.0, 0.0, 0, ref a, ref b, ref c, ref d, ref g, rep, _params);
         }
 
 
@@ -22512,7 +22764,7 @@ public partial class alglib
             ref double d,
             ref double g,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -22648,33 +22900,33 @@ public partial class alglib
             ref double d,
             ref double g,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int outerit = 0;
-            int nz = 0;
+            var i = 0;
+            var outerit = 0;
+            var nz = 0;
             double v = 0;
-            double[] p0 = new double[0];
-            double[] p1 = new double[0];
-            double[] p2 = new double[0];
-            double[] bndl = new double[0];
-            double[] bndu = new double[0];
-            double[] s = new double[0];
-            double[] bndl1 = new double[0];
-            double[] bndu1 = new double[0];
-            double[] bndl2 = new double[0];
-            double[] bndu2 = new double[0];
-            double[,] z = new double[0,0];
-            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
-            minlm.minlmstate state = new minlm.minlmstate();
-            minlm.minlmreport replm = new minlm.minlmreport();
-            int maxits = 0;
+            var p0 = new double[0];
+            var p1 = new double[0];
+            var p2 = new double[0];
+            var bndl = new double[0];
+            var bndu = new double[0];
+            var s = new double[0];
+            var bndl1 = new double[0];
+            var bndu1 = new double[0];
+            var bndl2 = new double[0];
+            var bndu2 = new double[0];
+            var z = new double[0,0];
+            var rs = new hqrnd.hqrndstate();
+            var state = new minlm.minlmstate();
+            var replm = new minlm.minlmreport();
+            var maxits = 0;
             double fbest = 0;
             double flast = 0;
             double scalex = 0;
             double scaley = 0;
-            double[] bufx = new double[0];
-            double[] bufy = new double[0];
+            var bufx = new double[0];
+            var bufy = new double[0];
             double fposb = 0;
             double fnegb = 0;
 
@@ -22688,8 +22940,8 @@ public partial class alglib
 
             alglib.ap.assert(math.isfinite(epsx), "LogisticFitX: EpsX is infinite/NAN");
             alglib.ap.assert(math.isfinite(lambdav), "LogisticFitX: LambdaV is infinite/NAN");
-            alglib.ap.assert(math.isfinite(cnstrleft) || Double.IsNaN(cnstrleft), "LogisticFitX: CnstrLeft is NOT finite or NAN");
-            alglib.ap.assert(math.isfinite(cnstrright) || Double.IsNaN(cnstrright), "LogisticFitX: CnstrRight is NOT finite or NAN");
+            alglib.ap.assert(math.isfinite(cnstrleft) || double.IsNaN(cnstrleft), "LogisticFitX: CnstrLeft is NOT finite or NAN");
+            alglib.ap.assert(math.isfinite(cnstrright) || double.IsNaN(cnstrright), "LogisticFitX: CnstrRight is NOT finite or NAN");
             alglib.ap.assert((double)(lambdav)>=(double)(0), "LogisticFitX: negative LambdaV");
             alglib.ap.assert(n>0, "LogisticFitX: N<=0");
             alglib.ap.assert(rscnt>=0, "LogisticFitX: RsCnt<0");
@@ -22741,9 +22993,9 @@ public partial class alglib
                 v = 0.0;
                 for(i=0; i<=n-1; i++)
                 {
-                    v = v+y[i];
+                    v += y[i];
                 }
-                v = v/n;
+                v /= n;
                 if( math.isfinite(cnstrleft) )
                 {
                     a = cnstrleft;
@@ -22771,18 +23023,18 @@ public partial class alglib
             // Non-degenerate problem.
             // Determine scale of data.
             //
-            scalex = x[nz+(n-nz)/2];
+            scalex = x[nz+ ((n-nz)/2)];
             alglib.ap.assert((double)(scalex)>(double)(0), "LogisticFitX: internal error");
             v = 0.0;
             for(i=0; i<=n-1; i++)
             {
-                v = v+y[i];
+                v += y[i];
             }
-            v = v/n;
+            v /= n;
             scaley = 0.0;
             for(i=0; i<=n-1; i++)
             {
-                scaley = scaley+math.sqr(y[i]-v);
+                scaley += math.sqr(y[i]-v);
             }
             scaley = Math.Sqrt(scaley/n);
             if( (double)(scaley)==(double)(0) )
@@ -22841,7 +23093,7 @@ public partial class alglib
                     }
                     else
                     {
-                        p1[0] = y[0]+0.15*scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5);
+                        p1[0] = y[0]+ (0.15 *scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5));
                     }
                     p1[1] = 0.5+hqrnd.hqrnduniformr(rs, _params);
                     p1[2] = x[nz+hqrnd.hqrnduniformi(rs, n-nz, _params)];
@@ -22851,7 +23103,7 @@ public partial class alglib
                     }
                     else
                     {
-                        p1[3] = y[n-1]+0.25*scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5);
+                        p1[3] = y[n-1]+ (0.25 *scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5));
                     }
                     p1[4] = 1.0;
                     
@@ -22865,8 +23117,8 @@ public partial class alglib
                     }
                     else
                     {
-                        bndl[0] = Double.NegativeInfinity;
-                        bndu[0] = Double.PositiveInfinity;
+                        bndl[0] = double.NegativeInfinity;
+                        bndu[0] = double.PositiveInfinity;
                     }
                     bndl[1] = 0.5;
                     bndu[1] = 2.0;
@@ -22879,14 +23131,14 @@ public partial class alglib
                     }
                     else
                     {
-                        bndl[3] = Double.NegativeInfinity;
-                        bndu[3] = Double.PositiveInfinity;
+                        bndl[3] = double.NegativeInfinity;
+                        bndu[3] = double.PositiveInfinity;
                     }
                     bndl[4] = 1.0;
                     bndu[4] = 1.0;
                     minlm.minlmsetbc(state, bndl, bndu, _params);
                     logisticfitinternal(x, y, n, is4pl, 100*lambdav, state, replm, ref p1, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Relax constraints, run optimization one more time
@@ -22897,7 +23149,7 @@ public partial class alglib
                     bndu[2] = scalex/math.machineepsilon;
                     minlm.minlmsetbc(state, bndl, bndu, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p1, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Relax constraints more, run optimization one more time
@@ -22906,7 +23158,7 @@ public partial class alglib
                     bndu[1] = 100.0;
                     minlm.minlmsetbc(state, bndl, bndu, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p1, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Relax constraints ever more, run optimization one more time
@@ -22915,7 +23167,7 @@ public partial class alglib
                     bndu[1] = 1000.0;
                     minlm.minlmsetbc(state, bndl, bndu, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p1, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Compare results with best value found so far.
@@ -22953,19 +23205,19 @@ public partial class alglib
                 //
                 // First, we try positive B.
                 //
-                p1[0] = y[0]+0.15*scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5);
+                p1[0] = y[0]+ (0.15 *scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5));
                 p1[1] = 0.5+hqrnd.hqrnduniformr(rs, _params);
                 p1[2] = x[nz+hqrnd.hqrnduniformi(rs, n-nz, _params)];
-                p1[3] = y[n-1]+0.25*scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5);
+                p1[3] = y[n-1]+ (0.25 *scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5));
                 p1[4] = 1.0;
-                bndl1[0] = Double.NegativeInfinity;
-                bndu1[0] = Double.PositiveInfinity;
+                bndl1[0] = double.NegativeInfinity;
+                bndu1[0] = double.PositiveInfinity;
                 bndl1[1] = 0.5;
                 bndu1[1] = 2.0;
                 bndl1[2] = 0.5*scalex;
                 bndu1[2] = 2.0*scalex;
-                bndl1[3] = Double.NegativeInfinity;
-                bndu1[3] = Double.PositiveInfinity;
+                bndl1[3] = double.NegativeInfinity;
+                bndu1[3] = double.PositiveInfinity;
                 bndl1[4] = 0.5;
                 bndu1[4] = 2.0;
                 if( math.isfinite(cnstrleft) )
@@ -22982,24 +23234,24 @@ public partial class alglib
                 }
                 minlm.minlmsetbc(state, bndl1, bndu1, _params);
                 logisticfitinternal(x, y, n, is4pl, 100*lambdav, state, replm, ref p1, ref fposb, _params);
-                rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                rep.iterationscount += replm.iterationscount;
                 
                 //
                 // Second attempt - with negative B (constraints are still tight).
                 //
-                p2[0] = y[n-1]+0.15*scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5);
+                p2[0] = y[n-1]+ (0.15 *scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5));
                 p2[1] = -(0.5+hqrnd.hqrnduniformr(rs, _params));
                 p2[2] = x[nz+hqrnd.hqrnduniformi(rs, n-nz, _params)];
-                p2[3] = y[0]+0.25*scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5);
+                p2[3] = y[0]+ (0.25 *scaley*(hqrnd.hqrnduniformr(rs, _params)-0.5));
                 p2[4] = 1.0;
-                bndl2[0] = Double.NegativeInfinity;
-                bndu2[0] = Double.PositiveInfinity;
+                bndl2[0] = double.NegativeInfinity;
+                bndu2[0] = double.PositiveInfinity;
                 bndl2[1] = -2.0;
                 bndu2[1] = -0.5;
                 bndl2[2] = 0.5*scalex;
                 bndu2[2] = 2.0*scalex;
-                bndl2[3] = Double.NegativeInfinity;
-                bndu2[3] = Double.PositiveInfinity;
+                bndl2[3] = double.NegativeInfinity;
+                bndu2[3] = double.PositiveInfinity;
                 bndl2[4] = 0.5;
                 bndu2[4] = 2.0;
                 if( math.isfinite(cnstrleft) )
@@ -23016,7 +23268,7 @@ public partial class alglib
                 }
                 minlm.minlmsetbc(state, bndl2, bndu2, _params);
                 logisticfitinternal(x, y, n, is4pl, 100*lambdav, state, replm, ref p2, ref fnegb, _params);
-                rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                rep.iterationscount += replm.iterationscount;
                 
                 //
                 // Select best version of B sign
@@ -23035,7 +23287,7 @@ public partial class alglib
                     bndu1[4] = 10.0;
                     minlm.minlmsetbc(state, bndl1, bndu1, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p1, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Prepare stronger relaxation of constraints
@@ -23044,7 +23296,7 @@ public partial class alglib
                     bndu1[1] = 100.0;
                     minlm.minlmsetbc(state, bndl1, bndu1, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p1, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Prepare stronger relaxation of constraints
@@ -23053,7 +23305,7 @@ public partial class alglib
                     bndu1[1] = 1000.0;
                     minlm.minlmsetbc(state, bndl1, bndu1, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p1, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Compare results with best value found so far.
@@ -23082,7 +23334,7 @@ public partial class alglib
                     bndu2[4] = 10.0;
                     minlm.minlmsetbc(state, bndl2, bndu2, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p2, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Prepare stronger relaxation
@@ -23091,7 +23343,7 @@ public partial class alglib
                     bndu2[1] = -0.01;
                     minlm.minlmsetbc(state, bndl2, bndu2, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p2, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Prepare stronger relaxation
@@ -23100,7 +23352,7 @@ public partial class alglib
                     bndu2[1] = -0.001;
                     minlm.minlmsetbc(state, bndl2, bndu2, _params);
                     logisticfitinternal(x, y, n, is4pl, lambdav, state, replm, ref p2, ref flast, _params);
-                    rep.iterationscount = rep.iterationscount+replm.iterationscount;
+                    rep.iterationscount += replm.iterationscount;
                     
                     //
                     // Compare results with best value found so far.
@@ -23240,15 +23492,15 @@ public partial class alglib
             ref int info,
             ratint.barycentricinterpolant b,
             barycentricfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int d = 0;
-            int i = 0;
+            var d = 0;
+            var i = 0;
             double wrmscur = 0;
             double wrmsbest = 0;
-            ratint.barycentricinterpolant locb = new ratint.barycentricinterpolant();
-            barycentricfitreport locrep = new barycentricfitreport();
-            int locinfo = 0;
+            var locb = new ratint.barycentricinterpolant();
+            var locrep = new barycentricfitreport();
+            var locinfo = 0;
 
             info = 0;
 
@@ -23295,7 +23547,7 @@ public partial class alglib
                     wrmscur = 0;
                     for(i=0; i<=n-1; i++)
                     {
-                        wrmscur = wrmscur+math.sqr(w[i]*(y[i]-ratint.barycentriccalc(locb, x[i], _params)));
+                        wrmscur += math.sqr(w[i]*(y[i]-ratint.barycentriccalc(locb, x[i], _params)));
                     }
                     wrmscur = Math.Sqrt(wrmscur/n);
                     if( (double)(wrmscur)<(double)(wrmsbest) || rep.dbest<0 )
@@ -23388,13 +23640,13 @@ public partial class alglib
             ref int info,
             ratint.barycentricinterpolant b,
             barycentricfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] w = new double[0];
-            double[] xc = new double[0];
-            double[] yc = new double[0];
-            int[] dc = new int[0];
-            int i = 0;
+            var w = new double[0];
+            var xc = new double[0];
+            var yc = new double[0];
+            var dc = new int[0];
+            var i = 0;
 
             info = 0;
 
@@ -23547,9 +23799,9 @@ public partial class alglib
             ref int info,
             spline1d.spline1dinterpolant s,
             spline1d.spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             info = 0;
 
@@ -23716,9 +23968,9 @@ public partial class alglib
             ref int info,
             spline1d.spline1dinterpolant s,
             spline1d.spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             info = 0;
 
@@ -23787,13 +24039,13 @@ public partial class alglib
             ref int info,
             spline1d.spline1dinterpolant s,
             spline1d.spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] w = new double[0];
-            double[] xc = new double[0];
-            double[] yc = new double[0];
-            int[] dc = new int[0];
+            var i = 0;
+            var w = new double[0];
+            var xc = new double[0];
+            var yc = new double[0];
+            var dc = new int[0];
 
             info = 0;
 
@@ -23854,13 +24106,13 @@ public partial class alglib
             ref int info,
             spline1d.spline1dinterpolant s,
             spline1d.spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] w = new double[0];
-            double[] xc = new double[0];
-            double[] yc = new double[0];
-            int[] dc = new int[0];
+            var i = 0;
+            var w = new double[0];
+            var xc = new double[0];
+            var yc = new double[0];
+            var dc = new int[0];
 
             info = 0;
 
@@ -23992,7 +24244,7 @@ public partial class alglib
             ref int info,
             ref double[] c,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             info = 0;
             c = new double[0];
@@ -24140,17 +24392,17 @@ public partial class alglib
             ref int info,
             ref double[] c,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            double[] tau = new double[0];
-            double[,] q = new double[0,0];
-            double[,] f2 = new double[0,0];
-            double[] tmp = new double[0];
-            double[] c0 = new double[0];
+            var i = 0;
+            var j = 0;
+            var tau = new double[0];
+            var q = new double[0,0];
+            var f2 = new double[0,0];
+            var tmp = new double[0];
+            var c0 = new double[0];
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             y = (double[])y.Clone();
             cmatrix = (double[,])cmatrix.Clone();
@@ -24239,7 +24491,7 @@ public partial class alglib
                     v = tmp[i];
                     for(i_=0; i_<=m-1;i_++)
                     {
-                        c0[i_] = c0[i_] + v*q[i,i_];
+                        c0[i_] = c0[i_] + (v *q[i,i_]);
                     }
                 }
                 
@@ -24376,10 +24628,10 @@ public partial class alglib
             ref int info,
             ref double[] c,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] w = new double[0];
-            int i = 0;
+            var w = new double[0];
+            var i = 0;
 
             info = 0;
             c = new double[0];
@@ -24525,10 +24777,10 @@ public partial class alglib
             ref int info,
             ref double[] c,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] w = new double[0];
-            int i = 0;
+            var w = new double[0];
+            var i = 0;
 
             y = (double[])y.Clone();
             info = 0;
@@ -24601,10 +24853,10 @@ public partial class alglib
             int k,
             double diffstep,
             lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>=1, "LSFitCreateWF: N<1!");
             alglib.ap.assert(m>=1, "LSFitCreateWF: M<1!");
@@ -24663,8 +24915,8 @@ public partial class alglib
             for(i=0; i<=k-1; i++)
             {
                 state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
+                state.bndl[i] = double.NegativeInfinity;
+                state.bndu[i] = double.PositiveInfinity;
             }
             state.optalgo = 0;
             state.prevnpt = -1;
@@ -24724,10 +24976,10 @@ public partial class alglib
             int k,
             double diffstep,
             lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>=1, "LSFitCreateF: N<1!");
             alglib.ap.assert(m>=1, "LSFitCreateF: M<1!");
@@ -24781,8 +25033,8 @@ public partial class alglib
             for(i=0; i<=k-1; i++)
             {
                 state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
+                state.bndl[i] = double.NegativeInfinity;
+                state.bndu[i] = double.PositiveInfinity;
             }
             state.optalgo = 0;
             state.prevnpt = -1;
@@ -24851,10 +25103,10 @@ public partial class alglib
             int k,
             bool cheapfg,
             lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>=1, "LSFitCreateWFG: N<1!");
             alglib.ap.assert(m>=1, "LSFitCreateWFG: M<1!");
@@ -24912,8 +25164,8 @@ public partial class alglib
             for(i=0; i<=k-1; i++)
             {
                 state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
+                state.bndl[i] = double.NegativeInfinity;
+                state.bndu[i] = double.PositiveInfinity;
             }
             state.optalgo = 1;
             state.prevnpt = -1;
@@ -24981,10 +25233,10 @@ public partial class alglib
             int k,
             bool cheapfg,
             lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>=1, "LSFitCreateFG: N<1!");
             alglib.ap.assert(m>=1, "LSFitCreateFG: M<1!");
@@ -25037,8 +25289,8 @@ public partial class alglib
             for(i=0; i<=k-1; i++)
             {
                 state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
+                state.bndl[i] = double.NegativeInfinity;
+                state.bndu[i] = double.PositiveInfinity;
             }
             state.optalgo = 1;
             state.prevnpt = -1;
@@ -25099,10 +25351,10 @@ public partial class alglib
             int m,
             int k,
             lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>=1, "LSFitCreateWFGH: N<1!");
             alglib.ap.assert(m>=1, "LSFitCreateWFGH: M<1!");
@@ -25161,8 +25413,8 @@ public partial class alglib
             for(i=0; i<=k-1; i++)
             {
                 state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
+                state.bndl[i] = double.NegativeInfinity;
+                state.bndu[i] = double.PositiveInfinity;
             }
             state.optalgo = 2;
             state.prevnpt = -1;
@@ -25215,10 +25467,10 @@ public partial class alglib
             int m,
             int k,
             lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             alglib.ap.assert(n>=1, "LSFitCreateFGH: N<1!");
             alglib.ap.assert(m>=1, "LSFitCreateFGH: M<1!");
@@ -25269,8 +25521,8 @@ public partial class alglib
             for(i=0; i<=k-1; i++)
             {
                 state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
+                state.bndl[i] = double.NegativeInfinity;
+                state.bndu[i] = double.PositiveInfinity;
             }
             state.optalgo = 2;
             state.prevnpt = -1;
@@ -25315,7 +25567,7 @@ public partial class alglib
         public static void lsfitsetcond(lsfitstate state,
             double epsx,
             int maxits,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(epsx), "LSFitSetCond: EpsX is not finite!");
             alglib.ap.assert((double)(epsx)>=(double)(0), "LSFitSetCond: negative EpsX!");
@@ -25348,7 +25600,7 @@ public partial class alglib
         *************************************************************************/
         public static void lsfitsetstpmax(lsfitstate state,
             double stpmax,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert((double)(stpmax)>=(double)(0), "LSFitSetStpMax: StpMax<0!");
             state.stpmax = stpmax;
@@ -25371,7 +25623,7 @@ public partial class alglib
         *************************************************************************/
         public static void lsfitsetxrep(lsfitstate state,
             bool needxrep,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -25406,9 +25658,9 @@ public partial class alglib
         *************************************************************************/
         public static void lsfitsetscale(lsfitstate state,
             double[] s,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(alglib.ap.len(s)>=state.k, "LSFitSetScale: Length(S)<K");
             for(i=0; i<=state.k-1; i++)
@@ -25451,18 +25703,18 @@ public partial class alglib
         public static void lsfitsetbc(lsfitstate state,
             double[] bndl,
             double[] bndu,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
 
             k = state.k;
             alglib.ap.assert(alglib.ap.len(bndl)>=k, "LSFitSetBC: Length(BndL)<K");
             alglib.ap.assert(alglib.ap.len(bndu)>=k, "LSFitSetBC: Length(BndU)<K");
             for(i=0; i<=k-1; i++)
             {
-                alglib.ap.assert(math.isfinite(bndl[i]) || Double.IsNegativeInfinity(bndl[i]), "LSFitSetBC: BndL contains NAN or +INF");
-                alglib.ap.assert(math.isfinite(bndu[i]) || Double.IsPositiveInfinity(bndu[i]), "LSFitSetBC: BndU contains NAN or -INF");
+                alglib.ap.assert(math.isfinite(bndl[i]) || double.IsNegativeInfinity(bndl[i]), "LSFitSetBC: BndL contains NAN or +INF");
+                alglib.ap.assert(math.isfinite(bndu[i]) || double.IsPositiveInfinity(bndu[i]), "LSFitSetBC: BndU contains NAN or -INF");
                 if( math.isfinite(bndl[i]) && math.isfinite(bndu[i]) )
                 {
                     alglib.ap.assert((double)(bndl[i])<=(double)(bndu[i]), "LSFitSetBC: BndL[i]>BndU[i]");
@@ -25519,11 +25771,11 @@ public partial class alglib
             double[,] c,
             int[] ct,
             int k,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int n = 0;
-            int i_ = 0;
+            var i = 0;
+            var n = 0;
+            var i_ = 0;
 
             n = state.k;
             
@@ -25565,7 +25817,7 @@ public partial class alglib
                     {
                         state.cleic[state.nec,i_] = c[i,i_];
                     }
-                    state.nec = state.nec+1;
+                    state.nec++;
                 }
             }
             for(i=0; i<=k-1; i++)
@@ -25586,7 +25838,7 @@ public partial class alglib
                             state.cleic[state.nec+state.nic,i_] = c[i,i_];
                         }
                     }
-                    state.nic = state.nic+1;
+                    state.nic++;
                 }
             }
         }
@@ -25631,26 +25883,26 @@ public partial class alglib
              Copyright 17.08.2009 by Bochkanov Sergey
         *************************************************************************/
         public static bool lsfititeration(lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
+            var result = new bool();
             double lx = 0;
             double lf = 0;
             double ld = 0;
             double rx = 0;
             double rf = 0;
             double rd = 0;
-            int n = 0;
-            int m = 0;
-            int k = 0;
+            var n = 0;
+            var m = 0;
+            var k = 0;
             double v = 0;
             double vv = 0;
             double relcnt = 0;
-            int i = 0;
-            int j = 0;
-            int j1 = 0;
-            int info = 0;
-            int i_ = 0;
+            var i = 0;
+            var j = 0;
+            var j1 = 0;
+            var info = 0;
+            var i_ = 0;
 
             
             //
@@ -25828,7 +26080,7 @@ public partial class alglib
             {
                 state.x[i_] = state.taskx[j,i_];
             }
-            state.c[i] = v-state.teststep*state.s[i];
+            state.c[i] = v- (state.teststep*state.s[i]);
             if( math.isfinite(state.bndl[i]) )
             {
                 state.c[i] = Math.Max(state.c[i], state.bndl[i]);
@@ -25839,7 +26091,7 @@ public partial class alglib
         lbl_0:
             lf = state.f;
             ld = state.g[i];
-            state.c[i] = v+state.teststep*state.s[i];
+            state.c[i] = v+ (state.teststep*state.s[i]);
             if( math.isfinite(state.bndu[i]) )
             {
                 state.c[i] = Math.Min(state.c[i], state.bndu[i]);
@@ -25870,10 +26122,10 @@ public partial class alglib
                 result = false;
                 return result;
             }
-            j = j+1;
+            j++;
             goto lbl_19;
         lbl_21:
-            i = i+1;
+            i++;
             goto lbl_16;
         lbl_18:
             state.needfg = false;
@@ -25933,7 +26185,7 @@ public partial class alglib
             state.needf = false;
             vv = state.wcur[i];
             state.optstate.fi[i] = vv*(state.f-state.tasky[i]);
-            i = i+1;
+            i++;
             goto lbl_26;
         lbl_28:
             goto lbl_22;
@@ -25969,8 +26221,8 @@ public partial class alglib
         lbl_4:
             state.needf = false;
             vv = state.wcur[i];
-            state.optstate.f = state.optstate.f+math.sqr(vv*(state.f-state.tasky[i]));
-            i = i+1;
+            state.optstate.f += math.sqr(vv*(state.f-state.tasky[i]));
+            i++;
             goto lbl_31;
         lbl_33:
             goto lbl_22;
@@ -26010,13 +26262,13 @@ public partial class alglib
         lbl_5:
             state.needfg = false;
             vv = state.wcur[i];
-            state.optstate.f = state.optstate.f+math.sqr(vv*(state.f-state.tasky[i]));
+            state.optstate.f += math.sqr(vv*(state.f-state.tasky[i]));
             v = math.sqr(vv)*2*(state.f-state.tasky[i]);
             for(i_=0; i_<=k-1;i_++)
             {
-                state.optstate.g[i_] = state.optstate.g[i_] + v*state.g[i_];
+                state.optstate.g[i_] = state.optstate.g[i_] + (v *state.g[i_]);
             }
-            i = i+1;
+            i++;
             goto lbl_36;
         lbl_38:
             goto lbl_22;
@@ -26056,7 +26308,7 @@ public partial class alglib
             {
                 state.optstate.j[i,i_] = vv*state.g[i_];
             }
-            i = i+1;
+            i++;
             goto lbl_41;
         lbl_43:
             goto lbl_22;
@@ -26103,26 +26355,26 @@ public partial class alglib
         lbl_7:
             state.needfgh = false;
             vv = state.wcur[i];
-            state.optstate.f = state.optstate.f+math.sqr(vv*(state.f-state.tasky[i]));
+            state.optstate.f += math.sqr(vv*(state.f-state.tasky[i]));
             v = math.sqr(vv)*2*(state.f-state.tasky[i]);
             for(i_=0; i_<=k-1;i_++)
             {
-                state.optstate.g[i_] = state.optstate.g[i_] + v*state.g[i_];
+                state.optstate.g[i_] = state.optstate.g[i_] + (v *state.g[i_]);
             }
             for(j=0; j<=k-1; j++)
             {
                 v = 2*math.sqr(vv)*state.g[j];
                 for(i_=0; i_<=k-1;i_++)
                 {
-                    state.optstate.h[j,i_] = state.optstate.h[j,i_] + v*state.g[i_];
+                    state.optstate.h[j,i_] = state.optstate.h[j,i_] + (v *state.g[i_]);
                 }
                 v = 2*math.sqr(vv)*(state.f-state.tasky[i]);
                 for(i_=0; i_<=k-1;i_++)
                 {
-                    state.optstate.h[j,i_] = state.optstate.h[j,i_] + v*state.h[j,i_];
+                    state.optstate.h[j,i_] = state.optstate.h[j,i_] + (v *state.h[j,i_]);
                 }
             }
-            i = i+1;
+            i++;
             goto lbl_46;
         lbl_48:
             goto lbl_22;
@@ -26203,24 +26455,24 @@ public partial class alglib
             state.needf = false;
             v = state.f;
             vv = state.wcur[i];
-            state.reprmserror = state.reprmserror+math.sqr(v-state.tasky[i]);
-            state.repwrmserror = state.repwrmserror+math.sqr(vv*(v-state.tasky[i]));
-            state.repavgerror = state.repavgerror+Math.Abs(v-state.tasky[i]);
+            state.reprmserror += math.sqr(v-state.tasky[i]);
+            state.repwrmserror += math.sqr(vv*(v-state.tasky[i]));
+            state.repavgerror += Math.Abs(v-state.tasky[i]);
             if( (double)(state.tasky[i])!=(double)(0) )
             {
-                state.repavgrelerror = state.repavgrelerror+Math.Abs(v-state.tasky[i])/Math.Abs(state.tasky[i]);
-                relcnt = relcnt+1;
+                state.repavgrelerror += (Math.Abs(v-state.tasky[i])/Math.Abs(state.tasky[i]));
+                relcnt++;
             }
             state.repmaxerror = Math.Max(state.repmaxerror, Math.Abs(v-state.tasky[i]));
-            i = i+1;
+            i++;
             goto lbl_53;
         lbl_55:
             state.reprmserror = Math.Sqrt(state.reprmserror/n);
             state.repwrmserror = Math.Sqrt(state.repwrmserror/n);
-            state.repavgerror = state.repavgerror/n;
+            state.repavgerror /= n;
             if( (double)(relcnt)!=(double)(0) )
             {
-                state.repavgrelerror = state.repavgrelerror/relcnt;
+                state.repavgrelerror /= relcnt;
             }
             
             //
@@ -26261,7 +26513,7 @@ public partial class alglib
                 goto lbl_63;
             }
             v = state.c[j];
-            lx = v-state.diffstep*state.s[j];
+            lx = v- (state.diffstep*state.s[j]);
             state.c[j] = lx;
             if( math.isfinite(state.bndl[j]) )
             {
@@ -26271,7 +26523,7 @@ public partial class alglib
             goto lbl_rcomm;
         lbl_11:
             lf = state.f;
-            rx = v+state.diffstep*state.s[j];
+            rx = v+ (state.diffstep*state.s[j]);
             state.c[j] = rx;
             if( math.isfinite(state.bndu[j]) )
             {
@@ -26290,10 +26542,10 @@ public partial class alglib
             {
                 state.tmpjac[i,j] = 0;
             }
-            j = j+1;
+            j++;
             goto lbl_61;
         lbl_63:
-            i = i+1;
+            i++;
             goto lbl_58;
         lbl_60:
             state.needf = false;
@@ -26324,7 +26576,7 @@ public partial class alglib
             {
                 state.tmpjac[i,j] = state.g[j];
             }
-            i = i+1;
+            i++;
             goto lbl_64;
         lbl_66:
             state.needfg = false;
@@ -26441,11 +26693,11 @@ public partial class alglib
             ref int info,
             ref double[] c,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int i_ = 0;
+            var i = 0;
+            var j = 0;
+            var i_ = 0;
 
             info = 0;
             c = new double[0];
@@ -26541,7 +26793,7 @@ public partial class alglib
         *************************************************************************/
         public static void lsfitsetgradientcheck(lsfitstate state,
             double teststep,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(teststep), "LSFitSetGradientCheck: TestStep contains NaN or Infinite");
             alglib.ap.assert((double)(teststep)>=(double)(0), "LSFitSetGradientCheck: invalid argument TestStep(TestStep<0)");
@@ -26576,9 +26828,9 @@ public partial class alglib
             int i1,
             ref int worstidx,
             ref double worsterror,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double xleft = 0;
             double xright = 0;
             double vx = 0;
@@ -26598,13 +26850,13 @@ public partial class alglib
                 return;
             }
             a = (y[i1]-y[i0])/(xright-xleft);
-            b = (y[i0]*xright-y[i1]*xleft)/(xright-xleft);
+            b = ((y[i0]*xright) - y[i1]*xleft)/(xright-xleft);
             worstidx = -1;
             worsterror = 0;
             for(i=i0+1; i<=i1-1; i++)
             {
                 vx = x[i];
-                ve = Math.Abs(a*vx+b-y[i]);
+                ve = Math.Abs((a * vx) + b-y[i]);
                 if( ((double)(vx)>(double)(xleft) && (double)(vx)<(double)(xright)) && (double)(ve)>(double)(worsterror) )
                 {
                     worsterror = ve;
@@ -26642,9 +26894,9 @@ public partial class alglib
             double[] xout,
             double[] yout,
             ref int nout,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int worstidx = 0;
+            var worstidx = 0;
             double worsterror = 0;
 
             alglib.ap.assert((double)(eps)>(double)(0), "RDPRecursive: internal error, Eps<0");
@@ -26655,7 +26907,7 @@ public partial class alglib
             }
             xout[nout] = x[worstidx];
             yout[nout] = y[worstidx];
-            nout = nout+1;
+            nout++;
             if( worstidx-i0<i1-worstidx )
             {
                 rdprecursive(x, y, i0, worstidx, eps, xout, yout, ref nout, _params);
@@ -26685,10 +26937,10 @@ public partial class alglib
             minlm.minlmreport replm,
             ref double[] p1,
             ref double flast,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double ta = 0;
             double tb = 0;
             double tc = 0;
@@ -26803,25 +27055,25 @@ public partial class alglib
                         //
                         if( is4pl )
                         {
-                            state.fi[i] = td+(ta-td)/vp1-y[i];
+                            state.fi[i] = td+ ((ta-td)/vp1) - y[i];
                             if( state.needfij )
                             {
                                 state.j[i,0] = 1/vp1;
                                 state.j[i,1] = -((ta-td)*vp0*Math.Log(x[i]/tc)/math.sqr(vp1));
                                 state.j[i,2] = (ta-td)*(tb/tc)*vp0/math.sqr(vp1);
-                                state.j[i,3] = 1-1/vp1;
+                                state.j[i,3] = 1- (1 / vp1);
                                 state.j[i,4] = 0;
                             }
                         }
                         else
                         {
-                            state.fi[i] = td+(ta-td)/vp1-y[i];
+                            state.fi[i] = td+ ((ta-td)/vp1) - y[i];
                             if( state.needfij )
                             {
                                 state.j[i,0] = 1/vp1;
                                 state.j[i,1] = (ta-td)*-tg*Math.Pow(1+vp0, -tg-1)*vp0*Math.Log(x[i]/tc);
                                 state.j[i,2] = (ta-td)*-tg*Math.Pow(1+vp0, -tg-1)*vp0*-(tb/tc);
-                                state.j[i,3] = 1-1/vp1;
+                                state.j[i,3] = 1- (1 / vp1);
                                 state.j[i,4] = -((ta-td)/vp1*Math.Log(1+vp0));
                             }
                         }
@@ -26872,10 +27124,10 @@ public partial class alglib
             double d,
             double g,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
             double v = 0;
             double rss = 0;
             double tss = 0;
@@ -26895,9 +27147,9 @@ public partial class alglib
             meany = 0.0;
             for(i=0; i<=n-1; i++)
             {
-                meany = meany+y[i];
+                meany += y[i];
             }
-            meany = meany/n;
+            meany /= n;
             for(i=0; i<=n-1; i++)
             {
                 
@@ -26906,7 +27158,7 @@ public partial class alglib
                 //
                 if( (double)(x[i])>(double)(0) )
                 {
-                    v = d+(a-d)/Math.Pow(1.0+Math.Pow(x[i]/c, b), g)-y[i];
+                    v = d+ ((a-d)/Math.Pow(1.0+Math.Pow(x[i]/c, b), g)) - y[i];
                 }
                 else
                 {
@@ -26931,28 +27183,28 @@ public partial class alglib
                 //       determining R2, each of them giving different results. Formula
                 //       above is the most intuitive one.
                 //
-                rss = rss+v*v;
-                tss = tss+math.sqr(y[i]-meany);
+                rss += (v * v);
+                tss += math.sqr(y[i]-meany);
                 
                 //
                 // Update errors
                 //
-                rep.rmserror = rep.rmserror+math.sqr(v);
-                rep.avgerror = rep.avgerror+Math.Abs(v);
+                rep.rmserror += math.sqr(v);
+                rep.avgerror += Math.Abs(v);
                 if( (double)(y[i])!=(double)(0) )
                 {
-                    rep.avgrelerror = rep.avgrelerror+Math.Abs(v/y[i]);
-                    k = k+1;
+                    rep.avgrelerror += Math.Abs(v/y[i]);
+                    k++;
                 }
                 rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v));
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/n);
-            rep.avgerror = rep.avgerror/n;
+            rep.avgerror /= n;
             if( k>0 )
             {
-                rep.avgrelerror = rep.avgrelerror/k;
+                rep.avgrelerror /= k;
             }
-            rep.r2 = 1.0-rss/tss;
+            rep.r2 = 1.0- (rss / tss);
         }
 
 
@@ -26975,27 +27227,27 @@ public partial class alglib
             ref int info,
             spline1d.spline1dinterpolant s,
             spline1d.spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] fmatrix = new double[0,0];
-            double[,] cmatrix = new double[0,0];
-            double[] y2 = new double[0];
-            double[] w2 = new double[0];
-            double[] sx = new double[0];
-            double[] sy = new double[0];
-            double[] sd = new double[0];
-            double[] tmp = new double[0];
-            double[] xoriginal = new double[0];
-            double[] yoriginal = new double[0];
-            lsfitreport lrep = new lsfitreport();
+            var fmatrix = new double[0,0];
+            var cmatrix = new double[0,0];
+            var y2 = new double[0];
+            var w2 = new double[0];
+            var sx = new double[0];
+            var sy = new double[0];
+            var sd = new double[0];
+            var tmp = new double[0];
+            var xoriginal = new double[0];
+            var yoriginal = new double[0];
+            var lrep = new lsfitreport();
             double v0 = 0;
             double v1 = 0;
             double v2 = 0;
             double mx = 0;
-            spline1d.spline1dinterpolant s2 = new spline1d.spline1dinterpolant();
-            int i = 0;
-            int j = 0;
-            int relcnt = 0;
+            var s2 = new spline1d.spline1dinterpolant();
+            var i = 0;
+            var j = 0;
+            var relcnt = 0;
             double xa = 0;
             double xb = 0;
             double sa = 0;
@@ -27003,7 +27255,7 @@ public partial class alglib
             double bl = 0;
             double br = 0;
             double decay = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -27089,7 +27341,7 @@ public partial class alglib
                 sy = new double[m-2];
                 for(j=0; j<=m-2-1; j++)
                 {
-                    sx[j] = (double)(2*j)/(double)(m-2-1)-1;
+                    sx[j] = ((double)(2*j)/(double)(m-2-1)) - 1;
                 }
             }
             if( st==1 )
@@ -27101,9 +27353,9 @@ public partial class alglib
                 sx = new double[m/2];
                 sy = new double[m/2];
                 sd = new double[m/2];
-                for(j=0; j<=m/2-1; j++)
+                for(j=0; j<= (m / 2) - 1; j++)
                 {
-                    sx[j] = (double)(2*j)/(double)(m/2-1)-1;
+                    sx[j] = ((double)(2*j)/(double)((m / 2) - 1)) - 1;
                 }
             }
             
@@ -27153,7 +27405,7 @@ public partial class alglib
                     //
                     // Hermite basis
                     //
-                    for(i=0; i<=m/2-1; i++)
+                    for(i=0; i<= (m / 2) - 1; i++)
                     {
                         sy[i] = 0;
                         sd[i] = 0;
@@ -27225,9 +27477,9 @@ public partial class alglib
             mx = 0;
             for(i=0; i<=n-1; i++)
             {
-                mx = mx+Math.Abs(w[i]);
+                mx += Math.Abs(w[i]);
             }
-            mx = mx/n;
+            mx /= n;
             for(i=0; i<=m-1; i++)
             {
                 y2[n+i] = 0;
@@ -27279,10 +27531,10 @@ public partial class alglib
                 //
                 // Hermite basis
                 //
-                for(i=0; i<=m/2-1; i++)
+                for(i=0; i<= (m / 2) - 1; i++)
                 {
                     sy[i] = tmp[2*i];
-                    sd[i] = tmp[2*i+1];
+                    sd[i] = tmp[(2 * i) + 1];
                 }
                 spline1d.spline1dbuildhermite(sx, sy, sd, m/2, s, _params);
             }
@@ -27304,13 +27556,13 @@ public partial class alglib
             {
                 if( (double)(yoriginal[i])!=(double)(0) )
                 {
-                    rep.avgrelerror = rep.avgrelerror+Math.Abs(spline1d.spline1dcalc(s, xoriginal[i], _params)-yoriginal[i])/Math.Abs(yoriginal[i]);
-                    relcnt = relcnt+1;
+                    rep.avgrelerror += (Math.Abs(spline1d.spline1dcalc(s, xoriginal[i], _params)-yoriginal[i])/Math.Abs(yoriginal[i]));
+                    relcnt++;
                 }
             }
             if( relcnt!=0 )
             {
-                rep.avgrelerror = rep.avgrelerror/relcnt;
+                rep.avgrelerror /= relcnt;
             }
         }
 
@@ -27326,29 +27578,29 @@ public partial class alglib
             ref int info,
             ref double[] c,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             double threshold = 0;
-            double[,] ft = new double[0,0];
-            double[,] q = new double[0,0];
-            double[,] l = new double[0,0];
-            double[,] r = new double[0,0];
-            double[] b = new double[0];
-            double[] wmod = new double[0];
-            double[] tau = new double[0];
-            double[] nzeros = new double[0];
-            double[] s = new double[0];
-            int i = 0;
-            int j = 0;
+            var ft = new double[0,0];
+            var q = new double[0,0];
+            var l = new double[0,0];
+            var r = new double[0,0];
+            var b = new double[0];
+            var wmod = new double[0];
+            var tau = new double[0];
+            var nzeros = new double[0];
+            var s = new double[0];
+            var i = 0;
+            var j = 0;
             double v = 0;
-            double[] sv = new double[0];
-            double[,] u = new double[0,0];
-            double[,] vt = new double[0,0];
-            double[] tmp = new double[0];
-            double[] utb = new double[0];
-            double[] sutb = new double[0];
-            int relcnt = 0;
-            int i_ = 0;
+            var sv = new double[0];
+            var u = new double[0,0];
+            var vt = new double[0,0];
+            var tmp = new double[0];
+            var utb = new double[0];
+            var sutb = new double[0];
+            var relcnt = 0;
+            var i_ = 0;
 
             info = 0;
             c = new double[0];
@@ -27407,7 +27659,7 @@ public partial class alglib
                     v = tmp[i];
                     for(i_=0; i_<=m-1;i_++)
                     {
-                        c[i_] = c[i_] + v*q[i,i_];
+                        c[i_] = c[i_] + (v *q[i,i_]);
                     }
                 }
                 return;
@@ -27441,7 +27693,7 @@ public partial class alglib
                 v = b[i];
                 for(i_=0; i_<=m-1;i_++)
                 {
-                    tmp[i_] = tmp[i_] + v*q[i,i_];
+                    tmp[i_] = tmp[i_] + (v *q[i,i_]);
                 }
             }
             b = new double[m];
@@ -27501,7 +27753,7 @@ public partial class alglib
                     v = b[i];
                     for(i_=0; i_<=m-1;i_++)
                     {
-                        utb[i_] = utb[i_] + v*u[i,i_];
+                        utb[i_] = utb[i_] + (v *u[i,i_]);
                     }
                 }
                 if( (double)(sv[0])>(double)(0) )
@@ -27537,7 +27789,7 @@ public partial class alglib
                     v = sutb[i];
                     for(i_=0; i_<=m-1;i_++)
                     {
-                        c[i_] = c[i_] + v*vt[i,i_];
+                        c[i_] = c[i_] + (v *vt[i,i_]);
                     }
                 }
             }
@@ -27557,20 +27809,20 @@ public partial class alglib
                 {
                     v += fmatrix[i,i_]*c[i_];
                 }
-                rep.rmserror = rep.rmserror+math.sqr(v-y[i]);
-                rep.avgerror = rep.avgerror+Math.Abs(v-y[i]);
+                rep.rmserror += math.sqr(v-y[i]);
+                rep.avgerror += Math.Abs(v-y[i]);
                 if( (double)(y[i])!=(double)(0) )
                 {
-                    rep.avgrelerror = rep.avgrelerror+Math.Abs(v-y[i])/Math.Abs(y[i]);
-                    relcnt = relcnt+1;
+                    rep.avgrelerror += (Math.Abs(v-y[i])/Math.Abs(y[i]));
+                    relcnt++;
                 }
                 rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v-y[i]));
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/n);
-            rep.avgerror = rep.avgerror/n;
+            rep.avgerror /= n;
             if( relcnt!=0 )
             {
-                rep.avgrelerror = rep.avgrelerror/relcnt;
+                rep.avgrelerror /= relcnt;
             }
             nzeros = new double[n];
             s = new double[m];
@@ -27605,7 +27857,7 @@ public partial class alglib
         Internal subroutine
         *************************************************************************/
         private static void lsfitclearrequestfields(lsfitstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.needf = false;
             state.needfg = false;
@@ -27624,14 +27876,14 @@ public partial class alglib
         private static void barycentriccalcbasis(ratint.barycentricinterpolant b,
             double t,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
             double s2 = 0;
             double s = 0;
             double v = 0;
-            int i = 0;
-            int j = 0;
-            int i_ = 0;
+            var i = 0;
+            var j = 0;
+            var i_ = 0;
 
             
             //
@@ -27675,9 +27927,9 @@ public partial class alglib
             for(i=0; i<=b.n-1; i++)
             {
                 v = s/(t-b.x[i]);
-                v = v*b.w[i];
+                v *= b.w[i];
                 y[i] = v;
-                s2 = s2+v;
+                s2 += v;
             }
             v = 1/s2;
             for(i_=0; i_<=b.n-1;i_++)
@@ -27747,23 +27999,23 @@ public partial class alglib
             ref int info,
             ref double[] c,
             lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] y2 = new double[0];
-            double[] w2 = new double[0];
-            double[] tmp = new double[0];
-            double[] tmp2 = new double[0];
-            double[] tmpdiff = new double[0];
-            double[] bx = new double[0];
-            double[] by = new double[0];
-            double[] bw = new double[0];
-            double[,] fmatrix = new double[0,0];
-            double[,] cmatrix = new double[0,0];
-            int i = 0;
-            int j = 0;
+            var y2 = new double[0];
+            var w2 = new double[0];
+            var tmp = new double[0];
+            var tmp2 = new double[0];
+            var tmpdiff = new double[0];
+            var bx = new double[0];
+            var by = new double[0];
+            var bw = new double[0];
+            var fmatrix = new double[0,0];
+            var cmatrix = new double[0,0];
+            var i = 0;
+            var j = 0;
             double mx = 0;
             double decay = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             xc = (double[])xc.Clone();
             yc = (double[])yc.Clone();
@@ -27824,7 +28076,7 @@ public partial class alglib
                         }
                         else
                         {
-                            tmp[j] = 2*x[i]*tmp[j-1]-tmp[j-2];
+                            tmp[j] = (2 *x[i]*tmp[j-1]) - tmp[j-2];
                         }
                     }
                 }
@@ -27858,9 +28110,9 @@ public partial class alglib
             mx = 0;
             for(i=0; i<=n-1; i++)
             {
-                mx = mx+Math.Abs(w[i]);
+                mx += Math.Abs(w[i]);
             }
-            mx = mx/n;
+            mx /= n;
             for(i=0; i<=m-1; i++)
             {
                 y2[n+i] = 0;
@@ -27894,8 +28146,8 @@ public partial class alglib
                         }
                         else
                         {
-                            tmp[j] = 2*xc[i]*tmp[j-1]-tmp[j-2];
-                            tmpdiff[j] = 2*(tmp[j-1]+xc[i]*tmpdiff[j-1])-tmpdiff[j-2];
+                            tmp[j] = (2 *xc[i]*tmp[j-1]) - tmp[j-2];
+                            tmpdiff[j] = (2 *(tmp[j-1]+ (xc[i]*tmpdiff[j-1]))) - tmpdiff[j-2];
                         }
                     }
                 }
@@ -27958,32 +28210,32 @@ public partial class alglib
             ref int info,
             ratint.barycentricinterpolant b,
             barycentricfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] fmatrix = new double[0,0];
-            double[,] cmatrix = new double[0,0];
-            double[] y2 = new double[0];
-            double[] w2 = new double[0];
-            double[] sx = new double[0];
-            double[] sy = new double[0];
-            double[] sbf = new double[0];
-            double[] xoriginal = new double[0];
-            double[] yoriginal = new double[0];
-            double[] tmp = new double[0];
-            lsfitreport lrep = new lsfitreport();
+            var fmatrix = new double[0,0];
+            var cmatrix = new double[0,0];
+            var y2 = new double[0];
+            var w2 = new double[0];
+            var sx = new double[0];
+            var sy = new double[0];
+            var sbf = new double[0];
+            var xoriginal = new double[0];
+            var yoriginal = new double[0];
+            var tmp = new double[0];
+            var lrep = new lsfitreport();
             double v0 = 0;
             double v1 = 0;
             double mx = 0;
-            ratint.barycentricinterpolant b2 = new ratint.barycentricinterpolant();
-            int i = 0;
-            int j = 0;
-            int relcnt = 0;
+            var b2 = new ratint.barycentricinterpolant();
+            var i = 0;
+            var j = 0;
+            var relcnt = 0;
             double xa = 0;
             double xb = 0;
             double sa = 0;
             double sb = 0;
             double decay = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -28053,7 +28305,7 @@ public partial class alglib
             sbf = new double[m];
             for(j=0; j<=m-1; j++)
             {
-                sx[j] = (double)(2*j)/(double)(m-1)-1;
+                sx[j] = ((double)(2*j)/(double)(m-1)) - 1;
             }
             for(i=0; i<=m-1; i++)
             {
@@ -28070,7 +28322,7 @@ public partial class alglib
                 }
                 y2[i] = y[i];
                 w2[i] = w[i];
-                mx = mx+Math.Abs(w[i])/n;
+                mx += (Math.Abs(w[i])/n);
             }
             for(i=0; i<=m-1; i++)
             {
@@ -28168,19 +28420,19 @@ public partial class alglib
             {
                 if( (double)(yoriginal[i])!=(double)(0) )
                 {
-                    rep.avgrelerror = rep.avgrelerror+Math.Abs(ratint.barycentriccalc(b, xoriginal[i], _params)-yoriginal[i])/Math.Abs(yoriginal[i]);
-                    relcnt = relcnt+1;
+                    rep.avgrelerror += (Math.Abs(ratint.barycentriccalc(b, xoriginal[i], _params)-yoriginal[i])/Math.Abs(yoriginal[i]));
+                    relcnt++;
                 }
             }
             if( relcnt!=0 )
             {
-                rep.avgrelerror = rep.avgrelerror/relcnt;
+                rep.avgrelerror /= relcnt;
             }
         }
 
 
         private static void clearreport(lsfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             rep.taskrcond = 0;
             rep.iterationscount = 0;
@@ -28297,22 +28549,22 @@ public partial class alglib
             lsfitreport rep,
             ref double[,] z,
             int zkind,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int j1 = 0;
+            var i = 0;
+            var j = 0;
+            var j1 = 0;
             double v = 0;
             double noisec = 0;
-            int info = 0;
-            matinv.matinvreport invrep = new matinv.matinvreport();
-            int nzcnt = 0;
+            var info = 0;
+            var invrep = new matinv.matinvreport();
+            var nzcnt = 0;
             double avg = 0;
             double rss = 0;
             double tss = 0;
             double sz = 0;
             double ss = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             s = (double[])s.Clone();
 
@@ -28325,7 +28577,7 @@ public partial class alglib
             {
                 if( (double)(w[i])!=(double)(0) )
                 {
-                    nzcnt = nzcnt+1;
+                    nzcnt++;
                 }
             }
             
@@ -28339,10 +28591,10 @@ public partial class alglib
                 {
                     if( (double)(w[i])!=(double)(0) )
                     {
-                        avg = avg+y[i];
+                        avg += y[i];
                     }
                 }
-                avg = avg/nzcnt;
+                avg /= nzcnt;
                 rss = 0.0;
                 tss = 0.0;
                 for(i=0; i<=n-1; i++)
@@ -28354,14 +28606,14 @@ public partial class alglib
                         {
                             v += f1[i,i_]*x[i_];
                         }
-                        v = v+f0[i];
-                        rss = rss+math.sqr(v-y[i]);
-                        tss = tss+math.sqr(y[i]-avg);
+                        v += f0[i];
+                        rss += math.sqr(v-y[i]);
+                        tss += math.sqr(y[i]-avg);
                     }
                 }
                 if( (double)(tss)!=(double)(0) )
                 {
-                    rep.r2 = Math.Max(1.0-rss/tss, 0.0);
+                    rep.r2 = Math.Max(1.0- (rss / tss), 0.0);
                 }
                 else
                 {
@@ -28390,8 +28642,8 @@ public partial class alglib
                         {
                             v += f1[i,i_]*x[i_];
                         }
-                        v = v+f0[i];
-                        noisec = noisec+math.sqr((v-y[i])*w[i]);
+                        v += f0[i];
+                        noisec += math.sqr((v-y[i])*w[i]);
                     }
                 }
                 noisec = Math.Sqrt(noisec/(nzcnt-k));
@@ -28448,7 +28700,7 @@ public partial class alglib
                     {
                         for(j=0; j<=k-1; j++)
                         {
-                            sz = sz+z[i,j]*z[i,j];
+                            sz += (z[i,j]*z[i,j]);
                         }
                     }
                     if( (double)(sz)==(double)(0) )
@@ -28458,7 +28710,7 @@ public partial class alglib
                     ss = 0;
                     for(j=0; j<=k-1; j++)
                     {
-                        ss = ss+1/math.sqr(s[j]);
+                        ss += (1 /math.sqr(s[j]));
                     }
                     for(j=0; j<=k-1; j++)
                     {
@@ -28475,7 +28727,7 @@ public partial class alglib
                         ablas.rmatrixsyrk(k, n, 1.0, z, 0, 0, 2, 0.0, rep.covpar, 0, 0, true, _params);
                         for(i=0; i<=k-1; i++)
                         {
-                            rep.covpar[i,i] = rep.covpar[i,i]+v*s[i];
+                            rep.covpar[i,i] = rep.covpar[i,i]+ (v *s[i]);
                         }
                         matinv.spdmatrixinverse(ref rep.covpar, k, true, ref info, invrep, _params);
                         v = 10*v;
@@ -28511,7 +28763,7 @@ public partial class alglib
                     sz = 0;
                     for(j=0; j<=k-1; j++)
                     {
-                        sz = sz+Math.Abs(z[j,j]/noisec);
+                        sz += Math.Abs(z[j,j]/noisec);
                     }
                     if( (double)(sz)==(double)(0) )
                     {
@@ -28520,7 +28772,7 @@ public partial class alglib
                     ss = 0;
                     for(j=0; j<=k-1; j++)
                     {
-                        ss = ss+1/s[j];
+                        ss += (1 /s[j]);
                     }
                     for(j=0; j<=k-1; j++)
                     {
@@ -28540,7 +28792,7 @@ public partial class alglib
                             {
                                 rep.covpar[i,j] = z[i,j]/noisec;
                             }
-                            rep.covpar[i,i] = rep.covpar[i,i]+v*s[i];
+                            rep.covpar[i,i] = rep.covpar[i,i]+ (v *s[i]);
                         }
                         matinv.spdmatrixcholeskyinverse(ref rep.covpar, k, true, ref info, invrep, _params);
                         v = 10*v;
@@ -28591,7 +28843,7 @@ public partial class alglib
                 {
                     for(j1=0; j1<=k-1; j1++)
                     {
-                        v = v+f1[i,j]*rep.covpar[j,j1]*f1[i,j1];
+                        v += (f1[i,j]*rep.covpar[j,j1]*f1[i,j1]);
                     }
                 }
                 rep.errcurve[i] = Math.Sqrt(v);
@@ -28625,11 +28877,13 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                fitsphereinternalreport _result = new fitsphereinternalreport();
-                _result.nfev = nfev;
-                _result.iterationscount = iterationscount;
+                var _result = new fitsphereinternalreport
+                {
+                    nfev = nfev,
+                    iterationscount = iterationscount
+                };
                 return _result;
             }
         };
@@ -28663,7 +28917,7 @@ public partial class alglib
             int nx,
             ref double[] cx,
             ref double r,
-            alglib.xparams _params)
+            xparams _params)
         {
             double dummy = 0;
 
@@ -28708,7 +28962,7 @@ public partial class alglib
             int nx,
             ref double[] cx,
             ref double rhi,
-            alglib.xparams _params)
+            xparams _params)
         {
             double dummy = 0;
 
@@ -28753,7 +29007,7 @@ public partial class alglib
             int nx,
             ref double[] cx,
             ref double rlo,
-            alglib.xparams _params)
+            xparams _params)
         {
             double dummy = 0;
 
@@ -28800,7 +29054,7 @@ public partial class alglib
             ref double[] cx,
             ref double rlo,
             ref double rhi,
-            alglib.xparams _params)
+            xparams _params)
         {
             cx = new double[0];
             rlo = 0;
@@ -28971,9 +29225,9 @@ public partial class alglib
             ref double[] cx,
             ref double rlo,
             ref double rhi,
-            alglib.xparams _params)
+            xparams _params)
         {
-            fitsphereinternalreport rep = new fitsphereinternalreport();
+            var rep = new fitsphereinternalreport();
 
             cx = new double[0];
             rlo = 0;
@@ -29068,40 +29322,40 @@ public partial class alglib
             ref double rlo,
             ref double rhi,
             fitsphereinternalreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
             double vv = 0;
-            int cpr = 0;
-            bool userlo = new bool();
-            bool userhi = new bool();
+            var cpr = 0;
+            var userlo = new bool();
+            var userhi = new bool();
             double vlo = 0;
             double vhi = 0;
-            double[] vmin = new double[0];
-            double[] vmax = new double[0];
+            var vmin = new double[0];
+            var vmax = new double[0];
             double spread = 0;
-            double[] pcr = new double[0];
-            double[] scr = new double[0];
-            double[] bl = new double[0];
-            double[] bu = new double[0];
-            int suboffset = 0;
-            int dstrow = 0;
-            minnlc.minnlcstate nlcstate = new minnlc.minnlcstate();
-            minnlc.minnlcreport nlcrep = new minnlc.minnlcreport();
-            double[,] cmatrix = new double[0,0];
-            int[] ct = new int[0];
-            int outeridx = 0;
-            int maxouterits = 0;
-            int maxits = 0;
+            var pcr = new double[0];
+            var scr = new double[0];
+            var bl = new double[0];
+            var bu = new double[0];
+            var suboffset = 0;
+            var dstrow = 0;
+            var nlcstate = new minnlc.minnlcstate();
+            var nlcrep = new minnlc.minnlcreport();
+            var cmatrix = new double[0,0];
+            var ct = new int[0];
+            var outeridx = 0;
+            var maxouterits = 0;
+            var maxits = 0;
             double safeguard = 0;
             double bi = 0;
-            minbleic.minbleicstate blcstate = new minbleic.minbleicstate();
-            minbleic.minbleicreport blcrep = new minbleic.minbleicreport();
-            double[] prevc = new double[0];
-            minlm.minlmstate lmstate = new minlm.minlmstate();
-            minlm.minlmreport lmrep = new minlm.minlmreport();
+            var blcstate = new minbleic.minbleicstate();
+            var blcrep = new minbleic.minbleicreport();
+            var prevc = new double[0];
+            var lmstate = new minlm.minlmstate();
+            var lmrep = new minlm.minlmreport();
 
             cx = new double[0];
             rlo = 0;
@@ -29175,7 +29429,7 @@ public partial class alglib
                 v = 0;
                 for(j=0; j<=nx-1; j++)
                 {
-                    v = v+math.sqr(xy[i,j]-cx[j]);
+                    v += math.sqr(xy[i,j]-cx[j]);
                 }
                 v = Math.Sqrt(v);
                 rhi = Math.Max(rhi, v);
@@ -29207,8 +29461,8 @@ public partial class alglib
             {
                 pcr[j] = cx[j];
                 scr[j] = 0.1*spread;
-                bl[j] = cx[j]-safeguard*spread;
-                bu[j] = cx[j]+safeguard*spread;
+                bl[j] = cx[j]- (safeguard * spread);
+                bu[j] = cx[j]+ (safeguard * spread);
             }
             pcr[nx+0] = rlo;
             pcr[nx+1] = rhi;
@@ -29243,14 +29497,14 @@ public partial class alglib
                             v = 0;
                             for(j=0; j<=nx-1; j++)
                             {
-                                v = v+math.sqr(lmstate.x[j]-xy[i,j]);
+                                v += math.sqr(lmstate.x[j]-xy[i,j]);
                             }
                             lmstate.fi[i] = Math.Sqrt(v)-lmstate.x[nx];
                             if( lmstate.needfij )
                             {
                                 for(j=0; j<=nx-1; j++)
                                 {
-                                    lmstate.j[i,j] = 0.5/(1.0E-9*spread+Math.Sqrt(v))*2*(lmstate.x[j]-xy[i,j]);
+                                    lmstate.j[i,j] = 0.5/((1.0E-9 * spread) + Math.Sqrt(v))*2*(lmstate.x[j]-xy[i,j]);
                                 }
                                 lmstate.j[i,nx] = -1;
                             }
@@ -29261,7 +29515,7 @@ public partial class alglib
                 }
                 minlm.minlmresults(lmstate, ref pcr, lmrep, _params);
                 alglib.ap.assert(lmrep.terminationtype>0, "FitSphereX: unexpected failure of LM solver");
-                rep.iterationscount = rep.iterationscount+lmrep.iterationscount;
+                rep.iterationscount += lmrep.iterationscount;
                 
                 //
                 // Offload center coordinates from PCR to CX,
@@ -29277,10 +29531,10 @@ public partial class alglib
                     v = 0;
                     for(j=0; j<=nx-1; j++)
                     {
-                        v = v+math.sqr(xy[i,j]-cx[j]);
+                        v += math.sqr(xy[i,j]-cx[j]);
                     }
                     v = Math.Sqrt(v);
-                    vv = vv+v/npoints;
+                    vv += (v / npoints);
                 }
                 rlo = vv;
                 rhi = vv;
@@ -29346,7 +29600,7 @@ public partial class alglib
                         if( nlcstate.needfij )
                         {
                             apserv.inc(ref rep.nfev, _params);
-                            nlcstate.fi[0] = vhi*nlcstate.x[nx+1]-vlo*nlcstate.x[nx+0];
+                            nlcstate.fi[0] = (vhi *nlcstate.x[nx+1]) - vlo*nlcstate.x[nx+0];
                             for(j=0; j<=nx-1; j++)
                             {
                                 nlcstate.j[0,j] = 0;
@@ -29358,16 +29612,16 @@ public partial class alglib
                                 suboffset = 0;
                                 if( userhi )
                                 {
-                                    dstrow = 1+cpr*i+suboffset;
+                                    dstrow = 1+ (cpr * i) + suboffset;
                                     v = 0;
                                     for(j=0; j<=nx-1; j++)
                                     {
                                         vv = nlcstate.x[j]-xy[i,j];
-                                        v = v+vv*vv;
+                                        v += (vv * vv);
                                         nlcstate.j[dstrow,j] = 2*vv;
                                     }
                                     vv = nlcstate.x[nx+1];
-                                    v = v-vv*vv;
+                                    v -= (vv * vv);
                                     nlcstate.j[dstrow,nx+0] = 0;
                                     nlcstate.j[dstrow,nx+1] = -(2*vv);
                                     nlcstate.fi[dstrow] = v;
@@ -29375,16 +29629,16 @@ public partial class alglib
                                 }
                                 if( userlo )
                                 {
-                                    dstrow = 1+cpr*i+suboffset;
+                                    dstrow = 1+ (cpr * i) + suboffset;
                                     v = 0;
                                     for(j=0; j<=nx-1; j++)
                                     {
                                         vv = nlcstate.x[j]-xy[i,j];
-                                        v = v-vv*vv;
+                                        v -= (vv * vv);
                                         nlcstate.j[dstrow,j] = -(2*vv);
                                     }
                                     vv = nlcstate.x[nx+0];
-                                    v = v+vv*vv;
+                                    v += (vv * vv);
                                     nlcstate.j[dstrow,nx+0] = 2*vv;
                                     nlcstate.j[dstrow,nx+1] = 0;
                                     nlcstate.fi[dstrow] = v;
@@ -29398,7 +29652,7 @@ public partial class alglib
                     }
                     minnlc.minnlcresults(nlcstate, ref pcr, nlcrep, _params);
                     alglib.ap.assert(nlcrep.terminationtype>0, "FitSphereX: unexpected failure of NLC solver");
-                    rep.iterationscount = rep.iterationscount+nlcrep.iterationscount;
+                    rep.iterationscount += nlcrep.iterationscount;
                     
                     //
                     // Offload center coordinates from PCR to CX,
@@ -29415,7 +29669,7 @@ public partial class alglib
                         v = 0;
                         for(j=0; j<=nx-1; j++)
                         {
-                            v = v+math.sqr(xy[i,j]-cx[j]);
+                            v += math.sqr(xy[i,j]-cx[j]);
                         }
                         v = Math.Sqrt(v);
                         rhi = Math.Max(rhi, v);
@@ -29464,7 +29718,7 @@ public partial class alglib
                             v = 0;
                             for(j=0; j<=nx-1; j++)
                             {
-                                v = v+math.sqr(xy[i,j]-pcr[j]);
+                                v += math.sqr(xy[i,j]-pcr[j]);
                             }
                             v = Math.Sqrt(v);
                             rhi = Math.Max(rhi, v);
@@ -29481,16 +29735,16 @@ public partial class alglib
                             v = 0;
                             for(j=0; j<=nx-1; j++)
                             {
-                                v = v+math.sqr(xy[i,j]);
+                                v += math.sqr(xy[i,j]);
                             }
                             bi = -(v/2);
                             suboffset = 0;
                             if( userhi )
                             {
-                                dstrow = cpr*i+suboffset;
+                                dstrow = (cpr * i) + suboffset;
                                 for(j=0; j<=nx-1; j++)
                                 {
-                                    cmatrix[dstrow,j] = pcr[j]/2-xy[i,j];
+                                    cmatrix[dstrow,j] = (pcr[j]/2) - xy[i,j];
                                 }
                                 cmatrix[dstrow,nx+0] = 0;
                                 cmatrix[dstrow,nx+1] = -(rhi/2);
@@ -29500,10 +29754,10 @@ public partial class alglib
                             }
                             if( userlo )
                             {
-                                dstrow = cpr*i+suboffset;
+                                dstrow = (cpr * i) + suboffset;
                                 for(j=0; j<=nx-1; j++)
                                 {
-                                    cmatrix[dstrow,j] = -(pcr[j]/2-xy[i,j]);
+                                    cmatrix[dstrow,j] = -((pcr[j]/2) - xy[i,j]);
                                 }
                                 cmatrix[dstrow,nx+0] = rlo/2;
                                 cmatrix[dstrow,nx+1] = 0;
@@ -29528,7 +29782,7 @@ public partial class alglib
                             if( blcstate.needfg )
                             {
                                 apserv.inc(ref rep.nfev, _params);
-                                blcstate.f = vhi*blcstate.x[nx+1]-vlo*blcstate.x[nx+0];
+                                blcstate.f = (vhi *blcstate.x[nx+1]) - vlo*blcstate.x[nx+0];
                                 for(j=0; j<=nx-1; j++)
                                 {
                                     blcstate.g[j] = 0;
@@ -29540,7 +29794,7 @@ public partial class alglib
                         }
                         minbleic.minbleicresults(blcstate, ref pcr, blcrep, _params);
                         alglib.ap.assert(blcrep.terminationtype>0, "FitSphereX: unexpected failure of BLEIC solver");
-                        rep.iterationscount = rep.iterationscount+blcrep.iterationscount;
+                        rep.iterationscount += blcrep.iterationscount;
                         
                         //
                         // Terminate iterations early if we converged
@@ -29548,7 +29802,7 @@ public partial class alglib
                         v = 0;
                         for(j=0; j<=nx-1; j++)
                         {
-                            v = v+math.sqr(prevc[j]-pcr[j]);
+                            v += math.sqr(prevc[j]-pcr[j]);
                         }
                         v = Math.Sqrt(v);
                         if( (double)(v)<=(double)(epsx) )
@@ -29572,7 +29826,7 @@ public partial class alglib
                         v = 0;
                         for(j=0; j<=nx-1; j++)
                         {
-                            v = v+math.sqr(xy[i,j]-cx[j]);
+                            v += math.sqr(xy[i,j]-cx[j]);
                         }
                         v = Math.Sqrt(v);
                         rhi = Math.Max(rhi, v);
@@ -29623,14 +29877,16 @@ public partial class alglib
                 x = new spline1d.spline1dinterpolant();
                 y = new spline1d.spline1dinterpolant();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                pspline2interpolant _result = new pspline2interpolant();
-                _result.n = n;
-                _result.periodic = periodic;
-                _result.p = (double[])p.Clone();
-                _result.x = (spline1d.spline1dinterpolant)x.make_copy();
-                _result.y = (spline1d.spline1dinterpolant)y.make_copy();
+                var _result = new pspline2interpolant
+                {
+                    n = n,
+                    periodic = periodic,
+                    p = (double[])p.Clone(),
+                    x = (spline1d.spline1dinterpolant)x.make_copy(),
+                    y = (spline1d.spline1dinterpolant)y.make_copy()
+                };
                 return _result;
             }
         };
@@ -29661,15 +29917,17 @@ public partial class alglib
                 y = new spline1d.spline1dinterpolant();
                 z = new spline1d.spline1dinterpolant();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                pspline3interpolant _result = new pspline3interpolant();
-                _result.n = n;
-                _result.periodic = periodic;
-                _result.p = (double[])p.Clone();
-                _result.x = (spline1d.spline1dinterpolant)x.make_copy();
-                _result.y = (spline1d.spline1dinterpolant)y.make_copy();
-                _result.z = (spline1d.spline1dinterpolant)z.make_copy();
+                var _result = new pspline3interpolant
+                {
+                    n = n,
+                    periodic = periodic,
+                    p = (double[])p.Clone(),
+                    x = (spline1d.spline1dinterpolant)x.make_copy(),
+                    y = (spline1d.spline1dinterpolant)y.make_copy(),
+                    z = (spline1d.spline1dinterpolant)z.make_copy()
+                };
                 return _result;
             }
         };
@@ -29714,10 +29972,10 @@ public partial class alglib
             int st,
             int pt,
             pspline2interpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] tmp = new double[0];
-            int i_ = 0;
+            var tmp = new double[0];
+            var i_ = 0;
 
             xy = (double[,])xy.Clone();
 
@@ -29805,10 +30063,10 @@ public partial class alglib
             int st,
             int pt,
             pspline3interpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] tmp = new double[0];
-            int i_ = 0;
+            var tmp = new double[0];
+            var i_ = 0;
 
             xy = (double[,])xy.Clone();
 
@@ -29935,11 +30193,11 @@ public partial class alglib
             int st,
             int pt,
             pspline2interpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] xyp = new double[0,0];
-            double[] tmp = new double[0];
-            int i_ = 0;
+            var xyp = new double[0,0];
+            var tmp = new double[0];
+            var i_ = 0;
 
             xy = (double[,])xy.Clone();
 
@@ -30021,11 +30279,11 @@ public partial class alglib
             int st,
             int pt,
             pspline3interpolant p,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] xyp = new double[0,0];
-            double[] tmp = new double[0];
-            int i_ = 0;
+            var xyp = new double[0,0];
+            var tmp = new double[0];
+            var i_ = 0;
 
             xy = (double[,])xy.Clone();
 
@@ -30133,9 +30391,9 @@ public partial class alglib
         public static void pspline2parametervalues(pspline2interpolant p,
             ref int n,
             ref double[] t,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             n = 0;
             t = new double[0];
@@ -30166,9 +30424,9 @@ public partial class alglib
         public static void pspline3parametervalues(pspline3interpolant p,
             ref int n,
             ref double[] t,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             n = 0;
             t = new double[0];
@@ -30213,14 +30471,14 @@ public partial class alglib
             double t,
             ref double x,
             ref double y,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = 0;
             y = 0;
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             x = spline1d.spline1dcalc(p.x, t, _params);
             y = spline1d.spline1dcalc(p.y, t, _params);
@@ -30254,7 +30512,7 @@ public partial class alglib
             ref double x,
             ref double y,
             ref double z,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = 0;
             y = 0;
@@ -30262,7 +30520,7 @@ public partial class alglib
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             x = spline1d.spline1dcalc(p.x, t, _params);
             y = spline1d.spline1dcalc(p.y, t, _params);
@@ -30297,7 +30555,7 @@ public partial class alglib
             double t,
             ref double x,
             ref double y,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
             double v0 = 0;
@@ -30308,7 +30566,7 @@ public partial class alglib
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             pspline2diff(p, t, ref v0, ref x, ref v1, ref y, _params);
             if( (double)(x)!=(double)(0) || (double)(y)!=(double)(0) )
@@ -30319,8 +30577,8 @@ public partial class alglib
                 // overflow for large values of X and Y.
                 //
                 v = apserv.safepythag2(x, y, _params);
-                x = x/v;
-                y = y/v;
+                x /= v;
+                y /= v;
             }
         }
 
@@ -30354,7 +30612,7 @@ public partial class alglib
             ref double x,
             ref double y,
             ref double z,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
             double v0 = 0;
@@ -30367,15 +30625,15 @@ public partial class alglib
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             pspline3diff(p, t, ref v0, ref x, ref v1, ref y, ref v2, ref z, _params);
             if( ((double)(x)!=(double)(0) || (double)(y)!=(double)(0)) || (double)(z)!=(double)(0) )
             {
                 v = apserv.safepythag3(x, y, z, _params);
-                x = x/v;
-                y = y/v;
-                z = z/v;
+                x /= v;
+                y /= v;
+                z /= v;
             }
         }
 
@@ -30408,7 +30666,7 @@ public partial class alglib
             ref double dx,
             ref double y,
             ref double dy,
-            alglib.xparams _params)
+            xparams _params)
         {
             double d2s = 0;
 
@@ -30419,7 +30677,7 @@ public partial class alglib
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             spline1d.spline1ddiff(p.x, t, ref x, ref dx, ref d2s, _params);
             spline1d.spline1ddiff(p.y, t, ref y, ref dy, ref d2s, _params);
@@ -30458,7 +30716,7 @@ public partial class alglib
             ref double dy,
             ref double z,
             ref double dz,
-            alglib.xparams _params)
+            xparams _params)
         {
             double d2s = 0;
 
@@ -30471,7 +30729,7 @@ public partial class alglib
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             spline1d.spline1ddiff(p.x, t, ref x, ref dx, ref d2s, _params);
             spline1d.spline1ddiff(p.y, t, ref y, ref dy, ref d2s, _params);
@@ -30511,7 +30769,7 @@ public partial class alglib
             ref double y,
             ref double dy,
             ref double d2y,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = 0;
             dx = 0;
@@ -30522,7 +30780,7 @@ public partial class alglib
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             spline1d.spline1ddiff(p.x, t, ref x, ref dx, ref d2x, _params);
             spline1d.spline1ddiff(p.y, t, ref y, ref dy, ref d2y, _params);
@@ -30567,7 +30825,7 @@ public partial class alglib
             ref double z,
             ref double dz,
             ref double d2z,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = 0;
             dx = 0;
@@ -30581,7 +30839,7 @@ public partial class alglib
 
             if( p.periodic )
             {
-                t = t-(int)Math.Floor(t);
+                t -= (int)Math.Floor(t);
             }
             spline1d.spline1ddiff(p.x, t, ref x, ref dx, ref d2x, _params);
             spline1d.spline1ddiff(p.y, t, ref y, ref dy, ref d2y, _params);
@@ -30609,11 +30867,11 @@ public partial class alglib
         public static double pspline2arclength(pspline2interpolant p,
             double a,
             double b,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            autogk.autogkstate state = new autogk.autogkstate();
-            autogk.autogkreport rep = new autogk.autogkreport();
+            var state = new autogk.autogkstate();
+            var rep = new autogk.autogkreport();
             double sx = 0;
             double dsx = 0;
             double d2sx = 0;
@@ -30654,11 +30912,11 @@ public partial class alglib
         public static double pspline3arclength(pspline3interpolant p,
             double a,
             double b,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            autogk.autogkstate state = new autogk.autogkstate();
-            autogk.autogkreport rep = new autogk.autogkreport();
+            var state = new autogk.autogkstate();
+            var rep = new autogk.autogkreport();
             double sx = 0;
             double dsx = 0;
             double d2sx = 0;
@@ -30751,26 +31009,26 @@ public partial class alglib
             ref double[,] x2,
             ref int[] idx2,
             ref int nsections,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            bool allsame = new bool();
-            int k0 = 0;
-            int k1 = 0;
-            int k2 = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var allsame = new bool();
+            var k0 = 0;
+            var k1 = 0;
+            var k2 = 0;
             double e0 = 0;
             double e1 = 0;
-            int idx0 = 0;
-            int idx1 = 0;
-            int worstidx = 0;
+            var idx0 = 0;
+            var idx1 = 0;
+            var worstidx = 0;
             double worsterror = 0;
-            double[,] sections = new double[0,0];
-            double[] heaperrors = new double[0];
-            int[] heaptags = new int[0];
-            double[] buf0 = new double[0];
-            double[] buf1 = new double[0];
+            var sections = new double[0,0];
+            var heaperrors = new double[0];
+            var heaptags = new int[0];
+            var buf0 = new double[0];
+            var buf1 = new double[0];
 
             x2 = new double[0,0];
             idx2 = new int[0];
@@ -30821,33 +31079,24 @@ public partial class alglib
             heaperrors[0] = worsterror;
             heaptags[0] = 0;
             alglib.ap.assert((double)(sections[0,1])==(double)(n-1), "RDP algorithm: integrity check failed");
-            
+
             //
             // Main loop.
             // Repeatedly find section with worst error and divide it.
             // Terminate after M-th section, or because of other reasons (see loop internals).
             //
-            while( true )
+            while ((double)(heaperrors[0]) != (double)(0))
             {
-                
-                //
-                // Break loop if one of the stopping conditions was met.
-                // Store index of worst section to K.
-                //
-                if( (double)(heaperrors[0])==(double)(0) )
+                if ((double)(stopeps) > (double)(0) && (double)(heaperrors[0]) <= (double)(stopeps))
                 {
                     break;
                 }
-                if( (double)(stopeps)>(double)(0) && (double)(heaperrors[0])<=(double)(stopeps) )
-                {
-                    break;
-                }
-                if( stopm>0 && nsections>=stopm )
+                if (stopm > 0 && nsections >= stopm)
                 {
                     break;
                 }
                 k = heaptags[0];
-                
+
                 //
                 // K-th section is divided in two:
                 // * first  one spans interval from X[Sections[K,0]] to X[Sections[K,2]]
@@ -30856,23 +31105,23 @@ public partial class alglib
                 // First section is stored at K-th position, second one is appended to the table.
                 // Then we update heap which stores pairs of (error,section_index)
                 //
-                k0 = (int)Math.Round(sections[k,0]);
-                k1 = (int)Math.Round(sections[k,1]);
-                k2 = (int)Math.Round(sections[k,2]);
+                k0 = (int)Math.Round(sections[k, 0]);
+                k1 = (int)Math.Round(sections[k, 1]);
+                k2 = (int)Math.Round(sections[k, 2]);
                 rdpanalyzesectionpar(x, k0, k2, d, ref idx0, ref e0, _params);
                 rdpanalyzesectionpar(x, k2, k1, d, ref idx1, ref e1, _params);
-                sections[k,0] = k0;
-                sections[k,1] = k2;
-                sections[k,2] = idx0;
-                sections[k,3] = e0;
+                sections[k, 0] = k0;
+                sections[k, 1] = k2;
+                sections[k, 2] = idx0;
+                sections[k, 3] = e0;
                 tsort.tagheapreplacetopi(ref heaperrors, ref heaptags, nsections, e0, k, _params);
-                sections[nsections,0] = k2;
-                sections[nsections,1] = k1;
-                sections[nsections,2] = idx1;
-                sections[nsections,3] = e1;
+                sections[nsections, 0] = k2;
+                sections[nsections, 1] = k1;
+                sections[nsections, 2] = idx1;
+                sections[nsections, 3] = e1;
                 tsort.tagheappushi(ref heaperrors, ref heaptags, ref nsections, e1, nsections, _params);
             }
-            
+
             //
             // Convert from sections to indexes
             //
@@ -30915,11 +31164,11 @@ public partial class alglib
             int n,
             int pt,
             ref double[] p,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             p = new double[0];
 
@@ -30969,11 +31218,11 @@ public partial class alglib
             int n,
             int pt,
             ref double[] p,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             p = new double[0];
 
@@ -31043,10 +31292,10 @@ public partial class alglib
             int d,
             ref int worstidx,
             ref double worsterror,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
             double d2 = 0;
             double ts = 0;
@@ -31073,7 +31322,7 @@ public partial class alglib
             d2 = 0.0;
             for(j=0; j<=d-1; j++)
             {
-                d2 = d2+math.sqr(xy[i1,j]-xy[i0,j]);
+                d2 += math.sqr(xy[i1,j]-xy[i0,j]);
             }
             if( (double)(d2)==(double)(0) )
             {
@@ -31091,7 +31340,7 @@ public partial class alglib
                     for(j=0; j<=d-1; j++)
                     {
                         v = xy[i,j]-xy[i0,j];
-                        vv = vv+v*v;
+                        vv += (v * v);
                     }
                     vv = Math.Sqrt(vv);
                     if( (double)(vv)>(double)(worsterror) )
@@ -31127,8 +31376,8 @@ public partial class alglib
                 vv = 0.0;
                 for(j=0; j<=d-1; j++)
                 {
-                    v = (xy[i1,j]-xy[i0,j])*ts-(xy[i,j]-xy[i0,j]);
-                    vv = vv+math.sqr(v);
+                    v = ((xy[i1,j]-xy[i0,j])*ts) - (xy[i,j]-xy[i0,j]);
+                    vv += math.sqr(v);
                 }
                 vv = Math.Sqrt(vv);
                 if( (double)(vv)>(double)(worsterror) )
@@ -31166,13 +31415,15 @@ public partial class alglib
                 calcbuftags = new int[0];
                 requestbuffer = new nearestneighbor.kdtreerequestbuffer();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfv1calcbuffer _result = new rbfv1calcbuffer();
-                _result.calcbufxcx = (double[])calcbufxcx.Clone();
-                _result.calcbufx = (double[,])calcbufx.Clone();
-                _result.calcbuftags = (int[])calcbuftags.Clone();
-                _result.requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy();
+                var _result = new rbfv1calcbuffer
+                {
+                    calcbufxcx = (double[])calcbufxcx.Clone(),
+                    calcbufx = (double[,])calcbufx.Clone(),
+                    calcbuftags = (int[])calcbuftags.Clone(),
+                    requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy()
+                };
                 return _result;
             }
         };
@@ -31212,21 +31463,23 @@ public partial class alglib
                 calcbufx = new double[0,0];
                 calcbuftags = new int[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfv1model _result = new rbfv1model();
-                _result.ny = ny;
-                _result.nx = nx;
-                _result.nc = nc;
-                _result.nl = nl;
-                _result.tree = (nearestneighbor.kdtree)tree.make_copy();
-                _result.xc = (double[,])xc.Clone();
-                _result.wr = (double[,])wr.Clone();
-                _result.rmax = rmax;
-                _result.v = (double[,])v.Clone();
-                _result.calcbufxcx = (double[])calcbufxcx.Clone();
-                _result.calcbufx = (double[,])calcbufx.Clone();
-                _result.calcbuftags = (int[])calcbuftags.Clone();
+                var _result = new rbfv1model
+                {
+                    ny = ny,
+                    nx = nx,
+                    nc = nc,
+                    nl = nl,
+                    tree = (nearestneighbor.kdtree)tree.make_copy(),
+                    xc = (double[,])xc.Clone(),
+                    wr = (double[,])wr.Clone(),
+                    rmax = rmax,
+                    v = (double[,])v.Clone(),
+                    calcbufxcx = (double[])calcbufxcx.Clone(),
+                    calcbufx = (double[,])calcbufx.Clone(),
+                    calcbuftags = (int[])calcbuftags.Clone()
+                };
                 return _result;
             }
         };
@@ -31270,22 +31523,24 @@ public partial class alglib
                 calcbufx = new double[0,0];
                 calcbuftags = new int[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                gridcalc3v1buf _result = new gridcalc3v1buf();
-                _result.tx = (double[])tx.Clone();
-                _result.cx = (double[])cx.Clone();
-                _result.ty = (double[])ty.Clone();
-                _result.flag0 = (bool[])flag0.Clone();
-                _result.flag1 = (bool[])flag1.Clone();
-                _result.flag2 = (bool[])flag2.Clone();
-                _result.flag12 = (bool[])flag12.Clone();
-                _result.expbuf0 = (double[])expbuf0.Clone();
-                _result.expbuf1 = (double[])expbuf1.Clone();
-                _result.expbuf2 = (double[])expbuf2.Clone();
-                _result.requestbuf = (nearestneighbor.kdtreerequestbuffer)requestbuf.make_copy();
-                _result.calcbufx = (double[,])calcbufx.Clone();
-                _result.calcbuftags = (int[])calcbuftags.Clone();
+                var _result = new gridcalc3v1buf
+                {
+                    tx = (double[])tx.Clone(),
+                    cx = (double[])cx.Clone(),
+                    ty = (double[])ty.Clone(),
+                    flag0 = (bool[])flag0.Clone(),
+                    flag1 = (bool[])flag1.Clone(),
+                    flag2 = (bool[])flag2.Clone(),
+                    flag12 = (bool[])flag12.Clone(),
+                    expbuf0 = (double[])expbuf0.Clone(),
+                    expbuf1 = (double[])expbuf1.Clone(),
+                    expbuf2 = (double[])expbuf2.Clone(),
+                    requestbuf = (nearestneighbor.kdtreerequestbuffer)requestbuf.make_copy(),
+                    calcbufx = (double[,])calcbufx.Clone(),
+                    calcbuftags = (int[])calcbuftags.Clone()
+                };
                 return _result;
             }
         };
@@ -31311,15 +31566,17 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfv1report _result = new rbfv1report();
-                _result.arows = arows;
-                _result.acols = acols;
-                _result.annz = annz;
-                _result.iterationscount = iterationscount;
-                _result.nmv = nmv;
-                _result.terminationtype = terminationtype;
+                var _result = new rbfv1report
+                {
+                    arows = arows,
+                    acols = acols,
+                    annz = annz,
+                    iterationscount = iterationscount,
+                    nmv = nmv,
+                    terminationtype = terminationtype
+                };
                 return _result;
             }
         };
@@ -31351,10 +31608,10 @@ public partial class alglib
         public static void rbfv1create(int nx,
             int ny,
             rbfv1model s,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(nx==2 || nx==3, "RBFCreate: NX<>2 and NX<>3");
             alglib.ap.assert(ny>=1, "RBFCreate: NY<1");
@@ -31419,7 +31676,7 @@ public partial class alglib
         *************************************************************************/
         public static void rbfv1createcalcbuffer(rbfv1model s,
             rbfv1calcbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
             nearestneighbor.kdtreecreaterequestbuffer(s.tree, buf.requestbuffer, _params);
         }
@@ -31473,30 +31730,30 @@ public partial class alglib
             int maxits,
             rbfv1model s,
             rbfv1report rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            nearestneighbor.kdtree tree = new nearestneighbor.kdtree();
-            nearestneighbor.kdtree ctree = new nearestneighbor.kdtree();
-            double[] dist = new double[0];
-            double[] xcx = new double[0];
-            double[,] a = new double[0,0];
-            double[,] v = new double[0,0];
-            double[,] omega = new double[0,0];
-            double[,] residualy = new double[0,0];
-            double[] radius = new double[0];
-            double[,] xc = new double[0,0];
-            int nc = 0;
+            var tree = new nearestneighbor.kdtree();
+            var ctree = new nearestneighbor.kdtree();
+            var dist = new double[0];
+            var xcx = new double[0];
+            var a = new double[0,0];
+            var v = new double[0,0];
+            var omega = new double[0,0];
+            var residualy = new double[0,0];
+            var radius = new double[0];
+            var xc = new double[0,0];
+            var nc = 0;
             double rmax = 0;
-            int[] tags = new int[0];
-            int[] ctags = new int[0];
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int snnz = 0;
-            double[] tmp0 = new double[0];
-            double[] tmp1 = new double[0];
-            int layerscnt = 0;
-            bool modelstatus = new bool();
+            var tags = new int[0];
+            var ctags = new int[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var snnz = 0;
+            var tmp0 = new double[0];
+            var tmp1 = new double[0];
+            var layerscnt = 0;
+            var modelstatus = new bool();
 
             alglib.ap.assert(s.nx==2 || s.nx==3, "RBFBuildModel: S.NX<>2 or S.NX<>3!");
             
@@ -31714,7 +31971,7 @@ public partial class alglib
             s.rmax = rmax;
             s.nl = layerscnt;
             s.xc = new double[s.nc, mxnx];
-            s.wr = new double[s.nc, 1+s.nl*s.ny];
+            s.wr = new double[s.nc, 1+ (s.nl*s.ny)];
             s.v = new double[s.ny, mxnx+1];
             for(i=0; i<=s.nc-1; i++)
             {
@@ -31736,7 +31993,7 @@ public partial class alglib
                 {
                     for(j=0; j<=s.ny-1; j++)
                     {
-                        s.wr[i,1+k*s.ny+j] = omega[k*s.nc+i,j];
+                        s.wr[i,1+ (k *s.ny) + j] = omega[(k *s.nc) + i,j];
                     }
                 }
             }
@@ -31759,9 +32016,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfv1alloc(alglib.serializer s,
+        public static void rbfv1alloc(serializer s,
             rbfv1model model,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -31785,9 +32042,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfv1serialize(alglib.serializer s,
+        public static void rbfv1serialize(serializer s,
             rbfv1model model,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -31811,12 +32068,12 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfv1unserialize(alglib.serializer s,
+        public static void rbfv1unserialize(serializer s,
             rbfv1model model,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nx = 0;
-            int ny = 0;
+            var nx = 0;
+            var ny = 0;
 
             
             //
@@ -31869,13 +32126,13 @@ public partial class alglib
         public static double rbfv1calc2(rbfv1model s,
             double x0,
             double x1,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
-            int j = 0;
-            int lx = 0;
-            int tg = 0;
+            var i = 0;
+            var j = 0;
+            var lx = 0;
+            var tg = 0;
             double d2 = 0;
             double t = 0;
             double bfcur = 0;
@@ -31888,7 +32145,7 @@ public partial class alglib
                 result = 0;
                 return result;
             }
-            result = s.v[0,0]*x0+s.v[0,1]*x1+s.v[0,mxnx];
+            result = (s.v[0,0]*x0) + s.v[0,1]*x1+s.v[0,mxnx];
             if( s.nc==0 )
             {
                 return result;
@@ -31911,7 +32168,7 @@ public partial class alglib
                 bfcur = Math.Exp(-(d2/(rcur*rcur)));
                 for(j=0; j<=s.nl-1; j++)
                 {
-                    result = result+bfcur*s.wr[tg,1+j];
+                    result += (bfcur *s.wr[tg,1+j]);
                     rcur = 0.5*rcur;
                     t = bfcur*bfcur;
                     bfcur = t*t;
@@ -31950,13 +32207,13 @@ public partial class alglib
             double x0,
             double x1,
             double x2,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
-            int j = 0;
-            int lx = 0;
-            int tg = 0;
+            var i = 0;
+            var j = 0;
+            var lx = 0;
+            var tg = 0;
             double t = 0;
             double rcur = 0;
             double bf = 0;
@@ -31969,7 +32226,7 @@ public partial class alglib
                 result = 0;
                 return result;
             }
-            result = s.v[0,0]*x0+s.v[0,1]*x1+s.v[0,2]*x2+s.v[0,mxnx];
+            result = (s.v[0,0]*x0) + s.v[0,1]*x1+ (s.v[0,2]*x2) + s.v[0,mxnx];
             if( s.nc==0 )
             {
                 return result;
@@ -31996,7 +32253,7 @@ public partial class alglib
                 bf = Math.Exp(-((math.sqr(x0-s.calcbufx[i,0])+math.sqr(x1-s.calcbufx[i,1])+math.sqr(x2-s.calcbufx[i,2]))/math.sqr(rcur)));
                 for(j=0; j<=s.nl-1; j++)
                 {
-                    result = result+bf*s.wr[tg,1+j];
+                    result += (bf *s.wr[tg,1+j]);
                     t = bf*bf;
                     bf = t*t;
                 }
@@ -32028,13 +32285,13 @@ public partial class alglib
         public static void rbfv1calcbuf(rbfv1model s,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int lx = 0;
-            int tg = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var lx = 0;
+            var tg = 0;
             double t = 0;
             double rcur = 0;
             double bf = 0;
@@ -32050,7 +32307,7 @@ public partial class alglib
                 y[i] = s.v[i,mxnx];
                 for(j=0; j<=s.nx-1; j++)
                 {
-                    y[i] = y[i]+s.v[i,j]*x[j];
+                    y[i] = y[i]+ (s.v[i,j]*x[j]);
                 }
             }
             if( s.nc==0 )
@@ -32078,7 +32335,7 @@ public partial class alglib
                     bf = Math.Exp(-((math.sqr(s.calcbufxcx[0]-s.calcbufx[j,0])+math.sqr(s.calcbufxcx[1]-s.calcbufx[j,1])+math.sqr(s.calcbufxcx[2]-s.calcbufx[j,2]))/math.sqr(rcur)));
                     for(k=0; k<=s.nl-1; k++)
                     {
-                        y[i] = y[i]+bf*s.wr[tg,1+k*s.ny+i];
+                        y[i] = y[i]+ (bf *s.wr[tg,1+ (k *s.ny) + i]);
                         t = bf*bf;
                         bf = t*t;
                     }
@@ -32116,13 +32373,13 @@ public partial class alglib
             rbfv1calcbuffer buf,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int lx = 0;
-            int tg = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var lx = 0;
+            var tg = 0;
             double t = 0;
             double rcur = 0;
             double bf = 0;
@@ -32138,7 +32395,7 @@ public partial class alglib
                 y[i] = s.v[i,mxnx];
                 for(j=0; j<=s.nx-1; j++)
                 {
-                    y[i] = y[i]+s.v[i,j]*x[j];
+                    y[i] = y[i]+ (s.v[i,j]*x[j]);
                 }
             }
             if( s.nc==0 )
@@ -32166,7 +32423,7 @@ public partial class alglib
                     bf = Math.Exp(-((math.sqr(buf.calcbufxcx[0]-buf.calcbufx[j,0])+math.sqr(buf.calcbufxcx[1]-buf.calcbufx[j,1])+math.sqr(buf.calcbufxcx[2]-buf.calcbufx[j,2]))/math.sqr(rcur)));
                     for(k=0; k<=s.nl-1; k++)
                     {
-                        y[i] = y[i]+bf*s.wr[tg,1+k*s.ny+i];
+                        y[i] = y[i]+ (bf *s.wr[tg,1+ (k *s.ny) + i]);
                         t = bf*bf;
                         bf = t*t;
                     }
@@ -32209,29 +32466,29 @@ public partial class alglib
             double[] x1,
             int n1,
             ref double[,] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] cpx0 = new double[0];
-            double[] cpx1 = new double[0];
-            int[] p01 = new int[0];
-            int[] p11 = new int[0];
-            int[] p2 = new int[0];
+            var cpx0 = new double[0];
+            var cpx1 = new double[0];
+            var p01 = new int[0];
+            var p11 = new int[0];
+            var p2 = new int[0];
             double rlimit = 0;
             double xcnorm2 = 0;
-            int hp01 = 0;
+            var hp01 = 0;
             double hcpx0 = 0;
             double xc0 = 0;
             double xc1 = 0;
             double omega = 0;
             double radius = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int d = 0;
-            int i00 = 0;
-            int i01 = 0;
-            int i10 = 0;
-            int i11 = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var d = 0;
+            var i00 = 0;
+            var i01 = 0;
+            var i10 = 0;
+            var i11 = 0;
 
             y = new double[0,0];
 
@@ -32299,7 +32556,7 @@ public partial class alglib
                             xcnorm2 = math.sqr(hcpx0-xc0)+math.sqr(cpx1[k]-xc1);
                             if( (double)(xcnorm2)<=(double)(rlimit*rlimit) )
                             {
-                                y[hp01,p11[k]] = y[hp01,p11[k]]+Math.Exp(-(xcnorm2/math.sqr(radius)))*omega;
+                                y[hp01,p11[k]] = y[hp01,p11[k]]+ (Math.Exp(-(xcnorm2/math.sqr(radius)))*omega);
                             }
                         }
                     }
@@ -32314,7 +32571,7 @@ public partial class alglib
             {
                 for(j=0; j<=n1-1; j++)
                 {
-                    y[i,j] = y[i,j]+s.v[0,0]*x0[i]+s.v[0,1]*x1[j]+s.v[0,mxnx];
+                    y[i,j] = y[i,j]+ (s.v[0,0]*x0[i]) + s.v[0,1]*x1[j]+s.v[0,mxnx];
                 }
             }
         }
@@ -32340,40 +32597,40 @@ public partial class alglib
             bool sparsey,
             double searchradius,
             double avgfuncpernode,
-            alglib.smp.shared_pool bufpool,
+            smp.shared_pool bufpool,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int t = 0;
-            int l = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int ic = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var t = 0;
+            var l = 0;
+            var i0 = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var ic = 0;
             gridcalc3v1buf pbuf = null;
-            int flag12dim1 = 0;
-            int flag12dim2 = 0;
+            var flag12dim1 = 0;
+            var flag12dim2 = 0;
             double problemcost = 0;
-            int maxbs = 0;
-            int nx = 0;
-            int ny = 0;
+            var maxbs = 0;
+            var nx = 0;
+            var ny = 0;
             double v = 0;
-            int kc = 0;
-            int tg = 0;
+            var kc = 0;
+            var tg = 0;
             double rcur = 0;
             double rcur2 = 0;
             double basisfuncval = 0;
-            int dstoffs = 0;
-            int srcoffs = 0;
-            int ubnd = 0;
+            var dstoffs = 0;
+            var srcoffs = 0;
+            var ubnd = 0;
             double w0 = 0;
             double w1 = 0;
             double w2 = 0;
-            bool allnodes = new bool();
-            bool somenodes = new bool();
+            var allnodes = new bool();
+            var somenodes = new bool();
 
             nx = s.nx;
             ny = s.ny;
@@ -32382,9 +32639,9 @@ public partial class alglib
             // Try to split large problem
             //
             problemcost = (s.nl+1)*s.ny*2*(avgfuncpernode+1);
-            problemcost = problemcost*(blocks0[block0b]-blocks0[block0a]);
-            problemcost = problemcost*(blocks1[block1b]-blocks1[block1a]);
-            problemcost = problemcost*(blocks2[block2b]-blocks2[block2a]);
+            problemcost *= (blocks0[block0b]-blocks0[block0a]);
+            problemcost *= (blocks1[block1b]-blocks1[block1a]);
+            problemcost *= (blocks2[block2b]-blocks2[block2a]);
             maxbs = 0;
             maxbs = Math.Max(maxbs, block0b-block0a);
             maxbs = Math.Max(maxbs, block1b-block1a);
@@ -32393,20 +32650,20 @@ public partial class alglib
             {
                 if( block0b-block0a==maxbs )
                 {
-                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0a+maxbs/2, blocks1, block1a, block1b, blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
-                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a+maxbs/2, block0b, blocks1, block1a, block1b, blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
+                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0a+ (maxbs / 2), blocks1, block1a, block1b, blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
+                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a+ (maxbs / 2), block0b, blocks1, block1a, block1b, blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
                     return;
                 }
                 if( block1b-block1a==maxbs )
                 {
-                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a, block1a+maxbs/2, blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
-                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a+maxbs/2, block1b, blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
+                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a, block1a+ (maxbs / 2), blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
+                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a+ (maxbs / 2), block1b, blocks2, block2a, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
                     return;
                 }
                 if( block2b-block2a==maxbs )
                 {
-                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a, block2a+maxbs/2, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
-                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a+maxbs/2, block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
+                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a, block2a+ (maxbs / 2), flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
+                    rbfv1gridcalc3vrec(s, x0, n0, x1, n1, x2, n2, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a+ (maxbs / 2), block2b, flagy, sparsey, searchradius, avgfuncpernode, bufpool, y, _params);
                     return;
                 }
             }
@@ -32460,7 +32717,7 @@ public partial class alglib
                             {
                                 pbuf.flag2[k] = false;
                             }
-                            for(i=0; i<=flag12dim1*flag12dim2-1; i++)
+                            for(i=0; i<= (flag12dim1 * flag12dim2) - 1; i++)
                             {
                                 pbuf.flag12[i] = false;
                             }
@@ -32470,8 +32727,8 @@ public partial class alglib
                             {
                                 for(j=blocks1[i1]; j<=blocks1[i1+1]-1; j++)
                                 {
-                                    dstoffs = j-blocks1[i1]+flag12dim1*(k-blocks2[i2]);
-                                    srcoffs = j*n0+k*n0*n1;
+                                    dstoffs = j-blocks1[i1]+ (flag12dim1 *(k-blocks2[i2]));
+                                    srcoffs = (j * n0) + k*n0*n1;
                                     for(i=blocks0[i0]; i<=blocks0[i0+1]-1; i++)
                                     {
                                         if( flagy[srcoffs+i] )
@@ -32510,7 +32767,7 @@ public partial class alglib
                                 //
                                 // do we need this micro-row?
                                 //
-                                if( !allnodes && !pbuf.flag12[j-blocks1[i1]+flag12dim1*(k-blocks2[i2])] )
+                                if( !allnodes && !pbuf.flag12[j-blocks1[i1]+ (flag12dim1 *(k-blocks2[i2]))] )
                                 {
                                     continue;
                                 }
@@ -32528,9 +32785,9 @@ public partial class alglib
                                         v = s.v[l,mxnx];
                                         for(t=0; t<=nx-1; t++)
                                         {
-                                            v = v+s.v[l,t]*pbuf.tx[t];
+                                            v += (s.v[l,t]*pbuf.tx[t]);
                                         }
-                                        y[l+ny*(i+j*n0+k*n0*n1)] = v;
+                                        y[l+ (ny *(i+ (j * n0) + (k *n0*n1)))] = v;
                                     }
                                 }
                             }
@@ -32600,7 +32857,7 @@ public partial class alglib
                                         //
                                         // do we need this micro-row?
                                         //
-                                        if( !allnodes && !pbuf.flag12[j-blocks1[i1]+flag12dim1*(k-blocks2[i2])] )
+                                        if( !allnodes && !pbuf.flag12[j-blocks1[i1]+ (flag12dim1 *(k-blocks2[i2]))] )
                                         {
                                             continue;
                                         }
@@ -32608,7 +32865,7 @@ public partial class alglib
                                         //
                                         // Prepare local variables
                                         //
-                                        dstoffs = ny*(blocks0[i0]+j*n0+k*n0*n1);
+                                        dstoffs = ny*(blocks0[i0]+ (j * n0) + k*n0*n1);
                                         v = pbuf.expbuf1[j]*pbuf.expbuf2[k];
                                         
                                         //
@@ -32616,13 +32873,13 @@ public partial class alglib
                                         //
                                         if( s.ny==1 )
                                         {
-                                            w0 = s.wr[tg,1+t*s.ny+0];
+                                            w0 = s.wr[tg,1+ (t *s.ny) + 0];
                                             ubnd = blocks0[i0+1]-1;
                                             for(i=blocks0[i0]; i<=ubnd; i++)
                                             {
                                                 basisfuncval = pbuf.expbuf0[i]*v;
-                                                y[dstoffs] = y[dstoffs]+basisfuncval*w0;
-                                                dstoffs = dstoffs+1;
+                                                y[dstoffs] = y[dstoffs]+ (basisfuncval * w0);
+                                                dstoffs++;
                                             }
                                             continue;
                                         }
@@ -32632,15 +32889,15 @@ public partial class alglib
                                         //
                                         if( s.ny==2 )
                                         {
-                                            w0 = s.wr[tg,1+t*s.ny+0];
-                                            w1 = s.wr[tg,1+t*s.ny+1];
+                                            w0 = s.wr[tg,1+ (t *s.ny) + 0];
+                                            w1 = s.wr[tg,1+ (t *s.ny) + 1];
                                             ubnd = blocks0[i0+1]-1;
                                             for(i=blocks0[i0]; i<=ubnd; i++)
                                             {
                                                 basisfuncval = pbuf.expbuf0[i]*v;
-                                                y[dstoffs+0] = y[dstoffs+0]+basisfuncval*w0;
-                                                y[dstoffs+1] = y[dstoffs+1]+basisfuncval*w1;
-                                                dstoffs = dstoffs+2;
+                                                y[dstoffs+0] = y[dstoffs+0]+ (basisfuncval * w0);
+                                                y[dstoffs+1] = y[dstoffs+1]+ (basisfuncval * w1);
+                                                dstoffs += 2;
                                             }
                                             continue;
                                         }
@@ -32650,17 +32907,17 @@ public partial class alglib
                                         //
                                         if( s.ny==3 )
                                         {
-                                            w0 = s.wr[tg,1+t*s.ny+0];
-                                            w1 = s.wr[tg,1+t*s.ny+1];
-                                            w2 = s.wr[tg,1+t*s.ny+2];
+                                            w0 = s.wr[tg,1+ (t *s.ny) + 0];
+                                            w1 = s.wr[tg,1+ (t *s.ny) + 1];
+                                            w2 = s.wr[tg,1+ (t *s.ny) + 2];
                                             ubnd = blocks0[i0+1]-1;
                                             for(i=blocks0[i0]; i<=ubnd; i++)
                                             {
                                                 basisfuncval = pbuf.expbuf0[i]*v;
-                                                y[dstoffs+0] = y[dstoffs+0]+basisfuncval*w0;
-                                                y[dstoffs+1] = y[dstoffs+1]+basisfuncval*w1;
-                                                y[dstoffs+2] = y[dstoffs+2]+basisfuncval*w2;
-                                                dstoffs = dstoffs+3;
+                                                y[dstoffs+0] = y[dstoffs+0]+ (basisfuncval * w0);
+                                                y[dstoffs+1] = y[dstoffs+1]+ (basisfuncval * w1);
+                                                y[dstoffs+2] = y[dstoffs+2]+ (basisfuncval * w2);
+                                                dstoffs += 3;
                                             }
                                             continue;
                                         }
@@ -32673,9 +32930,9 @@ public partial class alglib
                                             basisfuncval = pbuf.expbuf0[i]*v;
                                             for(l=0; l<=s.ny-1; l++)
                                             {
-                                                y[l+dstoffs] = y[l+dstoffs]+basisfuncval*s.wr[tg,1+t*s.ny+l];
+                                                y[l+dstoffs] = y[l+dstoffs]+ (basisfuncval *s.wr[tg,1+ (t *s.ny) + l]);
                                             }
-                                            dstoffs = dstoffs+ny;
+                                            dstoffs += ny;
                                         }
                                     }
                                 }
@@ -32749,8 +33006,8 @@ public partial class alglib
             bool sparsey,
             double searchradius,
             double avgfuncpernode,
-            alglib.smp.shared_pool bufpool,
-            double[] y, alglib.xparams _params)
+            smp.shared_pool bufpool,
+            double[] y, xparams _params)
         {
             return false;
         }
@@ -32787,13 +33044,13 @@ public partial class alglib
             ref double[,] xwr,
             ref int nc,
             ref double[,] v,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double rcur = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             nx = 0;
             ny = 0;
@@ -32831,14 +33088,14 @@ public partial class alglib
                     {
                         for(i_=0; i_<=s.nx-1;i_++)
                         {
-                            xwr[i*s.nl+j,i_] = s.xc[i,i_];
+                            xwr[(i *s.nl) + j,i_] = s.xc[i,i_];
                         }
-                        i1_ = (1+j*s.ny) - (s.nx);
+                        i1_ = (1+ (j *s.ny)) - (s.nx);
                         for(i_=s.nx; i_<=s.nx+s.ny-1;i_++)
                         {
-                            xwr[i*s.nl+j,i_] = s.wr[i,i_+i1_];
+                            xwr[(i *s.nl) + j,i_] = s.wr[i,i_+i1_];
                         }
-                        xwr[i*s.nl+j,s.nx+s.ny] = rcur;
+                        xwr[(i *s.nl) + j,s.nx+s.ny] = rcur;
                         rcur = 0.5*rcur;
                     }
                 }
@@ -32852,21 +33109,21 @@ public partial class alglib
             int ny,
             int modeltype,
             ref double[,] v,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            double[] tmpy = new double[0];
-            double[,] a = new double[0,0];
+            var result = new bool();
+            var tmpy = new double[0];
+            var a = new double[0,0];
             double scaling = 0;
-            double[] shifting = new double[0];
+            var shifting = new double[0];
             double mn = 0;
             double mx = 0;
-            double[] c = new double[0];
-            lsfit.lsfitreport rep = new lsfit.lsfitreport();
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int info = 0;
+            var c = new double[0];
+            var rep = new lsfit.lsfitreport();
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var info = 0;
 
             v = new double[0,0];
 
@@ -32967,13 +33224,13 @@ public partial class alglib
                     v[i,mxnx] = c[mxnx];
                     for(j=0; j<=mxnx-1; j++)
                     {
-                        v[i,mxnx] = v[i,mxnx]-shifting[j]*v[i,j];
+                        v[i,mxnx] = v[i,mxnx]- (shifting[j]*v[i,j]);
                     }
                     for(j=0; j<=n-1; j++)
                     {
                         for(k=0; k<=mxnx-1; k++)
                         {
-                            y[j,i] = y[j,i]-x[j,k]*v[i,k];
+                            y[j,i] = y[j,i]- (x[j,k]*v[i,k]);
                         }
                         y[j,i] = y[j,i]-v[i,mxnx];
                     }
@@ -33041,55 +33298,55 @@ public partial class alglib
             ref int info,
             ref int iterationscount,
             ref int nmv,
-            alglib.xparams _params)
+            xparams _params)
         {
-            linlsqr.linlsqrstate state = new linlsqr.linlsqrstate();
-            linlsqr.linlsqrreport lsqrrep = new linlsqr.linlsqrreport();
-            sparse.sparsematrix spg = new sparse.sparsematrix();
-            sparse.sparsematrix sps = new sparse.sparsematrix();
-            int[] nearcenterscnt = new int[0];
-            int[] nearpointscnt = new int[0];
-            int[] skipnearpointscnt = new int[0];
-            int[] farpointscnt = new int[0];
-            int maxnearcenterscnt = 0;
-            int maxnearpointscnt = 0;
-            int maxfarpointscnt = 0;
-            int sumnearcenterscnt = 0;
-            int sumnearpointscnt = 0;
-            int sumfarpointscnt = 0;
+            var state = new linlsqr.linlsqrstate();
+            var lsqrrep = new linlsqr.linlsqrreport();
+            var spg = new sparse.sparsematrix();
+            var sps = new sparse.sparsematrix();
+            var nearcenterscnt = new int[0];
+            var nearpointscnt = new int[0];
+            var skipnearpointscnt = new int[0];
+            var farpointscnt = new int[0];
+            var maxnearcenterscnt = 0;
+            var maxnearpointscnt = 0;
+            var maxfarpointscnt = 0;
+            var sumnearcenterscnt = 0;
+            var sumnearpointscnt = 0;
+            var sumfarpointscnt = 0;
             double maxrad = 0;
-            int[] pointstags = new int[0];
-            int[] centerstags = new int[0];
-            double[,] nearpoints = new double[0,0];
-            double[,] nearcenters = new double[0,0];
-            double[,] farpoints = new double[0,0];
-            int tmpi = 0;
-            int pointscnt = 0;
-            int centerscnt = 0;
-            double[] xcx = new double[0];
-            double[] tmpy = new double[0];
-            double[] tc = new double[0];
-            double[] g = new double[0];
-            double[] c = new double[0];
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int sind = 0;
-            double[,] a = new double[0,0];
+            var pointstags = new int[0];
+            var centerstags = new int[0];
+            var nearpoints = new double[0,0];
+            var nearcenters = new double[0,0];
+            var farpoints = new double[0,0];
+            var tmpi = 0;
+            var pointscnt = 0;
+            var centerscnt = 0;
+            var xcx = new double[0];
+            var tmpy = new double[0];
+            var tc = new double[0];
+            var g = new double[0];
+            var c = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var sind = 0;
+            var a = new double[0,0];
             double vv = 0;
             double vx = 0;
             double vy = 0;
             double vz = 0;
             double vr = 0;
             double gnorm2 = 0;
-            double[] tmp0 = new double[0];
-            double[] tmp1 = new double[0];
-            double[] tmp2 = new double[0];
+            var tmp0 = new double[0];
+            var tmp1 = new double[0];
+            var tmp2 = new double[0];
             double fx = 0;
-            double[,] xx = new double[0,0];
-            double[,] cx = new double[0,0];
+            var xx = new double[0,0];
+            var cx = new double[0,0];
             double mrad = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             gnnz = 0;
             snnz = 0;
@@ -33171,7 +33428,7 @@ public partial class alglib
                 //
                 // Determine number of far points
                 //
-                farpointscnt[i] = nearestneighbor.kdtreequeryrnn(pointstree, xcx, Math.Max(r[i]*rbfnearradius+maxrad*rbffarradius, r[i]*rbffarradius), true, _params);
+                farpointscnt[i] = nearestneighbor.kdtreequeryrnn(pointstree, xcx, Math.Max((r[i]*rbfnearradius) + maxrad*rbffarradius, r[i]*rbffarradius), true, _params);
                 
                 //
                 // calculate sum and max, make some basic checks
@@ -33180,9 +33437,9 @@ public partial class alglib
                 maxnearcenterscnt = Math.Max(maxnearcenterscnt, nearcenterscnt[i]);
                 maxnearpointscnt = Math.Max(maxnearpointscnt, nearpointscnt[i]);
                 maxfarpointscnt = Math.Max(maxfarpointscnt, farpointscnt[i]);
-                sumnearcenterscnt = sumnearcenterscnt+nearcenterscnt[i];
-                sumnearpointscnt = sumnearpointscnt+nearpointscnt[i];
-                sumfarpointscnt = sumfarpointscnt+farpointscnt[i];
+                sumnearcenterscnt += nearcenterscnt[i];
+                sumnearpointscnt += nearpointscnt[i];
+                sumfarpointscnt += farpointscnt[i];
             }
             snnz = sumnearcenterscnt;
             gnnz = sumfarpointscnt;
@@ -33267,11 +33524,11 @@ public partial class alglib
                         {
                             vr = 0.0;
                             vv = vx-cx[k,0];
-                            vr = vr+vv*vv;
+                            vr += (vv * vv);
                             vv = vy-cx[k,1];
-                            vr = vr+vv*vv;
+                            vr += (vv * vv);
                             vv = vz-cx[k,2];
-                            vr = vr+vv*vv;
+                            vr += (vv * vv);
                             vv = r[centerstags[k]];
                             a[j,k] = Math.Exp(-(vr/(vv*vv)));
                         }
@@ -33296,11 +33553,11 @@ public partial class alglib
                         {
                             vv += a[j,i_]*g[i_];
                         }
-                        vv = vv/gnorm2;
+                        vv /= gnorm2;
                         tmpy[j] = -vv;
                         for(i_=0; i_<=centerscnt-1;i_++)
                         {
-                            a[j,i_] = a[j,i_] - vv*g[i_];
+                            a[j,i_] = a[j,i_] - (vv *g[i_]);
                         }
                     }
                     for(j=pointscnt; j<=pointscnt+centerscnt-1; j++)
@@ -33322,15 +33579,15 @@ public partial class alglib
                     {
                         vv += g[i_]*c[i_];
                     }
-                    vv = vv/gnorm2;
+                    vv /= gnorm2;
                     for(i_=0; i_<=centerscnt-1;i_++)
                     {
-                        c[i_] = c[i_] - vv*g[i_];
+                        c[i_] = c[i_] - (vv *g[i_]);
                     }
                     vv = 1/gnorm2;
                     for(i_=0; i_<=centerscnt-1;i_++)
                     {
-                        c[i_] = c[i_] + vv*g[i_];
+                        c[i_] = c[i_] + (vv *g[i_]);
                     }
                     for(j=0; j<=centerscnt-1; j++)
                     {
@@ -33360,14 +33617,14 @@ public partial class alglib
                     {
                         vr = 0.0;
                         vv = vx-cx[k,0];
-                        vr = vr+vv*vv;
+                        vr += (vv * vv);
                         vv = vy-cx[k,1];
-                        vr = vr+vv*vv;
+                        vr += (vv * vv);
                         vv = vz-cx[k,2];
-                        vr = vr+vv*vv;
+                        vr += (vv * vv);
                         vv = r[centerstags[k]];
-                        vv = vv*vv;
-                        fx = fx+c[k]*Math.Exp(-(vr/vv));
+                        vv *= vv;
+                        fx += (c[k]*Math.Exp(-(vr/vv)));
                     }
                     sparse.sparseset(spg, pointstags[j], i, fx, _params);
                 }
@@ -33401,8 +33658,8 @@ public partial class alglib
                 {
                     w[j,i] = tc[j];
                 }
-                iterationscount = iterationscount+lsqrrep.iterationscount;
-                nmv = nmv+lsqrrep.nmv;
+                iterationscount += lsqrrep.iterationscount;
+                nmv += lsqrrep.nmv;
             }
             info = 1;
         }
@@ -33427,23 +33684,23 @@ public partial class alglib
             ref int info,
             ref int iterationscount,
             ref int nmv,
-            alglib.xparams _params)
+            xparams _params)
         {
-            linlsqr.linlsqrstate state = new linlsqr.linlsqrstate();
-            linlsqr.linlsqrreport lsqrrep = new linlsqr.linlsqrreport();
-            sparse.sparsematrix spa = new sparse.sparsematrix();
+            var state = new linlsqr.linlsqrstate();
+            var lsqrrep = new linlsqr.linlsqrreport();
+            var spa = new sparse.sparsematrix();
             double anorm = 0;
-            double[] omega = new double[0];
-            double[] xx = new double[0];
-            double[] tmpy = new double[0];
-            double[,] cx = new double[0,0];
+            var omega = new double[0];
+            var xx = new double[0];
+            var tmpy = new double[0];
+            var cx = new double[0,0];
             double yval = 0;
-            int nec = 0;
-            int[] centerstags = new int[0];
-            int layer = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var nec = 0;
+            var centerstags = new int[0];
+            var layer = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
             double v = 0;
             double rmaxbefore = 0;
             double rmaxafter = 0;
@@ -33508,7 +33765,7 @@ public partial class alglib
                 {
                     xx[j] = x[i,j];
                 }
-                annz = annz+nearestneighbor.kdtreequeryrnn(centerstree, xx, r[0]*rbfmlradius, true, _params);
+                annz += nearestneighbor.kdtreequeryrnn(centerstree, xx, r[0]*rbfmlradius, true, _params);
             }
             for(layer=0; layer<=nlayers-1; layer++)
             {
@@ -33529,9 +33786,9 @@ public partial class alglib
                     nearestneighbor.kdtreequeryresultstags(centerstree, ref centerstags, _params);
                     for(j=0; j<=nec-1; j++)
                     {
-                        v = Math.Exp(-((math.sqr(xx[0]-cx[j,0])+math.sqr(xx[1]-cx[j,1])+math.sqr(xx[2]-cx[j,2]))/math.sqr(r[layer*n+centerstags[j]])));
+                        v = Math.Exp(-((math.sqr(xx[0]-cx[j,0])+math.sqr(xx[1]-cx[j,1])+math.sqr(xx[2]-cx[j,2]))/math.sqr(r[(layer * n) + centerstags[j]])));
                         sparse.sparseset(spa, i, centerstags[j], v, _params);
-                        anorm = anorm+math.sqr(v);
+                        anorm += math.sqr(v);
                     }
                 }
                 anorm = Math.Sqrt(anorm);
@@ -33587,7 +33844,7 @@ public partial class alglib
                         nearestneighbor.kdtreequeryresultstags(centerstree, ref centerstags, _params);
                         for(k=0; k<=nec-1; k++)
                         {
-                            yval = yval+omega[centerstags[k]]*Math.Exp(-((math.sqr(xx[0]-cx[k,0])+math.sqr(xx[1]-cx[k,1])+math.sqr(xx[2]-cx[k,2]))/math.sqr(r[layer*n+centerstags[k]])));
+                            yval += (omega[centerstags[k]]*Math.Exp(-((math.sqr(xx[0]-cx[k,0])+math.sqr(xx[1]-cx[k,1])+math.sqr(xx[2]-cx[k,2]))/math.sqr(r[(layer * n) + centerstags[k]]))));
                         }
                         y[j,i] = y[j,i]-yval;
                     }
@@ -33597,10 +33854,10 @@ public partial class alglib
                     //
                     for(j=0; j<=n-1; j++)
                     {
-                        w[layer*n+j,i] = omega[j];
+                        w[(layer * n) + j,i] = omega[j];
                     }
-                    iterationscount = iterationscount+lsqrrep.iterationscount;
-                    nmv = nmv+lsqrrep.nmv;
+                    iterationscount += lsqrrep.iterationscount;
+                    nmv += lsqrrep.nmv;
                 }
                 
                 //
@@ -33645,16 +33902,18 @@ public partial class alglib
                 y = new double[0];
                 f = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline2dinterpolant _result = new spline2dinterpolant();
-                _result.stype = stype;
-                _result.n = n;
-                _result.m = m;
-                _result.d = d;
-                _result.x = (double[])x.Clone();
-                _result.y = (double[])y.Clone();
-                _result.f = (double[])f.Clone();
+                var _result = new spline2dinterpolant
+                {
+                    stype = stype,
+                    n = n,
+                    m = m,
+                    d = d,
+                    x = (double[])x.Clone(),
+                    y = (double[])y.Clone(),
+                    f = (double[])f.Clone()
+                };
                 return _result;
             }
         };
@@ -33696,32 +33955,34 @@ public partial class alglib
             {
                 xy = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline2dbuilder _result = new spline2dbuilder();
-                _result.priorterm = priorterm;
-                _result.priortermval = priortermval;
-                _result.areatype = areatype;
-                _result.xa = xa;
-                _result.xb = xb;
-                _result.ya = ya;
-                _result.yb = yb;
-                _result.gridtype = gridtype;
-                _result.kx = kx;
-                _result.ky = ky;
-                _result.smoothing = smoothing;
-                _result.nlayers = nlayers;
-                _result.solvertype = solvertype;
-                _result.lambdabase = lambdabase;
-                _result.xy = (double[])xy.Clone();
-                _result.npoints = npoints;
-                _result.d = d;
-                _result.sx = sx;
-                _result.sy = sy;
-                _result.adddegreeoffreedom = adddegreeoffreedom;
-                _result.interfacesize = interfacesize;
-                _result.lsqrcnt = lsqrcnt;
-                _result.maxcoresize = maxcoresize;
+                var _result = new spline2dbuilder
+                {
+                    priorterm = priorterm,
+                    priortermval = priortermval,
+                    areatype = areatype,
+                    xa = xa,
+                    xb = xb,
+                    ya = ya,
+                    yb = yb,
+                    gridtype = gridtype,
+                    kx = kx,
+                    ky = ky,
+                    smoothing = smoothing,
+                    nlayers = nlayers,
+                    solvertype = solvertype,
+                    lambdabase = lambdabase,
+                    xy = (double[])xy.Clone(),
+                    npoints = npoints,
+                    d = d,
+                    sx = sx,
+                    sy = sy,
+                    adddegreeoffreedom = adddegreeoffreedom,
+                    interfacesize = interfacesize,
+                    lsqrcnt = lsqrcnt,
+                    maxcoresize = maxcoresize
+                };
                 return _result;
             }
         };
@@ -33747,13 +34008,15 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline2dfitreport _result = new spline2dfitreport();
-                _result.rmserror = rmserror;
-                _result.avgerror = avgerror;
-                _result.maxerror = maxerror;
-                _result.r2 = r2;
+                var _result = new spline2dfitreport
+                {
+                    rmserror = rmserror,
+                    avgerror = avgerror,
+                    maxerror = maxerror,
+                    r2 = r2
+                };
                 return _result;
             }
         };
@@ -33811,25 +34074,27 @@ public partial class alglib
                 tmp1 = new double[0];
                 tmp2 = new double[0,0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline2dxdesignmatrix _result = new spline2dxdesignmatrix();
-                _result.blockwidth = blockwidth;
-                _result.kx = kx;
-                _result.ky = ky;
-                _result.npoints = npoints;
-                _result.nrows = nrows;
-                _result.ndenserows = ndenserows;
-                _result.ndensebatches = ndensebatches;
-                _result.d = d;
-                _result.maxbatch = maxbatch;
-                _result.vals = (double[,])vals.Clone();
-                _result.batches = (int[])batches.Clone();
-                _result.batchbases = (int[])batchbases.Clone();
-                _result.lambdareg = lambdareg;
-                _result.tmp0 = (double[])tmp0.Clone();
-                _result.tmp1 = (double[])tmp1.Clone();
-                _result.tmp2 = (double[,])tmp2.Clone();
+                var _result = new spline2dxdesignmatrix
+                {
+                    blockwidth = blockwidth,
+                    kx = kx,
+                    ky = ky,
+                    npoints = npoints,
+                    nrows = nrows,
+                    ndenserows = ndenserows,
+                    ndensebatches = ndensebatches,
+                    d = d,
+                    maxbatch = maxbatch,
+                    vals = (double[,])vals.Clone(),
+                    batches = (int[])batches.Clone(),
+                    batchbases = (int[])batchbases.Clone(),
+                    lambdareg = lambdareg,
+                    tmp0 = (double[])tmp0.Clone(),
+                    tmp1 = (double[])tmp1.Clone(),
+                    tmp2 = (double[,])tmp2.Clone()
+                };
                 return _result;
             }
         };
@@ -33863,17 +34128,19 @@ public partial class alglib
                 tmp0 = new double[0];
                 tmp1 = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline2dblockllsbuf _result = new spline2dblockllsbuf();
-                _result.solver = (linlsqr.linlsqrstate)solver.make_copy();
-                _result.solverrep = (linlsqr.linlsqrreport)solverrep.make_copy();
-                _result.blockata = (double[,])blockata.Clone();
-                _result.trsmbuf2 = (double[,])trsmbuf2.Clone();
-                _result.cholbuf2 = (double[,])cholbuf2.Clone();
-                _result.cholbuf1 = (double[])cholbuf1.Clone();
-                _result.tmp0 = (double[])tmp0.Clone();
-                _result.tmp1 = (double[])tmp1.Clone();
+                var _result = new spline2dblockllsbuf
+                {
+                    solver = (linlsqr.linlsqrstate)solver.make_copy(),
+                    solverrep = (linlsqr.linlsqrreport)solverrep.make_copy(),
+                    blockata = (double[,])blockata.Clone(),
+                    trsmbuf2 = (double[,])trsmbuf2.Clone(),
+                    cholbuf2 = (double[,])cholbuf2.Clone(),
+                    cholbuf1 = (double[])cholbuf1.Clone(),
+                    tmp0 = (double[])tmp0.Clone(),
+                    tmp1 = (double[])tmp1.Clone()
+                };
                 return _result;
             }
         };
@@ -33903,15 +34170,17 @@ public partial class alglib
                 localmodel = new spline2dinterpolant();
                 blockllsbuf = new spline2dblockllsbuf();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline2dfastddmbuf _result = new spline2dfastddmbuf();
-                _result.xdesignmatrix = (spline2dxdesignmatrix)xdesignmatrix.make_copy();
-                _result.tmp0 = (double[])tmp0.Clone();
-                _result.tmpz = (double[])tmpz.Clone();
-                _result.dummyrep = (spline2dfitreport)dummyrep.make_copy();
-                _result.localmodel = (spline2dinterpolant)localmodel.make_copy();
-                _result.blockllsbuf = (spline2dblockllsbuf)blockllsbuf.make_copy();
+                var _result = new spline2dfastddmbuf
+                {
+                    xdesignmatrix = (spline2dxdesignmatrix)xdesignmatrix.make_copy(),
+                    tmp0 = (double[])tmp0.Clone(),
+                    tmpz = (double[])tmpz.Clone(),
+                    dummyrep = (spline2dfitreport)dummyrep.make_copy(),
+                    localmodel = (spline2dinterpolant)localmodel.make_copy(),
+                    blockllsbuf = (spline2dblockllsbuf)blockllsbuf.make_copy()
+                };
                 return _result;
             }
         };
@@ -33943,14 +34212,14 @@ public partial class alglib
         public static double spline2dcalc(spline2dinterpolant c,
             double x,
             double y,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int ix = 0;
-            int iy = 0;
-            int l = 0;
-            int r = 0;
-            int h = 0;
+            var ix = 0;
+            var iy = 0;
+            var l = 0;
+            var r = 0;
+            var h = 0;
             double t = 0;
             double dt = 0;
             double u = 0;
@@ -33959,13 +34228,13 @@ public partial class alglib
             double y2 = 0;
             double y3 = 0;
             double y4 = 0;
-            int s1 = 0;
-            int s2 = 0;
-            int s3 = 0;
-            int s4 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var s1 = 0;
+            var s2 = 0;
+            var s3 = 0;
+            var s4 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double t2 = 0;
             double t3 = 0;
             double u2 = 0;
@@ -34030,11 +34299,11 @@ public partial class alglib
             //
             if( c.stype==-1 )
             {
-                y1 = c.f[c.n*iy+ix];
-                y2 = c.f[c.n*iy+(ix+1)];
-                y3 = c.f[c.n*(iy+1)+(ix+1)];
-                y4 = c.f[c.n*(iy+1)+ix];
-                result = (1-t)*(1-u)*y1+t*(1-u)*y2+t*u*y3+(1-t)*u*y4;
+                y1 = c.f[(c.n*iy) + ix];
+                y2 = c.f[(c.n*iy) + (ix+1)];
+                y3 = c.f[(c.n*(iy+1)) + (ix+1)];
+                y4 = c.f[(c.n*(iy+1)) + ix];
+                result = ((1-t)*(1-u)*y1) + t*(1-u)*y2+ (t *u*y3) + (1-t)*u*y4;
                 return result;
             }
             
@@ -34050,31 +34319,31 @@ public partial class alglib
             sfx = c.n*c.m;
             sfy = 2*c.n*c.m;
             sfxy = 3*c.n*c.m;
-            s1 = c.n*iy+ix;
-            s2 = c.n*iy+(ix+1);
-            s3 = c.n*(iy+1)+ix;
-            s4 = c.n*(iy+1)+(ix+1);
+            s1 = (c.n*iy) + ix;
+            s2 = (c.n*iy) + (ix+1);
+            s3 = (c.n*(iy+1)) + ix;
+            s4 = (c.n*(iy+1)) + (ix+1);
             t2 = t*t;
             t3 = t*t2;
             u2 = u*u;
             u3 = u*u2;
-            ht00 = 2*t3-3*t2+1;
-            ht10 = t3-2*t2+t;
-            ht01 = -(2*t3)+3*t2;
+            ht00 = (2 * t3) - 3*t2+1;
+            ht10 = t3- (2 * t2) + t;
+            ht01 = -(2*t3)+ (3 * t2);
             ht11 = t3-t2;
-            hu00 = 2*u3-3*u2+1;
-            hu10 = u3-2*u2+u;
-            hu01 = -(2*u3)+3*u2;
+            hu00 = (2 * u3) - 3*u2+1;
+            hu10 = u3- (2 * u2) + u;
+            hu01 = -(2*u3)+ (3 * u2);
             hu11 = u3-u2;
-            ht10 = ht10/dt;
-            ht11 = ht11/dt;
-            hu10 = hu10/du;
-            hu11 = hu11/du;
+            ht10 /= dt;
+            ht11 /= dt;
+            hu10 /= du;
+            hu11 /= du;
             result = 0;
-            result = result+c.f[s1]*ht00*hu00+c.f[s2]*ht01*hu00+c.f[s3]*ht00*hu01+c.f[s4]*ht01*hu01;
-            result = result+c.f[sfx+s1]*ht10*hu00+c.f[sfx+s2]*ht11*hu00+c.f[sfx+s3]*ht10*hu01+c.f[sfx+s4]*ht11*hu01;
-            result = result+c.f[sfy+s1]*ht00*hu10+c.f[sfy+s2]*ht01*hu10+c.f[sfy+s3]*ht00*hu11+c.f[sfy+s4]*ht01*hu11;
-            result = result+c.f[sfxy+s1]*ht10*hu10+c.f[sfxy+s2]*ht11*hu10+c.f[sfxy+s3]*ht10*hu11+c.f[sfxy+s4]*ht11*hu11;
+            result = result+ (c.f[s1]*ht00*hu00) + c.f[s2]*ht01*hu00+ (c.f[s3]*ht00*hu01) + c.f[s4]*ht01*hu01;
+            result = result+ (c.f[sfx+s1]*ht10*hu00) + c.f[sfx+s2]*ht11*hu00+ (c.f[sfx+s3]*ht10*hu01) + c.f[sfx+s4]*ht11*hu01;
+            result = result+ (c.f[sfy+s1]*ht00*hu10) + c.f[sfy+s2]*ht01*hu10+ (c.f[sfy+s3]*ht00*hu11) + c.f[sfy+s4]*ht01*hu11;
+            result = result+ (c.f[sfxy+s1]*ht10*hu10) + c.f[sfxy+s2]*ht11*hu10+ (c.f[sfxy+s3]*ht10*hu11) + c.f[sfxy+s4]*ht11*hu11;
             return result;
         }
 
@@ -34103,24 +34372,24 @@ public partial class alglib
             ref double fx,
             ref double fy,
             ref double fxy,
-            alglib.xparams _params)
+            xparams _params)
         {
             double t = 0;
             double dt = 0;
             double u = 0;
             double du = 0;
-            int ix = 0;
-            int iy = 0;
-            int l = 0;
-            int r = 0;
-            int h = 0;
-            int s1 = 0;
-            int s2 = 0;
-            int s3 = 0;
-            int s4 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var ix = 0;
+            var iy = 0;
+            var l = 0;
+            var r = 0;
+            var h = 0;
+            var s1 = 0;
+            var s2 = 0;
+            var s3 = 0;
+            var s4 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double y1 = 0;
             double y2 = 0;
             double y3 = 0;
@@ -34217,13 +34486,13 @@ public partial class alglib
             //
             if( c.stype==-1 )
             {
-                y1 = c.f[c.n*iy+ix];
-                y2 = c.f[c.n*iy+(ix+1)];
-                y3 = c.f[c.n*(iy+1)+(ix+1)];
-                y4 = c.f[c.n*(iy+1)+ix];
-                f = (1-t)*(1-u)*y1+t*(1-u)*y2+t*u*y3+(1-t)*u*y4;
-                fx = (-((1-u)*y1)+(1-u)*y2+u*y3-u*y4)*dt;
-                fy = (-((1-t)*y1)-t*y2+t*y3+(1-t)*y4)*du;
+                y1 = c.f[(c.n*iy) + ix];
+                y2 = c.f[(c.n*iy) + (ix+1)];
+                y3 = c.f[(c.n*(iy+1)) + (ix+1)];
+                y4 = c.f[(c.n*(iy+1)) + ix];
+                f = ((1-t)*(1-u)*y1) + t*(1-u)*y2+ (t *u*y3) + (1-t)*u*y4;
+                fx = (-((1-u)*y1)+ ((1-u)*y2) + u*y3- (u * y4)) *dt;
+                fy = (-((1-t)*y1)- (t * y2) + t*y3+ ((1-t)*y4)) *du;
                 fxy = (y1-y2+y3-y4)*du*dt;
                 return;
             }
@@ -34236,38 +34505,38 @@ public partial class alglib
                 sfx = c.n*c.m;
                 sfy = 2*c.n*c.m;
                 sfxy = 3*c.n*c.m;
-                s1 = c.n*iy+ix;
-                s2 = c.n*iy+(ix+1);
-                s3 = c.n*(iy+1)+ix;
-                s4 = c.n*(iy+1)+(ix+1);
+                s1 = (c.n*iy) + ix;
+                s2 = (c.n*iy) + (ix+1);
+                s3 = (c.n*(iy+1)) + ix;
+                s4 = (c.n*(iy+1)) + (ix+1);
                 t2 = t*t;
                 t3 = t*t2;
                 u2 = u*u;
                 u3 = u*u2;
-                ht00 = 2*t3-3*t2+1;
-                ht10 = t3-2*t2+t;
-                ht01 = -(2*t3)+3*t2;
+                ht00 = (2 * t3) - 3*t2+1;
+                ht10 = t3- (2 * t2) + t;
+                ht01 = -(2*t3)+ (3 * t2);
                 ht11 = t3-t2;
-                hu00 = 2*u3-3*u2+1;
-                hu10 = u3-2*u2+u;
-                hu01 = -(2*u3)+3*u2;
+                hu00 = (2 * u3) - 3*u2+1;
+                hu10 = u3- (2 * u2) + u;
+                hu01 = -(2*u3)+ (3 * u2);
                 hu11 = u3-u2;
-                ht10 = ht10/dt;
-                ht11 = ht11/dt;
-                hu10 = hu10/du;
-                hu11 = hu11/du;
-                dht00 = 6*t2-6*t;
-                dht10 = 3*t2-4*t+1;
-                dht01 = -(6*t2)+6*t;
-                dht11 = 3*t2-2*t;
-                dhu00 = 6*u2-6*u;
-                dhu10 = 3*u2-4*u+1;
-                dhu01 = -(6*u2)+6*u;
-                dhu11 = 3*u2-2*u;
-                dht00 = dht00*dt;
-                dht01 = dht01*dt;
-                dhu00 = dhu00*du;
-                dhu01 = dhu01*du;
+                ht10 /= dt;
+                ht11 /= dt;
+                hu10 /= du;
+                hu11 /= du;
+                dht00 = (6 * t2) - 6*t;
+                dht10 = (3 * t2) - 4*t+1;
+                dht01 = -(6*t2)+ (6 * t);
+                dht11 = (3 * t2) - 2*t;
+                dhu00 = (6 * u2) - 6*u;
+                dhu10 = (3 * u2) - 4*u+1;
+                dhu01 = -(6*u2)+ (6 * u);
+                dhu11 = (3 * u2) - 2*u;
+                dht00 *= dt;
+                dht01 *= dt;
+                dhu00 *= du;
+                dhu01 *= du;
                 f = 0;
                 fx = 0;
                 fy = 0;
@@ -34276,34 +34545,34 @@ public partial class alglib
                 v1 = c.f[s2];
                 v2 = c.f[s3];
                 v3 = c.f[s4];
-                f = f+v0*ht00*hu00+v1*ht01*hu00+v2*ht00*hu01+v3*ht01*hu01;
-                fx = fx+v0*dht00*hu00+v1*dht01*hu00+v2*dht00*hu01+v3*dht01*hu01;
-                fy = fy+v0*ht00*dhu00+v1*ht01*dhu00+v2*ht00*dhu01+v3*ht01*dhu01;
-                fxy = fxy+v0*dht00*dhu00+v1*dht01*dhu00+v2*dht00*dhu01+v3*dht01*dhu01;
+                f = f+ (v0 *ht00*hu00) + v1*ht01*hu00+ (v2 *ht00*hu01) + v3*ht01*hu01;
+                fx = fx+ (v0 *dht00*hu00) + v1*dht01*hu00+ (v2 *dht00*hu01) + v3*dht01*hu01;
+                fy = fy+ (v0 *ht00*dhu00) + v1*ht01*dhu00+ (v2 *ht00*dhu01) + v3*ht01*dhu01;
+                fxy = fxy+ (v0 *dht00*dhu00) + v1*dht01*dhu00+ (v2 *dht00*dhu01) + v3*dht01*dhu01;
                 v0 = c.f[sfx+s1];
                 v1 = c.f[sfx+s2];
                 v2 = c.f[sfx+s3];
                 v3 = c.f[sfx+s4];
-                f = f+v0*ht10*hu00+v1*ht11*hu00+v2*ht10*hu01+v3*ht11*hu01;
-                fx = fx+v0*dht10*hu00+v1*dht11*hu00+v2*dht10*hu01+v3*dht11*hu01;
-                fy = fy+v0*ht10*dhu00+v1*ht11*dhu00+v2*ht10*dhu01+v3*ht11*dhu01;
-                fxy = fxy+v0*dht10*dhu00+v1*dht11*dhu00+v2*dht10*dhu01+v3*dht11*dhu01;
+                f = f+ (v0 *ht10*hu00) + v1*ht11*hu00+ (v2 *ht10*hu01) + v3*ht11*hu01;
+                fx = fx+ (v0 *dht10*hu00) + v1*dht11*hu00+ (v2 *dht10*hu01) + v3*dht11*hu01;
+                fy = fy+ (v0 *ht10*dhu00) + v1*ht11*dhu00+ (v2 *ht10*dhu01) + v3*ht11*dhu01;
+                fxy = fxy+ (v0 *dht10*dhu00) + v1*dht11*dhu00+ (v2 *dht10*dhu01) + v3*dht11*dhu01;
                 v0 = c.f[sfy+s1];
                 v1 = c.f[sfy+s2];
                 v2 = c.f[sfy+s3];
                 v3 = c.f[sfy+s4];
-                f = f+v0*ht00*hu10+v1*ht01*hu10+v2*ht00*hu11+v3*ht01*hu11;
-                fx = fx+v0*dht00*hu10+v1*dht01*hu10+v2*dht00*hu11+v3*dht01*hu11;
-                fy = fy+v0*ht00*dhu10+v1*ht01*dhu10+v2*ht00*dhu11+v3*ht01*dhu11;
-                fxy = fxy+v0*dht00*dhu10+v1*dht01*dhu10+v2*dht00*dhu11+v3*dht01*dhu11;
+                f = f+ (v0 *ht00*hu10) + v1*ht01*hu10+ (v2 *ht00*hu11) + v3*ht01*hu11;
+                fx = fx+ (v0 *dht00*hu10) + v1*dht01*hu10+ (v2 *dht00*hu11) + v3*dht01*hu11;
+                fy = fy+ (v0 *ht00*dhu10) + v1*ht01*dhu10+ (v2 *ht00*dhu11) + v3*ht01*dhu11;
+                fxy = fxy+ (v0 *dht00*dhu10) + v1*dht01*dhu10+ (v2 *dht00*dhu11) + v3*dht01*dhu11;
                 v0 = c.f[sfxy+s1];
                 v1 = c.f[sfxy+s2];
                 v2 = c.f[sfxy+s3];
                 v3 = c.f[sfxy+s4];
-                f = f+v0*ht10*hu10+v1*ht11*hu10+v2*ht10*hu11+v3*ht11*hu11;
-                fx = fx+v0*dht10*hu10+v1*dht11*hu10+v2*dht10*hu11+v3*dht11*hu11;
-                fy = fy+v0*ht10*dhu10+v1*ht11*dhu10+v2*ht10*dhu11+v3*ht11*dhu11;
-                fxy = fxy+v0*dht10*dhu10+v1*dht11*dhu10+v2*dht10*dhu11+v3*dht11*dhu11;
+                f = f+ (v0 *ht10*hu10) + v1*ht11*hu10+ (v2 *ht10*hu11) + v3*ht11*hu11;
+                fx = fx+ (v0 *dht10*hu10) + v1*dht11*hu10+ (v2 *dht10*hu11) + v3*dht11*hu11;
+                fy = fy+ (v0 *ht10*dhu10) + v1*ht11*dhu10+ (v2 *ht10*dhu11) + v3*ht11*dhu11;
+                fxy = fxy+ (v0 *dht10*dhu10) + v1*dht11*dhu10+ (v2 *dht10*dhu11) + v3*dht11*dhu11;
                 return;
             }
         }
@@ -34333,14 +34602,14 @@ public partial class alglib
             double x,
             double y,
             ref double[] f,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int ix = 0;
-            int iy = 0;
-            int l = 0;
-            int r = 0;
-            int h = 0;
-            int i = 0;
+            var ix = 0;
+            var iy = 0;
+            var l = 0;
+            var r = 0;
+            var h = 0;
+            var i = 0;
             double t = 0;
             double dt = 0;
             double u = 0;
@@ -34349,13 +34618,13 @@ public partial class alglib
             double y2 = 0;
             double y3 = 0;
             double y4 = 0;
-            int s1 = 0;
-            int s2 = 0;
-            int s3 = 0;
-            int s4 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var s1 = 0;
+            var s2 = 0;
+            var s3 = 0;
+            var s4 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double t2 = 0;
             double t3 = 0;
             double u2 = 0;
@@ -34422,11 +34691,11 @@ public partial class alglib
             {
                 for(i=0; i<=c.d-1; i++)
                 {
-                    y1 = c.f[c.d*(c.n*iy+ix)+i];
-                    y2 = c.f[c.d*(c.n*iy+(ix+1))+i];
-                    y3 = c.f[c.d*(c.n*(iy+1)+(ix+1))+i];
-                    y4 = c.f[c.d*(c.n*(iy+1)+ix)+i];
-                    f[i] = (1-t)*(1-u)*y1+t*(1-u)*y2+t*u*y3+(1-t)*u*y4;
+                    y1 = c.f[(c.d*((c.n*iy) + ix)) + i];
+                    y2 = c.f[(c.d*((c.n*iy) + (ix+1))) + i];
+                    y3 = c.f[(c.d*((c.n*(iy+1)) + (ix+1))) + i];
+                    y4 = c.f[(c.d*((c.n*(iy+1)) + ix)) + i];
+                    f[i] = ((1-t)*(1-u)*y1) + t*(1-u)*y2+ (t *u*y3) + (1-t)*u*y4;
                 }
                 return;
             }
@@ -34443,26 +34712,26 @@ public partial class alglib
             sfx = c.n*c.m*c.d;
             sfy = 2*c.n*c.m*c.d;
             sfxy = 3*c.n*c.m*c.d;
-            s1 = (c.n*iy+ix)*c.d;
-            s2 = (c.n*iy+(ix+1))*c.d;
-            s3 = (c.n*(iy+1)+ix)*c.d;
-            s4 = (c.n*(iy+1)+(ix+1))*c.d;
+            s1 = ((c.n*iy) + ix)*c.d;
+            s2 = ((c.n*iy) + (ix+1))*c.d;
+            s3 = ((c.n*(iy+1)) + ix)*c.d;
+            s4 = ((c.n*(iy+1)) + (ix+1))*c.d;
             t2 = t*t;
             t3 = t*t2;
             u2 = u*u;
             u3 = u*u2;
-            ht00 = 2*t3-3*t2+1;
-            ht10 = t3-2*t2+t;
-            ht01 = -(2*t3)+3*t2;
+            ht00 = (2 * t3) - 3*t2+1;
+            ht10 = t3- (2 * t2) + t;
+            ht01 = -(2*t3)+ (3 * t2);
             ht11 = t3-t2;
-            hu00 = 2*u3-3*u2+1;
-            hu10 = u3-2*u2+u;
-            hu01 = -(2*u3)+3*u2;
+            hu00 = (2 * u3) - 3*u2+1;
+            hu10 = u3- (2 * u2) + u;
+            hu01 = -(2*u3)+ (3 * u2);
             hu11 = u3-u2;
-            ht10 = ht10/dt;
-            ht11 = ht11/dt;
-            hu10 = hu10/du;
-            hu11 = hu11/du;
+            ht10 /= dt;
+            ht11 /= dt;
+            hu10 /= du;
+            hu11 /= du;
             for(i=0; i<=c.d-1; i++)
             {
                 
@@ -34470,18 +34739,18 @@ public partial class alglib
                 // Calculate I-th component
                 //
                 f[i] = 0;
-                f[i] = f[i]+c.f[s1]*ht00*hu00+c.f[s2]*ht01*hu00+c.f[s3]*ht00*hu01+c.f[s4]*ht01*hu01;
-                f[i] = f[i]+c.f[sfx+s1]*ht10*hu00+c.f[sfx+s2]*ht11*hu00+c.f[sfx+s3]*ht10*hu01+c.f[sfx+s4]*ht11*hu01;
-                f[i] = f[i]+c.f[sfy+s1]*ht00*hu10+c.f[sfy+s2]*ht01*hu10+c.f[sfy+s3]*ht00*hu11+c.f[sfy+s4]*ht01*hu11;
-                f[i] = f[i]+c.f[sfxy+s1]*ht10*hu10+c.f[sfxy+s2]*ht11*hu10+c.f[sfxy+s3]*ht10*hu11+c.f[sfxy+s4]*ht11*hu11;
+                f[i] = f[i]+ (c.f[s1]*ht00*hu00) + c.f[s2]*ht01*hu00+ (c.f[s3]*ht00*hu01) + c.f[s4]*ht01*hu01;
+                f[i] = f[i]+ (c.f[sfx+s1]*ht10*hu00) + c.f[sfx+s2]*ht11*hu00+ (c.f[sfx+s3]*ht10*hu01) + c.f[sfx+s4]*ht11*hu01;
+                f[i] = f[i]+ (c.f[sfy+s1]*ht00*hu10) + c.f[sfy+s2]*ht01*hu10+ (c.f[sfy+s3]*ht00*hu11) + c.f[sfy+s4]*ht01*hu11;
+                f[i] = f[i]+ (c.f[sfxy+s1]*ht10*hu10) + c.f[sfxy+s2]*ht11*hu10+ (c.f[sfxy+s3]*ht10*hu11) + c.f[sfxy+s4]*ht11*hu11;
                 
                 //
                 // Advance source indexes
                 //
-                s1 = s1+1;
-                s2 = s2+1;
-                s3 = s3+1;
-                s4 = s4+1;
+                s1++;
+                s2++;
+                s3++;
+                s4++;
             }
         }
 
@@ -34506,14 +34775,14 @@ public partial class alglib
             double x,
             double y,
             int i,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int ix = 0;
-            int iy = 0;
-            int l = 0;
-            int r = 0;
-            int h = 0;
+            var ix = 0;
+            var iy = 0;
+            var l = 0;
+            var r = 0;
+            var h = 0;
             double t = 0;
             double dt = 0;
             double u = 0;
@@ -34522,13 +34791,13 @@ public partial class alglib
             double y2 = 0;
             double y3 = 0;
             double y4 = 0;
-            int s1 = 0;
-            int s2 = 0;
-            int s3 = 0;
-            int s4 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var s1 = 0;
+            var s2 = 0;
+            var s3 = 0;
+            var s4 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double t2 = 0;
             double t3 = 0;
             double u2 = 0;
@@ -34589,11 +34858,11 @@ public partial class alglib
             //
             if( c.stype==-1 )
             {
-                y1 = c.f[c.d*(c.n*iy+ix)+i];
-                y2 = c.f[c.d*(c.n*iy+(ix+1))+i];
-                y3 = c.f[c.d*(c.n*(iy+1)+(ix+1))+i];
-                y4 = c.f[c.d*(c.n*(iy+1)+ix)+i];
-                result = (1-t)*(1-u)*y1+t*(1-u)*y2+t*u*y3+(1-t)*u*y4;
+                y1 = c.f[(c.d*((c.n*iy) + ix)) + i];
+                y2 = c.f[(c.d*((c.n*iy) + (ix+1))) + i];
+                y3 = c.f[(c.d*((c.n*(iy+1)) + (ix+1))) + i];
+                y4 = c.f[(c.d*((c.n*(iy+1)) + ix)) + i];
+                result = ((1-t)*(1-u)*y1) + t*(1-u)*y2+ (t *u*y3) + (1-t)*u*y4;
                 return result;
             }
             
@@ -34609,43 +34878,43 @@ public partial class alglib
             sfx = c.n*c.m*c.d;
             sfy = 2*c.n*c.m*c.d;
             sfxy = 3*c.n*c.m*c.d;
-            s1 = (c.n*iy+ix)*c.d;
-            s2 = (c.n*iy+(ix+1))*c.d;
-            s3 = (c.n*(iy+1)+ix)*c.d;
-            s4 = (c.n*(iy+1)+(ix+1))*c.d;
+            s1 = ((c.n*iy) + ix)*c.d;
+            s2 = ((c.n*iy) + (ix+1))*c.d;
+            s3 = ((c.n*(iy+1)) + ix)*c.d;
+            s4 = ((c.n*(iy+1)) + (ix+1))*c.d;
             t2 = t*t;
             t3 = t*t2;
             u2 = u*u;
             u3 = u*u2;
-            ht00 = 2*t3-3*t2+1;
-            ht10 = t3-2*t2+t;
-            ht01 = -(2*t3)+3*t2;
+            ht00 = (2 * t3) - 3*t2+1;
+            ht10 = t3- (2 * t2) + t;
+            ht01 = -(2*t3)+ (3 * t2);
             ht11 = t3-t2;
-            hu00 = 2*u3-3*u2+1;
-            hu10 = u3-2*u2+u;
-            hu01 = -(2*u3)+3*u2;
+            hu00 = (2 * u3) - 3*u2+1;
+            hu10 = u3- (2 * u2) + u;
+            hu01 = -(2*u3)+ (3 * u2);
             hu11 = u3-u2;
-            ht10 = ht10/dt;
-            ht11 = ht11/dt;
-            hu10 = hu10/du;
-            hu11 = hu11/du;
+            ht10 /= dt;
+            ht11 /= dt;
+            hu10 /= du;
+            hu11 /= du;
             
             //
             // Advance source indexes to I-th position
             //
-            s1 = s1+i;
-            s2 = s2+i;
-            s3 = s3+i;
-            s4 = s4+i;
+            s1 += i;
+            s2 += i;
+            s3 += i;
+            s4 += i;
             
             //
             // Calculate I-th component
             //
             result = 0;
-            result = result+c.f[s1]*ht00*hu00+c.f[s2]*ht01*hu00+c.f[s3]*ht00*hu01+c.f[s4]*ht01*hu01;
-            result = result+c.f[sfx+s1]*ht10*hu00+c.f[sfx+s2]*ht11*hu00+c.f[sfx+s3]*ht10*hu01+c.f[sfx+s4]*ht11*hu01;
-            result = result+c.f[sfy+s1]*ht00*hu10+c.f[sfy+s2]*ht01*hu10+c.f[sfy+s3]*ht00*hu11+c.f[sfy+s4]*ht01*hu11;
-            result = result+c.f[sfxy+s1]*ht10*hu10+c.f[sfxy+s2]*ht11*hu10+c.f[sfxy+s3]*ht10*hu11+c.f[sfxy+s4]*ht11*hu11;
+            result = result+ (c.f[s1]*ht00*hu00) + c.f[s2]*ht01*hu00+ (c.f[s3]*ht00*hu01) + c.f[s4]*ht01*hu01;
+            result = result+ (c.f[sfx+s1]*ht10*hu00) + c.f[sfx+s2]*ht11*hu00+ (c.f[sfx+s3]*ht10*hu01) + c.f[sfx+s4]*ht11*hu01;
+            result = result+ (c.f[sfy+s1]*ht00*hu10) + c.f[sfy+s2]*ht01*hu10+ (c.f[sfy+s3]*ht00*hu11) + c.f[sfy+s4]*ht01*hu11;
+            result = result+ (c.f[sfxy+s1]*ht10*hu10) + c.f[sfxy+s2]*ht11*hu10+ (c.f[sfxy+s3]*ht10*hu11) + c.f[sfxy+s4]*ht11*hu11;
             return result;
         }
 
@@ -34672,7 +34941,7 @@ public partial class alglib
             double x,
             double y,
             ref double[] f,
-            alglib.xparams _params)
+            xparams _params)
         {
             f = new double[0];
 
@@ -34708,25 +34977,25 @@ public partial class alglib
             ref double fx,
             ref double fy,
             ref double fxy,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int d = 0;
+            var d = 0;
             double t = 0;
             double dt = 0;
             double u = 0;
             double du = 0;
-            int ix = 0;
-            int iy = 0;
-            int l = 0;
-            int r = 0;
-            int h = 0;
-            int s1 = 0;
-            int s2 = 0;
-            int s3 = 0;
-            int s4 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var ix = 0;
+            var iy = 0;
+            var l = 0;
+            var r = 0;
+            var h = 0;
+            var s1 = 0;
+            var s2 = 0;
+            var s3 = 0;
+            var s4 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double y1 = 0;
             double y2 = 0;
             double y3 = 0;
@@ -34821,13 +35090,13 @@ public partial class alglib
             //
             if( c.stype==-1 )
             {
-                y1 = c.f[d*(c.n*iy+ix)+i];
-                y2 = c.f[d*(c.n*iy+(ix+1))+i];
-                y3 = c.f[d*(c.n*(iy+1)+(ix+1))+i];
-                y4 = c.f[d*(c.n*(iy+1)+ix)+i];
-                f = (1-t)*(1-u)*y1+t*(1-u)*y2+t*u*y3+(1-t)*u*y4;
-                fx = (-((1-u)*y1)+(1-u)*y2+u*y3-u*y4)*dt;
-                fy = (-((1-t)*y1)-t*y2+t*y3+(1-t)*y4)*du;
+                y1 = c.f[(d * ((c.n*iy) + ix)) + i];
+                y2 = c.f[(d * ((c.n*iy) + (ix+1))) + i];
+                y3 = c.f[(d * ((c.n*(iy+1)) + (ix+1))) + i];
+                y4 = c.f[(d * ((c.n*(iy+1)) + ix)) + i];
+                f = ((1-t)*(1-u)*y1) + t*(1-u)*y2+ (t *u*y3) + (1-t)*u*y4;
+                fx = (-((1-u)*y1)+ ((1-u)*y2) + u*y3- (u * y4)) *dt;
+                fy = (-((1-t)*y1)- (t * y2) + t*y3+ ((1-t)*y4)) *du;
                 fxy = (y1-y2+y3-y4)*du*dt;
                 return;
             }
@@ -34840,38 +35109,38 @@ public partial class alglib
                 sfx = c.n*c.m*d;
                 sfy = 2*c.n*c.m*d;
                 sfxy = 3*c.n*c.m*d;
-                s1 = d*(c.n*iy+ix)+i;
-                s2 = d*(c.n*iy+(ix+1))+i;
-                s3 = d*(c.n*(iy+1)+ix)+i;
-                s4 = d*(c.n*(iy+1)+(ix+1))+i;
+                s1 = (d * ((c.n*iy) + ix)) + i;
+                s2 = (d * ((c.n*iy) + (ix+1))) + i;
+                s3 = (d * ((c.n*(iy+1)) + ix)) + i;
+                s4 = (d * ((c.n*(iy+1)) + (ix+1))) + i;
                 t2 = t*t;
                 t3 = t*t2;
                 u2 = u*u;
                 u3 = u*u2;
-                ht00 = 2*t3-3*t2+1;
-                ht10 = t3-2*t2+t;
-                ht01 = -(2*t3)+3*t2;
+                ht00 = (2 * t3) - 3*t2+1;
+                ht10 = t3- (2 * t2) + t;
+                ht01 = -(2*t3)+ (3 * t2);
                 ht11 = t3-t2;
-                hu00 = 2*u3-3*u2+1;
-                hu10 = u3-2*u2+u;
-                hu01 = -(2*u3)+3*u2;
+                hu00 = (2 * u3) - 3*u2+1;
+                hu10 = u3- (2 * u2) + u;
+                hu01 = -(2*u3)+ (3 * u2);
                 hu11 = u3-u2;
-                ht10 = ht10/dt;
-                ht11 = ht11/dt;
-                hu10 = hu10/du;
-                hu11 = hu11/du;
-                dht00 = 6*t2-6*t;
-                dht10 = 3*t2-4*t+1;
-                dht01 = -(6*t2)+6*t;
-                dht11 = 3*t2-2*t;
-                dhu00 = 6*u2-6*u;
-                dhu10 = 3*u2-4*u+1;
-                dhu01 = -(6*u2)+6*u;
-                dhu11 = 3*u2-2*u;
-                dht00 = dht00*dt;
-                dht01 = dht01*dt;
-                dhu00 = dhu00*du;
-                dhu01 = dhu01*du;
+                ht10 /= dt;
+                ht11 /= dt;
+                hu10 /= du;
+                hu11 /= du;
+                dht00 = (6 * t2) - 6*t;
+                dht10 = (3 * t2) - 4*t+1;
+                dht01 = -(6*t2)+ (6 * t);
+                dht11 = (3 * t2) - 2*t;
+                dhu00 = (6 * u2) - 6*u;
+                dhu10 = (3 * u2) - 4*u+1;
+                dhu01 = -(6*u2)+ (6 * u);
+                dhu11 = (3 * u2) - 2*u;
+                dht00 *= dt;
+                dht01 *= dt;
+                dhu00 *= du;
+                dhu01 *= du;
                 f = 0;
                 fx = 0;
                 fy = 0;
@@ -34880,34 +35149,34 @@ public partial class alglib
                 v1 = c.f[s2];
                 v2 = c.f[s3];
                 v3 = c.f[s4];
-                f = f+v0*ht00*hu00+v1*ht01*hu00+v2*ht00*hu01+v3*ht01*hu01;
-                fx = fx+v0*dht00*hu00+v1*dht01*hu00+v2*dht00*hu01+v3*dht01*hu01;
-                fy = fy+v0*ht00*dhu00+v1*ht01*dhu00+v2*ht00*dhu01+v3*ht01*dhu01;
-                fxy = fxy+v0*dht00*dhu00+v1*dht01*dhu00+v2*dht00*dhu01+v3*dht01*dhu01;
+                f = f+ (v0 *ht00*hu00) + v1*ht01*hu00+ (v2 *ht00*hu01) + v3*ht01*hu01;
+                fx = fx+ (v0 *dht00*hu00) + v1*dht01*hu00+ (v2 *dht00*hu01) + v3*dht01*hu01;
+                fy = fy+ (v0 *ht00*dhu00) + v1*ht01*dhu00+ (v2 *ht00*dhu01) + v3*ht01*dhu01;
+                fxy = fxy+ (v0 *dht00*dhu00) + v1*dht01*dhu00+ (v2 *dht00*dhu01) + v3*dht01*dhu01;
                 v0 = c.f[sfx+s1];
                 v1 = c.f[sfx+s2];
                 v2 = c.f[sfx+s3];
                 v3 = c.f[sfx+s4];
-                f = f+v0*ht10*hu00+v1*ht11*hu00+v2*ht10*hu01+v3*ht11*hu01;
-                fx = fx+v0*dht10*hu00+v1*dht11*hu00+v2*dht10*hu01+v3*dht11*hu01;
-                fy = fy+v0*ht10*dhu00+v1*ht11*dhu00+v2*ht10*dhu01+v3*ht11*dhu01;
-                fxy = fxy+v0*dht10*dhu00+v1*dht11*dhu00+v2*dht10*dhu01+v3*dht11*dhu01;
+                f = f+ (v0 *ht10*hu00) + v1*ht11*hu00+ (v2 *ht10*hu01) + v3*ht11*hu01;
+                fx = fx+ (v0 *dht10*hu00) + v1*dht11*hu00+ (v2 *dht10*hu01) + v3*dht11*hu01;
+                fy = fy+ (v0 *ht10*dhu00) + v1*ht11*dhu00+ (v2 *ht10*dhu01) + v3*ht11*dhu01;
+                fxy = fxy+ (v0 *dht10*dhu00) + v1*dht11*dhu00+ (v2 *dht10*dhu01) + v3*dht11*dhu01;
                 v0 = c.f[sfy+s1];
                 v1 = c.f[sfy+s2];
                 v2 = c.f[sfy+s3];
                 v3 = c.f[sfy+s4];
-                f = f+v0*ht00*hu10+v1*ht01*hu10+v2*ht00*hu11+v3*ht01*hu11;
-                fx = fx+v0*dht00*hu10+v1*dht01*hu10+v2*dht00*hu11+v3*dht01*hu11;
-                fy = fy+v0*ht00*dhu10+v1*ht01*dhu10+v2*ht00*dhu11+v3*ht01*dhu11;
-                fxy = fxy+v0*dht00*dhu10+v1*dht01*dhu10+v2*dht00*dhu11+v3*dht01*dhu11;
+                f = f+ (v0 *ht00*hu10) + v1*ht01*hu10+ (v2 *ht00*hu11) + v3*ht01*hu11;
+                fx = fx+ (v0 *dht00*hu10) + v1*dht01*hu10+ (v2 *dht00*hu11) + v3*dht01*hu11;
+                fy = fy+ (v0 *ht00*dhu10) + v1*ht01*dhu10+ (v2 *ht00*dhu11) + v3*ht01*dhu11;
+                fxy = fxy+ (v0 *dht00*dhu10) + v1*dht01*dhu10+ (v2 *dht00*dhu11) + v3*dht01*dhu11;
                 v0 = c.f[sfxy+s1];
                 v1 = c.f[sfxy+s2];
                 v2 = c.f[sfxy+s3];
                 v3 = c.f[sfxy+s4];
-                f = f+v0*ht10*hu10+v1*ht11*hu10+v2*ht10*hu11+v3*ht11*hu11;
-                fx = fx+v0*dht10*hu10+v1*dht11*hu10+v2*dht10*hu11+v3*dht11*hu11;
-                fy = fy+v0*ht10*dhu10+v1*ht11*dhu10+v2*ht10*dhu11+v3*ht11*dhu11;
-                fxy = fxy+v0*dht10*dhu10+v1*dht11*dhu10+v2*dht10*dhu11+v3*dht11*dhu11;
+                f = f+ (v0 *ht10*hu10) + v1*ht11*hu10+ (v2 *ht10*hu11) + v3*ht11*hu11;
+                fx = fx+ (v0 *dht10*hu10) + v1*dht11*hu10+ (v2 *dht10*hu11) + v3*dht11*hu11;
+                fy = fy+ (v0 *ht10*dhu10) + v1*ht11*dhu10+ (v2 *ht10*dhu11) + v3*ht11*dhu11;
+                fxy = fxy+ (v0 *dht10*dhu10) + v1*dht11*dhu10+ (v2 *dht10*dhu11) + v3*dht11*dhu11;
                 return;
             }
         }
@@ -34931,15 +35200,15 @@ public partial class alglib
             double bx,
             double ay,
             double by,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] x = new double[0];
-            double[] y = new double[0];
-            double[] f = new double[0];
-            double[] v = new double[0];
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var x = new double[0];
+            var y = new double[0];
+            var f = new double[0];
+            var v = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             alglib.ap.assert(c.stype==-3 || c.stype==-1, "Spline2DLinTransXY: incorrect C (incorrect parameter C.SType)");
             alglib.ap.assert(math.isfinite(ax), "Spline2DLinTransXY: AX is infinite or NaN");
@@ -34963,7 +35232,7 @@ public partial class alglib
                 {
                     for(k=0; k<=c.d-1; k++)
                     {
-                        f[c.d*(i*c.n+j)+k] = c.f[c.d*(i*c.n+j)+k];
+                        f[(c.d*((i *c.n) + j)) + k] = c.f[(c.d*((i *c.n) + j)) + k];
                     }
                 }
             }
@@ -34981,7 +35250,7 @@ public partial class alglib
                     {
                         for(k=0; k<=c.d-1; k++)
                         {
-                            f[c.d*(i*c.n+j)+k] = v[k];
+                            f[(c.d*((i *c.n) + j)) + k] = v[k];
                         }
                     }
                 }
@@ -34996,7 +35265,7 @@ public partial class alglib
                     {
                         for(k=0; k<=c.d-1; k++)
                         {
-                            f[c.d*(i*c.n+j)+k] = v[k];
+                            f[(c.d*((i *c.n) + j)) + k] = v[k];
                         }
                     }
                 }
@@ -35021,7 +35290,7 @@ public partial class alglib
                     {
                         for(k=0; k<=c.d-1; k++)
                         {
-                            f[c.d*(i*c.n+j)+k] = v[k];
+                            f[(c.d*((i *c.n) + j)) + k] = v[k];
                         }
                     }
                 }
@@ -35057,13 +35326,13 @@ public partial class alglib
         public static void spline2dlintransf(spline2dinterpolant c,
             double a,
             double b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] x = new double[0];
-            double[] y = new double[0];
-            double[] f = new double[0];
-            int i = 0;
-            int j = 0;
+            var x = new double[0];
+            var y = new double[0];
+            var f = new double[0];
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(c.stype==-3 || c.stype==-1, "Spline2DLinTransF: incorrect C (incorrect parameter C.SType)");
             x = new double[c.n];
@@ -35077,9 +35346,9 @@ public partial class alglib
             {
                 y[i] = c.y[i];
             }
-            for(i=0; i<=c.m*c.n*c.d-1; i++)
+            for(i=0; i<= (c.m*c.n*c.d) - 1; i++)
             {
-                f[i] = a*c.f[i]+b;
+                f[i] = (a *c.f[i]) + b;
             }
             if( c.stype==-3 )
             {
@@ -35106,10 +35375,10 @@ public partial class alglib
         *************************************************************************/
         public static void spline2dcopy(spline2dinterpolant c,
             spline2dinterpolant cc,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int tblsize = 0;
-            int i_ = 0;
+            var tblsize = 0;
+            var i_ = 0;
 
             alglib.ap.assert(c.stype==-1 || c.stype==-3, "Spline2DCopy: incorrect C (incorrect parameter C.SType)");
             cc.n = c.n;
@@ -35169,16 +35438,16 @@ public partial class alglib
             ref double[,] b,
             int newheight,
             int newwidth,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] buf = new double[0,0];
-            double[] x = new double[0];
-            double[] y = new double[0];
-            spline1d.spline1dinterpolant c = new spline1d.spline1dinterpolant();
-            int mw = 0;
-            int mh = 0;
-            int i = 0;
-            int j = 0;
+            var buf = new double[0,0];
+            var x = new double[0];
+            var y = new double[0];
+            var c = new spline1d.spline1dinterpolant();
+            var mw = 0;
+            var mh = 0;
+            var i = 0;
+            var j = 0;
 
             b = new double[0,0];
 
@@ -35272,14 +35541,14 @@ public partial class alglib
             ref double[,] b,
             int newheight,
             int newwidth,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int l = 0;
-            int c = 0;
+            var l = 0;
+            var c = 0;
             double t = 0;
             double u = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             b = new double[0,0];
 
@@ -35295,14 +35564,14 @@ public partial class alglib
                     {
                         l = oldheight-2;
                     }
-                    u = (double)i/(double)(newheight-1)*(oldheight-1)-l;
+                    u = ((double)i/(double)(newheight-1)*(oldheight-1)) - l;
                     c = j*(oldwidth-1)/(newwidth-1);
                     if( c==oldwidth-1 )
                     {
                         c = oldwidth-2;
                     }
-                    t = (double)(j*(oldwidth-1))/(double)(newwidth-1)-c;
-                    b[i,j] = (1-t)*(1-u)*a[l,c]+t*(1-u)*a[l,c+1]+t*u*a[l+1,c+1]+(1-t)*u*a[l+1,c];
+                    t = ((double)(j*(oldwidth-1))/(double)(newwidth-1)) - c;
+                    b[i,j] = ((1-t)*(1-u)*a[l,c]) + t*(1-u)*a[l,c+1]+ (t *u*a[l+1,c+1]) + (1-t)*u*a[l+1,c];
                 }
             }
         }
@@ -35335,13 +35604,13 @@ public partial class alglib
             double[] f,
             int d,
             spline2dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
             double t = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int i0 = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var i0 = 0;
 
             alglib.ap.assert(n>=2, "Spline2DBuildBilinearV: N is less then 2");
             alglib.ap.assert(m>=2, "Spline2DBuildBilinearV: M is less then 2");
@@ -35394,9 +35663,9 @@ public partial class alglib
                     {
                         for(i0=0; i0<=c.d-1; i0++)
                         {
-                            t = c.f[c.d*(i*c.n+j)+i0];
-                            c.f[c.d*(i*c.n+j)+i0] = c.f[c.d*(i*c.n+k)+i0];
-                            c.f[c.d*(i*c.n+k)+i0] = t;
+                            t = c.f[(c.d*((i *c.n) + j)) + i0];
+                            c.f[(c.d*((i *c.n) + j)) + i0] = c.f[(c.d*((i *c.n) + k)) + i0];
+                            c.f[(c.d*((i *c.n) + k)) + i0] = t;
                         }
                     }
                     t = c.x[j];
@@ -35420,9 +35689,9 @@ public partial class alglib
                     {
                         for(i0=0; i0<=c.d-1; i0++)
                         {
-                            t = c.f[c.d*(i*c.n+j)+i0];
-                            c.f[c.d*(i*c.n+j)+i0] = c.f[c.d*(k*c.n+j)+i0];
-                            c.f[c.d*(k*c.n+j)+i0] = t;
+                            t = c.f[(c.d*((i *c.n) + j)) + i0];
+                            c.f[(c.d*((i *c.n) + j)) + i0] = c.f[(c.d*((k *c.n) + j)) + i0];
+                            c.f[(c.d*((k *c.n) + j)) + i0] = t;
                         }
                     }
                     t = c.y[i];
@@ -35460,17 +35729,17 @@ public partial class alglib
             double[] f,
             int d,
             spline2dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] tf = new double[0,0];
-            double[,] dx = new double[0,0];
-            double[,] dy = new double[0,0];
-            double[,] dxy = new double[0,0];
+            var tf = new double[0,0];
+            var dx = new double[0,0];
+            var dy = new double[0,0];
+            var dxy = new double[0,0];
             double t = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int di = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var di = 0;
 
             f = (double[])f.Clone();
 
@@ -35531,9 +35800,9 @@ public partial class alglib
                     {
                         for(di=0; di<=c.d-1; di++)
                         {
-                            t = f[c.d*(i*c.n+j)+di];
-                            f[c.d*(i*c.n+j)+di] = f[c.d*(i*c.n+k)+di];
-                            f[c.d*(i*c.n+k)+di] = t;
+                            t = f[(c.d*((i *c.n) + j)) + di];
+                            f[(c.d*((i *c.n) + j)) + di] = f[(c.d*((i *c.n) + k)) + di];
+                            f[(c.d*((i *c.n) + k)) + di] = t;
                         }
                     }
                     t = c.x[j];
@@ -35557,9 +35826,9 @@ public partial class alglib
                     {
                         for(di=0; di<=c.d-1; di++)
                         {
-                            t = f[c.d*(i*c.n+j)+di];
-                            f[c.d*(i*c.n+j)+di] = f[c.d*(k*c.n+j)+di];
-                            f[c.d*(k*c.n+j)+di] = t;
+                            t = f[(c.d*((i *c.n) + j)) + di];
+                            f[(c.d*((i *c.n) + j)) + di] = f[(c.d*((k *c.n) + j)) + di];
+                            f[(c.d*((k *c.n) + j)) + di] = t;
                         }
                     }
                     t = c.y[i];
@@ -35573,7 +35842,7 @@ public partial class alglib
                 {
                     for(j=0; j<=c.n-1; j++)
                     {
-                        tf[i,j] = f[c.d*(i*c.n+j)+di];
+                        tf[i,j] = f[(c.d*((i *c.n) + j)) + di];
                     }
                 }
                 bicubiccalcderivatives(tf, c.x, c.y, c.m, c.n, ref dx, ref dy, ref dxy, _params);
@@ -35581,11 +35850,11 @@ public partial class alglib
                 {
                     for(j=0; j<=c.n-1; j++)
                     {
-                        k = c.d*(i*c.n+j)+di;
+                        k = (c.d*((i *c.n) + j)) + di;
                         c.f[k] = tf[i,j];
-                        c.f[c.n*c.m*c.d+k] = dx[i,j];
-                        c.f[2*c.n*c.m*c.d+k] = dy[i,j];
-                        c.f[3*c.n*c.m*c.d+k] = dxy[i,j];
+                        c.f[(c.n*c.m*c.d) + k] = dx[i,j];
+                        c.f[(2 *c.n*c.m*c.d) + k] = dy[i,j];
+                        c.f[(3 *c.n*c.m*c.d) + k] = dxy[i,j];
                     }
                 }
             }
@@ -35635,28 +35904,28 @@ public partial class alglib
             ref int n,
             ref int d,
             ref double[,] tbl,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int k = 0;
-            int p = 0;
-            int ci = 0;
-            int cj = 0;
-            int s1 = 0;
-            int s2 = 0;
-            int s3 = 0;
-            int s4 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var k = 0;
+            var p = 0;
+            var ci = 0;
+            var cj = 0;
+            var s1 = 0;
+            var s2 = 0;
+            var s3 = 0;
+            var s4 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double y1 = 0;
             double y2 = 0;
             double y3 = 0;
             double y4 = 0;
             double dt = 0;
             double du = 0;
-            int i = 0;
-            int j = 0;
-            int k0 = 0;
+            var i = 0;
+            var j = 0;
+            var k0 = 0;
 
             m = 0;
             n = 0;
@@ -35677,7 +35946,7 @@ public partial class alglib
                 {
                     for(k=0; k<=d-1; k++)
                     {
-                        p = d*(i*(n-1)+j)+k;
+                        p = (d * ((i *(n-1)) + j)) + k;
                         tbl[p,0] = c.x[j];
                         tbl[p,1] = c.x[j+1];
                         tbl[p,2] = c.y[i];
@@ -35694,14 +35963,14 @@ public partial class alglib
                             {
                                 tbl[p,k0] = 0;
                             }
-                            y1 = c.f[d*(n*i+j)+k];
-                            y2 = c.f[d*(n*i+(j+1))+k];
-                            y3 = c.f[d*(n*(i+1)+(j+1))+k];
-                            y4 = c.f[d*(n*(i+1)+j)+k];
+                            y1 = c.f[(d * ((n * i) + j)) + k];
+                            y2 = c.f[(d * ((n * i) + (j+1))) + k];
+                            y3 = c.f[(d * ((n *(i+1)) + (j+1))) + k];
+                            y4 = c.f[(d * ((n *(i+1)) + j)) + k];
                             tbl[p,4] = y1;
-                            tbl[p,4+1*4+0] = y2-y1;
-                            tbl[p,4+0*4+1] = y4-y1;
-                            tbl[p,4+1*4+1] = y3-y2-y4+y1;
+                            tbl[p,4+ (1 * 4) + 0] = y2-y1;
+                            tbl[p,4+ (0 * 4) + 1] = y4-y1;
+                            tbl[p,4+ (1 * 4) + 1] = y3-y2-y4+y1;
                         }
                         
                         //
@@ -35709,26 +35978,26 @@ public partial class alglib
                         //
                         if( c.stype==-3 )
                         {
-                            s1 = d*(n*i+j)+k;
-                            s2 = d*(n*i+(j+1))+k;
-                            s3 = d*(n*(i+1)+(j+1))+k;
-                            s4 = d*(n*(i+1)+j)+k;
-                            tbl[p,4+0*4+0] = c.f[s1];
-                            tbl[p,4+0*4+1] = c.f[sfy+s1]/du;
-                            tbl[p,4+0*4+2] = -(3*c.f[s1])+3*c.f[s4]-2*c.f[sfy+s1]/du-c.f[sfy+s4]/du;
-                            tbl[p,4+0*4+3] = 2*c.f[s1]-2*c.f[s4]+c.f[sfy+s1]/du+c.f[sfy+s4]/du;
-                            tbl[p,4+1*4+0] = c.f[sfx+s1]/dt;
-                            tbl[p,4+1*4+1] = c.f[sfxy+s1]/(dt*du);
-                            tbl[p,4+1*4+2] = -(3*c.f[sfx+s1]/dt)+3*c.f[sfx+s4]/dt-2*c.f[sfxy+s1]/(dt*du)-c.f[sfxy+s4]/(dt*du);
-                            tbl[p,4+1*4+3] = 2*c.f[sfx+s1]/dt-2*c.f[sfx+s4]/dt+c.f[sfxy+s1]/(dt*du)+c.f[sfxy+s4]/(dt*du);
-                            tbl[p,4+2*4+0] = -(3*c.f[s1])+3*c.f[s2]-2*c.f[sfx+s1]/dt-c.f[sfx+s2]/dt;
-                            tbl[p,4+2*4+1] = -(3*c.f[sfy+s1]/du)+3*c.f[sfy+s2]/du-2*c.f[sfxy+s1]/(dt*du)-c.f[sfxy+s2]/(dt*du);
-                            tbl[p,4+2*4+2] = 9*c.f[s1]-9*c.f[s2]+9*c.f[s3]-9*c.f[s4]+6*c.f[sfx+s1]/dt+3*c.f[sfx+s2]/dt-3*c.f[sfx+s3]/dt-6*c.f[sfx+s4]/dt+6*c.f[sfy+s1]/du-6*c.f[sfy+s2]/du-3*c.f[sfy+s3]/du+3*c.f[sfy+s4]/du+4*c.f[sfxy+s1]/(dt*du)+2*c.f[sfxy+s2]/(dt*du)+c.f[sfxy+s3]/(dt*du)+2*c.f[sfxy+s4]/(dt*du);
-                            tbl[p,4+2*4+3] = -(6*c.f[s1])+6*c.f[s2]-6*c.f[s3]+6*c.f[s4]-4*c.f[sfx+s1]/dt-2*c.f[sfx+s2]/dt+2*c.f[sfx+s3]/dt+4*c.f[sfx+s4]/dt-3*c.f[sfy+s1]/du+3*c.f[sfy+s2]/du+3*c.f[sfy+s3]/du-3*c.f[sfy+s4]/du-2*c.f[sfxy+s1]/(dt*du)-c.f[sfxy+s2]/(dt*du)-c.f[sfxy+s3]/(dt*du)-2*c.f[sfxy+s4]/(dt*du);
-                            tbl[p,4+3*4+0] = 2*c.f[s1]-2*c.f[s2]+c.f[sfx+s1]/dt+c.f[sfx+s2]/dt;
-                            tbl[p,4+3*4+1] = 2*c.f[sfy+s1]/du-2*c.f[sfy+s2]/du+c.f[sfxy+s1]/(dt*du)+c.f[sfxy+s2]/(dt*du);
-                            tbl[p,4+3*4+2] = -(6*c.f[s1])+6*c.f[s2]-6*c.f[s3]+6*c.f[s4]-3*c.f[sfx+s1]/dt-3*c.f[sfx+s2]/dt+3*c.f[sfx+s3]/dt+3*c.f[sfx+s4]/dt-4*c.f[sfy+s1]/du+4*c.f[sfy+s2]/du+2*c.f[sfy+s3]/du-2*c.f[sfy+s4]/du-2*c.f[sfxy+s1]/(dt*du)-2*c.f[sfxy+s2]/(dt*du)-c.f[sfxy+s3]/(dt*du)-c.f[sfxy+s4]/(dt*du);
-                            tbl[p,4+3*4+3] = 4*c.f[s1]-4*c.f[s2]+4*c.f[s3]-4*c.f[s4]+2*c.f[sfx+s1]/dt+2*c.f[sfx+s2]/dt-2*c.f[sfx+s3]/dt-2*c.f[sfx+s4]/dt+2*c.f[sfy+s1]/du-2*c.f[sfy+s2]/du-2*c.f[sfy+s3]/du+2*c.f[sfy+s4]/du+c.f[sfxy+s1]/(dt*du)+c.f[sfxy+s2]/(dt*du)+c.f[sfxy+s3]/(dt*du)+c.f[sfxy+s4]/(dt*du);
+                            s1 = (d * ((n * i) + j)) + k;
+                            s2 = (d * ((n * i) + (j+1))) + k;
+                            s3 = (d * ((n *(i+1)) + (j+1))) + k;
+                            s4 = (d * ((n *(i+1)) + j)) + k;
+                            tbl[p,4+ (0 * 4) + 0] = c.f[s1];
+                            tbl[p,4+ (0 * 4) + 1] = c.f[sfy+s1]/du;
+                            tbl[p,4+ (0 * 4) + 2] = -(3*c.f[s1])+ (3 *c.f[s4]) - 2*c.f[sfy+s1]/du- (c.f[sfy+s4]/du);
+                            tbl[p,4+ (0 * 4) + 3] = (2 *c.f[s1]) - 2*c.f[s4]+ (c.f[sfy+s1]/du) + c.f[sfy+s4]/du;
+                            tbl[p,4+ (1 * 4) + 0] = c.f[sfx+s1]/dt;
+                            tbl[p,4+ (1 * 4) + 1] = c.f[sfxy+s1]/(dt*du);
+                            tbl[p,4+ (1 * 4) + 2] = -(3*c.f[sfx+s1]/dt)+ (3 *c.f[sfx+s4]/dt) - 2*c.f[sfxy+s1]/(dt*du)- (c.f[sfxy+s4]/(dt*du));
+                            tbl[p,4+ (1 * 4) + 3] = (2 *c.f[sfx+s1]/dt) - 2*c.f[sfx+s4]/dt+ (c.f[sfxy+s1]/(dt*du)) + c.f[sfxy+s4]/(dt*du);
+                            tbl[p,4+ (2 * 4) + 0] = -(3*c.f[s1])+ (3 *c.f[s2]) - 2*c.f[sfx+s1]/dt- (c.f[sfx+s2]/dt);
+                            tbl[p,4+ (2 * 4) + 1] = -(3*c.f[sfy+s1]/du)+ (3 *c.f[sfy+s2]/du) - 2*c.f[sfxy+s1]/(dt*du)- (c.f[sfxy+s2]/(dt*du));
+                            tbl[p,4+ (2 * 4) + 2] = (9 *c.f[s1]) - 9*c.f[s2]+ (9 *c.f[s3]) - 9*c.f[s4]+ (6 *c.f[sfx+s1]/dt) + 3*c.f[sfx+s2]/dt- (3 *c.f[sfx+s3]/dt) - 6*c.f[sfx+s4]/dt+ (6 *c.f[sfy+s1]/du) - 6*c.f[sfy+s2]/du- (3 *c.f[sfy+s3]/du) + 3*c.f[sfy+s4]/du+ (4 *c.f[sfxy+s1]/(dt*du)) + 2*c.f[sfxy+s2]/(dt*du)+ (c.f[sfxy+s3]/(dt*du)) + 2*c.f[sfxy+s4]/(dt*du);
+                            tbl[p,4+ (2 * 4) + 3] = -(6*c.f[s1])+ (6 *c.f[s2]) - 6*c.f[s3]+ (6 *c.f[s4]) - 4*c.f[sfx+s1]/dt- (2 *c.f[sfx+s2]/dt) + 2*c.f[sfx+s3]/dt+ (4 *c.f[sfx+s4]/dt) - 3*c.f[sfy+s1]/du+ (3 *c.f[sfy+s2]/du) + 3*c.f[sfy+s3]/du- (3 *c.f[sfy+s4]/du) - 2*c.f[sfxy+s1]/(dt*du)- (c.f[sfxy+s2]/(dt*du)) - c.f[sfxy+s3]/(dt*du)- (2 *c.f[sfxy+s4]/(dt*du));
+                            tbl[p,4+ (3 * 4) + 0] = (2 *c.f[s1]) - 2*c.f[s2]+ (c.f[sfx+s1]/dt) + c.f[sfx+s2]/dt;
+                            tbl[p,4+ (3 * 4) + 1] = (2 *c.f[sfy+s1]/du) - 2*c.f[sfy+s2]/du+ (c.f[sfxy+s1]/(dt*du)) + c.f[sfxy+s2]/(dt*du);
+                            tbl[p,4+ (3 * 4) + 2] = -(6*c.f[s1])+ (6 *c.f[s2]) - 6*c.f[s3]+ (6 *c.f[s4]) - 3*c.f[sfx+s1]/dt- (3 *c.f[sfx+s2]/dt) + 3*c.f[sfx+s3]/dt+ (3 *c.f[sfx+s4]/dt) - 4*c.f[sfy+s1]/du+ (4 *c.f[sfy+s2]/du) + 2*c.f[sfy+s3]/du- (2 *c.f[sfy+s4]/du) - 2*c.f[sfxy+s1]/(dt*du)- (2 *c.f[sfxy+s2]/(dt*du)) - c.f[sfxy+s3]/(dt*du)- (c.f[sfxy+s4]/(dt*du));
+                            tbl[p,4+ (3 * 4) + 3] = (4 *c.f[s1]) - 4*c.f[s2]+ (4 *c.f[s3]) - 4*c.f[s4]+ (2 *c.f[sfx+s1]/dt) + 2*c.f[sfx+s2]/dt- (2 *c.f[sfx+s3]/dt) - 2*c.f[sfx+s4]/dt+ (2 *c.f[sfy+s1]/du) - 2*c.f[sfy+s2]/du- (2 *c.f[sfy+s3]/du) + 2*c.f[sfy+s4]/du+ (c.f[sfxy+s1]/(dt*du)) + c.f[sfxy+s2]/(dt*du)+ (c.f[sfxy+s3]/(dt*du)) + c.f[sfxy+s4]/(dt*du);
                         }
                         
                         //
@@ -35738,7 +36007,7 @@ public partial class alglib
                         {
                             for(cj=0; cj<=3; cj++)
                             {
-                                tbl[p,4+ci*4+cj] = tbl[p,4+ci*4+cj]*Math.Pow(dt, ci)*Math.Pow(du, cj);
+                                tbl[p,4+ (ci * 4) + cj] = tbl[p,4+ (ci * 4) + cj]*Math.Pow(dt, ci)*Math.Pow(du, cj);
                             }
                         }
                     }
@@ -35762,12 +36031,12 @@ public partial class alglib
             int m,
             int n,
             spline2dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
             double t = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             alglib.ap.assert(n>=2, "Spline2DBuildBilinear: N<2");
             alglib.ap.assert(m>=2, "Spline2DBuildBilinear: M<2");
@@ -35798,7 +36067,7 @@ public partial class alglib
             {
                 for(j=0; j<=c.n-1; j++)
                 {
-                    c.f[i*c.n+j] = f[i,j];
+                    c.f[(i *c.n) + j] = f[i,j];
                 }
             }
             
@@ -35819,9 +36088,9 @@ public partial class alglib
                 {
                     for(i=0; i<=c.m-1; i++)
                     {
-                        t = c.f[i*c.n+j];
-                        c.f[i*c.n+j] = c.f[i*c.n+k];
-                        c.f[i*c.n+k] = t;
+                        t = c.f[(i *c.n) + j];
+                        c.f[(i *c.n) + j] = c.f[(i *c.n) + k];
+                        c.f[(i *c.n) + k] = t;
                     }
                     t = c.x[j];
                     c.x[j] = c.x[k];
@@ -35842,9 +36111,9 @@ public partial class alglib
                 {
                     for(j=0; j<=c.n-1; j++)
                     {
-                        t = c.f[i*c.n+j];
-                        c.f[i*c.n+j] = c.f[k*c.n+j];
-                        c.f[k*c.n+j] = t;
+                        t = c.f[(i *c.n) + j];
+                        c.f[(i *c.n) + j] = c.f[(k *c.n) + j];
+                        c.f[(k *c.n) + j] = t;
                     }
                     t = c.y[i];
                     c.y[i] = c.y[k];
@@ -35869,18 +36138,18 @@ public partial class alglib
             int m,
             int n,
             spline2dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
-            double[,] dx = new double[0,0];
-            double[,] dy = new double[0,0];
-            double[,] dxy = new double[0,0];
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
+            var dx = new double[0,0];
+            var dy = new double[0,0];
+            var dxy = new double[0,0];
             double t = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             f = (double[,])f.Clone();
 
@@ -35975,7 +36244,7 @@ public partial class alglib
             {
                 for(j=0; j<=c.n-1; j++)
                 {
-                    k = i*c.n+j;
+                    k = (i *c.n) + j;
                     c.f[k] = f[i,j];
                     c.f[sfx+k] = dx[i,j];
                     c.f[sfy+k] = dy[i,j];
@@ -35998,27 +36267,27 @@ public partial class alglib
             ref int m,
             ref int n,
             ref double[,] tbl,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int k = 0;
-            int p = 0;
-            int ci = 0;
-            int cj = 0;
-            int s1 = 0;
-            int s2 = 0;
-            int s3 = 0;
-            int s4 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var k = 0;
+            var p = 0;
+            var ci = 0;
+            var cj = 0;
+            var s1 = 0;
+            var s2 = 0;
+            var s3 = 0;
+            var s4 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double y1 = 0;
             double y2 = 0;
             double y3 = 0;
             double y4 = 0;
             double dt = 0;
             double du = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             m = 0;
             n = 0;
@@ -36045,7 +36314,7 @@ public partial class alglib
             {
                 for(j=0; j<=n-2; j++)
                 {
-                    p = i*(n-1)+j;
+                    p = (i *(n-1)) + j;
                     tbl[p,0] = c.x[j];
                     tbl[p,1] = c.x[j+1];
                     tbl[p,2] = c.y[i];
@@ -36062,14 +36331,14 @@ public partial class alglib
                         {
                             tbl[p,k] = 0;
                         }
-                        y1 = c.f[n*i+j];
-                        y2 = c.f[n*i+(j+1)];
-                        y3 = c.f[n*(i+1)+(j+1)];
-                        y4 = c.f[n*(i+1)+j];
+                        y1 = c.f[(n * i) + j];
+                        y2 = c.f[(n * i) + (j+1)];
+                        y3 = c.f[(n *(i+1)) + (j+1)];
+                        y4 = c.f[(n *(i+1)) + j];
                         tbl[p,4] = y1;
-                        tbl[p,4+1*4+0] = y2-y1;
-                        tbl[p,4+0*4+1] = y4-y1;
-                        tbl[p,4+1*4+1] = y3-y2-y4+y1;
+                        tbl[p,4+ (1 * 4) + 0] = y2-y1;
+                        tbl[p,4+ (0 * 4) + 1] = y4-y1;
+                        tbl[p,4+ (1 * 4) + 1] = y3-y2-y4+y1;
                     }
                     
                     //
@@ -36077,26 +36346,26 @@ public partial class alglib
                     //
                     if( c.stype==-3 )
                     {
-                        s1 = n*i+j;
-                        s2 = n*i+(j+1);
-                        s3 = n*(i+1)+(j+1);
-                        s4 = n*(i+1)+j;
-                        tbl[p,4+0*4+0] = c.f[s1];
-                        tbl[p,4+0*4+1] = c.f[sfy+s1]/du;
-                        tbl[p,4+0*4+2] = -(3*c.f[s1])+3*c.f[s4]-2*c.f[sfy+s1]/du-c.f[sfy+s4]/du;
-                        tbl[p,4+0*4+3] = 2*c.f[s1]-2*c.f[s4]+c.f[sfy+s1]/du+c.f[sfy+s4]/du;
-                        tbl[p,4+1*4+0] = c.f[sfx+s1]/dt;
-                        tbl[p,4+1*4+1] = c.f[sfxy+s1]/(dt*du);
-                        tbl[p,4+1*4+2] = -(3*c.f[sfx+s1]/dt)+3*c.f[sfx+s4]/dt-2*c.f[sfxy+s1]/(dt*du)-c.f[sfxy+s4]/(dt*du);
-                        tbl[p,4+1*4+3] = 2*c.f[sfx+s1]/dt-2*c.f[sfx+s4]/dt+c.f[sfxy+s1]/(dt*du)+c.f[sfxy+s4]/(dt*du);
-                        tbl[p,4+2*4+0] = -(3*c.f[s1])+3*c.f[s2]-2*c.f[sfx+s1]/dt-c.f[sfx+s2]/dt;
-                        tbl[p,4+2*4+1] = -(3*c.f[sfy+s1]/du)+3*c.f[sfy+s2]/du-2*c.f[sfxy+s1]/(dt*du)-c.f[sfxy+s2]/(dt*du);
-                        tbl[p,4+2*4+2] = 9*c.f[s1]-9*c.f[s2]+9*c.f[s3]-9*c.f[s4]+6*c.f[sfx+s1]/dt+3*c.f[sfx+s2]/dt-3*c.f[sfx+s3]/dt-6*c.f[sfx+s4]/dt+6*c.f[sfy+s1]/du-6*c.f[sfy+s2]/du-3*c.f[sfy+s3]/du+3*c.f[sfy+s4]/du+4*c.f[sfxy+s1]/(dt*du)+2*c.f[sfxy+s2]/(dt*du)+c.f[sfxy+s3]/(dt*du)+2*c.f[sfxy+s4]/(dt*du);
-                        tbl[p,4+2*4+3] = -(6*c.f[s1])+6*c.f[s2]-6*c.f[s3]+6*c.f[s4]-4*c.f[sfx+s1]/dt-2*c.f[sfx+s2]/dt+2*c.f[sfx+s3]/dt+4*c.f[sfx+s4]/dt-3*c.f[sfy+s1]/du+3*c.f[sfy+s2]/du+3*c.f[sfy+s3]/du-3*c.f[sfy+s4]/du-2*c.f[sfxy+s1]/(dt*du)-c.f[sfxy+s2]/(dt*du)-c.f[sfxy+s3]/(dt*du)-2*c.f[sfxy+s4]/(dt*du);
-                        tbl[p,4+3*4+0] = 2*c.f[s1]-2*c.f[s2]+c.f[sfx+s1]/dt+c.f[sfx+s2]/dt;
-                        tbl[p,4+3*4+1] = 2*c.f[sfy+s1]/du-2*c.f[sfy+s2]/du+c.f[sfxy+s1]/(dt*du)+c.f[sfxy+s2]/(dt*du);
-                        tbl[p,4+3*4+2] = -(6*c.f[s1])+6*c.f[s2]-6*c.f[s3]+6*c.f[s4]-3*c.f[sfx+s1]/dt-3*c.f[sfx+s2]/dt+3*c.f[sfx+s3]/dt+3*c.f[sfx+s4]/dt-4*c.f[sfy+s1]/du+4*c.f[sfy+s2]/du+2*c.f[sfy+s3]/du-2*c.f[sfy+s4]/du-2*c.f[sfxy+s1]/(dt*du)-2*c.f[sfxy+s2]/(dt*du)-c.f[sfxy+s3]/(dt*du)-c.f[sfxy+s4]/(dt*du);
-                        tbl[p,4+3*4+3] = 4*c.f[s1]-4*c.f[s2]+4*c.f[s3]-4*c.f[s4]+2*c.f[sfx+s1]/dt+2*c.f[sfx+s2]/dt-2*c.f[sfx+s3]/dt-2*c.f[sfx+s4]/dt+2*c.f[sfy+s1]/du-2*c.f[sfy+s2]/du-2*c.f[sfy+s3]/du+2*c.f[sfy+s4]/du+c.f[sfxy+s1]/(dt*du)+c.f[sfxy+s2]/(dt*du)+c.f[sfxy+s3]/(dt*du)+c.f[sfxy+s4]/(dt*du);
+                        s1 = (n * i) + j;
+                        s2 = (n * i) + (j+1);
+                        s3 = (n *(i+1)) + (j+1);
+                        s4 = (n *(i+1)) + j;
+                        tbl[p,4+ (0 * 4) + 0] = c.f[s1];
+                        tbl[p,4+ (0 * 4) + 1] = c.f[sfy+s1]/du;
+                        tbl[p,4+ (0 * 4) + 2] = -(3*c.f[s1])+ (3 *c.f[s4]) - 2*c.f[sfy+s1]/du- (c.f[sfy+s4]/du);
+                        tbl[p,4+ (0 * 4) + 3] = (2 *c.f[s1]) - 2*c.f[s4]+ (c.f[sfy+s1]/du) + c.f[sfy+s4]/du;
+                        tbl[p,4+ (1 * 4) + 0] = c.f[sfx+s1]/dt;
+                        tbl[p,4+ (1 * 4) + 1] = c.f[sfxy+s1]/(dt*du);
+                        tbl[p,4+ (1 * 4) + 2] = -(3*c.f[sfx+s1]/dt)+ (3 *c.f[sfx+s4]/dt) - 2*c.f[sfxy+s1]/(dt*du)- (c.f[sfxy+s4]/(dt*du));
+                        tbl[p,4+ (1 * 4) + 3] = (2 *c.f[sfx+s1]/dt) - 2*c.f[sfx+s4]/dt+ (c.f[sfxy+s1]/(dt*du)) + c.f[sfxy+s4]/(dt*du);
+                        tbl[p,4+ (2 * 4) + 0] = -(3*c.f[s1])+ (3 *c.f[s2]) - 2*c.f[sfx+s1]/dt- (c.f[sfx+s2]/dt);
+                        tbl[p,4+ (2 * 4) + 1] = -(3*c.f[sfy+s1]/du)+ (3 *c.f[sfy+s2]/du) - 2*c.f[sfxy+s1]/(dt*du)- (c.f[sfxy+s2]/(dt*du));
+                        tbl[p,4+ (2 * 4) + 2] = (9 *c.f[s1]) - 9*c.f[s2]+ (9 *c.f[s3]) - 9*c.f[s4]+ (6 *c.f[sfx+s1]/dt) + 3*c.f[sfx+s2]/dt- (3 *c.f[sfx+s3]/dt) - 6*c.f[sfx+s4]/dt+ (6 *c.f[sfy+s1]/du) - 6*c.f[sfy+s2]/du- (3 *c.f[sfy+s3]/du) + 3*c.f[sfy+s4]/du+ (4 *c.f[sfxy+s1]/(dt*du)) + 2*c.f[sfxy+s2]/(dt*du)+ (c.f[sfxy+s3]/(dt*du)) + 2*c.f[sfxy+s4]/(dt*du);
+                        tbl[p,4+ (2 * 4) + 3] = -(6*c.f[s1])+ (6 *c.f[s2]) - 6*c.f[s3]+ (6 *c.f[s4]) - 4*c.f[sfx+s1]/dt- (2 *c.f[sfx+s2]/dt) + 2*c.f[sfx+s3]/dt+ (4 *c.f[sfx+s4]/dt) - 3*c.f[sfy+s1]/du+ (3 *c.f[sfy+s2]/du) + 3*c.f[sfy+s3]/du- (3 *c.f[sfy+s4]/du) - 2*c.f[sfxy+s1]/(dt*du)- (c.f[sfxy+s2]/(dt*du)) - c.f[sfxy+s3]/(dt*du)- (2 *c.f[sfxy+s4]/(dt*du));
+                        tbl[p,4+ (3 * 4) + 0] = (2 *c.f[s1]) - 2*c.f[s2]+ (c.f[sfx+s1]/dt) + c.f[sfx+s2]/dt;
+                        tbl[p,4+ (3 * 4) + 1] = (2 *c.f[sfy+s1]/du) - 2*c.f[sfy+s2]/du+ (c.f[sfxy+s1]/(dt*du)) + c.f[sfxy+s2]/(dt*du);
+                        tbl[p,4+ (3 * 4) + 2] = -(6*c.f[s1])+ (6 *c.f[s2]) - 6*c.f[s3]+ (6 *c.f[s4]) - 3*c.f[sfx+s1]/dt- (3 *c.f[sfx+s2]/dt) + 3*c.f[sfx+s3]/dt+ (3 *c.f[sfx+s4]/dt) - 4*c.f[sfy+s1]/du+ (4 *c.f[sfy+s2]/du) + 2*c.f[sfy+s3]/du- (2 *c.f[sfy+s4]/du) - 2*c.f[sfxy+s1]/(dt*du)- (2 *c.f[sfxy+s2]/(dt*du)) - c.f[sfxy+s3]/(dt*du)- (c.f[sfxy+s4]/(dt*du));
+                        tbl[p,4+ (3 * 4) + 3] = (4 *c.f[s1]) - 4*c.f[s2]+ (4 *c.f[s3]) - 4*c.f[s4]+ (2 *c.f[sfx+s1]/dt) + 2*c.f[sfx+s2]/dt- (2 *c.f[sfx+s3]/dt) - 2*c.f[sfx+s4]/dt+ (2 *c.f[sfy+s1]/du) - 2*c.f[sfy+s2]/du- (2 *c.f[sfy+s3]/du) + 2*c.f[sfy+s4]/du+ (c.f[sfxy+s1]/(dt*du)) + c.f[sfxy+s2]/(dt*du)+ (c.f[sfxy+s3]/(dt*du)) + c.f[sfxy+s4]/(dt*du);
                     }
                     
                     //
@@ -36106,7 +36375,7 @@ public partial class alglib
                     {
                         for(cj=0; cj<=3; cj++)
                         {
-                            tbl[p,4+ci*4+cj] = tbl[p,4+ci*4+cj]*Math.Pow(dt, ci)*Math.Pow(du, cj);
+                            tbl[p,4+ (ci * 4) + cj] = tbl[p,4+ (ci * 4) + cj]*Math.Pow(dt, ci)*Math.Pow(du, cj);
                         }
                     }
                 }
@@ -36167,7 +36436,7 @@ public partial class alglib
         *************************************************************************/
         public static void spline2dbuildercreate(int d,
             spline2dbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(d>=1, "Spline2DBuilderCreate: D<=0");
             
@@ -36216,7 +36485,7 @@ public partial class alglib
         *************************************************************************/
         public static void spline2dbuildersetuserterm(spline2dbuilder state,
             double v,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(v), "Spline2DBuilderSetUserTerm: infinite/NAN value passed");
             state.priorterm = 0;
@@ -36238,7 +36507,7 @@ public partial class alglib
              Copyright 01.02.2018 by Bochkanov Sergey
         *************************************************************************/
         public static void spline2dbuildersetlinterm(spline2dbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.priorterm = 1;
         }
@@ -36258,7 +36527,7 @@ public partial class alglib
              Copyright 01.02.2018 by Bochkanov Sergey
         *************************************************************************/
         public static void spline2dbuildersetconstterm(spline2dbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.priorterm = 2;
         }
@@ -36276,7 +36545,7 @@ public partial class alglib
              Copyright 01.02.2018 by Bochkanov Sergey
         *************************************************************************/
         public static void spline2dbuildersetzeroterm(spline2dbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.priorterm = 3;
         }
@@ -36303,11 +36572,11 @@ public partial class alglib
         public static void spline2dbuildersetpoints(spline2dbuilder state,
             double[,] xy,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int ew = 0;
+            var i = 0;
+            var j = 0;
+            var ew = 0;
 
             alglib.ap.assert(n>0, "Spline2DBuilderSetPoints: N<0");
             alglib.ap.assert(alglib.ap.rows(xy)>=n, "Spline2DBuilderSetPoints: Rows(XY)<N");
@@ -36320,7 +36589,7 @@ public partial class alglib
             {
                 for(j=0; j<=ew-1; j++)
                 {
-                    state.xy[i*ew+j] = xy[i,j];
+                    state.xy[(i * ew) + j] = xy[i,j];
                 }
             }
         }
@@ -36337,7 +36606,7 @@ public partial class alglib
              Copyright 05.02.2018 by Bochkanov Sergey
         *************************************************************************/
         public static void spline2dbuildersetareaauto(spline2dbuilder state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.areatype = 0;
         }
@@ -36360,7 +36629,7 @@ public partial class alglib
             double xb,
             double ya,
             double yb,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(xa), "Spline2DBuilderSetArea: XA is not finite");
             alglib.ap.assert(math.isfinite(xb), "Spline2DBuilderSetArea: XB is not finite");
@@ -36399,7 +36668,7 @@ public partial class alglib
         public static void spline2dbuildersetgrid(spline2dbuilder state,
             int kx,
             int ky,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(kx>0, "Spline2DBuilderSetGridSizePrecisely: KX<=0");
             alglib.ap.assert(ky>0, "Spline2DBuilderSetGridSizePrecisely: KY<=0");
@@ -36497,7 +36766,7 @@ public partial class alglib
         public static void spline2dbuildersetalgofastddm(spline2dbuilder state,
             int nlayers,
             double lambdav,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(lambdav), "Spline2DBuilderSetAlgoFastDDM: LambdaV is not finite value");
             alglib.ap.assert((double)(lambdav)>=(double)(0), "Spline2DBuilderSetAlgoFastDDM: LambdaV<0");
@@ -36562,7 +36831,7 @@ public partial class alglib
         *************************************************************************/
         public static void spline2dbuildersetalgoblocklls(spline2dbuilder state,
             double lambdans,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(lambdans), "Spline2DBuilderSetAlgoBlockLLS: LambdaNS is not finite value");
             alglib.ap.assert((double)(lambdans)>=(double)(0), "Spline2DBuilderSetAlgoBlockLLS: LambdaNS<0");
@@ -36599,7 +36868,7 @@ public partial class alglib
         *************************************************************************/
         public static void spline2dbuildersetalgonaivells(spline2dbuilder state,
             double lambdans,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(lambdans), "Spline2DBuilderSetAlgoBlockLLS: LambdaNS is not finite value");
             alglib.ap.assert((double)(lambdans)>=(double)(0), "Spline2DBuilderSetAlgoBlockLLS: LambdaNS<0");
@@ -36639,7 +36908,7 @@ public partial class alglib
         public static void spline2dfit(spline2dbuilder state,
             spline2dinterpolant s,
             spline2dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             double xa = 0;
             double xb = 0;
@@ -36649,51 +36918,51 @@ public partial class alglib
             double xbraw = 0;
             double yaraw = 0;
             double ybraw = 0;
-            int kx = 0;
-            int ky = 0;
+            var kx = 0;
+            var ky = 0;
             double hx = 0;
             double hy = 0;
             double invhx = 0;
             double invhy = 0;
-            int gridexpansion = 0;
-            int nzwidth = 0;
-            int bfrad = 0;
-            int npoints = 0;
-            int d = 0;
-            int ew = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var gridexpansion = 0;
+            var nzwidth = 0;
+            var bfrad = 0;
+            var npoints = 0;
+            var d = 0;
+            var ew = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
             double v = 0;
-            int k0 = 0;
-            int k1 = 0;
+            var k0 = 0;
+            var k1 = 0;
             double vx = 0;
             double vy = 0;
-            int arows = 0;
-            int acopied = 0;
-            int basecasex = 0;
-            int basecasey = 0;
+            var arows = 0;
+            var acopied = 0;
+            var basecasex = 0;
+            var basecasey = 0;
             double eps = 0;
-            double[] xywork = new double[0];
-            double[,] vterm = new double[0,0];
-            double[] tmpx = new double[0];
-            double[] tmpy = new double[0];
-            double[] tmp0 = new double[0];
-            double[] tmp1 = new double[0];
-            double[] meany = new double[0];
-            int[] xyindex = new int[0];
-            int[] tmpi = new int[0];
-            spline1d.spline1dinterpolant basis1 = new spline1d.spline1dinterpolant();
-            sparse.sparsematrix av = new sparse.sparsematrix();
-            sparse.sparsematrix ah = new sparse.sparsematrix();
-            spline2dxdesignmatrix xdesignmatrix = new spline2dxdesignmatrix();
-            double[] z = new double[0];
-            spline2dblockllsbuf blockllsbuf = new spline2dblockllsbuf();
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var xywork = new double[0];
+            var vterm = new double[0,0];
+            var tmpx = new double[0];
+            var tmpy = new double[0];
+            var tmp0 = new double[0];
+            var tmp1 = new double[0];
+            var meany = new double[0];
+            var xyindex = new int[0];
+            var tmpi = new int[0];
+            var basis1 = new spline1d.spline1dinterpolant();
+            var av = new sparse.sparsematrix();
+            var ah = new sparse.sparsematrix();
+            var xdesignmatrix = new spline2dxdesignmatrix();
+            var z = new double[0];
+            var blockllsbuf = new spline2dblockllsbuf();
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double tss = 0;
-            int dstidx = 0;
+            var dstidx = 0;
 
             nzwidth = 4;
             bfrad = 2;
@@ -36727,10 +36996,10 @@ public partial class alglib
                     yb = state.xy[1];
                     for(i=1; i<=npoints-1; i++)
                     {
-                        xa = Math.Min(xa, state.xy[i*ew+0]);
-                        xb = Math.Max(xb, state.xy[i*ew+0]);
-                        ya = Math.Min(ya, state.xy[i*ew+1]);
-                        yb = Math.Max(yb, state.xy[i*ew+1]);
+                        xa = Math.Min(xa, state.xy[(i * ew) + 0]);
+                        xb = Math.Max(xb, state.xy[(i * ew) + 0]);
+                        ya = Math.Min(ya, state.xy[(i * ew) + 1]);
+                        yb = Math.Max(yb, state.xy[(i * ew) + 1]);
                     }
                 }
                 else
@@ -36760,13 +37029,13 @@ public partial class alglib
                 v = xa;
                 if( (double)(v)>=(double)(0) )
                 {
-                    xa = v/2-1;
-                    xb = v*2+1;
+                    xa = (v / 2) - 1;
+                    xb = (v * 2) + 1;
                 }
                 else
                 {
-                    xa = v*2-1;
-                    xb = v/2+1;
+                    xa = (v * 2) - 1;
+                    xb = (v / 2) + 1;
                 }
             }
             if( (double)(ya)==(double)(yb) )
@@ -36774,13 +37043,13 @@ public partial class alglib
                 v = ya;
                 if( (double)(v)>=(double)(0) )
                 {
-                    ya = v/2-1;
-                    yb = v*2+1;
+                    ya = (v / 2) - 1;
+                    yb = (v * 2) + 1;
                 }
                 else
                 {
-                    ya = v*2-1;
-                    yb = v/2+1;
+                    ya = (v * 2) - 1;
+                    yb = (v / 2) + 1;
                 }
             }
             alglib.ap.assert((double)(xa)<(double)(xb), "Spline2DFit: integrity error");
@@ -36821,7 +37090,7 @@ public partial class alglib
                 {
                     kx = apserv.idivup(kx-1, 2, _params)+1;
                     ky = apserv.idivup(ky-1, 2, _params)+1;
-                    k = k+1;
+                    k++;
                 }
                 basecasex = kx-1;
                 k0 = 1;
@@ -36829,12 +37098,12 @@ public partial class alglib
                 {
                     basecasex = apserv.idivup(kx-1, 2, _params);
                     kx = basecasex+1;
-                    k0 = k0+1;
+                    k0++;
                 }
                 while( k0>1 )
                 {
-                    kx = (kx-1)*2+1;
-                    k0 = k0-1;
+                    kx = ((kx-1)*2) + 1;
+                    k0--;
                 }
                 basecasey = ky-1;
                 k1 = 1;
@@ -36842,18 +37111,18 @@ public partial class alglib
                 {
                     basecasey = apserv.idivup(ky-1, 2, _params);
                     ky = basecasey+1;
-                    k1 = k1+1;
+                    k1++;
                 }
                 while( k1>1 )
                 {
-                    ky = (ky-1)*2+1;
-                    k1 = k1-1;
+                    ky = ((ky-1)*2) + 1;
+                    k1--;
                 }
                 while( k>1 )
                 {
-                    kx = (kx-1)*2+1;
-                    ky = (ky-1)*2+1;
-                    k = k-1;
+                    kx = ((kx-1)*2) + 1;
+                    ky = ((ky-1)*2) + 1;
+                    k--;
                 }
                 
                 //
@@ -36901,12 +37170,12 @@ public partial class alglib
             yaraw = ya;
             xbraw = xb;
             ybraw = yb;
-            xa = xa-hx*gridexpansion;
-            ya = ya-hy*gridexpansion;
-            xb = xb+hx*gridexpansion;
-            yb = yb+hy*gridexpansion;
-            kx = kx+2*gridexpansion;
-            ky = ky+2*gridexpansion;
+            xa -= (hx * gridexpansion);
+            ya -= (hy * gridexpansion);
+            xb += (hx * gridexpansion);
+            yb += (hy * gridexpansion);
+            kx += (2 * gridexpansion);
+            ky += (2 * gridexpansion);
             
             //
             // Create output spline using transformed (unit-scale)
@@ -36930,7 +37199,7 @@ public partial class alglib
             {
                 s.y[i] = i;
             }
-            for(i=0; i<=4*s.n*s.m*d-1; i++)
+            for(i=0; i<= (4 *s.n*s.m*d) - 1; i++)
             {
                 s.f[i] = 0.0;
             }
@@ -36956,19 +37225,19 @@ public partial class alglib
             eps = 1.0E-6;
             for(i=0; i<=npoints-1; i++)
             {
-                vx = state.xy[i*ew+0];
-                vy = state.xy[i*ew+1];
-                if( (((double)(xaraw-eps*hx)<=(double)(vx) && (double)(vx)<=(double)(xbraw+eps*hx)) && (double)(yaraw-eps*hy)<=(double)(vy)) && (double)(vy)<=(double)(ybraw+eps*hy) )
+                vx = state.xy[(i * ew) + 0];
+                vy = state.xy[(i * ew) + 1];
+                if( (((double)(xaraw- (eps * hx)) <=(double)(vx) && (double)(vx)<=(double)(xbraw+ (eps * hx))) && (double)(yaraw- (eps * hy)) <=(double)(vy)) && (double)(vy)<=(double)(ybraw+ (eps * hy)) )
                 {
-                    xywork[acopied*ew+0] = (vx-xa)*invhx;
-                    xywork[acopied*ew+1] = (vy-ya)*invhy;
+                    xywork[(acopied * ew) + 0] = (vx-xa)*invhx;
+                    xywork[(acopied * ew) + 1] = (vy-ya)*invhy;
                     for(j=0; j<=d-1; j++)
                     {
-                        v = state.xy[i*ew+2+j];
-                        xywork[acopied*ew+2+j] = v;
+                        v = state.xy[(i * ew) + 2+j];
+                        xywork[(acopied * ew) + 2+j] = v;
                         meany[j] = meany[j]+v;
                     }
-                    acopied = acopied+1;
+                    acopied++;
                 }
             }
             npoints = acopied;
@@ -36981,7 +37250,7 @@ public partial class alglib
             {
                 for(j=0; j<=d-1; j++)
                 {
-                    tss = tss+math.sqr(xywork[i*ew+2+j]-meany[j]);
+                    tss += math.sqr(xywork[(i * ew) + 2+j]-meany[j]);
                 }
             }
             tss = apserv.coalesce(tss, 1.0, _params);
@@ -36998,27 +37267,27 @@ public partial class alglib
                 //
                 // Quick exit
                 //
-                for(k=0; k<=s.n*s.m-1; k++)
+                for(k=0; k<= (s.n*s.m) - 1; k++)
                 {
                     k0 = k%s.n;
                     k1 = k/s.n;
                     for(j=0; j<=d-1; j++)
                     {
-                        dstidx = d*(k1*s.n+k0)+j;
-                        s.f[dstidx] = s.f[dstidx]+vterm[j,0]*s.x[k0]+vterm[j,1]*s.y[k1]+vterm[j,2];
+                        dstidx = (d * ((k1 *s.n) + k0)) + j;
+                        s.f[dstidx] = s.f[dstidx]+ (vterm[j,0]*s.x[k0]) + vterm[j,1]*s.y[k1]+vterm[j,2];
                         s.f[sfx+dstidx] = s.f[sfx+dstidx]+vterm[j,0];
                         s.f[sfy+dstidx] = s.f[sfy+dstidx]+vterm[j,1];
                     }
                 }
                 for(i=0; i<=s.n-1; i++)
                 {
-                    s.x[i] = s.x[i]*hx+xa;
+                    s.x[i] = (s.x[i]*hx) + xa;
                 }
                 for(i=0; i<=s.m-1; i++)
                 {
-                    s.y[i] = s.y[i]*hy+ya;
+                    s.y[i] = (s.y[i]*hy) + ya;
                 }
-                for(i=0; i<=s.n*s.m*d-1; i++)
+                for(i=0; i<= (s.n*s.m*d) - 1; i++)
                 {
                     s.f[sfx+i] = s.f[sfx+i]*invhx;
                     s.f[sfy+i] = s.f[sfy+i]*invhy;
@@ -37103,27 +37372,27 @@ public partial class alglib
             // Append prior term.
             // Transform spline to original coordinates
             //
-            for(k=0; k<=s.n*s.m-1; k++)
+            for(k=0; k<= (s.n*s.m) - 1; k++)
             {
                 k0 = k%s.n;
                 k1 = k/s.n;
                 for(j=0; j<=d-1; j++)
                 {
-                    dstidx = d*(k1*s.n+k0)+j;
-                    s.f[dstidx] = s.f[dstidx]+vterm[j,0]*s.x[k0]+vterm[j,1]*s.y[k1]+vterm[j,2];
+                    dstidx = (d * ((k1 *s.n) + k0)) + j;
+                    s.f[dstidx] = s.f[dstidx]+ (vterm[j,0]*s.x[k0]) + vterm[j,1]*s.y[k1]+vterm[j,2];
                     s.f[sfx+dstidx] = s.f[sfx+dstidx]+vterm[j,0];
                     s.f[sfy+dstidx] = s.f[sfy+dstidx]+vterm[j,1];
                 }
             }
             for(i=0; i<=s.n-1; i++)
             {
-                s.x[i] = s.x[i]*hx+xa;
+                s.x[i] = (s.x[i]*hx) + xa;
             }
             for(i=0; i<=s.m-1; i++)
             {
-                s.y[i] = s.y[i]*hy+ya;
+                s.y[i] = (s.y[i]*hy) + ya;
             }
-            for(i=0; i<=s.n*s.m*d-1; i++)
+            for(i=0; i<= (s.n*s.m*d) - 1; i++)
             {
                 s.f[sfx+i] = s.f[sfx+i]*invhx;
                 s.f[sfy+i] = s.f[sfy+i]*invhy;
@@ -37138,9 +37407,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 28.02.2018 by Bochkanov Sergey
         *************************************************************************/
-        public static void spline2dalloc(alglib.serializer s,
+        public static void spline2dalloc(serializer s,
             spline2dinterpolant spline,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -37167,9 +37436,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 28.02.2018 by Bochkanov Sergey
         *************************************************************************/
-        public static void spline2dserialize(alglib.serializer s,
+        public static void spline2dserialize(serializer s,
             spline2dinterpolant spline,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -37196,11 +37465,11 @@ public partial class alglib
           -- ALGLIB --
              Copyright 28.02.2018 by Bochkanov Sergey
         *************************************************************************/
-        public static void spline2dunserialize(alglib.serializer s,
+        public static void spline2dunserialize(serializer s,
             spline2dinterpolant spline,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int scode = 0;
+            var scode = 0;
 
             
             //
@@ -37234,16 +37503,16 @@ public partial class alglib
             ref double[,] dx,
             ref double[,] dy,
             ref double[,] dxy,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            double[] xt = new double[0];
-            double[] ft = new double[0];
+            var i = 0;
+            var j = 0;
+            var xt = new double[0];
+            var ft = new double[0];
             double s = 0;
             double ds = 0;
             double d2s = 0;
-            spline1d.spline1dinterpolant c = new spline1d.spline1dinterpolant();
+            var c = new spline1d.spline1dinterpolant();
 
             dx = new double[0,0];
             dy = new double[0,0];
@@ -37348,17 +37617,17 @@ public partial class alglib
             sparse.sparsematrix av,
             sparse.sparsematrix ah,
             ref int arows,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nzwidth = 0;
-            int nzshift = 0;
-            int ew = 0;
-            int i = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int k0 = 0;
-            int k1 = 0;
-            int dstidx = 0;
+            var nzwidth = 0;
+            var nzshift = 0;
+            var ew = 0;
+            var i = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var k0 = 0;
+            var k1 = 0;
+            var dstidx = 0;
             double v = 0;
             double v0 = 0;
             double v1 = 0;
@@ -37366,12 +37635,12 @@ public partial class alglib
             double w0 = 0;
             double w1 = 0;
             double w2 = 0;
-            int[] crx = new int[0];
-            int[] cry = new int[0];
-            int[] nrs = new int[0];
-            double[,] d2x = new double[0,0];
-            double[,] d2y = new double[0,0];
-            double[,] dxy = new double[0,0];
+            var crx = new int[0];
+            var cry = new int[0];
+            var nrs = new int[0];
+            var d2x = new double[0,0];
+            var d2y = new double[0,0];
+            var dxy = new double[0,0];
 
             arows = 0;
 
@@ -37395,18 +37664,18 @@ public partial class alglib
             cry = new int[npoints];
             for(i=0; i<=npoints-1; i++)
             {
-                crx[i] = apserv.iboundval((int)Math.Floor(xy[i*ew+0])-nzshift, 0, kx-nzwidth, _params);
-                cry[i] = apserv.iboundval((int)Math.Floor(xy[i*ew+1])-nzshift, 0, ky-nzwidth, _params);
+                crx[i] = apserv.iboundval((int)Math.Floor(xy[(i * ew) + 0])-nzshift, 0, kx-nzwidth, _params);
+                cry[i] = apserv.iboundval((int)Math.Floor(xy[(i * ew) + 1])-nzshift, 0, ky-nzwidth, _params);
             }
             
             //
             // Create vertical and horizontal design matrices 
             //
-            arows = npoints+kx*ky;
+            arows = npoints+ (kx * ky);
             if( (double)(smoothing)!=(double)(0.0) )
             {
                 alglib.ap.assert((double)(smoothing)>(double)(0.0), "Spline2DFit: integrity check failed");
-                arows = arows+3*(kx-2)*(ky-2);
+                arows += (3 *(kx-2)*(ky-2));
             }
             nrs = new int[arows];
             dstidx = 0;
@@ -37414,19 +37683,19 @@ public partial class alglib
             {
                 nrs[dstidx+i] = nzwidth*nzwidth;
             }
-            dstidx = dstidx+npoints;
-            for(i=0; i<=kx*ky-1; i++)
+            dstidx += npoints;
+            for(i=0; i<= (kx * ky) - 1; i++)
             {
                 nrs[dstidx+i] = 1;
             }
-            dstidx = dstidx+kx*ky;
+            dstidx += (kx * ky);
             if( (double)(smoothing)!=(double)(0.0) )
             {
-                for(i=0; i<=3*(kx-2)*(ky-2)-1; i++)
+                for(i=0; i<= (3 *(kx-2)*(ky-2)) - 1; i++)
                 {
                     nrs[dstidx+i] = 3*3;
                 }
-                dstidx = dstidx+3*(kx-2)*(ky-2);
+                dstidx += (3 *(kx-2)*(ky-2));
             }
             alglib.ap.assert(dstidx==arows, "Spline2DFit: integrity check failed");
             sparse.sparsecreatecrs(arows, kx*ky, nrs, av, _params);
@@ -37437,18 +37706,18 @@ public partial class alglib
                 {
                     for(j0=0; j0<=nzwidth-1; j0++)
                     {
-                        v0 = spline1d.spline1dcalc(basis1, xy[i*ew+0]-(crx[i]+j0), _params);
-                        v1 = spline1d.spline1dcalc(basis1, xy[i*ew+1]-(cry[i]+j1), _params);
-                        sparse.sparseset(av, dstidx+i, (cry[i]+j1)*kx+(crx[i]+j0), v0*v1, _params);
+                        v0 = spline1d.spline1dcalc(basis1, xy[(i * ew) + 0]-(crx[i]+j0), _params);
+                        v1 = spline1d.spline1dcalc(basis1, xy[(i * ew) + 1]-(cry[i]+j1), _params);
+                        sparse.sparseset(av, dstidx+i, ((cry[i]+j1)*kx) + (crx[i]+j0), v0*v1, _params);
                     }
                 }
             }
-            dstidx = dstidx+npoints;
-            for(i=0; i<=kx*ky-1; i++)
+            dstidx += npoints;
+            for(i=0; i<= (kx * ky) - 1; i++)
             {
                 sparse.sparseset(av, dstidx+i, i, lambdareg, _params);
             }
-            dstidx = dstidx+kx*ky;
+            dstidx += (kx * ky);
             if( (double)(smoothing)!=(double)(0.0) )
             {
                 
@@ -37475,9 +37744,9 @@ public partial class alglib
                     {
                         spline1d.spline1ddiff(basis1, -(k0-1), ref v0, ref v1, ref v2, _params);
                         spline1d.spline1ddiff(basis1, -(k1-1), ref w0, ref w1, ref w2, _params);
-                        d2x[k0,k1] = d2x[k0,k1]+v2*w0;
-                        d2y[k0,k1] = d2y[k0,k1]+w2*v0;
-                        dxy[k0,k1] = dxy[k0,k1]+v1*w1;
+                        d2x[k0,k1] = d2x[k0,k1]+ (v2 * w0);
+                        d2y[k0,k1] = d2y[k0,k1]+ (w2 * v0);
+                        dxy[k0,k1] = dxy[k0,k1]+ (v1 * w1);
                     }
                 }
                 
@@ -37497,10 +37766,10 @@ public partial class alglib
                         {
                             for(k0=-1; k0<=1; k0++)
                             {
-                                sparse.sparseset(av, dstidx, (j1+k1)*kx+(j0+k0), v*d2x[1+k0,1+k1], _params);
+                                sparse.sparseset(av, dstidx, ((j1+k1)*kx) + (j0+k0), v*d2x[1+k0,1+k1], _params);
                             }
                         }
-                        dstidx = dstidx+1;
+                        dstidx++;
                         
                         //
                         // d2F/dy2 term
@@ -37510,10 +37779,10 @@ public partial class alglib
                         {
                             for(k0=-1; k0<=1; k0++)
                             {
-                                sparse.sparseset(av, dstidx, (j1+k1)*kx+(j0+k0), v*d2y[1+k0,1+k1], _params);
+                                sparse.sparseset(av, dstidx, ((j1+k1)*kx) + (j0+k0), v*d2y[1+k0,1+k1], _params);
                             }
                         }
-                        dstidx = dstidx+1;
+                        dstidx++;
                         
                         //
                         // 2*d2F/dxdy term
@@ -37523,10 +37792,10 @@ public partial class alglib
                         {
                             for(k0=-1; k0<=1; k0++)
                             {
-                                sparse.sparseset(av, dstidx, (j1+k1)*kx+(j0+k0), v*dxy[1+k0,1+k1], _params);
+                                sparse.sparseset(av, dstidx, ((j1+k1)*kx) + (j0+k0), v*dxy[1+k0,1+k1], _params);
                             }
                         }
-                        dstidx = dstidx+1;
+                        dstidx++;
                     }
                 }
             }
@@ -37553,60 +37822,60 @@ public partial class alglib
             int m,
             int n,
             int scalexy,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int k = 0;
-            int k0 = 0;
-            int k1 = 0;
-            int j = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int j0a = 0;
-            int j0b = 0;
-            int j1a = 0;
-            int j1b = 0;
+            var k = 0;
+            var k0 = 0;
+            var k1 = 0;
+            var j = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var j0a = 0;
+            var j0b = 0;
+            var j1a = 0;
+            var j1b = 0;
             double v = 0;
             double v0 = 0;
             double v1 = 0;
             double v01 = 0;
             double v11 = 0;
             double rdummy = 0;
-            int dstidx = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var dstidx = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double invscalexy = 0;
 
-            alglib.ap.assert(n==(kx-1)*scalexy+1, "Spline2DFit.UpdateSplineTable: integrity check failed");
-            alglib.ap.assert(m==(ky-1)*scalexy+1, "Spline2DFit.UpdateSplineTable: integrity check failed");
+            alglib.ap.assert(n== ((kx-1)*scalexy) + 1, "Spline2DFit.UpdateSplineTable: integrity check failed");
+            alglib.ap.assert(m== ((ky-1)*scalexy) + 1, "Spline2DFit.UpdateSplineTable: integrity check failed");
             invscalexy = (double)1/(double)scalexy;
             sfx = n*m*d;
             sfy = 2*n*m*d;
             sfxy = 3*n*m*d;
-            for(k=0; k<=kx*ky-1; k++)
+            for(k=0; k<= (kx * ky) - 1; k++)
             {
                 k0 = k%kx;
                 k1 = k/kx;
-                j0a = apserv.iboundval(k0*scalexy-(bfrad*scalexy-1), 0, n-1, _params);
-                j0b = apserv.iboundval(k0*scalexy+(bfrad*scalexy-1), 0, n-1, _params);
-                j1a = apserv.iboundval(k1*scalexy-(bfrad*scalexy-1), 0, m-1, _params);
-                j1b = apserv.iboundval(k1*scalexy+(bfrad*scalexy-1), 0, m-1, _params);
+                j0a = apserv.iboundval((k0 * scalexy) - ((bfrad * scalexy) - 1), 0, n-1, _params);
+                j0b = apserv.iboundval((k0 * scalexy) + ((bfrad * scalexy) - 1), 0, n-1, _params);
+                j1a = apserv.iboundval((k1 * scalexy) - ((bfrad * scalexy) - 1), 0, m-1, _params);
+                j1b = apserv.iboundval((k1 * scalexy) + ((bfrad * scalexy) - 1), 0, m-1, _params);
                 for(j1=j1a; j1<=j1b; j1++)
                 {
-                    spline1d.spline1ddiff(basis1, (j1-k1*scalexy)*invscalexy, ref v1, ref v11, ref rdummy, _params);
-                    v11 = v11*invscalexy;
+                    spline1d.spline1ddiff(basis1, (j1- (k1 * scalexy)) *invscalexy, ref v1, ref v11, ref rdummy, _params);
+                    v11 *= invscalexy;
                     for(j0=j0a; j0<=j0b; j0++)
                     {
-                        spline1d.spline1ddiff(basis1, (j0-k0*scalexy)*invscalexy, ref v0, ref v01, ref rdummy, _params);
-                        v01 = v01*invscalexy;
+                        spline1d.spline1ddiff(basis1, (j0- (k0 * scalexy)) *invscalexy, ref v0, ref v01, ref rdummy, _params);
+                        v01 *= invscalexy;
                         for(j=0; j<=d-1; j++)
                         {
-                            dstidx = d*(j1*n+j0)+j;
-                            v = z[j*kx*ky+k];
-                            ftbl[dstidx] = ftbl[dstidx]+v0*v1*v;
-                            ftbl[sfx+dstidx] = ftbl[sfx+dstidx]+v01*v1*v;
-                            ftbl[sfy+dstidx] = ftbl[sfy+dstidx]+v0*v11*v;
-                            ftbl[sfxy+dstidx] = ftbl[sfxy+dstidx]+v01*v11*v;
+                            dstidx = (d * ((j1 * n) + j0)) + j;
+                            v = z[(j *kx*ky) + k];
+                            ftbl[dstidx] = ftbl[dstidx]+ (v0 *v1*v);
+                            ftbl[sfx+dstidx] = ftbl[sfx+dstidx]+ (v01 *v1*v);
+                            ftbl[sfy+dstidx] = ftbl[sfy+dstidx]+ (v0 *v11*v);
+                            ftbl[sfxy+dstidx] = ftbl[sfxy+dstidx]+ (v01 *v11*v);
                         }
                     }
                 }
@@ -37669,31 +37938,31 @@ public partial class alglib
             spline2dinterpolant spline,
             spline2dfitreport rep,
             double tss,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int nzwidth = 0;
-            int xew = 0;
-            int ntotallayers = 0;
-            int scaleidx = 0;
-            int scalexy = 0;
+            var i = 0;
+            var j = 0;
+            var nzwidth = 0;
+            var xew = 0;
+            var ntotallayers = 0;
+            var scaleidx = 0;
+            var scalexy = 0;
             double invscalexy = 0;
-            int kxcur = 0;
-            int kycur = 0;
-            int tilescount0 = 0;
-            int tilescount1 = 0;
+            var kxcur = 0;
+            var kycur = 0;
+            var tilescount0 = 0;
+            var tilescount1 = 0;
             double v = 0;
             double rss = 0;
-            double[] yraw = new double[0];
-            int[] xyindex = new int[0];
-            double[] tmp0 = new double[0];
-            int[] bufi = new int[0];
-            spline2dfastddmbuf seed = new spline2dfastddmbuf();
-            alglib.smp.shared_pool pool = new alglib.smp.shared_pool();
-            spline2dxdesignmatrix xdesignmatrix = new spline2dxdesignmatrix();
-            spline2dblockllsbuf blockllsbuf = new spline2dblockllsbuf();
-            spline2dfitreport dummyrep = new spline2dfitreport();
+            var yraw = new double[0];
+            var xyindex = new int[0];
+            var tmp0 = new double[0];
+            var bufi = new int[0];
+            var seed = new spline2dfastddmbuf();
+            var pool = new smp.shared_pool();
+            var xdesignmatrix = new spline2dxdesignmatrix();
+            var blockllsbuf = new spline2dblockllsbuf();
+            var dummyrep = new spline2dfitreport();
 
             
             //
@@ -37720,9 +37989,9 @@ public partial class alglib
             {
                 alglib.ap.assert(kxcur%2==1, "Spline2DFit: integrity error");
                 alglib.ap.assert(kycur%2==1, "Spline2DFit: integrity error");
-                kxcur = (kxcur-1)/2+1;
-                kycur = (kycur-1)/2+1;
-                scalexy = scalexy*2;
+                kxcur = ((kxcur-1)/2) + 1;
+                kycur = ((kycur-1)/2) + 1;
+                scalexy *= 2;
                 apserv.inc(ref ntotallayers, _params);
             }
             invscalexy = (double)1/(double)scalexy;
@@ -37737,15 +38006,15 @@ public partial class alglib
             apserv.rvectorsetlengthatleast(ref yraw, npoints*d, _params);
             for(i=0; i<=npoints-1; i++)
             {
-                xy[xew*i+0] = xy[xew*i+0]*invscalexy;
-                xy[xew*i+1] = xy[xew*i+1]*invscalexy;
+                xy[(xew * i) + 0] = xy[(xew * i) + 0]*invscalexy;
+                xy[(xew * i) + 1] = xy[(xew * i) + 1]*invscalexy;
                 for(j=0; j<=d-1; j++)
                 {
-                    yraw[i*d+j] = xy[xew*i+2+j];
+                    yraw[(i * d) + j] = xy[(xew * i) + 2+j];
                 }
             }
-            kxcur = (kx-1)/scalexy+1;
-            kycur = (ky-1)/scalexy+1;
+            kxcur = ((kx-1)/scalexy) + 1;
+            kycur = ((ky-1)/scalexy) + 1;
             
             //
             // Build initial dataset index; area is divided into (KXCur-1)*(KYCur-1)
@@ -37766,7 +38035,7 @@ public partial class alglib
                     alglib.ap.assert(kycur%basecasey==1, "Spline2DFit: integrity error");
                     tilescount0 = kxcur/basecasex;
                     tilescount1 = kycur/basecasey;
-                    fastddmfitlayer(xy, d, scalexy, xyindex, basecasex, 0, tilescount0, tilescount0, basecasey, 0, tilescount1, tilescount1, maxcoresize, interfacesize, lsqrcnt, lambdaregfastddm+smoothing*Math.Pow(lambdadecay, scaleidx), basis1, pool, spline, _params);
+                    fastddmfitlayer(xy, d, scalexy, xyindex, basecasex, 0, tilescount0, tilescount0, basecasey, 0, tilescount1, tilescount1, maxcoresize, interfacesize, lsqrcnt, lambdaregfastddm+ (smoothing *Math.Pow(lambdadecay, scaleidx)), basis1, pool, spline, _params);
                     
                     //
                     // Compute residuals and update XY
@@ -37783,9 +38052,9 @@ public partial class alglib
                     //
                     // Transform dataset (multply everything by 2.0) and refine grid.
                     //
-                    kxcur = 2*kxcur-1;
-                    kycur = 2*kycur-1;
-                    scalexy = scalexy/2;
+                    kxcur = (2 * kxcur) - 1;
+                    kycur = (2 * kycur) - 1;
+                    scalexy /= 2;
                     invscalexy = (double)1/(double)scalexy;
                     rescaledatasetandrefineindex(xy, npoints, d, yraw, d, kxcur, kycur, ref xyindex, ref bufi, _params);
                     
@@ -37818,16 +38087,16 @@ public partial class alglib
             {
                 for(j=0; j<=d-1; j++)
                 {
-                    v = xy[i*xew+2+j];
-                    rss = rss+v*v;
-                    rep.rmserror = rep.rmserror+math.sqr(v);
-                    rep.avgerror = rep.avgerror+Math.Abs(v);
+                    v = xy[(i * xew) + 2+j];
+                    rss += (v * v);
+                    rep.rmserror += math.sqr(v);
+                    rep.avgerror += Math.Abs(v);
                     rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v));
                 }
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/apserv.coalesce(npoints*d, 1.0, _params));
-            rep.avgerror = rep.avgerror/apserv.coalesce(npoints*d, 1.0, _params);
-            rep.r2 = 1.0-rss/apserv.coalesce(tss, 1.0, _params);
+            rep.avgerror /= apserv.coalesce(npoints*d, 1.0, _params);
+            rep.r2 = 1.0- (rss /apserv.coalesce(tss, 1.0, _params));
         }
 
 
@@ -37862,33 +38131,33 @@ public partial class alglib
             int lsqrcnt,
             double lambdareg,
             spline1d.spline1dinterpolant basis1,
-            alglib.smp.shared_pool pool,
+            smp.shared_pool pool,
             spline2dinterpolant spline,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int kx = 0;
-            int ky = 0;
-            int i = 0;
-            int j = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int bfrad = 0;
-            int xa = 0;
-            int xb = 0;
-            int ya = 0;
-            int yb = 0;
-            int tile0 = 0;
-            int tile1 = 0;
-            int tilesize0 = 0;
-            int tilesize1 = 0;
-            int sfx = 0;
-            int sfy = 0;
-            int sfxy = 0;
+            var kx = 0;
+            var ky = 0;
+            var i = 0;
+            var j = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var bfrad = 0;
+            var xa = 0;
+            var xb = 0;
+            var ya = 0;
+            var yb = 0;
+            var tile0 = 0;
+            var tile1 = 0;
+            var tilesize0 = 0;
+            var tilesize1 = 0;
+            var sfx = 0;
+            var sfy = 0;
+            var sfxy = 0;
             double dummytss = 0;
             double invscalexy = 0;
-            int cnt0 = 0;
-            int cnt1 = 0;
-            int offs = 0;
+            var cnt0 = 0;
+            var cnt1 = 0;
+            var offs = 0;
             double vs = 0;
             double vsx = 0;
             double vsy = 0;
@@ -37902,8 +38171,8 @@ public partial class alglib
             //
             bfrad = 2;
             invscalexy = (double)1/(double)scalexy;
-            kx = basecasex*tilescountx+1;
-            ky = basecasey*tilescounty+1;
+            kx = (basecasex * tilescountx) + 1;
+            ky = (basecasey * tilescounty) + 1;
             
             //
             // Parallelism; because this function is intended for
@@ -37962,10 +38231,10 @@ public partial class alglib
             //
             // Analyze dataset
             //
-            xa = apserv.iboundval(tile0*basecasex-interfacesize, 0, kx, _params);
-            xb = apserv.iboundval((tile0+1)*basecasex+interfacesize, 0, kx, _params);
-            ya = apserv.iboundval(tile1*basecasey-interfacesize, 0, ky, _params);
-            yb = apserv.iboundval((tile1+1)*basecasey+interfacesize, 0, ky, _params);
+            xa = apserv.iboundval((tile0 * basecasex) - interfacesize, 0, kx, _params);
+            xb = apserv.iboundval(((tile0+1)*basecasex) + interfacesize, 0, kx, _params);
+            ya = apserv.iboundval((tile1 * basecasey) - interfacesize, 0, ky, _params);
+            yb = apserv.iboundval(((tile1+1)*basecasey) + interfacesize, 0, ky, _params);
             tilesize0 = xb-xa;
             tilesize1 = yb-ya;
             
@@ -37990,7 +38259,7 @@ public partial class alglib
             {
                 buf.localmodel.y[i] = ya+i;
             }
-            for(i=0; i<=tilesize0*tilesize1*d*4-1; i++)
+            for(i=0; i<= (tilesize0 *tilesize1*d*4) - 1; i++)
             {
                 buf.localmodel.f[i] = 0.0;
             }
@@ -38010,7 +38279,7 @@ public partial class alglib
             {
                 buf.localmodel.y[i] = buf.localmodel.y[i]*scalexy;
             }
-            for(i=0; i<=tilesize0*tilesize1*d-1; i++)
+            for(i=0; i<= (tilesize0 *tilesize1*d) - 1; i++)
             {
                 buf.localmodel.f[sfx+i] = buf.localmodel.f[sfx+i]*invscalexy;
                 buf.localmodel.f[sfy+i] = buf.localmodel.f[sfy+i]*invscalexy;
@@ -38041,18 +38310,18 @@ public partial class alglib
             {
                 apserv.inc(ref cnt1, _params);
             }
-            offs = d*(spline.n*tile1*basecasey*scalexy+tile0*basecasex*scalexy);
+            offs = d*((spline.n*tile1*basecasey*scalexy) + tile0*basecasex*scalexy);
             for(j1=0; j1<=cnt1-1; j1++)
             {
                 for(j0=0; j0<=cnt0-1; j0++)
                 {
                     for(j=0; j<=d-1; j++)
                     {
-                        spline2ddiffvi(buf.localmodel, tile0*basecasex*scalexy+j0, tile1*basecasey*scalexy+j1, j, ref vs, ref vsx, ref vsy, ref vsxy, _params);
-                        spline.f[offs+d*(spline.n*j1+j0)+j] = spline.f[offs+d*(spline.n*j1+j0)+j]+vs;
-                        spline.f[sfx+offs+d*(spline.n*j1+j0)+j] = spline.f[sfx+offs+d*(spline.n*j1+j0)+j]+vsx;
-                        spline.f[sfy+offs+d*(spline.n*j1+j0)+j] = spline.f[sfy+offs+d*(spline.n*j1+j0)+j]+vsy;
-                        spline.f[sfxy+offs+d*(spline.n*j1+j0)+j] = spline.f[sfxy+offs+d*(spline.n*j1+j0)+j]+vsxy;
+                        spline2ddiffvi(buf.localmodel, (tile0 *basecasex*scalexy) + j0, (tile1 *basecasey*scalexy) + j1, j, ref vs, ref vsx, ref vsy, ref vsxy, _params);
+                        spline.f[offs+ (d * ((spline.n*j1) + j0)) + j] = spline.f[offs+ (d * ((spline.n*j1) + j0)) + j]+vs;
+                        spline.f[sfx+offs+ (d * ((spline.n*j1) + j0)) + j] = spline.f[sfx+offs+ (d * ((spline.n*j1) + j0)) + j]+vsx;
+                        spline.f[sfy+offs+ (d * ((spline.n*j1) + j0)) + j] = spline.f[sfy+offs+ (d * ((spline.n*j1) + j0)) + j]+vsy;
+                        spline.f[sfxy+offs+ (d * ((spline.n*j1) + j0)) + j] = spline.f[sfxy+offs+ (d * ((spline.n*j1) + j0)) + j]+vsxy;
                     }
                 }
             }
@@ -38084,8 +38353,8 @@ public partial class alglib
             int lsqrcnt,
             double lambdareg,
             spline1d.spline1dinterpolant basis1,
-            alglib.smp.shared_pool pool,
-            spline2dinterpolant spline, alglib.xparams _params)
+            smp.shared_pool pool,
+            spline2dinterpolant spline, xparams _params)
         {
             return false;
         }
@@ -38145,23 +38414,23 @@ public partial class alglib
             spline2dfitreport rep,
             double tss,
             spline2dblockllsbuf buf,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int blockbandwidth = 0;
-            int d = 0;
-            int i = 0;
-            int j = 0;
+            var blockbandwidth = 0;
+            var d = 0;
+            var i = 0;
+            var j = 0;
             double lambdachol = 0;
-            apserv.sreal mxata = new apserv.sreal();
+            var mxata = new apserv.sreal();
             double v = 0;
-            int celloffset = 0;
-            int i0 = 0;
-            int i1 = 0;
+            var celloffset = 0;
+            var i0 = 0;
+            var i1 = 0;
             double rss = 0;
-            int arows = 0;
-            int bw2 = 0;
-            int kx = 0;
-            int ky = 0;
+            var arows = 0;
+            var bw2 = 0;
+            var kx = 0;
+            var ky = 0;
 
             alglib.ap.assert(xdesign.blockwidth==4, "Spline2DFit: integrity check failed");
             blockbandwidth = 3;
@@ -38175,7 +38444,7 @@ public partial class alglib
             // Initial values for Z/Residuals
             //
             apserv.rvectorsetlengthatleast(ref z, kx*ky*d, _params);
-            for(i=0; i<=kx*ky*d-1; i++)
+            for(i=0; i<= (kx *ky*d) - 1; i++)
             {
                 z[i] = 0;
             }
@@ -38285,7 +38554,7 @@ public partial class alglib
                         // Use Cholesky factorization of the system matrix
                         // as preconditioner: solve TRSV(U,Solver.X)
                         //
-                        for(i=0; i<=kx*ky-1; i++)
+                        for(i=0; i<= (kx * ky) - 1; i++)
                         {
                             buf.tmp1[i] = buf.solver.x[i];
                         }
@@ -38317,9 +38586,9 @@ public partial class alglib
                 //
                 linlsqr.linlsqrresults(buf.solver, ref buf.tmp1, buf.solverrep, _params);
                 blockllstrsv(buf.blockata, kx, ky, false, buf.tmp1, _params);
-                for(i=0; i<=kx*ky-1; i++)
+                for(i=0; i<= (kx * ky) - 1; i++)
                 {
-                    z[kx*ky*j+i] = buf.tmp1[i];
+                    z[(kx *ky*j) + i] = buf.tmp1[i];
                 }
                 
                 //
@@ -38329,15 +38598,15 @@ public partial class alglib
                 for(i=0; i<=xdesign.npoints-1; i++)
                 {
                     v = xdesign.vals[i,bw2+j]-buf.tmp0[i];
-                    rss = rss+v*v;
-                    rep.rmserror = rep.rmserror+math.sqr(v);
-                    rep.avgerror = rep.avgerror+Math.Abs(v);
+                    rss += (v * v);
+                    rep.rmserror += math.sqr(v);
+                    rep.avgerror += Math.Abs(v);
                     rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v));
                 }
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/apserv.coalesce(xdesign.npoints*d, 1.0, _params));
-            rep.avgerror = rep.avgerror/apserv.coalesce(xdesign.npoints*d, 1.0, _params);
-            rep.r2 = 1.0-rss/apserv.coalesce(tss, 1.0, _params);
+            rep.avgerror /= apserv.coalesce(xdesign.npoints*d, 1.0, _params);
+            rep.r2 = 1.0- (rss /apserv.coalesce(tss, 1.0, _params));
         }
 
 
@@ -38394,31 +38663,31 @@ public partial class alglib
             ref double[] z,
             spline2dfitreport rep,
             double tss,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int ew = 0;
-            int i = 0;
-            int j = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int j0 = 0;
-            int j1 = 0;
+            var ew = 0;
+            var i = 0;
+            var j = 0;
+            var i0 = 0;
+            var i1 = 0;
+            var j0 = 0;
+            var j1 = 0;
             double v = 0;
-            int blockbandwidth = 0;
+            var blockbandwidth = 0;
             double lambdareg = 0;
-            int srci = 0;
-            int srcj = 0;
-            int idxi = 0;
-            int idxj = 0;
-            int endi = 0;
-            int endj = 0;
-            int rfsidx = 0;
-            double[,] ata = new double[0,0];
-            double[] tmp0 = new double[0];
-            double[] tmp1 = new double[0];
+            var srci = 0;
+            var srcj = 0;
+            var idxi = 0;
+            var idxj = 0;
+            var endi = 0;
+            var endj = 0;
+            var rfsidx = 0;
+            var ata = new double[0,0];
+            var tmp0 = new double[0];
+            var tmp1 = new double[0];
             double mxata = 0;
-            linlsqr.linlsqrstate solver = new linlsqr.linlsqrstate();
-            linlsqr.linlsqrreport solverrep = new linlsqr.linlsqrreport();
+            var solver = new linlsqr.linlsqrstate();
+            var solverrep = new linlsqr.linlsqrreport();
             double rss = 0;
 
             blockbandwidth = 3;
@@ -38428,7 +38697,7 @@ public partial class alglib
             // Initial values for Z/Residuals
             //
             apserv.rvectorsetlengthatleast(ref z, kx*ky*d, _params);
-            for(i=0; i<=kx*ky*d-1; i++)
+            for(i=0; i<= (kx *ky*d) - 1; i++)
             {
                 z[i] = 0;
             }
@@ -38444,9 +38713,9 @@ public partial class alglib
             while( true )
             {
                 mxata = 0.0;
-                for(i=0; i<=kx*ky-1; i++)
+                for(i=0; i<= (kx * ky) - 1; i++)
                 {
-                    for(j=i; j<=kx*ky-1; j++)
+                    for(j=i; j<= (kx * ky) - 1; j++)
                     {
                         
                         //
@@ -38475,28 +38744,24 @@ public partial class alglib
                         srcj = ah.ridx[j];
                         endi = ah.ridx[i+1];
                         endj = ah.ridx[j+1];
-                        while( true )
+                        while (srci < endi && srcj < endj)
                         {
-                            if( srci>=endi || srcj>=endj )
-                            {
-                                break;
-                            }
                             idxi = ah.idx[srci];
                             idxj = ah.idx[srcj];
-                            if( idxi==idxj )
+                            if (idxi == idxj)
                             {
-                                v = v+ah.vals[srci]*ah.vals[srcj];
-                                srci = srci+1;
-                                srcj = srcj+1;
+                                v += (ah.vals[srci] * ah.vals[srcj]);
+                                srci++;
+                                srcj++;
                                 continue;
                             }
-                            if( idxi<idxj )
+                            if (idxi < idxj)
                             {
-                                srci = srci+1;
+                                srci++;
                             }
                             else
                             {
-                                srcj = srcj+1;
+                                srcj++;
                             }
                         }
                         ata[i,j] = v;
@@ -38504,7 +38769,7 @@ public partial class alglib
                     }
                 }
                 v = apserv.coalesce(mxata, 1.0, _params)*lambdareg;
-                for(i=0; i<=kx*ky-1; i++)
+                for(i=0; i<= (kx * ky) - 1; i++)
                 {
                     ata[i,i] = ata[i,i]+v;
                 }
@@ -38555,7 +38820,7 @@ public partial class alglib
                     {
                         if( i<npoints )
                         {
-                            tmp0[i] = xy[i*ew+2+j];
+                            tmp0[i] = xy[(i * ew) + 2+j];
                         }
                         else
                         {
@@ -38573,7 +38838,7 @@ public partial class alglib
                             // Use Cholesky factorization of the system matrix
                             // as preconditioner: solve TRSV(U,Solver.X)
                             //
-                            for(i=0; i<=kx*ky-1; i++)
+                            for(i=0; i<= (kx * ky) - 1; i++)
                             {
                                 tmp1[i] = solver.x[i];
                             }
@@ -38600,9 +38865,9 @@ public partial class alglib
                     }
                     linlsqr.linlsqrresults(solver, ref tmp1, solverrep, _params);
                     ablas.rmatrixtrsv(kx*ky, ata, 0, 0, true, false, 0, tmp1, 0, _params);
-                    for(i=0; i<=kx*ky-1; i++)
+                    for(i=0; i<= (kx * ky) - 1; i++)
                     {
-                        z[kx*ky*j+i] = tmp1[i];
+                        z[(kx *ky*j) + i] = tmp1[i];
                     }
                     
                     //
@@ -38611,7 +38876,7 @@ public partial class alglib
                     sparse.sparsemv(av, tmp1, ref tmp0, _params);
                     for(i=0; i<=npoints-1; i++)
                     {
-                        xy[i*ew+2+j] = xy[i*ew+2+j]-tmp0[i];
+                        xy[(i * ew) + 2+j] = xy[(i * ew) + 2+j]-tmp0[i];
                     }
                 }
                 else
@@ -38629,16 +38894,16 @@ public partial class alglib
                     //
                     for(rfsidx=1; rfsidx<=-lsqrcnt; rfsidx++)
                     {
-                        for(i=0; i<=kx*ky-1; i++)
+                        for(i=0; i<= (kx * ky) - 1; i++)
                         {
-                            tmp1[i] = z[kx*ky*j+i];
+                            tmp1[i] = z[(kx *ky*j) + i];
                         }
                         sparse.sparsemv(av, tmp1, ref tmp0, _params);
                         for(i=0; i<=arows-1; i++)
                         {
                             if( i<npoints )
                             {
-                                v = xy[i*ew+2+j];
+                                v = xy[(i * ew) + 2+j];
                             }
                             else
                             {
@@ -38649,23 +38914,23 @@ public partial class alglib
                         sparse.sparsemv(ah, tmp0, ref tmp1, _params);
                         ablas.rmatrixtrsv(kx*ky, ata, 0, 0, true, false, 1, tmp1, 0, _params);
                         ablas.rmatrixtrsv(kx*ky, ata, 0, 0, true, false, 0, tmp1, 0, _params);
-                        for(i=0; i<=kx*ky-1; i++)
+                        for(i=0; i<= (kx * ky) - 1; i++)
                         {
-                            z[kx*ky*j+i] = z[kx*ky*j+i]+tmp1[i];
+                            z[(kx *ky*j) + i] = z[(kx *ky*j) + i]+tmp1[i];
                         }
                     }
                     
                     //
                     // Calculate model values
                     //
-                    for(i=0; i<=kx*ky-1; i++)
+                    for(i=0; i<= (kx * ky) - 1; i++)
                     {
-                        tmp1[i] = z[kx*ky*j+i];
+                        tmp1[i] = z[(kx *ky*j) + i];
                     }
                     sparse.sparsemv(av, tmp1, ref tmp0, _params);
                     for(i=0; i<=npoints-1; i++)
                     {
-                        xy[i*ew+2+j] = xy[i*ew+2+j]-tmp0[i];
+                        xy[(i * ew) + 2+j] = xy[(i * ew) + 2+j]-tmp0[i];
                     }
                 }
             }
@@ -38681,16 +38946,16 @@ public partial class alglib
             {
                 for(j=0; j<=d-1; j++)
                 {
-                    v = xy[i*ew+2+j];
-                    rss = rss+v*v;
-                    rep.rmserror = rep.rmserror+math.sqr(v);
-                    rep.avgerror = rep.avgerror+Math.Abs(v);
+                    v = xy[(i * ew) + 2+j];
+                    rss += (v * v);
+                    rep.rmserror += math.sqr(v);
+                    rep.avgerror += Math.Abs(v);
                     rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v));
                 }
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/apserv.coalesce(npoints*d, 1.0, _params));
-            rep.avgerror = rep.avgerror/apserv.coalesce(npoints*d, 1.0, _params);
-            rep.r2 = 1.0-rss/apserv.coalesce(tss, 1.0, _params);
+            rep.avgerror /= apserv.coalesce(npoints*d, 1.0, _params);
+            rep.r2 = 1.0- (rss /apserv.coalesce(tss, 1.0, _params));
         }
 
 
@@ -38709,15 +38974,15 @@ public partial class alglib
             int blockbandwidth,
             int i,
             int j,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             alglib.ap.assert(i>=0 && i<ky, "Spline2DFit: GetCellOffset() integrity error");
             alglib.ap.assert(j>=0 && j<ky, "Spline2DFit: GetCellOffset() integrity error");
             alglib.ap.assert(j>=i && j<=i+blockbandwidth, "Spline2DFit: GetCellOffset() integrity error");
             result = j*(blockbandwidth+1)*kx;
-            result = result+(blockbandwidth-(j-i))*kx;
+            result += ((blockbandwidth-(j-i))*kx);
             return result;
         }
 
@@ -38739,11 +39004,11 @@ public partial class alglib
             double[,] dst,
             int dst0,
             int dst1,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int celloffset = 0;
-            int idx0 = 0;
-            int idx1 = 0;
+            var celloffset = 0;
+            var idx0 = 0;
+            var idx1 = 0;
 
             celloffset = getcelloffset(kx, ky, blockbandwidth, i, j, _params);
             for(idx0=0; idx0<=kx-1; idx0++)
@@ -38770,11 +39035,11 @@ public partial class alglib
             int i,
             int j,
             double eps,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int celloffset = 0;
-            int idx0 = 0;
-            int idx1 = 0;
+            var celloffset = 0;
+            var idx0 = 0;
+            var idx1 = 0;
             double eps2 = 0;
             double v = 0;
 
@@ -38829,27 +39094,27 @@ public partial class alglib
             int ky,
             double[,] blockata,
             apserv.sreal mxata,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int blockbandwidth = 0;
+            var blockbandwidth = 0;
             double avgrowlen = 0;
             double cellcost = 0;
             double totalcost = 0;
-            apserv.sreal tmpmxata = new apserv.sreal();
-            int i = 0;
-            int j = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int celloffset = 0;
+            var tmpmxata = new apserv.sreal();
+            var i = 0;
+            var j = 0;
+            var i0 = 0;
+            var i1 = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var celloffset = 0;
             double v = 0;
-            int srci = 0;
-            int srcj = 0;
-            int idxi = 0;
-            int idxj = 0;
-            int endi = 0;
-            int endj = 0;
+            var srci = 0;
+            var srcj = 0;
+            var idxi = 0;
+            var idxj = 0;
+            var endi = 0;
+            var endj = 0;
 
             alglib.ap.assert((double)(mxata.val)>=(double)(0), "BlockLLSGenerateATA: integrity check failed");
             blockbandwidth = 3;
@@ -38859,16 +39124,13 @@ public partial class alglib
             // (with optional parallelization)
             //
             avgrowlen = (double)ah.ridx[kx*ky]/(double)(kx*ky);
-            cellcost = apserv.rmul3(kx, 1+2*blockbandwidth, avgrowlen, _params);
-            totalcost = apserv.rmul3(ky1-ky0, 1+2*blockbandwidth, cellcost, _params);
-            if( ky1-ky0>=2 && (double)(totalcost)>(double)(apserv.smpactivationlevel(_params)) )
+            cellcost = apserv.rmul3(kx, 1+ (2 * blockbandwidth), avgrowlen, _params);
+            totalcost = apserv.rmul3(ky1-ky0, 1+ (2 * blockbandwidth), cellcost, _params);
+            if (ky1 - ky0 >= 2 && (double)(totalcost) > (double)(apserv.smpactivationlevel(_params)) && _trypexec_blockllsgenerateata(ah, ky0, ky1, kx, ky, blockata, mxata, _params))
             {
-                if( _trypexec_blockllsgenerateata(ah,ky0,ky1,kx,ky,blockata,mxata, _params) )
-                {
-                    return;
-                }
+                return;
             }
-            if( ky1-ky0>=2 )
+            if ( ky1-ky0>=2 )
             {
                 
                 //
@@ -38915,34 +39177,30 @@ public partial class alglib
                             // Nodes are close enough, calculate product of columns I and J of A.
                             //
                             v = 0;
-                            i = i1*kx+i0;
-                            j = j1*kx+j0;
+                            i = (i1 * kx) + i0;
+                            j = (j1 * kx) + j0;
                             srci = ah.ridx[i];
                             srcj = ah.ridx[j];
                             endi = ah.ridx[i+1];
                             endj = ah.ridx[j+1];
-                            while( true )
+                            while (srci < endi && srcj < endj)
                             {
-                                if( srci>=endi || srcj>=endj )
-                                {
-                                    break;
-                                }
                                 idxi = ah.idx[srci];
                                 idxj = ah.idx[srcj];
-                                if( idxi==idxj )
+                                if (idxi == idxj)
                                 {
-                                    v = v+ah.vals[srci]*ah.vals[srcj];
-                                    srci = srci+1;
-                                    srcj = srcj+1;
+                                    v += (ah.vals[srci] * ah.vals[srcj]);
+                                    srci++;
+                                    srcj++;
                                     continue;
                                 }
-                                if( idxi<idxj )
+                                if (idxi < idxj)
                                 {
-                                    srci = srci+1;
+                                    srci++;
                                 }
                                 else
                                 {
-                                    srcj = srcj+1;
+                                    srcj++;
                                 }
                             }
                             blockata[celloffset+i0,j0] = v;
@@ -38963,7 +39221,7 @@ public partial class alglib
             int kx,
             int ky,
             double[,] blockata,
-            apserv.sreal mxata, alglib.xparams _params)
+            apserv.sreal mxata, xparams _params)
         {
             return false;
         }
@@ -38997,15 +39255,15 @@ public partial class alglib
             ref double[,] trsmbuf2,
             ref double[,] cholbuf2,
             ref double[] cholbuf1,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            int blockbandwidth = 0;
-            int blockidx = 0;
-            int i = 0;
-            int j = 0;
-            int celloffset = 0;
-            int celloffset1 = 0;
+            var result = new bool();
+            var blockbandwidth = 0;
+            var blockidx = 0;
+            var i = 0;
+            var j = 0;
+            var celloffset = 0;
+            var celloffset1 = 0;
 
             blockbandwidth = 3;
             apserv.rmatrixsetlengthatleast(ref trsmbuf2, (blockbandwidth+1)*kx, (blockbandwidth+1)*kx, _params);
@@ -39091,12 +39349,12 @@ public partial class alglib
             int ky,
             bool transu,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int blockbandwidth = 0;
-            int blockidx = 0;
-            int blockidx1 = 0;
-            int celloffset = 0;
+            var blockbandwidth = 0;
+            var blockidx = 0;
+            var blockidx1 = 0;
+            var celloffset = 0;
 
             blockbandwidth = 3;
             if( !transu )
@@ -39151,11 +39409,11 @@ public partial class alglib
             int d,
             int scalexy,
             spline2dinterpolant spline,
-            alglib.xparams _params)
+            xparams _params)
         {
-            apserv.srealarray seed = new apserv.srealarray();
-            alglib.smp.shared_pool pool = new alglib.smp.shared_pool();
-            int chunksize = 0;
+            var seed = new apserv.srealarray();
+            var pool = new smp.shared_pool();
+            var chunksize = 0;
             double pointcost = 0;
 
             
@@ -39164,12 +39422,9 @@ public partial class alglib
             //
             chunksize = 1000;
             pointcost = 100.0;
-            if( (double)(npoints*pointcost)>(double)(apserv.smpactivationlevel(_params)) )
+            if ((double)(npoints * pointcost) > (double)(apserv.smpactivationlevel(_params)) && _trypexec_computeresidualsfromscratch(xy, yraw, npoints, d, scalexy, spline, _params))
             {
-                if( _trypexec_computeresidualsfromscratch(xy,yraw,npoints,d,scalexy,spline, _params) )
-                {
-                    return;
-                }
+                return;
             }
             alglib.smp.ae_shared_pool_set_seed(pool, seed);
             
@@ -39188,7 +39443,7 @@ public partial class alglib
             int npoints,
             int d,
             int scalexy,
-            spline2dinterpolant spline, alglib.xparams _params)
+            spline2dinterpolant spline, xparams _params)
         {
             return false;
         }
@@ -39208,13 +39463,13 @@ public partial class alglib
             int d,
             int scalexy,
             spline2dinterpolant spline,
-            alglib.smp.shared_pool pool,
-            alglib.xparams _params)
+            smp.shared_pool pool,
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             apserv.srealarray pbuf = null;
-            int xew = 0;
+            var xew = 0;
 
             xew = 2+d;
             
@@ -39235,10 +39490,10 @@ public partial class alglib
             alglib.smp.ae_shared_pool_retrieve(pool, ref pbuf);
             for(i=pt0; i<=pt1-1; i++)
             {
-                spline2dcalcvbuf(spline, xy[i*xew+0]*scalexy, xy[i*xew+1]*scalexy, ref pbuf.val, _params);
+                spline2dcalcvbuf(spline, xy[(i * xew) + 0]*scalexy, xy[(i * xew) + 1]*scalexy, ref pbuf.val, _params);
                 for(j=0; j<=d-1; j++)
                 {
-                    xy[i*xew+2+j] = yraw[i*d+j]-pbuf.val[j];
+                    xy[(i * xew) + 2+j] = yraw[(i * d) + j]-pbuf.val[j];
                 }
             }
             alglib.smp.ae_shared_pool_recycle(pool, ref pbuf);
@@ -39256,7 +39511,7 @@ public partial class alglib
             int d,
             int scalexy,
             spline2dinterpolant spline,
-            alglib.smp.shared_pool pool, alglib.xparams _params)
+            smp.shared_pool pool, xparams _params)
         {
             return false;
         }
@@ -39296,12 +39551,12 @@ public partial class alglib
             int ky,
             ref int[] xyindex,
             ref int[] bufi,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int entrywidth = 0;
+            var i = 0;
+            var i0 = 0;
+            var i1 = 0;
+            var entrywidth = 0;
 
             
             //
@@ -39310,13 +39565,13 @@ public partial class alglib
             alglib.ap.assert(kx>=2, "Spline2DFit.ReorderDatasetAndBuildIndex: integrity check failed");
             alglib.ap.assert(ky>=2, "Spline2DFit.ReorderDatasetAndBuildIndex: integrity check failed");
             entrywidth = 2+d;
-            apserv.ivectorsetlengthatleast(ref xyindex, (kx-1)*(ky-1)+1, _params);
+            apserv.ivectorsetlengthatleast(ref xyindex, ((kx-1)*(ky-1)) + 1, _params);
             apserv.ivectorsetlengthatleast(ref bufi, npoints, _params);
             for(i=0; i<=npoints-1; i++)
             {
-                i0 = apserv.iboundval((int)Math.Floor(xy[i*entrywidth+0]), 0, kx-2, _params);
-                i1 = apserv.iboundval((int)Math.Floor(xy[i*entrywidth+1]), 0, ky-2, _params);
-                bufi[i] = i1*(kx-1)+i0;
+                i0 = apserv.iboundval((int)Math.Floor(xy[(i * entrywidth) + 0]), 0, kx-2, _params);
+                i1 = apserv.iboundval((int)Math.Floor(xy[(i * entrywidth) + 1]), 0, ky-2, _params);
+                bufi[i] = (i1 *(kx-1)) + i0;
             }
             
             //
@@ -39358,9 +39613,9 @@ public partial class alglib
             int ky,
             ref int[] xyindex,
             ref int[] bufi,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int[] xyindexprev = new int[0];
+            var xyindexprev = new int[0];
 
             
             //
@@ -39371,13 +39626,13 @@ public partial class alglib
             alglib.ap.assert((kx-1)%2==0, "Spline2DFit.RescaleDataset2AndRefineIndex: integrity check failed");
             alglib.ap.assert((ky-1)%2==0, "Spline2DFit.RescaleDataset2AndRefineIndex: integrity check failed");
             alglib.ap.swap(ref xyindex, ref xyindexprev);
-            apserv.ivectorsetlengthatleast(ref xyindex, (kx-1)*(ky-1)+1, _params);
+            apserv.ivectorsetlengthatleast(ref xyindex, ((kx-1)*(ky-1)) + 1, _params);
             apserv.ivectorsetlengthatleast(ref bufi, npoints, _params);
             
             //
             // Refine
             //
-            expandindexrows(xy, d, shadow, ns, bufi, 0, npoints, xyindexprev, 0, (ky+1)/2-1, xyindex, kx, ky, true, _params);
+            expandindexrows(xy, d, shadow, ns, bufi, 0, npoints, xyindexprev, 0, ((ky+1)/2) - 1, xyindex, kx, ky, true, _params);
             xyindex[(kx-1)*(ky-1)] = npoints;
             
             //
@@ -39406,45 +39661,42 @@ public partial class alglib
             int kxnew,
             int kynew,
             bool rootcall,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int entrywidth = 0;
-            int kxprev = 0;
+            var i = 0;
+            var entrywidth = 0;
+            var kxprev = 0;
             double v = 0;
-            int i0 = 0;
-            int i1 = 0;
+            var i0 = 0;
+            var i1 = 0;
             double efficiency = 0;
             double cost = 0;
-            int rowmid = 0;
+            var rowmid = 0;
 
             kxprev = (kxnew+1)/2;
             entrywidth = 2+d;
             efficiency = 0.1;
             cost = d*(pt1-pt0+1)*(Math.Log(kxnew)/Math.Log(2))/efficiency;
-            alglib.ap.assert(xyindexprev[row0*(kxprev-1)+0]==pt0, "Spline2DFit.ExpandIndexRows: integrity check failed");
-            alglib.ap.assert(xyindexprev[row1*(kxprev-1)+0]==pt1, "Spline2DFit.ExpandIndexRows: integrity check failed");
-            
+            alglib.ap.assert(xyindexprev[(row0 *(kxprev-1)) + 0]==pt0, "Spline2DFit.ExpandIndexRows: integrity check failed");
+            alglib.ap.assert(xyindexprev[(row1 *(kxprev-1)) + 0]==pt1, "Spline2DFit.ExpandIndexRows: integrity check failed");
+
             //
             // Parallelism
             //
-            if( ((rootcall && pt1-pt0>10000) && row1-row0>=2) && (double)(cost)>(double)(apserv.smpactivationlevel(_params)) )
+            if (((rootcall && pt1 - pt0 > 10000) && row1 - row0 >= 2) && (double)(cost) > (double)(apserv.smpactivationlevel(_params)) && _trypexec_expandindexrows(xy, d, shadow, ns, cidx, pt0, pt1, xyindexprev, row0, row1, xyindexnew, kxnew, kynew, rootcall, _params))
             {
-                if( _trypexec_expandindexrows(xy,d,shadow,ns,cidx,pt0,pt1,xyindexprev,row0,row1,xyindexnew,kxnew,kynew,rootcall, _params) )
-                {
-                    return;
-                }
+                return;
             }
-            
+
             //
             // Partition
             //
-            if( row1-row0>=2 )
+            if ( row1-row0>=2 )
             {
                 apserv.tiledsplit(row1-row0, 1, ref i0, ref i1, _params);
                 rowmid = row0+i0;
-                expandindexrows(xy, d, shadow, ns, cidx, pt0, xyindexprev[rowmid*(kxprev-1)+0], xyindexprev, row0, rowmid, xyindexnew, kxnew, kynew, false, _params);
-                expandindexrows(xy, d, shadow, ns, cidx, xyindexprev[rowmid*(kxprev-1)+0], pt1, xyindexprev, rowmid, row1, xyindexnew, kxnew, kynew, false, _params);
+                expandindexrows(xy, d, shadow, ns, cidx, pt0, xyindexprev[(rowmid *(kxprev-1)) + 0], xyindexprev, row0, rowmid, xyindexnew, kxnew, kynew, false, _params);
+                expandindexrows(xy, d, shadow, ns, cidx, xyindexprev[(rowmid *(kxprev-1)) + 0], pt1, xyindexprev, rowmid, row1, xyindexnew, kxnew, kynew, false, _params);
                 return;
             }
             
@@ -39453,15 +39705,15 @@ public partial class alglib
             //
             for(i=pt0; i<=pt1-1; i++)
             {
-                v = 2*xy[i*entrywidth+0];
-                xy[i*entrywidth+0] = v;
+                v = 2*xy[(i * entrywidth) + 0];
+                xy[(i * entrywidth) + 0] = v;
                 i0 = apserv.iboundval((int)Math.Floor(v), 0, kxnew-2, _params);
-                v = 2*xy[i*entrywidth+1];
-                xy[i*entrywidth+1] = v;
+                v = 2*xy[(i * entrywidth) + 1];
+                xy[(i * entrywidth) + 1] = v;
                 i1 = apserv.iboundval((int)Math.Floor(v), 0, kynew-2, _params);
-                cidx[i] = i1*(kxnew-1)+i0;
+                cidx[i] = (i1 *(kxnew-1)) + i0;
             }
-            reorderdatasetandbuildindexrec(xy, d, shadow, ns, cidx, pt0, pt1, xyindexnew, 2*row0*(kxnew-1)+0, 2*row1*(kxnew-1)+0, false, _params);
+            reorderdatasetandbuildindexrec(xy, d, shadow, ns, cidx, pt0, pt1, xyindexnew, (2 *row0*(kxnew-1)) + 0, (2 *row1*(kxnew-1)) + 0, false, _params);
         }
 
 
@@ -39481,7 +39733,7 @@ public partial class alglib
             int[] xyindexnew,
             int kxnew,
             int kynew,
-            bool rootcall, alglib.xparams _params)
+            bool rootcall, xparams _params)
         {
             return false;
         }
@@ -39504,12 +39756,12 @@ public partial class alglib
             int idx0,
             int idx1,
             bool rootcall,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int entrywidth = 0;
-            int idxmid = 0;
-            int wrk0 = 0;
-            int wrk1 = 0;
+            var entrywidth = 0;
+            var idxmid = 0;
+            var wrk0 = 0;
+            var wrk1 = 0;
             double efficiency = 0;
             double cost = 0;
 
@@ -39521,18 +39773,15 @@ public partial class alglib
             entrywidth = 2+d;
             efficiency = 0.1;
             cost = d*(pt1-pt0+1)*Math.Log(idx1-idx0+1)/Math.Log(2)/efficiency;
-            
+
             //
             // Parallelism
             //
-            if( ((rootcall && pt1-pt0>10000) && idx1-idx0>=2) && (double)(cost)>(double)(apserv.smpactivationlevel(_params)) )
+            if (((rootcall && pt1 - pt0 > 10000) && idx1 - idx0 >= 2) && (double)(cost) > (double)(apserv.smpactivationlevel(_params)) && _trypexec_reorderdatasetandbuildindexrec(xy, d, shadow, ns, cidx, pt0, pt1, xyindex, idx0, idx1, rootcall, _params))
             {
-                if( _trypexec_reorderdatasetandbuildindexrec(xy,d,shadow,ns,cidx,pt0,pt1,xyindex,idx0,idx1,rootcall, _params) )
-                {
-                    return;
-                }
+                return;
             }
-            
+
             //
             // Store left bound to XYIndex
             //
@@ -39557,7 +39806,7 @@ public partial class alglib
             //
             // Select middle element
             //
-            idxmid = idx0+(idx1-idx0)/2;
+            idxmid = idx0+ ((idx1-idx0)/2);
             alglib.ap.assert(idx0<idxmid && idxmid<idx1, "Spline2D: integrity check failed");
             wrk0 = pt0;
             wrk1 = pt1-1;
@@ -39565,11 +39814,11 @@ public partial class alglib
             {
                 while( wrk0<pt1 && cidx[wrk0]<idxmid )
                 {
-                    wrk0 = wrk0+1;
+                    wrk0++;
                 }
                 while( wrk1>=pt0 && cidx[wrk1]>=idxmid )
                 {
-                    wrk1 = wrk1-1;
+                    wrk1--;
                 }
                 if( wrk1<=wrk0 )
                 {
@@ -39600,7 +39849,7 @@ public partial class alglib
             int[] xyindex,
             int idx0,
             int idx1,
-            bool rootcall, alglib.xparams _params)
+            bool rootcall, xparams _params)
         {
             return false;
         }
@@ -39645,29 +39894,29 @@ public partial class alglib
             double lambdans,
             spline1d.spline1dinterpolant basis1,
             spline2dxdesignmatrix a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int entrywidth = 0;
-            int i = 0;
-            int j = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int k0 = 0;
-            int k1 = 0;
-            int kx = 0;
-            int ky = 0;
-            int rowsdone = 0;
-            int batchesdone = 0;
-            int pt0 = 0;
-            int pt1 = 0;
-            int base0 = 0;
-            int base1 = 0;
-            int baseidx = 0;
-            int nzshift = 0;
-            int nzwidth = 0;
-            double[,] d2x = new double[0,0];
-            double[,] d2y = new double[0,0];
-            double[,] dxy = new double[0,0];
+            var entrywidth = 0;
+            var i = 0;
+            var j = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var k0 = 0;
+            var k1 = 0;
+            var kx = 0;
+            var ky = 0;
+            var rowsdone = 0;
+            var batchesdone = 0;
+            var pt0 = 0;
+            var pt1 = 0;
+            var base0 = 0;
+            var base1 = 0;
+            var baseidx = 0;
+            var nzshift = 0;
+            var nzwidth = 0;
+            var d2x = new double[0,0];
+            var d2y = new double[0,0];
+            var dxy = new double[0,0];
             double v = 0;
             double v0 = 0;
             double v1 = 0;
@@ -39694,22 +39943,22 @@ public partial class alglib
             {
                 for(j0=kx0; j0<=kx1-2; j0++)
                 {
-                    i = xyindex[j1*(kxtotal-1)+j0+1]-xyindex[j1*(kxtotal-1)+j0];
-                    a.npoints = a.npoints+i;
-                    a.ndenserows = a.ndenserows+i;
-                    a.ndensebatches = a.ndensebatches+1;
+                    i = xyindex[(j1 *(kxtotal-1)) + j0+1]-xyindex[(j1 *(kxtotal-1)) + j0];
+                    a.npoints += i;
+                    a.ndenserows += i;
+                    a.ndensebatches++;
                     a.maxbatch = Math.Max(a.maxbatch, i);
                 }
             }
             if( (double)(lambdans)!=(double)(0) )
             {
                 alglib.ap.assert((double)(lambdans)>=(double)(0), "Spline2DFit: integrity check failed");
-                a.ndenserows = a.ndenserows+3*(kx-2)*(ky-2);
-                a.ndensebatches = a.ndensebatches+(kx-2)*(ky-2);
+                a.ndenserows += (3 *(kx-2)*(ky-2));
+                a.ndensebatches += ((kx-2)*(ky-2));
                 a.maxbatch = Math.Max(a.maxbatch, 3);
             }
-            a.nrows = a.ndenserows+kx*ky;
-            apserv.rmatrixsetlengthatleast(ref a.vals, a.ndenserows, a.blockwidth*a.blockwidth+d, _params);
+            a.nrows = a.ndenserows+ (kx * ky);
+            apserv.rmatrixsetlengthatleast(ref a.vals, a.ndenserows, (a.blockwidth*a.blockwidth) + d, _params);
             apserv.ivectorsetlengthatleast(ref a.batches, a.ndensebatches+1, _params);
             apserv.ivectorsetlengthatleast(ref a.batchbases, a.ndensebatches, _params);
             
@@ -39731,36 +39980,36 @@ public partial class alglib
             {
                 for(j0=kx0; j0<=kx1-2; j0++)
                 {
-                    pt0 = xyindex[j1*(kxtotal-1)+j0];
-                    pt1 = xyindex[j1*(kxtotal-1)+j0+1];
+                    pt0 = xyindex[(j1 *(kxtotal-1)) + j0];
+                    pt1 = xyindex[(j1 *(kxtotal-1)) + j0+1];
                     base0 = apserv.iboundval(j0-kx0-nzshift, 0, kx-nzwidth, _params);
                     base1 = apserv.iboundval(j1-ky0-nzshift, 0, ky-nzwidth, _params);
-                    baseidx = base1*kx+base0;
+                    baseidx = (base1 * kx) + base0;
                     a.batchbases[batchesdone] = baseidx;
                     for(i=pt0; i<=pt1-1; i++)
                     {
                         for(k0=0; k0<=nzwidth-1; k0++)
                         {
-                            a.tmp0[k0] = spline1d.spline1dcalc(basis1, xy[i*entrywidth+0]-(base0+kx0+k0), _params);
+                            a.tmp0[k0] = spline1d.spline1dcalc(basis1, xy[(i * entrywidth) + 0]-(base0+kx0+k0), _params);
                         }
                         for(k1=0; k1<=nzwidth-1; k1++)
                         {
-                            a.tmp1[k1] = spline1d.spline1dcalc(basis1, xy[i*entrywidth+1]-(base1+ky0+k1), _params);
+                            a.tmp1[k1] = spline1d.spline1dcalc(basis1, xy[(i * entrywidth) + 1]-(base1+ky0+k1), _params);
                         }
                         for(k1=0; k1<=nzwidth-1; k1++)
                         {
                             for(k0=0; k0<=nzwidth-1; k0++)
                             {
-                                a.vals[rowsdone,k1*nzwidth+k0] = a.tmp0[k0]*a.tmp1[k1];
+                                a.vals[rowsdone, (k1 * nzwidth) + k0] = a.tmp0[k0]*a.tmp1[k1];
                             }
                         }
                         for(j=0; j<=d-1; j++)
                         {
-                            a.vals[rowsdone,nzwidth*nzwidth+j] = xy[i*entrywidth+2+j];
+                            a.vals[rowsdone, (nzwidth * nzwidth) + j] = xy[(i * entrywidth) + 2+j];
                         }
-                        rowsdone = rowsdone+1;
+                        rowsdone++;
                     }
-                    batchesdone = batchesdone+1;
+                    batchesdone++;
                     a.batches[batchesdone] = rowsdone;
                 }
             }
@@ -39794,9 +40043,9 @@ public partial class alglib
                     {
                         spline1d.spline1ddiff(basis1, -(k0-1), ref v0, ref v1, ref v2, _params);
                         spline1d.spline1ddiff(basis1, -(k1-1), ref w0, ref w1, ref w2, _params);
-                        d2x[k0,k1] = d2x[k0,k1]+v2*w0;
-                        d2y[k0,k1] = d2y[k0,k1]+w2*v0;
-                        dxy[k0,k1] = dxy[k0,k1]+v1*w1;
+                        d2x[k0,k1] = d2x[k0,k1]+ (v2 * w0);
+                        d2y[k0,k1] = d2y[k0,k1]+ (w2 * v0);
+                        dxy[k0,k1] = dxy[k0,k1]+ (v1 * w1);
                     }
                 }
                 
@@ -39809,14 +40058,14 @@ public partial class alglib
                     {
                         base0 = apserv.imax2(j0-2, 0, _params);
                         base1 = apserv.imax2(j1-2, 0, _params);
-                        baseidx = base1*kx+base0;
+                        baseidx = (base1 * kx) + base0;
                         a.batchbases[batchesdone] = baseidx;
                         
                         //
                         // d2F/dx2 term
                         //
                         v = lambdans;
-                        for(j=0; j<=nzwidth*nzwidth+d-1; j++)
+                        for(j=0; j<= (nzwidth * nzwidth) + d-1; j++)
                         {
                             a.vals[rowsdone,j] = 0;
                         }
@@ -39824,16 +40073,16 @@ public partial class alglib
                         {
                             for(k0=j0-1; k0<=j0+1; k0++)
                             {
-                                a.vals[rowsdone,nzwidth*(k1-base1)+(k0-base0)] = v*d2x[1+(k0-j0),1+(k1-j1)];
+                                a.vals[rowsdone, (nzwidth *(k1-base1)) + (k0-base0)] = v*d2x[1+(k0-j0),1+(k1-j1)];
                             }
                         }
-                        rowsdone = rowsdone+1;
+                        rowsdone++;
                         
                         //
                         // d2F/dy2 term
                         //
                         v = lambdans;
-                        for(j=0; j<=nzwidth*nzwidth+d-1; j++)
+                        for(j=0; j<= (nzwidth * nzwidth) + d-1; j++)
                         {
                             a.vals[rowsdone,j] = 0;
                         }
@@ -39841,16 +40090,16 @@ public partial class alglib
                         {
                             for(k0=j0-1; k0<=j0+1; k0++)
                             {
-                                a.vals[rowsdone,nzwidth*(k1-base1)+(k0-base0)] = v*d2y[1+(k0-j0),1+(k1-j1)];
+                                a.vals[rowsdone, (nzwidth *(k1-base1)) + (k0-base0)] = v*d2y[1+(k0-j0),1+(k1-j1)];
                             }
                         }
-                        rowsdone = rowsdone+1;
+                        rowsdone++;
                         
                         //
                         // 2*d2F/dxdy term
                         //
                         v = Math.Sqrt(2)*lambdans;
-                        for(j=0; j<=nzwidth*nzwidth+d-1; j++)
+                        for(j=0; j<= (nzwidth * nzwidth) + d-1; j++)
                         {
                             a.vals[rowsdone,j] = 0;
                         }
@@ -39858,11 +40107,11 @@ public partial class alglib
                         {
                             for(k0=j0-1; k0<=j0+1; k0++)
                             {
-                                a.vals[rowsdone,nzwidth*(k1-base1)+(k0-base0)] = v*dxy[1+(k0-j0),1+(k1-j1)];
+                                a.vals[rowsdone, (nzwidth *(k1-base1)) + (k0-base0)] = v*dxy[1+(k0-j0),1+(k1-j1)];
                             }
                         }
-                        rowsdone = rowsdone+1;
-                        batchesdone = batchesdone+1;
+                        rowsdone++;
+                        batchesdone++;
                         a.batches[batchesdone] = rowsdone;
                     }
                 }
@@ -39896,19 +40145,19 @@ public partial class alglib
         private static void xdesignmv(spline2dxdesignmatrix a,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int bidx = 0;
-            int i = 0;
-            int cnt = 0;
+            var bidx = 0;
+            var i = 0;
+            var cnt = 0;
             double v = 0;
-            int baseidx = 0;
-            int outidx = 0;
-            int batchsize = 0;
-            int kx = 0;
-            int k0 = 0;
-            int k1 = 0;
-            int nzwidth = 0;
+            var baseidx = 0;
+            var outidx = 0;
+            var batchsize = 0;
+            var kx = 0;
+            var k0 = 0;
+            var k1 = 0;
+            var nzwidth = 0;
 
             nzwidth = 4;
             alglib.ap.assert(a.blockwidth==nzwidth, "Spline2DFit: integrity check failed");
@@ -39936,7 +40185,7 @@ public partial class alglib
                     {
                         for(k0=0; k0<=nzwidth-1; k0++)
                         {
-                            a.tmp0[k1*nzwidth+k0] = x[baseidx+k1*kx+k0];
+                            a.tmp0[(k1 * nzwidth) + k0] = x[baseidx+ (k1 * kx) + k0];
                         }
                     }
                     ablas.rmatrixgemv(batchsize, nzwidth*nzwidth, 1.0, a.vals, a.batches[bidx], 0, 0, a.tmp0, 0, 0.0, a.tmp1, 0, _params);
@@ -39944,7 +40193,7 @@ public partial class alglib
                     {
                         y[outidx+i] = a.tmp1[i];
                     }
-                    outidx = outidx+batchsize;
+                    outidx += batchsize;
                 }
             }
             alglib.ap.assert(outidx==a.ndenserows, "Spline2DFit: integrity check failed");
@@ -39958,7 +40207,7 @@ public partial class alglib
             {
                 y[outidx+i] = v*x[i];
             }
-            outidx = outidx+cnt;
+            outidx += cnt;
             
             //
             // Post-check
@@ -39987,19 +40236,19 @@ public partial class alglib
         private static void xdesignmtv(spline2dxdesignmatrix a,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int bidx = 0;
-            int i = 0;
-            int cnt = 0;
+            var bidx = 0;
+            var i = 0;
+            var cnt = 0;
             double v = 0;
-            int baseidx = 0;
-            int inidx = 0;
-            int batchsize = 0;
-            int kx = 0;
-            int k0 = 0;
-            int k1 = 0;
-            int nzwidth = 0;
+            var baseidx = 0;
+            var inidx = 0;
+            var batchsize = 0;
+            var kx = 0;
+            var k0 = 0;
+            var k1 = 0;
+            var nzwidth = 0;
 
             nzwidth = 4;
             alglib.ap.assert(a.blockwidth==nzwidth, "Spline2DFit: integrity check failed");
@@ -40037,10 +40286,10 @@ public partial class alglib
                     {
                         for(k0=0; k0<=nzwidth-1; k0++)
                         {
-                            y[baseidx+k1*kx+k0] = y[baseidx+k1*kx+k0]+a.tmp0[k1*nzwidth+k0];
+                            y[baseidx+ (k1 * kx) + k0] = y[baseidx+ (k1 * kx) + k0]+a.tmp0[(k1 * nzwidth) + k0];
                         }
                     }
-                    inidx = inidx+batchsize;
+                    inidx += batchsize;
                 }
             }
             alglib.ap.assert(inidx==a.ndenserows, "Spline2DFit: integrity check failed");
@@ -40052,9 +40301,9 @@ public partial class alglib
             cnt = a.kx*a.ky;
             for(i=0; i<=cnt-1; i++)
             {
-                y[i] = y[i]+v*x[inidx+i];
+                y[i] = y[i]+ (v *x[inidx+i]);
             }
-            inidx = inidx+cnt;
+            inidx += cnt;
             
             //
             // Post-check
@@ -40087,22 +40336,22 @@ public partial class alglib
         private static void xdesignblockata(spline2dxdesignmatrix a,
             double[,] blockata,
             ref double mxata,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int blockbandwidth = 0;
-            int nzwidth = 0;
-            int kx = 0;
-            int ky = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int celloffset = 0;
-            int bidx = 0;
-            int baseidx = 0;
-            int batchsize = 0;
-            int offs0 = 0;
-            int offs1 = 0;
+            var blockbandwidth = 0;
+            var nzwidth = 0;
+            var kx = 0;
+            var ky = 0;
+            var i0 = 0;
+            var i1 = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var celloffset = 0;
+            var bidx = 0;
+            var baseidx = 0;
+            var batchsize = 0;
+            var offs0 = 0;
+            var offs1 = 0;
             double v = 0;
 
             blockbandwidth = 3;
@@ -40134,9 +40383,9 @@ public partial class alglib
                     }
                 }
             }
-            for(j1=0; j1<=nzwidth*nzwidth-1; j1++)
+            for(j1=0; j1<= (nzwidth * nzwidth) - 1; j1++)
             {
-                for(j0=0; j0<=nzwidth*nzwidth-1; j0++)
+                for(j0=0; j0<= (nzwidth * nzwidth) - 1; j0++)
                 {
                     a.tmp2[j1,j0] = 0.0;
                 }
@@ -40163,14 +40412,14 @@ public partial class alglib
                     {
                         for(j1=i1; j1<=nzwidth-1; j1++)
                         {
-                            celloffset = getcelloffset(kx, ky, blockbandwidth, baseidx/kx+i1, baseidx/kx+j1, _params);
+                            celloffset = getcelloffset(kx, ky, blockbandwidth, (baseidx / kx) + i1, (baseidx / kx) + j1, _params);
                             offs0 = baseidx%kx;
                             offs1 = baseidx%kx;
                             for(i0=0; i0<=nzwidth-1; i0++)
                             {
                                 for(j0=0; j0<=nzwidth-1; j0++)
                                 {
-                                    v = a.tmp2[i1*nzwidth+i0,j1*nzwidth+j0];
+                                    v = a.tmp2[(i1 * nzwidth) + i0, (j1 * nzwidth) + j0];
                                     blockata[celloffset+offs1+i0,offs0+j0] = blockata[celloffset+offs1+i0,offs0+j0]+v;
                                 }
                             }
@@ -40244,15 +40493,17 @@ public partial class alglib
                 x123 = new double[0];
                 y123 = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfv2calcbuffer _result = new rbfv2calcbuffer();
-                _result.x = (double[])x.Clone();
-                _result.curboxmin = (double[])curboxmin.Clone();
-                _result.curboxmax = (double[])curboxmax.Clone();
-                _result.curdist2 = curdist2;
-                _result.x123 = (double[])x123.Clone();
-                _result.y123 = (double[])y123.Clone();
+                var _result = new rbfv2calcbuffer
+                {
+                    x = (double[])x.Clone(),
+                    curboxmin = (double[])curboxmin.Clone(),
+                    curboxmax = (double[])curboxmax.Clone(),
+                    curdist2 = curdist2,
+                    x123 = (double[])x123.Clone(),
+                    y123 = (double[])y123.Clone()
+                };
                 return _result;
             }
         };
@@ -40301,27 +40552,29 @@ public partial class alglib
                 v = new double[0,0];
                 calcbuf = new rbfv2calcbuffer();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfv2model _result = new rbfv2model();
-                _result.ny = ny;
-                _result.nx = nx;
-                _result.bf = bf;
-                _result.nh = nh;
-                _result.ri = (double[])ri.Clone();
-                _result.s = (double[])s.Clone();
-                _result.kdroots = (int[])kdroots.Clone();
-                _result.kdnodes = (int[])kdnodes.Clone();
-                _result.kdsplits = (double[])kdsplits.Clone();
-                _result.kdboxmin = (double[])kdboxmin.Clone();
-                _result.kdboxmax = (double[])kdboxmax.Clone();
-                _result.cw = (double[])cw.Clone();
-                _result.v = (double[,])v.Clone();
-                _result.lambdareg = lambdareg;
-                _result.maxits = maxits;
-                _result.supportr = supportr;
-                _result.basisfunction = basisfunction;
-                _result.calcbuf = (rbfv2calcbuffer)calcbuf.make_copy();
+                var _result = new rbfv2model
+                {
+                    ny = ny,
+                    nx = nx,
+                    bf = bf,
+                    nh = nh,
+                    ri = (double[])ri.Clone(),
+                    s = (double[])s.Clone(),
+                    kdroots = (int[])kdroots.Clone(),
+                    kdnodes = (int[])kdnodes.Clone(),
+                    kdsplits = (double[])kdsplits.Clone(),
+                    kdboxmin = (double[])kdboxmin.Clone(),
+                    kdboxmax = (double[])kdboxmax.Clone(),
+                    cw = (double[])cw.Clone(),
+                    v = (double[,])v.Clone(),
+                    lambdareg = lambdareg,
+                    maxits = maxits,
+                    supportr = supportr,
+                    basisfunction = basisfunction,
+                    calcbuf = (rbfv2calcbuffer)calcbuf.make_copy()
+                };
                 return _result;
             }
         };
@@ -40353,16 +40606,18 @@ public partial class alglib
                 ty = new double[0];
                 rf = new bool[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfv2gridcalcbuffer _result = new rbfv2gridcalcbuffer();
-                _result.calcbuf = (rbfv2calcbuffer)calcbuf.make_copy();
-                _result.cx = (double[])cx.Clone();
-                _result.rx = (double[])rx.Clone();
-                _result.ry = (double[])ry.Clone();
-                _result.tx = (double[])tx.Clone();
-                _result.ty = (double[])ty.Clone();
-                _result.rf = (bool[])rf.Clone();
+                var _result = new rbfv2gridcalcbuffer
+                {
+                    calcbuf = (rbfv2calcbuffer)calcbuf.make_copy(),
+                    cx = (double[])cx.Clone(),
+                    rx = (double[])rx.Clone(),
+                    ry = (double[])ry.Clone(),
+                    tx = (double[])tx.Clone(),
+                    ty = (double[])ty.Clone(),
+                    rf = (bool[])rf.Clone()
+                };
                 return _result;
             }
         };
@@ -40385,12 +40640,14 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfv2report _result = new rbfv2report();
-                _result.terminationtype = terminationtype;
-                _result.maxerror = maxerror;
-                _result.rmserror = rmserror;
+                var _result = new rbfv2report
+                {
+                    terminationtype = terminationtype,
+                    maxerror = maxerror,
+                    rmserror = rmserror
+                };
                 return _result;
             }
         };
@@ -40423,10 +40680,10 @@ public partial class alglib
         public static void rbfv2create(int nx,
             int ny,
             rbfv2model s,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(nx>=1, "RBFCreate: NX<1");
             alglib.ap.assert(ny>=1, "RBFCreate: NY<1");
@@ -40502,7 +40759,7 @@ public partial class alglib
         *************************************************************************/
         public static void rbfv2createcalcbuffer(rbfv2model s,
             rbfv2calcbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
             allocatecalcbuffer(s, buf, _params);
         }
@@ -40575,64 +40832,64 @@ public partial class alglib
             ref int progress10000,
             ref bool terminationrequest,
             rbfv2report rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nx = 0;
-            int ny = 0;
-            int bf = 0;
-            double[,] rhs = new double[0,0];
-            double[,] residualy = new double[0,0];
-            double[,] v = new double[0,0];
-            int rowsperpoint = 0;
-            int[] hidx = new int[0];
-            double[] xr = new double[0];
-            double[] ri = new double[0];
-            int[] kdroots = new int[0];
-            int[] kdnodes = new int[0];
-            double[] kdsplits = new double[0];
-            double[] kdboxmin = new double[0];
-            double[] kdboxmax = new double[0];
-            double[] cw = new double[0];
-            int[] cwrange = new int[0];
-            double[,] curxy = new double[0,0];
-            int curn = 0;
-            int nbasis = 0;
-            nearestneighbor.kdtree curtree = new nearestneighbor.kdtree();
-            nearestneighbor.kdtree globaltree = new nearestneighbor.kdtree();
-            double[] x0 = new double[0];
-            double[] x1 = new double[0];
-            int[] tags = new int[0];
-            double[] dist = new double[0];
-            int[] nncnt = new int[0];
-            int[] rowsizes = new int[0];
-            double[] diagata = new double[0];
-            double[] prec = new double[0];
-            double[] tmpx = new double[0];
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int k2 = 0;
-            int levelidx = 0;
-            int offsi = 0;
-            int offsj = 0;
+            var nx = 0;
+            var ny = 0;
+            var bf = 0;
+            var rhs = new double[0,0];
+            var residualy = new double[0,0];
+            var v = new double[0,0];
+            var rowsperpoint = 0;
+            var hidx = new int[0];
+            var xr = new double[0];
+            var ri = new double[0];
+            var kdroots = new int[0];
+            var kdnodes = new int[0];
+            var kdsplits = new double[0];
+            var kdboxmin = new double[0];
+            var kdboxmax = new double[0];
+            var cw = new double[0];
+            var cwrange = new int[0];
+            var curxy = new double[0,0];
+            var curn = 0;
+            var nbasis = 0;
+            var curtree = new nearestneighbor.kdtree();
+            var globaltree = new nearestneighbor.kdtree();
+            var x0 = new double[0];
+            var x1 = new double[0];
+            var tags = new int[0];
+            var dist = new double[0];
+            var nncnt = new int[0];
+            var rowsizes = new int[0];
+            var diagata = new double[0];
+            var prec = new double[0];
+            var tmpx = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var k2 = 0;
+            var levelidx = 0;
+            var offsi = 0;
+            var offsj = 0;
             double val = 0;
             double criticalr = 0;
-            int cnt = 0;
+            var cnt = 0;
             double avgdiagata = 0;
-            double[] avgrowsize = new double[0];
+            var avgrowsize = new double[0];
             double sumrowsize = 0;
             double rprogress = 0;
-            int maxits = 0;
-            linlsqr.linlsqrstate linstate = new linlsqr.linlsqrstate();
-            linlsqr.linlsqrreport lsqrrep = new linlsqr.linlsqrreport();
-            sparse.sparsematrix sparseacrs = new sparse.sparsematrix();
-            double[] densew1 = new double[0];
-            double[] denseb1 = new double[0];
-            rbfv2calcbuffer calcbuf = new rbfv2calcbuffer();
-            double[] vr2 = new double[0];
-            int[] voffs = new int[0];
-            int[] rowindexes = new int[0];
-            double[] rowvals = new double[0];
+            var maxits = 0;
+            var linstate = new linlsqr.linlsqrstate();
+            var lsqrrep = new linlsqr.linlsqrreport();
+            var sparseacrs = new sparse.sparsematrix();
+            var densew1 = new double[0];
+            var denseb1 = new double[0];
+            var calcbuf = new rbfv2calcbuffer();
+            var vr2 = new double[0];
+            var voffs = new int[0];
+            var rowindexes = new int[0];
+            var rowvals = new double[0];
             double penalty = 0;
 
             alglib.ap.assert(s.nx>0, "RBFV2BuildHierarchical: incorrect NX");
@@ -40708,7 +40965,7 @@ public partial class alglib
                     for(j=0; j<=ny-1; j++)
                     {
                         rep.maxerror = Math.Max(rep.maxerror, Math.Abs(residualy[i,j]));
-                        rep.rmserror = rep.rmserror+math.sqr(residualy[i,j]);
+                        rep.rmserror += math.sqr(residualy[i,j]);
                     }
                 }
                 rep.rmserror = Math.Sqrt(rep.rmserror/(n*ny));
@@ -40753,7 +41010,7 @@ public partial class alglib
             nncnt = new int[n];
             rowsizes = new int[n*rowsperpoint];
             denseb1 = new double[n*rowsperpoint];
-            for(i=0; i<=n*rowsperpoint-1; i++)
+            for(i=0; i<= (n * rowsperpoint) - 1; i++)
             {
                 for(j=0; j<=ny-1; j++)
                 {
@@ -40916,10 +41173,10 @@ public partial class alglib
                     {
                         x0[j] = curxy[i,j];
                     }
-                    cnt = cnt+designmatrixrowsize(kdnodes, kdsplits, cw, ri, kdroots, kdboxmin, kdboxmax, nx, ny, nh, levelidx, rbfv2nearradius(bf, _params), x0, calcbuf, _params);
+                    cnt += designmatrixrowsize(kdnodes, kdsplits, cw, ri, kdroots, kdboxmin, kdboxmax, nx, ny, nh, levelidx, rbfv2nearradius(bf, _params), x0, calcbuf, _params);
                 }
                 avgrowsize[levelidx] = apserv.coalesce(cnt, 1, _params)/apserv.coalesce(n, 1, _params);
-                sumrowsize = sumrowsize+avgrowsize[levelidx];
+                sumrowsize += avgrowsize[levelidx];
             }
             
             //
@@ -40947,7 +41204,7 @@ public partial class alglib
                     nncnt[i] = cnt;
                     for(j=0; j<=rowsperpoint-1; j++)
                     {
-                        rowsizes[i*rowsperpoint+j] = cnt;
+                        rowsizes[(i * rowsperpoint) + j] = cnt;
                     }
                 }
                 apserv.ivectorsetlengthatleast(ref rowindexes, nbasis, _params);
@@ -40975,9 +41232,9 @@ public partial class alglib
                     {
                         for(j=0; j<=cnt-1; j++)
                         {
-                            val = rowvals[j*rowsperpoint+k];
-                            sparse.sparseset(sparseacrs, i*rowsperpoint+k, rowindexes[j], val, _params);
-                            avgdiagata = avgdiagata+math.sqr(val);
+                            val = rowvals[(j * rowsperpoint) + k];
+                            sparse.sparseset(sparseacrs, (i * rowsperpoint) + k, rowindexes[j], val, _params);
+                            avgdiagata += math.sqr(val);
                             diagata[rowindexes[j]] = diagata[rowindexes[j]]+math.sqr(val);
                         }
                     }
@@ -40997,7 +41254,7 @@ public partial class alglib
                         return;
                     }
                 }
-                avgdiagata = avgdiagata/nbasis;
+                avgdiagata /= nbasis;
                 apserv.rvectorsetlengthatleast(ref prec, nbasis, _params);
                 for(j=0; j<=nbasis-1; j++)
                 {
@@ -41014,7 +41271,7 @@ public partial class alglib
                 linlsqr.linlsqrsetlambdai(linstate, Math.Sqrt(s.lambdareg*avgdiagata), _params);
                 for(j=0; j<=ny-1; j++)
                 {
-                    for(i=0; i<=n*rowsperpoint-1; i++)
+                    for(i=0; i<= (n * rowsperpoint) - 1; i++)
                     {
                         denseb1[i] = rhs[i,j];
                     }
@@ -41057,10 +41314,10 @@ public partial class alglib
                             rprogress = 0;
                             for(i=0; i<=levelidx-1; i++)
                             {
-                                rprogress = rprogress+maxits*ny*avgrowsize[i];
+                                rprogress += (maxits *ny*avgrowsize[i]);
                             }
-                            rprogress = rprogress+(linlsqr.linlsqrpeekiterationscount(linstate, _params)+j*maxits)*avgrowsize[levelidx];
-                            rprogress = rprogress/(sumrowsize*maxits*ny);
+                            rprogress += ((linlsqr.linlsqrpeekiterationscount(linstate, _params)+ (j * maxits)) *avgrowsize[levelidx]);
+                            rprogress /= (sumrowsize*maxits*ny);
                             rprogress = 10000*rprogress;
                             rprogress = Math.Max(rprogress, 0);
                             rprogress = Math.Min(rprogress, 10000);
@@ -41078,7 +41335,7 @@ public partial class alglib
                     }
                     for(i=0; i<=nbasis-1; i++)
                     {
-                        offsi = cwrange[levelidx]+(nx+ny)*i;
+                        offsi = cwrange[levelidx]+ ((nx+ny)*i);
                         cw[offsi+nx+j] = densew1[i];
                     }
                 }
@@ -41095,13 +41352,13 @@ public partial class alglib
                     designmatrixgeneraterow(kdnodes, kdsplits, cw, ri, kdroots, kdboxmin, kdboxmax, cwrange, nx, ny, nh, levelidx, bf, rbfv2farradius(bf, _params), rowsperpoint, penalty, x0, calcbuf, vr2, voffs, rowindexes, rowvals, ref cnt, _params);
                     for(j=0; j<=cnt-1; j++)
                     {
-                        offsj = cwrange[levelidx]+(nx+ny)*rowindexes[j]+nx;
+                        offsj = cwrange[levelidx]+ ((nx+ny)*rowindexes[j]) + nx;
                         for(k=0; k<=rowsperpoint-1; k++)
                         {
-                            val = rowvals[j*rowsperpoint+k];
+                            val = rowvals[(j * rowsperpoint) + k];
                             for(k2=0; k2<=ny-1; k2++)
                             {
-                                rhs[i*rowsperpoint+k,k2] = rhs[i*rowsperpoint+k,k2]-val*cw[offsj+k2];
+                                rhs[(i * rowsperpoint) + k,k2] = rhs[(i * rowsperpoint) + k,k2]- (val *cw[offsj+k2]);
                             }
                         }
                     }
@@ -41141,7 +41398,7 @@ public partial class alglib
                 for(j=0; j<=ny-1; j++)
                 {
                     rep.maxerror = Math.Max(rep.maxerror, Math.Abs(rhs[i*rowsperpoint,j]));
-                    rep.rmserror = rep.rmserror+math.sqr(rhs[i*rowsperpoint,j]);
+                    rep.rmserror += math.sqr(rhs[i*rowsperpoint,j]);
                 }
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/(n*ny));
@@ -41159,9 +41416,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfv2alloc(alglib.serializer s,
+        public static void rbfv2alloc(serializer s,
             rbfv2model model,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -41189,9 +41446,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfv2serialize(alglib.serializer s,
+        public static void rbfv2serialize(serializer s,
             rbfv2model model,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -41219,12 +41476,12 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfv2unserialize(alglib.serializer s,
+        public static void rbfv2unserialize(serializer s,
             rbfv2model model,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nx = 0;
-            int ny = 0;
+            var nx = 0;
+            var ny = 0;
 
             
             //
@@ -41254,7 +41511,7 @@ public partial class alglib
         Returns far radius for basis function type
         *************************************************************************/
         public static double rbfv2farradius(int bf,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -41275,7 +41532,7 @@ public partial class alglib
         Returns near radius for basis function type
         *************************************************************************/
         public static double rbfv2nearradius(int bf,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -41298,7 +41555,7 @@ public partial class alglib
         *************************************************************************/
         public static double rbfv2basisfunc(int bf,
             double d2,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double v = 0;
@@ -41318,7 +41575,7 @@ public partial class alglib
                 // else:
                 //     0
                 //
-                v = 1-d2/9;
+                v = 1- (d2 / 9);
                 if( (double)(v)<=(double)(0) )
                 {
                     result = 0;
@@ -41341,7 +41598,7 @@ public partial class alglib
             ref double f,
             ref double df,
             ref double d2f,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
 
@@ -41367,7 +41624,7 @@ public partial class alglib
                 // else:
                 //     0
                 //
-                v = 1-d2/9;
+                v = 1- (d2 / 9);
                 if( (double)(v)<=(double)(0) )
                 {
                     f = 0;
@@ -41376,8 +41633,8 @@ public partial class alglib
                     return;
                 }
                 f = Math.Exp(1)*Math.Exp(-d2)*Math.Exp(-(1/v));
-                df = -(f*(1/(9*v*v)+1));
-                d2f = -(df*(1/(9*v*v)+1))+f*((double)2/(double)81)/(v*v*v);
+                df = -(f*((1 /(9*v*v)) + 1));
+                d2f = -(df*((1 /(9*v*v)) + 1))+ (f *((double)2/(double)81)/(v*v*v));
                 return;
             }
             alglib.ap.assert(false, "RBFV2BasisFuncDiff2: unknown BF type");
@@ -41407,7 +41664,7 @@ public partial class alglib
         *************************************************************************/
         public static double rbfv2calc1(rbfv2model s,
             double x0,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -41417,7 +41674,7 @@ public partial class alglib
                 result = 0;
                 return result;
             }
-            result = s.v[0,0]*x0-s.v[0,1];
+            result = (s.v[0,0]*x0) - s.v[0,1];
             if( s.nh==0 )
             {
                 return result;
@@ -41461,7 +41718,7 @@ public partial class alglib
         public static double rbfv2calc2(rbfv2model s,
             double x0,
             double x1,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -41472,7 +41729,7 @@ public partial class alglib
                 result = 0;
                 return result;
             }
-            result = s.v[0,0]*x0+s.v[0,1]*x1+s.v[0,2];
+            result = (s.v[0,0]*x0) + s.v[0,1]*x1+s.v[0,2];
             if( s.nh==0 )
             {
                 return result;
@@ -41515,7 +41772,7 @@ public partial class alglib
             double x0,
             double x1,
             double x2,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -41527,7 +41784,7 @@ public partial class alglib
                 result = 0;
                 return result;
             }
-            result = s.v[0,0]*x0+s.v[0,1]*x1+s.v[0,2]*x2+s.v[0,3];
+            result = (s.v[0,0]*x0) + s.v[0,1]*x1+ (s.v[0,2]*x2) + s.v[0,3];
             if( s.nh==0 )
             {
                 return result;
@@ -41565,7 +41822,7 @@ public partial class alglib
         public static void rbfv2calcbuf(rbfv2model s,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
             rbfv2tscalcbuf(s, s.calcbuf, x, ref y, _params);
         }
@@ -41600,16 +41857,16 @@ public partial class alglib
             rbfv2calcbuffer buf,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int levelidx = 0;
+            var i = 0;
+            var j = 0;
+            var levelidx = 0;
             double rcur = 0;
             double rquery2 = 0;
             double invrc2 = 0;
-            int nx = 0;
-            int ny = 0;
+            var nx = 0;
+            var ny = 0;
 
             alglib.ap.assert(alglib.ap.len(x)>=s.nx, "RBFCalcBuf: Length(X)<NX");
             alglib.ap.assert(apserv.isfinitevector(x, s.nx, _params), "RBFCalcBuf: X contains infinite or NaN values");
@@ -41628,7 +41885,7 @@ public partial class alglib
                 y[i] = s.v[i,nx];
                 for(j=0; j<=nx-1; j++)
                 {
-                    y[i] = y[i]+s.v[i,j]*x[j];
+                    y[i] = y[i]+ (s.v[i,j]*x[j]);
                 }
             }
             if( s.nh==0 )
@@ -41657,13 +41914,13 @@ public partial class alglib
                     buf.curboxmax[j] = s.kdboxmax[j];
                     if( (double)(buf.x[j])<(double)(buf.curboxmin[j]) )
                     {
-                        buf.curdist2 = buf.curdist2+math.sqr(buf.curboxmin[j]-buf.x[j]);
+                        buf.curdist2 += math.sqr(buf.curboxmin[j]-buf.x[j]);
                     }
                     else
                     {
                         if( (double)(buf.x[j])>(double)(buf.curboxmax[j]) )
                         {
-                            buf.curdist2 = buf.curdist2+math.sqr(buf.x[j]-buf.curboxmax[j]);
+                            buf.curdist2 += math.sqr(buf.x[j]-buf.curboxmax[j]);
                         }
                     }
                 }
@@ -41713,19 +41970,19 @@ public partial class alglib
             double[] x1,
             int n1,
             ref double[,] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] cpx0 = new double[0];
-            double[] cpx1 = new double[0];
-            double[] dummyx2 = new double[0];
-            double[] dummyx3 = new double[0];
-            bool[] dummyflag = new bool[0];
-            int[] p01 = new int[0];
-            int[] p11 = new int[0];
-            int[] p2 = new int[0];
-            double[] vy = new double[0];
-            int i = 0;
-            int j = 0;
+            var cpx0 = new double[0];
+            var cpx1 = new double[0];
+            var dummyx2 = new double[0];
+            var dummyx3 = new double[0];
+            var dummyflag = new bool[0];
+            var p01 = new int[0];
+            var p11 = new int[0];
+            var p2 = new int[0];
+            var vy = new double[0];
+            var i = 0;
+            var j = 0;
 
             y = new double[0,0];
 
@@ -41773,7 +42030,7 @@ public partial class alglib
             {
                 for(j=0; j<=n1-1; j++)
                 {
-                    y[i,j] = vy[i+j*n0];
+                    y[i,j] = vy[i+ (j * n0)];
                 }
             }
         }
@@ -41802,42 +42059,42 @@ public partial class alglib
             bool[] flagy,
             bool sparsey,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nx = 0;
-            int ny = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            double[] tx = new double[0];
-            double[] ty = new double[0];
-            double[] z = new double[0];
-            int dstoffs = 0;
-            int dummy = 0;
-            rbfv2gridcalcbuffer bufseedv2 = new rbfv2gridcalcbuffer();
-            alglib.smp.shared_pool bufpool = new alglib.smp.shared_pool();
-            int rowidx = 0;
-            int rowcnt = 0;
+            var nx = 0;
+            var ny = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var tx = new double[0];
+            var ty = new double[0];
+            var z = new double[0];
+            var dstoffs = 0;
+            var dummy = 0;
+            var bufseedv2 = new rbfv2gridcalcbuffer();
+            var bufpool = new smp.shared_pool();
+            var rowidx = 0;
+            var rowcnt = 0;
             double v = 0;
             double rcur = 0;
-            int levelidx = 0;
+            var levelidx = 0;
             double searchradius2 = 0;
-            int ntrials = 0;
+            var ntrials = 0;
             double avgfuncpernode = 0;
-            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
-            int[] blocks0 = new int[0];
-            int[] blocks1 = new int[0];
-            int[] blocks2 = new int[0];
-            int[] blocks3 = new int[0];
-            int blockscnt0 = 0;
-            int blockscnt1 = 0;
-            int blockscnt2 = 0;
-            int blockscnt3 = 0;
+            var rs = new hqrnd.hqrndstate();
+            var blocks0 = new int[0];
+            var blocks1 = new int[0];
+            var blocks2 = new int[0];
+            var blocks3 = new int[0];
+            var blockscnt0 = 0;
+            var blockscnt1 = 0;
+            var blockscnt2 = 0;
+            var blockscnt3 = 0;
             double blockwidth0 = 0;
             double blockwidth1 = 0;
             double blockwidth2 = 0;
             double blockwidth3 = 0;
-            int maxblocksize = 0;
+            var maxblocksize = 0;
 
             nx = s.nx;
             ny = s.ny;
@@ -41872,25 +42129,25 @@ public partial class alglib
                 k = rowidx;
                 tx[0] = 0;
                 tx[1] = x1[k%n1];
-                k = k/n1;
+                k /= n1;
                 tx[2] = x2[k%n2];
-                k = k/n2;
+                k /= n2;
                 tx[3] = x3[k%n3];
-                k = k/n3;
+                k /= n3;
                 alglib.ap.assert(k==0, "RBFGridCalcVX: integrity check failed");
                 for(j=0; j<=ny-1; j++)
                 {
                     v = s.v[j,nx];
                     for(k=1; k<=nx-1; k++)
                     {
-                        v = v+tx[k]*s.v[j,k];
+                        v += (tx[k]*s.v[j,k]);
                     }
                     z[j] = v;
                 }
                 for(i=0; i<=n0-1; i++)
                 {
-                    dstoffs = ny*(rowidx*n0+i);
-                    if( sparsey && !flagy[rowidx*n0+i] )
+                    dstoffs = ny*((rowidx * n0) + i);
+                    if( sparsey && !flagy[(rowidx * n0) + i] )
                     {
                         for(j=0; j<=ny-1; j++)
                         {
@@ -41901,7 +42158,7 @@ public partial class alglib
                     v = x0[i];
                     for(j=0; j<=ny-1; j++)
                     {
-                        y[j+dstoffs] = z[j]+v*s.v[j,0];
+                        y[j+dstoffs] = z[j]+ (v *s.v[j,0]);
                     }
                 }
             }
@@ -42013,7 +42270,7 @@ public partial class alglib
                     tx[2] = x2[hqrnd.hqrnduniformi(rs, n2, _params)];
                     tx[3] = x3[hqrnd.hqrnduniformi(rs, n3, _params)];
                     preparepartialquery(tx, s.kdboxmin, s.kdboxmax, nx, bufseedv2.calcbuf, ref dummy, _params);
-                    avgfuncpernode = avgfuncpernode+(double)partialcountrec(s.kdnodes, s.kdsplits, s.cw, nx, ny, bufseedv2.calcbuf, s.kdroots[levelidx], searchradius2, tx, _params)/(double)ntrials;
+                    avgfuncpernode += ((double)partialcountrec(s.kdnodes, s.kdsplits, s.cw, nx, ny, bufseedv2.calcbuf, s.kdroots[levelidx], searchradius2, tx, _params)/(double)ntrials);
                 }
                 
                 //
@@ -42049,41 +42306,41 @@ public partial class alglib
             bool sparsey,
             int levelidx,
             double avgfuncpernode,
-            alglib.smp.shared_pool bufpool,
+            smp.shared_pool bufpool,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nx = 0;
-            int ny = 0;
-            int k = 0;
-            int l = 0;
-            int blkidx = 0;
-            int blkcnt = 0;
-            int nodeidx = 0;
-            int nodescnt = 0;
-            int rowidx = 0;
-            int rowscnt = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int i3 = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int j2 = 0;
-            int j3 = 0;
+            var nx = 0;
+            var ny = 0;
+            var k = 0;
+            var l = 0;
+            var blkidx = 0;
+            var blkcnt = 0;
+            var nodeidx = 0;
+            var nodescnt = 0;
+            var rowidx = 0;
+            var rowscnt = 0;
+            var i0 = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var i3 = 0;
+            var j0 = 0;
+            var j1 = 0;
+            var j2 = 0;
+            var j3 = 0;
             double rcur = 0;
             double invrc2 = 0;
             double rquery2 = 0;
             double rfar2 = 0;
-            int dstoffs = 0;
-            int srcoffs = 0;
-            int dummy = 0;
+            var dstoffs = 0;
+            var srcoffs = 0;
+            var dummy = 0;
             double rowwidth = 0;
             double maxrowwidth = 0;
             double problemcost = 0;
-            int maxbs = 0;
-            int midpoint = 0;
-            bool emptyrow = new bool();
+            var maxbs = 0;
+            var midpoint = 0;
+            var emptyrow = new bool();
             rbfv2gridcalcbuffer buf = null;
 
             nx = s.nx;
@@ -42098,48 +42355,45 @@ public partial class alglib
             // Try to split large problem
             //
             problemcost = s.ny*2*(avgfuncpernode+1);
-            problemcost = problemcost*(blocks0[block0b]-blocks0[block0a]);
-            problemcost = problemcost*(blocks1[block1b]-blocks1[block1a]);
-            problemcost = problemcost*(blocks2[block2b]-blocks2[block2a]);
-            problemcost = problemcost*(blocks3[block3b]-blocks3[block3a]);
+            problemcost *= (blocks0[block0b]-blocks0[block0a]);
+            problemcost *= (blocks1[block1b]-blocks1[block1a]);
+            problemcost *= (blocks2[block2b]-blocks2[block2a]);
+            problemcost *= (blocks3[block3b]-blocks3[block3a]);
             maxbs = 0;
             maxbs = Math.Max(maxbs, block0b-block0a);
             maxbs = Math.Max(maxbs, block1b-block1a);
             maxbs = Math.Max(maxbs, block2b-block2a);
             maxbs = Math.Max(maxbs, block3b-block3a);
-            if( (double)(problemcost*complexitymultiplier)>=(double)(apserv.smpactivationlevel(_params)) )
+            if ((double)(problemcost * complexitymultiplier) >= (double)(apserv.smpactivationlevel(_params)) && _trypexec_rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a, block2b, blocks3, block3a, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params))
             {
-                if( _trypexec_rbfv2partialgridcalcrec(s,x0,n0,x1,n1,x2,n2,x3,n3,blocks0,block0a,block0b,blocks1,block1a,block1b,blocks2,block2a,block2b,blocks3,block3a,block3b,flagy,sparsey,levelidx,avgfuncpernode,bufpool,y, _params) )
-                {
-                    return;
-                }
+                return;
             }
-            if( (double)(problemcost*complexitymultiplier)>=(double)(apserv.spawnlevel(_params)) && maxbs>=2 )
+            if ( (double)(problemcost*complexitymultiplier)>=(double)(apserv.spawnlevel(_params)) && maxbs>=2 )
             {
                 if( block0b-block0a==maxbs )
                 {
-                    midpoint = block0a+maxbs/2;
+                    midpoint = block0a+ (maxbs / 2);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, midpoint, blocks1, block1a, block1b, blocks2, block2a, block2b, blocks3, block3a, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, midpoint, block0b, blocks1, block1a, block1b, blocks2, block2a, block2b, blocks3, block3a, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     return;
                 }
                 if( block1b-block1a==maxbs )
                 {
-                    midpoint = block1a+maxbs/2;
+                    midpoint = block1a+ (maxbs / 2);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, block0b, blocks1, block1a, midpoint, blocks2, block2a, block2b, blocks3, block3a, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, block0b, blocks1, midpoint, block1b, blocks2, block2a, block2b, blocks3, block3a, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     return;
                 }
                 if( block2b-block2a==maxbs )
                 {
-                    midpoint = block2a+maxbs/2;
+                    midpoint = block2a+ (maxbs / 2);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a, midpoint, blocks3, block3a, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, midpoint, block2b, blocks3, block3a, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     return;
                 }
                 if( block3b-block3a==maxbs )
                 {
-                    midpoint = block3a+maxbs/2;
+                    midpoint = block3a+ (maxbs / 2);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a, block2b, blocks3, block3a, midpoint, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     rbfv2partialgridcalcrec(s, x0, n0, x1, n1, x2, n2, x3, n3, blocks0, block0a, block0b, blocks1, block1a, block1b, blocks2, block2a, block2b, blocks3, midpoint, block3b, flagy, sparsey, levelidx, avgfuncpernode, bufpool, y, _params);
                     return;
@@ -42171,14 +42425,14 @@ public partial class alglib
                 // NOTE: for problems with NX<4 corresponding I_? are zero.
                 //
                 k = blkidx;
-                i0 = block0a+k%(block0b-block0a);
-                k = k/(block0b-block0a);
-                i1 = block1a+k%(block1b-block1a);
-                k = k/(block1b-block1a);
-                i2 = block2a+k%(block2b-block2a);
-                k = k/(block2b-block2a);
-                i3 = block3a+k%(block3b-block3a);
-                k = k/(block3b-block3a);
+                i0 = block0a+ (k %(block0b-block0a));
+                k /= (block0b-block0a);
+                i1 = block1a+ (k %(block1b-block1a));
+                k /= (block1b-block1a);
+                i2 = block2a+ (k %(block2b-block2a));
+                k /= (block2b-block2a);
+                i3 = block3a+ (k %(block3b-block3a));
+                k /= (block3b-block3a);
                 alglib.ap.assert(k==0, "RBFV2PartialGridCalcRec: integrity check failed");
                 
                 //
@@ -42205,19 +42459,19 @@ public partial class alglib
                     // NOTE: for problems with NX<4 corresponding J_? are zero.
                     //
                     k = rowidx;
-                    j1 = blocks1[i1]+k%(blocks1[i1+1]-blocks1[i1]);
-                    k = k/(blocks1[i1+1]-blocks1[i1]);
-                    j2 = blocks2[i2]+k%(blocks2[i2+1]-blocks2[i2]);
-                    k = k/(blocks2[i2+1]-blocks2[i2]);
-                    j3 = blocks3[i3]+k%(blocks3[i3+1]-blocks3[i3]);
-                    k = k/(blocks3[i3+1]-blocks3[i3]);
+                    j1 = blocks1[i1]+ (k %(blocks1[i1+1]-blocks1[i1]));
+                    k /= (blocks1[i1+1]-blocks1[i1]);
+                    j2 = blocks2[i2]+ (k %(blocks2[i2+1]-blocks2[i2]));
+                    k /= (blocks2[i2+1]-blocks2[i2]);
+                    j3 = blocks3[i3]+ (k %(blocks3[i3+1]-blocks3[i3]));
+                    k /= (blocks3[i3+1]-blocks3[i3]);
                     alglib.ap.assert(k==0, "RBFV2PartialGridCalcRec: integrity check failed");
                     
                     //
                     // Analyze row, skip completely empty rows
                     //
                     nodescnt = blocks0[i0+1]-blocks0[i0];
-                    srcoffs = blocks0[i0]+(j1+(j2+j3*n2)*n1)*n0;
+                    srcoffs = blocks0[i0]+ ((j1 + ((j2 + (j3 * n2)) * n1)) * n0);
                     emptyrow = true;
                     for(nodeidx=0; nodeidx<=nodescnt-1; nodeidx++)
                     {
@@ -42244,12 +42498,12 @@ public partial class alglib
                         // "Batch" code which processes entire row at once, saving
                         // some time in kd-tree search code.
                         //
-                        rquery2 = math.sqr(rcur*rbfv2farradius(s.bf, _params)+0.5*rowwidth/s.s[0]);
+                        rquery2 = math.sqr((rcur *rbfv2farradius(s.bf, _params)) + 0.5*rowwidth/s.s[0]);
                         rfar2 = math.sqr(rcur*rbfv2farradius(s.bf, _params));
                         j0 = blocks0[i0];
                         if( nx>0 )
                         {
-                            buf.cx[0] = (x0[j0]+0.5*rowwidth)/s.s[0];
+                            buf.cx[0] = (x0[j0]+ (0.5 * rowwidth)) /s.s[0];
                         }
                         if( nx>1 )
                         {
@@ -42263,7 +42517,7 @@ public partial class alglib
                         {
                             buf.cx[3] = x3[j3]/s.s[3];
                         }
-                        srcoffs = j0+(j1+(j2+j3*n2)*n1)*n0;
+                        srcoffs = j0+ ((j1 + ((j2 + (j3 * n2)) * n1)) * n0);
                         dstoffs = ny*srcoffs;
                         apserv.rvectorsetlengthatleast(ref buf.rx, nodescnt, _params);
                         apserv.bvectorsetlengthatleast(ref buf.rf, nodescnt, _params);
@@ -42273,13 +42527,13 @@ public partial class alglib
                             buf.rx[nodeidx] = x0[j0+nodeidx]/s.s[0];
                             buf.rf[nodeidx] = !sparsey || flagy[srcoffs+nodeidx];
                         }
-                        for(k=0; k<=nodescnt*ny-1; k++)
+                        for(k=0; k<= (nodescnt * ny) - 1; k++)
                         {
                             buf.ry[k] = 0;
                         }
                         preparepartialquery(buf.cx, s.kdboxmin, s.kdboxmax, nx, buf.calcbuf, ref dummy, _params);
                         partialrowcalcrec(s, buf.calcbuf, s.kdroots[levelidx], invrc2, rquery2, rfar2, buf.cx, buf.rx, buf.rf, nodescnt, buf.ry, _params);
-                        for(k=0; k<=nodescnt*ny-1; k++)
+                        for(k=0; k<= (nodescnt * ny) - 1; k++)
                         {
                             y[dstoffs+k] = y[dstoffs+k]+buf.ry[k];
                         }
@@ -42321,7 +42575,7 @@ public partial class alglib
                             //
                             // Evaluate and add to Y
                             //
-                            srcoffs = j0+(j1+(j2+j3*n2)*n1)*n0;
+                            srcoffs = j0+ ((j1 + ((j2 + (j3 * n2)) * n1)) * n0);
                             dstoffs = ny*srcoffs;
                             for(l=0; l<=ny-1; l++)
                             {
@@ -42376,8 +42630,8 @@ public partial class alglib
             bool sparsey,
             int levelidx,
             double avgfuncpernode,
-            alglib.smp.shared_pool bufpool,
-            double[] y, alglib.xparams _params)
+            smp.shared_pool bufpool,
+            double[] y, xparams _params)
         {
             return false;
         }
@@ -42413,11 +42667,11 @@ public partial class alglib
             ref double[,] xwr,
             ref int nc,
             ref double[,] v,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int ncactual = 0;
-            int i_ = 0;
+            var i = 0;
+            var ncactual = 0;
+            var i_ = 0;
 
             nx = 0;
             ny = 0;
@@ -42466,21 +42720,21 @@ public partial class alglib
             int ny,
             int modeltype,
             ref double[,] v,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            double[] tmpy = new double[0];
-            double[,] a = new double[0,0];
+            var result = new bool();
+            var tmpy = new double[0];
+            var a = new double[0,0];
             double scaling = 0;
-            double[] shifting = new double[0];
+            var shifting = new double[0];
             double mn = 0;
             double mx = 0;
-            double[] c = new double[0];
-            lsfit.lsfitreport rep = new lsfit.lsfitreport();
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int info = 0;
+            var c = new double[0];
+            var rep = new lsfit.lsfitreport();
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var info = 0;
 
             v = new double[0,0];
 
@@ -42582,13 +42836,13 @@ public partial class alglib
                     v[i,nx] = c[nx];
                     for(j=0; j<=nx-1; j++)
                     {
-                        v[i,nx] = v[i,nx]-shifting[j]*v[i,j];
+                        v[i,nx] = v[i,nx]- (shifting[j]*v[i,j]);
                     }
                     for(j=0; j<=n-1; j++)
                     {
                         for(k=0; k<=nx-1; k++)
                         {
-                            y[j,i] = y[j,i]-x[j,k]*v[i,k];
+                            y[j,i] = y[j,i]- (x[j,k]*v[i,k]);
                         }
                         y[j,i] = y[j,i]-v[i,nx];
                     }
@@ -42647,7 +42901,7 @@ public partial class alglib
         *************************************************************************/
         private static void allocatecalcbuffer(rbfv2model s,
             rbfv2calcbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
             if( alglib.ap.len(buf.x)<s.nx )
             {
@@ -42687,19 +42941,19 @@ public partial class alglib
             ref int[] kdnodes,
             ref double[] kdsplits,
             ref double[] cw,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nodesbase = 0;
-            int splitsbase = 0;
-            int cwbase = 0;
-            int[] localnodes = new int[0];
-            double[] localsplits = new double[0];
-            double[] localcw = new double[0];
-            double[,] xybuf = new double[0,0];
-            int localnodessize = 0;
-            int localsplitssize = 0;
-            int localcwsize = 0;
-            int i = 0;
+            var nodesbase = 0;
+            var splitsbase = 0;
+            var cwbase = 0;
+            var localnodes = new int[0];
+            var localsplits = new double[0];
+            var localcw = new double[0];
+            var xybuf = new double[0,0];
+            var localnodessize = 0;
+            var localsplitssize = 0;
+            var localcwsize = 0;
+            var i = 0;
 
             
             //
@@ -42769,17 +43023,17 @@ public partial class alglib
             double[] localcw,
             ref int localcwsize,
             ref double[,] xybuf,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int nodetype = 0;
-            int cnt = 0;
-            int d = 0;
+            var i = 0;
+            var j = 0;
+            var nodetype = 0;
+            var cnt = 0;
+            var d = 0;
             double s = 0;
-            int nodele = 0;
-            int nodege = 0;
-            int oldnodessize = 0;
+            var nodele = 0;
+            var nodege = 0;
+            var oldnodessize = 0;
 
             nearestneighbor.kdtreeexplorenodetype(curtree, nodeoffset, ref nodetype, _params);
             
@@ -42790,18 +43044,18 @@ public partial class alglib
             {
                 nearestneighbor.kdtreeexploreleaf(curtree, nodeoffset, ref xybuf, ref cnt, _params);
                 alglib.ap.assert(alglib.ap.len(localnodes)>=localnodessize+2, "ConvertTreeRec: integrity check failed");
-                alglib.ap.assert(alglib.ap.len(localcw)>=localcwsize+cnt*(nx+ny), "ConvertTreeRec: integrity check failed");
+                alglib.ap.assert(alglib.ap.len(localcw)>=localcwsize+ (cnt *(nx+ny)), "ConvertTreeRec: integrity check failed");
                 localnodes[localnodessize+0] = cnt;
                 localnodes[localnodessize+1] = cwbase+localcwsize;
-                localnodessize = localnodessize+2;
+                localnodessize += 2;
                 for(i=0; i<=cnt-1; i++)
                 {
                     for(j=0; j<=nx+ny-1; j++)
                     {
-                        localcw[localcwsize+i*(nx+ny)+j] = xybuf[i,j];
+                        localcw[localcwsize+ (i *(nx+ny)) + j] = xybuf[i,j];
                     }
                 }
-                localcwsize = localcwsize+cnt*(nx+ny);
+                localcwsize += (cnt *(nx+ny));
                 return;
             }
             
@@ -42819,9 +43073,9 @@ public partial class alglib
                 localnodes[localnodessize+2] = splitsbase+localsplitssize;
                 localnodes[localnodessize+3] = -1;
                 localnodes[localnodessize+4] = -1;
-                localnodessize = localnodessize+5;
+                localnodessize += 5;
                 localsplits[localsplitssize+0] = s;
-                localsplitssize = localsplitssize+1;
+                localsplitssize++;
                 localnodes[oldnodessize+3] = nodesbase+localnodessize;
                 converttreerec(curtree, n, nx, ny, nodele, nodesbase, splitsbase, cwbase, localnodes, ref localnodessize, localsplits, ref localsplitssize, localcw, ref localcwsize, ref xybuf, _params);
                 localnodes[oldnodessize+4] = nodesbase+localnodessize;
@@ -42867,29 +43121,29 @@ public partial class alglib
             double queryr2,
             double[] x,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double ptdist2 = 0;
             double v = 0;
             double v0 = 0;
             double v1 = 0;
-            int cwoffs = 0;
-            int cwcnt = 0;
-            int itemoffs = 0;
+            var cwoffs = 0;
+            var cwcnt = 0;
+            var itemoffs = 0;
             double arg = 0;
             double val = 0;
-            int d = 0;
+            var d = 0;
             double split = 0;
-            int childle = 0;
-            int childge = 0;
-            int childoffs = 0;
-            bool updatemin = new bool();
+            var childle = 0;
+            var childge = 0;
+            var childoffs = 0;
+            var updatemin = new bool();
             double prevdist2 = 0;
             double t1 = 0;
-            int nx = 0;
-            int ny = 0;
+            var nx = 0;
+            var ny = 0;
 
             nx = s.nx;
             ny = s.ny;
@@ -42912,12 +43166,12 @@ public partial class alglib
                     //
                     // Calculate distance
                     //
-                    itemoffs = cwoffs+i*(nx+ny);
+                    itemoffs = cwoffs+ (i *(nx+ny));
                     ptdist2 = 0;
                     for(j=0; j<=nx-1; j++)
                     {
                         v = s.cw[itemoffs+j]-x[j];
-                        ptdist2 = ptdist2+v*v;
+                        ptdist2 += (v * v);
                     }
                     
                     //
@@ -42947,10 +43201,10 @@ public partial class alglib
                             alglib.ap.assert(false, "PartialCalcRec: integrity check failed");
                         }
                     }
-                    itemoffs = itemoffs+nx;
+                    itemoffs += nx;
                     for(j=0; j<=ny-1; j++)
                     {
-                        y[j] = y[j]+val*s.cw[itemoffs+j];
+                        y[j] = y[j]+ (val *s.cw[itemoffs+j]);
                     }
                 }
                 return;
@@ -43011,7 +43265,7 @@ public partial class alglib
                                 v0 = 0;
                             }
                             v1 = split-t1;
-                            buf.curdist2 = buf.curdist2-v0*v0+v1*v1;
+                            buf.curdist2 = buf.curdist2- (v0 * v0) + v1*v1;
                         }
                         buf.curboxmin[d] = split;
                     }
@@ -43026,7 +43280,7 @@ public partial class alglib
                                 v0 = 0;
                             }
                             v1 = t1-split;
-                            buf.curdist2 = buf.curdist2-v0*v0+v1*v1;
+                            buf.curdist2 = buf.curdist2- (v0 * v0) + v1*v1;
                         }
                         buf.curboxmax[d] = split;
                     }
@@ -43113,32 +43367,32 @@ public partial class alglib
             bool[] rf,
             int rowsize,
             double[] ry,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int i0 = 0;
-            int i1 = 0;
+            var i = 0;
+            var j = 0;
+            var i0 = 0;
+            var i1 = 0;
             double partialptdist2 = 0;
             double ptdist2 = 0;
             double v = 0;
             double v0 = 0;
             double v1 = 0;
-            int cwoffs = 0;
-            int cwcnt = 0;
-            int itemoffs = 0;
-            int woffs = 0;
+            var cwoffs = 0;
+            var cwcnt = 0;
+            var itemoffs = 0;
+            var woffs = 0;
             double val = 0;
-            int d = 0;
+            var d = 0;
             double split = 0;
-            int childle = 0;
-            int childge = 0;
-            int childoffs = 0;
-            bool updatemin = new bool();
+            var childle = 0;
+            var childge = 0;
+            var childoffs = 0;
+            var updatemin = new bool();
             double prevdist2 = 0;
             double t1 = 0;
-            int nx = 0;
-            int ny = 0;
+            var nx = 0;
+            var ny = 0;
 
             nx = s.nx;
             ny = s.ny;
@@ -43156,12 +43410,12 @@ public partial class alglib
                     //
                     // Calculate partial distance (components from 1 to NX-1)
                     //
-                    itemoffs = cwoffs+i0*(nx+ny);
+                    itemoffs = cwoffs+ (i0 *(nx+ny));
                     partialptdist2 = 0;
                     for(j=1; j<=nx-1; j++)
                     {
                         v = s.cw[itemoffs+j]-cx[j];
-                        partialptdist2 = partialptdist2+v*v;
+                        partialptdist2 += (v * v);
                     }
                     
                     //
@@ -43176,7 +43430,7 @@ public partial class alglib
                             // Calculate distance
                             //
                             v = s.cw[itemoffs]-rx[i1];
-                            ptdist2 = partialptdist2+v*v;
+                            ptdist2 = partialptdist2+ (v * v);
                             
                             //
                             // Skip points if distance too large
@@ -43193,7 +43447,7 @@ public partial class alglib
                             woffs = itemoffs+nx;
                             for(j=0; j<=ny-1; j++)
                             {
-                                ry[j+i1*ny] = ry[j+i1*ny]+val*s.cw[woffs+j];
+                                ry[j+ (i1 * ny)] = ry[j+ (i1 * ny)] + (val *s.cw[woffs+j]);
                             }
                         }
                     }
@@ -43256,7 +43510,7 @@ public partial class alglib
                                 v0 = 0;
                             }
                             v1 = split-t1;
-                            buf.curdist2 = buf.curdist2-v0*v0+v1*v1;
+                            buf.curdist2 = buf.curdist2- (v0 * v0) + v1*v1;
                         }
                         buf.curboxmin[d] = split;
                     }
@@ -43271,7 +43525,7 @@ public partial class alglib
                                 v0 = 0;
                             }
                             v1 = t1-split;
-                            buf.curdist2 = buf.curdist2-v0*v0+v1*v1;
+                            buf.curdist2 = buf.curdist2- (v0 * v0) + v1*v1;
                         }
                         buf.curboxmax[d] = split;
                     }
@@ -43336,9 +43590,9 @@ public partial class alglib
             int nx,
             rbfv2calcbuffer buf,
             ref int cnt,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
 
             cnt = 0;
             buf.curdist2 = 0;
@@ -43348,13 +43602,13 @@ public partial class alglib
                 buf.curboxmax[j] = kdboxmax[j];
                 if( (double)(x[j])<(double)(buf.curboxmin[j]) )
                 {
-                    buf.curdist2 = buf.curdist2+math.sqr(buf.curboxmin[j]-x[j]);
+                    buf.curdist2 += math.sqr(buf.curboxmin[j]-x[j]);
                 }
                 else
                 {
                     if( (double)(x[j])>(double)(buf.curboxmax[j]) )
                     {
-                        buf.curdist2 = buf.curdist2+math.sqr(x[j]-buf.curboxmax[j]);
+                        buf.curdist2 += math.sqr(x[j]-buf.curboxmax[j]);
                     }
                 }
             }
@@ -43406,21 +43660,21 @@ public partial class alglib
             double[] r2,
             int[] offs,
             ref int k,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double ptdist2 = 0;
             double v = 0;
-            int cwoffs = 0;
-            int cwcnt = 0;
-            int itemoffs = 0;
-            int d = 0;
+            var cwoffs = 0;
+            var cwcnt = 0;
+            var itemoffs = 0;
+            var d = 0;
             double split = 0;
-            int childle = 0;
-            int childge = 0;
-            int childoffs = 0;
-            bool updatemin = new bool();
+            var childle = 0;
+            var childge = 0;
+            var childoffs = 0;
+            var updatemin = new bool();
             double prevdist2 = 0;
             double t1 = 0;
 
@@ -43438,12 +43692,12 @@ public partial class alglib
                     //
                     // Calculate distance
                     //
-                    itemoffs = cwoffs+i*(nx+ny);
+                    itemoffs = cwoffs+ (i *(nx+ny));
                     ptdist2 = 0;
                     for(j=0; j<=nx-1; j++)
                     {
                         v = cw[itemoffs+j]-x[j];
-                        ptdist2 = ptdist2+v*v;
+                        ptdist2 += (v * v);
                     }
                     
                     //
@@ -43459,7 +43713,7 @@ public partial class alglib
                     //
                     r2[k] = ptdist2;
                     offs[k] = itemoffs;
-                    k = k+1;
+                    k++;
                 }
                 return;
             }
@@ -43595,22 +43849,22 @@ public partial class alglib
             int rootidx,
             double queryr2,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int i = 0;
-            int j = 0;
+            var result = 0;
+            var i = 0;
+            var j = 0;
             double ptdist2 = 0;
             double v = 0;
-            int cwoffs = 0;
-            int cwcnt = 0;
-            int itemoffs = 0;
-            int d = 0;
+            var cwoffs = 0;
+            var cwcnt = 0;
+            var itemoffs = 0;
+            var d = 0;
             double split = 0;
-            int childle = 0;
-            int childge = 0;
-            int childoffs = 0;
-            bool updatemin = new bool();
+            var childle = 0;
+            var childge = 0;
+            var childoffs = 0;
+            var updatemin = new bool();
             double prevdist2 = 0;
             double t1 = 0;
 
@@ -43629,12 +43883,12 @@ public partial class alglib
                     //
                     // Calculate distance
                     //
-                    itemoffs = cwoffs+i*(nx+ny);
+                    itemoffs = cwoffs+ (i *(nx+ny));
                     ptdist2 = 0;
                     for(j=0; j<=nx-1; j++)
                     {
                         v = cw[itemoffs+j]-x[j];
-                        ptdist2 = ptdist2+v*v;
+                        ptdist2 += (v * v);
                     }
                     
                     //
@@ -43648,7 +43902,7 @@ public partial class alglib
                     //
                     // Output
                     //
-                    result = result+1;
+                    result++;
                 }
                 return result;
             }
@@ -43721,7 +43975,7 @@ public partial class alglib
                     //
                     if( (double)(buf.curdist2)<(double)(queryr2) )
                     {
-                        result = result+partialcountrec(kdnodes, kdsplits, cw, nx, ny, buf, childoffs, queryr2, x, _params);
+                        result += partialcountrec(kdnodes, kdsplits, cw, nx, ny, buf, childoffs, queryr2, x, _params);
                     }
                     
                     //
@@ -43779,15 +44033,15 @@ public partial class alglib
             double r,
             double[,] xwr,
             ref int k,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int childle = 0;
-            int childge = 0;
-            int itemoffs = 0;
-            int cwoffs = 0;
-            int cwcnt = 0;
+            var i = 0;
+            var j = 0;
+            var childle = 0;
+            var childge = 0;
+            var itemoffs = 0;
+            var cwoffs = 0;
+            var cwcnt = 0;
 
             
             //
@@ -43799,7 +44053,7 @@ public partial class alglib
                 cwoffs = kdnodes[rootidx+1];
                 for(i=0; i<=cwcnt-1; i++)
                 {
-                    itemoffs = cwoffs+i*(nx+ny);
+                    itemoffs = cwoffs+ (i *(nx+ny));
                     for(j=0; j<=nx+ny-1; j++)
                     {
                         xwr[k,j] = cw[itemoffs+j];
@@ -43812,7 +44066,7 @@ public partial class alglib
                     {
                         xwr[k,nx+ny+j] = r*s[j];
                     }
-                    k = k+1;
+                    k++;
                 }
                 return;
             }
@@ -43881,13 +44135,13 @@ public partial class alglib
             double rcoeff,
             double[] x0,
             rbfv2calcbuffer calcbuf,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int dummy = 0;
-            int levelidx = 0;
-            int level0 = 0;
-            int level1 = 0;
+            var result = 0;
+            var dummy = 0;
+            var levelidx = 0;
+            var level0 = 0;
+            var level1 = 0;
             double curradius2 = 0;
 
             alglib.ap.assert(nh>0, "DesignMatrixRowSize: integrity failure");
@@ -43906,7 +44160,7 @@ public partial class alglib
             {
                 curradius2 = math.sqr(ri[levelidx]*rcoeff);
                 preparepartialquery(x0, kdboxmin, kdboxmax, nx, calcbuf, ref dummy, _params);
-                result = result+partialcountrec(kdnodes, kdsplits, cw, nx, ny, calcbuf, kdroots[levelidx], curradius2, x0, _params);
+                result += partialcountrec(kdnodes, kdsplits, cw, nx, ny, calcbuf, kdroots[levelidx], curradius2, x0, _params);
             }
             return result;
         }
@@ -43985,14 +44239,14 @@ public partial class alglib
             int[] rowidx,
             double[] rowval,
             ref int rowsize,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
-            int k = 0;
-            int cnt = 0;
-            int levelidx = 0;
-            int level0 = 0;
-            int level1 = 0;
+            var j = 0;
+            var k = 0;
+            var cnt = 0;
+            var levelidx = 0;
+            var level0 = 0;
+            var level1 = 0;
             double invri2 = 0;
             double curradius2 = 0;
             double val = 0;
@@ -44034,7 +44288,7 @@ public partial class alglib
                     alglib.ap.assert((tmpoffs[j]-cwrange[level0])%(nx+ny)==0, "DesignMatrixRowSize: integrity failure (g)");
                     rbfv2basisfuncdiff2(bf, tmpr2[j]*invri2, ref val, ref dval, ref d2val, _params);
                     rowidx[rowsize+j] = (tmpoffs[j]-cwrange[level0])/(nx+ny);
-                    rowval[(rowsize+j)*rowsperpoint+0] = val;
+                    rowval[((rowsize+j)*rowsperpoint) + 0] = val;
                     if( rowsperpoint==1 )
                     {
                         continue;
@@ -44046,14 +44300,14 @@ public partial class alglib
                     alglib.ap.assert(rowsperpoint==1+nx, "DesignMatrixRowSize: integrity failure (h)");
                     for(k=0; k<=nx-1; k++)
                     {
-                        rowval[(rowsize+j)*rowsperpoint+1+k] = penalty*(dval*2*invri2+d2val*math.sqr(2*(x0[k]-cw[tmpoffs[j]+k])*invri2));
+                        rowval[((rowsize+j)*rowsperpoint) + 1+k] = penalty*((dval *2*invri2) + d2val*math.sqr(2*(x0[k]-cw[tmpoffs[j]+k])*invri2));
                     }
                 }
                 
                 //
                 // Update columns counter
                 //
-                rowsize = rowsize+cnt;
+                rowsize += cnt;
             }
         }
 
@@ -44068,10 +44322,10 @@ public partial class alglib
             int nx,
             int ny,
             int bf,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             s.bf = bf;
             s.nh = 0;
@@ -44123,19 +44377,21 @@ public partial class alglib
                 z = new double[0];
                 f = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                spline3dinterpolant _result = new spline3dinterpolant();
-                _result.k = k;
-                _result.stype = stype;
-                _result.n = n;
-                _result.m = m;
-                _result.l = l;
-                _result.d = d;
-                _result.x = (double[])x.Clone();
-                _result.y = (double[])y.Clone();
-                _result.z = (double[])z.Clone();
-                _result.f = (double[])f.Clone();
+                var _result = new spline3dinterpolant
+                {
+                    k = k,
+                    stype = stype,
+                    n = n,
+                    m = m,
+                    l = l,
+                    d = d,
+                    x = (double[])x.Clone(),
+                    y = (double[])y.Clone(),
+                    z = (double[])z.Clone(),
+                    f = (double[])f.Clone()
+                };
                 return _result;
             }
         };
@@ -44163,7 +44419,7 @@ public partial class alglib
             double x,
             double y,
             double z,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double v = 0;
@@ -44206,18 +44462,18 @@ public partial class alglib
             double by,
             double az,
             double bz,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] x = new double[0];
-            double[] y = new double[0];
-            double[] z = new double[0];
-            double[] f = new double[0];
-            double[] v = new double[0];
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int di = 0;
-            int i_ = 0;
+            var x = new double[0];
+            var y = new double[0];
+            var z = new double[0];
+            var f = new double[0];
+            var v = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var di = 0;
+            var i_ = 0;
 
             alglib.ap.assert(c.stype==-3 || c.stype==-1, "Spline3DLinTransXYZ: incorrect C (incorrect parameter C.SType)");
             x = new double[c.n];
@@ -44242,7 +44498,7 @@ public partial class alglib
             //
             if( ((double)(ax)!=(double)(0) && (double)(ay)!=(double)(0)) && (double)(az)!=(double)(0) )
             {
-                for(i_=0; i_<=c.m*c.n*c.l*c.d-1;i_++)
+                for(i_=0; i_<= (c.m*c.n*c.l*c.d) - 1;i_++)
                 {
                     f[i_] = c.f[i_];
                 }
@@ -44258,7 +44514,7 @@ public partial class alglib
                         {
                             for(di=0; di<=c.d-1; di++)
                             {
-                                f[c.d*(c.n*(c.m*j+i)+k)+di] = v[di];
+                                f[(c.d*((c.n*((c.m*j) + i)) + k)) + di] = v[di];
                             }
                         }
                     }
@@ -44277,7 +44533,7 @@ public partial class alglib
                         {
                             for(di=0; di<=c.d-1; di++)
                             {
-                                f[c.d*(c.n*(c.m*j+k)+i)+di] = v[di];
+                                f[(c.d*((c.n*((c.m*j) + k)) + i)) + di] = v[di];
                             }
                         }
                     }
@@ -44296,7 +44552,7 @@ public partial class alglib
                         {
                             for(di=0; di<=c.d-1; di++)
                             {
-                                f[c.d*(c.n*(c.m*k+j)+i)+di] = v[di];
+                                f[(c.d*((c.n*((c.m*k) + j)) + i)) + di] = v[di];
                             }
                         }
                     }
@@ -44315,7 +44571,7 @@ public partial class alglib
                         {
                             for(di=0; di<=c.d-1; di++)
                             {
-                                f[c.d*(c.n*(c.m*i+k)+j)+di] = v[di];
+                                f[(c.d*((c.n*((c.m*i) + k)) + j)) + di] = v[di];
                             }
                         }
                     }
@@ -44336,7 +44592,7 @@ public partial class alglib
                         {
                             for(di=0; di<=c.d-1; di++)
                             {
-                                f[c.d*(c.n*(c.m*k+i)+j)+di] = v[di];
+                                f[(c.d*((c.n*((c.m*k) + i)) + j)) + di] = v[di];
                             }
                         }
                     }
@@ -44357,7 +44613,7 @@ public partial class alglib
                         {
                             for(di=0; di<=c.d-1; di++)
                             {
-                                f[c.d*(c.n*(c.m*k+j)+i)+di] = v[di];
+                                f[(c.d*((c.n*((c.m*k) + j)) + i)) + di] = v[di];
                             }
                         }
                     }
@@ -44378,7 +44634,7 @@ public partial class alglib
                         {
                             for(di=0; di<=c.d-1; di++)
                             {
-                                f[c.d*(c.n*(c.m*k+j)+i)+di] = v[di];
+                                f[(c.d*((c.n*((c.m*k) + j)) + i)) + di] = v[di];
                             }
                         }
                     }
@@ -44430,14 +44686,14 @@ public partial class alglib
         public static void spline3dlintransf(spline3dinterpolant c,
             double a,
             double b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] x = new double[0];
-            double[] y = new double[0];
-            double[] z = new double[0];
-            double[] f = new double[0];
-            int i = 0;
-            int j = 0;
+            var x = new double[0];
+            var y = new double[0];
+            var z = new double[0];
+            var f = new double[0];
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(c.stype==-3 || c.stype==-1, "Spline3DLinTransF: incorrect C (incorrect parameter C.SType)");
             x = new double[c.n];
@@ -44456,9 +44712,9 @@ public partial class alglib
             {
                 z[i] = c.z[i];
             }
-            for(i=0; i<=c.m*c.n*c.l*c.d-1; i++)
+            for(i=0; i<= (c.m*c.n*c.l*c.d) - 1; i++)
             {
-                f[i] = a*c.f[i]+b;
+                f[i] = (a *c.f[i]) + b;
             }
             if( c.stype==-1 )
             {
@@ -44481,10 +44737,10 @@ public partial class alglib
         *************************************************************************/
         public static void spline3dcopy(spline3dinterpolant c,
             spline3dinterpolant cc,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int tblsize = 0;
-            int i_ = 0;
+            var tblsize = 0;
+            var i_ = 0;
 
             alglib.ap.assert(c.k==1 || c.k==3, "Spline3DCopy: incorrect C (incorrect parameter C.K)");
             cc.k = c.k;
@@ -44560,7 +44816,7 @@ public partial class alglib
             int newycount,
             int newxcount,
             ref double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
             double xd = 0;
             double yd = 0;
@@ -44569,12 +44825,12 @@ public partial class alglib
             double c1 = 0;
             double c2 = 0;
             double c3 = 0;
-            int ix = 0;
-            int iy = 0;
-            int iz = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var ix = 0;
+            var iy = 0;
+            var iz = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             b = new double[0];
 
@@ -44593,26 +44849,26 @@ public partial class alglib
                         {
                             ix = oldxcount-2;
                         }
-                        xd = (double)(i*(oldxcount-1))/(double)(newxcount-1)-ix;
+                        xd = ((double)(i*(oldxcount-1))/(double)(newxcount-1)) - ix;
                         iy = j*(oldycount-1)/(newycount-1);
                         if( iy==oldycount-1 )
                         {
                             iy = oldycount-2;
                         }
-                        yd = (double)(j*(oldycount-1))/(double)(newycount-1)-iy;
+                        yd = ((double)(j*(oldycount-1))/(double)(newycount-1)) - iy;
                         iz = k*(oldzcount-1)/(newzcount-1);
                         if( iz==oldzcount-1 )
                         {
                             iz = oldzcount-2;
                         }
-                        zd = (double)(k*(oldzcount-1))/(double)(newzcount-1)-iz;
-                        c0 = a[oldxcount*(oldycount*iz+iy)+ix]*(1-xd)+a[oldxcount*(oldycount*iz+iy)+(ix+1)]*xd;
-                        c1 = a[oldxcount*(oldycount*iz+(iy+1))+ix]*(1-xd)+a[oldxcount*(oldycount*iz+(iy+1))+(ix+1)]*xd;
-                        c2 = a[oldxcount*(oldycount*(iz+1)+iy)+ix]*(1-xd)+a[oldxcount*(oldycount*(iz+1)+iy)+(ix+1)]*xd;
-                        c3 = a[oldxcount*(oldycount*(iz+1)+(iy+1))+ix]*(1-xd)+a[oldxcount*(oldycount*(iz+1)+(iy+1))+(ix+1)]*xd;
-                        c0 = c0*(1-yd)+c1*yd;
-                        c1 = c2*(1-yd)+c3*yd;
-                        b[newxcount*(newycount*k+j)+i] = c0*(1-zd)+c1*zd;
+                        zd = ((double)(k*(oldzcount-1))/(double)(newzcount-1)) - iz;
+                        c0 = (a[(oldxcount * ((oldycount * iz) + iy)) + ix]*(1-xd)) + a[oldxcount*(oldycount*iz+iy)+(ix+1)]*xd;
+                        c1 = (a[(oldxcount * ((oldycount * iz) + (iy+1))) + ix]*(1-xd)) + a[oldxcount*(oldycount*iz+(iy+1))+(ix+1)]*xd;
+                        c2 = (a[(oldxcount * ((oldycount *(iz+1)) + iy)) + ix]*(1-xd)) + a[oldxcount*(oldycount*(iz+1)+iy)+(ix+1)]*xd;
+                        c3 = (a[(oldxcount * ((oldycount *(iz+1)) + (iy+1))) + ix]*(1-xd)) + a[oldxcount*(oldycount*(iz+1)+(iy+1))+(ix+1)]*xd;
+                        c0 = (c0 *(1-yd)) + c1*yd;
+                        c1 = (c2 *(1-yd)) + c3*yd;
+                        b[(newxcount * ((newycount * k) + j)) + i] = (c0 *(1-zd)) + c1*zd;
                     }
                 }
             }
@@ -44660,15 +44916,15 @@ public partial class alglib
             double[] f,
             int d,
             spline3dinterpolant c,
-            alglib.xparams _params)
+            xparams _params)
         {
             double t = 0;
-            int tblsize = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int i0 = 0;
-            int j0 = 0;
+            var tblsize = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var i0 = 0;
+            var j0 = 0;
 
             alglib.ap.assert(m>=2, "Spline3DBuildTrilinearV: M<2");
             alglib.ap.assert(n>=2, "Spline3DBuildTrilinearV: N<2");
@@ -44734,9 +44990,9 @@ public partial class alglib
                         {
                             for(i0=0; i0<=c.d-1; i0++)
                             {
-                                t = c.f[c.d*(c.n*(c.m*j0+i)+j)+i0];
-                                c.f[c.d*(c.n*(c.m*j0+i)+j)+i0] = c.f[c.d*(c.n*(c.m*j0+i)+k)+i0];
-                                c.f[c.d*(c.n*(c.m*j0+i)+k)+i0] = t;
+                                t = c.f[(c.d*((c.n*((c.m*j0) + i)) + j)) + i0];
+                                c.f[(c.d*((c.n*((c.m*j0) + i)) + j)) + i0] = c.f[(c.d*((c.n*((c.m*j0) + i)) + k)) + i0];
+                                c.f[(c.d*((c.n*((c.m*j0) + i)) + k)) + i0] = t;
                             }
                         }
                     }
@@ -44763,9 +45019,9 @@ public partial class alglib
                         {
                             for(i0=0; i0<=c.d-1; i0++)
                             {
-                                t = c.f[c.d*(c.n*(c.m*j0+i)+j)+i0];
-                                c.f[c.d*(c.n*(c.m*j0+i)+j)+i0] = c.f[c.d*(c.n*(c.m*j0+k)+j)+i0];
-                                c.f[c.d*(c.n*(c.m*j0+k)+j)+i0] = t;
+                                t = c.f[(c.d*((c.n*((c.m*j0) + i)) + j)) + i0];
+                                c.f[(c.d*((c.n*((c.m*j0) + i)) + j)) + i0] = c.f[(c.d*((c.n*((c.m*j0) + k)) + j)) + i0];
+                                c.f[(c.d*((c.n*((c.m*j0) + k)) + j)) + i0] = t;
                             }
                         }
                     }
@@ -44792,9 +45048,9 @@ public partial class alglib
                         {
                             for(i0=0; i0<=c.d-1; i0++)
                             {
-                                t = c.f[c.d*(c.n*(c.m*k+j)+j0)+i0];
-                                c.f[c.d*(c.n*(c.m*k+j)+j0)+i0] = c.f[c.d*(c.n*(c.m*i+j)+j0)+i0];
-                                c.f[c.d*(c.n*(c.m*i+j)+j0)+i0] = t;
+                                t = c.f[(c.d*((c.n*((c.m*k) + j)) + j0)) + i0];
+                                c.f[(c.d*((c.n*((c.m*k) + j)) + j0)) + i0] = c.f[(c.d*((c.n*((c.m*i) + j)) + j0)) + i0];
+                                c.f[(c.d*((c.n*((c.m*i) + j)) + j0)) + i0] = t;
                             }
                         }
                     }
@@ -44829,7 +45085,7 @@ public partial class alglib
             double y,
             double z,
             ref double[] f,
-            alglib.xparams _params)
+            xparams _params)
         {
             double xd = 0;
             double yd = 0;
@@ -44838,13 +45094,13 @@ public partial class alglib
             double c1 = 0;
             double c2 = 0;
             double c3 = 0;
-            int ix = 0;
-            int iy = 0;
-            int iz = 0;
-            int l = 0;
-            int r = 0;
-            int h = 0;
-            int i = 0;
+            var ix = 0;
+            var iy = 0;
+            var iz = 0;
+            var l = 0;
+            var r = 0;
+            var h = 0;
+            var i = 0;
 
             alglib.ap.assert(c.stype==-1 || c.stype==-3, "Spline3DCalcVBuf: incorrect C (incorrect parameter C.SType)");
             alglib.ap.assert((math.isfinite(x) && math.isfinite(y)) && math.isfinite(z), "Spline3DCalcVBuf: X, Y or Z contains NaN/Infinite");
@@ -44917,13 +45173,13 @@ public partial class alglib
                 //
                 if( c.stype==-1 )
                 {
-                    c0 = c.f[c.d*(c.n*(c.m*iz+iy)+ix)+i]*(1-xd)+c.f[c.d*(c.n*(c.m*iz+iy)+(ix+1))+i]*xd;
-                    c1 = c.f[c.d*(c.n*(c.m*iz+(iy+1))+ix)+i]*(1-xd)+c.f[c.d*(c.n*(c.m*iz+(iy+1))+(ix+1))+i]*xd;
-                    c2 = c.f[c.d*(c.n*(c.m*(iz+1)+iy)+ix)+i]*(1-xd)+c.f[c.d*(c.n*(c.m*(iz+1)+iy)+(ix+1))+i]*xd;
-                    c3 = c.f[c.d*(c.n*(c.m*(iz+1)+(iy+1))+ix)+i]*(1-xd)+c.f[c.d*(c.n*(c.m*(iz+1)+(iy+1))+(ix+1))+i]*xd;
-                    c0 = c0*(1-yd)+c1*yd;
-                    c1 = c2*(1-yd)+c3*yd;
-                    f[i] = c0*(1-zd)+c1*zd;
+                    c0 = (c.f[(c.d*((c.n*((c.m*iz) + iy)) + ix)) + i]*(1-xd)) + c.f[c.d*(c.n*(c.m*iz+iy)+(ix+1))+i]*xd;
+                    c1 = (c.f[(c.d*((c.n*((c.m*iz) + (iy+1))) + ix)) + i]*(1-xd)) + c.f[c.d*(c.n*(c.m*iz+(iy+1))+(ix+1))+i]*xd;
+                    c2 = (c.f[(c.d*((c.n*((c.m*(iz+1)) + iy)) + ix)) + i]*(1-xd)) + c.f[c.d*(c.n*(c.m*(iz+1)+iy)+(ix+1))+i]*xd;
+                    c3 = (c.f[(c.d*((c.n*((c.m*(iz+1)) + (iy+1))) + ix)) + i]*(1-xd)) + c.f[c.d*(c.n*(c.m*(iz+1)+(iy+1))+(ix+1))+i]*xd;
+                    c0 = (c0 *(1-yd)) + c1*yd;
+                    c1 = (c2 *(1-yd)) + c3*yd;
+                    f[i] = (c0 *(1-zd)) + c1*zd;
                 }
             }
         }
@@ -44953,7 +45209,7 @@ public partial class alglib
             double y,
             double z,
             ref double[] f,
-            alglib.xparams _params)
+            xparams _params)
         {
             f = new double[0];
 
@@ -45020,20 +45276,20 @@ public partial class alglib
             ref int d,
             ref int stype,
             ref double[,] tbl,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int p = 0;
-            int ci = 0;
-            int cj = 0;
-            int ck = 0;
+            var p = 0;
+            var ci = 0;
+            var cj = 0;
+            var ck = 0;
             double du = 0;
             double dv = 0;
             double dw = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int di = 0;
-            int i0 = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var di = 0;
+            var i0 = 0;
 
             n = 0;
             m = 0;
@@ -45061,7 +45317,7 @@ public partial class alglib
                     {
                         for(di=0; di<=d-1; di++)
                         {
-                            p = d*((n-1)*((m-1)*k+j)+i)+di;
+                            p = (d * (((n-1)*(((m-1)*k) + j)) + i)) + di;
                             tbl[p,0] = c.x[i];
                             tbl[p,1] = c.x[i+1];
                             tbl[p,2] = c.y[j];
@@ -45081,14 +45337,14 @@ public partial class alglib
                                 {
                                     tbl[p,i0] = 0;
                                 }
-                                tbl[p,6+2*(2*0+0)+0] = c.f[d*(n*(m*k+j)+i)+di];
-                                tbl[p,6+2*(2*0+0)+1] = c.f[d*(n*(m*k+j)+(i+1))+di]-c.f[d*(n*(m*k+j)+i)+di];
-                                tbl[p,6+2*(2*0+1)+0] = c.f[d*(n*(m*k+(j+1))+i)+di]-c.f[d*(n*(m*k+j)+i)+di];
-                                tbl[p,6+2*(2*0+1)+1] = c.f[d*(n*(m*k+(j+1))+(i+1))+di]-c.f[d*(n*(m*k+(j+1))+i)+di]-c.f[d*(n*(m*k+j)+(i+1))+di]+c.f[d*(n*(m*k+j)+i)+di];
-                                tbl[p,6+2*(2*1+0)+0] = c.f[d*(n*(m*(k+1)+j)+i)+di]-c.f[d*(n*(m*k+j)+i)+di];
-                                tbl[p,6+2*(2*1+0)+1] = c.f[d*(n*(m*(k+1)+j)+(i+1))+di]-c.f[d*(n*(m*(k+1)+j)+i)+di]-c.f[d*(n*(m*k+j)+(i+1))+di]+c.f[d*(n*(m*k+j)+i)+di];
-                                tbl[p,6+2*(2*1+1)+0] = c.f[d*(n*(m*(k+1)+(j+1))+i)+di]-c.f[d*(n*(m*(k+1)+j)+i)+di]-c.f[d*(n*(m*k+(j+1))+i)+di]+c.f[d*(n*(m*k+j)+i)+di];
-                                tbl[p,6+2*(2*1+1)+1] = c.f[d*(n*(m*(k+1)+(j+1))+(i+1))+di]-c.f[d*(n*(m*(k+1)+(j+1))+i)+di]-c.f[d*(n*(m*(k+1)+j)+(i+1))+di]+c.f[d*(n*(m*(k+1)+j)+i)+di]-c.f[d*(n*(m*k+(j+1))+(i+1))+di]+c.f[d*(n*(m*k+(j+1))+i)+di]+c.f[d*(n*(m*k+j)+(i+1))+di]-c.f[d*(n*(m*k+j)+i)+di];
+                                tbl[p,6+ (2 * ((2 * 0) + 0)) + 0] = c.f[(d * ((n * ((m * k) + j)) + i)) + di];
+                                tbl[p,6+ (2 * ((2 * 0) + 0)) + 1] = c.f[(d * ((n * ((m * k) + j)) + (i+1))) + di]-c.f[(d * ((n * ((m * k) + j)) + i)) + di];
+                                tbl[p,6+ (2 * ((2 * 0) + 1)) + 0] = c.f[(d * ((n * ((m * k) + (j+1))) + i)) + di]-c.f[(d * ((n * ((m * k) + j)) + i)) + di];
+                                tbl[p,6+ (2 * ((2 * 0) + 1)) + 1] = c.f[(d * ((n * ((m * k) + (j+1))) + (i+1))) + di]-c.f[(d * ((n * ((m * k) + (j+1))) + i)) + di]-c.f[(d * ((n * ((m * k) + j)) + (i+1))) + di]+c.f[(d * ((n * ((m * k) + j)) + i)) + di];
+                                tbl[p,6+ (2 * ((2 * 1) + 0)) + 0] = c.f[(d * ((n * ((m *(k+1)) + j)) + i)) + di]-c.f[(d * ((n * ((m * k) + j)) + i)) + di];
+                                tbl[p,6+ (2 * ((2 * 1) + 0)) + 1] = c.f[(d * ((n * ((m *(k+1)) + j)) + (i+1))) + di]-c.f[(d * ((n * ((m *(k+1)) + j)) + i)) + di]-c.f[(d * ((n * ((m * k) + j)) + (i+1))) + di]+c.f[(d * ((n * ((m * k) + j)) + i)) + di];
+                                tbl[p,6+ (2 * ((2 * 1) + 1)) + 0] = c.f[(d * ((n * ((m *(k+1)) + (j+1))) + i)) + di]-c.f[(d * ((n * ((m *(k+1)) + j)) + i)) + di]-c.f[(d * ((n * ((m * k) + (j+1))) + i)) + di]+c.f[(d * ((n * ((m * k) + j)) + i)) + di];
+                                tbl[p,6+ (2 * ((2 * 1) + 1)) + 1] = c.f[(d * ((n * ((m *(k+1)) + (j+1))) + (i+1))) + di]-c.f[(d * ((n * ((m *(k+1)) + (j+1))) + i)) + di]-c.f[(d * ((n * ((m *(k+1)) + j)) + (i+1))) + di]+c.f[(d * ((n * ((m *(k+1)) + j)) + i)) + di]-c.f[(d * ((n * ((m * k) + (j+1))) + (i+1))) + di]+c.f[(d * ((n * ((m * k) + (j+1))) + i)) + di]+c.f[(d * ((n * ((m * k) + j)) + (i+1))) + di]-c.f[(d * ((n * ((m * k) + j)) + i)) + di];
                             }
                             
                             //
@@ -45100,7 +45356,7 @@ public partial class alglib
                                 {
                                     for(ck=0; ck<=1; ck++)
                                     {
-                                        tbl[p,6+2*(2*ck+cj)+ci] = tbl[p,6+2*(2*ck+cj)+ci]*Math.Pow(du, ci)*Math.Pow(dv, cj)*Math.Pow(dw, ck);
+                                        tbl[p,6+ (2 * ((2 * ck) + cj)) + ci] = tbl[p,6+ (2 * ((2 * ck) + cj)) + ci]*Math.Pow(du, ci)*Math.Pow(dv, cj)*Math.Pow(dw, ck);
                                     }
                                 }
                             }
@@ -45137,7 +45393,7 @@ public partial class alglib
             ref double fx,
             ref double fy,
             ref double fxy,
-            alglib.xparams _params)
+            xparams _params)
         {
             double xd = 0;
             double yd = 0;
@@ -45146,12 +45402,12 @@ public partial class alglib
             double c1 = 0;
             double c2 = 0;
             double c3 = 0;
-            int ix = 0;
-            int iy = 0;
-            int iz = 0;
-            int l = 0;
-            int r = 0;
-            int h = 0;
+            var ix = 0;
+            var iy = 0;
+            var iz = 0;
+            var l = 0;
+            var r = 0;
+            var h = 0;
 
             f = 0;
             fx = 0;
@@ -45238,13 +45494,13 @@ public partial class alglib
             //
             if( c.stype==-1 )
             {
-                c0 = c.f[c.n*(c.m*iz+iy)+ix]*(1-xd)+c.f[c.n*(c.m*iz+iy)+(ix+1)]*xd;
-                c1 = c.f[c.n*(c.m*iz+(iy+1))+ix]*(1-xd)+c.f[c.n*(c.m*iz+(iy+1))+(ix+1)]*xd;
-                c2 = c.f[c.n*(c.m*(iz+1)+iy)+ix]*(1-xd)+c.f[c.n*(c.m*(iz+1)+iy)+(ix+1)]*xd;
-                c3 = c.f[c.n*(c.m*(iz+1)+(iy+1))+ix]*(1-xd)+c.f[c.n*(c.m*(iz+1)+(iy+1))+(ix+1)]*xd;
-                c0 = c0*(1-yd)+c1*yd;
-                c1 = c2*(1-yd)+c3*yd;
-                f = c0*(1-zd)+c1*zd;
+                c0 = (c.f[(c.n*((c.m*iz) + iy)) + ix]*(1-xd)) + c.f[c.n*(c.m*iz+iy)+(ix+1)]*xd;
+                c1 = (c.f[(c.n*((c.m*iz) + (iy+1))) + ix]*(1-xd)) + c.f[c.n*(c.m*iz+(iy+1))+(ix+1)]*xd;
+                c2 = (c.f[(c.n*((c.m*(iz+1)) + iy)) + ix]*(1-xd)) + c.f[c.n*(c.m*(iz+1)+iy)+(ix+1)]*xd;
+                c3 = (c.f[(c.n*((c.m*(iz+1)) + (iy+1))) + ix]*(1-xd)) + c.f[c.n*(c.m*(iz+1)+(iy+1))+(ix+1)]*xd;
+                c0 = (c0 *(1-yd)) + c1*yd;
+                c1 = (c2 *(1-yd)) + c3*yd;
+                f = (c0 *(1-zd)) + c1*zd;
             }
         }
 
@@ -45265,7 +45521,7 @@ public partial class alglib
             int nx,
             ref double[] cx,
             ref double rhi,
-            alglib.xparams _params)
+            xparams _params)
         {
             double dummy = 0;
 
@@ -45288,7 +45544,7 @@ public partial class alglib
             int nx,
             ref double[] cx,
             ref double rlo,
-            alglib.xparams _params)
+            xparams _params)
         {
             double dummy = 0;
 
@@ -45312,7 +45568,7 @@ public partial class alglib
             ref double[] cx,
             ref double rlo,
             ref double rhi,
-            alglib.xparams _params)
+            xparams _params)
         {
             cx = new double[0];
             rlo = 0;
@@ -45339,7 +45595,7 @@ public partial class alglib
             ref double[] cx,
             ref double rlo,
             ref double rhi,
-            alglib.xparams _params)
+            xparams _params)
         {
             cx = new double[0];
             rlo = 0;
@@ -45369,10 +45625,10 @@ public partial class alglib
             ref int info,
             spline1d.spline1dinterpolant s,
             spline1d.spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] w = new double[0];
-            int i = 0;
+            var w = new double[0];
+            var i = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -45415,52 +45671,52 @@ public partial class alglib
             ref int info,
             spline1d.spline1dinterpolant s,
             spline1d.spline1dfitreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int b = 0;
+            var i = 0;
+            var j = 0;
+            var b = 0;
             double v = 0;
             double relcnt = 0;
             double xa = 0;
             double xb = 0;
             double sa = 0;
             double sb = 0;
-            double[] xoriginal = new double[0];
-            double[] yoriginal = new double[0];
+            var xoriginal = new double[0];
+            var yoriginal = new double[0];
             double pdecay = 0;
             double tdecay = 0;
-            double[,] fmatrix = new double[0,0];
-            double[] fcolumn = new double[0];
-            double[] y2 = new double[0];
-            double[] w2 = new double[0];
-            double[] xc = new double[0];
-            double[] yc = new double[0];
-            int[] dc = new int[0];
+            var fmatrix = new double[0,0];
+            var fcolumn = new double[0];
+            var y2 = new double[0];
+            var w2 = new double[0];
+            var xc = new double[0];
+            var yc = new double[0];
+            var dc = new int[0];
             double fdmax = 0;
             double admax = 0;
-            double[,] amatrix = new double[0,0];
-            double[,] d2matrix = new double[0,0];
+            var amatrix = new double[0,0];
+            var d2matrix = new double[0,0];
             double fa = 0;
             double ga = 0;
             double fb = 0;
             double gb = 0;
             double lambdav = 0;
-            double[] bx = new double[0];
-            double[] by = new double[0];
-            double[] bd1 = new double[0];
-            double[] bd2 = new double[0];
-            double[] tx = new double[0];
-            double[] ty = new double[0];
-            double[] td = new double[0];
-            spline1d.spline1dinterpolant bs = new spline1d.spline1dinterpolant();
-            double[,] nmatrix = new double[0,0];
-            double[] rightpart = new double[0];
-            fbls.fblslincgstate cgstate = new fbls.fblslincgstate();
-            double[] c = new double[0];
-            double[] tmp0 = new double[0];
-            int i_ = 0;
-            int i1_ = 0;
+            var bx = new double[0];
+            var by = new double[0];
+            var bd1 = new double[0];
+            var bd2 = new double[0];
+            var tx = new double[0];
+            var ty = new double[0];
+            var td = new double[0];
+            var bs = new spline1d.spline1dinterpolant();
+            var nmatrix = new double[0,0];
+            var rightpart = new double[0];
+            var cgstate = new fbls.fblslincgstate();
+            var c = new double[0];
+            var tmp0 = new double[0];
+            var i_ = 0;
+            var i1_ = 0;
 
             x = (double[])x.Clone();
             y = (double[])y.Clone();
@@ -45530,7 +45786,7 @@ public partial class alglib
                 //
                 for(j=0; j<=m-1; j++)
                 {
-                    bx[j] = (double)(2*j)/(double)(m-1)-1;
+                    bx[j] = ((double)(2*j)/(double)(m-1)) - 1;
                     by[j] = 0;
                 }
                 by[b] = 1;
@@ -45549,7 +45805,7 @@ public partial class alglib
                 v = 0;
                 for(i=0; i<=n-1; i++)
                 {
-                    v = v+math.sqr(w[i]*fcolumn[i]);
+                    v += math.sqr(w[i]*fcolumn[i]);
                 }
                 fdmax = Math.Max(fdmax, v);
                 
@@ -45584,7 +45840,7 @@ public partial class alglib
                         fb = d2matrix[i,b+1];
                         ga = d2matrix[j,b];
                         gb = d2matrix[j,b+1];
-                        v = v+(bx[b+1]-bx[b])*(fa*ga+(fa*(gb-ga)+ga*(fb-fa))/2+(fb-fa)*(gb-ga)/3);
+                        v += ((bx[b+1]-bx[b])*((fa * ga) + (((fa *(gb-ga)) + (ga *(fb-fa))) / 2) + ((fb-fa)*(gb-ga)/3)));
                     }
                     amatrix[i,j] = v;
                     amatrix[j,i] = v;
@@ -45620,7 +45876,7 @@ public partial class alglib
             {
                 for(j=0; j<=m-1; j++)
                 {
-                    nmatrix[i,j] = nmatrix[i,j]+pdecay*amatrix[i,j];
+                    nmatrix[i,j] = nmatrix[i,j]+ (pdecay *amatrix[i,j]);
                 }
             }
             for(i=0; i<=m-1; i++)
@@ -45636,7 +45892,7 @@ public partial class alglib
                 v = y[i]*w[i];
                 for(i_=0; i_<=m-1;i_++)
                 {
-                    rightpart[i_] = rightpart[i_] + v*fmatrix[i,i_];
+                    rightpart[i_] = rightpart[i_] + (v *fmatrix[i,i_]);
                 }
             }
             
@@ -45677,10 +45933,10 @@ public partial class alglib
                 td[i_] = bd1[i_+i1_];
             }
             tx[0] = tx[1]-(tx[2]-tx[1]);
-            ty[0] = ty[1]-td[1]*(tx[2]-tx[1]);
+            ty[0] = ty[1]- (td[1]*(tx[2]-tx[1]));
             td[0] = td[1];
             tx[m+1] = tx[m]+(tx[m]-tx[m-1]);
-            ty[m+1] = ty[m]+td[m]*(tx[m]-tx[m-1]);
+            ty[m+1] = ty[m]+ (td[m]*(tx[m]-tx[m-1]));
             td[m+1] = td[m];
             spline1d.spline1dbuildhermite(tx, ty, td, m+2, s, _params);
             spline1d.spline1dlintransx(s, 2/(xb-xa), -((xa+xb)/(xb-xa)), _params);
@@ -45698,21 +45954,21 @@ public partial class alglib
             spline1d.spline1dconvcubic(bx, rightpart, m, 2, 0.0, 2, 0.0, x, n, ref fcolumn, _params);
             for(i=0; i<=n-1; i++)
             {
-                v = (sb-sa)*fcolumn[i]+sa;
-                rep.rmserror = rep.rmserror+math.sqr(v-yoriginal[i]);
-                rep.avgerror = rep.avgerror+Math.Abs(v-yoriginal[i]);
+                v = ((sb-sa)*fcolumn[i]) + sa;
+                rep.rmserror += math.sqr(v-yoriginal[i]);
+                rep.avgerror += Math.Abs(v-yoriginal[i]);
                 if( (double)(yoriginal[i])!=(double)(0) )
                 {
-                    rep.avgrelerror = rep.avgrelerror+Math.Abs(v-yoriginal[i])/Math.Abs(yoriginal[i]);
-                    relcnt = relcnt+1;
+                    rep.avgrelerror += (Math.Abs(v-yoriginal[i])/Math.Abs(yoriginal[i]));
+                    relcnt++;
                 }
                 rep.maxerror = Math.Max(rep.maxerror, Math.Abs(v-yoriginal[i]));
             }
             rep.rmserror = Math.Sqrt(rep.rmserror/n);
-            rep.avgerror = rep.avgerror/n;
+            rep.avgerror /= n;
             if( (double)(relcnt)!=(double)(0) )
             {
-                rep.avgrelerror = rep.avgrelerror/relcnt;
+                rep.avgrelerror /= relcnt;
             }
         }
 
@@ -45740,12 +45996,14 @@ public partial class alglib
                 bufv1 = new rbfv1.rbfv1calcbuffer();
                 bufv2 = new rbfv2.rbfv2calcbuffer();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfcalcbuffer _result = new rbfcalcbuffer();
-                _result.modelversion = modelversion;
-                _result.bufv1 = (rbfv1.rbfv1calcbuffer)bufv1.make_copy();
-                _result.bufv2 = (rbfv2.rbfv2calcbuffer)bufv2.make_copy();
+                var _result = new rbfcalcbuffer
+                {
+                    modelversion = modelversion,
+                    bufv1 = (rbfv1.rbfv1calcbuffer)bufv1.make_copy(),
+                    bufv2 = (rbfv2.rbfv2calcbuffer)bufv2.make_copy()
+                };
                 return _result;
             }
         };
@@ -45793,31 +46051,33 @@ public partial class alglib
                 y = new double[0,0];
                 s = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfmodel _result = new rbfmodel();
-                _result.nx = nx;
-                _result.ny = ny;
-                _result.modelversion = modelversion;
-                _result.model1 = (rbfv1.rbfv1model)model1.make_copy();
-                _result.model2 = (rbfv2.rbfv2model)model2.make_copy();
-                _result.lambdav = lambdav;
-                _result.radvalue = radvalue;
-                _result.radzvalue = radzvalue;
-                _result.nlayers = nlayers;
-                _result.aterm = aterm;
-                _result.algorithmtype = algorithmtype;
-                _result.epsort = epsort;
-                _result.epserr = epserr;
-                _result.maxits = maxits;
-                _result.nnmaxits = nnmaxits;
-                _result.n = n;
-                _result.x = (double[,])x.Clone();
-                _result.y = (double[,])y.Clone();
-                _result.hasscale = hasscale;
-                _result.s = (double[])s.Clone();
-                _result.progress10000 = progress10000;
-                _result.terminationrequest = terminationrequest;
+                var _result = new rbfmodel
+                {
+                    nx = nx,
+                    ny = ny,
+                    modelversion = modelversion,
+                    model1 = (rbfv1.rbfv1model)model1.make_copy(),
+                    model2 = (rbfv2.rbfv2model)model2.make_copy(),
+                    lambdav = lambdav,
+                    radvalue = radvalue,
+                    radzvalue = radzvalue,
+                    nlayers = nlayers,
+                    aterm = aterm,
+                    algorithmtype = algorithmtype,
+                    epsort = epsort,
+                    epserr = epserr,
+                    maxits = maxits,
+                    nnmaxits = nnmaxits,
+                    n = n,
+                    x = (double[,])x.Clone(),
+                    y = (double[,])y.Clone(),
+                    hasscale = hasscale,
+                    s = (double[])s.Clone(),
+                    progress10000 = progress10000,
+                    terminationrequest = terminationrequest
+                };
                 return _result;
             }
         };
@@ -45849,17 +46109,19 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                rbfreport _result = new rbfreport();
-                _result.rmserror = rmserror;
-                _result.maxerror = maxerror;
-                _result.arows = arows;
-                _result.acols = acols;
-                _result.annz = annz;
-                _result.iterationscount = iterationscount;
-                _result.nmv = nmv;
-                _result.terminationtype = terminationtype;
+                var _result = new rbfreport
+                {
+                    rmserror = rmserror,
+                    maxerror = maxerror,
+                    arows = arows,
+                    acols = acols,
+                    annz = annz,
+                    iterationscount = iterationscount,
+                    nmv = nmv,
+                    terminationtype = terminationtype
+                };
                 return _result;
             }
         };
@@ -45946,7 +46208,7 @@ public partial class alglib
         public static void rbfcreate(int nx,
             int ny,
             rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(nx>=1, "RBFCreate: NX<1");
             alglib.ap.assert(ny>=1, "RBFCreate: NY<1");
@@ -46025,7 +46287,7 @@ public partial class alglib
         *************************************************************************/
         public static void rbfcreatecalcbuffer(rbfmodel s,
             rbfcalcbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
             if( s.modelversion==1 )
             {
@@ -46087,10 +46349,10 @@ public partial class alglib
         public static void rbfsetpoints(rbfmodel s,
             double[,] xy,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(n>0, "RBFSetPoints: N<0");
             alglib.ap.assert(alglib.ap.rows(xy)>=n, "RBFSetPoints: Rows(XY)<N");
@@ -46168,10 +46430,10 @@ public partial class alglib
             double[,] xy,
             int n,
             double[] s,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(n>0, "RBFSetPointsAndScales: N<0");
             alglib.ap.assert(alglib.ap.rows(xy)>=n, "RBFSetPointsAndScales: Rows(XY)<N");
@@ -46266,7 +46528,7 @@ public partial class alglib
         public static void rbfsetalgoqnn(rbfmodel s,
             double q,
             double z,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(q), "RBFSetAlgoQNN: Q is infinite or NAN");
             alglib.ap.assert((double)(q)>(double)(0), "RBFSetAlgoQNN: Q<=0");
@@ -46380,7 +46642,7 @@ public partial class alglib
             double rbase,
             int nlayers,
             double lambdav,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(rbase), "RBFSetAlgoMultiLayer: RBase is infinite or NaN");
             alglib.ap.assert((double)(rbase)>(double)(0), "RBFSetAlgoMultiLayer: RBase<=0");
@@ -46489,7 +46751,7 @@ public partial class alglib
             double rbase,
             int nlayers,
             double lambdans,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(rbase), "RBFSetAlgoHierarchical: RBase is infinite or NaN");
             alglib.ap.assert((double)(rbase)>(double)(0), "RBFSetAlgoHierarchical: RBase<=0");
@@ -46518,7 +46780,7 @@ public partial class alglib
              Copyright 13.12.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void rbfsetlinterm(rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
             s.aterm = 1;
         }
@@ -46540,7 +46802,7 @@ public partial class alglib
              Copyright 13.12.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void rbfsetconstterm(rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
             s.aterm = 2;
         }
@@ -46562,7 +46824,7 @@ public partial class alglib
              Copyright 13.12.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void rbfsetzeroterm(rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
             s.aterm = 3;
         }
@@ -46585,7 +46847,7 @@ public partial class alglib
         *************************************************************************/
         public static void rbfsetv2bf(rbfmodel s,
             int bf,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(bf==0 || bf==1, "RBFSetV2Its: BF<>0 and BF<>1");
             s.model2.basisfunction = bf;
@@ -46608,7 +46870,7 @@ public partial class alglib
         *************************************************************************/
         public static void rbfsetv2its(rbfmodel s,
             int maxits,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(maxits>=0, "RBFSetV2Its: MaxIts is negative");
             s.model2.maxits = maxits;
@@ -46641,7 +46903,7 @@ public partial class alglib
         *************************************************************************/
         public static void rbfsetv2supportr(rbfmodel s,
             double r,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(r), "RBFSetV2SupportR: R is not finite");
             alglib.ap.assert((double)(r)>=(double)(0), "RBFSetV2SupportR: R<0");
@@ -46691,7 +46953,7 @@ public partial class alglib
             double epsort,
             double epserr,
             int maxits,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(epsort) && (double)(epsort)>=(double)(0), "RBFSetCond: EpsOrt is negative, INF or NAN");
             alglib.ap.assert(math.isfinite(epserr) && (double)(epserr)>=(double)(0), "RBFSetCond: EpsB is negative, INF or NAN");
@@ -46762,14 +47024,14 @@ public partial class alglib
         *************************************************************************/
         public static void rbfbuildmodel(rbfmodel s,
             rbfreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            rbfv1.rbfv1report rep1 = new rbfv1.rbfv1report();
-            rbfv2.rbfv2report rep2 = new rbfv2.rbfv2report();
-            double[,] x3 = new double[0,0];
-            double[] scalevec = new double[0];
-            int i = 0;
-            int curalgorithmtype = 0;
+            var rep1 = new rbfv1.rbfv1report();
+            var rep2 = new rbfv2.rbfv2report();
+            var x3 = new double[0,0];
+            var scalevec = new double[0];
+            var i = 0;
+            var curalgorithmtype = 0;
 
             
             //
@@ -46942,7 +47204,7 @@ public partial class alglib
         *************************************************************************/
         public static double rbfcalc1(rbfmodel s,
             double x0,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -47001,7 +47263,7 @@ public partial class alglib
         public static double rbfcalc2(rbfmodel s,
             double x0,
             double x1,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -47063,7 +47325,7 @@ public partial class alglib
             double x0,
             double x1,
             double x2,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -47121,7 +47383,7 @@ public partial class alglib
         public static void rbfcalc(rbfmodel s,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
             y = new double[0];
 
@@ -47157,9 +47419,9 @@ public partial class alglib
         public static void rbfcalcbuf(rbfmodel s,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(alglib.ap.len(x)>=s.nx, "RBFCalcBuf: Length(X)<NX");
             alglib.ap.assert(apserv.isfinitevector(x, s.nx, _params), "RBFCalcBuf: X contains infinite or NaN values");
@@ -47214,9 +47476,9 @@ public partial class alglib
             rbfcalcbuffer buf,
             double[] x,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(alglib.ap.len(x)>=s.nx, "RBFCalcBuf: Length(X)<NX");
             alglib.ap.assert(apserv.isfinitevector(x, s.nx, _params), "RBFCalcBuf: X contains infinite or NaN values");
@@ -47257,13 +47519,13 @@ public partial class alglib
             double[] x1,
             int n1,
             ref double[,] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] cpx0 = new double[0];
-            double[] cpx1 = new double[0];
-            int[] p01 = new int[0];
-            int[] p11 = new int[0];
-            int[] p2 = new int[0];
+            var cpx0 = new double[0];
+            var cpx1 = new double[0];
+            var p01 = new int[0];
+            var p11 = new int[0];
+            var p2 = new int[0];
 
             y = new double[0,0];
 
@@ -47358,10 +47620,10 @@ public partial class alglib
             double[] x1,
             int n1,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            bool[] dummy = new bool[0];
+            var i = 0;
+            var dummy = new bool[0];
 
             y = new double[0];
 
@@ -47465,9 +47727,9 @@ public partial class alglib
             int n1,
             bool[] flagy,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             y = new double[0];
 
@@ -47569,10 +47831,10 @@ public partial class alglib
             double[] x2,
             int n2,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            bool[] dummy = new bool[0];
+            var i = 0;
+            var dummy = new bool[0];
 
             y = new double[0];
 
@@ -47690,9 +47952,9 @@ public partial class alglib
             int n2,
             bool[] flagy,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             y = new double[0];
 
@@ -47738,22 +48000,22 @@ public partial class alglib
             bool[] flagy,
             bool sparsey,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int nx = 0;
-            int ny = 0;
-            int ylen = 0;
-            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
-            double[] dummyx2 = new double[0];
-            double[] dummyx3 = new double[0];
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int l = 0;
-            double[] tx = new double[0];
-            double[] ty = new double[0];
-            int dstoffs = 0;
-            rbfcalcbuffer calcbuf = new rbfcalcbuffer();
+            var nx = 0;
+            var ny = 0;
+            var ylen = 0;
+            var rs = new hqrnd.hqrndstate();
+            var dummyx2 = new double[0];
+            var dummyx3 = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var l = 0;
+            var tx = new double[0];
+            var ty = new double[0];
+            var dstoffs = 0;
+            var calcbuf = new rbfcalcbuffer();
 
             alglib.ap.assert(n0>0, "RBFGridCalc2VX: invalid value for N0 (N0<=0)!");
             alglib.ap.assert(n1>0, "RBFGridCalc2VX: invalid value for N1 (N1<=0)!");
@@ -47815,7 +48077,7 @@ public partial class alglib
                 {
                     for(j=0; j<=n1-1; j++)
                     {
-                        k = i+j*n0;
+                        k = i+ (j * n0);
                         dstoffs = ny*k;
                         if( sparsey && !flagy[k] )
                         {
@@ -47862,28 +48124,28 @@ public partial class alglib
             bool[] flagy,
             bool sparsey,
             ref double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int ylen = 0;
-            int nx = 0;
-            int ny = 0;
+            var i = 0;
+            var ylen = 0;
+            var nx = 0;
+            var ny = 0;
             double rmax = 0;
-            int[] blocks0 = new int[0];
-            int[] blocks1 = new int[0];
-            int[] blocks2 = new int[0];
-            int blockscnt0 = 0;
-            int blockscnt1 = 0;
-            int blockscnt2 = 0;
+            var blocks0 = new int[0];
+            var blocks1 = new int[0];
+            var blocks2 = new int[0];
+            var blockscnt0 = 0;
+            var blockscnt1 = 0;
+            var blockscnt2 = 0;
             double blockwidth = 0;
             double searchradius = 0;
             double avgfuncpernode = 0;
-            int ntrials = 0;
-            int maxblocksize = 0;
-            rbfv1.gridcalc3v1buf bufseedv1 = new rbfv1.gridcalc3v1buf();
-            alglib.smp.shared_pool bufpool = new alglib.smp.shared_pool();
-            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
-            double[] dummyx3 = new double[0];
+            var ntrials = 0;
+            var maxblocksize = 0;
+            var bufseedv1 = new rbfv1.gridcalc3v1buf();
+            var bufpool = new smp.shared_pool();
+            var rs = new hqrnd.hqrndstate();
+            var dummyx3 = new double[0];
 
             alglib.ap.assert(n0>0, "RBFGridCalc3V: invalid value for N0 (N0<=0)!");
             alglib.ap.assert(n1>0, "RBFGridCalc3V: invalid value for N1 (N1<=0)!");
@@ -47962,7 +48224,7 @@ public partial class alglib
                 rmax = s.model1.rmax;
                 blockwidth = 2*rmax;
                 maxblocksize = 8;
-                searchradius = rmax*rbffarradius+0.5*Math.Sqrt(s.nx)*blockwidth;
+                searchradius = (rmax * rbffarradius) + 0.5*Math.Sqrt(s.nx)*blockwidth;
                 ntrials = 100;
                 avgfuncpernode = 0.0;
                 for(i=0; i<=ntrials-1; i++)
@@ -47970,7 +48232,7 @@ public partial class alglib
                     bufseedv1.tx[0] = x0[hqrnd.hqrnduniformi(rs, n0, _params)];
                     bufseedv1.tx[1] = x1[hqrnd.hqrnduniformi(rs, n1, _params)];
                     bufseedv1.tx[2] = x2[hqrnd.hqrnduniformi(rs, n2, _params)];
-                    avgfuncpernode = avgfuncpernode+(double)nearestneighbor.kdtreetsqueryrnn(s.model1.tree, bufseedv1.requestbuf, bufseedv1.tx, searchradius, true, _params)/(double)ntrials;
+                    avgfuncpernode += ((double)nearestneighbor.kdtreetsqueryrnn(s.model1.tree, bufseedv1.requestbuf, bufseedv1.tx, searchradius, true, _params)/(double)ntrials);
                 }
                 blocks0 = new int[n0+1];
                 blockscnt0 = 0;
@@ -48081,7 +48343,7 @@ public partial class alglib
             ref int nc,
             ref double[,] v,
             ref int modelversion,
-            alglib.xparams _params)
+            xparams _params)
         {
             nx = 0;
             ny = 0;
@@ -48122,9 +48384,9 @@ public partial class alglib
              Copyright 06.07.2016 by Bochkanov Sergey
         *************************************************************************/
         public static int rbfgetmodelversion(rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             result = s.modelversion;
             return result;
@@ -48150,7 +48412,7 @@ public partial class alglib
              Copyright 17.11.2018 by Bochkanov Sergey
         *************************************************************************/
         public static double rbfpeekprogress(rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -48183,7 +48445,7 @@ public partial class alglib
              Copyright 17.11.2018 by Bochkanov Sergey
         *************************************************************************/
         public static void rbfrequesttermination(rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
             s.terminationrequest = true;
         }
@@ -48195,9 +48457,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfalloc(alglib.serializer s,
+        public static void rbfalloc(serializer s,
             rbfmodel model,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -48242,9 +48504,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfserialize(alglib.serializer s,
+        public static void rbfserialize(serializer s,
             rbfmodel model,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -48285,12 +48547,12 @@ public partial class alglib
           -- ALGLIB --
              Copyright 02.02.2012 by Bochkanov Sergey
         *************************************************************************/
-        public static void rbfunserialize(alglib.serializer s,
+        public static void rbfunserialize(serializer s,
             rbfmodel model,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i0 = 0;
-            int i1 = 0;
+            var i0 = 0;
+            var i1 = 0;
 
             rbfpreparenonserializablefields(model, _params);
             
@@ -48338,7 +48600,7 @@ public partial class alglib
              Copyright 12.05.2016 by Bochkanov Sergey
         *************************************************************************/
         private static void rbfpreparenonserializablefields(rbfmodel s,
-            alglib.xparams _params)
+            xparams _params)
         {
             s.n = 0;
             s.hasscale = false;
@@ -48364,7 +48626,7 @@ public partial class alglib
         private static void initializev1(int nx,
             int ny,
             rbfv1.rbfv1model s,
-            alglib.xparams _params)
+            xparams _params)
         {
             if( nx==2 || nx==3 )
             {
@@ -48382,7 +48644,7 @@ public partial class alglib
         private static void initializev2(int nx,
             int ny,
             rbfv2.rbfv2model s,
-            alglib.xparams _params)
+            xparams _params)
         {
             rbfv2.rbfv2create(nx, ny, s, _params);
         }
@@ -48395,10 +48657,10 @@ public partial class alglib
              Copyright 16.06.2016 by Bochkanov Sergey
         *************************************************************************/
         private static void clearreportfields(rbfreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            rep.rmserror = Double.NaN;
-            rep.maxerror = Double.NaN;
+            rep.rmserror = double.NaN;
+            rep.maxerror = double.NaN;
             rep.arows = 0;
             rep.acols = 0;
             rep.annz = 0;

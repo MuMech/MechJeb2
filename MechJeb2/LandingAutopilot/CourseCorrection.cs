@@ -14,24 +14,26 @@ namespace MuMech
             public override AutopilotStep Drive(FlightCtrlState s)
             {
                 if (!core.landing.PredictionReady)
-                    return this;
-
-                // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
-                if (core.landing.deployChutes)
                 {
-                    if (core.landing.ParachutesDeployable())
-                    {
-                        core.landing.ControlParachutes();
-                    }
+                    return this;
                 }
 
-                double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
+                // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
+                if (core.landing.deployChutes && core.landing.ParachutesDeployable())
+                {
+                    core.landing.ControlParachutes();
+                }
+
+                var currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
 
                 if (currentError < 150)
                 {
                     core.thrust.targetThrottle = 0;
                     if (core.landing.rcsAdjustment)
+                    {
                         core.rcs.enabled = true;
+                    }
+
                     return new CoastToDeceleration(core);
                 }
 
@@ -55,16 +57,20 @@ namespace MuMech
                     return new CoastToDeceleration(core);
                 }
 
-                Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
+                var deltaV = core.landing.ComputeCourseCorrection(true);
 
                 status = Localizer.Format("#MechJeb_LandingGuidance_Status3", deltaV.magnitude.ToString("F1"));//"Performing course correction of about " +  + " m/s"
 
                 core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, core.landing);
 
                 if (core.attitude.attitudeAngleFromTarget() < 2)
+                {
                     courseCorrectionBurning = true;
+                }
                 else if (core.attitude.attitudeAngleFromTarget() > 30)
+                {
                     courseCorrectionBurning = false;
+                }
 
                 if (courseCorrectionBurning)
                 {

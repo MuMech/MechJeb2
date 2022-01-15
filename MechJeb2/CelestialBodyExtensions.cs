@@ -16,9 +16,12 @@ namespace MuMech
         //fraction of its initial velocity
         public static double DragLength(this CelestialBody body, Vector3d pos, double dragCoeff, double mass)
         {
-            double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(pos, body), FlightGlobals.getExternalTemperature(pos, body));
+            var airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(pos, body), FlightGlobals.getExternalTemperature(pos, body));
 
-            if (airDensity <= 0) return Double.MaxValue;
+            if (airDensity <= 0)
+            {
+                return double.MaxValue;
+            }
 
             //MechJebCore.print("DragLength " + airDensity.ToString("F5") + " " +  dragCoeff.ToString("F5"));
 
@@ -39,13 +42,16 @@ namespace MuMech
         public static double AltitudeForPressure(this CelestialBody body, double pressure)
         {
             if (!body.atmosphere)
+            {
                 return 0;
-            double upperAlt = body.atmosphereDepth;
+            }
+
+            var upperAlt = body.atmosphereDepth;
             double lowerAlt = 0;
             while (upperAlt - lowerAlt > 10)
             {
-                double testAlt = (upperAlt + lowerAlt) * 0.5;
-                double testPressure = FlightGlobals.getStaticPressure(testAlt, body);
+                var testAlt = (upperAlt + lowerAlt) * 0.5;
+                var testPressure = FlightGlobals.getStaticPressure(testAlt, body);
                 if (testPressure < pressure)
                 {
                     upperAlt = testAlt;
@@ -62,7 +68,10 @@ namespace MuMech
         public static string GetExperimentBiomeSafe(this CelestialBody body, double lat, double lon)
         {
             if (body.BiomeMap == null || body.BiomeMap.Attributes.Length == 0)
+            {
                 return string.Empty;
+            }
+
             return ScienceUtil.GetExperimentBiome(body, lat, lon);
         }
     }

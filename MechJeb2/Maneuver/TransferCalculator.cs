@@ -88,11 +88,15 @@ namespace MuMech
         protected void StartThreads()
         {
             if (_pendingJobs != 0)
+            {
                 throw new Exception("Computation threads have already been started");
+            }
 
             _pendingJobs = Math.Max(1, Environment.ProcessorCount - 1);
-            for (int job = 0; job < _pendingJobs; job++)
+            for (var job = 0; job < _pendingJobs; job++)
+            {
                 ThreadPool.QueueUserWorkItem(ComputeDeltaV);
+            }
 
             //pending_jobs = 1;
             //ComputeDeltaV(this);
@@ -105,17 +109,17 @@ namespace MuMech
 
         private void CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
         {
-            double t1 = t0 + dt;
-            CelestialBody originPlanet = _origin.referenceBody;
+            var t1 = t0 + dt;
+            var originPlanet = _origin.referenceBody;
 
-            Vector3d v1_0 = originPlanet.orbit.getOrbitalVelocityAtUT(t0);
-            Vector3d r1 = originPlanet.orbit.getRelativePositionAtUT(t0);
+            var v1_0 = originPlanet.orbit.getOrbitalVelocityAtUT(t0);
+            var r1 = originPlanet.orbit.getRelativePositionAtUT(t0);
 
-            Vector3d r2 = _destination.getRelativePositionAtUT(t1);
-            Vector3d v2_1 = _destination.getOrbitalVelocityAtUT(t1);
+            var r2 = _destination.getRelativePositionAtUT(t1);
+            var v2_1 = _destination.getOrbitalVelocityAtUT(t1);
 
-            Vector3d v1 = v1_0;
-            Vector3d v2 = v2_1;
+            var v1 = v1_0;
+            var v2 = v2_1;
             try
             {
                 GoodingSolver.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, v2_1, dt, 0, out v1, out v2);
@@ -131,28 +135,35 @@ namespace MuMech
 
         private void ComputeDeltaV(object args)
         {
-            for (int dateIndex = TakeDateIndex();
+            for (var dateIndex = TakeDateIndex();
                 dateIndex >= 0;
                 dateIndex = TakeDateIndex())
             {
-                double t0 = DateFromIndex(dateIndex);
+                var t0 = DateFromIndex(dateIndex);
 
-                if (double.IsInfinity(t0)) continue;
+                if (double.IsInfinity(t0))
+                {
+                    continue;
+                }
 
-                int durationSamples = DurationSamplesForDate(dateIndex);
-                for (int durationIndex = 0; durationIndex < durationSamples; durationIndex++)
+                var durationSamples = DurationSamplesForDate(dateIndex);
+                for (var durationIndex = 0; durationIndex < durationSamples; durationIndex++)
                 {
                     if (Stop)
+                    {
                         break;
+                    }
 
-                    double dt = DurationFromIndex(durationIndex);
+                    var dt = DurationFromIndex(durationIndex);
 
-                    CalcLambertDVs(t0, dt, out Vector3d exitDV, out Vector3d captureDV);
-                    ManeuverParameters maneuver = ComputeEjectionManeuver(exitDV, _origin, t0);
+                    CalcLambertDVs(t0, dt, out var exitDV, out var captureDV);
+                    var maneuver = ComputeEjectionManeuver(exitDV, _origin, t0);
 
                     Computed[dateIndex, durationIndex] = maneuver.dV.magnitude;
                     if (_includeCaptureBurn)
+                    {
                         Computed[dateIndex, durationIndex] += captureDV.magnitude;
+                    }
 #if DEBUG
                     _log[dateIndex, durationIndex] += "," + Computed[dateIndex, durationIndex];
 #endif
@@ -164,18 +175,20 @@ namespace MuMech
 
         private void JobFinished()
         {
-            int remaining = Interlocked.Decrement(ref _pendingJobs);
+            var remaining = Interlocked.Decrement(ref _pendingJobs);
             if (remaining == 0)
             {
-                for (int dateIndex = 0; dateIndex < DateSamples; dateIndex++)
+                for (var dateIndex = 0; dateIndex < DateSamples; dateIndex++)
                 {
-                    int n = DurationSamplesForDate(dateIndex);
-                    for (int durationIndex = 0; durationIndex < n; durationIndex++)
+                    var n = DurationSamplesForDate(dateIndex);
+                    for (var durationIndex = 0; durationIndex < n; durationIndex++)
+                    {
                         if (IsBetter(BestDate, BestDuration, dateIndex, durationIndex))
                         {
                             BestDate     = dateIndex;
                             BestDuration = durationIndex;
                         }
+                    }
                 }
 
                 ArrivalDate = DateFromIndex(BestDate) + DurationFromIndex(BestDuration);
@@ -183,13 +196,13 @@ namespace MuMech
                 _pendingJobs = -1;
 
 #if DEBUG
-                string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                StreamWriter f = File.CreateText(dir + "/DeltaVWorking.csv");
+                var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var f = File.CreateText(dir + "/DeltaVWorking.csv");
                 f.WriteLine(OriginOrbit.referenceBody.referenceBody.gravParameter);
-                for (int dateIndex = 0; dateIndex < DateSamples; dateIndex++)
+                for (var dateIndex = 0; dateIndex < DateSamples; dateIndex++)
                 {
-                    int n = DurationSamplesForDate(dateIndex);
-                    for (int durationIndex = 0; durationIndex < n; durationIndex++) f.WriteLine(_log[dateIndex, durationIndex]);
+                    var n = DurationSamplesForDate(dateIndex);
+                    for (var durationIndex = 0; durationIndex < n; durationIndex++) f.WriteLine(_log[dateIndex, durationIndex]);
                 }
 #endif
             }
@@ -211,27 +224,29 @@ namespace MuMech
 
         public double DurationFromIndex(int index)
         {
-            return MinTransferTime + index * (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
+            return MinTransferTime + (index * (MaxTransferTime - MinTransferTime) / MaxDurationSamples);
         }
 
         public double DateFromIndex(int index)
         {
-            return MinDepartureTime + index * (MaxDepartureTime - MinDepartureTime) / DateSamples;
+            return MinDepartureTime + (index * (MaxDepartureTime - MinDepartureTime) / DateSamples);
         }
 
         private static ManeuverParameters ComputeEjectionManeuver(Vector3d exitVelocity, Orbit initialOrbit, double ut0, bool debug = false)
         {
             // get our reference position on the orbit
-            Vector3d r0 = initialOrbit.getRelativePositionAtUT(ut0);
-            Vector3d v0 = initialOrbit.getOrbitalVelocityAtUT(ut0);
+            var r0 = initialOrbit.getRelativePositionAtUT(ut0);
+            var v0 = initialOrbit.getOrbitalVelocityAtUT(ut0);
 
             // analytic solution for paring orbit ejection to hyperbolic v-infinity
-            SpaceMath.singleImpulseHyperbolicBurn(initialOrbit.referenceBody.gravParameter, r0, v0, exitVelocity, out Vector3d vneg,
-                out Vector3d vpos, out Vector3d r, out double dt, debug);
+            SpaceMath.singleImpulseHyperbolicBurn(initialOrbit.referenceBody.gravParameter, r0, v0, exitVelocity, out var vneg,
+                out var vpos, out var r, out var dt, debug);
 
             if (!dt.IsFinite() || !r.magnitude.IsFinite() || !vpos.magnitude.IsFinite() || !vneg.magnitude.IsFinite())
+            {
                 Debug.Log("[MechJeb TransferCalculator] BUG mu = " + initialOrbit.referenceBody.gravParameter + " r0 = " + r0 + " v0 = " + v0 +
                           " vinf = " + exitVelocity);
+            }
 
             return new ManeuverParameters((vpos - vneg).xzy, ut0 + dt);
         }
@@ -246,14 +261,14 @@ namespace MuMech
 
         private void FindSOIObjective(double[] x, double[] fi, object obj)
         {
-            Vector3d dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
+            var dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
 
-            double burnUT = _initialTime + x[3] * _timeScale;
-            double arrivalUT = _arrivalTime + x[4] * _timeScale;
+            var burnUT = _initialTime + (x[3] * _timeScale);
+            var arrivalUT = _arrivalTime + (x[4] * _timeScale);
 
-            OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out Orbit orbit);
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out var orbit);
 
-            Vector3d err = orbit.getTruePositionAtUT(arrivalUT) - _targetBody.orbit.getTruePositionAtUT(arrivalUT);
+            var err = orbit.getTruePositionAtUT(arrivalUT) - _targetBody.orbit.getTruePositionAtUT(arrivalUT);
 
             fi[0] = dv.sqrMagnitude / _impulseScale / _impulseScale;
 
@@ -273,7 +288,7 @@ namespace MuMech
             const int EQUALITYCONSTRAINTS = 3;
             const int INEQUALITYCONSTRAINTS = 0;
 
-            double[] x = new double[VARS];
+            var x = new double[VARS];
 
             _impulseScale = maneuver.dV.magnitude;
             _timeScale    = _initialOrbit.period;
@@ -286,7 +301,7 @@ namespace MuMech
             x[3] = 0;
             x[4] = 0;
 
-            alglib.minnlccreatef(VARS, x, DIFFSTEP, out alglib.minnlcstate state);
+            alglib.minnlccreatef(VARS, x, DIFFSTEP, out var state);
             alglib.minnlcsetstpmax(state, 1e-3);
             //double rho = 250.0;
             //int outerits = 5;
@@ -298,28 +313,28 @@ namespace MuMech
             alglib.minnlcsetnlc(state, EQUALITYCONSTRAINTS, INEQUALITYCONSTRAINTS);
 
             alglib.minnlcoptimize(state, FindSOIObjective, null, null);
-            alglib.minnlcresults(state, out x, out alglib.minnlcreport rep);
+            alglib.minnlcresults(state, out x, out var rep);
 
             Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
             Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
 
             maneuver.dV = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
-            maneuver.UT = _initialTime + x[3] * _timeScale;
-            utArrival   = _arrivalTime + x[4] * _timeScale;
+            maneuver.UT = _initialTime + (x[3] * _timeScale);
+            utArrival   = _arrivalTime + (x[4] * _timeScale);
         }
 
         private void PeriapsisObjective(double[] x, double[] fi, object obj)
         {
-            Vector3d dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
+            var dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
 
-            double burnUT = _initialTime;
-            double arrivalUT = _arrivalTime;
+            var burnUT = _initialTime;
+            var arrivalUT = _arrivalTime;
 
-            OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out Orbit orbit);
+            OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out var orbit);
 
             if (orbit.referenceBody == _targetBody)
             {
-                double err = (orbit.PeR - _targetPeR) / 1e6;
+                var err = (orbit.PeR - _targetPeR) / 1e6;
                 fi[0] = dv.sqrMagnitude / _impulseScale / _impulseScale;
                 fi[1] = err * err;
             }
@@ -340,7 +355,7 @@ namespace MuMech
             const int EQUALITYCONSTRAINTS = 1;
             const int INEQUALITYCONSTRAINTS = 0;
 
-            double[] x = new double[VARS];
+            var x = new double[VARS];
 
             _impulseScale = maneuver.dV.magnitude;
             _timeScale    = _initialOrbit.period;
@@ -354,10 +369,10 @@ namespace MuMech
             //
             // run the NLP
             //
-            alglib.minnlccreatef(VARS, x, DIFFSTEP, out alglib.minnlcstate state);
+            alglib.minnlccreatef(VARS, x, DIFFSTEP, out var state);
             alglib.minnlcsetstpmax(state, 1e-3);
-            double rho = 250.0;
-            int outerits = 5;
+            var rho = 250.0;
+            var outerits = 5;
             alglib.minnlcsetalgoaul(state, rho, outerits);
             //alglib.minnlcsetalgoslp(state);
             //alglib.minnlcsetalgosqp(state);
@@ -368,7 +383,7 @@ namespace MuMech
             alglib.minnlcsetprecexactrobust(state, 0);
 
             alglib.minnlcoptimize(state, PeriapsisObjective, null, null);
-            alglib.minnlcresults(state, out x, out alglib.minnlcreport rep);
+            alglib.minnlcresults(state, out x, out var rep);
 
             Debug.Log("Transfer calculator: termination type=" + rep.terminationtype);
             Debug.Log("Transfer calculator: iteration count=" + rep.iterationscount);
@@ -380,7 +395,7 @@ namespace MuMech
         public List<ManeuverParameters> OptimizeEjection(double utTransfer, Orbit initialOrbit, CelestialBody targetBody,
             double utArrival, double earliestUT, double targetPeR, bool includeCaptureBurn)
         {
-            int n = 0;
+            var n = 0;
 
             _initialOrbit = initialOrbit;
             _targetBody   = targetBody;
@@ -390,41 +405,41 @@ namespace MuMech
 
             while (true)
             {
-                bool failed = false;
+                var failed = false;
 
-                CalcLambertDVs(utTransfer, utArrival - utTransfer, out Vector3d exitDV, out Vector3d _);
+                CalcLambertDVs(utTransfer, utArrival - utTransfer, out var exitDV, out var _);
 
-                Orbit source = initialOrbit.referenceBody.orbit; // helicentric orbit of the source planet
+                var source = initialOrbit.referenceBody.orbit; // helicentric orbit of the source planet
 
                 // helicentric transfer orbit
                 var transferOrbit = new Orbit();
                 transferOrbit.UpdateFromStateVectors(source.getRelativePositionAtUT(utTransfer),
                     source.getOrbitalVelocityAtUT(utTransfer) + exitDV, source.referenceBody, utTransfer);
 
-                OrbitalManeuverCalculator.SOI_intercept(transferOrbit, initialOrbit.referenceBody, utTransfer, utArrival, out double utSoiExit);
+                OrbitalManeuverCalculator.SOI_intercept(transferOrbit, initialOrbit.referenceBody, utTransfer, utArrival, out var utSoiExit);
 
                 // convert from heliocentric to body centered velocity
-                Vector3d vsoi = transferOrbit.getOrbitalVelocityAtUT(utSoiExit) -
+                var vsoi = transferOrbit.getOrbitalVelocityAtUT(utSoiExit) -
                                 initialOrbit.referenceBody.orbit.getOrbitalVelocityAtUT(utSoiExit);
 
                 // find the magnitude of Vinf from energy
-                double vsoiMag = vsoi.magnitude;
-                double eh = vsoiMag * vsoiMag / 2 - initialOrbit.referenceBody.gravParameter / initialOrbit.referenceBody.sphereOfInfluence;
-                double vinfMag = Math.Sqrt(2 * eh);
+                var vsoiMag = vsoi.magnitude;
+                var eh = (vsoiMag * vsoiMag / 2) - (initialOrbit.referenceBody.gravParameter / initialOrbit.referenceBody.sphereOfInfluence);
+                var vinfMag = Math.Sqrt(2 * eh);
 
                 // scale Vsoi by the Vinf magnitude (this is now the Vinf target that will yield Vsoi at the SOI interface, but in the Vsoi direction)
-                Vector3d vinf = vsoi / vsoi.magnitude * vinfMag;
+                var vinf = vsoi / vsoi.magnitude * vinfMag;
 
                 // using Vsoi seems to work slightly better here than the Vinf from the heliocentric computation at UT_Transfer
                 //ManeuverParameters maneuver = ComputeEjectionManeuver(Vsoi, initial_orbit, UT_transfer, true);
-                ManeuverParameters maneuver = ComputeEjectionManeuver(vinf, initialOrbit, utTransfer);
+                var maneuver = ComputeEjectionManeuver(vinf, initialOrbit, utTransfer);
 
                 // the arrival time plus a bit extra
-                double extraArrival = maneuver.UT + (utArrival - maneuver.UT) * 1.1;
+                var extraArrival = maneuver.UT + ((utArrival - maneuver.UT) * 1.1);
 
                 // check to see if we're in the SOI
                 OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, maneuver.dV, maneuver.UT, extraArrival,
-                    out Orbit orbit2);
+                    out var orbit2);
 
                 if (orbit2.referenceBody != _targetBody)
                 {
@@ -433,10 +448,10 @@ namespace MuMech
                     FindSOI(maneuver, ref utArrival);
                 }
 
-                extraArrival = maneuver.UT + (utArrival - maneuver.UT) * 1.1;
+                extraArrival = maneuver.UT + ((utArrival - maneuver.UT) * 1.1);
 
                 OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, maneuver.dV, maneuver.UT, extraArrival,
-                    out Orbit orbit3);
+                    out var orbit3);
 
                 if (orbit3.referenceBody == _targetBody)
                 {
@@ -463,16 +478,21 @@ namespace MuMech
                     break;
                 }
 
-                if (n++ > 10) throw new OperationException("Ejection Optimization failed; try manual selection");
+                if (n++ > 10)
+                {
+                    throw new OperationException("Ejection Optimization failed; try manual selection");
+                }
             }
 
-            if (nodeList.Count <= 0 || !(targetPeR > 0) || !includeCaptureBurn)
+            if (nodeList.Count == 0 || !(targetPeR > 0) || !includeCaptureBurn)
+            {
                 return nodeList;
+            }
 
             // calculate the incoming orbit
             OrbitalManeuverCalculator.PatchedConicInterceptBody(initialOrbit, targetBody, nodeList[0].dV, nodeList[0].UT, utArrival,
-                out Orbit incomingOrbit);
-            double burnUT = incomingOrbit.NextPeriapsisTime(incomingOrbit.StartUT);
+                out var incomingOrbit);
+            var burnUT = incomingOrbit.NextPeriapsisTime(incomingOrbit.StartUT);
             nodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(incomingOrbit, burnUT), burnUT));
 
             return nodeList;
@@ -500,6 +520,6 @@ namespace MuMech
             return MaxDurationSamples;
         }
 
-        public override int Progress => Math.Min(100, (int)(100 * (1 - (double)NextDateIndex / DateSamples)));
+        public override int Progress => Math.Min(100, (int)(100 * (1 - ((double)NextDateIndex / DateSamples))));
     }
 }

@@ -27,7 +27,11 @@ namespace MuMech
 
         public int CompareTo(ComputerModule other)
         {
-            if (other == null) return 1;
+            if (other == null)
+            {
+                return 1;
+            }
+
             return priority.CompareTo(other.priority);
         }
 
@@ -126,9 +130,20 @@ namespace MuMech
         {
             try
             {
-                if (global != null) ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.Global);
-                if (type != null) ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.Type);
-                if (local != null) ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.Local);
+                if (global != null)
+                {
+                    ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.Global);
+                }
+
+                if (type != null)
+                {
+                    ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.Type);
+                }
+
+                if (local != null)
+                {
+                    ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.Local);
+                }
             }
             catch (Exception e)
             {
@@ -180,15 +195,15 @@ namespace MuMech
         {
             if (!unlockChecked)
             {
-                bool unlock = true;
+                var unlock = true;
 
                 if (ResearchAndDevelopment.Instance != null)
                 {
-                    string[] parts = unlockParts.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    var parts = unlockParts.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length > 0)
                     {
                         unlock = false;
-                        foreach (string p in parts)
+                        foreach (var p in parts)
                         {
                             if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 && ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
                             {
@@ -198,14 +213,14 @@ namespace MuMech
                         }
                     }
 
-                    string[] techs = unlockTechs.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    var techs = unlockTechs.Split(new char[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     if (techs.Length > 0)
                     {
                         if (parts.Length == 0)
                         {
                             unlock = false;
                         }
-                        foreach (string t in techs)
+                        foreach (var t in techs)
                         {
                             if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
                             {
@@ -245,7 +260,7 @@ namespace MuMech
     //module only gets disabled when all of its users have disabled it.
     public class UserPool : List<object>
     {
-        ComputerModule controlledModule;
+        readonly ComputerModule controlledModule;
 
         public UserPool(ComputerModule controlledModule)
             : base()
@@ -268,7 +283,10 @@ namespace MuMech
             {
                 base.Remove(user);
             }
-            if (base.Count == 0) controlledModule.enabled = false;
+            if (base.Count == 0)
+            {
+                controlledModule.enabled = false;
+            }
         }
 
         public new void Clear()
@@ -285,12 +303,11 @@ namespace MuMech
             }
             else
             {
-                foreach (object o in this)
+                foreach (var o in this)
                 {
-                    ComputerModule c = o as ComputerModule;
-                    if (c != null && c != controlledModule)
+                    if (o is ComputerModule && (o as ComputerModule) != controlledModule && (o as ComputerModule)?.users.RecursiveUser(user) == true)
                     {
-                        if (c.users.RecursiveUser(user)) return true;
+                        return true;
                     }
                 }
                 return false;

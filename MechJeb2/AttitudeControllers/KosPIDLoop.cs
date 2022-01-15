@@ -59,8 +59,8 @@ namespace MuMech.AttitudeControllers
 
         public double Update(double input)
         {
-            double error = Setpoint - input;
-            double pTerm = error * Kp;
+            var error = Setpoint - input;
+            var pTerm = error * Kp;
             double iTerm = 0;
             double dTerm = 0;
             double dt = TimeWarp.fixedDeltaTime;
@@ -82,7 +82,7 @@ namespace MuMech.AttitudeControllers
                         unWinding = false;
                     }
                 }
-                iTerm = ITerm + error * dt * _loopKi;
+                iTerm = ITerm + (error * dt * _loopKi);
             }
             ChangeRate = (input - Input) / dt;
             if (Kd != 0)
@@ -112,9 +112,14 @@ namespace MuMech.AttitudeControllers
             ITerm = iTerm;
             DTerm = dTerm;
             if (_loopKi != 0)
+            {
                 ErrorSum = iTerm / _loopKi;
+            }
             else
+            {
                 ErrorSum = 0;
+            }
+
             return Output;
         }
 

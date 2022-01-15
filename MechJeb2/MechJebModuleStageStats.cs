@@ -63,7 +63,7 @@ namespace MuMech
 
         private int needRebuild = 1;
 
-        private FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
+        private readonly FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
 
         long millisecondsBetweenSimulations;
 
@@ -176,7 +176,7 @@ namespace MuMech
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
                 
                 //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
-                List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+                var parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
 
                 if (HighLogic.LoadedSceneIsEditor)
                 {
@@ -224,11 +224,11 @@ namespace MuMech
         {
             try
             {
-                CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : vessel.mainBody;
+                var simBody = HighLogic.LoadedSceneIsEditor ? editorBody : vessel.mainBody;
 
-                double staticPressureKpa = (HighLogic.LoadedSceneIsEditor || !liveSLT ? (simBody.atmosphere ? simBody.GetPressure(altSLT) : 0) : vessel.staticPressurekPa);
-                double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT ? simBody.GetDensity(simBody.GetPressure(altSLT), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
-                double mach = HighLogic.LoadedSceneIsEditor ? this.mach : vessel.mach;
+                var staticPressureKpa = (HighLogic.LoadedSceneIsEditor || !liveSLT ? (simBody.atmosphere ? simBody.GetPressure(altSLT) : 0) : vessel.staticPressurekPa);
+                var atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT ? simBody.GetDensity(simBody.GetPressure(altSLT), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
+                var mach = HighLogic.LoadedSceneIsEditor ? this.mach : vessel.mach;
 
                 //Run the simulation
                 newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
@@ -241,7 +241,7 @@ namespace MuMech
 
             //see how long the simulation took
             stopwatch.Stop();
-            long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
+            var millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
             stopwatch.Reset();
 
             //set the delay before the next simulation

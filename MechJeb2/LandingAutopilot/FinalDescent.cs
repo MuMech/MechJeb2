@@ -17,19 +17,22 @@ namespace MuMech
 
             public override AutopilotStep OnFixedUpdate()
             {
-                double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
+                var minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
 
                 if (core.node.autowarp && aggressivePolicy != null)
                 {
-                    double maxVel = 1.02 * aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity);
+                    var maxVel = 1.02 * aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity);
 
-                    double diffPercent = ((maxVel / vesselState.speedSurface) - 1) * 100;
+                    var diffPercent = ((maxVel / vesselState.speedSurface) - 1) * 100;
                     
                     if (minalt > 200  && diffPercent > 0 && (Vector3d.Angle(vesselState.forward, -vesselState.surfaceVelocity) < 45))
+                    {
                         core.warp.WarpRegularAtRate((float)(diffPercent * diffPercent * diffPercent));
+                    }
                     else
+                    {
                         core.warp.MinimumWarp(true);
-                    
+                    }
                 }
                 return this;
             }
@@ -44,7 +47,7 @@ namespace MuMech
 
                 // TODO perhaps we should pop the parachutes at this point, or at least consider it depending on the altitude.
 
-                double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
+                var minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
 
                 if (vesselState.limitedMaxThrustAccel < vesselState.gravityForce.magnitude)
                 {
@@ -78,8 +81,8 @@ namespace MuMech
                         core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
 
                         //core.thrust.trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
-                        Vector3d estimatedLandingPosition = vesselState.CoM + vesselState.surfaceVelocity.sqrMagnitude / (2 * vesselState.limitedMaxThrustAccel) * vesselState.surfaceVelocity.normalized;
-                        double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
+                        var estimatedLandingPosition = vesselState.CoM + (vesselState.surfaceVelocity.sqrMagnitude / (2 * vesselState.limitedMaxThrustAccel) * vesselState.surfaceVelocity.normalized);
+                        var terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(estimatedLandingPosition);
                         aggressivePolicy = new GravityTurnDescentSpeedPolicy(terrainRadius, mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);  // this constant policy creation is wastefull...
                         core.thrust.trans_spd_act = (float)(aggressivePolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity));
                     }

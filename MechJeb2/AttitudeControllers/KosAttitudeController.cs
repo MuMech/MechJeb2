@@ -6,10 +6,10 @@ namespace MuMech.AttitudeControllers
     class KosAttitudeController : BaseAttitudeController
     {
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDouble maxStoppingTime = new EditableDouble(2);
+        private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
+        private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
         //public double RollControlRange {
         //    get { return this.rollControlRange; }
         //    set { this.rollControlRange.val = Math.Max(EPSILON, Math.Min(Math.PI, value)); }
@@ -80,25 +80,35 @@ namespace MuMech.AttitudeControllers
         public double PhiTotal() {
             UpdateStateVectors();
 
-            double PhiTotal = Vector3d.Angle(vesselForward, targetForward) * Mathf.Deg2Rad;
+            var PhiTotal = Vector3d.Angle(vesselForward, targetForward) * Mathf.Deg2Rad;
             if (Vector3d.Angle(vesselTop, targetForward) > 90)
+            {
                 PhiTotal *= -1;
+            }
 
             return PhiTotal;
         }
 
         public Vector3d PhiVector() {
-            Vector3d Phi = Vector3d.zero;
+            var Phi = Vector3d.zero;
 
             Phi[0] = Vector3d.Angle(vesselForward, Vector3d.Exclude(vesselStarboard, targetForward)) * Mathf.Deg2Rad;
             if (Vector3d.Angle(vesselTop, Vector3d.Exclude(vesselStarboard, targetForward)) > 90)
+            {
                 Phi[0] *= -1;
+            }
+
             Phi[1] = Vector3d.Angle(vesselTop, Vector3d.Exclude(vesselForward, targetTop)) * Mathf.Deg2Rad;
             if (Vector3d.Angle(vesselStarboard, Vector3d.Exclude(vesselForward, targetTop)) > 90)
+            {
                 Phi[1] *= -1;
+            }
+
             Phi[2] = Vector3d.Angle(vesselForward, Vector3d.Exclude(vesselTop, targetForward)) * Mathf.Deg2Rad;
             if (Vector3d.Angle(vesselStarboard, Vector3d.Exclude(vesselTop, targetForward)) > 90)
+            {
                 Phi[2] *= -1;
+            }
 
             return Phi;
         }
@@ -108,7 +118,7 @@ namespace MuMech.AttitudeControllers
 
             phiVector = PhiVector();
             
-            for(int i = 0; i < 3; i++) {
+            for(var i = 0; i < 3; i++) {
                 MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
             }
 
@@ -140,11 +150,14 @@ namespace MuMech.AttitudeControllers
         private void UpdateControl() {
             /* TODO: static engine torque and/or differential throttle */
 
-            for(int i = 0; i < 3; i++) {
-                double clamp = Math.Max(Math.Abs(Actuation[i]), 0.005) * 2;
+            for(var i = 0; i < 3; i++) {
+                var clamp = Math.Max(Math.Abs(Actuation[i]), 0.005) * 2;
                 Actuation[i] = TargetTorque[i] / ControlTorque[i];
                 if (Math.Abs(Actuation[i]) < EPSILON || double.IsNaN(Actuation[i]))
+                {
                     Actuation[i] = 0;
+                }
+
                 Actuation[i] = Math.Max(Math.Min(Actuation[i], clamp), -clamp);
             }
         }

@@ -55,13 +55,17 @@ namespace MuMech
                     if (navBall.NavBallGuidance)
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_NavBallGuidance_btn1")))//Hide ascent navball guidance
-                            navBall.NavBallGuidance = false;
+                    {
+                        navBall.NavBallGuidance = false;
                     }
+                }
                     else
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_NavBallGuidance_btn2")))//Show ascent navball guidance
-                            navBall.NavBallGuidance = true;
+                    {
+                        navBall.NavBallGuidance = true;
                     }
+                }
                 }
             }
 
@@ -105,39 +109,67 @@ namespace MuMech
                 if (ascentPathIdx == ascentType.PVG)
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button3")))//Reset Guidance (DO NOT PRESS)
+                    {
                         core.guidance.Reset();
-
+                    }
 
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
 
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button4"), autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//"TARG"
+                    {
                         autopilot.showTargeting = !autopilot.showTargeting;
+                    }
+
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button5"), autopilot.showGuidanceSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//GUID
+                    {
                         autopilot.showGuidanceSettings = !autopilot.showGuidanceSettings;
+                    }
+
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button6"), autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//OPTS
+                    {
                         autopilot.showSettings = !autopilot.showSettings;
+                    }
+
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button7"), autopilot.showStatus ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//STATUS
+                    {
                         autopilot.showStatus = !autopilot.showStatus;
+                    }
+
                     GUILayout.EndHorizontal();
                 }
                 else if (ascentPathIdx == ascentType.GRAVITYTURN)
                 {
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button8"), autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//TARG
+                    {
                         autopilot.showTargeting = !autopilot.showTargeting;
+                    }
+
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button9"), autopilot.showGuidanceSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//GUID
+                    {
                         autopilot.showGuidanceSettings = !autopilot.showGuidanceSettings;
+                    }
+
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button10"), autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//OPTS
+                    {
                         autopilot.showSettings = !autopilot.showSettings;
+                    }
+
                     GUILayout.EndHorizontal();
                 }
                 else if (ascentPathIdx == ascentType.CLASSIC)
                 {
                     GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button11"), autopilot.showTargeting ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//TARG
+                    {
                         autopilot.showTargeting = !autopilot.showTargeting;
+                    }
+
                     if ( GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button12"), autopilot.showSettings ? btActive : btNormal, GUILayout.ExpandWidth(true)) )//OPTS
+                    {
                         autopilot.showSettings = !autopilot.showSettings;
+                    }
+
                     GUILayout.EndHorizontal();
                 }
 
@@ -157,36 +189,30 @@ namespace MuMech
 
                         if ( pvgascent.DesiredApoapsis >= 0 && pvgascent.DesiredApoapsis < autopilot.desiredOrbitAltitude )
                         {
-                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            var s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.yellow;
                             GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label3"), s);//Ap < Pe: circularizing orbit
                         }
                         else
                         {
-                            if ( pvgascent.AttachAltFlag )
+                            if (pvgascent.AttachAltFlag && pvgascent.DesiredAttachAlt > pvgascent.DesiredApoapsis)
                             {
-                                if ( pvgascent.DesiredAttachAlt > pvgascent.DesiredApoapsis )
-                                {
-                                    GUIStyle s = new GUIStyle(GUI.skin.label);
-                                    s.normal.textColor = XKCDColors.Orange;
-                                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh"), s);//Attach > Ap: apoapsis insertion
-                                }
+                                var s = new GUIStyle(GUI.skin.label);
+                                s.normal.textColor = XKCDColors.Orange;
+                                GUILayout.Label(Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh"), s);//Attach > Ap: apoapsis insertion
                             }
                         }
                         if ( pvgascent.DesiredApoapsis < 0 )
                         {
-                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            var s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = XKCDColors.Orange;
                             GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label4"), s);//Hyperbolic target orbit (neg Ap)
                         }
-                        if ( pvgascent.AttachAltFlag )
+                        if (pvgascent.AttachAltFlag && pvgascent.DesiredAttachAlt < autopilot.desiredOrbitAltitude)
                         {
-                            if ( pvgascent.DesiredAttachAlt < autopilot.desiredOrbitAltitude )
-                            {
-                                GUIStyle s = new GUIStyle(GUI.skin.label);
-                                s.normal.textColor = XKCDColors.Orange;
-                                GUILayout.Label(Localizer.Format("#MechJeb_Ascent_warnAttachAltLow"), s);//Attach < Pe: periapsis insertion
-                            }
+                            var s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = XKCDColors.Orange;
+                            GUILayout.Label(Localizer.Format("#MechJeb_Ascent_warnAttachAltLow"), s);//Attach < Pe: periapsis insertion
                         }
                     }
                     else
@@ -194,19 +220,28 @@ namespace MuMech
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label5"), autopilot.desiredOrbitAltitude, "km");//Orbit altitude
                     }
 
-                    GUIStyle si = new GUIStyle(GUI.skin.label);
+                    var si = new GUIStyle(GUI.skin.label);
                     if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2.001)
+                    {
                         si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+                    }
+
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label6"), si, GUILayout.ExpandWidth(true));//Orbit inc.
                     desiredInclination.text = GUILayout.TextField(desiredInclination.text, GUILayout.ExpandWidth(true), GUILayout.Width(100));
                     GUILayout.Label("º", GUILayout.ExpandWidth(false));
                     if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button13")))//Current
+                    {
                         desiredInclination.val = vesselState.latitude;
+                    }
+
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     if (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2.001)
+                    {
                         GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", Math.Abs(vesselState.latitude) - Math.Abs(desiredInclination)), si);//inc {0:F1}º below current latitude
+                    }
+
                     GUILayout.EndHorizontal();
                     autopilot.desiredInclination = desiredInclination;
                 }
@@ -240,22 +275,28 @@ namespace MuMech
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label15"), core.guidance.pvgInterval, "s");//Guidance Interval:
                         if ( core.guidance.pvgInterval < 1 || core.guidance.pvgInterval > 30 )
                         {
-                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            var s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.yellow;
                             GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label16"), s);//Guidance intervals are limited to between 1s and 30s
                         }
                         GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label17"), autopilot.limitQa, "Pa-rad");//Qα limit
                         if ( autopilot.limitQa < 100 || autopilot.limitQa > 4000 )
                         {
-                            GUIStyle s = new GUIStyle(GUI.skin.label);
+                            var s = new GUIStyle(GUI.skin.label);
                             s.normal.textColor = Color.yellow;
 
                             if ( autopilot.limitQa < 100 )
+                            {
                                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label18"), s);//Qα limit cannot be set to lower than 100 Pa-rad
+                            }
                             else if ( autopilot.limitQa > 10000 )
+                            {
                                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label19"), s);//Qα limit cannot be set to higher than 10000 Pa-rad
+                            }
                             else
+                            {
                                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label20"), s);//Qα limit is recommended to be 1000 to 4000 Pa-rad
+                            }
                         }
                         GUILayout.BeginHorizontal();
                         pvgascent.FixedCoast  = GUILayout.Toggle(pvgascent.FixedCoast,"Fixed Coast Length:");
@@ -309,8 +350,12 @@ namespace MuMech
                     if (ascentPathIdx != ascentType.PVG)
                     {
                         GUILayout.BeginHorizontal();
-                        GUIStyle s = new GUIStyle(GUI.skin.toggle);
-                        if (autopilot.limitingAoA) s.onHover.textColor = s.onNormal.textColor = Color.green;
+                        var s = new GUIStyle(GUI.skin.toggle);
+                        if (autopilot.limitingAoA)
+                        {
+                            s.onHover.textColor = s.onNormal.textColor = Color.green;
+                        }
+
                         autopilot.limitAoA = GUILayout.Toggle(autopilot.limitAoA, Localizer.Format("#MechJeb_Ascent_checkbox3"), s, GUILayout.ExpandWidth(true));//Limit AoA to
                         autopilot.maxAoA.text = GUILayout.TextField(autopilot.maxAoA.text, GUILayout.Width(30));
                         GUILayout.Label("º (" + autopilot.currentMaxAoA.ToString("F1") + "°)", GUILayout.ExpandWidth(true));
@@ -320,9 +365,12 @@ namespace MuMech
                         GUILayout.Space(25);
                         if (autopilot.limitAoA)
                         {
-                            GUIStyle sl = new GUIStyle(GUI.skin.label);
+                            var sl = new GUIStyle(GUI.skin.label);
                             if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
+                            {
                                 sl.normal.textColor = sl.hover.textColor = Color.green;
+                            }
+
                             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label24"), autopilot.aoALimitFadeoutPressure, "Pa", 50, sl);//Dynamic Pressure Fadeout
                         }
                         GUILayout.EndHorizontal();
@@ -343,7 +391,10 @@ namespace MuMech
                     }
 
                     autopilot.autostage = GUILayout.Toggle(autopilot.autostage, Localizer.Format("#MechJeb_Ascent_checkbox5"));//Autostage
-                    if (autopilot.autostage) core.staging.AutostageSettingsInfoItem();
+                    if (autopilot.autostage)
+                    {
+                        core.staging.AutostageSettingsInfoItem();
+                    }
 
                     autopilot.autodeploySolarPanels = GUILayout.Toggle(autopilot.autodeploySolarPanels,
                             Localizer.Format("#MechJeb_Ascent_checkbox6"));//Auto-deploy solar panels
@@ -365,78 +416,84 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                 }
 
-                if (autopilot.showStatus)
+                if (autopilot.showStatus && ascentPathIdx == ascentType.PVG)
                 {
-                    if (ascentPathIdx == ascentType.PVG)
+                    if (core.guidance.solution != null)
                     {
-                        if (core.guidance.solution != null)
+                        for (var i = core.guidance.solution.num_segments; i > 0; i--)
                         {
-                            for(int i = core.guidance.solution.num_segments; i > 0; i--)
-                                GUILayout.Label(String.Format("{0}: {1}", i, core.guidance.solution.ArcString(vesselState.time, i-1)));
+                            GUILayout.Label(string.Format("{0}: {1}", i, core.guidance.solution.ArcString(vesselState.time, i - 1)));
                         }
+                    }
 
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(string.Format("vgo: {0:F1}", core.guidance.vgo), GUILayout.Width(100));
+                    GUILayout.Label(string.Format("heading: {0:F1}", core.guidance.heading), GUILayout.Width(100));
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(string.Format("tgo: {0:F3}", core.guidance.tgo), GUILayout.Width(100));
+                    GUILayout.Label(string.Format("pitch: {0:F1}", core.guidance.pitch), GUILayout.Width(100));
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    var si = new GUIStyle(GUI.skin.label);
+                    if (core.guidance.isStable())
+                    {
+                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
+                    }
+                    else if (core.guidance.isInitializing() || core.guidance.status == PVGStatus.FINISHED)
+                    {
+                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
+                    }
+                    else
+                    {
+                        si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
+                    }
+
+                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label26") + core.guidance.status, si);//Guidance Status:
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label27") + core.guidance.successful_converges, GUILayout.Width(100));//converges:
+                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label28") + core.guidance.last_lm_status, GUILayout.Width(100));//status:
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("n: " + core.guidance.last_lm_iteration_count + "(" + core.guidance.max_lm_iteration_count + ")", GUILayout.Width(100));
+                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label29") + GuiUtils.TimeToDHMS(core.guidance.staleness));//staleness:
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(string.Format("znorm: {0:G5}", core.guidance.last_znorm));
+                    GUILayout.EndHorizontal();
+                    if (core.guidance.last_failure_cause != null)
+                    {
+                        var s = new GUIStyle(GUI.skin.label);
+                        s.normal.textColor = core.guidance.staleness < 2 && core.guidance.successful_converges > 0 ? Color.green : Color.red;
                         GUILayout.BeginHorizontal();
-                        GUILayout.Label(String.Format("vgo: {0:F1}", core.guidance.vgo), GUILayout.Width(100));
-                        GUILayout.Label(String.Format("heading: {0:F1}", core.guidance.heading), GUILayout.Width(100));
+                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label30") + core.guidance.last_failure_cause, s);//LAST FAILURE:
                         GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label(String.Format("tgo: {0:F3}", core.guidance.tgo), GUILayout.Width(100));
-                        GUILayout.Label(String.Format("pitch: {0:F1}", core.guidance.pitch), GUILayout.Width(100));
-                        GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                        GUIStyle si = new GUIStyle(GUI.skin.label);
-                        if ( core.guidance.isStable() )
-                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Green;
-                        else if ( core.guidance.isInitializing() || core.guidance.status == PVGStatus.FINISHED )
-                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Orange;
-                        else
-                            si.onHover.textColor = si.onNormal.textColor = si.normal.textColor = XKCDColors.Red;
-                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label26") + core.guidance.status, si);//Guidance Status:
-                        GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label27") + core.guidance.successful_converges, GUILayout.Width(100));//converges:
-                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label28") + core.guidance.last_lm_status, GUILayout.Width(100));//status:
-                        GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label("n: " + core.guidance.last_lm_iteration_count + "(" + core.guidance.max_lm_iteration_count + ")", GUILayout.Width(100));
-                        GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label29") + GuiUtils.TimeToDHMS(core.guidance.staleness));//staleness:
-                        GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label(String.Format("znorm: {0:G5}", core.guidance.last_znorm));
-                        GUILayout.EndHorizontal();
-                        if ( core.guidance.last_failure_cause != null )
+                    }
+
+                    if (vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH && vessel.situation != Vessel.Situations.SPLASHED && atmoStats.Length > vessel.currentStage)
+                    {
+                        var m0 = atmoStats[vessel.currentStage].StartMass;
+                        var thrust = atmoStats[vessel.currentStage].EndThrust;
+
+                        if (Math.Abs(vesselState.mass - m0) / m0 > 0.01)
                         {
-                            GUIStyle s = new GUIStyle(GUI.skin.label);
-                            s.normal.textColor = core.guidance.staleness < 2 && core.guidance.successful_converges > 0 ? Color.green : Color.red;
+                            var s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = Color.yellow;
                             GUILayout.BeginHorizontal();
-                            GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label30") + core.guidance.last_failure_cause, s);//LAST FAILURE:
+                            GUILayout.Label(string.Format(Localizer.Format("#MechJeb_Ascent_label31") + "{0:F1}%", (vesselState.mass - m0) / m0 * 100.0), s);//MASS IS OFF BY
                             GUILayout.EndHorizontal();
                         }
 
-                        if ( vessel.situation != Vessel.Situations.LANDED && vessel.situation != Vessel.Situations.PRELAUNCH && vessel.situation != Vessel.Situations.SPLASHED && atmoStats.Length > vessel.currentStage)
+                        var thrustfrac = Math.Abs(vesselState.thrustCurrent - thrust) / thrust;
+
+                        if (thrustfrac > 0.10 && thrustfrac < 0.99)
                         {
-                            double m0 = atmoStats[vessel.currentStage].StartMass;
-                            double thrust = atmoStats[vessel.currentStage].EndThrust;
-
-                            if (Math.Abs(vesselState.mass - m0) / m0 > 0.01)
-                            {
-                                GUIStyle s = new GUIStyle(GUI.skin.label);
-                                s.normal.textColor = Color.yellow;
-                                GUILayout.BeginHorizontal();
-                                GUILayout.Label(String.Format(Localizer.Format("#MechJeb_Ascent_label31") +"{0:F1}%", (vesselState.mass - m0) / m0 * 100.0 ), s);//MASS IS OFF BY
-                                GUILayout.EndHorizontal();
-                            }
-
-                            double thrustfrac = Math.Abs(vesselState.thrustCurrent - thrust) / thrust;
-
-                            if (thrustfrac > 0.10 && thrustfrac < 0.99)
-                            {
-                                GUIStyle s = new GUIStyle(GUI.skin.label);
-                                s.normal.textColor = Color.yellow;
-                                GUILayout.BeginHorizontal();
-                                GUILayout.Label(String.Format(Localizer.Format("#MechJeb_Ascent_label32") +"{0:F1}%", (vesselState.thrustCurrent - thrust) / thrust * 100.0 ), s);//THRUST IS OFF BY
-                                GUILayout.EndHorizontal();
-                            }
+                            var s = new GUIStyle(GUI.skin.label);
+                            s.normal.textColor = Color.yellow;
+                            GUILayout.BeginHorizontal();
+                            GUILayout.Label(string.Format(Localizer.Format("#MechJeb_Ascent_label32") + "{0:F1}%", (vesselState.thrustCurrent - thrust) / thrust * 100.0), s);//THRUST IS OFF BY
+                            GUILayout.EndHorizontal();
                         }
                     }
                 }
@@ -523,36 +580,33 @@ namespace MuMech
                         GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label34"));//Select a target for a timed launch.
                     }
 
-                    if ( ascentPathIdx == ascentType.PVG )
+                    if (ascentPathIdx == ascentType.PVG && !launchingToPlane && !launchingToRendezvous && !launchingToMatchLAN && !launchingToLAN)
                     {
-                        if (!launchingToPlane && !launchingToRendezvous && !launchingToMatchLAN && !launchingToLAN)
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_LaunchToLan"), GUILayout.ExpandWidth(false)))//Launch to LAN
                         {
-                            GUILayout.BeginHorizontal();
-                            if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_LaunchToLan"), GUILayout.ExpandWidth(false)))//Launch to LAN
-                            {
-                                launchingToLAN = true;
+                            launchingToLAN = true;
 
-                                autopilot.StartCountdown(vesselState.time +
-                                        SpaceMath.MinimumTimeToPlane(
-                                            mainBody.rotationPeriod,
-                                            vesselState.latitude,
-                                            vesselState.celestialLongitude,
-                                            desiredLAN,
-                                            desiredInclination
-                                            )
-                                        );
-                            }
-
-                            desiredLAN.text = GUILayout.TextField(desiredLAN.text, GUILayout.Width(60));
-                            autopilot.desiredLAN = desiredLAN;
-                            GUILayout.Label("º", GUILayout.ExpandWidth(false));
-                            GUILayout.EndHorizontal();
+                            autopilot.StartCountdown(vesselState.time +
+                                    SpaceMath.MinimumTimeToPlane(
+                                        mainBody.rotationPeriod,
+                                        vesselState.latitude,
+                                        vesselState.celestialLongitude,
+                                        desiredLAN,
+                                        desiredInclination
+                                        )
+                                    );
                         }
+
+                        desiredLAN.text = GUILayout.TextField(desiredLAN.text, GUILayout.Width(60));
+                        autopilot.desiredLAN = desiredLAN;
+                        GUILayout.Label("º", GUILayout.ExpandWidth(false));
+                        GUILayout.EndHorizontal();
                     }
 
                     if (launchingToPlane || launchingToRendezvous || launchingToMatchLAN || launchingToLAN)
                     {
-                        string message = "";
+                        var message = "";
                         if (launchingToPlane)
                         {
                             desiredInclination = MuUtils.Clamp(core.target.TargetOrbit.inclination, Math.Abs(vesselState.latitude), 180 - Math.Abs(vesselState.latitude));
@@ -582,7 +636,9 @@ namespace MuMech
                         GUILayout.Label(message);
 
                         if (GUILayout.Button(Localizer.Format("#MechJeb_Ascent_button17")))//Abort
+                        {
                             launchingToPlane = launchingToRendezvous = launchingToMatchLAN = launchingToLAN = autopilot.timedLaunch = false;
+                        }
                     }
                 }
 
@@ -592,7 +648,7 @@ namespace MuMech
                 }
                 if (core.DeactivateControl)
                 {
-                    GUIStyle s = new GUIStyle(GUI.skin.label);
+                    var s = new GUIStyle(GUI.skin.label);
                     s.normal.textColor = Color.red;
                     GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label36"), s);//CONTROL DISABLED (AVIONICS)
                 }
@@ -607,7 +663,10 @@ namespace MuMech
             autopilot.ascentPathIdxPublic = (ascentType)GuiUtils.ComboBox.Box((int)autopilot.ascentPathIdxPublic, autopilot.ascentPathList, this);
             GUILayout.EndHorizontal();
 
-            if (autopilot.ascentMenu != null) autopilot.ascentMenu.enabled = GUILayout.Toggle(autopilot.ascentMenu.enabled, Localizer.Format("#MechJeb_Ascent_checkbox10"));//Edit ascent path
+            if (autopilot.ascentMenu != null)
+            {
+                autopilot.ascentMenu.enabled = GUILayout.Toggle(autopilot.ascentMenu.enabled, Localizer.Format("#MechJeb_Ascent_checkbox10"));//Edit ascent path
+            }
 
             GUILayout.EndVertical();
 

@@ -36,22 +36,22 @@ namespace MuMech {
 
         private void flightangle5constraint(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) ) * rTm * vTm * Math.Cos(gammaT);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var hf = Vector3d.Cross(rf, vf);
+            var hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) ) * rTm * vTm * Math.Cos(gammaT);
 
             hT = -hT.xzy;
 
-            Vector3d hmiss = hf - hT;
+            var hmiss = hf - hT;
 
             // 5 constraints
             if (!terminal)
             {
-                z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
-                z[1] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gammaT);
+                z[0] = ((rf.magnitude * rf.magnitude) - (rTm * rTm)) / 2.0;
+                z[1] = Vector3d.Dot(rf, vf) - (rf.magnitude * vf.magnitude * Math.Sin(gammaT));
                 z[2] = hmiss[0];
                 z[3] = hmiss[1];
                 z[4] = hmiss[2];
@@ -79,29 +79,29 @@ namespace MuMech {
 
         private void flightangle4constraint(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
-            Vector3d rn = Vector3d.Cross(rf, n);
-            Vector3d vn = Vector3d.Cross(vf, n);
-            Vector3d hf = Vector3d.Cross(rf, vf);
+            var n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
+            var rn = Vector3d.Cross(rf, n);
+            var vn = Vector3d.Cross(vf, n);
+            var hf = Vector3d.Cross(rf, vf);
 
             if (!terminal)
             {
-                z[0] = ( rf.magnitude * rf.magnitude - rTm * rTm ) / 2.0;
-                z[1] = ( vf.magnitude * vf.magnitude - vTm * vTm ) / 2.0;
-                z[2] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(incT);
-                z[3] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gammaT);
-                z[4] = rTm * rTm * ( Vector3d.Dot(vf, prf) - vTm * Math.Sin(gammaT) / rTm * Vector3d.Dot(rf, prf) ) -
-                    vTm * vTm * ( Vector3d.Dot(rf, pvf) - rTm * Math.Sin(gammaT) / vTm * Vector3d.Dot(vf, pvf) );
-                z[5] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, rn) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, vn);
+                z[0] = ((rf.magnitude * rf.magnitude) - (rTm * rTm)) / 2.0;
+                z[1] = ((vf.magnitude * vf.magnitude) - (vTm * vTm)) / 2.0;
+                z[2] = Vector3d.Dot(n, hf) - (hf.magnitude * Math.Cos(incT));
+                z[3] = Vector3d.Dot(rf, vf) - (rf.magnitude * vf.magnitude * Math.Sin(gammaT));
+                z[4] = (rTm * rTm * ( Vector3d.Dot(vf, prf) - (vTm * Math.Sin(gammaT) / rTm * Vector3d.Dot(rf, prf)))) -
+                    (vTm * vTm * ( Vector3d.Dot(rf, pvf) - (rTm * Math.Sin(gammaT) / vTm * Vector3d.Dot(vf, pvf))));
+                z[5] = (Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, rn)) + (Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, vn));
             }
             else
             {
-                double hTm = rTm * vTm * Math.Cos(gammaT);
+                var hTm = rTm * vTm * Math.Cos(gammaT);
 
                 z[0] = hf.magnitude - hTm;
                 z[1] = z[2] = z[3] = z[4] = z[5] = 0.0;
@@ -134,32 +134,32 @@ namespace MuMech {
         //
         private void keplerian3constraint(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
-            Vector3d rn = Vector3d.Cross(rf, n);
-            Vector3d vn = Vector3d.Cross(vf, n);
+            var hf = Vector3d.Cross(rf, vf);
+            var n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
+            var rn = Vector3d.Cross(rf, n);
+            var vn = Vector3d.Cross(vf, n);
 
-            double hTm = Math.Sqrt( smaT * ( 1 - eccT * eccT ) );
+            var hTm = Math.Sqrt( smaT * ( 1 - (eccT * eccT)) );
 
-            double smaf = 1.0 / ( 2.0 / rf.magnitude - vf.sqrMagnitude );
-            double eccf = Math.Sqrt(1.0 - hf.sqrMagnitude / smaf);
-            double rf3 = rf.magnitude * rf.sqrMagnitude;
+            var smaf = 1.0 / ((2.0 / rf.magnitude) - vf.sqrMagnitude );
+            var eccf = Math.Sqrt(1.0 - (hf.sqrMagnitude / smaf));
+            var rf3 = rf.magnitude * rf.sqrMagnitude;
 
             if (!terminal)
             {
-                z[0] = hf.sqrMagnitude / 2.0 - hTm * hTm / 2.0; // angular momentum constraint
-                z[1] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf ) ); // PeA constraint
+                z[0] = (hf.sqrMagnitude / 2.0) - (hTm * hTm / 2.0); // angular momentum constraint
+                z[1] = (smaT * ( 1 - eccT )) - ( smaf * ( 1 - eccf ) ); // PeA constraint
                 //z[1] = 1 / (2 * smaf) - 1 / (2 * smaT); // energy constraint
                 z[2] = Vector3d.Dot(n, hf.normalized) - Math.Cos(incT); // inclination constraint
                 // transversality
                 z[3] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hf);
                 z[4] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), n);
-                z[5] = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
+                z[5] = Vector3d.Dot(prf, vf) - (Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude ));
                 //z[3] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, Vector3d.Cross(rf, n)) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, Vector3d.Cross(vf, n));
                 //z[4] = rf3 * Vector3.Dot(vf, prf) - Vector3d.Dot(rf, pvf);
                 //z[5] = Vector3d.Dot(prf, Vector3d.Cross(rf, vn)) * Vector3d.Dot(Vector3d.Cross(rf, hf), Vector3d.Cross(vf, rn)) +
@@ -181,47 +181,47 @@ namespace MuMech {
             //DebugLog("eccT = " + eccT);
             //DebugLog("incT = " + incT + " / " + incT * UtilMath.Rad2Deg);
 
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
+            var hf = Vector3d.Cross(rf, vf);
+            var n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
             //Vector3d n = new Vector3d(0, 0, 1);
 
-            Vector3d ir = rf.normalized;
-            Vector3d iv = vf.normalized;
-            Vector3d ih = hf.normalized;
+            var ir = rf.normalized;
+            var iv = vf.normalized;
+            var ih = hf.normalized;
 
-            double hTm = Math.Sqrt( smaT * ( 1 - eccT * eccT ) );
+            var hTm = Math.Sqrt( smaT * ( 1 - (eccT * eccT)) );
 
-            double smaf = 1.0 / ( 2.0 / rf.magnitude - vf.sqrMagnitude );
-            double eccf = Math.Sqrt(1.0 - hf.sqrMagnitude / smaf);
+            var smaf = 1.0 / ((2.0 / rf.magnitude) - vf.sqrMagnitude );
+            var eccf = Math.Sqrt(1.0 - (hf.sqrMagnitude / smaf));
 
-            double ar = Vector3d.Dot(ih, Vector3d.Cross(n, vf));
-            double av = Vector3d.Dot(ih, Vector3d.Cross(n, rf));
+            var ar = Vector3d.Dot(ih, Vector3d.Cross(n, vf));
+            var av = Vector3d.Dot(ih, Vector3d.Cross(n, rf));
 
-            double c2vs = 2 * smaf * smaf * vf.magnitude * eccf * ( 1 - eccf ) - smaf * hf.sqrMagnitude * vf.magnitude; // c2v-sqiggle
-            double c2rs = 2 * smaf * smaf * eccf * ( 1 - eccf ) / rf.sqrMagnitude - smaf * hf.sqrMagnitude / rf.sqrMagnitude; // c2r-sqiggle
+            var c2vs = (2 * smaf * smaf * vf.magnitude * eccf * ( 1 - eccf )) - (smaf * hf.sqrMagnitude * vf.magnitude); // c2v-sqiggle
+            var c2rs = (2 * smaf * smaf * eccf * ( 1 - eccf ) / rf.sqrMagnitude) - (smaf * hf.sqrMagnitude / rf.sqrMagnitude); // c2r-sqiggle
 
-            double As = c2vs * Vector3d.Dot(iv, iv+ir) - Vector3d.Dot(Vector3d.Cross(rf, Vector3d.Cross(rf, vf)), iv + ir);
-            double Bs = c2rs * Vector3d.Dot(ir, iv+ir) - Vector3d.Dot(Vector3d.Cross(vf, Vector3d.Cross(vf, rf)), iv + ir);
+            var As = (c2vs * Vector3d.Dot(iv, iv+ir)) - Vector3d.Dot(Vector3d.Cross(rf, Vector3d.Cross(rf, vf)), iv + ir);
+            var Bs = (c2rs * Vector3d.Dot(ir, iv+ir)) - Vector3d.Dot(Vector3d.Cross(vf, Vector3d.Cross(vf, rf)), iv + ir);
 
             // double A = As / eccf;
 
-            double v2s = ( Vector3d.Dot(pvf, iv+ir) / rf.sqrMagnitude - vf.magnitude * Vector3d.Dot(prf, iv + ir) ) / ( As / rf.sqrMagnitude - vf.magnitude * Bs );
-            double v3s = ( Vector3d.Dot(pvf, iv+ir) - v2s * As ) / ( Vector3d.Dot(ir, iv) + 1 );
+            var v2s = ((Vector3d.Dot(pvf, iv+ir) / rf.sqrMagnitude) - (vf.magnitude * Vector3d.Dot(prf, iv + ir))) / ((As / rf.sqrMagnitude) - (vf.magnitude * Bs));
+            var v3s = ( Vector3d.Dot(pvf, iv+ir) - (v2s * As)) / ( Vector3d.Dot(ir, iv) + 1 );
 
             if (!terminal)
             {
-                z[0] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf ) ); // PeA constraint
-                z[1] = vf.sqrMagnitude / 2.0 - 1.0 / rf.magnitude + 1.0 / ( 2.0 * smaT ); // E constraint
+                z[0] = (smaT * ( 1 - eccT )) - ( smaf * ( 1 - eccf ) ); // PeA constraint
+                z[1] = (vf.sqrMagnitude / 2.0) - (1.0 / rf.magnitude) + (1.0 / ( 2.0 * smaT )); // E constraint
                 z[2] = Vector3d.Dot(n, ih) - Math.Cos(incT); // inc constraint
                 // transversality
-                z[3] = Vector3d.Dot(ar/av * pvf + prf, ih);
-                z[4] = Vector3d.Dot(pvf, ir) - v2s * c2vs * Vector3d.Dot(iv, ir) - v3s * Vector3d.Dot(iv, ir);
-                z[5] = Vector3d.Dot(prf, ir) - v2s * c2rs * Vector3d.Dot(iv, ir) - v3s / (vf.magnitude * rf.sqrMagnitude) * Vector3d.Dot(iv, ir);
+                z[3] = Vector3d.Dot((ar /av * pvf) + prf, ih);
+                z[4] = Vector3d.Dot(pvf, ir) - (v2s * c2vs * Vector3d.Dot(iv, ir)) - (v3s * Vector3d.Dot(iv, ir));
+                z[5] = Vector3d.Dot(prf, ir) - (v2s * c2rs * Vector3d.Dot(iv, ir)) - (v3s / (vf.magnitude * rf.sqrMagnitude) * Vector3d.Dot(iv, ir));
             }
             else
             {
@@ -242,29 +242,29 @@ namespace MuMech {
 
         private void keplerian4constraintArgPfree(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d hf = Vector3d.Cross(rf, vf);
+            var hf = Vector3d.Cross(rf, vf);
 
-            Vector3d hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) ) * Math.Sqrt(smaT * (1 - eccT*eccT));
+            var hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) ) * Math.Sqrt(smaT * (1 - (eccT * eccT)));
             hT = -hT.xzy; // left handed coordinate system
-            Vector3d hmiss = hf - hT;
+            var hmiss = hf - hT;
 
-            double smaf = 1.0 / ( 2.0 / rf.magnitude - vf.sqrMagnitude );
-            double eccf = Math.Sqrt(1.0 - hf.sqrMagnitude / smaf);
+            var smaf = 1.0 / ((2.0 / rf.magnitude) - vf.sqrMagnitude );
+            var eccf = Math.Sqrt(1.0 - (hf.sqrMagnitude / smaf));
 
             if (!terminal)
             {
-                z[0] = smaT * ( 1 - eccT ) - ( smaf * ( 1 - eccf ) ); // PeA constraint
+                z[0] = (smaT * ( 1 - eccT )) - ( smaf * ( 1 - eccf ) ); // PeA constraint
                 z[1] = hmiss[0];
                 z[2] = hmiss[1];
                 z[3] = hmiss[2];
                 // transversality
                 z[4] = Vector3d.Dot(Vector3d.Cross(prf, rf) + Vector3d.Cross(pvf, vf), hf);
-                z[5] = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
+                z[5] = Vector3d.Dot(prf, vf) - (Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude ));
             }
             else
             {
@@ -286,12 +286,12 @@ namespace MuMech {
 
         private void keplerian5constraint(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) ) * Math.Sqrt(smaT * (1 - eccT*eccT));
+            var hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) ) * Math.Sqrt(smaT * (1 - (eccT * eccT)));
             hT = -hT.xzy; // left handed coordinate system
             // FIXME: Vector3d.cross(n, hf) is the node vector pointing in LAN dir, another ArgPT rot around hT would give eT direction
             //Vector3d eT = QuaternionD.AngleAxis(-ArgPT * UtilMath.Rad2Deg, hf) * -Vector3d.cross(n, hf);
@@ -300,7 +300,7 @@ namespace MuMech {
             // order of applying the angles is backwards.  However, the negative sign for the rotation angle is cancelled out by AngleAxis being
             // a left-handed rotation, so the angles here are positive.  Argh.
             //
-            Vector3d eT = QuaternionD.AngleAxis(LANT * UtilMath.Rad2Deg, Vector3d.forward) * QuaternionD.AngleAxis(incT * UtilMath.Rad2Deg, Vector3d.right) * QuaternionD.AngleAxis(ArgPT * UtilMath.Rad2Deg, Vector3d.forward) * Vector3d.right * eccT;
+            var eT = QuaternionD.AngleAxis(LANT * UtilMath.Rad2Deg, Vector3d.forward) * QuaternionD.AngleAxis(incT * UtilMath.Rad2Deg, Vector3d.right) * QuaternionD.AngleAxis(ArgPT * UtilMath.Rad2Deg, Vector3d.forward) * Vector3d.right * eccT;
             eT = eT.xzy;
 
             if (Math.Abs(hT[1]) <= 1e-6) // handle 90 degree singularity
@@ -313,11 +313,11 @@ namespace MuMech {
                 eT = eT.Reorder(231);
             }
 
-            Vector3d hf = Vector3d.Cross(rf, vf);
-            Vector3d ef = Vector3d.Cross(vf, hf) - rf.normalized;
-            Vector3d hmiss = hf - hT;
-            Vector3d emiss = ef - eT;
-            double trans = Vector3d.Dot(prf, vf) - Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude );
+            var hf = Vector3d.Cross(rf, vf);
+            var ef = Vector3d.Cross(vf, hf) - rf.normalized;
+            var hmiss = hf - hT;
+            var emiss = ef - eT;
+            var trans = Vector3d.Dot(prf, vf) - (Vector3d.Dot(pvf, rf) / ( rf.magnitude * rf.magnitude * rf.magnitude ));
 
             if (!terminal)
             {
@@ -347,23 +347,23 @@ namespace MuMech {
         // fixed-time maximal energy from https://doi.org/10.2514/2.5045
         private void flightangle3constraintMAXE(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
-            Vector3d hf = Vector3d.Cross(rf, vf);
+            var n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
+            var hf = Vector3d.Cross(rf, vf);
 
             if (!terminal)
             {
-                z[0] = ( rf.sqrMagnitude - rTm * rTm ) / 2.0;
-                z[1] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(incT);
-                z[2] = Vector3d.Dot(rf, vf) - rf.magnitude * vf.magnitude * Math.Sin(gammaT);
+                z[0] = ( rf.sqrMagnitude - (rTm * rTm)) / 2.0;
+                z[1] = Vector3d.Dot(n, hf) - (hf.magnitude * Math.Cos(incT));
+                z[2] = Vector3d.Dot(rf, vf) - (rf.magnitude * vf.magnitude * Math.Sin(gammaT));
 
-                z[3] = Vector3d.Dot(vf, prf) * rf.sqrMagnitude - Vector3d.Dot(rf, pvf) * vf.sqrMagnitude + Vector3d.Dot(rf, vf) * (vf.sqrMagnitude - Vector3d.Dot(rf, prf));
+                z[3] = (Vector3d.Dot(vf, prf) * rf.sqrMagnitude) - (Vector3d.Dot(rf, pvf) * vf.sqrMagnitude) + (Vector3d.Dot(rf, vf) * (vf.sqrMagnitude - Vector3d.Dot(rf, prf)));
                 z[4] = Vector3d.Dot(vf, pvf) - vf.sqrMagnitude;
-                z[5] = Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, Vector3d.Cross(rf, n)) + Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, Vector3d.Cross(vf, n));
+                z[5] = (Vector3d.Dot(hf, prf) * Vector3d.Dot(hf, Vector3d.Cross(rf, n))) + (Vector3d.Dot(hf, pvf) * Vector3d.Dot(hf, Vector3d.Cross(vf, n)));
             }
             else
             {
@@ -385,25 +385,25 @@ namespace MuMech {
         // XXX: this may only work for gammaT of zero?
         private void flightangle4constraintMAXE(double[] yT, double[] z, bool terminal)
         {
-            Vector3d rf = new Vector3d(yT[0], yT[1], yT[2]);
-            Vector3d vf = new Vector3d(yT[3], yT[4], yT[5]);
-            Vector3d pvf = new Vector3d(yT[6], yT[7], yT[8]);
-            Vector3d prf = new Vector3d(yT[9], yT[10], yT[11]);
+            var rf = new Vector3d(yT[0], yT[1], yT[2]);
+            var vf = new Vector3d(yT[3], yT[4], yT[5]);
+            var pvf = new Vector3d(yT[6], yT[7], yT[8]);
+            var prf = new Vector3d(yT[9], yT[10], yT[11]);
 
-            Vector3d n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
-            Vector3d hf = Vector3d.Cross(rf, vf);
+            var n = new Vector3d(0, -1, 0);  /* angular momentum vectors point south in KSP and we're in xzy coords */
+            var hf = Vector3d.Cross(rf, vf);
 
             // angular momentum direction unit vector
-            Vector3d i_hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) );
+            var i_hT = new Vector3d( Math.Sin(LANT) * Math.Sin(incT), -Math.Cos(LANT) * Math.Sin(incT), Math.Cos(incT) );
 
             if (!terminal)
             {
-                z[0] = ( rf.sqrMagnitude - rTm * rTm ) / 2.0;
-                z[1] = Vector3d.Dot(n, hf) - hf.magnitude * Math.Cos(incT);
+                z[0] = ( rf.sqrMagnitude - (rTm * rTm)) / 2.0;
+                z[1] = Vector3d.Dot(n, hf) - (hf.magnitude * Math.Cos(incT));
                 z[2] = Vector3d.Dot(rf, i_hT);
                 z[3] = Vector3d.Dot(vf, i_hT);
 
-                z[4] = Vector3d.Dot(vf, prf) * rf.sqrMagnitude - Vector3d.Dot(rf, pvf) * vf.sqrMagnitude;
+                z[4] = (Vector3d.Dot(vf, prf) * rf.sqrMagnitude) - (Vector3d.Dot(rf, pvf) * vf.sqrMagnitude);
                 z[5] = Vector3d.Dot(vf, pvf) - vf.sqrMagnitude;
             }
             else
@@ -414,11 +414,11 @@ namespace MuMech {
 
         protected override void Bootstrap(double t0)
         {
-            int stageCount = numStages > 0 ? numStages : stages.Count;
+            var stageCount = numStages > 0 ? numStages : stages.Count;
 
             // build arcs off of ksp stages, with coasts
-            ArcList arcs = new ArcList();
-            for(int i = 0; i < stageCount; i++)
+            var arcs = new ArcList();
+            for(var i = 0; i < stageCount; i++)
             {
                 arcs.Add(new Arc(this, stage: stages[i], t0: t0));
             }
@@ -430,7 +430,7 @@ namespace MuMech {
             y0 = new double[arcIndex(arcs, arcs.Count)];
 
             // update initial position and guess for first arc (uses effective thrust to deal with ullage motors)
-            double ve = g0 * stages[0].Isp;
+            var ve = g0 * stages[0].Isp;
             tgo = ve * stages[0].StartMass / stages[0].EffectiveThrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
 
@@ -449,10 +449,10 @@ namespace MuMech {
                 return;
             }
 
-            Solution new_sol = new Solution(t_scale, v_scale, r_scale, t0);
+            var new_sol = new Solution(t_scale, v_scale, r_scale, t0);
             multipleIntegrate(y0, new_sol, arcs);
 
-            for(int i = arcs.Count - 1; i >= 0; i--)
+            for(var i = arcs.Count - 1; i >= 0; i--)
             {
                 if ( new_sol.tgo(new_sol.t0, i) < 1 )
                 {
@@ -461,7 +461,7 @@ namespace MuMech {
                 }
             }
 
-            bool insertedCoast = false;
+            var insertedCoast = false;
 
             if (arcs.Count > 1 && fixedCoast < 0)
             {
@@ -476,9 +476,9 @@ namespace MuMech {
             arcs[arcs.Count-1].infinite = false;
 
             // now that we're done with the infinite burn make sure the total burn time of the guess doesn't exceed the rocket.
-            double tot_bt_bar = 0.0;
+            var tot_bt_bar = 0.0;
 
-            for(int i = 0; i < arcs.Count; i++)
+            for(var i = 0; i < arcs.Count; i++)
             {
                 if (!arcs[i].coast)
                 {
@@ -518,7 +518,7 @@ namespace MuMech {
                 new_sol = new Solution(t_scale, v_scale, r_scale, t0);
                 multipleIntegrate(y0, new_sol, arcs);
 
-                double coastlen = new_sol.tgo(new_sol.t0, arcs.Count-2); // human seconds
+                var coastlen = new_sol.tgo(new_sol.t0, arcs.Count-2); // human seconds
 
                 if ( coastlen < 1 )
                 {

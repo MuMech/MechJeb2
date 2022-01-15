@@ -215,16 +215,16 @@ namespace MuMech
                     vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 }
 
-                Vector3d rcs = new Vector3d();
+                var rcs = new Vector3d();
 
-                for (int i = 0; i < Vector6.Values.Length; i++)
+                for (var i = 0; i < Vector6.Values.Length; i++)
                 {
-                    Vector6.Direction dir = Vector6.Values[i];
-                    double dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[(int)dir]);
-                    double dirAvail = vesselState.rcsThrustAvailable[dir]; 
+                    var dir = Vector6.Values[i];
+                    var dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[(int)dir]);
+                    var dirAvail = vesselState.rcsThrustAvailable[dir]; 
                     if (dirAvail  > 0 && Math.Abs(dirDv) > 0.001)
                     {
-                        double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / vesselState.mass);
+                        var dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / vesselState.mass);
                         if (dirAction > 0)
                         {
                             rcs += Vector6.directions[(int)dir] * dirAction;
@@ -232,7 +232,7 @@ namespace MuMech
                     }
                 }
                                 
-                Vector3d omega = Vector3d.zero;
+                var omega = Vector3d.zero;
 
                 switch (controlType)
                 {

@@ -9,7 +9,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newInc = 0;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationInclination ()
         {
@@ -29,9 +29,9 @@ namespace MuMech
 
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeInclination(o, UT, newInc), UT));
 
             return NodeList;

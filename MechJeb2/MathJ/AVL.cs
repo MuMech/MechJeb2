@@ -27,7 +27,11 @@ namespace MuMech.MathJ
         {
             get
             {
-                if (First is null) throw new InvalidOperationException("AVL tree is empty");
+                if (First is null)
+                {
+                    throw new InvalidOperationException("AVL tree is empty");
+                }
+
                 return First.Data;
             }
         }
@@ -36,7 +40,11 @@ namespace MuMech.MathJ
         {
             get
             {
-                if (Last is null) throw new InvalidOperationException("AVL tree is empty");
+                if (Last is null)
+                {
+                    throw new InvalidOperationException("AVL tree is empty");
+                }
+
                 return Last.Data;
             }
         }
@@ -51,12 +59,14 @@ namespace MuMech.MathJ
             value = default!;
 
             if (Root is null)
+            {
                 return false;
+            }
 
-            Node<TStore>? current = Root;
+            var current = Root;
             while (current != null)
             {
-                int cmp = current.Data.CompareTo(key);
+                var cmp = current.Data.CompareTo(key);
                 if (cmp == 0)
                 {
                     value = current.Data;
@@ -72,12 +82,14 @@ namespace MuMech.MathJ
         public void Replace(TIndex key, TStore value)
         {
             if (Root is null)
+            {
                 throw new ArgumentException("AVL tree is empty");
+            }
 
-            Node<TStore>? current = Root;
+            var current = Root;
             while (current != null)
             {
-                int cmp = current.Data.CompareTo(key);
+                var cmp = current.Data.CompareTo(key);
                 if (cmp == 0)
                 {
                     current.Data = value;
@@ -93,14 +105,18 @@ namespace MuMech.MathJ
         public bool Contains(TIndex data)
         {
             if (Root is null)
+            {
                 return false;
+            }
 
-            Node<TStore>? current = Root;
+            var current = Root;
             while (current != null)
             {
-                int cmp = current.Data.CompareTo(data);
+                var cmp = current.Data.CompareTo(data);
                 if (cmp == 0)
+                {
                     return true;
+                }
 
                 current = cmp > 0 ? current.Left : current.Right;
             }
@@ -125,28 +141,35 @@ namespace MuMech.MathJ
                 return;
             }
 
-            Node<TStore> parent = Root;
+            var parent = Root;
 
             while (true)
             {
                 // this tree doesn't support dups
                 if (data.CompareTo(parent.Data) == 0)
+                {
                     return;
+                }
 
-                int cmp = data.CompareTo(parent.Data);
+                var cmp = data.CompareTo(parent.Data);
 
                 if (cmp < 0 && LeftIsNode(parent))
+                {
                     parent = parent.Left!;
-
+                }
                 else if (cmp > 0 && RightIsNode(parent))
+                {
                     parent = parent.Right!;
+                }
                 else
+                {
                     break;
+                }
             }
 
             Mutated();
 
-            Node<TStore> current = GetNode(data);
+            var current = GetNode(data);
             current.Parent = parent;
             Count++;
 
@@ -166,14 +189,19 @@ namespace MuMech.MathJ
             }
 
             if (First is null || current.Data.CompareTo(First.Data) < 0)
+            {
                 First = current;
+            }
 
             if (Last is null || current.Data.CompareTo(Last.Data) > 0)
+            {
                 Last = current;
+            }
 
             while (true)
             {
                 if (current == parent.Left)
+                {
                     switch (parent.BalanceFactor)
                     {
                         case 1:
@@ -186,7 +214,9 @@ namespace MuMech.MathJ
                             parent.BalanceFactor = -1;
                             break;
                     }
+                }
                 else
+                {
                     switch (parent.BalanceFactor)
                     {
                         case -1:
@@ -199,9 +229,12 @@ namespace MuMech.MathJ
                             parent.BalanceFactor = 1;
                             break;
                     }
+                }
 
                 if (parent.Parent is null)
+                {
                     break;
+                }
 
                 current = parent;
                 parent  = current.Parent;
@@ -218,9 +251,10 @@ namespace MuMech.MathJ
 
         public (TStore min, TStore max) FindRange(TIndex data)
         {
-            if (_lastLeft != null && _lastLeft.Data.CompareTo(data) <= 0)
-                if (_lastRight!.Data.CompareTo(data) > 0)
-                    return (_lastLeft.Data, _lastRight.Data);
+            if (_lastLeft?.Data.CompareTo(data) <= 0 && _lastRight!.Data.CompareTo(data) > 0)
+            {
+                return (_lastLeft.Data, _lastRight.Data);
+            }
 
             _lastLeft  = ClosestSmallerElementSearch(data);
             _lastRight = GetNextRightThread(_lastLeft);
@@ -237,29 +271,41 @@ namespace MuMech.MathJ
         private Node<TStore> ClosestSmallerElementSearch(TIndex data)
         {
             if (Root is null)
+            {
                 throw new ArgumentException("empty tree");
+            }
 
-            Node<TStore> current = Root;
+            var current = Root;
 
             while (true)
             {
-                int cmp = current.Data.CompareTo(data);
+                var cmp = current.Data.CompareTo(data);
                 if (cmp == 0)
+                {
                     return current;
+                }
 
                 if (cmp > 0)
                 {
                     if (LeftIsNode(current))
+                    {
                         current = current.Left!;
+                    }
                     else
+                    {
                         return current.Left ?? current;
+                    }
                 }
                 else
                 {
                     if (RightIsNode(current))
+                    {
                         current = current.Right!;
+                    }
                     else
+                    {
                         return current;
+                    }
                 }
             }
         }
@@ -273,7 +319,7 @@ namespace MuMech.MathJ
             }
             else // 1, -1
             {
-                int oldBf = parent.Left!.Right!.BalanceFactor;
+                var oldBf = parent.Left!.Right!.BalanceFactor;
                 RotateLeft(parent.Left!);
                 parent               = RotateRight(parent);
                 parent.BalanceFactor = 0;
@@ -304,7 +350,7 @@ namespace MuMech.MathJ
             }
             else // -1, 1
             {
-                int oldBf = parent.Right!.Left!.BalanceFactor;
+                var oldBf = parent.Right!.Left!.BalanceFactor;
                 RotateRight(parent.Right!);
                 parent               = RotateLeft(parent);
                 parent.BalanceFactor = 0;
@@ -328,7 +374,7 @@ namespace MuMech.MathJ
 
         private Node<TStore> RotateRight(Node<TStore> x)
         {
-            Node<TStore> y = x.Left!;
+            var y = x.Left!;
 
             if (!y.Rthread)
             {
@@ -342,7 +388,9 @@ namespace MuMech.MathJ
             }
 
             if (LeftIsNode(x))
+            {
                 x.Left!.Parent = x;
+            }
 
             y.Parent = x.Parent;
 
@@ -370,7 +418,7 @@ namespace MuMech.MathJ
 
         private Node<TStore> RotateLeft(Node<TStore> x)
         {
-            Node<TStore> y = x.Right!;
+            var y = x.Right!;
 
             if (!y.Lthread)
             {
@@ -384,7 +432,9 @@ namespace MuMech.MathJ
             }
 
             if (RightIsNode(x))
+            {
                 x.Right!.Parent = x;
+            }
 
             y.Parent = x.Parent;
 
@@ -422,25 +472,31 @@ namespace MuMech.MathJ
 
         private void CheckThreading()
         {
-            Node<TStore>? current = First;
+            var current = First;
 
             int n;
 
             for (n = 0; current != null; n++)
             {
-                bool rightThreaded = current.Rthread;
+                var rightThreaded = current.Rthread;
                 current = current.Right;
 
                 if (rightThreaded || current == null)
+                {
                     continue;
+                }
 
                 // if right wasn't threaded, follow left to find leftmost subtree
                 while (current.Left != null && !current.Lthread)
+                {
                     current = current.Left;
+                }
             }
 
             if (n != Count)
+            {
                 throw new InvalidOperationException("threading traversal did not count enough elements");
+            }
         }
 
         protected Node<TStore>? GetNextRightThread(Node<TStore> current)
@@ -451,7 +507,9 @@ namespace MuMech.MathJ
 
                 // follow left to find leftmost subtree
                 while (current.Left != null && !current.Lthread)
+                {
                     current = current.Left;
+                }
 
                 return current;
             }
@@ -468,7 +526,9 @@ namespace MuMech.MathJ
 
                 // follow right to find rightmost subtree
                 while (current.Right != null && !current.Rthread)
+                {
                     current = current.Right;
+                }
 
                 return current;
             }
@@ -479,53 +539,71 @@ namespace MuMech.MathJ
 
         private void CheckReverseThreading()
         {
-            Node<TStore>? current = Last;
+            var current = Last;
 
             int n;
 
             for (n = 0; current != null; n++)
             {
-                bool leftThreaded = current.Lthread;
+                var leftThreaded = current.Lthread;
                 current = current.Left;
 
                 if (leftThreaded || current == null)
+                {
                     continue;
+                }
 
                 // if right wasn't threaded, follow left to find leftmost subtree
                 while (current.Right != null && !current.Rthread)
+                {
                     current = current.Right;
+                }
             }
 
             if (n != Count)
+            {
                 throw new InvalidOperationException("threading traversal did not count enough elements");
+            }
         }
 
         private void CheckOrder(Node<TStore> node)
         {
             if (LeftIsNode(node) && node.Data.CompareTo(node.Left!.Data) <= 0)
+            {
                 throw new InvalidOperationException("order is wrong on left node");
+            }
 
             if (RightIsNode(node) && node.Data.CompareTo(node.Right!.Data) >= 0)
+            {
                 throw new InvalidOperationException("order is wrong on right node");
+            }
 
             if (LeftIsNode(node))
+            {
                 CheckOrder(node.Left!);
+            }
 
             if (RightIsNode(node))
+            {
                 CheckOrder(node.Right!);
+            }
         }
 
         private int CheckHeight(Node<TStore> node)
         {
-            int lh = LeftIsNode(node) ? CheckHeight(node.Left!) : 0;
+            var lh = LeftIsNode(node) ? CheckHeight(node.Left!) : 0;
 
-            int rh = RightIsNode(node) ? CheckHeight(node.Right!) : 0;
+            var rh = RightIsNode(node) ? CheckHeight(node.Right!) : 0;
 
             if (rh - lh != node.BalanceFactor)
+            {
                 throw new InvalidOperationException("computed balance factor isn't correct");
+            }
 
             if (node.BalanceFactor > 1 || node.BalanceFactor < -1)
+            {
                 throw new InvalidOperationException("stored balance factor is out of range");
+            }
 
             return Math.Max(rh, lh) + 1;
         }
@@ -533,24 +611,38 @@ namespace MuMech.MathJ
         private void CheckLinkages(Node<TStore> node)
         {
             if (LeftIsNode(node) && node.Left!.Parent != node)
+            {
                 throw new InvalidOperationException("left node parent point does not point back");
+            }
 
             if (RightIsNode(node) && node.Right!.Parent != node)
+            {
                 throw new InvalidOperationException("left node parent point does not point back");
+            }
 
             if (RightIsNode(node))
+            {
                 CheckLinkages(node.Right!);
+            }
 
             if (LeftIsNode(node))
+            {
                 CheckLinkages(node.Left!);
+            }
         }
 
         public bool CheckTree()
         {
             if (Root is null)
+            {
                 return true;
+            }
+
             if (Root.Parent != null)
+            {
                 throw new InvalidOperationException("root parent isn't null");
+            }
+
             CheckHeight(Root);
             CheckOrder(Root);
             CheckLinkages(Root);
@@ -561,15 +653,17 @@ namespace MuMech.MathJ
 
         public void Clear()
         {
-            Node<TStore>? current = First;
+            var current = First;
 
             while (current != null)
             {
-                bool rightThreaded = current.Rthread;
+                var rightThreaded = current.Rthread;
                 current = current.Right;
 
                 if (current == null)
+                {
                     break;
+                }
 
                 if (rightThreaded)
                 {
@@ -579,7 +673,9 @@ namespace MuMech.MathJ
 
                 // if right wasn't threaded, follow left to find leftmost subtree
                 while (current.Left != null && !current.Lthread)
+                {
                     current = current.Left;
+                }
 
                 current.Dispose();
             }
@@ -611,7 +707,7 @@ namespace MuMech.MathJ
 
             public static Node<T> Get(T data)
             {
-                Node<T> node = _nodePool.Get();
+                var node = _nodePool.Get();
                 node.Reset();
                 node.Data = data;
                 return node;
@@ -636,15 +732,17 @@ namespace MuMech.MathJ
 
         public IEnumerator<TStore> GetEnumerator()
         {
-            Node<TStore>? current = First;
+            var current = First;
 
             while (current != null)
             {
-                bool rightThreaded = current.Rthread;
+                var rightThreaded = current.Rthread;
                 current = current.Right;
 
                 if (current == null)
+                {
                     break;
+                }
 
                 if (rightThreaded)
                 {
@@ -654,7 +752,9 @@ namespace MuMech.MathJ
 
                 // if right wasn't threaded, follow left to find leftmost subtree
                 while (current.Left != null && !current.Lthread)
+                {
                     current = current.Left;
+                }
 
                 yield return current.Data;
             }

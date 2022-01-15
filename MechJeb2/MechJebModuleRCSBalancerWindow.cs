@@ -33,7 +33,7 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            bool wasEnabled = balancer.smartTranslation;
+            var wasEnabled = balancer.smartTranslation;
 
             GUILayout.BeginHorizontal();
             balancer.smartTranslation = GUILayout.Toggle(balancer.smartTranslation, Localizer.Format("#MechJeb_RCSBalancer_checkbox1"), GUILayout.Width(130));//"Smart translation"
@@ -68,7 +68,7 @@ namespace MuMech
                 const int sliderPrecision = 3;
                 if (Math.Round(Math.Abs(sliderVal - oldOverdrive), sliderPrecision) > 0)
                 {
-                    double rounded = Math.Round(sliderVal, sliderPrecision);
+                    var rounded = Math.Round(sliderVal, sliderPrecision);
                     balancer.overdrive = new EditableDoubleMult(rounded, 0.01);
                 }
 

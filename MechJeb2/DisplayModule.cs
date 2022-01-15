@@ -13,13 +13,17 @@ namespace MuMech
             get
             {
                 if (!HighLogic.LoadedSceneIsEditor)
+                {
                     return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w);
+                }
                 else
+                {
                     return new Rect(windowVectorEditor.x, windowVectorEditor.y, windowVectorEditor.z, windowVectorEditor.w);
+                }
             }
             set
             {
-                Vector4 newPos = new Vector4(
+                var newPos = new Vector4(
                         Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
                         Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
                         value.width, value.height
@@ -149,17 +153,19 @@ namespace MuMech
 //                locked = !locked;
 //            }
 
-            bool allowDrag = !locked;
+            var allowDrag = !locked;
             if (!locked && !isOverlay && core.settings.useTitlebarDragging)
             {
-                float x = Mouse.screenPos.x / GuiUtils.scale;
-                float y = Mouse.screenPos.y / GuiUtils.scale;
+                var x = Mouse.screenPos.x / GuiUtils.scale;
+                var y = Mouse.screenPos.y / GuiUtils.scale;
                 allowDrag = x >= windowPos.xMin + 3 && x <= windowPos.xMin + windowPos.width - 3 &&
                             y >= windowPos.yMin + 3 && y <= windowPos.yMin + 17;
             }
 
             if (draggable && allowDrag)
+            {
                 GUI.DragWindow();
+            }
         }
 
         protected void ProfiledWindowGUI(int windowID)
@@ -180,7 +186,9 @@ namespace MuMech
             {
                 // Cache the array to not create one each frame
                 if (windowOptions == null)
+                {
                     windowOptions = WindowOptions();
+                }
 
                 windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), windowOptions);
 
@@ -215,9 +223,14 @@ namespace MuMech
             if (global != null)
             {
                 if (HighLogic.LoadedSceneIsEditor)
+                {
                     enabledEditor = enabled;
+                }
+
                 if (HighLogic.LoadedSceneIsFlight)
+                {
                     enabledFlight = enabled;
+                }
 
                 global.AddValue("enabledEditor", enabledEditor);
                 global.AddValue("enabledFlight", enabledFlight);
@@ -229,40 +242,32 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
-            bool useOldConfig = true;
-            if (global != null && global.HasValue("enabledEditor"))
+            var useOldConfig = true;
+            if (global?.HasValue("enabledEditor") == true && bool.TryParse(global.GetValue("enabledEditor"), out var loadedEnabledConfig))
             {
-                bool loadedEnabled;
-                if (bool.TryParse(global.GetValue("enabledEditor"), out loadedEnabled))
+                enabledEditor = loadedEnabledConfig;
+                useOldConfig = false;
+                if (HighLogic.LoadedSceneIsEditor)
                 {
-                    enabledEditor = loadedEnabled;
-                    useOldConfig = false;
-                    if (HighLogic.LoadedSceneIsEditor)
-                        enabled = loadedEnabled;
+                    enabled = loadedEnabledConfig;
                 }
             }
 
-            if (global != null && global.HasValue("enabledFlight"))
+            if (global?.HasValue("enabledFlight") == true && bool.TryParse(global.GetValue("enabledFlight"), out var loadedEnabledFlight))
             {
-                bool loadedEnabled;
-                if (bool.TryParse(global.GetValue("enabledFlight"), out loadedEnabled))
+                enabledFlight = loadedEnabledFlight;
+                useOldConfig = false;
+                if (HighLogic.LoadedSceneIsFlight)
                 {
-                    enabledFlight = loadedEnabled;
-                    useOldConfig = false;
-                    if (HighLogic.LoadedSceneIsFlight)
-                        enabled = loadedEnabled;
+                    enabled = loadedEnabledFlight;
                 }
             }
 
             if (useOldConfig)
             {
-                if (global != null && global.HasValue("enabled"))
+                if (global?.HasValue("enabled") == true && bool.TryParse(global.GetValue("enabled"), out var loadedEnabledOldConfig))
                 {
-                    bool loadedEnabled;
-                    if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled))
-                    {
-                        enabled = loadedEnabled;
-                    }
+                    enabled = loadedEnabledOldConfig;
                 }
                 enabledEditor = enabled;
                 enabledFlight = enabled;
@@ -280,16 +285,17 @@ namespace MuMech
         public virtual bool isActive()
         {
             if (makesActive == null)
+            {
                 makesActive = new ComputerModule[] { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
+            }
 
-            bool active = false;
-            for (int i = 0; i < makesActive.Length; i++)
+            var active = false;
+            for (var i = 0; i < makesActive.Length; i++)
             {
                 var m = makesActive[i];
-                if (m != null)
+                if (m != null && (active |= m.users.RecursiveUser(this)))
                 {
-                    if (active |= m.users.RecursiveUser(this))
-                        break;
+                    break;
                 }
             }
             return active;
@@ -299,7 +305,7 @@ namespace MuMech
         {
             if (!unlockChecked)
             {
-                bool prevEn = enabled;
+                var prevEn = enabled;
                 enabled = true;
                 base.UnlockCheck();
                 if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())

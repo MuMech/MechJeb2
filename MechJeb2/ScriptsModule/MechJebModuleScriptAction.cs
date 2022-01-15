@@ -5,7 +5,7 @@ namespace MuMech
 {
 	public abstract class MechJebModuleScriptAction
 	{
-		private String name = "DEFAULT";
+		private readonly string name = "DEFAULT";
 		protected bool started = false;
 		protected bool executed = false;
 		protected MechJebModuleScript scriptModule;
@@ -13,7 +13,7 @@ namespace MuMech
 		protected int actionIndex;
 		protected MechJebModuleScriptActionsList actionsList;
 
-		public MechJebModuleScriptAction (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList, String name)
+		public MechJebModuleScriptAction (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList, string name)
 		{
 			this.scriptModule = scriptModule;
 			this.core = core;
@@ -74,7 +74,7 @@ namespace MuMech
 			this.endAction();
 		}
 
-		public String getName()
+		public string getName()
 		{
 			return this.name;
 		}
@@ -84,7 +84,7 @@ namespace MuMech
 			GUILayout.BeginHorizontal();
 		}
 
-		virtual public void WindowGUI(int windowID)
+		public virtual void WindowGUI(int windowID)
 		{
 			if (this.isStarted())
 			{

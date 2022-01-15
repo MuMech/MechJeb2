@@ -23,7 +23,7 @@ namespace MuMech
 
             if (!waitForPhaseAngle)
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}};
+                var s = new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}};
                 GUILayout.Label(Localizer.Format("#MechJeb_transfer_Label4"), s);//Using this mode voids your warranty
             }
         }
@@ -33,15 +33,22 @@ namespace MuMech
 
             // Check preconditions
             if (!target.NormalTargetExists)
+            {
                 throw new OperationException(Localizer.Format("#MechJeb_transfer_Exception1"));//"must select a target for the interplanetary transfer."
+            }
 
             if (o.referenceBody.referenceBody == null)
+            {
                 throw new OperationException(Localizer.Format("#MechJeb_transfer_Exception2",o.referenceBody.displayName));//doesn't make sense to plot an interplanetary transfer from an orbit around <<1>>
+            }
 
             if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
             {
                 if (o.referenceBody == target.TargetOrbit.referenceBody)
+                {
                     throw new OperationException(Localizer.Format("#MechJeb_transfer_Exception3", o.referenceBody.displayName));//use regular Hohmann transfer function to intercept another body orbiting <<1>>
+                }
+
                 throw new OperationException(Localizer.Format("#MechJeb_transfer_Exception4", o.referenceBody.displayName, o.referenceBody.displayName, o.referenceBody.referenceBody.displayName));//"an interplanetary transfer from within "<<1>>"'s sphere of influence must target a body that orbits "<<2>>"'s parent, "<<3>>.
             }
 
@@ -52,7 +59,7 @@ namespace MuMech
             }
             else
             {
-                double relativeInclination = Vector3d.Angle(o.SwappedOrbitNormal(), o.referenceBody.orbit.SwappedOrbitNormal());
+                var relativeInclination = Vector3d.Angle(o.SwappedOrbitNormal(), o.referenceBody.orbit.SwappedOrbitNormal());
                 if (relativeInclination > 10)
                 {
                     errorMessage = Localizer.Format("#MechJeb_transfer_errormsg2", o.referenceBody.displayName, o.referenceBody.displayName, o.referenceBody.referenceBody.displayName, o.referenceBody.displayName, relativeInclination.ToString("F1"), o.referenceBody.displayName, o.referenceBody.referenceBody.displayName);//Warning: Recommend starting interplanetary transfers from  <<1>> from an orbit in the same plane as "<<2>>"'s orbit around "<<3>>". Starting orbit around "<<4>>" is inclined "<<5>>"º with respect to "<<6>>"'s orbit around "<<7>> " (recommend < 10º). Planned transfer may not intercept target properly."
@@ -64,7 +71,7 @@ namespace MuMech
             }
 
             var dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, target.TargetOrbit, waitForPhaseAngle, out UT);
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add( new ManeuverParameters(dV, UT) );
             return NodeList;
         }

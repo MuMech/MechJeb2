@@ -41,9 +41,11 @@ namespace MuMech
             {
                 _text = value;
                 _text = Regex.Replace(_text, @"[^\d+-.]", ""); //throw away junk characters
-                double parsedValue;
-                parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) _val = parsedValue * multiplier;
+                parsed = double.TryParse(_text, out var parsedValue);
+                if (parsed)
+                {
+                    _val = parsedValue * multiplier;
+                }
             }
         }
 
@@ -103,14 +105,19 @@ namespace MuMech
                 _text = value;
                 _text = Regex.Replace(_text, @"[^\d+-.ydhms ,]", ""); //throw away junk characters
 
-                double parsedValue;
-                parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) _val = parsedValue;
+                parsed = double.TryParse(_text, out var parsedValue);
+                if (parsed)
+                {
+                    _val = parsedValue;
+                }
 
                 if (!parsed)
                 {
                     parsed = GuiUtils.TryParseDHMS(_text, out parsedValue);
-                    if (parsed) _val = parsedValue;
+                    if (parsed)
+                    {
+                        _val = parsedValue;
+                    }
                 }
             }
         }
@@ -147,7 +154,7 @@ namespace MuMech
 
         public static implicit operator double(EditableAngle x)
         {
-            return (x.negative ? -1 : 1) * (x.degrees + x.minutes / 60.0 + x.seconds / 3600.0);
+            return (x.negative ? -1 : 1) * (x.degrees + (x.minutes / 60.0) + (x.seconds / 3600.0));
         }
 
         public static implicit operator EditableAngle(double x)
@@ -166,8 +173,12 @@ namespace MuMech
             GUILayout.Label("'", GUILayout.ExpandWidth(false));
             seconds.text = GUILayout.TextField(seconds.text, GUILayout.Width(30));
             GUILayout.Label("\"", GUILayout.ExpandWidth(false));
-            String dirString = (direction == Direction.NS ? (negative ? "S" : "N") : (negative ? "W" : "E"));
-            if (GUILayout.Button(dirString, GUILayout.Width(25))) negative = !negative;
+            var dirString = (direction == Direction.NS ? (negative ? "S" : "N") : (negative ? "W" : "E"));
+            if (GUILayout.Button(dirString, GUILayout.Width(25)))
+            {
+                negative = !negative;
+            }
+
             GUILayout.EndHorizontal();
         }
     }
@@ -187,9 +198,11 @@ namespace MuMech
             {
                 _text = value;
                 _text = Regex.Replace(_text, @"[^\d+-]", ""); //throw away junk characters
-                int parsedValue;
-                parsed = int.TryParse(_text, out parsedValue);
-                if (parsed) val = parsedValue;
+                parsed = int.TryParse(_text, out var parsedValue);
+                if (parsed)
+                {
+                    val = parsedValue;
+                }
             }
         }
 
@@ -217,7 +230,11 @@ namespace MuMech
         void OnGUI()
         {
             GuiUtils.CopyDefaultSkin();
-            if (GuiUtils.skin == null) GuiUtils.skin = GuiUtils.defaultSkin;
+            if (GuiUtils.skin == null)
+            {
+                GuiUtils.skin = GuiUtils.defaultSkin;
+            }
+
             GameObject.Destroy(gameObject);
         }
     }
@@ -233,7 +250,7 @@ namespace MuMech
                 {
                     _yellowOnHover = new GUIStyle(GUI.skin.label);
                     _yellowOnHover.hover.textColor = Color.yellow;
-                    Texture2D t = new Texture2D(1, 1);
+                    var t = new Texture2D(1, 1);
                     t.SetPixel(0, 0, new Color(0, 0, 0, 0));
                     t.Apply();
                     _yellowOnHover.hover.background = t;
@@ -312,7 +329,7 @@ namespace MuMech
             GUI.skin = null;
             transparentSkin = Object.Instantiate(GUI.skin);
 
-            Texture2D t = new Texture2D(1, 1);
+            var t = new Texture2D(1, 1);
             t.SetPixel(0, 0, new Color(0, 0, 0, 0));
             t.Apply();
 
@@ -324,9 +341,20 @@ namespace MuMech
 
         public static void LoadSkin(SkinType skinType)
         {
-            if (defaultSkin == null) CopyDefaultSkin();
-            if (compactSkin == null) CopyCompactSkin();
-            if (transparentSkin == null) CopyTransparentSkin();
+            if (defaultSkin == null)
+            {
+                CopyDefaultSkin();
+            }
+
+            if (compactSkin == null)
+            {
+                CopyCompactSkin();
+            }
+
+            if (transparentSkin == null)
+            {
+                CopyTransparentSkin();
+            }
 
             switch (skinType)
             {
@@ -347,7 +375,10 @@ namespace MuMech
         public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100, GUIStyle rightLabelStyle=null)
         {
             if (rightLabelStyle == null)
+            {
                 rightLabelStyle = GUI.skin.label;
+            }
+
             GUILayout.BeginHorizontal();
             GUILayout.Label(leftLabel, rightLabelStyle, GUILayout.ExpandWidth(true));
             ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(width));
@@ -370,14 +401,25 @@ namespace MuMech
 
         public static int ArrowSelector(int index, int numIndices, Action centerGuiAction)
         {
-            if (numIndices == 0) return index;
+            if (numIndices == 0)
+            {
+                return index;
+            }
 
             GUILayout.BeginHorizontal();
             //if (numIndices > 1 && GUILayout.Button("◀", GUILayout.ExpandWidth(false))) index = (index - 1 + numIndices) % numIndices; // Seems those are gone from KSP font
-            if (numIndices > 1 && GUILayout.Button("<", GUILayout.ExpandWidth(false))) index = (index - 1 + numIndices) % numIndices;
+            if (numIndices > 1 && GUILayout.Button("<", GUILayout.ExpandWidth(false)))
+            {
+                index = (index - 1 + numIndices) % numIndices;
+            }
+
             centerGuiAction();
             //if (numIndices > 1 && GUILayout.Button("▶", GUILayout.ExpandWidth(false))) index = (index + 1) % numIndices;
-            if (numIndices > 1 && GUILayout.Button(">", GUILayout.ExpandWidth(false))) index = (index + 1) % numIndices;
+            if (numIndices > 1 && GUILayout.Button(">", GUILayout.ExpandWidth(false)))
+            {
+                index = (index + 1) % numIndices;
+            }
+
             GUILayout.EndHorizontal();
 
             return index;
@@ -394,10 +436,13 @@ namespace MuMech
 
         public static string TimeToDHMS(double seconds, int decimalPlaces = 0)
         {
-            if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
+            if (double.IsInfinity(seconds) || double.IsNaN(seconds))
+            {
+                return "Inf";
+            }
 
-            string ret = "";
-            bool showSecondsDecimals = decimalPlaces > 0;
+            var ret = "";
+            var showSecondsDecimals = decimalPlaces > 0;
 
             try
             {
@@ -410,17 +455,29 @@ namespace MuMech
                     seconds *= -1;
                 }
 
-                for (int i = 0; i < units.Length; i++)
+                for (var i = 0; i < units.Length; i++)
                 {
-                    long n = (long)(seconds / intervals[i]);
-                    bool first = ret.Length < 2;
+                    var n = (long)(seconds / intervals[i]);
+                    var first = ret.Length < 2;
                     if (!first || (n != 0) || (i == units.Length - 1 && ret == ""))
                     {
-                        if (!first) ret += " ";
+                        if (!first)
+                        {
+                            ret += " ";
+                        }
 
-                        if (showSecondsDecimals && seconds < 60 && i == units.Length - 1) ret += seconds.ToString("00." + new string('0', decimalPlaces));
-                        else if (first) ret += n.ToString();
-                        else ret += n.ToString(i == 1 ? "000" : "00");
+                        if (showSecondsDecimals && seconds < 60 && i == units.Length - 1)
+                        {
+                            ret += seconds.ToString("00." + new string('0', decimalPlaces));
+                        }
+                        else if (first)
+                        {
+                            ret += n.ToString();
+                        }
+                        else
+                        {
+                            ret += n.ToString(i == 1 ? "000" : "00");
+                        }
 
                         ret += units[i];
                     }
@@ -441,25 +498,31 @@ namespace MuMech
             int[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
             s = s.Trim(' ');
-            bool minus = (s.StartsWith("-"));
+            var minus = (s.StartsWith("-"));
 
             seconds = 0;
-            bool parsedSomething = false;
-            for (int i = 0; i < units.Length; i++)
+            var parsedSomething = false;
+            for (var i = 0; i < units.Length; i++)
             {
                 s = s.Trim(' ', ',', '-');
-                int unitPos = s.IndexOf(units[i]);
+                var unitPos = s.IndexOf(units[i]);
                 if (unitPos != -1)
                 {
-                    double value;
-                    if (!double.TryParse(s.Substring(0, unitPos), out value)) return false;
+                    if (!double.TryParse(s.Substring(0, unitPos), out var value))
+                    {
+                        return false;
+                    }
+
                     seconds += value * intervals[i];
                     s = s.Substring(unitPos + 1);
                     parsedSomething = true;
                 }
             }
 
-            if (minus) seconds = -seconds;
+            if (minus)
+            {
+                seconds = -seconds;
+            }
 
             return parsedSomething;
         }
@@ -467,8 +530,8 @@ namespace MuMech
         public static double ArcDistance(Vector3 From, Vector3 To) {
             double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
             double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
-            double c = Vector3d.Distance(From, To);
-            double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+            var c = Vector3d.Distance(From, To);
+            var ang = Math.Acos((((a * a) + (b * b)) - (c * c)) / (double)(2f * a * b));
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
 
@@ -493,21 +556,20 @@ namespace MuMech
 
         public static Coordinates GetMouseCoordinates(CelestialBody body)
         {
-            Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
+            var mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
-            Vector3d relOrigin = mouseRay.origin - body.position;
-            Vector3d relSurfacePosition;
-            double curRadius = body.pqsController.radiusMax;
+            var relOrigin = mouseRay.origin - body.position;
+            var curRadius = body.pqsController.radiusMax;
             double lastRadius = 0;
             double error = 0;
-            int loops = 0;
-            float st = Time.time;
+            var loops = 0;
+            var st = Time.time;
             while (loops < 50)
             {
-                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out relSurfacePosition))
+                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out var relSurfacePosition))
                 {
-                    Vector3d surfacePoint = body.position + relSurfacePosition;
-                    double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) * QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) * Vector3d.right);
+                    var surfacePoint = body.position + relSurfacePosition;
+                    var alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) * QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) * Vector3d.right);
                     error = Math.Abs(curRadius - alt);
                     if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
                     {
@@ -528,7 +590,7 @@ namespace MuMech
                     }
                     else
                     { // Went too low, needs to try higher
-                        curRadius = (lastRadius * 9 + curRadius) / 10;
+                        curRadius = ((lastRadius * 9) + curRadius) / 10;
                         loops++;
                     }
                 }
@@ -555,9 +617,9 @@ namespace MuMech
             // Result to be returned to the owner
             private static int selectedItem;
             // Unity identifier of the window, just needs to be unique
-            private static int id = GUIUtility.GetControlID(FocusType.Passive);
+            private static readonly int id = GUIUtility.GetControlID(FocusType.Passive);
             // ComboBox GUI Style
-            private static GUIStyle style;
+            private static readonly GUIStyle style;
 
             static ComboBox()
             {
@@ -571,7 +633,9 @@ namespace MuMech
             public static void DrawGUI()
             {
                 if (popupOwner == null || rect.height == 0 || ! popupActive)
+                {
                     return;
+                }
 
                 if (style.normal.background == null)
                 {
@@ -587,19 +651,26 @@ namespace MuMech
                     {
                         selectedItem = GUILayout.SelectionGrid(-1, entries, 1, yellowOnHover);
                         if (GUI.changed)
+                        {
                             popupActive = false;
+                        }
                     }, "", style);
 
                 //Cancel the popup if we click outside
                 if (Event.current.type == EventType.MouseDown && !rect.Contains(Event.current.mousePosition))
+                {
                     popupOwner = null;
+                }
             }
 
             public static int Box(int selectedItem, string[] entries, object caller, bool expandWidth = true)
             {
                 // Trivial cases (0-1 items)
                 if (entries.Length == 0)
+                {
                     return 0;
+                }
+
                 if (entries.Length == 1)
                 {
                     GUILayout.Label(entries[0]);
@@ -607,10 +678,14 @@ namespace MuMech
                 }
 
                 if (selectedItem >= entries.Length)
+                {
                     selectedItem = entries.Length - 1;
+                }
 
                 if (dontUseDropDownMenu)
+                {
                     return ArrowSelector(selectedItem, entries.Length, entries[selectedItem], expandWidth);
+                }
 
                 // A choice has been made, update the return value
                 if (popupOwner == caller && ! ComboBox.popupActive)
@@ -620,7 +695,7 @@ namespace MuMech
                     GUI.changed = true;
                 }
 
-                bool guiChanged = GUI.changed;
+                var guiChanged = GUI.changed;
                 if (GUILayout.Button("↓ " + entries[selectedItem] + " ↓", GUILayout.ExpandWidth(expandWidth)))
                 {
                     // We will set the changed status when we return from the menu instead
@@ -639,9 +714,9 @@ namespace MuMech
                     // But even worse, I can't find a clean way to convert from relative to absolute coordinates
                     Vector2 mousePos = Input.mousePosition;
                     mousePos.y = Screen.height - mousePos.y;
-                    Vector2 clippedMousePos = Event.current.mousePosition;
-                    rect.x = (rect.x + mousePos.x) / scale - clippedMousePos.x;
-                    rect.y = (rect.y + mousePos.y) / scale - clippedMousePos.y;
+                    var clippedMousePos = Event.current.mousePosition;
+                    rect.x = ((rect.x + mousePos.x) / scale) - clippedMousePos.x;
+                    rect.y = ((rect.y + mousePos.y) / scale) - clippedMousePos.y;
                 }
 
                 return selectedItem;
@@ -662,9 +737,9 @@ namespace MuMech
 
         public static string ToStringDecimal(double latitude, double longitude, bool newline = false, int precision = 3)
         {
-            double clampedLongitude = MuUtils.ClampDegrees180(longitude);
-            double latitudeAbs  = Math.Abs(latitude);
-            double longitudeAbs = Math.Abs(clampedLongitude);
+            var clampedLongitude = MuUtils.ClampDegrees180(longitude);
+            var latitudeAbs  = Math.Abs(latitude);
+            var longitudeAbs = Math.Abs(clampedLongitude);
             return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
                 + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
         }
@@ -676,7 +751,7 @@ namespace MuMech
 
         public static string ToStringDMS(double latitude, double longitude, bool newline = false)
         {
-            double clampedLongitude = MuUtils.ClampDegrees180(longitude);
+            var clampedLongitude = MuUtils.ClampDegrees180(longitude);
             return AngleToDMS(latitude) + (latitude > 0 ? " N" : " S") + (newline ? "\n" : ", ")
                  + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
         }
@@ -688,11 +763,11 @@ namespace MuMech
 
         public static string AngleToDMS(double angle)
         {
-            int degrees = (int)Math.Floor(Math.Abs(angle));
-            int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
-            int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
+            var degrees = (int)Math.Floor(Math.Abs(angle));
+            var minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
+            var seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - (minutes / 60.0)));
 
-            return String.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
+            return string.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
         }
     }
 
@@ -703,8 +778,8 @@ namespace MuMech
         public static Color setColor;
         private static Color lastSetColor;
 
-        private static int textureWidth = 240;
-        private static int textureHeight = 240;
+        private static readonly int textureWidth = 240;
+        private static readonly int textureHeight = 240;
 
         private static float saturationSlider = 0.0F;
         private static float alphaSlider = 0.0F;
@@ -713,21 +788,21 @@ namespace MuMech
         private static void Init()
         {
             displayPicker = new Texture2D(textureWidth, textureHeight, TextureFormat.ARGB32, false);
-            for (int i = 0; i < textureWidth; i++)
+            for (var i = 0; i < textureWidth; i++)
             {
-                for (int j = 0; j < textureHeight; j++)
+                for (var j = 0; j < textureHeight; j++)
                 {
                     displayPicker.SetPixel(i, j, MuUtils.HSVtoRGB((360f / textureWidth) * i, (1.0f / j) * textureHeight, 1.0f, 1f));
                 }
             }
             displayPicker.Apply();
 
-            float v = 0.0F;
-            float diff = 1.0f / textureHeight;
+            var v = 0.0F;
+            var diff = 1.0f / textureHeight;
             saturationTexture = new Texture2D(20, textureHeight);
-            for (int i = 0; i < saturationTexture.width; i++)
+            for (var i = 0; i < saturationTexture.width; i++)
             {
-                for (int j = 0; j < saturationTexture.height; j++)
+                for (var j = 0; j < saturationTexture.height; j++)
                 {
                     saturationTexture.SetPixel(i, j, new Color(v, v, v));
                     v += diff;
@@ -740,14 +815,16 @@ namespace MuMech
         public static void DrawGUI(int positionLeft, int positionTop)
         {
             if (!displayPicker)
+            {
                 Init();
+            }
 
             GUI.Box(new Rect(positionLeft - 3, positionTop - 3, textureWidth + 90, textureHeight + 30), "");
 
             if (GUI.RepeatButton(new Rect(positionLeft, positionTop, textureWidth, textureHeight), displayPicker))
             {
-                int a = (int)Input.mousePosition.x;
-                int b = Screen.height - (int)Input.mousePosition.y;
+                var a = (int)Input.mousePosition.x;
+                var b = Screen.height - (int)Input.mousePosition.y;
 
                 setColor = displayPicker.GetPixel(a - positionLeft, -(b - positionTop));
                 lastSetColor = setColor;
@@ -766,8 +843,8 @@ namespace MuMech
     }
     public static class ColorPickerRGB
     {
-        private static int textureWidth = 240;
-        private static int textureHeight = 10;
+        private static readonly int textureWidth = 240;
+        private static readonly int textureHeight = 10;
 
         private static Texture2D rTexture;
         private static Texture2D gTexture;
@@ -780,9 +857,9 @@ namespace MuMech
             gTexture = new Texture2D(textureWidth, 1);
             bTexture = new Texture2D(textureWidth, 1);
             aTexture = new Texture2D(textureWidth, 1);
-            for (int i = 0; i < textureWidth; i++)
+            for (var i = 0; i < textureWidth; i++)
             {
-                float v = (float)i / (textureWidth - 1);
+                var v = (float)i / (textureWidth - 1);
                 rTexture.SetPixel(i, 0, new Color(v, 0, 0));
                 gTexture.SetPixel(i, 0, new Color(0, v, 0));
                 bTexture.SetPixel(i, 0, new Color(0, 0, v));
@@ -802,7 +879,9 @@ namespace MuMech
         public static Color DrawGUI(int positionLeft, int positionTop, Color c)
         {
             if (!rTexture)
+            {
                 Init();
+            }
 
             GUI.Box(new Rect(positionLeft - 3, positionTop - 3, textureWidth + 3, textureHeight + 125), "");
 

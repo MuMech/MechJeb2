@@ -15,9 +15,11 @@ namespace MuMech
             public override AutopilotStep Drive(FlightCtrlState s)
             {
                 if (!core.landing.PredictionReady)
+                {
                     return this;
+                }
 
-                Vector3d horizontalPointingDirection = Vector3d.Exclude(vesselState.up, vesselState.forward).normalized;
+                var horizontalPointingDirection = Vector3d.Exclude(vesselState.up, vesselState.forward).normalized;
                 if (Vector3d.Dot(horizontalPointingDirection, vesselState.surfaceVelocity) > 0)
                 {
                     core.thrust.targetThrottle = 0;
@@ -27,12 +29,12 @@ namespace MuMech
 
                 //control thrust to control vertical speed:
                 const double desiredSpeed = 0; //hover until horizontal velocity is killed
-                double controlledSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.up);
-                double speedError = desiredSpeed - controlledSpeed;
+                var controlledSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.up);
+                var speedError = desiredSpeed - controlledSpeed;
                 const double speedCorrectionTimeConstant = 1.0;
-                double desiredAccel = speedError / speedCorrectionTimeConstant;
-                double minAccel = -vesselState.localg;
-                double maxAccel = -vesselState.localg + Vector3d.Dot(vesselState.forward, vesselState.up) * vesselState.maxThrustAccel;
+                var desiredAccel = speedError / speedCorrectionTimeConstant;
+                var minAccel = -vesselState.localg;
+                var maxAccel = -vesselState.localg + (Vector3d.Dot(vesselState.forward, vesselState.up) * vesselState.maxThrustAccel);
                 if (maxAccel - minAccel > 0)
                 {
                     core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
@@ -43,7 +45,7 @@ namespace MuMech
                 }
 
                 //angle up and slightly away from vertical:
-                Vector3d desiredThrustVector = (vesselState.up + 0.2 * horizontalPointingDirection).normalized;
+                var desiredThrustVector = (vesselState.up + (0.2 * horizontalPointingDirection)).normalized;
 
                 core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, core.landing);
 

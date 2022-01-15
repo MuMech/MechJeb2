@@ -12,7 +12,7 @@ namespace MuMech
         public EditableInt resonanceNumerator = 2;
         [Persistent(pass = (int)Pass.Global)]
         public EditableInt resonanceDenominator = 3;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationResonantOrbit ()
         {
@@ -33,10 +33,10 @@ namespace MuMech
 
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
             var dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, UT, (double)resonanceNumerator.val / resonanceDenominator.val);
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(dV, UT));
 
             return NodeList;

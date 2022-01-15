@@ -7,18 +7,18 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionsList
 	{
-		private List<MechJebModuleScriptAction> actionsList = new List<MechJebModuleScriptAction>();
-		private String[] actionGroups;
-		private String[][] actionNames;
-		private MechJebModuleScript scriptModule;
+		private readonly List<MechJebModuleScriptAction> actionsList = new List<MechJebModuleScriptAction>();
+		private string[] actionGroups;
+		private string[][] actionNames;
+		private readonly MechJebModuleScript scriptModule;
 		private int selectedGroupIndex = 0;
 		private int old_selectedGroupIndex = 0;
 		private int selectedActionIndex = 0;
 		private bool started = false;
 		private bool executed = false;
-		private IMechJebModuleScriptActionsListParent parent;
-		private int depth = 0;
-		private MechJebCore core;
+		private readonly IMechJebModuleScriptActionsListParent parent;
+		private readonly int depth = 0;
+		private readonly MechJebCore core;
 		private int currentIndex;
 
 		public MechJebModuleScriptActionsList(MechJebCore core, MechJebModuleScript scriptModule, IMechJebModuleScriptActionsListParent parent, int depth)
@@ -37,7 +37,7 @@ namespace MuMech
 
 		public void populateActionNames()
 		{
-			List<String> actionsGroupsList = new List<String>();
+			var actionsGroupsList = new List<string>();
 			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1"));//"Time"
 			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2"));//"Docking"
 			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions3"));//"Target"
@@ -52,10 +52,10 @@ namespace MuMech
 			actionsGroupsList.Add(Localizer.Format("#MechJeb_ScriptMod_actions12"));//"Plugins"
 			actionGroups = actionsGroupsList.ToArray();
 
-			actionNames = new String[actionsGroupsList.Count][];
+			actionNames = new string[actionsGroupsList.Count][];
 
 			//Time
-			List<String> actionsNamesList = new List<String>();
+			var actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1_1"));//"Timer"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1_2"));//"Pause"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions1_3"));//"Wait for"
@@ -63,20 +63,20 @@ namespace MuMech
 			actionNames[0] = actionsNamesList.ToArray();
 
 			//Docking
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2_1"));//"Decouple"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2_2"));//"Dock Shield"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions2_3"));//"Target Dock"
 			actionNames[1] = actionsNamesList.ToArray();
 
 			//Target
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions3_1"));//"Target Dock"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions3_2"));//"Target Body"
 			actionNames[2] = actionsNamesList.ToArray();
 
 			//Control
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4_1"));//"Control From"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4_2"));//"RCS"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions4_3"));//"SAS"
@@ -87,29 +87,29 @@ namespace MuMech
 			actionNames[3] = actionsNamesList.ToArray();
 
 			//Crew
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions5_1"));//"Crew Transfer"
 			actionNames[4] = actionsNamesList.ToArray();
 
 			//Trajectory
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions6_1"));//"Maneuver"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions6_2"));//"Execute node"
 			actionNames[5] = actionsNamesList.ToArray();
 
 			//Staging
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions7_1"));//"Staging"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions7_2"));//"Activate Engine"
 			actionNames[6] = actionsNamesList.ToArray();
 
 			//Settings
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions8_1"));//"Node tolerance"
 			actionNames[7] = actionsNamesList.ToArray();
 
 			//Modules
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
             actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_1"));//"MODULE Smart A.S.S."
             actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_2"));//"MODULE Ascent Autopilot"
 			actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions9_3"));//"MODULE Docking Autopilot"
@@ -119,7 +119,7 @@ namespace MuMech
 			actionNames[8] = actionsNamesList.ToArray();
 
 			//Save
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			if (depth == 0) //Actions only available at depth 0 because they can change focus
 			{
 				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions10_1"));//"Quicksave"
@@ -129,7 +129,7 @@ namespace MuMech
 			actionNames[9] = actionsNamesList.ToArray();
 
 			//PROGRAM Logic
-			actionsNamesList = new List<String>();
+			actionsNamesList = new List<string>();
 			if (depth < 4) //Limit program depth to 4 (just to avoid UI mess)
 			{
 				actionsNamesList.Add(Localizer.Format("#MechJeb_ScriptMod_actions11_1"));//"PROGRAM - Repeat"
@@ -150,10 +150,10 @@ namespace MuMech
 		public void refreshActionNamesPlugins()
 		{
 			//Check plugins compatibility
-			List<String> actionsNamesList = new List<String>();
+			var actionsNamesList = new List<string>();
 			if (scriptModule.hasCompatiblePluginInstalled())
 			{
-				actionsNamesList = new List<String>();
+				actionsNamesList = new List<string>();
 				if (scriptModule.checkCompatiblePluginInstalled("IRSequencer"))
 				{
 					actionsNamesList.Add("[IR Sequencer] Sequence");
@@ -178,7 +178,7 @@ namespace MuMech
 
 		public void moveActionUp(MechJebModuleScriptAction action)
 		{
-			int index = this.actionsList.IndexOf(action);
+			var index = this.actionsList.IndexOf(action);
 			this.actionsList.Remove(action);
 			if (index > 0)
 			{
@@ -188,7 +188,7 @@ namespace MuMech
 
 		public void actionsAddWindowGui(int windowID)
 		{
-			GUIStyle s = new GUIStyle(GUI.skin.label);
+			var s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.blue;
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(20);
@@ -201,7 +201,7 @@ namespace MuMech
 			}
 			if (selectedGroupIndex == 10 && depth >= 4) //Block more than 4 depth
 			{
-				GUIStyle s2 = new GUIStyle(GUI.skin.label);
+				var s2 = new GUIStyle(GUI.skin.label);
 				s2.normal.textColor = Color.red;
 				GUILayout.Label(Localizer.Format("#MechJeb_ScriptMod_label5"), s2, GUILayout.ExpandWidth(false));//"Program depth is limited to 4"
 			}
@@ -227,7 +227,7 @@ namespace MuMech
 
 				if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
 				{
-					String actionName = actionNames[selectedGroupIndex][selectedActionIndex];
+					var actionName = actionNames[selectedGroupIndex][selectedActionIndex];
 					if (actionName.CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions1_1")) == 0)//"Timer"
 					{
 						this.addAction(new MechJebModuleScriptActionTimer(scriptModule, core, this));
@@ -379,9 +379,9 @@ namespace MuMech
 
 		public void actionsWindowGui(int windowID)
 		{
-			for (int i = 0; i < actionsList.Count; i++) //Don't use "foreach" here to avoid nullpointer exception
+			for (var i = 0; i < actionsList.Count; i++) //Don't use "foreach" here to avoid nullpointer exception
 			{
-				MechJebModuleScriptAction actionItem = actionsList[i];
+				var actionItem = actionsList[i];
 				if (!scriptModule.isMinifiedGUI() || actionItem.isStarted())
 				{
 					actionItem.WindowGUI(windowID);
@@ -399,8 +399,8 @@ namespace MuMech
 			if (actionsList.Count > 0)
 			{
 				//Find the first not executed action
-				int start_index = 0;
-				for (int i = 0; i < actionsList.Count; i++)
+				var start_index = 0;
+				for (var i = 0; i < actionsList.Count; i++)
 				{
 					if (!actionsList[i].isExecuted())
 					{
@@ -423,7 +423,7 @@ namespace MuMech
 		{
 			this.started = false;
 			//Clean abord the current action
-			for (int i = 0; i < actionsList.Count; i++)
+			for (var i = 0; i < actionsList.Count; i++)
 			{
 				if (actionsList[i].isStarted() && !actionsList[i].isExecuted())
 				{
@@ -475,7 +475,7 @@ namespace MuMech
 
 		public void OnFixedUpdate()
 		{
-			for (int i = 0; i < actionsList.Count; i++)
+			for (var i = 0; i < actionsList.Count; i++)
 			{
 				if (actionsList[i].isStarted() && !actionsList[i].isExecuted())
 				{
@@ -488,8 +488,8 @@ namespace MuMech
 		{
 			this.clearAll();
 			//Load custom info scripts, which are stored in our ConfigNode:
-			ConfigNode[] scriptNodes = node.GetNodes();
-			foreach (ConfigNode scriptNode in scriptNodes)
+			var scriptNodes = node.GetNodes();
+			foreach (var scriptNode in scriptNodes)
 			{
 				MechJebModuleScriptAction obj = null;
                 if (scriptNode.name.CompareTo(MechJebModuleScriptActionSmartASS.NAME) == 0)
@@ -642,10 +642,10 @@ namespace MuMech
 
 		public void SaveConfig(ConfigNode node)
 		{
-			foreach (MechJebModuleScriptAction script in this.actionsList)
+			foreach (var script in this.actionsList)
 			{
-				string name = script.getName();
-				ConfigNode scriptNode = ConfigNode.CreateConfigFromObject(script, (int)Pass.Type, null);
+				var name = script.getName();
+				var scriptNode = ConfigNode.CreateConfigFromObject(script, (int)Pass.Type, null);
 				script.postSave(scriptNode);
 				scriptNode.CopyTo(node.AddNode(name));
 			}
@@ -664,8 +664,8 @@ namespace MuMech
 		//Return the list + sub-lists count
 		public int getRecursiveCount()
 		{
-			int count = 0;
-			for (int i = 0; i < actionsList.Count; i++)
+			var count = 0;
+			for (var i = 0; i < actionsList.Count; i++)
 			{
 				count++;
 				if (actionsList[i] is IMechJebModuleScriptActionContainer)
@@ -678,8 +678,8 @@ namespace MuMech
 
 		public List<MechJebModuleScriptAction> getRecursiveActionsList()
 		{
-			List<MechJebModuleScriptAction> list = new List<MechJebModuleScriptAction>();
-			for (int i = 0; i < actionsList.Count; i++)
+			var list = new List<MechJebModuleScriptAction>();
+			for (var i = 0; i < actionsList.Count; i++)
 			{
 				list.Add(actionsList[i]);
 				if (actionsList[i] is IMechJebModuleScriptActionContainer)
@@ -692,8 +692,8 @@ namespace MuMech
 
 		public void recursiveResetStatus()
 		{
-			List<MechJebModuleScriptAction> actions = this.getRecursiveActionsList();
-			foreach (MechJebModuleScriptAction action in actions)
+			var actions = this.getRecursiveActionsList();
+			foreach (var action in actions)
 			{
 				action.resetStatus();
 			}
@@ -701,9 +701,9 @@ namespace MuMech
 
 		public void recursiveUpdateActionsIndex(int startIndex)
 		{
-			List<MechJebModuleScriptAction> actions = this.getRecursiveActionsList();
-			int index = startIndex;
-			foreach (MechJebModuleScriptAction action in actions)
+			var actions = this.getRecursiveActionsList();
+			var index = startIndex;
+			foreach (var action in actions)
 			{
 				action.setActionIndex(index);
 				index++;

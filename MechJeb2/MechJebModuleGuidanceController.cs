@@ -38,7 +38,7 @@ namespace MuMech
         public int last_lm_iteration_count { get { return ( p != null ) ? p.last_lm_iteration_count : 0; } }
         public int last_lm_status { get { return ( p != null ) ? p.last_lm_status : 0; } }
         public double last_znorm { get { return ( p != null ) ? p.last_znorm : 0; } }
-        public String last_failure_cause { get { return ( p != null ) ? p.last_failure_cause : null; } }
+        public string last_failure_cause { get { return ( p != null ) ? p.last_failure_cause : null; } }
         public double last_success_time = 0.0;
         public double staleness { get { return ( last_success_time > 0 ) ? vesselState.time - last_success_time : 0; } }
 
@@ -79,13 +79,16 @@ namespace MuMech
         {
             core.attitude.attitudeDeactivate();
             if (!core.rssMode)
+            {
                 core.thrust.ThrustOff();
+            }
+
             core.thrust.users.Remove(this);
             core.stageTracking.enabled = false;
             status = PVGStatus.FINISHED;
             last_success_time = 0.0;
-            if (p != null)
-                p.KillThread();
+            p?.KillThread();
+
             p = null;
         }
 
@@ -98,7 +101,10 @@ namespace MuMech
         public void AssertStart(bool allow_execution = true)
         {
             if (status == PVGStatus.ENABLED )
+            {
                 Reset();
+            }
+
             this.allow_execution = allow_execution;
         }
 
@@ -118,7 +124,9 @@ namespace MuMech
             }
 
             if ( !enabled || status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
             if ( status == PVGStatus.FINISHED )
             {
@@ -127,7 +135,9 @@ namespace MuMech
             }
 
             if ( status == PVGStatus.FAILED )
+            {
                 Reset();
+            }
 
             if (p != null)
             {
@@ -138,14 +148,16 @@ namespace MuMech
                 p.UpdatePosition(vesselState.orbitalPosition, vesselState.orbitalVelocity, lambda, lambdaDot, tgo, vgo);
             }
 
-            if ( p != null && p.Solution != null && isTerminalGuidance() )
+            if (p?.Solution != null && isTerminalGuidance() )
             {
-                bool has_rcs = vessel.hasEnabledRCSModules(); // && ( vesselState.rcsThrustAvailable.up > 0 );
+                var has_rcs = vessel.hasEnabledRCSModules(); // && ( vesselState.rcsThrustAvailable.up > 0 );
 
                 // stopping one tick short is more accurate for rockets without RCS, but sometimes we overshoot with only one tick
-                int ticks = 1;
+                var ticks = 1;
                 if (has_rcs)
+                {
                     ticks = 2;
+                }
 
                 if (status == PVGStatus.TERMINAL_RCS && !vessel.ActionGroups[KSPActionGroup.RCS])  // if someone manually disables RCS
                 {
@@ -155,16 +167,16 @@ namespace MuMech
 
                 // bit of a hack to predict velocity + position in the next tick or two
                 // FIXME: what exactly does KSP do to integrate over timesteps?
-                Vector3d a0 = vessel.acceleration_immediate;
+                var a0 = vessel.acceleration_immediate;
                 double dt = ticks * TimeWarp.fixedDeltaTime;
-                Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
-                Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 1/2 * a0 * dt * dt;
+                var v1 = vesselState.orbitalVelocity + (a0 * dt);
+                var x1 = vesselState.orbitalPosition + (vesselState.orbitalVelocity * dt) + (1 /2 * a0 * dt * dt);
 
-                double current = p.znormAtStateVectors(vesselState.orbitalPosition, vesselState.orbitalVelocity);
-                double future = p.znormAtStateVectors(x1, v1);
+                var current = p.znormAtStateVectors(vesselState.orbitalPosition, vesselState.orbitalVelocity);
+                var future = p.znormAtStateVectors(x1, v1);
 
                 // ensure that we're burning in a roughly forward direction -- no idea why, but we can get a few ticks of backwards "thrust" due to staging during terminal guidance
-                double costhrustangle = Vector3d.Dot(vesselState.forward, (vessel.acceleration_immediate - vessel.graviticAcceleration).normalized );
+                var costhrustangle = Vector3d.Dot(vesselState.forward, (vessel.acceleration_immediate - vessel.graviticAcceleration).normalized );
 
                 if ( future > current && costhrustangle > 0.5 )
                 {
@@ -172,7 +184,9 @@ namespace MuMech
                     {
                         status = PVGStatus.TERMINAL_RCS;
                         if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                        {
                             vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                        }
                     }
                     else
                     {
@@ -197,14 +211,14 @@ namespace MuMech
         public void TargetNode(ManeuverNode node, double burntime)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
             if (p == null || isCoasting())
             {
-                PontryaginNode solver = p as PontryaginNode;
-                if (solver == null)
-                    solver = new PontryaginNode(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: node.GetBurnVector(orbit).normalized, pr0: Vector3d.zero, dV: node.GetBurnVector(orbit).magnitude, bt: burntime);
-                solver.intercept(node.nextPatch);
+                var solver = p as PontryaginNode;
+                (solver ??= new PontryaginNode(core: core, mu: mainBody.gravParameter, r0: vesselState.orbitalPosition, v0: vesselState.orbitalVelocity, pv0: node.GetBurnVector(orbit).normalized, pr0: Vector3d.zero, dV: node.GetBurnVector(orbit).magnitude, bt: burntime)).intercept(node.nextPatch);
                 p = solver;
             }
         }
@@ -224,20 +238,23 @@ namespace MuMech
         public void flightangle4constraint(double rT, double vT, double inc, double gamma, double sma, double fixedCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
-            bool doupdate = rT != old_rT || vT != old_vT || gamma != old_gamma || (inc != old_inc && !targetInc);
+            var doupdate = rT != old_rT || vT != old_vT || gamma != old_gamma || (inc != old_inc && !targetInc);
 
             if (p != null && p.bctype != BCType.FLIGHTANGLE4)
+            {
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
-                if (p != null)
-                    p.KillThread();
+                p?.KillThread();
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle4constraint, rT: " + rT + " vT:" + vT + " inc:" + inc + " gamma:" + gamma);
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
+                var solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
                 solver.flightangle4constraint(rT, vT, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad);
                 p = solver;
@@ -253,21 +270,24 @@ namespace MuMech
         public void flightangle5constraint(double rT, double vT, double inc, double gamma, double LAN, double sma, double fixedCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
-            bool doupdate = rT != old_rT || vT != old_vT || gamma != old_gamma || (LAN != old_LAN && !targetLAN)
+            var doupdate = rT != old_rT || vT != old_vT || gamma != old_gamma || (LAN != old_LAN && !targetLAN)
                             || ( inc != old_inc && !targetInc);
 
             if (p != null && p.bctype != BCType.FLIGHTANGLE5)
+            {
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
-                if (p != null)
-                    p.KillThread();
+                p?.KillThread();
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle5constraint, rT: " + rT + " vT:" + vT + " inc:" + inc + " gamma:" + gamma + " LAN:" + LAN + " sma: " + sma);
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
+                var solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
                 solver.flightangle5constraint(rT, vT, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad);
                 p = solver;
@@ -286,16 +306,16 @@ namespace MuMech
         //
         private double approximateDeltaV(double sma)
         {
-            double addE = mainBody.gravParameter * ( 2 * sma - mainBody.Radius ) / ( 2 * sma * mainBody.Radius );  // in kJ/t or m^2/s^2
+            var addE = mainBody.gravParameter * ((2 * sma) - mainBody.Radius ) / ( 2 * sma * mainBody.Radius );  // in kJ/t or m^2/s^2
             return Math.Sqrt( 2 * addE ) + 2000; // E = v^2 / 2 solved for v with 2000 thrown in for grav losses and drag
         }
 
         private PontryaginLaunch NewPontryaginForLaunch(double inc, double sma)
         {
             lambdaDot = Vector3d.zero;
-            double desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
-            Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
-            Vector3d desiredThrustVector = Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector + Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up;  /* 45 pitch guess */
+            var desiredHeading = OrbitalManeuverCalculator.HeadingForInclination(inc, vesselState.latitude);
+            var desiredHeadingVector = (Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east) + (Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north);
+            var desiredThrustVector = (Math.Cos(45 * UtilMath.Deg2Rad) * desiredHeadingVector) + (Math.Sin(45 * UtilMath.Deg2Rad) * vesselState.up);  /* 45 pitch guess */
             lambda = desiredThrustVector;
             Debug.Log("sma = " + sma);
             Debug.Log("deltaV guess = " + approximateDeltaV(sma));
@@ -305,27 +325,34 @@ namespace MuMech
         public void keplerian3constraint(double sma, double ecc, double inc, double fixedCoast, bool targetInc)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
-            bool doupdate = false;
+            var doupdate = false;
 
             if (sma != old_sma || ecc != old_ecc)
+            {
                 doupdate = true;
+            }
 
             // if we are tracking a target inc, don't reset
             if (inc != old_inc && !targetInc)
+            {
                 doupdate = true;
+            }
 
             if (p != null && p.bctype != BCType.KEPLER3)
+            {
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
-                if (p != null)
-                    p.KillThread();
+                p?.KillThread();
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian3constraint");
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
+                var solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
                 solver.keplerian3constraint(sma, ecc, inc * UtilMath.Deg2Rad);
                 p = solver;
@@ -339,31 +366,40 @@ namespace MuMech
         public void keplerian4constraintArgPfree(double sma, double ecc, double inc, double LAN, double fixedCoast, bool targetInc, bool targetLAN)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
-            bool doupdate = false;
+            var doupdate = false;
 
             if (sma != old_sma || ecc != old_ecc )
+            {
                 doupdate = true;
+            }
 
             // if we are tracking a target LAN, don't reset
             if (LAN != old_LAN && !targetLAN)
+            {
                 doupdate = true;
+            }
 
             // if we are tracking a target inc, don't reset
             if (inc != old_inc && !targetInc)
+            {
                 doupdate = true;
+            }
 
             if (p != null && p.bctype != BCType.KEPLER4)
+            {
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
-                if (p != null)
-                    p.KillThread();
+                p?.KillThread();
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian4constraintArgPfree");
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
+                var solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
                 solver.keplerian4constraintArgPfree(sma, ecc, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad);
                 p = solver;
@@ -378,27 +414,34 @@ namespace MuMech
         public void keplerian5constraint(double sma, double ecc, double inc, double LAN, double ArgP, double fixedCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
-            bool doupdate = false;
+            var doupdate = false;
 
             if (sma != old_sma || ecc != old_ecc || inc != old_inc || LAN != old_LAN || ArgP != old_ArgP)
+            {
                 doupdate = true;
+            }
 
             // avoid slight drift in the current inclination from resetting guidance constantly
             if (inc != old_inc && !currentInc)
+            {
                 doupdate = true;
+            }
 
             if (p != null && p.bctype != BCType.KEPLER5)
+            {
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
-                if (p != null)
-                    p.KillThread();
+                p?.KillThread();
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian5constraint");
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
+                var solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
                 solver.keplerian5constraint(sma, ecc, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad, ArgP * UtilMath.Deg2Rad);
                 p = solver;
@@ -415,24 +458,29 @@ namespace MuMech
         public void flightangle3constraintMAXE(double rTm, double gamma, double inc, int numStages, double sma, double fixedCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
-            bool doupdate = false;
+            var doupdate = false;
 
             if (rTm != old_rTm || gamma != old_gamma || numStages != old_numStages )
+            {
                 doupdate = true;
+            }
 
             // avoid slight drift in the current inclination from resetting guidance constantly
             if (inc != old_inc && !currentInc)
+            {
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
-                if (p != null)
-                    p.KillThread();
+                p?.KillThread();
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle3constraintMAXE");
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
+                var solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
                 solver.flightangle3constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, numStages);
                 p = solver;
@@ -448,24 +496,29 @@ namespace MuMech
         public void flightangle4constraintMAXE(double rTm, double gamma, double inc, double LAN, int numStages, double sma, double fixedCoast, bool currentInc)
         {
             if ( status == PVGStatus.ENABLED )
+            {
                 return;
+            }
 
-            bool doupdate = false;
+            var doupdate = false;
 
             if (rTm != old_rTm || gamma != old_gamma || numStages != old_numStages || LAN != old_LAN )
+            {
                 doupdate = true;
+            }
 
             // avoid slight drift in the current inclination from resetting guidance constantly
             if (inc != old_inc && !currentInc)
+            {
                 doupdate = true;
+            }
 
             if (p == null || doupdate)
             {
-                if (p != null)
-                    p.KillThread();
+                p?.KillThread();
 
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle3constraintMAXE");
-                PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
+                var solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
                 solver.flightangle4constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad, numStages);
                 p = solver;
@@ -522,7 +575,9 @@ namespace MuMech
             }
 
             if (p.last_success_time > 0)
+            {
                 last_success_time = p.last_success_time;
+            }
 
             // FIXME: should make this use wall clock time rather than simulation time and drop it down to
             // 10 seconds or so (phys warp means that this timeout could be 1/4 of the wall time and the
@@ -542,7 +597,9 @@ namespace MuMech
             {
                 /* we have a solver and have a valid solution */
                 if ( isTerminalGuidance() )
+                {
                     return;
+                }
 
                 /* hardcoded 10 seconds of terminal guidance */
                 if ( tgo < 10 )
@@ -565,24 +622,32 @@ namespace MuMech
                 // The current_tgo is the "booster" stage of the solution, it is allowed to go negative, for staging freeze
                 // running the optimizer for 4 seconds on either side of staging.
                 if ( Math.Abs(p.Solution.current_tgo(vesselState.time)) < 4 )
+                {
                     return;
+                }
 
                 // Also if we just triggered a KSP stage separation or just started coasting, then wait for 4 seconds for
                 // stats to settle before running the optimizer again.
                 if ( vesselState.time < last_stage_time + 4 )
+                {
                     return;
+                }
             }
 
 
             if ( (vesselState.time - last_optimizer_time) < MuUtils.Clamp(pvgInterval, 1.00, 30.00) )
+            {
                 return;
+            }
 
             p.threadStart(vesselState.time);
             //if ( p.threadStart(vesselState.time) )
             //Debug.Log("MechJeb: started optimizer thread");
 
             if (status == PVGStatus.INITIALIZING && p.Solution != null)
+            {
                 status = PVGStatus.CONVERGED;
+            }
 
             last_optimizer_time = vesselState.time;
         }
@@ -594,20 +659,27 @@ namespace MuMech
         // just go off of whatever the solution says for the current time.
         private bool actuallyCoasting()
         {
-            Arc current_arc = p.Solution.arc(vesselState.time);
+            var current_arc = p.Solution.arc(vesselState.time);
 
             if ( last_burning_stage_complete && last_burning_stage <= vessel.currentStage )
+            {
                 return false;
+            }
+
             return current_arc.Thrust == 0;
         }
 
         private void handle_throttle()
         {
             if ( p == null || p.Solution == null )
+            {
                 return;
+            }
 
             if ( !allow_execution )
+            {
                 return;
+            }
 
             if ( status == PVGStatus.TERMINAL_RCS )
             {
@@ -615,7 +687,7 @@ namespace MuMech
                 return;
             }
 
-            Arc current_arc = p.Solution.arc(vesselState.time);
+            var current_arc = p.Solution.arc(vesselState.time);
 
             if ( current_arc.Thrust != 0 )
             {
@@ -626,10 +698,9 @@ namespace MuMech
             if ( actuallyCoasting() )
             {
                 // force RCS on at the state transition
-                if ( !isCoasting() )
+                if (!isCoasting() && !vessel.ActionGroups[KSPActionGroup.RCS])
                 {
-                    if (!vessel.ActionGroups[KSPActionGroup.RCS])
-                        vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 }
 
                 if ( !isTerminalGuidance() )
@@ -644,7 +715,9 @@ namespace MuMech
             else
             {
                 if ( !isBurning() )
+                {
                     ThrustOn();
+                }
 
                 if ( !isTerminalGuidance() )
                 {
@@ -660,11 +733,15 @@ namespace MuMech
         {
             // FIXME: if we have no solution update off of lambda + lambdaDot + last update time
             if (p == null || p.Solution == null)
+            {
                 return;
+            }
 
             // if we're not flying yet, continuously update the t0 of the solution
             if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
+            {
                 p.Solution.t0 = vesselState.time;
+            }
 
             if ( status == PVGStatus.TERMINAL_RCS )
             {
@@ -720,7 +797,10 @@ namespace MuMech
             last_optimizer_time = 0.0;
             last_success_time = 0.0;
             autowarp = false;
-            if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+            if (!MuUtils.PhysicsRunning())
+            {
+                core.warp.MinimumWarp();
+            }
         }
 
         public static MethodInfo principiaEGNPCDOF;

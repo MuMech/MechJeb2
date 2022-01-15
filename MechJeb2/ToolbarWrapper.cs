@@ -52,7 +52,7 @@ namespace MuMech
     /// <summary>
     /// The global tool bar manager.
     /// </summary>
-    public partial class ToolbarManager : IToolbarManager
+    public sealed partial class ToolbarManager : IToolbarManager
     {
         /// <summary>
         /// Whether the Toolbar Plugin is available.
@@ -78,10 +78,10 @@ namespace MuMech
             {
                 if ((toolbarAvailable != false) && (instance_ == null))
                 {
-                    Type type = ToolbarTypes.getType("Toolbar.ToolbarManager");
+                    var type = ToolbarTypes.getType("Toolbar.ToolbarManager");
                     if (type != null)
                     {
-                        object realToolbarManager = ToolbarTypes.getStaticProperty(type, "Instance").GetValue(null, null);
+                        var realToolbarManager = ToolbarTypes.getStaticProperty(type, "Instance").GetValue(null, null);
                         instance_ = new ToolbarManager(realToolbarManager);
                     }
                 }
@@ -452,12 +452,12 @@ namespace MuMech
             }
         }
 
-        private object realGameScenesVisibility;
-        private PropertyInfo visibleProperty;
+        private readonly object realGameScenesVisibility;
+        private readonly PropertyInfo visibleProperty;
 
         public GameScenesVisibility(params GameScenes[] gameScenes)
         {
-            Type gameScenesVisibilityType = ToolbarTypes.getType("Toolbar.GameScenesVisibility");
+            var gameScenesVisibilityType = ToolbarTypes.getType("Toolbar.GameScenesVisibility");
             realGameScenesVisibility = Activator.CreateInstance(gameScenesVisibilityType, new object[] { gameScenes });
             visibleProperty = ToolbarTypes.getProperty(gameScenesVisibilityType, "Visible");
         }
@@ -487,17 +487,17 @@ namespace MuMech
             }
         }
 
-        private object realPopupMenuDrawable;
-        private MethodInfo updateMethod;
-        private MethodInfo drawMethod;
-        private MethodInfo addOptionMethod;
-        private MethodInfo addSeparatorMethod;
-        private MethodInfo destroyMethod;
-        private EventInfo onAnyOptionClickedEvent;
+        private readonly object realPopupMenuDrawable;
+        private readonly MethodInfo updateMethod;
+        private readonly MethodInfo drawMethod;
+        private readonly MethodInfo addOptionMethod;
+        private readonly MethodInfo addSeparatorMethod;
+        private readonly MethodInfo destroyMethod;
+        private readonly EventInfo onAnyOptionClickedEvent;
 
         public PopupMenuDrawable()
         {
-            Type popupMenuDrawableType = ToolbarTypes.getType("Toolbar.PopupMenuDrawable");
+            var popupMenuDrawableType = ToolbarTypes.getType("Toolbar.PopupMenuDrawable");
             realPopupMenuDrawable = Activator.CreateInstance(popupMenuDrawableType, null);
             updateMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Update");
             drawMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Draw");
@@ -524,7 +524,7 @@ namespace MuMech
         /// <returns>A button that can be used to register clicks on the menu option.</returns>
         public IButton AddOption(string text)
         {
-            object realButton = addOptionMethod.Invoke(realPopupMenuDrawable, new object[] { text });
+            var realButton = addOptionMethod.Invoke(realPopupMenuDrawable, new object[] { text });
             return new Button(realButton, new ToolbarTypes());
         }
 
@@ -554,10 +554,10 @@ namespace MuMech
         private static bool? toolbarAvailable = null;
         private static IToolbarManager instance_;
 
-        private object realToolbarManager;
-        private MethodInfo addMethod;
-        private Dictionary<object, IButton> buttons = new Dictionary<object, IButton>();
-        private ToolbarTypes types = new ToolbarTypes();
+        private readonly object realToolbarManager;
+        private readonly MethodInfo addMethod;
+        private readonly Dictionary<object, IButton> buttons = new Dictionary<object, IButton>();
+        private readonly ToolbarTypes types = new ToolbarTypes();
 
         private ToolbarManager(object realToolbarManager)
         {
@@ -568,7 +568,7 @@ namespace MuMech
 
         public IButton add(string ns, string id)
         {
-            object realButton = addMethod.Invoke(realToolbarManager, new object[] { ns, id });
+            var realButton = addMethod.Invoke(realToolbarManager, new object[] { ns, id });
             IButton button = new Button(realButton, types);
             buttons.Add(realButton, button);
             return button;
@@ -577,11 +577,11 @@ namespace MuMech
 
     internal class Button : IButton
     {
-        private object realButton;
-        private ToolbarTypes types;
-        private Delegate realClickHandler;
-        private Delegate realMouseEnterHandler;
-        private Delegate realMouseLeaveHandler;
+        private readonly object realButton;
+        private readonly ToolbarTypes types;
+        private readonly Delegate realClickHandler;
+        private readonly Delegate realMouseEnterHandler;
+        private readonly Delegate realMouseLeaveHandler;
 
         internal Button(object realButton, ToolbarTypes types)
         {
@@ -595,8 +595,8 @@ namespace MuMech
 
         private Delegate attachEventHandler(EventInfo @event, string methodName, object realButton)
         {
-            MethodInfo method = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
-            Delegate d = Delegate.CreateDelegate(@event.EventHandlerType, this, method);
+            var method = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            var d = Delegate.CreateDelegate(@event.EventHandlerType, this, method);
             @event.AddEventHandler(realButton, d);
             return d;
         }
@@ -801,7 +801,7 @@ namespace MuMech
     {
         internal ClickEvent(object realEvent, IButton button)
         {
-            Type type = realEvent.GetType();
+            var type = realEvent.GetType();
             Button = button;
             MouseButton = (int)type.GetField("MouseButton", BindingFlags.Public | BindingFlags.Instance).GetValue(realEvent);
         }
@@ -844,7 +844,7 @@ namespace MuMech
             functionVisibilityType = getType("Toolbar.FunctionVisibility");
             functionDrawableType = getType("Toolbar.FunctionDrawable");
 
-            Type iButtonType = getType("Toolbar.IButton");
+            var iButtonType = getType("Toolbar.IButton");
             button = new ButtonTypes(iButtonType);
         }
 

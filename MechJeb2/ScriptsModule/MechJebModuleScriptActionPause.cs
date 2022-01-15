@@ -5,35 +5,32 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionPause : MechJebModuleScriptAction
 	{
-		public static String NAME = "Pause";
+		public static string NAME = "Pause";
 
 		public MechJebModuleScriptActionPause (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			GUILayout.Label ("Pause");
-			if (this.isStarted())
-			{
-				if (GUILayout.Button ("GO"))
-				{
-					this.endAction ();
-				}
-			}
-			base.postWindowGUI(windowID);
+            if (this.isStarted() && GUILayout.Button("GO"))
+            {
+                this.endAction();
+            }
+            base.postWindowGUI(windowID);
 		}
 	}
 }

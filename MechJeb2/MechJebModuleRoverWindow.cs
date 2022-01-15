@@ -31,8 +31,8 @@ namespace MuMech
 
 		protected override void WindowGUI(int windowID)
 		{
-			MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-			bool alt = GameSettings.MODIFIER_KEY.GetKey();
+			var ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+			var alt = GameSettings.MODIFIER_KEY.GetKey();
 
 			if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
 			{
@@ -83,7 +83,7 @@ namespace MuMech
 //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 
 			GUILayout.BeginHorizontal();
-			if (core.target != null && core.target.Target != null)
+			if (core.target?.Target != null)
 			{
 				var vssl = core.target.Target.GetVessel();
 

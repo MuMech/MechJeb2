@@ -6,21 +6,23 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionWhile : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
 	{
-		public static String NAME = "While";
-		private MechJebModuleScriptActionsList actions;
-		private MechJebModuleScriptCondition condition;
-		private GUIStyle sBorder;
+		public static string NAME = "While";
+		private readonly MechJebModuleScriptActionsList actions;
+		private readonly MechJebModuleScriptCondition condition;
+		private readonly GUIStyle sBorder;
 
 		public MechJebModuleScriptActionWhile (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actions = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
-			sBorder = new GUIStyle();
-			sBorder.border = new RectOffset(1, 1, 1, 1);
-			Texture2D background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-			for (int x = 0; x < background.width; x++)
+            sBorder = new GUIStyle
+            {
+                border = new RectOffset(1, 1, 1, 1)
+            };
+            var background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			for (var x = 0; x < background.width; x++)
 			{
-				for (int y = 0; y < background.height; y++)
+				for (var y = 0; y < background.height; y++)
 				{
 					if (x == 0 || x == 15 || y == 0 || y == 15)
 					{
@@ -38,20 +40,20 @@ namespace MuMech
 			sBorder.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			this.actions.start();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
-			GUIStyle s = new GUIStyle(GUI.skin.label);
+			var s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
 			GUILayout.BeginVertical(sBorder);
 			base.preWindowGUI(windowID);
@@ -88,28 +90,28 @@ namespace MuMech
 
 		public List<MechJebModuleScriptActionsList> getActionsListsObjects()
 		{
-			List<MechJebModuleScriptActionsList> lists = new List<MechJebModuleScriptActionsList>();
+			var lists = new List<MechJebModuleScriptActionsList>();
 			lists.Add(this.actions);
 			return lists;
 		}
 
-		override public void afterOnFixedUpdate() {
+		public override void afterOnFixedUpdate() {
 			actions.OnFixedUpdate();
 		}
 
-		override public void postLoad(ConfigNode node) {
+		public override void postLoad(ConfigNode node) {
 			ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
-			ConfigNode nodeList = node.GetNode("ActionsList");
+			var nodeList = node.GetNode("ActionsList");
 			if (nodeList != null)
 			{
 				actions.LoadConfig(nodeList);
 			}
 		}
 
-		override public void postSave(ConfigNode node) {
-			ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
+		public override void postSave(ConfigNode node) {
+			var conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
 			conditionNode.CopyTo(node.AddNode("Condition"));
-			ConfigNode nodeListThen = new ConfigNode("ActionsList");
+			var nodeListThen = new ConfigNode("ActionsList");
 			actions.SaveConfig(nodeListThen);
 			node.AddNode(nodeListThen);
 		}

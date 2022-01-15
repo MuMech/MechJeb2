@@ -26,7 +26,10 @@ namespace MuMech
 
         public void FixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsEditor) HandleLights();
+            if (!HighLogic.LoadedSceneIsEditor)
+            {
+                HandleLights();
+            }
         }
 
         private void InitializeLights()
@@ -34,10 +37,17 @@ namespace MuMech
             greenLightTransform = null;
             redLightTransform = null;
             
-            foreach (Transform t in GetComponentsInChildren<Transform>())
+            foreach (var t in GetComponentsInChildren<Transform>())
             {
-                if (t.name.Equals("light_green")) greenLightTransform = t;
-                if (t.name.Equals("light_red")) redLightTransform = t;
+                if (t.name.Equals("light_green"))
+                {
+                    greenLightTransform = t;
+                }
+
+                if (t.name.Equals("light_red"))
+                {
+                    redLightTransform = t;
+                }
             }
 
             emissionId = Shader.PropertyToID("_EmissiveColor");
@@ -85,8 +95,15 @@ namespace MuMech
 
         private void HandleLights()
         {
-            if (greenLight == null || redLight == null) InitializeLights();
-            if (greenLight == null || redLight == null) return;
+            if (greenLight == null || redLight == null)
+            {
+                InitializeLights();
+            }
+
+            if (greenLight == null || redLight == null)
+            {
+                return;
+            }
 
             if (core == null || MapView.MapIsEnabled)
             {
@@ -94,12 +111,16 @@ namespace MuMech
             }
             else
             {
-                bool somethingEnabled = false;
+                var somethingEnabled = false;
                 if (vessel.GetMasterMechJeb() == core)
                 {
-                    foreach (DisplayModule display in core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance))
+                    foreach (var display in core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance))
                     {
-                        if (display is MechJebModuleMenu) continue;
+                        if (display is MechJebModuleMenu)
+                        {
+                            continue;
+                        }
+
                         if (display.enabled && display.showInCurrentScene)
                         {
                             somethingEnabled = true;
@@ -113,18 +134,42 @@ namespace MuMech
             switch (litLight)
             {
                 case LightColor.GREEN:
-                    if (!greenLight.enabled) TurnOnLight(LightColor.GREEN);
-                    if (redLight.enabled) TurnOffLight(LightColor.RED);
+                    if (!greenLight.enabled)
+                    {
+                        TurnOnLight(LightColor.GREEN);
+                    }
+
+                    if (redLight.enabled)
+                    {
+                        TurnOffLight(LightColor.RED);
+                    }
+
                     break;
 
                 case LightColor.RED:
-                    if (greenLight.enabled) TurnOffLight(LightColor.GREEN);
-                    if (!redLight.enabled) TurnOnLight(LightColor.RED);
+                    if (greenLight.enabled)
+                    {
+                        TurnOffLight(LightColor.GREEN);
+                    }
+
+                    if (!redLight.enabled)
+                    {
+                        TurnOnLight(LightColor.RED);
+                    }
+
                     break;
 
                 case LightColor.NEITHER:
-                    if (greenLight.enabled) TurnOffLight(LightColor.GREEN);
-                    if (redLight.enabled) TurnOffLight(LightColor.RED);
+                    if (greenLight.enabled)
+                    {
+                        TurnOffLight(LightColor.GREEN);
+                    }
+
+                    if (redLight.enabled)
+                    {
+                        TurnOffLight(LightColor.RED);
+                    }
+
                     break;
             }
         }

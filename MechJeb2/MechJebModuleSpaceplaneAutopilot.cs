@@ -119,7 +119,7 @@ namespace MuMech
         /// the aircraft is perpendicular to the initial approach point
         /// at a distance of turn diameter.
         /// </summary>
-        private double angleToFinalApproachPointTurnDiameter = 20.0;
+        private readonly double angleToFinalApproachPointTurnDiameter = 20.0;
 
         /// <summary>
         /// Touchdown AoA and speed recorded for smooth main gear touchdown.
@@ -130,13 +130,13 @@ namespace MuMech
         /// <summary>
         /// Threshold in seconds to move on to the next waypoint.
         /// </summary>
-        private double secondsThresholdToNextWaypoint = 5.0;
+        private readonly double secondsThresholdToNextWaypoint = 5.0;
 
         /// <summary>
         /// The lowest altitude which may be used which will provide a minimum
         /// clearence above all objects in the area.
         /// </summary>
-        private double minimumSectorAltitude = 1500;
+        private readonly double minimumSectorAltitude = 1500;
 
         public void Autoland(object controller)
         {
@@ -164,7 +164,9 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             if (runways == null && HighLogic.LoadedSceneIsFlight)
+            {
                 InitRunwaysList();
+            }
         }
 
         public override void OnModuleDisabled()
@@ -213,7 +215,7 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            Vector3d vectorToWaypoint = GetAutolandTargetVector();
+            var vectorToWaypoint = GetAutolandTargetVector();
 
             // Make sure autopilot is enabled properly
             if (!Autopilot.HeadingHoldEnabled)
@@ -246,8 +248,8 @@ namespace MuMech
 
             if (approachState == AutolandApproachState.FLARE)
             {
-                double exponentPerMeter = (Math.Log(targetFlareAoA + 1) - Math.Log(1)) / startFlareAtAltitude;
-                double desiredAoA = Math.Exp((startFlareAtAltitude - vesselState.altitudeTrue) * exponentPerMeter) - 1;
+                var exponentPerMeter = (Math.Log(targetFlareAoA + 1) - Math.Log(1)) / startFlareAtAltitude;
+                var desiredAoA = Math.Exp((startFlareAtAltitude - vesselState.altitudeTrue) * exponentPerMeter) - 1;
 
                 //core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Max(desiredAoA, flareStartAoA), 0, this, true, false, false);
 
@@ -264,8 +266,8 @@ namespace MuMech
                 RoverPilot.ControlHeading = true;
 
                 // Smoothen the main gear touchdown
-                double exponentPerMeterPerSecond = (Math.Log(touchdownMomentAoA + 1) - Math.Log(1)) / touchdownMomentSpeed;
-                double desiredAoA = touchdownMomentAoA - (Math.Exp(exponentPerMeterPerSecond * (touchdownMomentSpeed - vesselState.speedSurfaceHorizontal)) - 1);
+                var exponentPerMeterPerSecond = (Math.Log(touchdownMomentAoA + 1) - Math.Log(1)) / touchdownMomentSpeed;
+                var desiredAoA = touchdownMomentAoA - (Math.Exp(exponentPerMeterPerSecond * (touchdownMomentSpeed - vesselState.speedSurfaceHorizontal)) - 1);
                 double currentAoA = vesselState.AoA;
                 core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Min(desiredAoA, currentAoA), 0, this, true, false, false);
 
@@ -273,9 +275,13 @@ namespace MuMech
                 SetReverseThrusters(bEngageReverseIfAvailable && vesselState.speedSurfaceHorizontal > 10);
 
                 if (bEngagedReverseThrusters)
+                {
                     s.mainThrottle = 1;
+                }
                 else
+                {
                     s.mainThrottle = 0;
+                }
 
                 if (bBreakAsSoonAsLanded)
                 {
@@ -301,13 +307,15 @@ namespace MuMech
         private void SetReverseThrusters(bool bEngage)
         {
             if (bEngage == bEngagedReverseThrusters)
+            {
                 return;
+            }
 
-            foreach (Part part in vessel.parts)
+            foreach (var part in vessel.parts)
             {
                 if (part.IsEngine())
                 {
-                    foreach (ModuleAnimateGeneric module in part.FindModulesImplementing<ModuleAnimateGeneric>())
+                    foreach (var module in part.FindModulesImplementing<ModuleAnimateGeneric>())
                     {
                         module.Toggle();
                         bEngagedReverseThrusters = bEngage;
@@ -318,7 +326,7 @@ namespace MuMech
 
         public double GetAutolandTargetAltitude(Vector3d vectorToWaypoint)
         {
-            runway.body.GetLatLonAlt(vectorToWaypoint, out double lat, out double lon, out double alt);
+            runway.body.GetLatLonAlt(vectorToWaypoint, out var lat, out var lon, out var alt);
 
             return alt;
         }
@@ -326,12 +334,14 @@ namespace MuMech
         public double GetAutolandTargetVerticalSpeed(Vector3d vectorToWaypoint)
         {
             if (approachState == AutolandApproachState.FLARE)
+            {
                 return -1.5;
+            }
 
-            double timeToWaypoint = LateralDistance(vesselState.CoM, vectorToWaypoint) / vesselState.speedSurfaceHorizontal;
-            double deltaAlt = GetAutolandTargetAltitude(vectorToWaypoint) - vesselState.altitudeASL;
+            var timeToWaypoint = LateralDistance(vesselState.CoM, vectorToWaypoint) / vesselState.speedSurfaceHorizontal;
+            var deltaAlt = GetAutolandTargetAltitude(vectorToWaypoint) - vesselState.altitudeASL;
 
-            double vertSpeed = deltaAlt / timeToWaypoint;
+            var vertSpeed = deltaAlt / timeToWaypoint;
 
             // If we are on final, we want to maintain glideslope as much as
             // possible so that we don't overshoot or undershoot the runway.
@@ -339,12 +349,12 @@ namespace MuMech
             {
                 Debug.Assert(vertSpeed < 0);
 
-                double latDist = LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown());
-                Vector3d vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, latDist);
-                double desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope);
-                double deltaToCorrectAlt = desiredAlt - vesselState.altitudeASL;
-                double expPerMeter = (Math.Log(maximumVerticalSpeedCorrection + 1) - Math.Log(1)) / desiredAlt;
-                double adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
+                var latDist = LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown());
+                var vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, latDist);
+                var desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope);
+                var deltaToCorrectAlt = desiredAlt - vesselState.altitudeASL;
+                var expPerMeter = (Math.Log(maximumVerticalSpeedCorrection + 1) - Math.Log(1)) / desiredAlt;
+                var adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
 
                 vertSpeed += deltaToCorrectAlt > 0 ? adjustment : -adjustment;
             }
@@ -354,13 +364,13 @@ namespace MuMech
 
         public double GetAutolandAlignmentError(Vector3d vectorToWaypoint)
         {
-            Vector3d runwayDir = (runway.End() - runway.Start()).normalized;
+            var runwayDir = (runway.End() - runway.Start()).normalized;
             return Math.Atan2(Vector3d.Dot(runway.Up(), Vector3d.Cross(vectorToWaypoint, runwayDir)), Vector3d.Dot(vectorToWaypoint, runwayDir)) * UtilMath.Rad2Deg;
         }
 
         public double GetAutolandTargetHeading(Vector3d vectorToWaypoint)
         {
-            double targetHeading = vesselState.HeadingFromDirection(vectorToWaypoint);
+            var targetHeading = vesselState.HeadingFromDirection(vectorToWaypoint);
 
             // If we are on final, align with runway and maintain
             switch (approachState)
@@ -371,11 +381,11 @@ namespace MuMech
                 case AutolandApproachState.ROLLOUT:
                 case AutolandApproachState.FLARE:
                 {
-                    double alignOffset = GetAutolandAlignmentError(vectorToWaypoint);
+                    var alignOffset = GetAutolandAlignmentError(vectorToWaypoint);
                     Debug.Assert(alignOffset < lateralInterceptAngle);
 
-                    double exponentPerDegreeOfError = (Math.Log(3) - Math.Log(1)) / lateralInterceptAngle;
-                    double offsetMultiplier = Math.Exp((lateralInterceptAngle - Math.Abs(alignOffset)) * exponentPerDegreeOfError);
+                    var exponentPerDegreeOfError = (Math.Log(3) - Math.Log(1)) / lateralInterceptAngle;
+                    var offsetMultiplier = Math.Exp((lateralInterceptAngle - Math.Abs(alignOffset)) * exponentPerDegreeOfError);
 
                     targetHeading -= alignOffset * offsetMultiplier;
                     break;
@@ -388,7 +398,9 @@ namespace MuMech
         public double GetAutolandMaxBankAngle()
         {
             if (approachState == AutolandApproachState.TOUCHDOWN)
+            {
                 return 10.0;
+            }
 
             return maximumSafeBankAngle;
         }
@@ -421,7 +433,9 @@ namespace MuMech
         public double GetAutolandTargetSpeed()
         {
             if (vessel.Landed)
+            {
                 return 0;
+            }
 
             switch (approachState)
             {
@@ -450,20 +464,20 @@ namespace MuMech
         public Vector3d GetAutolandTargetVector()
         {
             // positions of the start and end of the runway
-            Vector3d runwayStart = runway.GetVectorToTouchdown();
-            Vector3d runwayEnd = runway.End();
+            var runwayStart = runway.GetVectorToTouchdown();
+            var runwayEnd = runway.End();
 
             // get the initial and final approach vectors
-            Vector3d initialApproachVector = GetInitialApproachPoint();
-            Vector3d finalApproachVector = GetFinalApproachPoint();
+            var initialApproachVector = GetInitialApproachPoint();
+            var finalApproachVector = GetFinalApproachPoint();
 
             // determine whether the vessel is within the approach cone or not
-            Vector3d finalApproachVectorProjectedOnGroundPlane = finalApproachVector.ProjectOnPlane(runway.Up());
-            Vector3d initialApproachVectorProjectedOnGroundPlane = initialApproachVector.ProjectOnPlane(runway.Up());
-            Vector3d runwayDirectionVectorProjectedOnGroundPlane = (runwayEnd - runwayStart).ProjectOnPlane(runway.Up());
+            var finalApproachVectorProjectedOnGroundPlane = finalApproachVector.ProjectOnPlane(runway.Up());
+            var initialApproachVectorProjectedOnGroundPlane = initialApproachVector.ProjectOnPlane(runway.Up());
+            var runwayDirectionVectorProjectedOnGroundPlane = (runwayEnd - runwayStart).ProjectOnPlane(runway.Up());
 
-            double lateralAngleOfFinalApproachVector = Vector3d.Angle(finalApproachVectorProjectedOnGroundPlane, runwayDirectionVectorProjectedOnGroundPlane);
-            double lateralAngleOfInitialApproachVector = Vector3d.Angle(initialApproachVectorProjectedOnGroundPlane, runwayDirectionVectorProjectedOnGroundPlane);
+            var lateralAngleOfFinalApproachVector = Vector3d.Angle(finalApproachVectorProjectedOnGroundPlane, runwayDirectionVectorProjectedOnGroundPlane);
+            var lateralAngleOfInitialApproachVector = Vector3d.Angle(initialApproachVectorProjectedOnGroundPlane, runwayDirectionVectorProjectedOnGroundPlane);
 
             if (approachState == AutolandApproachState.START)
             {
@@ -498,11 +512,11 @@ namespace MuMech
             }
             else if (approachState == AutolandApproachState.GLIDESLOPEINTERCEPT)
             {
-                Vector3d vectorToGlideslopeIntercept = FindVectorToGlideslopeIntercept(finalApproachVector,  lateralAngleOfFinalApproachVector);
+                var vectorToGlideslopeIntercept = FindVectorToGlideslopeIntercept(finalApproachVector,  lateralAngleOfFinalApproachVector);
 
                 // Determine whether we should start turning towards FAP.
-                double estimatedTimeToTurn = lateralInterceptAngle / GetAutolandMaxRateOfTurn();
-                double timeToGlideslopeIntercept = LateralDistance(vesselState.CoM, vectorToGlideslopeIntercept) / vesselState.speedSurfaceHorizontal;
+                var estimatedTimeToTurn = lateralInterceptAngle / GetAutolandMaxRateOfTurn();
+                var timeToGlideslopeIntercept = LateralDistance(vesselState.CoM, vectorToGlideslopeIntercept) / vesselState.speedSurfaceHorizontal;
 
                 if (estimatedTimeToTurn >= timeToGlideslopeIntercept)
                 {
@@ -522,7 +536,7 @@ namespace MuMech
                     return initialApproachVector;
                 }
 
-                double timeToFAP = LateralDistance(vesselState.CoM, finalApproachVector) / vesselState.speedSurfaceHorizontal;
+                var timeToFAP = LateralDistance(vesselState.CoM, finalApproachVector) / vesselState.speedSurfaceHorizontal;
 
                 if (GetAutolandAlignmentError(finalApproachVector) < 3.0 && timeToFAP < secondsThresholdToNextWaypoint)
                 {
@@ -588,7 +602,7 @@ namespace MuMech
         /// <returns></returns>
         public Vector3d GetInitialApproachPoint()
         {
-            Vector3d iap = runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
+            var iap = runway.GetPointOnGlideslope(glideslope, GetAutolandLateralDistanceFromTouchdownToFinalApproach() - runway.touchdownPoint);
 
             iap = PreventClimbingIntoGlideslope(iap);
             iap = MaintainMinimalAltitude(iap);
@@ -603,10 +617,12 @@ namespace MuMech
         /// <returns></returns>
         private Vector3d PreventClimbingIntoGlideslope(Vector3d v)
         {
-            runway.body.GetLatLonAlt(v, out double lat, out double lon, out double alt);
+            runway.body.GetLatLonAlt(v, out var lat, out var lon, out var alt);
 
             if (alt <= vesselState.altitudeASL)
+            {
                 return v;
+            }
 
             return runway.body.GetWorldSurfacePosition(lat, lon, vesselState.altitudeASL);
         }
@@ -617,10 +633,12 @@ namespace MuMech
         /// <returns></returns>
         private Vector3d MaintainMinimalAltitude(Vector3d v)
         {
-            runway.body.GetLatLonAlt(v, out double lat, out double lon, out double alt);
+            runway.body.GetLatLonAlt(v, out var lat, out var lon, out var alt);
 
             if (alt >= minimumSectorAltitude)
+            {
                 return v;
+            }
 
             return runway.body.GetWorldSurfacePosition(lat, lon, minimumSectorAltitude);
         }
@@ -637,13 +655,13 @@ namespace MuMech
             // Determine the three angles of the triangle, one of which is
             // the lateral angle of final approach vector, and the other is
             // 180 - lateral intercept angle.
-            double theta = 180 - lateralInterceptAngle;
-            double omega = 180 - lateralAngleOfFinalApproachVector - theta;
+            var theta = 180 - lateralInterceptAngle;
+            var omega = 180 - lateralAngleOfFinalApproachVector - theta;
 
             // We know the lateral distance to the final approach point, we
             // want to find a point on the glide slope which we can
             // intercept at a given angle.
-            double dist = (LateralDistance(vesselState.CoM, finalApproachVector) * Math.Sin(UtilMath.Deg2Rad * omega)) / Math.Sin(UtilMath.Deg2Rad * theta);
+            var dist = (LateralDistance(vesselState.CoM, finalApproachVector) * Math.Sin(UtilMath.Deg2Rad * omega)) / Math.Sin(UtilMath.Deg2Rad * theta);
 
             // If this is a bad intercept, proceed to IAP.
             if (dist < lateralDistanceFromTouchdownToFinalApproach)
@@ -652,7 +670,7 @@ namespace MuMech
                 return GetInitialApproachPoint();
             }
 
-            Vector3d pointOnLocalizer = runway.GetPointOnGlideslope(glideslope, dist + lateralDistanceFromTouchdownToFinalApproach);
+            var pointOnLocalizer = runway.GetPointOnGlideslope(glideslope, dist + lateralDistanceFromTouchdownToFinalApproach);
 
             return PreventClimbingIntoGlideslope(pointOnLocalizer);
         }
@@ -671,43 +689,46 @@ namespace MuMech
             // Import landing sites form a user createded .cfg
             foreach (var mjConf in GameDatabase.Instance.GetConfigs("MechJeb2Landing"))
             {
-                foreach (ConfigNode site in mjConf.config.GetNode("Runways").GetNodes("Runway"))
+                foreach (var site in mjConf.config.GetNode("Runways").GetNodes("Runway"))
                 {
-                    string runwayName = site.GetValue("name");
-                    ConfigNode start = site.GetNode("start");
-                    ConfigNode end = site.GetNode("end");
-                    double touchdown = 0.0;
-                    double.TryParse(site.GetValue("touchdown"), out touchdown);
+                    var runwayName = site.GetValue("name");
+                    var start = site.GetNode("start");
+                    var end = site.GetNode("end");
+                    double.TryParse(site.GetValue("touchdown"), out var touchdown);
 
                     if (runwayName == null || start == null || end == null)
+                    {
                         continue;
+                    }
 
-                    string lat = start.GetValue("latitude");
-                    string lon = start.GetValue("longitude");
-                    string alt = start.GetValue("altitude");
+                    var lat = start.GetValue("latitude");
+                    var lon = start.GetValue("longitude");
+                    var alt = start.GetValue("altitude");
                     
                     if (lat == null || lon == null || alt == null)
+                    {
                         continue;
+                    }
 
-                    double startLatitude, startLongitude, startAltitude;
-                    double.TryParse(lat, out startLatitude);
-                    double.TryParse(lon, out startLongitude);
-                    double.TryParse(alt, out startAltitude);
+                    double.TryParse(lat, out var startLatitude);
+                    double.TryParse(lon, out var startLongitude);
+                    double.TryParse(alt, out var startAltitude);
 
                     lat = end.GetValue("latitude");
                     lon = end.GetValue("longitude");
                     alt = end.GetValue("altitude");
 
                     if (lat == null || lon == null || alt == null)
+                    {
                         continue;
+                    }
 
-                    double endLatitude, endLongitude, endAltitude;
-                    double.TryParse(lat, out endLatitude);
-                    double.TryParse(lon, out endLongitude);
-                    double.TryParse(alt, out endAltitude);
+                    double.TryParse(lat, out var endLatitude);
+                    double.TryParse(lon, out var endLongitude);
+                    double.TryParse(alt, out var endAltitude);
 
-                    string bodyName = site.GetValue("body");
-                    CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
+                    var bodyName = site.GetValue("body");
+                    var body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
 
                     if (body != null && !runways.Any(p => p.name == runwayName))
                     {
@@ -725,6 +746,7 @@ namespace MuMech
 
             // TODO: deploy LandingSites.cfg?
             if (!runways.Any(p => p.name == "KSC Runway 09"))
+            {
                 runways.Add(new Runway
                 {
                     name = "KSC Runway 09",
@@ -733,8 +755,10 @@ namespace MuMech
                     end = new Runway.Endpoint { latitude = -0.050185, longitude = -74.490867, altitude = 69.01 },
                     touchdownPoint = 100.0
                 });
+            }
 
             if (!runways.Any(p => p.name == "KSC Runway 27"))
+            {
                 runways.Add(new Runway
                 {
                     name = "KSC Runway 27",
@@ -743,8 +767,10 @@ namespace MuMech
                     end = new Runway.Endpoint { latitude = -0.0485981, longitude = -74.726413, altitude = 69.01 },
                     touchdownPoint = 100.0
                 });
+            }
 
             if (!runways.Any(p => p.name == "Island Runway 09"))
+            {
                 runways.Add(new Runway
                 {
                     name = "Island Runway 09",
@@ -753,8 +779,10 @@ namespace MuMech
                     end = new Runway.Endpoint { latitude = -1.515980, longitude = -71.852408, altitude = 133.17 },
                     touchdownPoint = 25.0
                 });
+            }
 
             if (!runways.Any(p => p.name == "Island Runway 27"))
+            {
                 runways.Add(new Runway
                 {
                     name = "Island Runway 27",
@@ -763,6 +791,7 @@ namespace MuMech
                     end = new Runway.Endpoint { latitude = -1.517306, longitude = -71.965488, altitude = 133.17 },
                     touchdownPoint = 25.0
                 });
+            }
         }
     }
 
@@ -802,10 +831,10 @@ namespace MuMech
 
         public Vector3d GetVectorToTouchdown()
         {
-            Vector3d runwayStart = Start();
-            Vector3d runwayEnd = End();
+            var runwayStart = Start();
+            var runwayEnd = End();
 
-            Vector3d runwayDir = (runwayEnd - runwayStart).normalized;
+            var runwayDir = (runwayEnd - runwayStart).normalized;
             runwayStart += touchdownPoint * runwayDir;
 
             return runwayStart;
@@ -813,14 +842,14 @@ namespace MuMech
 
         public Vector3d GetPointOnGlideslope(double glideslope, double distanceOnCenterline)
         {
-            Vector3d runwayStart = Start();
-            Vector3d runwayEnd = End();
-            Vector3d runwayDir = (runwayEnd - runwayStart).normalized;
-            Vector3d pointOnGlideslope = runwayStart - (distanceOnCenterline * runwayDir);
+            var runwayStart = Start();
+            var runwayEnd = End();
+            var runwayDir = (runwayEnd - runwayStart).normalized;
+            var pointOnGlideslope = runwayStart - (distanceOnCenterline * runwayDir);
 
-            double altitude = start.altitude + Math.Tan(glideslope * Mathf.Deg2Rad) * distanceOnCenterline;
+            var altitude = start.altitude + (Math.Tan(glideslope * Mathf.Deg2Rad) * distanceOnCenterline);
 
-            body.GetLatLonAlt(pointOnGlideslope, out double latAtDistance, out double lonAtDistance, out double altAtDistance);
+            body.GetLatLonAlt(pointOnGlideslope, out var latAtDistance, out var lonAtDistance, out var altAtDistance);
 
             return body.GetWorldSurfacePosition(latAtDistance, lonAtDistance, altitude);
         }

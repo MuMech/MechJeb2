@@ -14,8 +14,8 @@ namespace MuMech
         }
 
         // Keep all Operation objects so parameters are saved
-        Operation[] operation = Operation.getAvailableOperations();
-        string[] operationNames;
+        readonly Operation[] operation = Operation.getAvailableOperations();
+        readonly string[] operationNames;
 
         [Persistent(pass = (int)Pass.Global)]
         int operationId = 0;
@@ -29,8 +29,8 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            List<ManeuverNode> maneuverNodes = GetManeuverNodes();
-            bool anyNodeExists = GetManeuverNodes().Any();
+            var maneuverNodes = GetManeuverNodes();
+            var anyNodeExists = GetManeuverNodes().Any();
 
             if (anyNodeExists)
             {
@@ -51,19 +51,19 @@ namespace MuMech
             operationId = GuiUtils.ComboBox.Box(operationId, operationNames, this);
 
             // Compute orbit and universal time parameters for next maneuver
-            double UT = vesselState.time;
-            Orbit o = orbit;
+            var UT = vesselState.time;
+            var o = orbit;
             if (anyNodeExists)
             {
                 if (createNode)
                 {
-                    ManeuverNode last = maneuverNodes.Last();
+                    var last = maneuverNodes.Last();
                     UT = last.UT;
                     o = last.nextPatch;
                 }
                 else if (maneuverNodes.Count > 1)
                 {
-                    ManeuverNode last = maneuverNodes[maneuverNodes.Count - 1];
+                    var last = maneuverNodes[maneuverNodes.Count - 1];
                     UT = last.UT;
                     o = last.nextPatch;
                 }
@@ -76,10 +76,12 @@ namespace MuMech
             catch (Exception) { } // TODO: Would be better to fix the problem but this will do for now
 
             if (anyNodeExists)
+            {
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_createlab3"));//"after the last maneuver node."
+            }
 
-            bool makingNode = false;
-            bool executingNode = false;
+            var makingNode = false;
+            var executingNode = false;
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button1")))//"Create node"
             {
@@ -99,7 +101,10 @@ namespace MuMech
                 if (nodeList != null)
                 {
                     if (!createNode)
+                    {
                         maneuverNodes.Last().RemoveSelf();
+                    }
+
                     for (var i = 0; i < nodeList.Count; i++)
                     {
                         vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
@@ -107,12 +112,14 @@ namespace MuMech
                 }
 
                 if (executingNode && core.node != null)
+                {
                     core.node.ExecuteOneNode(this);
+                }
             }
 
             if (operation[operationId].getErrorMessage().Length > 0)
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
+                var s = new GUIStyle(GUI.skin.label);
                 s.normal.textColor = Color.yellow;
                 GUILayout.Label(operation[operationId].getErrorMessage(), s);
             }
@@ -203,9 +210,15 @@ namespace MuMech
 
         public List<ManeuverNode> GetManeuverNodes()
         {
-            MechJebModuleLandingPredictions predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
-            if (predictor == null) return vessel.patchedConicSolver.maneuverNodes;
-            else return vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
+            var predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
+            if (predictor == null)
+            {
+                return vessel.patchedConicSolver.maneuverNodes;
+            }
+            else
+            {
+                return vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
+            }
         }
 
         public override GUILayoutOption[] WindowOptions()

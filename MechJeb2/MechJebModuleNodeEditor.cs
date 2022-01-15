@@ -16,15 +16,15 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         EditableDouble normalPlusDelta = 0;
         [Persistent(pass = (int)Pass.Global)]
-        EditableTime timeOffset = 0;
+        readonly EditableTime timeOffset = 0;
 
         ManeuverNode node;
         ManeuverGizmo gizmo;
 
         enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING };
-        static int numSnaps = Enum.GetNames(typeof(Snap)).Length;
+        static readonly int numSnaps = Enum.GetNames(typeof(Snap)).Length;
         Snap snap = Snap.PERIAPSIS;
-        string[] snapStrings = new string[] { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") };//"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
+        readonly string[] snapStrings = new string[] { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") };//"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
 
         void GizmoUpdateHandler(Vector3d dV, double UT)
         {
@@ -35,10 +35,10 @@ namespace MuMech
 
         void MergeNext(int index)
         {
-            ManeuverNode cur = vessel.patchedConicSolver.maneuverNodes[index];
-            ManeuverNode next = vessel.patchedConicSolver.maneuverNodes[index+1];
+            var cur = vessel.patchedConicSolver.maneuverNodes[index];
+            var next = vessel.patchedConicSolver.maneuverNodes[index+1];
 
-            double newUT = (cur.UT + next.UT) / 2;
+            var newUT = (cur.UT + next.UT) / 2;
             cur.UpdateNode(cur.patch.DeltaVToManeuverNodeCoordinates(newUT, cur.WorldDeltaV() + next.WorldDeltaV()), newUT);
             next.RemoveSelf();
         }
@@ -55,7 +55,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            ManeuverNode oldNode = node;
+            var oldNode = node;
 
             if (vessel.patchedConicSolver.maneuverNodes.Count == 1)
             {
@@ -63,15 +63,21 @@ namespace MuMech
             }
             else
             {
-                if (!vessel.patchedConicSolver.maneuverNodes.Contains(node)) node = vessel.patchedConicSolver.maneuverNodes[0];
+                if (!vessel.patchedConicSolver.maneuverNodes.Contains(node))
+                {
+                    node = vessel.patchedConicSolver.maneuverNodes[0];
+                }
 
-                int nodeIndex = vessel.patchedConicSolver.maneuverNodes.IndexOf(node);
-                int numNodes = vessel.patchedConicSolver.maneuverNodes.Count;
+                var nodeIndex = vessel.patchedConicSolver.maneuverNodes.IndexOf(node);
+                var numNodes = vessel.patchedConicSolver.maneuverNodes.Count;
 
                 nodeIndex = GuiUtils.ArrowSelector(nodeIndex, numNodes, "Maneuver node #" + (nodeIndex + 1));
 
                 node = vessel.patchedConicSolver.maneuverNodes[nodeIndex];
-                if (nodeIndex < (numNodes-1) && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button1"))) MergeNext(nodeIndex);//"Merge next node"
+                if (nodeIndex < (numNodes-1) && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button1")))
+                {
+                    MergeNext(nodeIndex);//"Merge next node"
+                }
             }
 
             if (node != oldNode)
@@ -83,9 +89,16 @@ namespace MuMech
 
             if (gizmo != node.attachedGizmo)
             {
-                if (gizmo != null) gizmo.OnGizmoUpdated -= GizmoUpdateHandler;
+                if (gizmo != null)
+                {
+                    gizmo.OnGizmoUpdated -= GizmoUpdateHandler;
+                }
+
                 gizmo = node.attachedGizmo;
-                if (gizmo != null) gizmo.OnGizmoUpdated += GizmoUpdateHandler;
+                if (gizmo != null)
+                {
+                    gizmo.OnGizmoUpdated += GizmoUpdateHandler;
+                }
             }
 
 
@@ -140,18 +153,36 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label5"), GUILayout.ExpandWidth(true));//"Set delta to:"
             if (GUILayout.Button("0.01", GUILayout.ExpandWidth(true)))
+            {
                 progradeDelta = radialPlusDelta = normalPlusDelta = 0.01;
+            }
+
             if (GUILayout.Button("0.1", GUILayout.ExpandWidth(true)))
+            {
                 progradeDelta = radialPlusDelta = normalPlusDelta = 0.1;
+            }
+
             if (GUILayout.Button("1", GUILayout.ExpandWidth(true)))
+            {
                 progradeDelta = radialPlusDelta = normalPlusDelta = 1;
+            }
+
             if (GUILayout.Button("10", GUILayout.ExpandWidth(true)))
+            {
                 progradeDelta = radialPlusDelta = normalPlusDelta = 10;
+            }
+
             if (GUILayout.Button("100", GUILayout.ExpandWidth(true)))
+            {
                 progradeDelta = radialPlusDelta = normalPlusDelta = 100;
+            }
+
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button2"))) node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);//"Update"
+            if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button2")))
+            {
+                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);//"Update"
+            }
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label6"), GUILayout.ExpandWidth(true));//"Shift time"
@@ -177,37 +208,49 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button3"), GUILayout.ExpandWidth(true)))//"Snap node to"
             {
-                Orbit o = node.patch;
-                double UT = node.UT;
+                var o = node.patch;
+                var UT = node.UT;
                 switch (snap)
                 {
                     case Snap.PERIAPSIS:
-                        UT = o.NextPeriapsisTime(o.eccentricity < 1 ? UT - o.period / 2 : UT);
+                        UT = o.NextPeriapsisTime(o.eccentricity < 1 ? UT - (o.period / 2) : UT);
                         break;
 
                     case Snap.APOAPSIS:
-                        if (o.eccentricity < 1) UT = o.NextApoapsisTime(UT - o.period / 2);
+                        if (o.eccentricity < 1)
+                        {
+                            UT = o.NextApoapsisTime(UT - (o.period / 2));
+                        }
+
                         break;
 
                     case Snap.EQ_ASCENDING:
-                        if (o.AscendingNodeEquatorialExists()) UT = o.TimeOfAscendingNodeEquatorial(UT - o.period / 2);
+                        if (o.AscendingNodeEquatorialExists())
+                        {
+                            UT = o.TimeOfAscendingNodeEquatorial(UT - (o.period / 2));
+                        }
+
                         break;
 
                     case Snap.EQ_DESCENDING:
-                        if (o.DescendingNodeEquatorialExists()) UT = o.TimeOfDescendingNodeEquatorial(UT - o.period / 2);
+                        if (o.DescendingNodeEquatorialExists())
+                        {
+                            UT = o.TimeOfDescendingNodeEquatorial(UT - (o.period / 2));
+                        }
+
                         break;
 
                     case Snap.REL_ASCENDING:
-                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
+                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody && o.AscendingNodeExists(core.target.TargetOrbit))
                         {
-                            if (o.AscendingNodeExists(core.target.TargetOrbit)) UT = o.TimeOfAscendingNode(core.target.TargetOrbit, UT - o.period / 2);
+                            UT = o.TimeOfAscendingNode(core.target.TargetOrbit, UT - (o.period / 2));
                         }
                         break;
 
                     case Snap.REL_DESCENDING:
-                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
+                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody && o.DescendingNodeExists(core.target.TargetOrbit))
                         {
-                            if (o.DescendingNodeExists(core.target.TargetOrbit)) UT = o.TimeOfDescendingNode(core.target.TargetOrbit, UT - o.period / 2);
+                            UT = o.TimeOfDescendingNode(core.target.TargetOrbit, UT - (o.period / 2));
                         }
                         break;
                 }
@@ -283,7 +326,7 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label8"), GUILayout.ExpandWidth(false));//"Conics mode:"
-            int newRelativityMode = GUILayout.SelectionGrid((int)vessel.patchedConicRenderer.relativityMode, relativityModeStrings, 5);
+            var newRelativityMode = GUILayout.SelectionGrid((int)vessel.patchedConicRenderer.relativityMode, relativityModeStrings, 5);
             vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)newRelativityMode;
             GUILayout.EndHorizontal();
 

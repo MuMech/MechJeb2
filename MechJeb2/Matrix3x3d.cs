@@ -39,12 +39,12 @@ namespace MuMech
         {
             get
             {
-                return this[row + column * 3];
+                return this[row + (column * 3)];
             }
 
             set
             {
-                this[row + column * 3] = value;
+                this[row + (column * 3)] = value;
             }
         }
 
@@ -98,7 +98,10 @@ namespace MuMech
         // also required for being able to use Matrix3x3d as keys in hash tables
         public override bool Equals(object other)
         {
-            if (!(other is Matrix3x3d)) return false;
+            if (!(other is Matrix3x3d))
+            {
+                return false;
+            }
 
             return Equals((Matrix3x3d)other);
         }
@@ -114,17 +117,17 @@ namespace MuMech
         public static Matrix3x3d operator*(Matrix3x3d lhs, Matrix3x3d rhs)
         {
             Matrix3x3d res;
-            res.m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20;
-            res.m01 = lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21;
-            res.m02 = lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22;
+            res.m00 = (lhs.m00 * rhs.m00) + (lhs.m01 * rhs.m10) + (lhs.m02 * rhs.m20);
+            res.m01 = (lhs.m00 * rhs.m01) + (lhs.m01 * rhs.m11) + (lhs.m02 * rhs.m21);
+            res.m02 = (lhs.m00 * rhs.m02) + (lhs.m01 * rhs.m12) + (lhs.m02 * rhs.m22);
 
-            res.m10 = lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10 + lhs.m12 * rhs.m20;
-            res.m11 = lhs.m10 * rhs.m01 + lhs.m11 * rhs.m11 + lhs.m12 * rhs.m21;
-            res.m12 = lhs.m10 * rhs.m02 + lhs.m11 * rhs.m12 + lhs.m12 * rhs.m22;
+            res.m10 = (lhs.m10 * rhs.m00) + (lhs.m11 * rhs.m10) + (lhs.m12 * rhs.m20);
+            res.m11 = (lhs.m10 * rhs.m01) + (lhs.m11 * rhs.m11) + (lhs.m12 * rhs.m21);
+            res.m12 = (lhs.m10 * rhs.m02) + (lhs.m11 * rhs.m12) + (lhs.m12 * rhs.m22);
 
-            res.m20 = lhs.m20 * rhs.m00 + lhs.m21 * rhs.m10 + lhs.m22 * rhs.m20;
-            res.m21 = lhs.m20 * rhs.m01 + lhs.m21 * rhs.m11 + lhs.m22 * rhs.m21;
-            res.m22 = lhs.m20 * rhs.m02 + lhs.m21 * rhs.m12 + lhs.m22 * rhs.m22;
+            res.m20 = (lhs.m20 * rhs.m00) + (lhs.m21 * rhs.m10) + (lhs.m22 * rhs.m20);
+            res.m21 = (lhs.m20 * rhs.m01) + (lhs.m21 * rhs.m11) + (lhs.m22 * rhs.m21);
+            res.m22 = (lhs.m20 * rhs.m02) + (lhs.m21 * rhs.m12) + (lhs.m22 * rhs.m22);
 
             return res;
         }
@@ -133,9 +136,9 @@ namespace MuMech
         public static Vector3d operator*(Matrix3x3d lhs, Vector3d vector)
         {
             Vector3d res;
-            res.x = lhs.m00 * vector.x + lhs.m01 * vector.y + lhs.m02 * vector.z;
-            res.y = lhs.m10 * vector.x + lhs.m11 * vector.y + lhs.m12 * vector.z;
-            res.z = lhs.m20 * vector.x + lhs.m21 * vector.y + lhs.m22 * vector.z;
+            res.x = (lhs.m00 * vector.x) + (lhs.m01 * vector.y) + (lhs.m02 * vector.z);
+            res.y = (lhs.m10 * vector.x) + (lhs.m11 * vector.y) + (lhs.m12 * vector.z);
+            res.z = (lhs.m20 * vector.x) + (lhs.m21 * vector.y) + (lhs.m22 * vector.z);
             return res;
         }
 
@@ -247,9 +250,9 @@ namespace MuMech
         public Vector3d MultiplyVector(Vector3d vector)
         {
             Vector3d res;
-            res.x = this.m00 * vector.x + this.m01 * vector.y + this.m02 * vector.z;
-            res.y = this.m10 * vector.x + this.m11 * vector.y + this.m12 * vector.z;
-            res.z = this.m20 * vector.x + this.m21 * vector.y + this.m22 * vector.z;
+            res.x = (this.m00 * vector.x) + (this.m01 * vector.y) + (this.m02 * vector.z);
+            res.y = (this.m10 * vector.x) + (this.m11 * vector.y) + (this.m12 * vector.z);
+            res.z = (this.m20 * vector.x) + (this.m21 * vector.y) + (this.m22 * vector.z);
             return res;
         }
 
@@ -257,18 +260,18 @@ namespace MuMech
         public static Matrix3x3d Rotate(QuaternionD q)
         {
             // Precalculate coordinate products
-            double x = q.x * 2.0F;
-            double y = q.y * 2.0F;
-            double z = q.z * 2.0F;
-            double xx = q.x * x;
-            double yy = q.y * y;
-            double zz = q.z * z;
-            double xy = q.x * y;
-            double xz = q.x * z;
-            double yz = q.y * z;
-            double wx = q.w * x;
-            double wy = q.w * y;
-            double wz = q.w * z;
+            var x = q.x * 2.0F;
+            var y = q.y * 2.0F;
+            var z = q.z * 2.0F;
+            var xx = q.x * x;
+            var yy = q.y * y;
+            var zz = q.z * z;
+            var xy = q.x * y;
+            var xz = q.x * z;
+            var yz = q.y * z;
+            var wx = q.w * x;
+            var wy = q.w * y;
+            var wz = q.w * z;
 
             // Calculate 3x3 matrix from orthonormal basis
             Matrix3x3d m;
@@ -305,8 +308,11 @@ namespace MuMech
         public string ToString(string format, IFormatProvider formatProvider)
         {
             if (string.IsNullOrEmpty(format))
+            {
                 format = "G9";
-            return String.Format("{0}\t{1}\t{2}\n{3}\t{4}\t{5}\n{6}\t{7}\t{8}\n",
+            }
+
+            return string.Format("{0}\t{1}\t{2}\n{3}\t{4}\t{5}\n{6}\t{7}\t{8}\n",
                 m00.ToString(format, formatProvider), m01.ToString(format, formatProvider), m02.ToString(format, formatProvider),
                 m10.ToString(format, formatProvider), m11.ToString(format, formatProvider), m12.ToString(format, formatProvider),
                 m20.ToString(format, formatProvider), m21.ToString(format, formatProvider), m22.ToString(format, formatProvider));
@@ -321,7 +327,7 @@ namespace MuMech
                 m02 == 0.0 && m12 == 0.0 && m22 == 0.0;
         }
         private double         GetDeterminant() {
-            return m00 * ( m11 * m22 - m21 * m12 ) - m10 * ( m01 * m22 - m21 * m02 ) + m20 * ( m01 * m12 - m11 * m02 );
+            return (m00 * ((m11 * m22) - (m21 * m12))) - (m10 * ((m01 * m22) - (m21 * m02))) + (m20 * ((m01 * m12) - (m11 * m02)));
         }
 
         // public QuaternionD rotation               { get { return GetRotation(); } }
@@ -331,18 +337,18 @@ namespace MuMech
 
         // FIXME: really needs testing
         public static Matrix3x3d Inverse(Matrix3x3d m) {
-            double a = m.m11 * m.m22 - m.m21 * m.m12;
-            double b = m.m21 * m.m02 - m.m01 * m.m22;
-            double c = m.m01 * m.m12 - m.m11 * m.m02;
-            double d = m.m20 * m.m12 - m.m10 * m.m22;
-            double e = m.m00 * m.m22 - m.m20 * m.m02;
-            double f = m.m10 * m.m02 - m.m00 * m.m12;
-            double g = m.m10 * m.m21 - m.m20 * m.m11;
-            double h = m.m20 * m.m01 - m.m00 * m.m21;
-            double i = m.m10 * m.m01 - m.m11 * m.m00;
+            var a = (m.m11 * m.m22) - (m.m21 * m.m12);
+            var b = (m.m21 * m.m02) - (m.m01 * m.m22);
+            var c = (m.m01 * m.m12) - (m.m11 * m.m02);
+            var d = (m.m20 * m.m12) - (m.m10 * m.m22);
+            var e = (m.m00 * m.m22) - (m.m20 * m.m02);
+            var f = (m.m10 * m.m02) - (m.m00 * m.m12);
+            var g = (m.m10 * m.m21) - (m.m20 * m.m11);
+            var h = (m.m20 * m.m01) - (m.m00 * m.m21);
+            var i = (m.m10 * m.m01) - (m.m11 * m.m00);
             return new Matrix3x3d(new Vector3d(a, b, c),
                     new Vector3d(d, e, f),
-                    new Vector3d(g, h, i)) * ( 1 / ( m.m00 * a + m.m10 * b + m.m20 * c ));
+                    new Vector3d(g, h, i)) * ( 1 / ((m.m00 * a) + (m.m10 * b) + (m.m20 * c)));
         }
 
         public Matrix3x3d inverse { get { return Matrix3x3d.Inverse(this); } }

@@ -72,12 +72,19 @@ namespace MuMech
             get { return _autostage; }
             set
             {
-                bool changed = (value != _autostage);
+                var changed = (value != _autostage);
                 _autostage = value;
                 if (changed)
                 {
-                    if (_autostage && enabled) core.staging.users.Add(this);
-                    if (!_autostage) core.staging.users.Remove(this);
+                    if (_autostage && enabled)
+                    {
+                        core.staging.users.Add(this);
+                    }
+
+                    if (!_autostage)
+                    {
+                        core.staging.users.Remove(this);
+                    }
                 }
             }
         }
@@ -154,7 +161,9 @@ namespace MuMech
         {
             // continuously update the launchStarted time if we're sitting on the ground on the water anywhere (once we are not, then we've launched)
             if ( vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.PRELAUNCH || vessel.situation == Vessel.Situations.SPLASHED )
+            {
                 launchStarted = vesselState.time;
+            }
         }
 
         // various events can cause launchStarted to be before or after vessel.launchTime, but the most recent one is so far always the most accurate
@@ -178,7 +187,10 @@ namespace MuMech
 
             core.attitude.users.Add(this);
             core.thrust.users.Add(this);
-            if (autostage) core.staging.users.Add(this);
+            if (autostage)
+            {
+                core.staging.users.Add(this);
+            }
 
             status = Localizer.Format("#MechJeb_Ascent_status1");//"Pre Launch"
         }
@@ -188,11 +200,17 @@ namespace MuMech
             ascentPath.enabled = false;
             core.attitude.attitudeDeactivate();
             if (!core.rssMode)
+            {
                 core.thrust.ThrustOff();
+            }
+
             core.thrust.users.Remove(this);
             core.staging.users.Remove(this);
 
-            if (placedCircularizeNode) core.node.Abort();
+            if (placedCircularizeNode)
+            {
+                core.node.Abort();
+            }
 
             status = Localizer.Format("#MechJeb_Ascent_status2");//"Off"
         }
@@ -212,14 +230,19 @@ namespace MuMech
                 if (tMinus < 3*vesselState.deltaT || (tMinus > 10.0 && lastTMinus < 1.0))
                 {
                     if (enabled && vesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
+                    {
                         StageManager.ActivateNextStage();
+                    }
+
                     ascentPath.timedLaunchHook();  // let ascentPath modules do stuff edge triggered on launch starting
                     timedLaunch = false;
                 }
                 else
                 {
                     if (core.node.autowarp)
+                    {
                         core.warp.WarpToUT(launchTime - warpCountDown);
+                    }
                 }
                 lastTMinus = tMinus;
             }
@@ -263,9 +286,13 @@ namespace MuMech
             if (autoDeployAntennas)
             {
                 if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
+                {
                     core.antennaControl.ExtendAll();
+                }
                 else
+                {
                     core.antennaControl.RetractAll();
+                }
             }
         }
 
@@ -344,9 +371,16 @@ namespace MuMech
             {
                 if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 {
-                    MechJebModuleFlightRecorder recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
-                    if (recorder != null) launchPhaseAngle = recorder.phaseAngleFromMark;
-                    if (recorder != null) launchLANDifference = vesselState.orbitLAN - recorder.markLAN;
+                    var recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
+                    if (recorder != null)
+                    {
+                        launchPhaseAngle = recorder.phaseAngleFromMark;
+                    }
+
+                    if (recorder != null)
+                    {
+                        launchLANDifference = vesselState.orbitLAN - recorder.markLAN;
+                    }
 
                     //finished circularize
                     users.Clear();
@@ -357,7 +391,7 @@ namespace MuMech
             {
                 //place circularization node
                 vessel.RemoveAllManeuverNodes();
-                double UT = orbit.NextApoapsisTime(vesselState.time);
+                var UT = orbit.NextApoapsisTime(vesselState.time);
                 //During the circularization burn, try to correct any inclination errors because it's better to combine the two burns.
                 //  For example, if you're about to do a 1500 m/s circularization burn, if you combine a 200 m/s inclination correction
                 //  into it, you actually only spend 1513 m/s to execute combined manuver.  Mechjeb should also do correction burns before
@@ -365,18 +399,24 @@ namespace MuMech
                 //   (A better version of this should try to match inclination & LAN if target is specified)
                 // FIXME? this inclination correction is unlikely to be at tha AN/DN and will throw the LAN off with anything other than high
                 // TWR launches from equatorial launch sites -- should probably be made optional (or clip it if the correction is too large).
-                Vector3d inclinationCorrection = OrbitalManeuverCalculator.DeltaVToChangeInclination(orbit, UT, Math.Abs(desiredInclination));
-                Vector3d smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit.PerturbedOrbit(UT, inclinationCorrection), UT,
+                var inclinationCorrection = OrbitalManeuverCalculator.DeltaVToChangeInclination(orbit, UT, Math.Abs(desiredInclination));
+                var smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(orbit.PerturbedOrbit(UT, inclinationCorrection), UT,
                     desiredOrbitAltitude + mainBody.Radius);
-                Vector3d dV = inclinationCorrection + smaCorrection;
+                var dV = inclinationCorrection + smaCorrection;
                 vessel.PlaceManeuverNode(orbit, dV, UT);
                 placedCircularizeNode = true;
 
                 core.node.ExecuteOneNode(this);
             }
 
-            if (core.node.burnTriggered) status = Localizer.Format("#MechJeb_Ascent_status7");//"Circularizing"
-            else status = Localizer.Format("#MechJeb_Ascent_status8");//"Coasting to circularization burn"
+            if (core.node.burnTriggered)
+            {
+                status = Localizer.Format("#MechJeb_Ascent_status7");//"Circularizing"
+            }
+            else
+            {
+                status = Localizer.Format("#MechJeb_Ascent_status8");//"Coasting to circularization burn"
+            }
         }
 
         //////////////////////////////////////////////////
@@ -393,7 +433,9 @@ namespace MuMech
             foreach(int i in Enum.GetValues(typeof(ascentType)))
             {
                 if (i != (int)type)
+                {
                     enablePathModules((ascentType)i, false);
+                }
             }
         }
 
@@ -402,7 +444,9 @@ namespace MuMech
             ascentPathForType(type).enabled = enabled;
             var menu = ascentMenuForType(type);
             if (menu != null)
+            {
                 menu.enabled = enabled;
+            }
         }
 
         private MechJebModuleAscentBase ascentPathForType(ascentType type)
@@ -422,7 +466,9 @@ namespace MuMech
         private MechJebModuleAscentMenuBase ascentMenuForType(ascentType type)
         {
             if ( type == ascentType.CLASSIC )
+            {
                 return core.GetComputerModule<MechJebModuleAscentClassicMenu>();
+            }
 
             return null;
         }
@@ -450,7 +496,7 @@ namespace MuMech
         float raiseApoapsisLastThrottle = 0;
         double raiseApoapsisLastApR = 0;
         double raiseApoapsisLastUT = 0;
-        MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
+        readonly MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
 
         public virtual void timedLaunchHook()
         {
@@ -467,7 +513,10 @@ namespace MuMech
         {
             core.attitude.attitudeDeactivate();
             if (!core.rssMode)
+            {
                 core.thrust.ThrustOff();
+            }
+
             core.thrust.users.Remove(this);
         }
 
@@ -484,10 +533,10 @@ namespace MuMech
             else if (raiseApoapsisLastUT > vesselState.time - 1)
             {
                 //reduce throttle as apoapsis nears target
-                double instantRatePerThrottle = (orbit.ApR - raiseApoapsisLastApR) / ((vesselState.time - raiseApoapsisLastUT) * raiseApoapsisLastThrottle);
+                var instantRatePerThrottle = (orbit.ApR - raiseApoapsisLastApR) / ((vesselState.time - raiseApoapsisLastUT) * raiseApoapsisLastThrottle);
                 instantRatePerThrottle = Math.Max(1.0, instantRatePerThrottle); //avoid problems from negative rates
                 raiseApoapsisRatePerThrottle.value = instantRatePerThrottle;
-                double desiredApRate = (finalApR - currentApR) / 1.0;
+                var desiredApRate = (finalApR - currentApR) / 1.0;
                 desiredThrottle = Mathf.Clamp((float)(desiredApRate / raiseApoapsisRatePerThrottle), 0.05F, 1.0F);
             }
             else
@@ -514,7 +563,7 @@ namespace MuMech
         // this provides ground track heading based on desired inclination and is what most consumers should call
         protected void attitudeTo(double desiredPitch)
         {
-            double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination);
+            var desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(vessel, vesselState, autopilot.desiredInclination);
             attitudeTo(desiredPitch, desiredHeading);
         }
 
@@ -537,10 +586,10 @@ namespace MuMech
             }
             */
 
-            Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east + Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north;
+            var desiredHeadingVector = (Math.Sin(desiredHeading * UtilMath.Deg2Rad) * vesselState.east) + (Math.Cos(desiredHeading * UtilMath.Deg2Rad) * vesselState.north);
 
-            Vector3d desiredThrustVector = Math.Cos(desiredPitch * UtilMath.Deg2Rad) * desiredHeadingVector
-                + Math.Sin(desiredPitch * UtilMath.Deg2Rad) * vesselState.up;
+            var desiredThrustVector = (Math.Cos(desiredPitch * UtilMath.Deg2Rad) * desiredHeadingVector)
+                + (Math.Sin(desiredPitch * UtilMath.Deg2Rad) * vesselState.up);
 
             desiredThrustVector = desiredThrustVector.normalized;
 
@@ -549,7 +598,7 @@ namespace MuMech
             /* old style AoA limiter */
             if (autopilot.limitAoA && !autopilot.limitQaEnabled)
             {
-                float fade = vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure ? (float)(autopilot.aoALimitFadeoutPressure / vesselState.dynamicPressure) : 1;
+                var fade = vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure ? (float)(autopilot.aoALimitFadeoutPressure / vesselState.dynamicPressure) : 1;
                 autopilot.currentMaxAoA = Math.Min(fade * autopilot.maxAoA, 180d);
                 autopilot.limitingAoA = vessel.altitude < mainBody.atmosphereDepth && Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) > autopilot.currentMaxAoA;
 
@@ -562,7 +611,7 @@ namespace MuMech
             /* AoA limiter for PVG */
             if (autopilot.limitQaEnabled)
             {
-                double lim = MuUtils.Clamp(autopilot.limitQa, 100, 10000);
+                var lim = MuUtils.Clamp(autopilot.limitQa, 100, 10000);
                 autopilot.limitingAoA = vesselState.dynamicPressure * Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
                 if (autopilot.limitingAoA)
                 {
@@ -571,9 +620,9 @@ namespace MuMech
                 }
             }
 
-            bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
+            var liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
 
-            double pitch = 90 - Vector3d.Angle(desiredThrustVector, vesselState.up);
+            var pitch = 90 - Vector3d.Angle(desiredThrustVector, vesselState.up);
 
             double hdg;
 
@@ -612,23 +661,26 @@ namespace MuMech
         //the time returned will go to exactly zero when the desired phase angle is reached.
         public static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target)
         {
-            double launchpadAngularRate = 360 / launchBody.rotationPeriod;
-            double targetAngularRate = 360.0 / target.period;
-            if (Vector3d.Dot(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity) < 0) targetAngularRate *= -1; //retrograde target
+            var launchpadAngularRate = 360 / launchBody.rotationPeriod;
+            var targetAngularRate = 360.0 / target.period;
+            if (Vector3d.Dot(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity) < 0)
+            {
+                targetAngularRate *= -1; //retrograde target
+            }
 
-            Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
-            Vector3d currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
+            var currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
+            var currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
             currentTargetDirection = Vector3d.Exclude(launchBody.angularVelocity, currentTargetDirection);
 
-            double currentPhaseAngle = Math.Abs(Vector3d.Angle(currentLaunchpadDirection, currentTargetDirection));
+            var currentPhaseAngle = Math.Abs(Vector3d.Angle(currentLaunchpadDirection, currentTargetDirection));
             if (Vector3d.Dot(Vector3d.Cross(currentTargetDirection, currentLaunchpadDirection), launchBody.angularVelocity) < 0)
             {
                 currentPhaseAngle = 360 - currentPhaseAngle;
             }
 
-            double phaseAngleRate = launchpadAngularRate - targetAngularRate;
+            var phaseAngleRate = launchpadAngularRate - targetAngularRate;
 
-            double phaseAngleDifference = MuUtils.ClampDegrees360(phaseAngle - currentPhaseAngle);
+            var phaseAngleDifference = MuUtils.ClampDegrees360(phaseAngle - currentPhaseAngle);
 
             if (phaseAngleRate < 0)
             {

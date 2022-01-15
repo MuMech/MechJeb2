@@ -11,11 +11,11 @@ namespace MuMech
 
     public class TimeSelector
     {
-        private string[] timeRefNames;
+        private readonly string[] timeRefNames;
 
         public double universalTime;
 
-        private TimeReference[] allowedTimeRef;
+        private readonly TimeReference[] allowedTimeRef;
         [Persistent(pass = (int)Pass.Global)]
         private int currentTimeRef;
 
@@ -32,7 +32,7 @@ namespace MuMech
             this.allowedTimeRef = allowedTimeRef;
             universalTime = 0;
             timeRefNames = new string[allowedTimeRef.Length];
-            for (int i = 0 ; i < allowedTimeRef.Length ; ++i)
+            for (var i = 0 ; i < allowedTimeRef.Length ; ++i)
             {
                 switch (allowedTimeRef[i])
                 {

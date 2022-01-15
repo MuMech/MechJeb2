@@ -6,35 +6,35 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionWarp : MechJebModuleScriptAction
 	{
-		public static String NAME = "Warp";
+		public static string NAME = "Warp";
 
 		public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
-		static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry" };
+		static readonly string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry" };
 		[Persistent(pass = (int)Pass.Type)]
 		public WarpTarget warpTarget = WarpTarget.Periapsis;
 		[Persistent(pass = (int)Pass.Type)]
-		EditableDouble phaseAngle = 0;
+        readonly EditableDouble phaseAngle = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		public EditableTime leadTime = 0;
 		[Persistent(pass = (int)Pass.Type)]
-		EditableTime timeOffset = 0;
+        readonly EditableTime timeOffset = 0;
 		double targetUT = 0;
 		private bool warping;
 		private int spendTime = 0;
-		private int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
+		private readonly int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
 		private float startTime = 0f;
 
 		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			warping = true;
-			Orbit orbit = this.scriptModule.orbit;
-			VesselState vesselState = this.scriptModule.vesselState;
-			Vessel vessel = FlightGlobals.ActiveVessel;
+			var orbit = this.scriptModule.orbit;
+			var vesselState = this.scriptModule.vesselState;
+			var vessel = FlightGlobals.ActiveVessel;
 
 			switch (warpTarget)
 			{
@@ -43,16 +43,28 @@ namespace MuMech
 					break;
 
 				case WarpTarget.Apoapsis:
-					if (orbit.eccentricity < 1) targetUT = orbit.NextApoapsisTime(vesselState.time);
-					break;
+					if (orbit.eccentricity < 1)
+                    {
+                        targetUT = orbit.NextApoapsisTime(vesselState.time);
+                    }
+
+                    break;
 
 				case WarpTarget.SoI:
-					if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL) targetUT = orbit.EndUT;
-					break;
+					if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL)
+                    {
+                        targetUT = orbit.EndUT;
+                    }
+
+                    break;
 
 				case WarpTarget.Node:
-					if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
-					break;
+					if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
+                    {
+                        targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
+                    }
+
+                    break;
 
 				case WarpTarget.Time:
 					targetUT = vesselState.time + timeOffset;
@@ -63,18 +75,28 @@ namespace MuMech
 					{
 						Orbit reference;
 						if (core.target.TargetOrbit.referenceBody == orbit.referenceBody)
-							reference = orbit; // we orbit arround the same body
-						else
-							reference = orbit.referenceBody.orbit;
-						// From Kerbal Alarm Clock
-						double angleChangePerSec = (360 / core.target.TargetOrbit.period) - (360 / reference.period);
-						double currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
-						double angleDigff = currentAngle - phaseAngle;
+                        {
+                            reference = orbit; // we orbit arround the same body
+                        }
+                        else
+                        {
+                            reference = orbit.referenceBody.orbit;
+                        }
+                        // From Kerbal Alarm Clock
+                        var angleChangePerSec = (360 / core.target.TargetOrbit.period) - (360 / reference.period);
+						var currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
+						var angleDigff = currentAngle - phaseAngle;
 						if (angleDigff > 0 && angleChangePerSec > 0)
-							angleDigff -= 360;
-						if (angleDigff < 0 && angleChangePerSec < 0)
-							angleDigff += 360;
-						double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
+                        {
+                            angleDigff -= 360;
+                        }
+
+                        if (angleDigff < 0 && angleChangePerSec < 0)
+                        {
+                            angleDigff += 360;
+                        }
+
+                        var TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
 						targetUT = vesselState.time + TimeToTarget;
 					}
 					break;
@@ -107,12 +129,12 @@ namespace MuMech
 			}
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -129,34 +151,38 @@ namespace MuMech
 			{
 				// I wonder if I should check for target that don't make sense
 				if (!core.target.NormalTargetExists)
-					GUILayout.Label("You need a target");
-				else
-					GuiUtils.SimpleTextBox("Phase Angle:", phaseAngle, "º", 60);
-			}
+                {
+                    GUILayout.Label("You need a target");
+                }
+                else
+                {
+                    GuiUtils.SimpleTextBox("Phase Angle:", phaseAngle, "º", 60);
+                }
+            }
 
 			if (!warping)
 			{
 				GuiUtils.SimpleTextBox("Lead time: ", leadTime, "");
 			}
 
-			if (warping)
-			{
-				if (GUILayout.Button("Abort"))
-				{
-					this.onAbord();
-				}
-			}
+            if (warping && GUILayout.Button("Abort"))
+            {
+                this.onAbord();
+            }
 
-			if (warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
+            if (warping)
+            {
+                GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
+            }
 
-			if (this.isStarted() && !this.isExecuted() && this.startTime > 0)
+            if (this.isStarted() && !this.isExecuted() && this.startTime > 0)
 			{
 				GUILayout.Label(" waiting " + this.spendTime + "s");
 			}
 			base.postWindowGUI(windowID);
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			//Check the end of the action
 			if (this.isStarted() && !this.isExecuted() && !warping && startTime == 0f)
@@ -172,9 +198,12 @@ namespace MuMech
 				}
 			}
 
-			if (!warping) return;
+			if (!warping)
+            {
+                return;
+            }
 
-			if (warpTarget == WarpTarget.SuicideBurn)
+            if (warpTarget == WarpTarget.SuicideBurn)
 			{
 				try
 				{
@@ -186,7 +215,7 @@ namespace MuMech
 				}
 			}
 
-			double target = targetUT - leadTime;
+			var target = targetUT - leadTime;
 
 			if (target < this.scriptModule.vesselState.time + 1)
 			{
@@ -199,7 +228,7 @@ namespace MuMech
 			}
 		}
 
-		override public void onAbord()
+		public override void onAbord()
 		{
 			warping = false;
 			core.warp.MinimumWarp(true);

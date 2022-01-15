@@ -71,7 +71,9 @@ namespace MuMech
                 {
                     target = Target.OFF;
                     if (core.rcs.users.Contains(this))
+                    {
                         core.rcs.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    }
                 }
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GUILayout.ExpandWidth(true));//"AUTO"
             }

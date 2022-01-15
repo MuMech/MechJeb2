@@ -155,29 +155,32 @@ namespace MuMech.MathJ
         //
         public override void Integrate(double[] y0, double[] yf, double t0, double tf, CN? interpolant = null)
         {
-            double h = Hstart;
-            double t = t0;
+            var h = Hstart;
+            var t = t0;
 
-            for (int i = 0; i < _n; i++) _y[i] = y0[i];
+            for (var i = 0; i < _n; i++)
+            {
+                _y[i] = y0[i];
+            }
 
             // auto-guess starting value of h based on tf-t0
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (h == 0)
             {
-                double v = Math.Abs(tf - t0);
+                var v = Math.Abs(tf - t0);
                 h = 0.001 * v;
             }
 
             // tf-t0 controls the direction of integration, the sign of h is not relevant
             h = Math.Sign(tf - t0) * Math.Abs(h);
 
-            bool fsal = false;        // do first-same-as-last because last time we took a normal step
-            bool terminate = false;   // event requested the next step is the last
-            double oldh = double.NaN; // if we take a truncated step this will save the last untruncated step size
+            var fsal = false;        // do first-same-as-last because last time we took a normal step
+            var terminate = false;   // event requested the next step is the last
+            var oldh = double.NaN; // if we take a truncated step this will save the last untruncated step size
             double niter = 0;
-            double lastInterpolant = t0;
-            double interpDt = (tf - t0) / Interpnum;
-            double interpLeft = interpDt;
+            var lastInterpolant = t0;
+            var interpDt = (tf - t0) / Interpnum;
+            var interpLeft = interpDt;
 
             if (interpolant != null)
             {
@@ -190,72 +193,117 @@ namespace MuMech.MathJ
             while (h > 0 ? t < tf : t > tf)
             {
                 if (h > 0 && t + h > tf)
+                {
                     h = tf - t;
+                }
 
                 if (h < 0 && t + h < tf)
+                {
                     h = tf - t;
+                }
 
                 if (interpolant != null && Math.Abs(h) > Math.Abs(interpLeft))
                 {
                     h = interpLeft;
                     // save the untruncated step size if we weren't already truncated
                     if (!oldh.IsFinite())
+                    {
                         oldh = h;
+                    }
                 }
 
                 if (fsal)
-                    for (int i = 0; i < _n; i++)
+                {
+                    for (var i = 0; i < _n; i++)
+                    {
                         _k1[i] = _k7[i];
+                    }
+                }
                 else
+                {
                     _dydt(_y, t, _k1);
+                }
 
-                for (int i = 0; i < _n; i++)
-                    _a[i] = _y[i] + h * (A21 * _k1[i]);
-                _dydt(_a, t + C2 * h, _k2);
+                for (var i = 0; i < _n; i++)
+                {
+                    _a[i] = _y[i] + (h * (A21 * _k1[i]));
+                }
 
-                for (int i = 0; i < _n; i++)
-                    _a[i] = _y[i] + h * (A31 * _k1[i] + A32 * _k2[i]);
-                _dydt(_a, t + C3 * h, _k3);
+                _dydt(_a, t + (C2 * h), _k2);
 
-                for (int i = 0; i < _n; i++)
-                    _a[i] = _y[i] + h * (A41 * _k1[i] + A42 * _k2[i] + A43 * _k3[i]);
-                _dydt(_a, t + C4 * h, _k4);
+                for (var i = 0; i < _n; i++)
+                {
+                    _a[i] = _y[i] + (h * ((A31 * _k1[i]) + (A32 * _k2[i])));
+                }
 
-                for (int i = 0; i < _n; i++)
-                    _a[i] = _y[i] + h * (A51 * _k1[i] + A52 * _k2[i] + A53 * _k3[i] + A54 * _k4[i]);
-                _dydt(_a, t + C5 * h, _k5);
+                _dydt(_a, t + (C3 * h), _k3);
 
-                for (int i = 0; i < _n; i++)
-                    _a[i] = _y[i] + h * (A61 * _k1[i] + A62 * _k2[i] + A63 * _k3[i] + A64 * _k4[i] + A65 * _k5[i]);
-                _dydt(_a, t + C6 * h, _k6);
+                for (var i = 0; i < _n; i++)
+                {
+                    _a[i] = _y[i] + (h * ((A41 * _k1[i]) + (A42 * _k2[i]) + (A43 * _k3[i])));
+                }
 
-                for (int i = 0; i < _n; i++)
-                    _a[i] = _y[i] + h * (A71 * _k1[i] + A73 * _k3[i] + A74 * _k4[i] + A75 * _k5[i] + A76 * _k6[i]);
-                _dydt(_a, t + C7 * h, _k7);
+                _dydt(_a, t + (C4 * h), _k4);
 
-                for (int i = 0; i < _n; i++)
-                    _err[i] = _k1[i] * (B1 - B1_P) + _k3[i] * (B3 - B3_P) + _k4[i] * (B4 - B4_P) + _k5[i] * (B5 - B5_P) +
-                              _k6[i] * (B6 - B6_P) + _k7[i] * (B7 - B7_P);
+                for (var i = 0; i < _n; i++)
+                {
+                    _a[i] = _y[i] + (h * ((A51 * _k1[i]) + (A52 * _k2[i]) + (A53 * _k3[i]) + (A54 * _k4[i])));
+                }
+
+                _dydt(_a, t + (C5 * h), _k5);
+
+                for (var i = 0; i < _n; i++)
+                {
+                    _a[i] = _y[i] + (h * ((A61 * _k1[i]) + (A62 * _k2[i]) + (A63 * _k3[i]) + (A64 * _k4[i]) + (A65 * _k5[i])));
+                }
+
+                _dydt(_a, t + (C6 * h), _k6);
+
+                for (var i = 0; i < _n; i++)
+                {
+                    _a[i] = _y[i] + (h * ((A71 * _k1[i]) + (A73 * _k3[i]) + (A74 * _k4[i]) + (A75 * _k5[i]) + (A76 * _k6[i])));
+                }
+
+                _dydt(_a, t + (C7 * h), _k7);
+
+                for (var i = 0; i < _n; i++)
+                {
+                    _err[i] = (_k1[i] * (B1 - B1_P)) + (_k3[i] * (B3 - B3_P)) + (_k4[i] * (B4 - B4_P)) + (_k5[i] * (B5 - B5_P)) +
+                              (_k6[i] * (B6 - B6_P)) + (_k7[i] * (B7 - B7_P));
+                }
 
                 double error = 0;
-                for (int i = 0; i < _n; i++)
+                for (var i = 0; i < _n; i++)
+                {
                     // FIXME: look at dopri fortran code to see how they generate this
                     error = Math.Max(error, Math.Abs(_err[i]));
+                }
 
                 if (error > Accuracy)
                 {
-                    double s = 0.84 * Math.Pow(Accuracy / error, 1.0 / 5.0);
+                    var s = 0.84 * Math.Pow(Accuracy / error, 1.0 / 5.0);
 
                     if (s < 0.1)
+                    {
                         s = 0.1;
+                    }
+
                     if (s > 4)
+                    {
                         s = 4;
+                    }
+
                     h *= s;
 
                     if (Hmin > 0 && Math.Abs(h) < Hmin)
+                    {
                         h = Hmin * Math.Sign(h);
+                    }
+
                     if (Hmax > 0 && Math.Abs(h) > Hmax)
+                    {
                         h = Hmax * Math.Sign(h);
+                    }
 
                     fsal = false;
 
@@ -263,20 +311,27 @@ namespace MuMech.MathJ
                 }
 
                 // search for an event trigger
-                foreach (Event e in _events)
+                foreach (var e in _events)
                 {
                     if (!e.Enabled)
+                    {
                         continue;
+                    }
 
-                    double e1 = e.Evaluate(_y, t);
-                    double e2 = e.Evaluate(_a, t + h);
+                    var e1 = e.Evaluate(_y, t);
+                    var e2 = e.Evaluate(_a, t + h);
 
-                    if (e1 * e2 > 0) continue;
+                    if (e1 * e2 > 0)
+                    {
+                        continue;
+                    }
 
                     EventsFired.Add(e);
 
                     if (e.Stop)
+                    {
                         terminate = true;
+                    }
 
                     if (e2 != 0)
                     {
@@ -291,7 +346,9 @@ namespace MuMech.MathJ
 
                         // save the untruncated step size if we weren't already truncated
                         if (!oldh.IsFinite())
+                        {
                             oldh = h;
+                        }
 
                         h = BrentRoot.Solve(_evtDelegate, 0, h, _brentargs, sign: Math.Sign(e2));
 
@@ -310,15 +367,18 @@ namespace MuMech.MathJ
                  */
 
                 fsal = true; // advancing so use k7 for k1 next time
-                for (int i = 0; i < _n + _m; i++)
+                for (var i = 0; i < _n + _m; i++)
+                {
                     _y[i] = _a[i]; // FSAL
+                }
+
                 t += h;
 
                 interpLeft -= h;
 
                 // add this point to the interpolant
                 if (interpolant != null &&
-                    (Math.Abs(interpLeft) <= 2*Utils.EPS && Utils.NearlyEqual(t - lastInterpolant, interpDt, 1e-2) || terminate))
+                    ((Math.Abs(interpLeft) <= 2*Utils.EPS && Utils.NearlyEqual(t - lastInterpolant, interpDt, 1e-2)) || terminate))
                 {
                     interpolant.Add(t, _y, _k7);
                     interpLeft      = interpDt;
@@ -326,7 +386,9 @@ namespace MuMech.MathJ
                 }
 
                 if (terminate)
+                {
                     break;
+                }
 
                 if (oldh.IsFinite())
                 {
@@ -336,32 +398,50 @@ namespace MuMech.MathJ
                 }
                 else
                 {
-                    double s = 0.84 * Math.Pow(Accuracy / error, 1.0 / 5.0);
+                    var s = 0.84 * Math.Pow(Accuracy / error, 1.0 / 5.0);
 
                     if (s < 0.1)
+                    {
                         s = 0.1;
+                    }
+
                     if (s > 4)
+                    {
                         s = 4;
+                    }
+
                     h *= s;
 
                     if (Hmin > 0 && Math.Abs(h) < Hmin)
+                    {
                         h = Hmin * Math.Sign(h);
+                    }
+
                     if (Hmax > 0 && Math.Abs(h) > Hmax)
+                    {
                         h = Hmax * Math.Sign(h);
+                    }
                 }
 
                 // handle max iterations
                 if (Maxiter <= 0 || niter++ < Maxiter)
+                {
                     continue;
+                }
 
                 if (ThrowOnMaxIter)
+                {
                     throw new ArgumentException("maximum iterations exceeded");
+                }
 
                 break;
             }
 
             // copy results into yf
-            for (int i = 0; i < _n; i++) yf[i] = _y[i];
+            for (var i = 0; i < _n; i++)
+            {
+                yf[i] = _y[i];
+            }
         }
 
         private double EvtWrapper(double newh, object? o)

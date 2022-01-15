@@ -33,10 +33,9 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_return_Exception",o.referenceBody.displayName));//<<1>> is not orbiting another body you could return to.
             }
 
-            double UT;
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, universalTime, o.referenceBody.referenceBody.Radius + moonReturnAltitude, out UT);
+            var dV = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, universalTime, o.referenceBody.referenceBody.Radius + moonReturnAltitude, out var UT);
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(dV, UT));
             return NodeList;
         }

@@ -8,7 +8,7 @@ namespace MuMech
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (Arc arc in this)
+            foreach (var arc in this)
             {
                 sb.AppendLine(arc.ToString());
             }
@@ -46,7 +46,7 @@ namespace MuMech
 
         public bool done
         {
-            get => stage != null && stage.Staged || _done;
+            get => (stage?.Staged == true) || _done;
             set => _done = value;
         }
 

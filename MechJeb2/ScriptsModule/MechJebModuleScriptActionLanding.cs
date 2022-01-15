@@ -5,10 +5,9 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionLanding : MechJebModuleScriptAction
 	{
-		public static String NAME = "Landing";
-
-		MechJebModuleLandingGuidance module;
-		MechJebModuleLandingAutopilot module_autopilot;
+		public static string NAME = "Landing";
+        readonly MechJebModuleLandingGuidance module;
+        readonly MechJebModuleLandingAutopilot module_autopilot;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool deployGear = true;
 		[Persistent(pass = (int)Pass.Type)]
@@ -31,7 +30,7 @@ namespace MuMech
 			this.readModuleConfiguration();
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (this.landTarget)
@@ -46,13 +45,13 @@ namespace MuMech
 			module_autopilot.users.Add(module);
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 			module_autopilot.users.Remove(module);
 		}
 
-		override public void readModuleConfiguration()
+		public override void readModuleConfiguration()
 		{
 			deployGear = module_autopilot.deployGears;
 			deployChutes = module_autopilot.deployChutes;
@@ -66,7 +65,7 @@ namespace MuMech
 			}
 		}
 
-		override public void writeModuleConfiguration()
+		public override void writeModuleConfiguration()
 		{
 			module_autopilot.deployGears = deployGear;
 			module_autopilot.deployChutes = deployChutes;
@@ -78,7 +77,7 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -97,7 +96,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (this.isStarted() && !this.isExecuted() && module_autopilot.CurrentStep == null)
 			{

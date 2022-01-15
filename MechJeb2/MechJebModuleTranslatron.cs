@@ -48,7 +48,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            GUIStyle sty = new GUIStyle(GUI.skin.button);
+            var sty = new GUIStyle(GUI.skin.button);
             sty.normal.textColor = sty.focused.textColor = Color.white;
             sty.hover.textColor = sty.active.textColor = Color.yellow;
             sty.onNormal.textColor = sty.onFocused.textColor = sty.onHover.textColor = sty.onActive.textColor = Color.green;
@@ -76,7 +76,7 @@ namespace MuMech
                     autoMode = false;
                 }
 
-                MechJebModuleThrustController.TMode newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
+                var newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
                 SetMode(newMode);
 
                 float val = (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
@@ -84,7 +84,7 @@ namespace MuMech
                 core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, Localizer.Format("#MechJeb_Trans_kill_h"), GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Trans_spd"), trans_spd, "", 37);
-                bool change = false;
+                var change = false;
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
                     trans_spd -= val;
@@ -116,8 +116,10 @@ namespace MuMech
 
             GUILayout.FlexibleSpace();
 
-            GUIStyle tsty = new GUIStyle(GUI.skin.label);
-            tsty.alignment = TextAnchor.UpperCenter;
+            var tsty = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.UpperCenter
+            };
             GUILayout.Label("Automation", tsty, GUILayout.ExpandWidth(true));
 
             sty.normal.textColor = sty.focused.textColor = sty.hover.textColor = sty.active.textColor = sty.onNormal.textColor = sty.onFocused.textColor = sty.onHover.textColor = sty.onActive.textColor = (abort != AbortStage.OFF) ? Color.red : Color.green;
@@ -134,7 +136,7 @@ namespace MuMech
 
         public void SetMode(MechJebModuleThrustController.TMode newMode)
         {
-            MechJebModuleThrustController.TMode oldMode = core.thrust.tmode;
+            var oldMode = core.thrust.tmode;
             core.thrust.tmode = newMode;
             if (core.thrust.tmode != oldMode)
             {
@@ -176,30 +178,27 @@ namespace MuMech
 
         public void recursiveDecouple()
         {
-            int minStage = StageManager.LastStage;
-            for (int i = 0; i < part.vessel.parts.Count; i++)
+            var minStage = StageManager.LastStage;
+            for (var i = 0; i < part.vessel.parts.Count; i++)
             {
-                Part child = part.vessel.parts[i];
+                var child = part.vessel.parts[i];
                 // TODO Sarbian : Cleanup - not sure if any mod still use those and they are not supported in other part of the code
-                if (child.HasModule<ModuleEngines>())
+                if (child.HasModule<ModuleEngines>() && child.inverseStage < minStage)
                 {
-                    if (child.inverseStage < minStage)
-                    {
-                        minStage = child.inverseStage;
-                    }
+                    minStage = child.inverseStage;
                 }
             }
-            List<Part> decouplers = new List<Part>();
-            for (int i = 0; i < part.vessel.parts.Count; i++)
+            var decouplers = new List<Part>();
+            for (var i = 0; i < part.vessel.parts.Count; i++)
             {
-                Part child = part.vessel.parts[i];
+                var child = part.vessel.parts[i];
                 if ((child.inverseStage > minStage) &&
                     (child.HasModule<ModuleDecouple>() || child.HasModule<ModuleAnchoredDecoupler>()))
                 {
                     decouplers.Add(child);
                 }
             }
-            for (int i = 0; i < decouplers.Count; i++)
+            for (var i = 0; i < decouplers.Count; i++)
             {
                 decouplers[i].force_activate();
             }
@@ -235,7 +234,7 @@ namespace MuMech
                         {
                             core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
                             core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
-                            double int_error = Math.Abs(Vector3d.Angle(vesselState.up, vesselState.forward));
+                            var int_error = Math.Abs(Vector3d.Angle(vesselState.up, vesselState.forward));
                             core.thrust.trans_spd_act = (int_error < 90) ? 100 : 0;
                         }
                         else

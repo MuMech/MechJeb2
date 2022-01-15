@@ -18,7 +18,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool simpleTransfer = false;
 
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationGeneric ()
         {
@@ -51,7 +51,7 @@ namespace MuMech
 
             Vector3d dV;
 
-            Orbit targetOrbit = target.TargetOrbit;
+            var targetOrbit = target.TargetOrbit;
 
             if ( periodOffset != 0 )
             {
@@ -73,8 +73,8 @@ namespace MuMech
                 {
                     var anExists = o.AscendingNodeExists(target.TargetOrbit);
                     var dnExists = o.DescendingNodeExists(target.TargetOrbit);
-                    double anTime = o.TimeOfAscendingNode(target.TargetOrbit, universalTime);
-                    double dnTime = o.TimeOfDescendingNode(target.TargetOrbit, universalTime);
+                    var anTime = o.TimeOfAscendingNode(target.TargetOrbit, universalTime);
+                    var dnTime = o.TimeOfDescendingNode(target.TargetOrbit, universalTime);
 
                     if(timeSelector.timeReference == TimeReference.REL_ASCENDING)
                     {
@@ -113,7 +113,7 @@ namespace MuMech
                 }
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add( new ManeuverParameters(dV, UT) );
             return NodeList;
         }

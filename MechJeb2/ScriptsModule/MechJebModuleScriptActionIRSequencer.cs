@@ -7,14 +7,14 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionIRSequencer : MechJebModuleScriptAction
 	{
-		public static String NAME = "IRSequencer";
-		private List<Part> irsequencerParts = new List<Part>();
-		private List<String> irsequencerPartsNames = new List<String>();
-		private List<PartModule> irsequencerModules = new List<PartModule>();
-		private List<List<String>> irsequencerSequenceNames = new List<List<String>>();
-		private List<List<object>> irsequencerSequences = new List<List<object>>();
-		private List<String> currentIrsequencerSequenceNames = new List<String>();
-		private List<object> currentIrsequencerSequences = new List<object>();
+		public static string NAME = "IRSequencer";
+		private readonly List<Part> irsequencerParts = new List<Part>();
+		private readonly List<string> irsequencerPartsNames = new List<string>();
+		private readonly List<PartModule> irsequencerModules = new List<PartModule>();
+		private readonly List<List<string>> irsequencerSequenceNames = new List<List<string>>();
+		private readonly List<List<object>> irsequencerSequences = new List<List<object>>();
+		private readonly List<string> currentIrsequencerSequenceNames = new List<string>();
+		private readonly List<object> currentIrsequencerSequences = new List<object>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -27,7 +27,7 @@ namespace MuMech
 		private int actionType;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool waitFinish = true;
-		private List<String> actionTypes = new List<String>();
+		private readonly List<string> actionTypes = new List<string>();
 		private bool partHighlighted = false;
 		private int old_selectedPartIndex = 0;
 
@@ -40,15 +40,15 @@ namespace MuMech
 			this.actionTypes.Add("Start Sequence");
 			this.actionTypes.Add("Pause Sequence");
 			this.actionTypes.Add("Reset Sequence");
-			foreach (Vessel vessel in FlightGlobals.Vessels)
+			foreach (var vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
 				{
-					foreach (Part part in vessel.Parts)
+					foreach (var part in vessel.Parts)
 					{
 						if (part.name.Contains("RoboticsControlUnit"))
 						{
-							foreach (PartModule module in part.Modules)
+							foreach (var module in part.Modules)
 							{
 								if (module.moduleName.Contains("ModuleSequencer"))
 								{
@@ -68,29 +68,26 @@ namespace MuMech
 		{
 			irsequencerSequenceNames.Clear();
 			irsequencerSequences.Clear();
-			foreach (PartModule module in this.irsequencerModules)
+			foreach (var module in this.irsequencerModules)
 			{
-				List<String> sequenceNames = new List<String>();
-				List<object> sequenceObjects = new List<object>();
+				var sequenceNames = new List<string>();
+				var sequenceObjects = new List<object>();
 				//List all the sequences on the sequencer
 				var sequences = module.GetType().GetField("sequences").GetValue(module);
-				if (sequences != null)
-				{
-					if (sequences is IEnumerable)
-					{
-						foreach (var sequence in sequences as IEnumerable)
-						{
-							Guid sID = getSequenceGuid(sequence);
-							String name = getSequenceName(sequence);
-							if (sID != Guid.Empty && name != null && name.Length > 0)
-							{
-								sequenceNames.Add(name);
-								sequenceObjects.Add(sequence);
-							}
-						}
-					}
-				}
-				this.irsequencerSequenceNames.Add(sequenceNames);
+                if (sequences != null && sequences is IEnumerable)
+                {
+                    foreach (var sequence in sequences as IEnumerable)
+                    {
+                        var sID = getSequenceGuid(sequence);
+                        var name = getSequenceName(sequence);
+                        if (sID != Guid.Empty && name?.Length > 0)
+                        {
+                            sequenceNames.Add(name);
+                            sequenceObjects.Add(sequence);
+                        }
+                    }
+                }
+                this.irsequencerSequenceNames.Add(sequenceNames);
 				this.irsequencerSequences.Add(sequenceObjects);
 			}
 			this.populateSequencesList();
@@ -108,7 +105,7 @@ namespace MuMech
 			this.old_selectedPartIndex = this.selectedPartIndex;
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (this.selectedPartIndex < this.irsequencerModules.Count)
@@ -138,24 +135,21 @@ namespace MuMech
 			}
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
-			//If we are waiting for the sequence to finish, we check the status
-			if (!this.isExecuted() && this.isStarted())
-			{
-				if (getSequenceIsFinished(currentIrsequencerSequences[selectedSequenceIndex]))
-				{
-					this.endAction();
-				}
-			}
-		}
+            //If we are waiting for the sequence to finish, we check the status
+            if (!this.isExecuted() && this.isStarted() && getSequenceIsFinished(currentIrsequencerSequences[selectedSequenceIndex]))
+            {
+                this.endAction();
+            }
+        }
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -218,12 +212,12 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{
-				int i = 0;
-				foreach (Part part in irsequencerParts)
+				var i = 0;
+				foreach (var part in irsequencerParts)
 				{
 					if (part.flightID == selectedPartFlightID)
 					{
@@ -237,8 +231,8 @@ namespace MuMech
 			//then try to find the sequence Guid in the selected part sequences list
 			if (selectedSequenceGuid != Guid.Empty)
 			{
-				int i = 0;
-				foreach (object sequence in currentIrsequencerSequences)
+				var i = 0;
+				foreach (var sequence in currentIrsequencerSequences)
 				{
 					if (getSequenceGuid(sequence) == selectedSequenceGuid)
 					{
@@ -254,9 +248,9 @@ namespace MuMech
 			return (Guid)sequence.GetType().GetField("sequenceID").GetValue(sequence);
 		}
 
-		private String getSequenceName(object sequence)
+		private string getSequenceName(object sequence)
 		{
-			return (String)sequence.GetType().GetField("name").GetValue(sequence);
+			return (string)sequence.GetType().GetField("name").GetValue(sequence);
 		}
 
 		private bool getSequenceIsFinished(object sequence)

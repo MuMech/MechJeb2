@@ -100,7 +100,7 @@ namespace MuMech.AttitudeControllers
 
         public void setPIDParameters()
         {
-            Vector3d invTf = (Tf_autoTune ? TfV : defaultTfV).InvertNoNaN();
+            var invTf = (Tf_autoTune ? TfV : defaultTfV).InvertNoNaN();
 
             pid.Kd = kdFactor * invTf;
 
@@ -115,7 +115,7 @@ namespace MuMech.AttitudeControllers
 
         public void tuneTf(Vector3d torque)
         {
-            Vector3d ratio = new Vector3d(
+            var ratio = new Vector3d(
                 torque.x != 0 ? ac.vesselState.MoI.x / torque.x : 0,
                 torque.y != 0 ? ac.vesselState.MoI.y / torque.y : 0,
                 torque.z != 0 ? ac.vesselState.MoI.z / torque.z : 0
@@ -123,7 +123,7 @@ namespace MuMech.AttitudeControllers
 
             TfV = 0.05 * ratio;
 
-            Vector3d delayFactor = Vector3d.one + 2 * ac.vesselState.torqueReactionSpeed;
+            var delayFactor = Vector3d.one + (2 * ac.vesselState.torqueReactionSpeed);
 
 
             TfV.Scale(delayFactor);
@@ -155,22 +155,22 @@ namespace MuMech.AttitudeControllers
 
         public override void DrivePre(FlightCtrlState s, out Vector3d act, out Vector3d deltaEuler)
         {
-            Transform vesselTransform = ac.vessel.ReferenceTransform;
+            var vesselTransform = ac.vessel.ReferenceTransform;
 
             // Find out the real shorter way to turn where we wan to.
             // Thanks to HoneyFox
             Vector3d tgtLocalUp = vesselTransform.transform.rotation.Inverse() * ac.RequestedAttitude * Vector3d.forward;
-            Vector3d curLocalUp = Vector3d.up;
+            var curLocalUp = Vector3d.up;
 
-            double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
-            Vector2d rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
+            var turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
+            var rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
             rotDirection = rotDirection.normalized * turnAngle;
 
             // And the lowest roll
             // Thanks to Crzyrndm
-            Vector3 normVec = Vector3.Cross(ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
-            Quaternion targetDeRotated = Quaternion.AngleAxis((float) turnAngle, normVec) * ac.RequestedAttitude;
-            float rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) *
+            var normVec = Vector3.Cross(ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
+            var targetDeRotated = Quaternion.AngleAxis((float) turnAngle, normVec) * ac.RequestedAttitude;
+            var rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) *
                               Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
 
             // From here everything should use MOI order for Vectors (pitch, roll, yaw)
@@ -183,14 +183,14 @@ namespace MuMech.AttitudeControllers
 
             error.Scale(ac.AxisControl);
 
-            Vector3d err = error + ac.inertia;
+            var err = error + ac.inertia;
             err = new Vector3d(
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
 
             // ( MoI / available torque ) factor:
-            Vector3d NormFactor = Vector3d.Scale(ac.vesselState.MoI, ac.torque.InvertNoNaN());
+            var NormFactor = Vector3d.Scale(ac.vesselState.MoI, ac.torque.InvertNoNaN());
 
             err.Scale(NormFactor);
 
@@ -202,7 +202,10 @@ namespace MuMech.AttitudeControllers
             omega.Scale(NormFactor);
 
             if (Tf_autoTune)
+            {
                 tuneTf(ac.torque);
+            }
+
             setPIDParameters();
 
             // angular velocity limit:
@@ -283,7 +286,7 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            bool newLowPassFilter = GUILayout.Toggle(lowPassFilter, Localizer.Format("#MechJeb_AttitudeController_checkbox2"));//" Low Pass Filter"
+            var newLowPassFilter = GUILayout.Toggle(lowPassFilter, Localizer.Format("#MechJeb_AttitudeController_checkbox2"));//" Low Pass Filter"
 
             if (lowPassFilter != newLowPassFilter)
             {

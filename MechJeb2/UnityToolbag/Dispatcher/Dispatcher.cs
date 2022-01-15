@@ -19,7 +19,7 @@ namespace UnityToolbag
         private static bool _instanceExists;
 
         private static Thread _mainThread;
-        private static object _lockObject = new object();
+        private static readonly object _lockObject = new object();
         private static readonly Queue _actions = new Queue();
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace UnityToolbag
                 return;
             }
 
-            bool hasRun = false;
+            var hasRun = false;
 
             InvokeAsync(() =>
             {
@@ -114,7 +114,10 @@ namespace UnityToolbag
         public static void CreateDispatcher()
         {
             if (_instanceExists)
+            {
                 return;
+            }
+
             Debug.Log("[MechJeb2] Starting the Dispatcher");
             new GameObject(typeof(Dispatcher).Name).AddComponent<Dispatcher>();
         }

@@ -7,16 +7,16 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionKos : MechJebModuleScriptAction
 	{
-		public static String NAME = "kOS";
-		private List<Part> kosParts = new List<Part>();
-		private List<String> kosPartsNames = new List<String>();
-		private List<PartModule> kosModules = new List<PartModule>();
+		public static string NAME = "kOS";
+		private readonly List<Part> kosParts = new List<Part>();
+		private readonly List<string> kosPartsNames = new List<string>();
+		private readonly List<PartModule> kosModules = new List<PartModule>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		[Persistent(pass = (int)Pass.Type)]
-		private String command = "";
+		private string command = "";
 		[Persistent(pass = (int)Pass.Type)]
 		private bool openTerminal = true;
 		[Persistent(pass = (int)Pass.Type)]
@@ -33,13 +33,13 @@ namespace MuMech
 			kosParts.Clear();
 			kosPartsNames.Clear();
 			kosModules.Clear();
-			foreach (Vessel vessel in FlightGlobals.Vessels)
+			foreach (var vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
 				{
-					foreach (Part part in vessel.Parts)
+					foreach (var part in vessel.Parts)
 					{
-						foreach (PartModule module in part.Modules)
+						foreach (var module in part.Modules)
 						{
 							if (module.moduleName.Contains("kOSProcessor"))
 							{
@@ -53,7 +53,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (this.selectedPartIndex < this.kosModules.Count)
@@ -92,31 +92,25 @@ namespace MuMech
 			}
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
-			if (this.selectedPartIndex < this.kosModules.Count)
-			{
-				if (closeTerminal)
-				{
-					this.kosModules[this.selectedPartIndex].GetType().InvokeMember("CloseWindow", System.Reflection.BindingFlags.InvokeMethod, null, this.kosModules[this.selectedPartIndex], null);
-				}
-			}
-		}
+            if (this.selectedPartIndex < this.kosModules.Count && closeTerminal)
+            {
+                this.kosModules[this.selectedPartIndex].GetType().InvokeMember("CloseWindow", System.Reflection.BindingFlags.InvokeMethod, null, this.kosModules[this.selectedPartIndex], null);
+            }
+        }
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
-			//If we are waiting for the sequence to finish, we check the status
-			if (!this.isExecuted() && this.isStarted())
-			{
-				if (isCPUActive(this.kosModules[this.selectedPartIndex]))
-				{
-					this.endAction();
-				}
-			}
-		}
+            //If we are waiting for the sequence to finish, we check the status
+            if (!this.isExecuted() && this.isStarted() && isCPUActive(this.kosModules[this.selectedPartIndex]))
+            {
+                this.endAction();
+            }
+        }
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -157,12 +151,12 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{
-				int i = 0;
-				foreach (Part part in kosParts)
+				var i = 0;
+				foreach (var part in kosParts)
 				{
 					if (part.flightID == selectedPartFlightID)
 					{
@@ -178,7 +172,7 @@ namespace MuMech
 			if (sharedObjects != null && interpreter != null)
 			{
 				//We check if the interpreter is waiting to know if our program has been executed
-				bool waiting = (bool)interpreter.GetType().InvokeMember("IsWaitingForCommand", System.Reflection.BindingFlags.InvokeMethod, null, interpreter, null);
+				var waiting = (bool)interpreter.GetType().InvokeMember("IsWaitingForCommand", System.Reflection.BindingFlags.InvokeMethod, null, interpreter, null);
 				if (waiting)
 				{
 					return true;

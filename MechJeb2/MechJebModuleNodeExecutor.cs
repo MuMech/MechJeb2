@@ -19,22 +19,26 @@ namespace MuMech
         public string NextNodeBurnTime()
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
+            {
                 return "-";
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
-            double dV = node.GetBurnVector(orbit).magnitude;
-            double halfBurnTIme;
-            return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTIme));
+            }
+
+            var node = vessel.patchedConicSolver.maneuverNodes[0];
+            var dV = node.GetBurnVector(orbit).magnitude;
+            return GuiUtils.TimeToDHMS(BurnTime(dV, out var halfBurnTIme));
         }
 
         [ValueInfoItem("#MechJeb_NodeBurnCountdown", InfoItem.Category.Thrust)]//Node Burn Countdown
         public string NextNodeCountdown()
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
+            {
                 return "-";
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
-            double dV = node.GetBurnVector(orbit).magnitude;
-            double halfBurnTIme;
-            BurnTime(dV, out halfBurnTIme);
+            }
+
+            var node = vessel.patchedConicSolver.maneuverNodes[0];
+            var dV = node.GetBurnVector(orbit).magnitude;
+            BurnTime(dV, out var halfBurnTIme);
             return GuiUtils.TimeToDHMS(node.UT - halfBurnTIme - vesselState.time);
         }
 
@@ -96,8 +100,8 @@ namespace MuMech
             }
 
             //check if we've finished a node:
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
-            double dVLeft = node.GetBurnVector(orbit).magnitude;
+            var node = vessel.patchedConicSolver.maneuverNodes[0];
+            var dVLeft = node.GetBurnVector(orbit).magnitude;
 
             if (dVLeft < tolerance && core.attitude.attitudeAngleFromTarget() > 5)
             {
@@ -127,17 +131,19 @@ namespace MuMech
             //aim along the node
             core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
 
-            double halfBurnTime;
-            BurnTime(dVLeft, out halfBurnTime);
+            BurnTime(dVLeft, out var halfBurnTime);
 
-            double timeToNode = node.UT - vesselState.time;
+            var timeToNode = node.UT - vesselState.time;
             //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
             if (mode == Mode.ONE_NODE || mode == Mode.ALL_NODES)
             {
                 if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
                 {
                     burnTriggered = true;
-                    if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                    if (!MuUtils.PhysicsRunning())
+                    {
+                        core.warp.MinimumWarp();
+                    }
                 }
             }
             else if (mode == Mode.ONE_PNODE)
@@ -145,7 +151,10 @@ namespace MuMech
                 if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode <= 0.0225) || timeToNode < 0)
                 {
                     burnTriggered = true;
-                    if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
+                    if (!MuUtils.PhysicsRunning())
+                    {
+                        core.warp.MinimumWarp();
+                    }
                 }
             }
 
@@ -171,7 +180,7 @@ namespace MuMech
                 {
                     if (core.attitude.attitudeAngleFromTarget() < 90)
                     {
-                        double timeConstant = (dVLeft > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
+                        var timeConstant = (dVLeft > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
                         core.thrust.ThrustForDV(dVLeft + tolerance, timeConstant);
                     }
                     else
@@ -191,8 +200,8 @@ namespace MuMech
 
         private double BurnTime(double dv, out double halfBurnTime)
         {
-            double dvLeft = dv;
-            double halfDvLeft = dv / 2;
+            var dvLeft = dv;
+            var halfDvLeft = dv / 2;
 
             double burnTime = 0;
             halfBurnTime = 0;
@@ -204,7 +213,7 @@ namespace MuMech
             stats.RequestUpdate(this, true);
 
             double lastStageBurnTime = 0;
-            for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
+            for (var i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
             {
                 var s = stats.vacStats[i];
                 if (s.DeltaV <= 0 || s.StartThrust <= 0)
@@ -214,17 +223,20 @@ namespace MuMech
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
                         if (burnTime - lastStageBurnTime < core.staging.autostagePreDelay && i != stats.vacStats.Length - 1)
+                        {
                             burnTime += core.staging.autostagePreDelay - (burnTime - lastStageBurnTime);
+                        }
+
                         burnTime += core.staging.autostagePreDelay;
                         lastStageBurnTime = burnTime;
                     }
                     continue;
                 }
 
-                double stageBurnDv = Math.Min(s.DeltaV, dvLeft);
+                var stageBurnDv = Math.Min(s.DeltaV, dvLeft);
                 dvLeft -= stageBurnDv;
 
-                double stageBurnFraction = stageBurnDv / s.DeltaV;
+                var stageBurnFraction = stageBurnDv / s.DeltaV;
 
                 // Delta-V is proportional to ln(m0 / m1) (where m0 is initial
                 // mass and m1 is final mass). We need to know the final mass
@@ -232,8 +244,8 @@ namespace MuMech
                 //      ln(m0 / m1) * stageBurnFraction = ln(m0 / m1b)
                 //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
                 //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
-                double stageBurnFinalMass = s.StartMass / Math.Exp(Math.Log(s.StartMass / s.EndMass) * stageBurnFraction);
-                double stageAvgAccel = s.StartThrust / ((s.StartMass + stageBurnFinalMass) / 2d);
+                var stageBurnFinalMass = s.StartMass / Math.Exp(Math.Log(s.StartMass / s.EndMass) * stageBurnFraction);
+                var stageAvgAccel = s.StartThrust / ((s.StartMass + stageBurnFinalMass) / 2d);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's

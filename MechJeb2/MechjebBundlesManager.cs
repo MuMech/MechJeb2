@@ -23,7 +23,7 @@ namespace MuMech
 
         void Awake()
         {
-            string gameDataPath = KSPUtil.ApplicationRootPath + "/GameData/MechJeb2/Bundles/";
+            var gameDataPath = KSPUtil.ApplicationRootPath + "/GameData/MechJeb2/Bundles/";
             shaderPath = gameDataPath + shaderBundle;
         }
 
@@ -31,22 +31,24 @@ namespace MuMech
         {
             // We do this in MainMenu because something is going on in that scene that kills anything loaded with a bundle
             if (diffuseAmbient)
+            {
                 MechJebCore.print("Shaders already loaded");
+            }
 
             MechJebCore.print("Loading Shaders Bundles");
 
             // Load the font asset bundle
-            AssetBundleCreateRequest bundleLoadRequest = AssetBundle.LoadFromFileAsync(shaderPath);
+            var bundleLoadRequest = AssetBundle.LoadFromFileAsync(shaderPath);
             yield return bundleLoadRequest;
 
-            AssetBundle assetBundle = bundleLoadRequest.assetBundle;
+            var assetBundle = bundleLoadRequest.assetBundle;
             if (assetBundle == null)
             {
                 MechJebCore.print("Failed to load AssetBundle " + shaderPath);
                 yield break;
             }
 
-            AssetBundleRequest assetLoadRequest = assetBundle.LoadAssetAsync<Shader>(diffuseAmbientName);
+            var assetLoadRequest = assetBundle.LoadAssetAsync<Shader>(diffuseAmbientName);
             yield return assetLoadRequest;
             diffuseAmbient = assetLoadRequest.asset as Shader;
 
@@ -57,16 +59,24 @@ namespace MuMech
             assetBundle.Unload(false);
             MechJebCore.print("Loaded Shaders Bundles");
 
-            comboBoxBackground = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-            comboBoxBackground.wrapMode = TextureWrapMode.Clamp;
+            comboBoxBackground = new Texture2D(16, 16, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Clamp
+            };
 
-            for (int x = 0; x < comboBoxBackground.width; x++)
-            for (int y = 0; y < comboBoxBackground.height; y++)
+            for (var x = 0; x < comboBoxBackground.width; x++)
+            {
+                for (var y = 0; y < comboBoxBackground.height; y++)
             {
                 if (x == 0 || x == comboBoxBackground.width-1 || y == 0 || y == comboBoxBackground.height-1)
-                    comboBoxBackground.SetPixel(x, y, new Color(0, 0, 0, 1));
-                else
-                    comboBoxBackground.SetPixel(x, y, new Color(0.05f, 0.05f, 0.05f, 0.95f));
+                    {
+                        comboBoxBackground.SetPixel(x, y, new Color(0, 0, 0, 1));
+                    }
+                    else
+                    {
+                        comboBoxBackground.SetPixel(x, y, new Color(0.05f, 0.05f, 0.05f, 0.95f));
+                    }
+                }
             }
 
             comboBoxBackground.Apply();

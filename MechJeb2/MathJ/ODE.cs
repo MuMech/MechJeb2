@@ -27,8 +27,12 @@ namespace MuMech.MathJ
             Integrator.Initialize(dydt_internal, N, M);
 
             if (events != null)
-                foreach (Event e in events)
+            {
+                foreach (var e in events)
+                {
                     Integrator.AddEvent(e);
+                }
+            }
         }
 
         public void Integrate(double[] y0, double[] yf, double t0, double tf, CN? interpolant = null)

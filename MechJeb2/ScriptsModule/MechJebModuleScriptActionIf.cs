@@ -6,31 +6,37 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionIf : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
 	{
-		public static String NAME = "If";
-		private MechJebModuleScriptActionsList actionsThen;
-		private MechJebModuleScriptActionsList actionsElse;
-		private MechJebModuleScriptCondition condition;
-		private GUIStyle sBorderY;
-		private GUIStyle sBorderG;
-		private GUIStyle sBorderR;
+		public static string NAME = "If";
+		private readonly MechJebModuleScriptActionsList actionsThen;
+		private readonly MechJebModuleScriptActionsList actionsElse;
+		private readonly MechJebModuleScriptCondition condition;
+		private readonly GUIStyle sBorderY;
+		private readonly GUIStyle sBorderG;
+		private readonly GUIStyle sBorderR;
 
 		public MechJebModuleScriptActionIf (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionsThen = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			actionsElse = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
-			sBorderY = new GUIStyle();
-			sBorderY.border = new RectOffset(1, 1, 1, 1);
-			sBorderG = new GUIStyle();
-			sBorderG.border = new RectOffset(1, 1, 1, 1);
-			sBorderR = new GUIStyle();
-			sBorderR.border = new RectOffset(1, 1, 1, 1);
-			Texture2D backgroundY = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-			Texture2D backgroundG = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-			Texture2D backgroundR = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-			for (int x = 0; x < backgroundY.width; x++)
+            sBorderY = new GUIStyle
+            {
+                border = new RectOffset(1, 1, 1, 1)
+            };
+            sBorderG = new GUIStyle
+            {
+                border = new RectOffset(1, 1, 1, 1)
+            };
+            sBorderR = new GUIStyle
+            {
+                border = new RectOffset(1, 1, 1, 1)
+            };
+            var backgroundY = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			var backgroundG = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			var backgroundR = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+			for (var x = 0; x < backgroundY.width; x++)
 			{
-				for (int y = 0; y < backgroundY.height; y++)
+				for (var y = 0; y < backgroundY.height; y++)
 				{
 					if (x == 0 || x == 15 || y == 0 || y == 15)
 					{
@@ -60,7 +66,7 @@ namespace MuMech
 			sBorderR.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (condition.checkCondition())
@@ -73,14 +79,14 @@ namespace MuMech
 			}
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
-			GUIStyle s = new GUIStyle(GUI.skin.label);
+			var s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
 			GUILayout.BeginVertical(sBorderY);
 			base.preWindowGUI(windowID);
@@ -119,7 +125,7 @@ namespace MuMech
 
 		public List<MechJebModuleScriptAction> getRecursiveActionsList()
 		{
-			List<MechJebModuleScriptAction> actionsRes = new List<MechJebModuleScriptAction>();
+			var actionsRes = new List<MechJebModuleScriptAction>();
 			actionsRes.AddRange(this.actionsThen.getRecursiveActionsList());
 			actionsRes.AddRange(this.actionsElse.getRecursiveActionsList());
 			return actionsRes;
@@ -132,13 +138,13 @@ namespace MuMech
 
 		public List<MechJebModuleScriptActionsList> getActionsListsObjects()
 		{
-			List<MechJebModuleScriptActionsList> lists = new List<MechJebModuleScriptActionsList>();
+			var lists = new List<MechJebModuleScriptActionsList>();
 			lists.Add(this.actionsThen);
 			lists.Add(this.actionsElse);
 			return lists;
 		}
 
-		override public void afterOnFixedUpdate() {
+		public override void afterOnFixedUpdate() {
 			if (this.condition.getConditionVerified())
 			{
 				actionsThen.OnFixedUpdate();
@@ -149,27 +155,27 @@ namespace MuMech
 			}
 		}
 
-		override public void postLoad(ConfigNode node) {
+		public override void postLoad(ConfigNode node) {
 			ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
-			ConfigNode nodeListThen = node.GetNode("ActionsListThen");
+			var nodeListThen = node.GetNode("ActionsListThen");
 			if (nodeListThen != null)
 			{
 				actionsThen.LoadConfig(nodeListThen);
 			}
-			ConfigNode nodeListElse = node.GetNode("ActionsListElse");
+			var nodeListElse = node.GetNode("ActionsListElse");
 			if (nodeListElse != null)
 			{
 				actionsElse.LoadConfig(nodeListElse);
 			}
 		}
 
-		override public void postSave(ConfigNode node) {
-			ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
+		public override void postSave(ConfigNode node) {
+			var conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
 			conditionNode.CopyTo(node.AddNode("Condition"));
-			ConfigNode nodeListThen = new ConfigNode("ActionsListThen");
+			var nodeListThen = new ConfigNode("ActionsListThen");
 			actionsThen.SaveConfig(nodeListThen);
 			node.AddNode(nodeListThen);
-			ConfigNode nodeListElse = new ConfigNode("ActionsListElse");
+			var nodeListElse = new ConfigNode("ActionsListElse");
 			actionsElse.SaveConfig(nodeListElse);
 			node.AddNode(nodeListElse);
 		}

@@ -11,9 +11,18 @@ namespace MuMech
         public static List<ITargetable> GetTargetables(this Vessel vessel)
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor) parts = EditorLogic.fetch.ship.parts;
-            else if (vessel == null) return new List<ITargetable>();
-            else parts = vessel.Parts;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                parts = EditorLogic.fetch.ship.parts;
+            }
+            else if (vessel == null)
+            {
+                return new List<ITargetable>();
+            }
+            else
+            {
+                parts = vessel.Parts;
+            }
 
             return parts.SelectMany(part => part.Modules.OfType<ITargetable>()).ToList();
         }
@@ -21,20 +30,31 @@ namespace MuMech
         public static List<T> GetModules<T>(this Vessel vessel) where T : PartModule
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null) parts = EditorLogic.fetch.ship.parts;
-            else if (vessel == null || vessel.Parts == null) return new List<T>();
-            else parts = vessel.Parts;
-
-            List<T> list = new List<T>();
-            for (int p = 0; p < parts.Count; p++)
+            if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null)
             {
-                Part part = parts[p];
+                parts = EditorLogic.fetch.ship.parts;
+            }
+            else if (vessel == null || vessel.Parts == null)
+            {
+                return new List<T>();
+            }
+            else
+            {
+                parts = vessel.Parts;
+            }
+
+            var list = new List<T>();
+            for (var p = 0; p < parts.Count; p++)
+            {
+                var part = parts[p];
 
                 if (part.Modules == null)
+                {
                     continue;
+                }
 
-                int count = part.Modules.Count;
-                for (int m = 0; m < count; m++)
+                var count = part.Modules.Count;
+                for (var m = 0; m < count; m++)
                 {
                     if (part.Modules[m] is T mod)
                     {
@@ -48,19 +68,30 @@ namespace MuMech
         public static T GetModule<T>(this Vessel vessel, Predicate<T> predicate) where T : PartModule
         {
             List<Part> parts;
-            if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null) parts = EditorLogic.fetch.ship.parts;
-            else if (vessel == null || vessel.Parts == null) return default;
-            else parts = vessel.Parts;
-
-            for (int p = 0; p < parts.Count; p++)
+            if (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null)
             {
-                Part part = parts[p];
+                parts = EditorLogic.fetch.ship.parts;
+            }
+            else if (vessel == null || vessel.Parts == null)
+            {
+                return default;
+            }
+            else
+            {
+                parts = vessel.Parts;
+            }
+
+            for (var p = 0; p < parts.Count; p++)
+            {
+                var part = parts[p];
 
                 if (part.Modules == null)
+                {
                     continue;
+                }
 
-                int count = part.Modules.Count;
-                for (int m = 0; m < count; m++)
+                var count = part.Modules.Count;
+                for (var m = 0; m < count; m++)
                 {
                     if (part.Modules[m] is T mod && predicate(mod))
                     {
@@ -81,13 +112,16 @@ namespace MuMech
                 masterMechJeb.Clear();
                 lastFixedTime = Time.fixedTime;
             }
-            Guid vesselKey = vessel == null ? Guid.Empty : vessel.id;
+            var vesselKey = vessel == null ? Guid.Empty : vessel.id;
 
-            if (!masterMechJeb.TryGetValue(vesselKey, out MechJebCore mj))
+            if (!masterMechJeb.TryGetValue(vesselKey, out var mj))
             {
                 mj = vessel.GetModule<MechJebCore>(p => p.running);
                 if (mj != null)
+                {
                     masterMechJeb.Add(vesselKey, mj);
+                }
+
                 return mj;
             }
             return mj;
@@ -95,16 +129,20 @@ namespace MuMech
 
         public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
-            if (definition == null) return 0;
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+            if (definition == null)
+            {
+                return 0;
+            }
+
+            var parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
 
             double amount = 0;
-            for (int i = 0; i < parts.Count; i++)
+            for (var i = 0; i < parts.Count; i++)
             {
-                Part p = parts[i];
-                for (int j = 0; j < p.Resources.Count; j++)
+                var p = parts[i];
+                for (var j = 0; j < p.Resources.Count; j++)
                 {
-                    PartResource r = p.Resources[j];
+                    var r = p.Resources[j];
 
                     if (r.info.id == definition.id)
                     {
@@ -128,28 +166,32 @@ namespace MuMech
 
         public static double TotalResourceMass(this Vessel vessel, string resourceName)
         {
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            var definition = PartResourceLibrary.Instance.GetDefinition(resourceName);
             return vessel.TotalResourceAmount(definition) * definition.density;
         }
 
         public static double TotalResourceMass(this Vessel vessel, int resourceId)
         {
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(resourceId);
+            var definition = PartResourceLibrary.Instance.GetDefinition(resourceId);
             return vessel.TotalResourceAmount(definition) * definition.density;
         }
 
         public static double MaxResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
-            if (definition == null) return 0;
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+            if (definition == null)
+            {
+                return 0;
+            }
+
+            var parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
 
             double amount = 0;
-            for (int i = 0; i < parts.Count; i++)
+            for (var i = 0; i < parts.Count; i++)
             {
-                Part p = parts[i];
-                for (int j = 0; j < p.Resources.Count; j++)
+                var p = parts[i];
+                for (var j = 0; j < p.Resources.Count; j++)
                 {
-                    PartResource r = p.Resources[j];
+                    var r = p.Resources[j];
 
                     if (r.info.id == definition.id)
                     {
@@ -163,7 +205,7 @@ namespace MuMech
 
         public static double MaxResourceAmount(this Vessel vessel, int id)
         {
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(id);
+            var definition = PartResourceLibrary.Instance.GetDefinition(id);
             return vessel.MaxResourceAmount(definition);
         }
 
@@ -175,26 +217,33 @@ namespace MuMech
         public static bool HasElectricCharge(this Vessel vessel)
         {
             if (vessel == null)
+            {
                 return false;
+            }
 
-            List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
-            PartResourceDefinition definition = PartResourceLibrary.Instance.GetDefinition(PartResourceLibrary.ElectricityHashcode);
-            if (definition == null) return false;
+            var parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+            var definition = PartResourceLibrary.Instance.GetDefinition(PartResourceLibrary.ElectricityHashcode);
+            if (definition == null)
+            {
+                return false;
+            }
 
             PartResource r;
             if (vessel.GetReferenceTransformPart() != null)
             {
                 r = vessel.GetReferenceTransformPart().Resources.Get(definition.id);
                 // check the command pod first since most have their batteries
-                if (r != null && r.amount > 0)
+                if (r?.amount > 0)
+                {
                     return true;
+                }
             }
 
-            for (int i = 0; i < parts.Count; i++)
+            for (var i = 0; i < parts.Count; i++)
             {
-                Part p = parts[i];
+                var p = parts[i];
                 r = p.Resources.Get(definition.id);
-                if (r != null && r.amount > 0)
+                if (r?.amount > 0)
                 {
                     return true;
                 }
@@ -212,8 +261,8 @@ namespace MuMech
 
         public static Orbit GetPatchAtUT(this Vessel vessel, double UT)
         {
-            IEnumerable<ManeuverNode> earlierNodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.UT <= UT));
-            Orbit o = vessel.orbit;
+            var earlierNodes = vessel.patchedConicSolver.maneuverNodes.Where(n => (n.UT <= UT));
+            var o = vessel.orbit;
             if (earlierNodes.Any())
             {
                 o = earlierNodes.OrderByDescending(n => n.UT).First().nextPatch;
@@ -236,7 +285,7 @@ namespace MuMech
             }
 
             //Determine whether this patch ends in an SOI transition or if it's the final one:
-            bool finalPatch = (patch.patchEndTransition == Orbit.PatchTransitionType.FINAL);
+            var finalPatch = (patch.patchEndTransition == Orbit.PatchTransitionType.FINAL);
 
 
             if (vessel.patchedConicSolver == null)
@@ -250,11 +299,20 @@ namespace MuMech
             var nodes = vessel.patchedConicSolver.maneuverNodes.Slinq().Where((n,p) => n.patch == p && n != ignoreNode, patch);
             // Slinq is nice but you can only enumerate it once
             var first = nodes.FirstOrDefault();
-            if (first != null) return first.nextPatch;
+            if (first != null)
+            {
+                return first.nextPatch;
+            }
 
             //return the next patch, or null if there isn't one:
-            if (!finalPatch) return patch.nextPatch;
-            else return null;
+            if (!finalPatch)
+            {
+                return patch.nextPatch;
+            }
+            else
+            {
+                return null;
+            }
         }
 
 
@@ -262,11 +320,11 @@ namespace MuMech
         public static ManeuverNode PlaceManeuverNode(this Vessel vessel, Orbit ignoredParameterThatNeedsDeleting, Vector3d dV, double UT)
         {
             // get the right for the time
-            Orbit patch = vessel.GetPatchAtUT(UT);
+            var patch = vessel.GetPatchAtUT(UT);
 
             //placing a maneuver node with bad dV values can really mess up the game, so try to protect against that
             //and log an exception if we get a bad dV vector:
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 if (double.IsNaN(dV[i]) || double.IsInfinity(dV[i]))
                 {
@@ -285,8 +343,8 @@ namespace MuMech
 
             //convert a dV in world coordinates into the coordinate system of the maneuver node,
             //which uses (x, y, z) = (radial+, normal-, prograde)
-            Vector3d nodeDV = patch.DeltaVToManeuverNodeCoordinates(UT, dV);
-            ManeuverNode mn = vessel.patchedConicSolver.AddManeuverNode(UT);
+            var nodeDV = patch.DeltaVToManeuverNodeCoordinates(UT, dV);
+            var mn = vessel.patchedConicSolver.AddManeuverNode(UT);
             mn.DeltaV = nodeDV;
             vessel.patchedConicSolver.UpdateFlightPlan();
             return mn;
@@ -295,7 +353,9 @@ namespace MuMech
         public static void RemoveAllManeuverNodes(this Vessel vessel)
         {
             if (!vessel.patchedConicsUnlocked())
+            {
                 return;
+            }
 
             while (vessel.patchedConicSolver.maneuverNodes.Count > 0)
             {
@@ -306,18 +366,18 @@ namespace MuMech
         // From FAR with ferram4 authorisation
         public static MechJebModuleDockingAutopilot.Box3d GetBoundingBox(this Vessel vessel, bool debug=false)
         {
-            Vector3 minBounds = new Vector3();
-            Vector3 maxBounds = new Vector3();
+            var minBounds = new Vector3();
+            var maxBounds = new Vector3();
 
             if (debug)
             {
                 MonoBehaviour.print("[GetBoundingBox] Start " + vessel.vesselName);
             }
 
-            for (int i = 0; i < vessel.parts.Count; i++)
+            for (var i = 0; i < vessel.parts.Count; i++)
             {
-                Part p = vessel.parts[i];
-                PartExtensions.Vector3Pair partBox = p.GetBoundingBox();
+                var p = vessel.parts[i];
+                var partBox = p.GetBoundingBox();
 
                 if (debug)
                 {
@@ -349,9 +409,10 @@ namespace MuMech
                 MonoBehaviour.print("[GetBoundingBox] End " + vessel.vesselName);
             }
 
-            MechJebModuleDockingAutopilot.Box3d box = new MechJebModuleDockingAutopilot.Box3d();
-
-            box.center = new Vector3d((maxBounds.x + minBounds.x) / 2, (maxBounds.y + minBounds.y) / 2, (maxBounds.z + minBounds.z) / 2);
+            var box = new MechJebModuleDockingAutopilot.Box3d
+            {
+                center = new Vector3d((maxBounds.x + minBounds.x) / 2, (maxBounds.y + minBounds.y) / 2, (maxBounds.z + minBounds.z) / 2)
+            };
             box.size = new Vector3d(Math.Abs(box.center.x - maxBounds.x), Math.Abs(box.center.y - maxBounds.y), Math.Abs(box.center.z - maxBounds.z));
 
             return box;
@@ -371,14 +432,17 @@ namespace MuMech
             node.UT = ut;
             node.solver.UpdateFlightPlan();
             if (node.attachedGizmo == null)
+            {
                 return;
+            }
+
             node.attachedGizmo.patchBefore = node.patch;
             node.attachedGizmo.patchAhead = node.nextPatch;
         }
 
         public static Vector3d WorldDeltaV(this ManeuverNode node)
         {
-            return node.patch.Prograde(node.UT) * node.DeltaV.z + node.patch.RadialPlus(node.UT) * node.DeltaV.x + -node.patch.NormalPlus(node.UT) * node.DeltaV.y;
+            return (node.patch.Prograde(node.UT) * node.DeltaV.z) + (node.patch.RadialPlus(node.UT) * node.DeltaV.x) + (-node.patch.NormalPlus(node.UT) * node.DeltaV.y);
         }
 
         // The part loop in VesselState could expose this, but it gets disabled when the RCS action group is disabled.
@@ -387,15 +451,19 @@ namespace MuMech
         {
             var rcsModules = vessel.FindPartModulesImplementing<ModuleRCS>();
 
-            for (int m = 0; m < rcsModules.Count; m++)
+            for (var m = 0; m < rcsModules.Count; m++)
             {
-                ModuleRCS rcs = rcsModules[m];
+                var rcs = rcsModules[m];
 
                 if (rcs == null)
+                {
                     continue;
+                }
 
                 if (rcs.rcsEnabled && rcs.isEnabled && !rcs.isJustForShow)
+                {
                     return true;
+                }
             }
 
             return false;

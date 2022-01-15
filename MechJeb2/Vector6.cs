@@ -81,10 +81,10 @@ namespace MuMech
 
         public void Add(Vector3d vector)
         {
-            for (int i = 0; i < Values.Length; i++)
+            for (var i = 0; i < Values.Length; i++)
             {
-                Direction d = Values[i];
-                double projection = Vector3d.Dot(vector, directions[(int)d]);
+                var d = Values[i];
+                var projection = Vector3d.Dot(vector, directions[(int)d]);
                 if (projection > 0)
                 {
                     this[d] += projection;
@@ -95,10 +95,10 @@ namespace MuMech
         public double GetMagnitude(Vector3d direction)
         {
             double sqrMagnitude = 0;
-            for (int i = 0; i < Values.Length; i++)
+            for (var i = 0; i < Values.Length; i++)
             {
-                Direction d = Values[i];
-                double projection = Vector3d.Dot(direction.normalized, directions[(int)d]);
+                var d = Values[i];
+                var projection = Vector3d.Dot(direction.normalized, directions[(int)d]);
                 if (projection > 0)
                 {
                     sqrMagnitude += Math.Pow(projection * this[d], 2);

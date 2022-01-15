@@ -6,15 +6,15 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionRCS : MechJebModuleScriptAction
 	{
-		public static String NAME = "RCS";
+		public static string NAME = "RCS";
 
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType;
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionObject;
-		private List<String> actionTypes = new List<String>();
-		private List<String> actionObjects = new List<String>();
-		private String errorMessage = "";
+		private readonly List<string> actionTypes = new List<string>();
+		private readonly List<string> actionObjects = new List<string>();
+		private string errorMessage = "";
 
 		public MechJebModuleScriptActionRCS (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -26,7 +26,7 @@ namespace MuMech
 			actionObjects.Add("Zero Rvel");
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (actionObject == 0)
@@ -84,12 +84,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID) {
+		public override void WindowGUI(int windowID) {
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			if (errorMessage.Length == 0)
@@ -99,7 +99,7 @@ namespace MuMech
 			}
 			else
 			{
-				GUIStyle s = new GUIStyle(GUI.skin.label);
+				var s = new GUIStyle(GUI.skin.label);
 				s.normal.textColor = Color.yellow;
 				GUILayout.Label(this.errorMessage, s);			
 			}

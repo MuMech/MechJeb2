@@ -41,7 +41,7 @@ public partial class alglib
             _innerobj = new polynomialsolver.polynomialsolverreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new polynomialsolverreport((polynomialsolver.polynomialsolverreport)_innerobj.make_copy());
         }
@@ -50,7 +50,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private polynomialsolver.polynomialsolverreport _innerobj;
+        private readonly polynomialsolver.polynomialsolverreport _innerobj;
         public polynomialsolver.polynomialsolverreport innerobj { get { return _innerobj; } }
         public polynomialsolverreport(polynomialsolver.polynomialsolverreport obj)
         {
@@ -105,7 +105,7 @@ public partial class alglib
         polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj, null);
     }
     
-    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep, alglib.xparams _params)
+    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep, xparams _params)
     {
         x = new complex[0];
         rep = new polynomialsolverreport();
@@ -133,7 +133,7 @@ public partial class alglib
             _innerobj = new directdensesolvers.densesolverreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new densesolverreport((directdensesolvers.densesolverreport)_innerobj.make_copy());
         }
@@ -142,7 +142,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private directdensesolvers.densesolverreport _innerobj;
+        private readonly directdensesolvers.densesolverreport _innerobj;
         public directdensesolvers.densesolverreport innerobj { get { return _innerobj; } }
         public densesolverreport(directdensesolvers.densesolverreport obj)
         {
@@ -169,7 +169,7 @@ public partial class alglib
             _innerobj = new directdensesolvers.densesolverlsreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new densesolverlsreport((directdensesolvers.densesolverlsreport)_innerobj.make_copy());
         }
@@ -178,7 +178,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private directdensesolvers.densesolverlsreport _innerobj;
+        private readonly directdensesolvers.densesolverlsreport _innerobj;
         public directdensesolvers.densesolverlsreport innerobj { get { return _innerobj; } }
         public densesolverlsreport(directdensesolvers.densesolverlsreport obj)
         {
@@ -266,7 +266,7 @@ public partial class alglib
         directdensesolvers.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void rmatrixsolve(double[,] a, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixsolve(double[,] a, int n, double[] b, out int info, out densesolverreport rep, out double[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -337,7 +337,7 @@ public partial class alglib
         directdensesolvers.rmatrixsolvefast(a, n, b, ref info, null);
     }
     
-    public static void rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info, alglib.xparams _params)
+    public static void rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.rmatrixsolvefast(a, n, b, ref info, _params);
@@ -433,7 +433,7 @@ public partial class alglib
         directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out int info, out densesolverreport rep, out double[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -511,7 +511,7 @@ public partial class alglib
         directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info, null);
     }
     
-    public static void rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static void rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info, _params);
@@ -579,7 +579,7 @@ public partial class alglib
         directdensesolvers.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void rmatrixlusolve(double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixlusolve(double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -625,7 +625,7 @@ public partial class alglib
         directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info, null);
     }
     
-    public static void rmatrixlusolvefast(double[,] lua, int[] p, int n, ref double[] b, out int info, alglib.xparams _params)
+    public static void rmatrixlusolvefast(double[,] lua, int[] p, int n, ref double[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info, _params);
@@ -719,7 +719,7 @@ public partial class alglib
         directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -790,7 +790,7 @@ public partial class alglib
         directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info, null);
     }
     
-    public static void rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static void rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info, _params);
@@ -840,7 +840,7 @@ public partial class alglib
         directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -892,7 +892,7 @@ public partial class alglib
         directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -988,7 +988,7 @@ public partial class alglib
         directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out int info, out densesolverreport rep, out complex[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1055,7 +1055,7 @@ public partial class alglib
         directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info, null);
     }
     
-    public static void cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static void cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info, _params);
@@ -1140,7 +1140,7 @@ public partial class alglib
         directdensesolvers.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void cmatrixsolve(complex[,] a, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void cmatrixsolve(complex[,] a, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1204,7 +1204,7 @@ public partial class alglib
         directdensesolvers.cmatrixsolvefast(a, n, b, ref info, null);
     }
     
-    public static void cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info, alglib.xparams _params)
+    public static void cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.cmatrixsolvefast(a, n, b, ref info, _params);
@@ -1293,7 +1293,7 @@ public partial class alglib
         directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1360,7 +1360,7 @@ public partial class alglib
         directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info, null);
     }
     
-    public static void cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static void cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info, _params);
@@ -1426,7 +1426,7 @@ public partial class alglib
         directdensesolvers.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void cmatrixlusolve(complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void cmatrixlusolve(complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1475,7 +1475,7 @@ public partial class alglib
         directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info, null);
     }
     
-    public static void cmatrixlusolvefast(complex[,] lua, int[] p, int n, ref complex[] b, out int info, alglib.xparams _params)
+    public static void cmatrixlusolvefast(complex[,] lua, int[] p, int n, ref complex[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info, _params);
@@ -1522,7 +1522,7 @@ public partial class alglib
         directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1570,7 +1570,7 @@ public partial class alglib
         directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1663,7 +1663,7 @@ public partial class alglib
         directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1729,7 +1729,7 @@ public partial class alglib
         directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info, null);
     }
     
-    public static void spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static void spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info, _params);
@@ -1820,7 +1820,7 @@ public partial class alglib
         directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -1886,7 +1886,7 @@ public partial class alglib
         directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info, null);
     }
     
-    public static void spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info, alglib.xparams _params)
+    public static void spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info, _params);
@@ -1957,7 +1957,7 @@ public partial class alglib
         directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -2003,7 +2003,7 @@ public partial class alglib
         directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, null);
     }
     
-    public static void spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static void spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, _params);
@@ -2071,7 +2071,7 @@ public partial class alglib
         directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void spdmatrixcholeskysolve(double[,] cha, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void spdmatrixcholeskysolve(double[,] cha, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -2115,7 +2115,7 @@ public partial class alglib
         directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, null);
     }
     
-    public static void spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, ref double[] b, out int info, alglib.xparams _params)
+    public static void spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, ref double[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, _params);
@@ -2199,7 +2199,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -2266,7 +2266,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info, null);
     }
     
-    public static void hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static void hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info, _params);
@@ -2350,7 +2350,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -2418,7 +2418,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info, null);
     }
     
-    public static void hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info, alglib.xparams _params)
+    public static void hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info, _params);
@@ -2490,7 +2490,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -2535,7 +2535,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, null);
     }
     
-    public static void hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static void hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, _params);
@@ -2603,7 +2603,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void hpdmatrixcholeskysolve(complex[,] cha, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void hpdmatrixcholeskysolve(complex[,] cha, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverreport();
@@ -2647,7 +2647,7 @@ public partial class alglib
         directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, null);
     }
     
-    public static void hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, ref complex[] b, out int info, alglib.xparams _params)
+    public static void hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, ref complex[] b, out int info, xparams _params)
     {
         info = 0;
         directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, _params);
@@ -2730,7 +2730,7 @@ public partial class alglib
         directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x, null);
     }
     
-    public static void rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out int info, out densesolverlsreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out int info, out densesolverlsreport rep, out double[] x, xparams _params)
     {
         info = 0;
         rep = new densesolverlsreport();
@@ -2770,7 +2770,7 @@ public partial class alglib
             _innerobj = new directsparsesolvers.sparsesolverreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new sparsesolverreport((directsparsesolvers.sparsesolverreport)_innerobj.make_copy());
         }
@@ -2779,7 +2779,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private directsparsesolvers.sparsesolverreport _innerobj;
+        private readonly directsparsesolvers.sparsesolverreport _innerobj;
         public directsparsesolvers.sparsesolverreport innerobj { get { return _innerobj; } }
         public sparsesolverreport(directsparsesolvers.sparsesolverreport obj)
         {
@@ -2819,7 +2819,7 @@ public partial class alglib
         directsparsesolvers.sparsespdsolvesks(a.innerobj, isupper, b, ref x, rep.innerobj, null);
     }
     
-    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -2858,7 +2858,7 @@ public partial class alglib
         directsparsesolvers.sparsespdsolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
     }
     
-    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -2897,7 +2897,7 @@ public partial class alglib
         directsparsesolvers.sparsespdcholeskysolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
     }
     
-    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -2934,7 +2934,7 @@ public partial class alglib
         directsparsesolvers.sparsesolve(a.innerobj, b, ref x, rep.innerobj, null);
     }
     
-    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -2974,7 +2974,7 @@ public partial class alglib
         directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, null);
     }
     
-    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -3003,7 +3003,7 @@ public partial class alglib
             _innerobj = new iterativesparse.sparsesolverstate();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new sparsesolverstate((iterativesparse.sparsesolverstate)_innerobj.make_copy());
         }
@@ -3012,7 +3012,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private iterativesparse.sparsesolverstate _innerobj;
+        private readonly iterativesparse.sparsesolverstate _innerobj;
         public iterativesparse.sparsesolverstate innerobj { get { return _innerobj; } }
         public sparsesolverstate(iterativesparse.sparsesolverstate obj)
         {
@@ -3084,7 +3084,7 @@ public partial class alglib
         iterativesparse.sparsesolvesymmetricgmres(a.innerobj, isupper, b, k, epsf, maxits, ref x, rep.innerobj, null);
     }
     
-    public static void sparsesolvesymmetricgmres(sparsematrix a, bool isupper, double[] b, int k, double epsf, int maxits, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsesolvesymmetricgmres(sparsematrix a, bool isupper, double[] b, int k, double epsf, int maxits, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -3147,7 +3147,7 @@ public partial class alglib
         iterativesparse.sparsesolvegmres(a.innerobj, b, k, epsf, maxits, ref x, rep.innerobj, null);
     }
     
-    public static void sparsesolvegmres(sparsematrix a, double[] b, int k, double epsf, int maxits, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsesolvegmres(sparsematrix a, double[] b, int k, double epsf, int maxits, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -3222,7 +3222,7 @@ public partial class alglib
         iterativesparse.sparsesolvercreate(n, state.innerobj, null);
     }
     
-    public static void sparsesolvercreate(int n, out sparsesolverstate state, alglib.xparams _params)
+    public static void sparsesolvercreate(int n, out sparsesolverstate state, xparams _params)
     {
         state = new sparsesolverstate();
         iterativesparse.sparsesolvercreate(n, state.innerobj, _params);
@@ -3255,7 +3255,7 @@ public partial class alglib
         iterativesparse.sparsesolversetalgogmres(state.innerobj, k, null);
     }
     
-    public static void sparsesolversetalgogmres(sparsesolverstate state, int k, alglib.xparams _params)
+    public static void sparsesolversetalgogmres(sparsesolverstate state, int k, xparams _params)
     {
     
         iterativesparse.sparsesolversetalgogmres(state.innerobj, k, _params);
@@ -3281,7 +3281,7 @@ public partial class alglib
         iterativesparse.sparsesolversetstartingpoint(state.innerobj, x, null);
     }
     
-    public static void sparsesolversetstartingpoint(sparsesolverstate state, double[] x, alglib.xparams _params)
+    public static void sparsesolversetstartingpoint(sparsesolverstate state, double[] x, xparams _params)
     {
     
         iterativesparse.sparsesolversetstartingpoint(state.innerobj, x, _params);
@@ -3312,7 +3312,7 @@ public partial class alglib
         iterativesparse.sparsesolversetcond(state.innerobj, epsf, maxits, null);
     }
     
-    public static void sparsesolversetcond(sparsesolverstate state, double epsf, int maxits, alglib.xparams _params)
+    public static void sparsesolversetcond(sparsesolverstate state, double epsf, int maxits, xparams _params)
     {
     
         iterativesparse.sparsesolversetcond(state.innerobj, epsf, maxits, _params);
@@ -3359,7 +3359,7 @@ public partial class alglib
         iterativesparse.sparsesolversolvesymmetric(state.innerobj, a.innerobj, isupper, b, null);
     }
     
-    public static void sparsesolversolvesymmetric(sparsesolverstate state, sparsematrix a, bool isupper, double[] b, alglib.xparams _params)
+    public static void sparsesolversolvesymmetric(sparsesolverstate state, sparsematrix a, bool isupper, double[] b, xparams _params)
     {
     
         iterativesparse.sparsesolversolvesymmetric(state.innerobj, a.innerobj, isupper, b, _params);
@@ -3398,7 +3398,7 @@ public partial class alglib
         iterativesparse.sparsesolversolve(state.innerobj, a.innerobj, b, null);
     }
     
-    public static void sparsesolversolve(sparsesolverstate state, sparsematrix a, double[] b, alglib.xparams _params)
+    public static void sparsesolversolve(sparsesolverstate state, sparsematrix a, double[] b, xparams _params)
     {
     
         iterativesparse.sparsesolversolve(state.innerobj, a.innerobj, b, _params);
@@ -3442,7 +3442,7 @@ public partial class alglib
         iterativesparse.sparsesolverresults(state.innerobj, ref x, rep.innerobj, null);
     }
     
-    public static void sparsesolverresults(sparsesolverstate state, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsesolverresults(sparsesolverstate state, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -3479,7 +3479,7 @@ public partial class alglib
         iterativesparse.sparsesolversetxrep(state.innerobj, needxrep, null);
     }
     
-    public static void sparsesolversetxrep(sparsesolverstate state, bool needxrep, alglib.xparams _params)
+    public static void sparsesolversetxrep(sparsesolverstate state, bool needxrep, xparams _params)
     {
     
         iterativesparse.sparsesolversetxrep(state.innerobj, needxrep, _params);
@@ -3511,7 +3511,7 @@ public partial class alglib
         iterativesparse.sparsesolveroocstart(state.innerobj, b, null);
     }
     
-    public static void sparsesolveroocstart(sparsesolverstate state, double[] b, alglib.xparams _params)
+    public static void sparsesolveroocstart(sparsesolverstate state, double[] b, xparams _params)
     {
     
         iterativesparse.sparsesolveroocstart(state.innerobj, b, _params);
@@ -3540,7 +3540,7 @@ public partial class alglib
         return iterativesparse.sparsesolverooccontinue(state.innerobj, null);
     }
     
-    public static bool sparsesolverooccontinue(sparsesolverstate state, alglib.xparams _params)
+    public static bool sparsesolverooccontinue(sparsesolverstate state, xparams _params)
     {
     
         return iterativesparse.sparsesolverooccontinue(state.innerobj, _params);
@@ -3588,7 +3588,7 @@ public partial class alglib
         iterativesparse.sparsesolveroocgetrequestinfo(state.innerobj, ref requesttype, null);
     }
     
-    public static void sparsesolveroocgetrequestinfo(sparsesolverstate state, out int requesttype, alglib.xparams _params)
+    public static void sparsesolveroocgetrequestinfo(sparsesolverstate state, out int requesttype, xparams _params)
     {
         requesttype = 0;
         iterativesparse.sparsesolveroocgetrequestinfo(state.innerobj, ref requesttype, _params);
@@ -3632,7 +3632,7 @@ public partial class alglib
         iterativesparse.sparsesolveroocgetrequestdata(state.innerobj, ref x, null);
     }
     
-    public static void sparsesolveroocgetrequestdata(sparsesolverstate state, ref double[] x, alglib.xparams _params)
+    public static void sparsesolveroocgetrequestdata(sparsesolverstate state, ref double[] x, xparams _params)
     {
     
         iterativesparse.sparsesolveroocgetrequestdata(state.innerobj, ref x, _params);
@@ -3660,7 +3660,7 @@ public partial class alglib
         iterativesparse.sparsesolveroocgetrequestdata1(state.innerobj, ref v, null);
     }
     
-    public static void sparsesolveroocgetrequestdata1(sparsesolverstate state, out double v, alglib.xparams _params)
+    public static void sparsesolveroocgetrequestdata1(sparsesolverstate state, out double v, xparams _params)
     {
         v = 0;
         iterativesparse.sparsesolveroocgetrequestdata1(state.innerobj, ref v, _params);
@@ -3696,7 +3696,7 @@ public partial class alglib
         iterativesparse.sparsesolveroocsendresult(state.innerobj, ax, null);
     }
     
-    public static void sparsesolveroocsendresult(sparsesolverstate state, double[] ax, alglib.xparams _params)
+    public static void sparsesolveroocsendresult(sparsesolverstate state, double[] ax, xparams _params)
     {
     
         iterativesparse.sparsesolveroocsendresult(state.innerobj, ax, _params);
@@ -3749,7 +3749,7 @@ public partial class alglib
         iterativesparse.sparsesolveroocstop(state.innerobj, ref x, rep.innerobj, null);
     }
     
-    public static void sparsesolveroocstop(sparsesolverstate state, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    public static void sparsesolveroocstop(sparsesolverstate state, out double[] x, out sparsesolverreport rep, xparams _params)
     {
         x = new double[0];
         rep = new sparsesolverreport();
@@ -3788,7 +3788,7 @@ public partial class alglib
         iterativesparse.sparsesolverrequesttermination(state.innerobj, null);
     }
     
-    public static void sparsesolverrequesttermination(sparsesolverstate state, alglib.xparams _params)
+    public static void sparsesolverrequesttermination(sparsesolverstate state, xparams _params)
     {
     
         iterativesparse.sparsesolverrequesttermination(state.innerobj, _params);
@@ -3816,7 +3816,7 @@ public partial class alglib
             _innerobj = new lincg.lincgstate();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new lincgstate((lincg.lincgstate)_innerobj.make_copy());
         }
@@ -3825,7 +3825,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lincg.lincgstate _innerobj;
+        private readonly lincg.lincgstate _innerobj;
         public lincg.lincgstate innerobj { get { return _innerobj; } }
         public lincgstate(lincg.lincgstate obj)
         {
@@ -3852,7 +3852,7 @@ public partial class alglib
             _innerobj = new lincg.lincgreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new lincgreport((lincg.lincgreport)_innerobj.make_copy());
         }
@@ -3861,7 +3861,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lincg.lincgreport _innerobj;
+        private readonly lincg.lincgreport _innerobj;
         public lincg.lincgreport innerobj { get { return _innerobj; } }
         public lincgreport(lincg.lincgreport obj)
         {
@@ -3901,7 +3901,7 @@ public partial class alglib
         lincg.lincgcreate(n, state.innerobj, null);
     }
     
-    public static void lincgcreate(int n, out lincgstate state, alglib.xparams _params)
+    public static void lincgcreate(int n, out lincgstate state, xparams _params)
     {
         state = new lincgstate();
         lincg.lincgcreate(n, state.innerobj, _params);
@@ -3926,7 +3926,7 @@ public partial class alglib
         lincg.lincgsetstartingpoint(state.innerobj, x, null);
     }
     
-    public static void lincgsetstartingpoint(lincgstate state, double[] x, alglib.xparams _params)
+    public static void lincgsetstartingpoint(lincgstate state, double[] x, xparams _params)
     {
     
         lincg.lincgsetstartingpoint(state.innerobj, x, _params);
@@ -3950,7 +3950,7 @@ public partial class alglib
         lincg.lincgsetprecunit(state.innerobj, null);
     }
     
-    public static void lincgsetprecunit(lincgstate state, alglib.xparams _params)
+    public static void lincgsetprecunit(lincgstate state, xparams _params)
     {
     
         lincg.lincgsetprecunit(state.innerobj, _params);
@@ -3973,7 +3973,7 @@ public partial class alglib
         lincg.lincgsetprecdiag(state.innerobj, null);
     }
     
-    public static void lincgsetprecdiag(lincgstate state, alglib.xparams _params)
+    public static void lincgsetprecdiag(lincgstate state, xparams _params)
     {
     
         lincg.lincgsetprecdiag(state.innerobj, _params);
@@ -4004,7 +4004,7 @@ public partial class alglib
         lincg.lincgsetcond(state.innerobj, epsf, maxits, null);
     }
     
-    public static void lincgsetcond(lincgstate state, double epsf, int maxits, alglib.xparams _params)
+    public static void lincgsetcond(lincgstate state, double epsf, int maxits, xparams _params)
     {
     
         lincg.lincgsetcond(state.innerobj, epsf, maxits, _params);
@@ -4043,7 +4043,7 @@ public partial class alglib
         lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, null);
     }
     
-    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b, alglib.xparams _params)
+    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b, xparams _params)
     {
     
         lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, _params);
@@ -4082,7 +4082,7 @@ public partial class alglib
         lincg.lincgresults(state.innerobj, ref x, rep.innerobj, null);
     }
     
-    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep, alglib.xparams _params)
+    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep, xparams _params)
     {
         x = new double[0];
         rep = new lincgreport();
@@ -4102,7 +4102,7 @@ public partial class alglib
         lincg.lincgsetrestartfreq(state.innerobj, srf, null);
     }
     
-    public static void lincgsetrestartfreq(lincgstate state, int srf, alglib.xparams _params)
+    public static void lincgsetrestartfreq(lincgstate state, int srf, xparams _params)
     {
     
         lincg.lincgsetrestartfreq(state.innerobj, srf, _params);
@@ -4132,7 +4132,7 @@ public partial class alglib
         lincg.lincgsetrupdatefreq(state.innerobj, freq, null);
     }
     
-    public static void lincgsetrupdatefreq(lincgstate state, int freq, alglib.xparams _params)
+    public static void lincgsetrupdatefreq(lincgstate state, int freq, xparams _params)
     {
     
         lincg.lincgsetrupdatefreq(state.innerobj, freq, _params);
@@ -4157,7 +4157,7 @@ public partial class alglib
         lincg.lincgsetxrep(state.innerobj, needxrep, null);
     }
     
-    public static void lincgsetxrep(lincgstate state, bool needxrep, alglib.xparams _params)
+    public static void lincgsetxrep(lincgstate state, bool needxrep, xparams _params)
     {
     
         lincg.lincgsetxrep(state.innerobj, needxrep, _params);
@@ -4184,7 +4184,7 @@ public partial class alglib
             _innerobj = new linlsqr.linlsqrstate();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new linlsqrstate((linlsqr.linlsqrstate)_innerobj.make_copy());
         }
@@ -4193,7 +4193,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private linlsqr.linlsqrstate _innerobj;
+        private readonly linlsqr.linlsqrstate _innerobj;
         public linlsqr.linlsqrstate innerobj { get { return _innerobj; } }
         public linlsqrstate(linlsqr.linlsqrstate obj)
         {
@@ -4219,7 +4219,7 @@ public partial class alglib
             _innerobj = new linlsqr.linlsqrreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new linlsqrreport((linlsqr.linlsqrreport)_innerobj.make_copy());
         }
@@ -4228,7 +4228,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private linlsqr.linlsqrreport _innerobj;
+        private readonly linlsqr.linlsqrreport _innerobj;
         public linlsqr.linlsqrreport innerobj { get { return _innerobj; } }
         public linlsqrreport(linlsqr.linlsqrreport obj)
         {
@@ -4270,7 +4270,7 @@ public partial class alglib
         linlsqr.linlsqrcreate(m, n, state.innerobj, null);
     }
     
-    public static void linlsqrcreate(int m, int n, out linlsqrstate state, alglib.xparams _params)
+    public static void linlsqrcreate(int m, int n, out linlsqrstate state, xparams _params)
     {
         state = new linlsqrstate();
         linlsqr.linlsqrcreate(m, n, state.innerobj, _params);
@@ -4297,7 +4297,7 @@ public partial class alglib
         linlsqr.linlsqrcreatebuf(m, n, state.innerobj, null);
     }
     
-    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state, alglib.xparams _params)
+    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state, xparams _params)
     {
     
         linlsqr.linlsqrcreatebuf(m, n, state.innerobj, _params);
@@ -4321,7 +4321,7 @@ public partial class alglib
         linlsqr.linlsqrsetprecunit(state.innerobj, null);
     }
     
-    public static void linlsqrsetprecunit(linlsqrstate state, alglib.xparams _params)
+    public static void linlsqrsetprecunit(linlsqrstate state, xparams _params)
     {
     
         linlsqr.linlsqrsetprecunit(state.innerobj, _params);
@@ -4344,7 +4344,7 @@ public partial class alglib
         linlsqr.linlsqrsetprecdiag(state.innerobj, null);
     }
     
-    public static void linlsqrsetprecdiag(linlsqrstate state, alglib.xparams _params)
+    public static void linlsqrsetprecdiag(linlsqrstate state, xparams _params)
     {
     
         linlsqr.linlsqrsetprecdiag(state.innerobj, _params);
@@ -4369,7 +4369,7 @@ public partial class alglib
         linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, null);
     }
     
-    public static void linlsqrsetlambdai(linlsqrstate state, double lambdai, alglib.xparams _params)
+    public static void linlsqrsetlambdai(linlsqrstate state, double lambdai, xparams _params)
     {
     
         linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, _params);
@@ -4404,7 +4404,7 @@ public partial class alglib
         linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, null);
     }
     
-    public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b, alglib.xparams _params)
+    public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b, xparams _params)
     {
     
         linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, _params);
@@ -4434,7 +4434,7 @@ public partial class alglib
         linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, null);
     }
     
-    public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits, alglib.xparams _params)
+    public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits, xparams _params)
     {
     
         linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, _params);
@@ -4473,7 +4473,7 @@ public partial class alglib
         linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj, null);
     }
     
-    public static void linlsqrresults(linlsqrstate state, out double[] x, out linlsqrreport rep, alglib.xparams _params)
+    public static void linlsqrresults(linlsqrstate state, out double[] x, out linlsqrreport rep, xparams _params)
     {
         x = new double[0];
         rep = new linlsqrreport();
@@ -4499,7 +4499,7 @@ public partial class alglib
         linlsqr.linlsqrsetxrep(state.innerobj, needxrep, null);
     }
     
-    public static void linlsqrsetxrep(linlsqrstate state, bool needxrep, alglib.xparams _params)
+    public static void linlsqrsetxrep(linlsqrstate state, bool needxrep, xparams _params)
     {
     
         linlsqr.linlsqrsetxrep(state.innerobj, needxrep, _params);
@@ -4524,7 +4524,7 @@ public partial class alglib
         return linlsqr.linlsqrpeekiterationscount(s.innerobj, null);
     }
     
-    public static int linlsqrpeekiterationscount(linlsqrstate s, alglib.xparams _params)
+    public static int linlsqrpeekiterationscount(linlsqrstate s, xparams _params)
     {
     
         return linlsqr.linlsqrpeekiterationscount(s.innerobj, _params);
@@ -4563,7 +4563,7 @@ public partial class alglib
         linlsqr.linlsqrrequesttermination(state.innerobj, null);
     }
     
-    public static void linlsqrrequesttermination(linlsqrstate state, alglib.xparams _params)
+    public static void linlsqrrequesttermination(linlsqrstate state, xparams _params)
     {
     
         linlsqr.linlsqrrequesttermination(state.innerobj, _params);
@@ -4595,7 +4595,7 @@ public partial class alglib
             _innerobj = new nleq.nleqstate();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new nleqstate((nleq.nleqstate)_innerobj.make_copy());
         }
@@ -4604,7 +4604,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private nleq.nleqstate _innerobj;
+        private readonly nleq.nleqstate _innerobj;
         public nleq.nleqstate innerobj { get { return _innerobj; } }
         public nleqstate(nleq.nleqstate obj)
         {
@@ -4631,7 +4631,7 @@ public partial class alglib
             _innerobj = new nleq.nleqreport();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new nleqreport((nleq.nleqreport)_innerobj.make_copy());
         }
@@ -4640,7 +4640,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private nleq.nleqreport _innerobj;
+        private readonly nleq.nleqreport _innerobj;
         public nleq.nleqreport innerobj { get { return _innerobj; } }
         public nleqreport(nleq.nleqreport obj)
         {
@@ -4724,7 +4724,7 @@ public partial class alglib
         nleq.nleqcreatelm(n, m, x, state.innerobj, null);
     }
     
-    public static void nleqcreatelm(int n, int m, double[] x, out nleqstate state, alglib.xparams _params)
+    public static void nleqcreatelm(int n, int m, double[] x, out nleqstate state, xparams _params)
     {
         state = new nleqstate();
         nleq.nleqcreatelm(n, m, x, state.innerobj, _params);
@@ -4741,7 +4741,7 @@ public partial class alglib
         return;
     }
             
-    public static void nleqcreatelm(int m, double[] x, out nleqstate state, alglib.xparams _params)
+    public static void nleqcreatelm(int m, double[] x, out nleqstate state, xparams _params)
     {
         int n;
     
@@ -4777,7 +4777,7 @@ public partial class alglib
         nleq.nleqsetcond(state.innerobj, epsf, maxits, null);
     }
     
-    public static void nleqsetcond(nleqstate state, double epsf, int maxits, alglib.xparams _params)
+    public static void nleqsetcond(nleqstate state, double epsf, int maxits, xparams _params)
     {
     
         nleq.nleqsetcond(state.innerobj, epsf, maxits, _params);
@@ -4802,7 +4802,7 @@ public partial class alglib
         nleq.nleqsetxrep(state.innerobj, needxrep, null);
     }
     
-    public static void nleqsetxrep(nleqstate state, bool needxrep, alglib.xparams _params)
+    public static void nleqsetxrep(nleqstate state, bool needxrep, xparams _params)
     {
     
         nleq.nleqsetxrep(state.innerobj, needxrep, _params);
@@ -4831,7 +4831,7 @@ public partial class alglib
         nleq.nleqsetstpmax(state.innerobj, stpmax, null);
     }
     
-    public static void nleqsetstpmax(nleqstate state, double stpmax, alglib.xparams _params)
+    public static void nleqsetstpmax(nleqstate state, double stpmax, xparams _params)
     {
     
         nleq.nleqsetstpmax(state.innerobj, stpmax, _params);
@@ -4848,7 +4848,7 @@ public partial class alglib
         return nleq.nleqiteration(state.innerobj, null);
     }
     
-    public static bool nleqiteration(nleqstate state, alglib.xparams _params)
+    public static bool nleqiteration(nleqstate state, xparams _params)
     {
     
         return nleq.nleqiteration(state.innerobj, _params);
@@ -4876,13 +4876,19 @@ public partial class alglib
         nleqsolve(state, func, jac, rep, obj, null);
     }
     
-    public static void nleqsolve(nleqstate state, ndimensional_func func, ndimensional_jac  jac, ndimensional_rep rep, object obj, alglib.xparams _params)
+    public static void nleqsolve(nleqstate state, ndimensional_func func, ndimensional_jac  jac, ndimensional_rep rep, object obj, xparams _params)
     {
         if( func==null )
+        {
             throw new alglibexception("ALGLIB: error in 'nleqsolve()' (func is null)");
-        if( jac==null )
+        }
+
+        if ( jac==null )
+        {
             throw new alglibexception("ALGLIB: error in 'nleqsolve()' (jac is null)");
-        while( alglib.nleqiteration(state, _params) )
+        }
+
+        while ( alglib.nleqiteration(state, _params) )
         {
             if( state.needf )
             {
@@ -4897,7 +4903,10 @@ public partial class alglib
             if( state.innerobj.xupdated )
             {
                 if( rep!=null )
+                {
                     rep(state.innerobj.x, state.innerobj.f, obj);
+                }
+
                 continue;
             }
             throw new alglibexception("ALGLIB: error in 'nleqsolve' (some derivatives were not provided?)");
@@ -4938,7 +4947,7 @@ public partial class alglib
         nleq.nleqresults(state.innerobj, ref x, rep.innerobj, null);
     }
     
-    public static void nleqresults(nleqstate state, out double[] x, out nleqreport rep, alglib.xparams _params)
+    public static void nleqresults(nleqstate state, out double[] x, out nleqreport rep, xparams _params)
     {
         x = new double[0];
         rep = new nleqreport();
@@ -4962,7 +4971,7 @@ public partial class alglib
         nleq.nleqresultsbuf(state.innerobj, ref x, rep.innerobj, null);
     }
     
-    public static void nleqresultsbuf(nleqstate state, ref double[] x, nleqreport rep, alglib.xparams _params)
+    public static void nleqresultsbuf(nleqstate state, ref double[] x, nleqreport rep, xparams _params)
     {
     
         nleq.nleqresultsbuf(state.innerobj, ref x, rep.innerobj, _params);
@@ -4991,7 +5000,7 @@ public partial class alglib
         nleq.nleqrestartfrom(state.innerobj, x, null);
     }
     
-    public static void nleqrestartfrom(nleqstate state, double[] x, alglib.xparams _params)
+    public static void nleqrestartfrom(nleqstate state, double[] x, xparams _params)
     {
     
         nleq.nleqrestartfrom(state.innerobj, x, _params);
@@ -5012,10 +5021,12 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                polynomialsolverreport _result = new polynomialsolverreport();
-                _result.maxerr = maxerr;
+                var _result = new polynomialsolverreport
+                {
+                    maxerr = maxerr
+                };
                 return _result;
             }
         };
@@ -5067,18 +5078,18 @@ public partial class alglib
             int n,
             ref complex[] x,
             polynomialsolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] c = new double[0,0];
-            double[,] vl = new double[0,0];
-            double[,] vr = new double[0,0];
-            double[] wr = new double[0];
-            double[] wi = new double[0];
-            int i = 0;
-            int j = 0;
-            bool status = new bool();
-            int nz = 0;
-            int ne = 0;
+            var c = new double[0,0];
+            var vl = new double[0,0];
+            var vr = new double[0,0];
+            var wr = new double[0];
+            var wi = new double[0];
+            var i = 0;
+            var j = 0;
+            var status = new bool();
+            var nz = 0;
+            var ne = 0;
             complex v = 0;
             complex vv = 0;
 
@@ -5105,7 +5116,7 @@ public partial class alglib
             nz = 0;
             while( nz<n && (double)(a[nz])==(double)(0) )
             {
-                nz = nz+1;
+                nz++;
             }
             ne = n-nz;
             for(i=nz; i<=n; i++)
@@ -5159,8 +5170,8 @@ public partial class alglib
                 vv = 1;
                 for(j=0; j<=ne; j++)
                 {
-                    v = v+a[j]*vv;
-                    vv = vv*x[i];
+                    v += (a[j]*vv);
+                    vv *= x[i];
                 }
                 rep.maxerr = Math.Max(rep.maxerr, math.abscomplex(v));
             }
@@ -5181,11 +5192,13 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                densesolverreport _result = new densesolverreport();
-                _result.r1 = r1;
-                _result.rinf = rinf;
+                var _result = new densesolverreport
+                {
+                    r1 = r1,
+                    rinf = rinf
+                };
                 return _result;
             }
         };
@@ -5205,13 +5218,15 @@ public partial class alglib
             {
                 cx = new double[0,0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                densesolverlsreport _result = new densesolverlsreport();
-                _result.r2 = r2;
-                _result.cx = (double[,])cx.Clone();
-                _result.n = n;
-                _result.k = k;
+                var _result = new densesolverlsreport
+                {
+                    r2 = r2,
+                    cx = (double[,])cx.Clone(),
+                    n = n,
+                    k = k
+                };
                 return _result;
             }
         };
@@ -5297,11 +5312,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] bm = new double[0,0];
-            double[,] xm = new double[0,0];
-            int i_ = 0;
+            var bm = new double[0,0];
+            var xm = new double[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new double[0];
@@ -5386,11 +5401,11 @@ public partial class alglib
             int n,
             double[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int[] p = new int[0];
+            var i = 0;
+            var j = 0;
+            var p = new int[0];
 
             a = (double[,])a.Clone();
             info = 0;
@@ -5508,13 +5523,13 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] da = new double[0,0];
-            double[,] emptya = new double[0,0];
-            int[] p = new int[0];
-            int i = 0;
-            int i_ = 0;
+            var da = new double[0,0];
+            var emptya = new double[0,0];
+            var p = new int[0];
+            var i = 0;
+            var i_ = 0;
 
             info = 0;
             x = new double[0,0];
@@ -5622,13 +5637,13 @@ public partial class alglib
             double[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int[] p = new int[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var p = new int[0];
 
             a = (double[,])a.Clone();
             info = 0;
@@ -5741,11 +5756,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] bm = new double[0,0];
-            double[,] xm = new double[0,0];
-            int i_ = 0;
+            var bm = new double[0,0];
+            var xm = new double[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new double[0];
@@ -5806,10 +5821,10 @@ public partial class alglib
             int n,
             double[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             info = 0;
 
@@ -5923,9 +5938,9 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] emptya = new double[0,0];
+            var emptya = new double[0,0];
 
             info = 0;
             x = new double[0,0];
@@ -6010,12 +6025,12 @@ public partial class alglib
             double[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             info = 0;
 
@@ -6109,11 +6124,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] bm = new double[0,0];
-            double[,] xm = new double[0,0];
-            int i_ = 0;
+            var bm = new double[0,0];
+            var xm = new double[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new double[0];
@@ -6182,7 +6197,7 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             info = 0;
             x = new double[0,0];
@@ -6292,13 +6307,13 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] da = new complex[0,0];
-            complex[,] emptya = new complex[0,0];
-            int[] p = new int[0];
-            int i = 0;
-            int i_ = 0;
+            var da = new complex[0,0];
+            var emptya = new complex[0,0];
+            var p = new int[0];
+            var i = 0;
+            var i_ = 0;
 
             info = 0;
             x = new complex[0,0];
@@ -6394,13 +6409,13 @@ public partial class alglib
             complex[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
             complex v = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int[] p = new int[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var p = new int[0];
 
             a = (complex[,])a.Clone();
             info = 0;
@@ -6529,11 +6544,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] bm = new complex[0,0];
-            complex[,] xm = new complex[0,0];
-            int i_ = 0;
+            var bm = new complex[0,0];
+            var xm = new complex[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new complex[0];
@@ -6611,11 +6626,11 @@ public partial class alglib
             int n,
             complex[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int[] p = new int[0];
+            var i = 0;
+            var j = 0;
+            var p = new int[0];
 
             a = (complex[,])a.Clone();
             info = 0;
@@ -6726,9 +6741,9 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] emptya = new complex[0,0];
+            var emptya = new complex[0,0];
 
             info = 0;
             x = new complex[0,0];
@@ -6809,12 +6824,12 @@ public partial class alglib
             complex[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
             complex v = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             info = 0;
 
@@ -6923,11 +6938,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] bm = new complex[0,0];
-            complex[,] xm = new complex[0,0];
-            int i_ = 0;
+            var bm = new complex[0,0];
+            var xm = new complex[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new complex[0];
@@ -6991,10 +7006,10 @@ public partial class alglib
             int n,
             complex[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             info = 0;
 
@@ -7062,7 +7077,7 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             info = 0;
             x = new complex[0,0];
@@ -7124,11 +7139,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] bm = new complex[0,0];
-            complex[,] xm = new complex[0,0];
-            int i_ = 0;
+            var bm = new complex[0,0];
+            var xm = new complex[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new complex[0];
@@ -7237,14 +7252,14 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] da = new double[0,0];
-            int i = 0;
-            int j = 0;
-            int j1 = 0;
-            int j2 = 0;
-            int i_ = 0;
+            var da = new double[0,0];
+            var i = 0;
+            var j = 0;
+            var j1 = 0;
+            var j2 = 0;
+            var i_ = 0;
 
             info = 0;
             x = new double[0,0];
@@ -7359,10 +7374,10 @@ public partial class alglib
             double[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             a = (double[,])a.Clone();
             info = 0;
@@ -7482,11 +7497,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] bm = new double[0,0];
-            double[,] xm = new double[0,0];
-            int i_ = 0;
+            var bm = new double[0,0];
+            var xm = new double[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new double[0];
@@ -7567,9 +7582,9 @@ public partial class alglib
             bool isupper,
             double[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             a = (double[,])a.Clone();
             info = 0;
@@ -7658,9 +7673,9 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] emptya = new double[0,0];
+            var emptya = new double[0,0];
 
             info = 0;
             x = new double[0,0];
@@ -7720,11 +7735,11 @@ public partial class alglib
             double[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             info = 0;
 
@@ -7823,11 +7838,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[,] bm = new double[0,0];
-            double[,] xm = new double[0,0];
-            int i_ = 0;
+            var bm = new double[0,0];
+            var xm = new double[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new double[0];
@@ -7886,10 +7901,10 @@ public partial class alglib
             bool isupper,
             double[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
 
             info = 0;
 
@@ -7993,14 +8008,14 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] da = new complex[0,0];
-            int i = 0;
-            int j = 0;
-            int j1 = 0;
-            int j2 = 0;
-            int i_ = 0;
+            var da = new complex[0,0];
+            var i = 0;
+            var j = 0;
+            var j1 = 0;
+            var j2 = 0;
+            var i_ = 0;
 
             info = 0;
             x = new complex[0,0];
@@ -8115,10 +8130,10 @@ public partial class alglib
             complex[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             a = (complex[,])a.Clone();
             info = 0;
@@ -8231,11 +8246,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] bm = new complex[0,0];
-            complex[,] xm = new complex[0,0];
-            int i_ = 0;
+            var bm = new complex[0,0];
+            var xm = new complex[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new complex[0];
@@ -8318,9 +8333,9 @@ public partial class alglib
             bool isupper,
             complex[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             a = (complex[,])a.Clone();
             info = 0;
@@ -8410,9 +8425,9 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] emptya = new complex[0,0];
+            var emptya = new complex[0,0];
 
             info = 0;
             x = new complex[0,0];
@@ -8473,11 +8488,11 @@ public partial class alglib
             complex[,] b,
             int m,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
 
             info = 0;
 
@@ -8576,11 +8591,11 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            complex[,] bm = new complex[0,0];
-            complex[,] xm = new complex[0,0];
-            int i_ = 0;
+            var bm = new complex[0,0];
+            var xm = new complex[0,0];
+            var i_ = 0;
 
             info = 0;
             x = new complex[0];
@@ -8639,10 +8654,10 @@ public partial class alglib
             bool isupper,
             complex[] b,
             ref int info,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
 
             info = 0;
 
@@ -8745,32 +8760,32 @@ public partial class alglib
             ref int info,
             densesolverlsreport rep,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            double[] sv = new double[0];
-            double[,] u = new double[0,0];
-            double[,] vt = new double[0,0];
-            double[] rp = new double[0];
-            double[] utb = new double[0];
-            double[] sutb = new double[0];
-            double[] tmp = new double[0];
-            double[] ta = new double[0];
-            double[] tx = new double[0];
-            double[] buf = new double[0];
-            double[] w = new double[0];
-            int i = 0;
-            int j = 0;
-            int nsv = 0;
-            int kernelidx = 0;
+            var sv = new double[0];
+            var u = new double[0,0];
+            var vt = new double[0,0];
+            var rp = new double[0];
+            var utb = new double[0];
+            var sutb = new double[0];
+            var tmp = new double[0];
+            var ta = new double[0];
+            var tx = new double[0];
+            var buf = new double[0];
+            var w = new double[0];
+            var i = 0;
+            var j = 0;
+            var nsv = 0;
+            var kernelidx = 0;
             double v = 0;
             double verr = 0;
-            bool svdfailed = new bool();
-            bool zeroa = new bool();
-            int rfs = 0;
-            int nrfs = 0;
-            bool terminatenexttime = new bool();
-            bool smallerr = new bool();
-            int i_ = 0;
+            var svdfailed = new bool();
+            var zeroa = new bool();
+            var rfs = 0;
+            var nrfs = 0;
+            var terminatenexttime = new bool();
+            var smallerr = new bool();
+            var i_ = 0;
 
             info = 0;
             x = new double[0];
@@ -8931,7 +8946,7 @@ public partial class alglib
                     v = rp[i];
                     for(i_=0; i_<=nsv-1;i_++)
                     {
-                        utb[i_] = utb[i_] + v*u[i,i_];
+                        utb[i_] = utb[i_] + (v *u[i,i_]);
                     }
                 }
                 for(i=0; i<=nsv-1; i++)
@@ -8950,7 +8965,7 @@ public partial class alglib
                     v = sutb[i];
                     for(i_=0; i_<=ncols-1;i_++)
                     {
-                        tmp[i_] = tmp[i_] + v*vt[i,i_];
+                        tmp[i_] = tmp[i_] + (v *vt[i,i_]);
                     }
                 }
                 
@@ -8996,25 +9011,25 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int rfs = 0;
-            int nrfs = 0;
-            double[] xc = new double[0];
-            double[] y = new double[0];
-            double[] bc = new double[0];
-            double[] xa = new double[0];
-            double[] xb = new double[0];
-            double[] tx = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var rfs = 0;
+            var nrfs = 0;
+            var xc = new double[0];
+            var y = new double[0];
+            var bc = new double[0];
+            var xa = new double[0];
+            var xb = new double[0];
+            var tx = new double[0];
             double v = 0;
             double verr = 0;
             double mxb = 0;
-            bool smallerr = new bool();
-            bool terminatenexttime = new bool();
-            int i_ = 0;
+            var smallerr = new bool();
+            var terminatenexttime = new bool();
+            var i_ = 0;
 
             info = 0;
             x = new double[0,0];
@@ -9164,10 +9179,10 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             info = 0;
             x = new double[0,0];
@@ -9243,25 +9258,25 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int rfs = 0;
-            int nrfs = 0;
-            complex[] xc = new complex[0];
-            complex[] y = new complex[0];
-            complex[] bc = new complex[0];
-            complex[] xa = new complex[0];
-            complex[] xb = new complex[0];
-            complex[] tx = new complex[0];
-            double[] tmpbuf = new double[0];
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var rfs = 0;
+            var nrfs = 0;
+            var xc = new complex[0];
+            var y = new complex[0];
+            var bc = new complex[0];
+            var xa = new complex[0];
+            var xb = new complex[0];
+            var tx = new complex[0];
+            var tmpbuf = new double[0];
             complex v = 0;
             double verr = 0;
-            bool smallerr = new bool();
-            bool terminatenexttime = new bool();
-            int i_ = 0;
+            var smallerr = new bool();
+            var terminatenexttime = new bool();
+            var i_ = 0;
 
             info = 0;
             x = new complex[0,0];
@@ -9290,7 +9305,7 @@ public partial class alglib
             tx = new complex[n];
             xa = new complex[n+1];
             xb = new complex[n+1];
-            tmpbuf = new double[2*n+2];
+            tmpbuf = new double[(2 * n) + 2];
             
             //
             // estimate condition number, test for near singularity
@@ -9437,16 +9452,16 @@ public partial class alglib
             ref int info,
             densesolverreport rep,
             ref complex[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            complex[] xc = new complex[0];
-            complex[] y = new complex[0];
-            complex[] bc = new complex[0];
-            complex[] xa = new complex[0];
-            complex[] xb = new complex[0];
-            complex[] tx = new complex[0];
+            var i = 0;
+            var j = 0;
+            var xc = new complex[0];
+            var y = new complex[0];
+            var bc = new complex[0];
+            var xa = new complex[0];
+            var xb = new complex[0];
+            var tx = new complex[0];
 
             info = 0;
             x = new complex[0,0];
@@ -9525,9 +9540,9 @@ public partial class alglib
         private static int densesolverrfsmax(int n,
             double r1,
             double rinf,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             result = 5;
             return result;
@@ -9546,9 +9561,9 @@ public partial class alglib
         *************************************************************************/
         private static int densesolverrfsmaxv2(int n,
             double r2,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             result = densesolverrfsmax(n, 0, 0, _params);
             return result;
@@ -9568,11 +9583,11 @@ public partial class alglib
             int[] p,
             int n,
             double[] xb,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             for(i=0; i<=n-1; i++)
             {
@@ -9619,11 +9634,11 @@ public partial class alglib
             int n,
             bool isupper,
             double[] xb,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             
             //
@@ -9643,7 +9658,7 @@ public partial class alglib
                         v = xb[i];
                         for(i_=i+1; i_<=n-1;i_++)
                         {
-                            xb[i_] = xb[i_] - v*cha[i,i_];
+                            xb[i_] = xb[i_] - (v *cha[i,i_]);
                         }
                     }
                 }
@@ -9696,7 +9711,7 @@ public partial class alglib
                         v = xb[i];
                         for(i_=0; i_<=i-1;i_++)
                         {
-                            xb[i_] = xb[i_] - v*cha[i,i_];
+                            xb[i_] = xb[i_] - (v *cha[i,i_]);
                         }
                     }
                 }
@@ -9718,11 +9733,11 @@ public partial class alglib
             int[] p,
             int n,
             complex[] xb,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             complex v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             for(i=0; i<=n-1; i++)
             {
@@ -9769,11 +9784,11 @@ public partial class alglib
             int n,
             bool isupper,
             complex[] xb,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             complex v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             
             //
@@ -9793,7 +9808,7 @@ public partial class alglib
                         v = xb[i];
                         for(i_=i+1; i_<=n-1;i_++)
                         {
-                            xb[i_] = xb[i_] - v*math.conj(cha[i,i_]);
+                            xb[i_] = xb[i_] - (v *math.conj(cha[i,i_]));
                         }
                     }
                 }
@@ -9846,7 +9861,7 @@ public partial class alglib
                         v = xb[i];
                         for(i_=0; i_<=i-1;i_++)
                         {
-                            xb[i_] = xb[i_] - v*math.conj(cha[i,i_]);
+                            xb[i_] = xb[i_] - (v *math.conj(cha[i,i_]));
                         }
                     }
                 }
@@ -9882,13 +9897,15 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                sparsesolverreport _result = new sparsesolverreport();
-                _result.terminationtype = terminationtype;
-                _result.nmv = nmv;
-                _result.iterationscount = iterationscount;
-                _result.r2 = r2;
+                var _result = new sparsesolverreport
+                {
+                    terminationtype = terminationtype,
+                    nmv = nmv,
+                    iterationscount = iterationscount,
+                    r2 = r2
+                };
                 return _result;
             }
         };
@@ -9926,11 +9943,11 @@ public partial class alglib
             double[] b,
             ref double[] x,
             sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            sparse.sparsematrix a2 = new sparse.sparsematrix();
-            int n = 0;
+            var i = 0;
+            var a2 = new sparse.sparsematrix();
+            var n = 0;
 
             x = new double[0];
 
@@ -10000,14 +10017,14 @@ public partial class alglib
             double[] b,
             ref double[] x,
             sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            sparse.sparsematrix a2 = new sparse.sparsematrix();
-            int n = 0;
+            var i = 0;
+            var j = 0;
+            var a2 = new sparse.sparsematrix();
+            var n = 0;
             double v = 0;
-            int[] p = new int[0];
+            var p = new int[0];
 
             x = new double[0];
 
@@ -10084,10 +10101,10 @@ public partial class alglib
             double[] b,
             ref double[] x,
             sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int n = 0;
+            var i = 0;
+            var n = 0;
 
             x = new double[0];
 
@@ -10157,15 +10174,15 @@ public partial class alglib
             double[] b,
             ref double[] x,
             sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int n = 0;
+            var i = 0;
+            var j = 0;
+            var n = 0;
             double v = 0;
-            sparse.sparsematrix a2 = new sparse.sparsematrix();
-            int[] pivp = new int[0];
-            int[] pivq = new int[0];
+            var a2 = new sparse.sparsematrix();
+            var pivp = new int[0];
+            var pivq = new int[0];
 
             x = new double[0];
 
@@ -10243,12 +10260,12 @@ public partial class alglib
             double[] b,
             ref double[] x,
             sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
-            int n = 0;
+            var n = 0;
 
             x = new double[0];
 
@@ -10311,7 +10328,7 @@ public partial class alglib
              Copyright 26.12.2017 by Bochkanov Sergey
         *************************************************************************/
         public static void initsparsesolverreport(sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             rep.terminationtype = 0;
             rep.nmv = 0;
@@ -10370,32 +10387,34 @@ public partial class alglib
                 gmressolver = new fbls.fblsgmresstate();
                 rstate = new rcommstate();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                sparsesolverstate _result = new sparsesolverstate();
-                _result.n = n;
-                _result.x0 = (double[])x0.Clone();
-                _result.epsf = epsf;
-                _result.maxits = maxits;
-                _result.algotype = algotype;
-                _result.gmresk = gmresk;
-                _result.xrep = xrep;
-                _result.running = running;
-                _result.userterminationneeded = userterminationneeded;
-                _result.b = (double[])b.Clone();
-                _result.xf = (double[])xf.Clone();
-                _result.repiterationscount = repiterationscount;
-                _result.repnmv = repnmv;
-                _result.repterminationtype = repterminationtype;
-                _result.repr2 = repr2;
-                _result.requesttype = requesttype;
-                _result.x = (double[])x.Clone();
-                _result.ax = (double[])ax.Clone();
-                _result.reply1 = reply1;
-                _result.wrkb = (double[])wrkb.Clone();
-                _result.convbuf = (sparse.sparsematrix)convbuf.make_copy();
-                _result.gmressolver = (fbls.fblsgmresstate)gmressolver.make_copy();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                var _result = new sparsesolverstate
+                {
+                    n = n,
+                    x0 = (double[])x0.Clone(),
+                    epsf = epsf,
+                    maxits = maxits,
+                    algotype = algotype,
+                    gmresk = gmresk,
+                    xrep = xrep,
+                    running = running,
+                    userterminationneeded = userterminationneeded,
+                    b = (double[])b.Clone(),
+                    xf = (double[])xf.Clone(),
+                    repiterationscount = repiterationscount,
+                    repnmv = repnmv,
+                    repterminationtype = repterminationtype,
+                    repr2 = repr2,
+                    requesttype = requesttype,
+                    x = (double[])x.Clone(),
+                    ax = (double[])ax.Clone(),
+                    reply1 = reply1,
+                    wrkb = (double[])wrkb.Clone(),
+                    convbuf = (sparse.sparsematrix)convbuf.make_copy(),
+                    gmressolver = (fbls.fblsgmresstate)gmressolver.make_copy(),
+                    rstate = (rcommstate)rstate.make_copy()
+                };
                 return _result;
             }
         };
@@ -10468,11 +10487,11 @@ public partial class alglib
             int maxits,
             ref double[] x,
             directsparsesolvers.sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int n = 0;
-            sparse.sparsematrix convbuf = new sparse.sparsematrix();
-            sparsesolverstate solver = new sparsesolverstate();
+            var n = 0;
+            var convbuf = new sparse.sparsematrix();
+            var solver = new sparsesolverstate();
 
             x = new double[0];
 
@@ -10570,11 +10589,11 @@ public partial class alglib
             int maxits,
             ref double[] x,
             directsparsesolvers.sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int n = 0;
-            sparse.sparsematrix convbuf = new sparse.sparsematrix();
-            sparsesolverstate solver = new sparsesolverstate();
+            var n = 0;
+            var convbuf = new sparse.sparsematrix();
+            var solver = new sparsesolverstate();
 
             x = new double[0];
 
@@ -10680,7 +10699,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolvercreate(int n,
             sparsesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(n>=1, "SparseSolverCreate: N<=0");
             state.n = n;
@@ -10724,7 +10743,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolversetalgogmres(sparsesolverstate state,
             int k,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(k>=0, "SparseSolverSetAlgoGMRESK: K<0");
             state.algotype = 0;
@@ -10752,7 +10771,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolversetstartingpoint(sparsesolverstate state,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(state.n<=alglib.ap.len(x), "SparseSolverSetStartingPoint: Length(X)<N");
             alglib.ap.assert(apserv.isfinitevector(x, state.n, _params), "SparseSolverSetStartingPoint: X contains infinite or NaN values!");
@@ -10782,7 +10801,7 @@ public partial class alglib
         public static void sparsesolversetcond(sparsesolverstate state,
             double epsf,
             int maxits,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(epsf) && (double)(epsf)>=(double)(0), "SparseSolverSetCond: EpsF is negative or contains infinite or NaN values");
             alglib.ap.assert(maxits>=0, "SparseSolverSetCond: MaxIts is negative");
@@ -10838,9 +10857,9 @@ public partial class alglib
             sparse.sparsematrix a,
             bool isupper,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int n = 0;
+            var n = 0;
 
             n = state.n;
             
@@ -10912,9 +10931,9 @@ public partial class alglib
         public static void sparsesolversolve(sparsesolverstate state,
             sparse.sparsematrix a,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int n = 0;
+            var n = 0;
 
             n = state.n;
             
@@ -10990,7 +11009,7 @@ public partial class alglib
         public static void sparsesolverresults(sparsesolverstate state,
             ref double[] x,
             directsparsesolvers.sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = new double[0];
 
@@ -11024,7 +11043,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolversetxrep(sparsesolverstate state,
             bool needxrep,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -11052,7 +11071,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolveroocstart(sparsesolverstate state,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.rstate.ia = new int[0+1];
             state.rstate.ra = new double[2+1];
@@ -11083,9 +11102,9 @@ public partial class alglib
              Copyright 24.09.2021 by Bochkanov Sergey
         *************************************************************************/
         public static bool sparsesolverooccontinue(sparsesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
+            var result = new bool();
 
             alglib.ap.assert(state.running, "SparseSolverContinue: the solver is not running");
             result = sparsesolveriteration(state, _params);
@@ -11132,7 +11151,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolveroocgetrequestinfo(sparsesolverstate state,
             ref int requesttype,
-            alglib.xparams _params)
+            xparams _params)
         {
             requesttype = 0;
 
@@ -11175,7 +11194,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolveroocgetrequestdata(sparsesolverstate state,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(state.running, "SparseSolverOOCGetRequestInfo: the solver is not running");
             ablasf.rcopyallocv(state.n, state.x, ref x, _params);
@@ -11200,7 +11219,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolveroocgetrequestdata1(sparsesolverstate state,
             ref double v,
-            alglib.xparams _params)
+            xparams _params)
         {
             v = 0;
 
@@ -11235,7 +11254,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolveroocsendresult(sparsesolverstate state,
             double[] ax,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(state.running, "SparseSolverOOCSendResult: the solver is not running");
             alglib.ap.assert(state.requesttype==0, "SparseSolverOOCSendResult: this request type does not accept replies");
@@ -11286,7 +11305,7 @@ public partial class alglib
         public static void sparsesolveroocstop(sparsesolverstate state,
             ref double[] x,
             directsparsesolvers.sparsesolverreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = new double[0];
 
@@ -11328,7 +11347,7 @@ public partial class alglib
              Copyright 01.10.2021 by Bochkanov Sergey
         *************************************************************************/
         public static void sparsesolverrequesttermination(sparsesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.userterminationneeded = true;
         }
@@ -11341,10 +11360,10 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         private static bool sparsesolveriteration(sparsesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            int outeridx = 0;
+            var result = new bool();
+            var outeridx = 0;
             double res = 0;
             double prevres = 0;
             double res0 = 0;
@@ -11432,7 +11451,7 @@ public partial class alglib
             goto lbl_rcomm;
         lbl_0:
             state.requesttype = -999;
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             ablasf.rcopyv(state.n, state.b, state.wrkb, _params);
             ablasf.raddv(state.n, -1.0, state.ax, state.wrkb, _params);
         lbl_8:
@@ -11489,7 +11508,7 @@ public partial class alglib
         lbl_2:
             state.requesttype = -999;
             ablasf.rcopyv(state.n, state.ax, state.gmressolver.ax, _params);
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             if( state.userterminationneeded )
             {
                 
@@ -11502,7 +11521,7 @@ public partial class alglib
             }
             goto lbl_13;
         lbl_14:
-            state.repiterationscount = state.repiterationscount+state.gmressolver.itsperformed;
+            state.repiterationscount += state.gmressolver.itsperformed;
             ablasf.raddv(state.n, 1.0, state.gmressolver.xs, state.xf, _params);
             
             //
@@ -11514,7 +11533,7 @@ public partial class alglib
             goto lbl_rcomm;
         lbl_3:
             state.requesttype = -999;
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             ablasf.rcopyv(state.n, state.b, state.wrkb, _params);
             ablasf.raddv(state.n, -1.0, state.ax, state.wrkb, _params);
             state.repr2 = ablasf.rdotv2(state.n, state.wrkb, _params);
@@ -11564,7 +11583,7 @@ public partial class alglib
                 result = false;
                 return result;
             }
-            outeridx = outeridx+1;
+            outeridx++;
             goto lbl_11;
         lbl_12:
             result = false;
@@ -11591,7 +11610,7 @@ public partial class alglib
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
         private static void clearrequestfields(sparsesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.requesttype = -999;
         }
@@ -11601,7 +11620,7 @@ public partial class alglib
         Clears report fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
         private static void clearreportfields(sparsesolverstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.repiterationscount = 0;
             state.repnmv = 0;
@@ -11678,45 +11697,47 @@ public partial class alglib
                 tmpd = new double[0];
                 rstate = new rcommstate();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                lincgstate _result = new lincgstate();
-                _result.rx = (double[])rx.Clone();
-                _result.b = (double[])b.Clone();
-                _result.n = n;
-                _result.prectype = prectype;
-                _result.cx = (double[])cx.Clone();
-                _result.cr = (double[])cr.Clone();
-                _result.cz = (double[])cz.Clone();
-                _result.p = (double[])p.Clone();
-                _result.r = (double[])r.Clone();
-                _result.z = (double[])z.Clone();
-                _result.alpha = alpha;
-                _result.beta = beta;
-                _result.r2 = r2;
-                _result.meritfunction = meritfunction;
-                _result.x = (double[])x.Clone();
-                _result.mv = (double[])mv.Clone();
-                _result.pv = (double[])pv.Clone();
-                _result.vmv = vmv;
-                _result.startx = (double[])startx.Clone();
-                _result.epsf = epsf;
-                _result.maxits = maxits;
-                _result.itsbeforerestart = itsbeforerestart;
-                _result.itsbeforerupdate = itsbeforerupdate;
-                _result.xrep = xrep;
-                _result.xupdated = xupdated;
-                _result.needmv = needmv;
-                _result.needmtv = needmtv;
-                _result.needmv2 = needmv2;
-                _result.needvmv = needvmv;
-                _result.needprec = needprec;
-                _result.repiterationscount = repiterationscount;
-                _result.repnmv = repnmv;
-                _result.repterminationtype = repterminationtype;
-                _result.running = running;
-                _result.tmpd = (double[])tmpd.Clone();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                var _result = new lincgstate
+                {
+                    rx = (double[])rx.Clone(),
+                    b = (double[])b.Clone(),
+                    n = n,
+                    prectype = prectype,
+                    cx = (double[])cx.Clone(),
+                    cr = (double[])cr.Clone(),
+                    cz = (double[])cz.Clone(),
+                    p = (double[])p.Clone(),
+                    r = (double[])r.Clone(),
+                    z = (double[])z.Clone(),
+                    alpha = alpha,
+                    beta = beta,
+                    r2 = r2,
+                    meritfunction = meritfunction,
+                    x = (double[])x.Clone(),
+                    mv = (double[])mv.Clone(),
+                    pv = (double[])pv.Clone(),
+                    vmv = vmv,
+                    startx = (double[])startx.Clone(),
+                    epsf = epsf,
+                    maxits = maxits,
+                    itsbeforerestart = itsbeforerestart,
+                    itsbeforerupdate = itsbeforerupdate,
+                    xrep = xrep,
+                    xupdated = xupdated,
+                    needmv = needmv,
+                    needmtv = needmtv,
+                    needmv2 = needmv2,
+                    needvmv = needvmv,
+                    needprec = needprec,
+                    repiterationscount = repiterationscount,
+                    repnmv = repnmv,
+                    repterminationtype = repterminationtype,
+                    running = running,
+                    tmpd = (double[])tmpd.Clone(),
+                    rstate = (rcommstate)rstate.make_copy()
+                };
                 return _result;
             }
         };
@@ -11735,13 +11756,15 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                lincgreport _result = new lincgreport();
-                _result.iterationscount = iterationscount;
-                _result.nmv = nmv;
-                _result.terminationtype = terminationtype;
-                _result.r2 = r2;
+                var _result = new lincgreport
+                {
+                    iterationscount = iterationscount,
+                    nmv = nmv,
+                    terminationtype = terminationtype,
+                    r2 = r2
+                };
                 return _result;
             }
         };
@@ -11780,9 +11803,9 @@ public partial class alglib
         *************************************************************************/
         public static void lincgcreate(int n,
             lincgstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(n>0, "LinCGCreate: N<=0");
             state.n = n;
@@ -11808,7 +11831,7 @@ public partial class alglib
             state.b = new double[state.n];
             for(i=0; i<=state.n-1; i++)
             {
-                state.rx[i] = Double.NaN;
+                state.rx[i] = double.NaN;
                 state.startx[i] = 0.0;
                 state.b[i] = 0;
             }
@@ -11843,9 +11866,9 @@ public partial class alglib
         *************************************************************************/
         public static void lincgsetstartingpoint(lincgstate state,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             alglib.ap.assert(!state.running, "LinCGSetStartingPoint: you can not change starting point because LinCGIteration() function is running");
             alglib.ap.assert(state.n<=alglib.ap.len(x), "LinCGSetStartingPoint: Length(X)<N");
@@ -11871,9 +11894,9 @@ public partial class alglib
         *************************************************************************/
         public static void lincgsetb(lincgstate state,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             alglib.ap.assert(!state.running, "LinCGSetB: you can not set B, because function LinCGIteration is running!");
             alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
@@ -11898,7 +11921,7 @@ public partial class alglib
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgsetprecunit(lincgstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetPrecUnit: you can not change preconditioner, because function LinCGIteration is running!");
             state.prectype = -1;
@@ -11917,7 +11940,7 @@ public partial class alglib
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgsetprecdiag(lincgstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
             state.prectype = 0;
@@ -11946,7 +11969,7 @@ public partial class alglib
         public static void lincgsetcond(lincgstate state,
             double epsf,
             int maxits,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetCond: you can not change stopping criteria when LinCGIteration() is running");
             alglib.ap.assert(math.isfinite(epsf) && (double)(epsf)>=(double)(0), "LinCGSetCond: EpsF is negative or contains infinite or NaN values");
@@ -11971,14 +11994,14 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static bool lincgiteration(lincgstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            int i = 0;
+            var result = new bool();
+            var i = 0;
             double uvar = 0;
             double bnorm = 0;
             double v = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             
             //
@@ -12058,7 +12081,7 @@ public partial class alglib
             {
                 state.x[i_] = state.rx[i_];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needvmv = true;
             state.rstate.stage = 0;
@@ -12071,9 +12094,9 @@ public partial class alglib
             for(i=0; i<=state.n-1; i++)
             {
                 state.r[i] = state.b[i]-state.mv[i];
-                state.r2 = state.r2+state.r[i]*state.r[i];
-                state.meritfunction = state.meritfunction+state.mv[i]*state.rx[i]-2*state.b[i]*state.rx[i];
-                bnorm = bnorm+state.b[i]*state.b[i];
+                state.r2 += (state.r[i]*state.r[i]);
+                state.meritfunction = state.meritfunction+ (state.mv[i]*state.rx[i]) - 2*state.b[i]*state.rx[i];
+                bnorm += (state.b[i]*state.b[i]);
             }
             bnorm = Math.Sqrt(bnorm);
             
@@ -12121,7 +12144,7 @@ public partial class alglib
             {
                 state.x[i_] = state.r[i_];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needprec = true;
             state.rstate.stage = 2;
@@ -12143,7 +12166,7 @@ public partial class alglib
             {
                 goto lbl_11;
             }
-            state.repiterationscount = state.repiterationscount+1;
+            state.repiterationscount++;
             
             //
             // Calculate Alpha
@@ -12152,7 +12175,7 @@ public partial class alglib
             {
                 state.x[i_] = state.p[i_];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needvmv = true;
             state.rstate.stage = 3;
@@ -12181,9 +12204,9 @@ public partial class alglib
             state.alpha = 0;
             for(i=0; i<=state.n-1; i++)
             {
-                state.alpha = state.alpha+state.r[i]*state.z[i];
+                state.alpha += (state.r[i]*state.z[i]);
             }
-            state.alpha = state.alpha/state.vmv;
+            state.alpha /= state.vmv;
             if( !math.isfinite(state.alpha) )
             {
                 
@@ -12201,7 +12224,7 @@ public partial class alglib
             //
             for(i=0; i<=state.n-1; i++)
             {
-                state.cx[i] = state.rx[i]+state.alpha*state.p[i];
+                state.cx[i] = state.rx[i]+ (state.alpha*state.p[i]);
             }
             
             //
@@ -12220,7 +12243,7 @@ public partial class alglib
             //
             for(i=0; i<=state.n-1; i++)
             {
-                state.cr[i] = state.r[i]-state.alpha*state.mv[i];
+                state.cr[i] = state.r[i]- (state.alpha*state.mv[i]);
                 state.x[i] = state.cr[i];
             }
             goto lbl_13;
@@ -12233,7 +12256,7 @@ public partial class alglib
             {
                 state.x[i_] = state.cx[i_];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needmv = true;
             state.rstate.stage = 4;
@@ -12253,7 +12276,7 @@ public partial class alglib
             v = 0;
             for(i=0; i<=state.n-1; i++)
             {
-                v = v+state.mv[i]*state.cx[i]-2*state.b[i]*state.cx[i];
+                v = v+ (state.mv[i]*state.cx[i]) - 2*state.b[i]*state.cx[i];
             }
             if( (double)(v)<(double)(state.meritfunction) )
             {
@@ -12308,7 +12331,7 @@ public partial class alglib
             state.r2 = 0;
             for(i=0; i<=state.n-1; i++)
             {
-                state.r2 = state.r2+state.cr[i]*state.cr[i];
+                state.r2 += (state.cr[i]*state.cr[i]);
             }
             
             //
@@ -12377,7 +12400,7 @@ public partial class alglib
             //
             //prepere of parameters for next iteration
             //
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needprec = true;
             state.rstate.stage = 7;
@@ -12394,8 +12417,8 @@ public partial class alglib
                 uvar = 0;
                 for(i=0; i<=state.n-1; i++)
                 {
-                    state.beta = state.beta+state.cz[i]*state.cr[i];
-                    uvar = uvar+state.z[i]*state.r[i];
+                    state.beta += (state.cz[i]*state.cr[i]);
+                    uvar += (state.z[i]*state.r[i]);
                 }
                 
                 //
@@ -12412,7 +12435,7 @@ public partial class alglib
                 //
                 //calculate .BETA
                 //
-                state.beta = state.beta/uvar;
+                state.beta /= uvar;
                 
                 //
                 //check that .BETA neither INF nor NaN
@@ -12426,7 +12449,7 @@ public partial class alglib
                 }
                 for(i=0; i<=state.n-1; i++)
                 {
-                    state.p[i] = state.cz[i]+state.beta*state.p[i];
+                    state.p[i] = state.cz[i]+ (state.beta*state.p[i]);
                 }
             }
             else
@@ -12498,13 +12521,13 @@ public partial class alglib
             sparse.sparsematrix a,
             bool isupper,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int n = 0;
-            int i = 0;
+            var n = 0;
+            var i = 0;
             double v = 0;
             double vmv = 0;
-            int i_ = 0;
+            var i_ = 0;
 
             n = state.n;
             alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
@@ -12614,9 +12637,9 @@ public partial class alglib
         public static void lincgresults(lincgstate state,
             ref double[] x,
             lincgreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             x = new double[0];
 
@@ -12645,7 +12668,7 @@ public partial class alglib
         *************************************************************************/
         public static void lincgsetrestartfreq(lincgstate state,
             int srf,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetRestartFreq: you can not change restart frequency when LinCGIteration() is running");
             alglib.ap.assert(srf>0, "LinCGSetRestartFreq: non-positive SRF");
@@ -12673,7 +12696,7 @@ public partial class alglib
         *************************************************************************/
         public static void lincgsetrupdatefreq(lincgstate state,
             int freq,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinCGSetRUpdateFreq: you can not change update frequency when LinCGIteration() is running");
             alglib.ap.assert(freq>=0, "LinCGSetRUpdateFreq: non-positive Freq");
@@ -12696,7 +12719,7 @@ public partial class alglib
         *************************************************************************/
         public static void lincgsetxrep(lincgstate state,
             bool needxrep,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -12709,7 +12732,7 @@ public partial class alglib
              Copyright 14.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void lincgrestart(lincgstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.rstate.ia = new int[0+1];
             state.rstate.ra = new double[2+1];
@@ -12722,7 +12745,7 @@ public partial class alglib
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
         private static void clearrfields(lincgstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.xupdated = false;
             state.needmv = false;
@@ -12737,7 +12760,7 @@ public partial class alglib
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
         private static void updateitersdata(lincgstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.repiterationscount = 0;
             state.repnmv = 0;
@@ -12831,62 +12854,64 @@ public partial class alglib
                 tmpx = new double[0];
                 rstate = new rcommstate();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                linlsqrstate _result = new linlsqrstate();
-                _result.nes = (normestimator.normestimatorstate)nes.make_copy();
-                _result.rx = (double[])rx.Clone();
-                _result.b = (double[])b.Clone();
-                _result.n = n;
-                _result.m = m;
-                _result.prectype = prectype;
-                _result.ui = (double[])ui.Clone();
-                _result.uip1 = (double[])uip1.Clone();
-                _result.vi = (double[])vi.Clone();
-                _result.vip1 = (double[])vip1.Clone();
-                _result.omegai = (double[])omegai.Clone();
-                _result.omegaip1 = (double[])omegaip1.Clone();
-                _result.alphai = alphai;
-                _result.alphaip1 = alphaip1;
-                _result.betai = betai;
-                _result.betaip1 = betaip1;
-                _result.phibari = phibari;
-                _result.phibarip1 = phibarip1;
-                _result.phii = phii;
-                _result.rhobari = rhobari;
-                _result.rhobarip1 = rhobarip1;
-                _result.rhoi = rhoi;
-                _result.ci = ci;
-                _result.si = si;
-                _result.theta = theta;
-                _result.lambdai = lambdai;
-                _result.d = (double[])d.Clone();
-                _result.anorm = anorm;
-                _result.bnorm2 = bnorm2;
-                _result.dnorm = dnorm;
-                _result.r2 = r2;
-                _result.x = (double[])x.Clone();
-                _result.mv = (double[])mv.Clone();
-                _result.mtv = (double[])mtv.Clone();
-                _result.epsa = epsa;
-                _result.epsb = epsb;
-                _result.epsc = epsc;
-                _result.maxits = maxits;
-                _result.xrep = xrep;
-                _result.xupdated = xupdated;
-                _result.needmv = needmv;
-                _result.needmtv = needmtv;
-                _result.needmv2 = needmv2;
-                _result.needvmv = needvmv;
-                _result.needprec = needprec;
-                _result.repiterationscount = repiterationscount;
-                _result.repnmv = repnmv;
-                _result.repterminationtype = repterminationtype;
-                _result.running = running;
-                _result.userterminationneeded = userterminationneeded;
-                _result.tmpd = (double[])tmpd.Clone();
-                _result.tmpx = (double[])tmpx.Clone();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                var _result = new linlsqrstate
+                {
+                    nes = (normestimator.normestimatorstate)nes.make_copy(),
+                    rx = (double[])rx.Clone(),
+                    b = (double[])b.Clone(),
+                    n = n,
+                    m = m,
+                    prectype = prectype,
+                    ui = (double[])ui.Clone(),
+                    uip1 = (double[])uip1.Clone(),
+                    vi = (double[])vi.Clone(),
+                    vip1 = (double[])vip1.Clone(),
+                    omegai = (double[])omegai.Clone(),
+                    omegaip1 = (double[])omegaip1.Clone(),
+                    alphai = alphai,
+                    alphaip1 = alphaip1,
+                    betai = betai,
+                    betaip1 = betaip1,
+                    phibari = phibari,
+                    phibarip1 = phibarip1,
+                    phii = phii,
+                    rhobari = rhobari,
+                    rhobarip1 = rhobarip1,
+                    rhoi = rhoi,
+                    ci = ci,
+                    si = si,
+                    theta = theta,
+                    lambdai = lambdai,
+                    d = (double[])d.Clone(),
+                    anorm = anorm,
+                    bnorm2 = bnorm2,
+                    dnorm = dnorm,
+                    r2 = r2,
+                    x = (double[])x.Clone(),
+                    mv = (double[])mv.Clone(),
+                    mtv = (double[])mtv.Clone(),
+                    epsa = epsa,
+                    epsb = epsb,
+                    epsc = epsc,
+                    maxits = maxits,
+                    xrep = xrep,
+                    xupdated = xupdated,
+                    needmv = needmv,
+                    needmtv = needmtv,
+                    needmv2 = needmv2,
+                    needvmv = needvmv,
+                    needprec = needprec,
+                    repiterationscount = repiterationscount,
+                    repnmv = repnmv,
+                    repterminationtype = repterminationtype,
+                    running = running,
+                    userterminationneeded = userterminationneeded,
+                    tmpd = (double[])tmpd.Clone(),
+                    tmpx = (double[])tmpx.Clone(),
+                    rstate = (rcommstate)rstate.make_copy()
+                };
                 return _result;
             }
         };
@@ -12904,12 +12929,14 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                linlsqrreport _result = new linlsqrreport();
-                _result.iterationscount = iterationscount;
-                _result.nmv = nmv;
-                _result.terminationtype = terminationtype;
+                var _result = new linlsqrreport
+                {
+                    iterationscount = iterationscount,
+                    nmv = nmv,
+                    terminationtype = terminationtype
+                };
                 return _result;
             }
         };
@@ -12952,7 +12979,7 @@ public partial class alglib
         public static void linlsqrcreate(int m,
             int n,
             linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(m>0, "LinLSQRCreate: M<=0");
             alglib.ap.assert(n>0, "LinLSQRCreate: N<=0");
@@ -12978,9 +13005,9 @@ public partial class alglib
         public static void linlsqrcreatebuf(int m,
             int n,
             linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(m>0, "LinLSQRCreateBuf: M<=0");
             alglib.ap.assert(n>0, "LinLSQRCreateBuf: N<=0");
@@ -13017,7 +13044,7 @@ public partial class alglib
             state.b = new double[state.m];
             for(i=0; i<=n-1; i++)
             {
-                state.rx[i] = Double.NaN;
+                state.rx[i] = double.NaN;
             }
             for(i=0; i<=m-1; i++)
             {
@@ -13043,9 +13070,9 @@ public partial class alglib
         *************************************************************************/
         public static void linlsqrsetb(linlsqrstate state,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(!state.running, "LinLSQRSetB: you can not change B when LinLSQRIteration is running");
             alglib.ap.assert(state.m<=alglib.ap.len(b), "LinLSQRSetB: Length(B)<M");
@@ -13054,7 +13081,7 @@ public partial class alglib
             for(i=0; i<=state.m-1; i++)
             {
                 state.b[i] = b[i];
-                state.bnorm2 = state.bnorm2+b[i]*b[i];
+                state.bnorm2 += (b[i]*b[i]);
             }
         }
 
@@ -13072,7 +13099,7 @@ public partial class alglib
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrsetprecunit(linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetPrecUnit: you can not change preconditioner, because function LinLSQRIteration is running!");
             state.prectype = -1;
@@ -13091,7 +13118,7 @@ public partial class alglib
              Copyright 19.11.2012 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrsetprecdiag(linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
             state.prectype = 0;
@@ -13113,7 +13140,7 @@ public partial class alglib
         *************************************************************************/
         public static void linlsqrsetlambdai(linlsqrstate state,
             double lambdai,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetLambdaI: you can not set LambdaI, because function LinLSQRIteration is running");
             alglib.ap.assert(math.isfinite(lambdai) && (double)(lambdai)>=(double)(0), "LinLSQRSetLambdaI: LambdaI is infinite or NaN");
@@ -13127,13 +13154,13 @@ public partial class alglib
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static bool linlsqriteration(linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            int summn = 0;
+            var result = new bool();
+            var summn = 0;
             double bnorm = 0;
-            int i = 0;
-            int i_ = 0;
+            var i = 0;
+            var i_ = 0;
 
             
             //
@@ -13217,7 +13244,7 @@ public partial class alglib
             {
                 state.x[i_] = state.nes.x[i_];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needmv = true;
             state.rstate.stage = 0;
@@ -13242,7 +13269,7 @@ public partial class alglib
             //
             //matrix-vector multiplication
             //
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needmtv = true;
             state.rstate.stage = 1;
@@ -13339,7 +13366,7 @@ public partial class alglib
                 }
                 state.x[i] = state.ui[i];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needmtv = true;
             state.rstate.stage = 3;
@@ -13348,12 +13375,12 @@ public partial class alglib
             state.needmtv = false;
             for(i=0; i<=state.n-1; i++)
             {
-                state.mtv[i] = state.mtv[i]+state.lambdai*state.ui[state.m+i];
+                state.mtv[i] = state.mtv[i]+ (state.lambdai*state.ui[state.m+i]);
             }
             state.alphai = 0;
             for(i=0; i<=state.n-1; i++)
             {
-                state.alphai = state.alphai+state.mtv[i]*state.mtv[i];
+                state.alphai += (state.mtv[i]*state.mtv[i]);
             }
             state.alphai = Math.Sqrt(state.alphai);
             if( (double)(state.alphai)==(double)(0) )
@@ -13392,7 +13419,7 @@ public partial class alglib
             //
             // At I-th step State.RepIterationsCount=I.
             //
-            state.repiterationscount = state.repiterationscount+1;
+            state.repiterationscount++;
             
             //
             // Bidiagonalization part:
@@ -13411,7 +13438,7 @@ public partial class alglib
             {
                 state.x[i_] = state.vi[i_];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needmv = true;
             state.rstate.stage = 4;
@@ -13425,8 +13452,8 @@ public partial class alglib
             state.betaip1 = 0;
             for(i=0; i<=summn-1; i++)
             {
-                state.uip1[i] = state.mv[i]-state.alphai*state.ui[i];
-                state.betaip1 = state.betaip1+state.uip1[i]*state.uip1[i];
+                state.uip1[i] = state.mv[i]- (state.alphai*state.ui[i]);
+                state.betaip1 += (state.uip1[i]*state.uip1[i]);
             }
             if( (double)(state.betaip1)!=(double)(0) )
             {
@@ -13440,7 +13467,7 @@ public partial class alglib
             {
                 state.x[i_] = state.uip1[i_];
             }
-            state.repnmv = state.repnmv+1;
+            state.repnmv++;
             clearrfields(state, _params);
             state.needmtv = true;
             state.rstate.stage = 5;
@@ -13449,13 +13476,13 @@ public partial class alglib
             state.needmtv = false;
             for(i=0; i<=state.n-1; i++)
             {
-                state.mtv[i] = state.mtv[i]+state.lambdai*state.uip1[state.m+i];
+                state.mtv[i] = state.mtv[i]+ (state.lambdai*state.uip1[state.m+i]);
             }
             state.alphaip1 = 0;
             for(i=0; i<=state.n-1; i++)
             {
-                state.vip1[i] = state.mtv[i]-state.betaip1*state.vi[i];
-                state.alphaip1 = state.alphaip1+state.vip1[i]*state.vip1[i];
+                state.vip1[i] = state.mtv[i]- (state.betaip1*state.vi[i]);
+                state.alphaip1 += (state.vip1[i]*state.vip1[i]);
             }
             if( (double)(state.alphaip1)!=(double)(0) )
             {
@@ -13494,8 +13521,8 @@ public partial class alglib
             //
             for(i=0; i<=state.n-1; i++)
             {
-                state.d[i] = 1/state.rhoi*(state.vi[i]-state.theta*state.d[i]);
-                state.dnorm = state.dnorm+state.d[i]*state.d[i];
+                state.d[i] = 1/state.rhoi*(state.vi[i]- (state.theta*state.d[i]));
+                state.dnorm += (state.d[i]*state.d[i]);
             }
             if( (double)(Math.Sqrt(state.dnorm)*state.anorm)>=(double)(state.epsc) )
             {
@@ -13510,7 +13537,7 @@ public partial class alglib
             //
             for(i=0; i<=state.n-1; i++)
             {
-                state.rx[i] = state.rx[i]+state.phii/state.rhoi*state.omegai[i];
+                state.rx[i] = state.rx[i]+ (state.phii/state.rhoi*state.omegai[i]);
             }
             if( !state.xrep )
             {
@@ -13584,7 +13611,7 @@ public partial class alglib
             //
             for(i=0; i<=state.n-1; i++)
             {
-                state.omegaip1[i] = state.vip1[i]-state.theta/state.rhoi*state.omegai[i];
+                state.omegaip1[i] = state.vip1[i]- (state.theta/state.rhoi*state.omegai[i]);
             }
             
             //
@@ -13653,13 +13680,13 @@ public partial class alglib
         public static void linlsqrsolvesparse(linlsqrstate state,
             sparse.sparsematrix a,
             double[] b,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int n = 0;
-            int i = 0;
-            int j = 0;
-            int t0 = 0;
-            int t1 = 0;
+            var n = 0;
+            var i = 0;
+            var j = 0;
+            var t0 = 0;
+            var t1 = 0;
             double v = 0;
 
             n = state.n;
@@ -13774,7 +13801,7 @@ public partial class alglib
             double epsa,
             double epsb,
             int maxits,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(!state.running, "LinLSQRSetCond: you can not call this function when LinLSQRIteration is running");
             alglib.ap.assert(math.isfinite(epsa) && (double)(epsa)>=(double)(0), "LinLSQRSetCond: EpsA is negative, INF or NAN");
@@ -13824,9 +13851,9 @@ public partial class alglib
         public static void linlsqrresults(linlsqrstate state,
             ref double[] x,
             linlsqrreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             x = new double[0];
 
@@ -13860,7 +13887,7 @@ public partial class alglib
         *************************************************************************/
         public static void linlsqrsetxrep(linlsqrstate state,
             bool needxrep,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -13873,7 +13900,7 @@ public partial class alglib
              Copyright 30.11.2011 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrrestart(linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.rstate.ia = new int[1+1];
             state.rstate.ra = new double[0+1];
@@ -13897,9 +13924,9 @@ public partial class alglib
              Copyright 21.05.2018 by Bochkanov Sergey
         *************************************************************************/
         public static int linlsqrpeekiterationscount(linlsqrstate s,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             result = s.repiterationscount;
             return result;
@@ -13934,7 +13961,7 @@ public partial class alglib
              Copyright 08.10.2014 by Bochkanov Sergey
         *************************************************************************/
         public static void linlsqrrequesttermination(linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.userterminationneeded = true;
         }
@@ -13944,7 +13971,7 @@ public partial class alglib
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
         private static void clearrfields(linlsqrstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.xupdated = false;
             state.needmv = false;
@@ -13999,33 +14026,35 @@ public partial class alglib
                 rightpart = new double[0];
                 cgbuf = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                nleqstate _result = new nleqstate();
-                _result.n = n;
-                _result.m = m;
-                _result.epsf = epsf;
-                _result.maxits = maxits;
-                _result.xrep = xrep;
-                _result.stpmax = stpmax;
-                _result.x = (double[])x.Clone();
-                _result.f = f;
-                _result.fi = (double[])fi.Clone();
-                _result.j = (double[,])j.Clone();
-                _result.needf = needf;
-                _result.needfij = needfij;
-                _result.xupdated = xupdated;
-                _result.rstate = (rcommstate)rstate.make_copy();
-                _result.repiterationscount = repiterationscount;
-                _result.repnfunc = repnfunc;
-                _result.repnjac = repnjac;
-                _result.repterminationtype = repterminationtype;
-                _result.xbase = (double[])xbase.Clone();
-                _result.fbase = fbase;
-                _result.fprev = fprev;
-                _result.candstep = (double[])candstep.Clone();
-                _result.rightpart = (double[])rightpart.Clone();
-                _result.cgbuf = (double[])cgbuf.Clone();
+                var _result = new nleqstate
+                {
+                    n = n,
+                    m = m,
+                    epsf = epsf,
+                    maxits = maxits,
+                    xrep = xrep,
+                    stpmax = stpmax,
+                    x = (double[])x.Clone(),
+                    f = f,
+                    fi = (double[])fi.Clone(),
+                    j = (double[,])j.Clone(),
+                    needf = needf,
+                    needfij = needfij,
+                    xupdated = xupdated,
+                    rstate = (rcommstate)rstate.make_copy(),
+                    repiterationscount = repiterationscount,
+                    repnfunc = repnfunc,
+                    repnjac = repnjac,
+                    repterminationtype = repterminationtype,
+                    xbase = (double[])xbase.Clone(),
+                    fbase = fbase,
+                    fprev = fprev,
+                    candstep = (double[])candstep.Clone(),
+                    rightpart = (double[])rightpart.Clone(),
+                    cgbuf = (double[])cgbuf.Clone()
+                };
                 return _result;
             }
         };
@@ -14044,13 +14073,15 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                nleqreport _result = new nleqreport();
-                _result.iterationscount = iterationscount;
-                _result.nfunc = nfunc;
-                _result.njac = njac;
-                _result.terminationtype = terminationtype;
+                var _result = new nleqreport
+                {
+                    iterationscount = iterationscount,
+                    nfunc = nfunc,
+                    njac = njac,
+                    terminationtype = terminationtype
+                };
                 return _result;
             }
         };
@@ -14132,7 +14163,7 @@ public partial class alglib
             int m,
             double[] x,
             nleqstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(n>=1, "NLEQCreateLM: N<1!");
             alglib.ap.assert(m>=1, "NLEQCreateLM: M<1!");
@@ -14179,7 +14210,7 @@ public partial class alglib
         public static void nleqsetcond(nleqstate state,
             double epsf,
             int maxits,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(epsf), "NLEQSetCond: EpsF is not finite number!");
             alglib.ap.assert((double)(epsf)>=(double)(0), "NLEQSetCond: negative EpsF!");
@@ -14208,7 +14239,7 @@ public partial class alglib
         *************************************************************************/
         public static void nleqsetxrep(nleqstate state,
             bool needxrep,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.xrep = needxrep;
         }
@@ -14233,7 +14264,7 @@ public partial class alglib
         *************************************************************************/
         public static void nleqsetstpmax(nleqstate state,
             double stpmax,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(math.isfinite(stpmax), "NLEQSetStpMax: StpMax is not finite!");
             alglib.ap.assert((double)(stpmax)>=(double)(0), "NLEQSetStpMax: StpMax<0!");
@@ -14247,20 +14278,20 @@ public partial class alglib
              Copyright 20.03.2009 by Bochkanov Sergey
         *************************************************************************/
         public static bool nleqiteration(nleqstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
-            int n = 0;
-            int m = 0;
-            int i = 0;
+            var result = new bool();
+            var n = 0;
+            var m = 0;
+            var i = 0;
             double lambdaup = 0;
             double lambdadown = 0;
             double lambdav = 0;
             double rho = 0;
             double mu = 0;
             double stepnorm = 0;
-            bool b = new bool();
-            int i_ = 0;
+            var b = new bool();
+            var i_ = 0;
 
             
             //
@@ -14343,7 +14374,7 @@ public partial class alglib
             goto lbl_rcomm;
         lbl_0:
             state.needf = false;
-            state.repnfunc = state.repnfunc+1;
+            state.repnfunc++;
             for(i_=0; i_<=n-1;i_++)
             {
                 state.xbase[i_] = state.x[i_];
@@ -14401,8 +14432,8 @@ public partial class alglib
             goto lbl_rcomm;
         lbl_2:
             state.needfij = false;
-            state.repnfunc = state.repnfunc+1;
-            state.repnjac = state.repnjac+1;
+            state.repnfunc++;
+            state.repnjac++;
             ablas.rmatrixmv(n, m, state.j, 0, 0, 1, state.fi, 0, state.rightpart, 0, _params);
             for(i_=0; i_<=n-1;i_++)
             {
@@ -14464,7 +14495,7 @@ public partial class alglib
             }
             for(i_=0; i_<=n-1;i_++)
             {
-                state.x[i_] = state.x[i_] + stepnorm*state.candstep[i_];
+                state.x[i_] = state.x[i_] + (stepnorm *state.candstep[i_]);
             }
             b = true;
             for(i=0; i<=n-1; i++)
@@ -14495,7 +14526,7 @@ public partial class alglib
             goto lbl_rcomm;
         lbl_3:
             state.needf = false;
-            state.repnfunc = state.repnfunc+1;
+            state.repnfunc++;
             if( (double)(state.f)<(double)(state.fbase) )
             {
                 
@@ -14530,9 +14561,9 @@ public partial class alglib
             state.fbase = state.f;
             for(i_=0; i_<=n-1;i_++)
             {
-                state.xbase[i_] = state.xbase[i_] + stepnorm*state.candstep[i_];
+                state.xbase[i_] = state.xbase[i_] + (stepnorm *state.candstep[i_]);
             }
-            state.repiterationscount = state.repiterationscount+1;
+            state.repiterationscount++;
             
             //
             // Report new iteration
@@ -14630,7 +14661,7 @@ public partial class alglib
         public static void nleqresults(nleqstate state,
             ref double[] x,
             nleqreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = new double[0];
 
@@ -14652,9 +14683,9 @@ public partial class alglib
         public static void nleqresultsbuf(nleqstate state,
             ref double[] x,
             nleqreport rep,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             if( alglib.ap.len(x)<state.n )
             {
@@ -14690,9 +14721,9 @@ public partial class alglib
         *************************************************************************/
         public static void nleqrestartfrom(nleqstate state,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i_ = 0;
+            var i_ = 0;
 
             alglib.ap.assert(alglib.ap.len(x)>=state.n, "NLEQRestartFrom: Length(X)<N!");
             alglib.ap.assert(apserv.isfinitevector(x, state.n, _params), "NLEQRestartFrom: X contains infinite or NaN values!");
@@ -14712,7 +14743,7 @@ public partial class alglib
         Clears request fileds (to be sure that we don't forgot to clear something)
         *************************************************************************/
         private static void clearrequestfields(nleqstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             state.needf = false;
             state.needfij = false;
@@ -14726,9 +14757,9 @@ public partial class alglib
         private static bool increaselambda(ref double lambdav,
             ref double nu,
             double lambdaup,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool result = new bool();
+            var result = new bool();
             double lnlambda = 0;
             double lnnu = 0;
             double lnlambdaup = 0;
@@ -14748,7 +14779,7 @@ public partial class alglib
                 return result;
             }
             lambdav = lambdav*lambdaup*nu;
-            nu = nu*2;
+            nu *= 2;
             result = true;
             return result;
         }
@@ -14760,7 +14791,7 @@ public partial class alglib
         private static void decreaselambda(ref double lambdav,
             ref double nu,
             double lambdadown,
-            alglib.xparams _params)
+            xparams _params)
         {
             nu = 1;
             if( (double)(Math.Log(lambdav)+Math.Log(lambdadown))<(double)(Math.Log(math.minrealnumber)) )
@@ -14769,7 +14800,7 @@ public partial class alglib
             }
             else
             {
-                lambdav = lambdav*lambdadown;
+                lambdav *= lambdadown;
             }
         }
 

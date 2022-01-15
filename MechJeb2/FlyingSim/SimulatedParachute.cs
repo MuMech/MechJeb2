@@ -28,7 +28,7 @@ namespace MuMech
 
         private static readonly Pool<SimulatedParachute> pool = new Pool<SimulatedParachute>(Create, Reset);
 
-        public new static int PoolSize
+        public static new int PoolSize
         {
             get { return pool.Size; }
         }
@@ -40,7 +40,7 @@ namespace MuMech
 
         public override void Release()
         {
-            foreach (DragCube cube in cubes.Cubes)
+            foreach (var cube in cubes.Cubes)
             {
                 DragCubePool.Instance.Release(cube);
             }
@@ -53,7 +53,7 @@ namespace MuMech
 
         public static SimulatedParachute Borrow(ModuleParachute mp, ReentrySimulation.SimCurves simCurve, double startTime, int limitChutesStage)
         {
-            SimulatedParachute part = pool.Borrow();
+            var part = pool.Borrow();
             part.Init(mp.part, simCurve);
             part.Init(mp, startTime, limitChutesStage);
             return part;
@@ -74,16 +74,26 @@ namespace MuMech
             {
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     if (mp.Anim.isPlaying)
+                    {
                         timeSinceDeployment = mp.Anim[mp.semiDeployedAnimation].time;
+                    }
                     else
+                    {
                         timeSinceDeployment = 10000000;
+                    }
+
                     break;
 
                 case ModuleParachute.deploymentStates.DEPLOYED:
                     if (mp.Anim.isPlaying)
+                    {
                         timeSinceDeployment = mp.Anim[mp.fullyDeployedAnimation].time;
+                    }
                     else
+                    {
                         timeSinceDeployment = 10000000;
+                    }
+
                     break;
 
                 case ModuleParachute.deploymentStates.STOWED:
@@ -110,7 +120,9 @@ namespace MuMech
         public override Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
         {
             if (state != ModuleParachute.deploymentStates.SEMIDEPLOYED && state != ModuleParachute.deploymentStates.DEPLOYED)
+            {
                 return base.Drag(vesselVelocity, dragFactor, mach);
+            }
 
             return Vector3d.zero;
 
@@ -121,9 +133,11 @@ namespace MuMech
         public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             if (!willDeploy)
+            {
                 return false;
+            }
 
-            bool stateChanged = false;
+            var stateChanged = false;
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
@@ -152,7 +166,10 @@ namespace MuMech
         public override bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
         {
             if (!willDeploy)
+            {
                 return false;
+            }
+
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:

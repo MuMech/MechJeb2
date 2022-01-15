@@ -6,30 +6,30 @@ namespace MuMech
 {
     public class MechJebModuleScriptActionWaitFor : MechJebModuleScriptAction
     {
-        public static String NAME = "WaitFor";
+        public static string NAME = "WaitFor";
 
         /*
         [Persistent(pass = (int)Pass.Type)]
         private int actionType = 0;
         */
-        private MechJebModuleScriptCondition condition;
+        private readonly MechJebModuleScriptCondition condition;
 
         public MechJebModuleScriptActionWaitFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
         {
             condition = new MechJebModuleScriptCondition(scriptModule, core, this);
         }
 
-        override public void activateAction()
+        public override void activateAction()
         {
             base.activateAction();
         }
 
-        override public void endAction()
+        public override void endAction()
         {
             base.endAction();
         }
 
-        override public void WindowGUI(int windowID)
+        public override void WindowGUI(int windowID)
         {
             base.preWindowGUI(windowID);
             base.WindowGUI(windowID);
@@ -38,25 +38,22 @@ namespace MuMech
             base.postWindowGUI(windowID);
         }
 
-        override public void afterOnFixedUpdate()
+        public override void afterOnFixedUpdate()
         {
-            if (this.isStarted() && !this.isExecuted())
+            if (this.isStarted() && !this.isExecuted() && condition.checkCondition())
             {
-                if (condition.checkCondition())
-                {
-                    this.endAction();
-                }
+                this.endAction();
             }
         }
 
-        override public void postLoad(ConfigNode node)
+        public override void postLoad(ConfigNode node)
         {
             ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
         }
 
-        override public void postSave(ConfigNode node)
+        public override void postSave(ConfigNode node)
         {
-            ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
+            var conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
             conditionNode.CopyTo(node.AddNode("Condition"));
         }
     }

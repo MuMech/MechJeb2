@@ -23,16 +23,38 @@
 
         public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            if (global != null && global.HasNode(this.GetType().Name)) ConfigNode.LoadObjectFromConfig(this, global.GetNode(this.GetType().Name), (int)Pass.Global);
-            if (type != null && type.HasNode(this.GetType().Name)) ConfigNode.LoadObjectFromConfig(this, type.GetNode(this.GetType().Name), (int)Pass.Type);
-            if (local != null && local.HasNode(this.GetType().Name)) ConfigNode.LoadObjectFromConfig(this, local.GetNode(this.GetType().Name), (int)Pass.Local);
+            if (global?.HasNode(this.GetType().Name) == true)
+            {
+                ConfigNode.LoadObjectFromConfig(this, global.GetNode(this.GetType().Name), (int)Pass.Global);
+            }
+
+            if (type?.HasNode(this.GetType().Name) == true)
+            {
+                ConfigNode.LoadObjectFromConfig(this, type.GetNode(this.GetType().Name), (int)Pass.Type);
+            }
+
+            if (local?.HasNode(this.GetType().Name) == true)
+            {
+                ConfigNode.LoadObjectFromConfig(this, local.GetNode(this.GetType().Name), (int)Pass.Local);
+            }
         }
 
         public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, null).CopyTo(global.AddNode(this.GetType().Name));
-            if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null).CopyTo(type.AddNode(this.GetType().Name));
-            if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, null).CopyTo(local.AddNode(this.GetType().Name));
+            if (global != null)
+            {
+                ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, null).CopyTo(global.AddNode(this.GetType().Name));
+            }
+
+            if (type != null)
+            {
+                ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null).CopyTo(type.AddNode(this.GetType().Name));
+            }
+
+            if (local != null)
+            {
+                ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, null).CopyTo(local.AddNode(this.GetType().Name));
+            }
         }
 
         public virtual void ResetConfig()

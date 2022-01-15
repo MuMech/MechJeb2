@@ -8,7 +8,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime interceptInterval = 3600;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationLambert ()
         {
@@ -24,15 +24,20 @@ namespace MuMech
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)
+            {
                 throw new OperationException(Localizer.Format("#MechJeb_intercept_Exception1"));//must select a target to intercept.
-            if (o.referenceBody != target.TargetOrbit.referenceBody)
-                throw new OperationException(Localizer.Format("#MechJeb_intercept_Exception2"));//target must be in the same sphere of influence.
+            }
 
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            if (o.referenceBody != target.TargetOrbit.referenceBody)
+            {
+                throw new OperationException(Localizer.Format("#MechJeb_intercept_Exception2"));//target must be in the same sphere of influence.
+            }
+
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             var dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, UT, target.TargetOrbit, UT + interceptInterval);
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(dV, UT));
             return NodeList;
         }

@@ -9,7 +9,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newSMA = new EditableDoubleMult(800000, 1000);
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationSemiMajor ()
         {
@@ -24,7 +24,7 @@ namespace MuMech
 
         public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            var UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence)
             {
@@ -36,7 +36,7 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception",o.referenceBody.displayName) +  "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
+            var NodeList = new List<ManeuverParameters>();
             NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA), UT));
 
             return NodeList;

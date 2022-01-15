@@ -68,9 +68,9 @@ namespace MuMech
 
             if (Versioning.version_major == 1 && Versioning.version_minor >= 8)
             {
-                foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
+                foreach (var assembly in AssemblyLoader.loadedAssemblies)
                 {
-                    AssemblyName assemblyName = assembly.assembly.GetName();
+                    var assemblyName = assembly.assembly.GetName();
                     if (assemblyName.Name == "Firespitter" && assemblyName.Version <= Version.Parse("7.3.7175.38653"))
                     {
                         PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
@@ -110,7 +110,7 @@ namespace MuMech
         public void Start()
         {
             // Checkers are identified by the type name and version field name.
-            FieldInfo[] fields =
+            var fields =
                 getAllTypes()
                 .Where(t => t.Name == "CompatibilityChecker")
                 .Select(t => t.GetField("_version", BindingFlags.Static | BindingFlags.NonPublic))
@@ -121,14 +121,14 @@ namespace MuMech
             // Let the latest version of the checker execute.
             if (_version != fields.Max(f => (int)f.GetValue(null))) { return; }
 
-            Debug.Log(String.Format("[CompatibilityChecker] Running checker version {0} from '{1}'", _version, Assembly.GetExecutingAssembly().GetName().Name));
+            Debug.Log(string.Format("[CompatibilityChecker] Running checker version {0} from '{1}'", _version, Assembly.GetExecutingAssembly().GetName().Name));
 
             // Other checkers will see this version and not run.
             // This accomplishes the same as an explicit "ran" flag with fewer moving parts.
             _version = int.MaxValue;
 
             // A mod is incompatible if its compatibility checker has an IsCompatible method which returns false.
-            String[] incompatible =
+            var incompatible =
                 fields
                 .Select(f => f.DeclaringType.GetMethod("IsCompatible", Type.EmptyTypes))
                 .Where(m => m.IsStatic)
@@ -142,7 +142,7 @@ namespace MuMech
                     catch (Exception e)
                     {
                         // If a mod throws an exception from IsCompatible, it's not compatible.
-                        Debug.LogWarning(String.Format("[CompatibilityChecker] Exception while invoking IsCompatible() from '{0}':\n\n{1}", m.DeclaringType.Assembly.GetName().Name, e));
+                        Debug.LogWarning(string.Format("[CompatibilityChecker] Exception while invoking IsCompatible() from '{0}':\n\n{1}", m.DeclaringType.Assembly.GetName().Name, e));
                         return true;
                     }
                 })
@@ -150,7 +150,7 @@ namespace MuMech
                 .ToArray();
 
             // A mod is incompatible with Unity if its compatibility checker has an IsUnityCompatible method which returns false.
-            String[] incompatibleUnity =
+            var incompatibleUnity =
                 fields
                 .Select(f => f.DeclaringType.GetMethod("IsUnityCompatible", Type.EmptyTypes))
                 .Where(m => m != null)  // Mods without IsUnityCompatible() are assumed to be compatible.
@@ -165,7 +165,7 @@ namespace MuMech
                     catch (Exception e)
                     {
                         // If a mod throws an exception from IsUnityCompatible, it's not compatible.
-                        Debug.LogWarning(String.Format("[CompatibilityChecker] Exception while invoking IsUnityCompatible() from '{0}':\n\n{1}", m.DeclaringType.Assembly.GetName().Name, e));
+                        Debug.LogWarning(string.Format("[CompatibilityChecker] Exception while invoking IsUnityCompatible() from '{0}':\n\n{1}", m.DeclaringType.Assembly.GetName().Name, e));
                         return true;
                     }
                 })
@@ -175,7 +175,7 @@ namespace MuMech
             Array.Sort(incompatible);
             Array.Sort(incompatibleUnity);
 
-            String message = String.Empty;
+            var message = string.Empty;
 
             /*if (IsWin64())
             {
@@ -184,20 +184,20 @@ namespace MuMech
 
             if ((incompatible.Length > 0) || (incompatibleUnity.Length > 0))
             {
-                message += ((message == String.Empty) ? "Some" : "\n\nAdditionally, some") + " installed mods may be incompatible with this version of Kerbal Space Program. Features may be broken or disabled. Please check for updates to the listed mods.";
+                message += ((message == string.Empty) ? "Some" : "\n\nAdditionally, some") + " installed mods may be incompatible with this version of Kerbal Space Program. Features may be broken or disabled. Please check for updates to the listed mods.";
 
                 if (incompatible.Length > 0)
                 {
-                    Debug.LogWarning("[CompatibilityChecker] Incompatible mods detected: " + String.Join(", ", incompatible));
-                    message += String.Format("\n\nThese mods are incompatible with KSP {0}.{1}.{2}:\n\n", Versioning.version_major, Versioning.version_minor, Versioning.Revision);
-                    message += String.Join("\n", incompatible);
+                    Debug.LogWarning("[CompatibilityChecker] Incompatible mods detected: " + string.Join(", ", incompatible));
+                    message += string.Format("\n\nThese mods are incompatible with KSP {0}.{1}.{2}:\n\n", Versioning.version_major, Versioning.version_minor, Versioning.Revision);
+                    message += string.Join("\n", incompatible);
                 }
 
                 if (incompatibleUnity.Length > 0)
                 {
-                    Debug.LogWarning("[CompatibilityChecker] Incompatible mods (Unity) detected: " + String.Join(", ", incompatibleUnity));
-                    message += String.Format("\n\nThese mods are incompatible with Unity {0}:\n\n", Application.unityVersion);
-                    message += String.Join("\n", incompatibleUnity);
+                    Debug.LogWarning("[CompatibilityChecker] Incompatible mods (Unity) detected: " + string.Join(", ", incompatibleUnity));
+                    message += string.Format("\n\nThese mods are incompatible with Unity {0}:\n\n", Application.unityVersion);
+                    message += string.Join("\n", incompatibleUnity);
                 }
             }
 

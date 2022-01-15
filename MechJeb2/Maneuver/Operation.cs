@@ -19,9 +19,15 @@ namespace MuMech
 
     }
 
+    [Serializable]
     public class OperationException : Exception
     {
         public OperationException(string message) : base(message) {}
+
+        protected OperationException(System.Runtime.Serialization.SerializationInfo serializationInfo,System.Runtime.Serialization.StreamingContext streamingContext)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public abstract class Operation
@@ -61,17 +67,18 @@ namespace MuMech
             }
         }
 
-        private static List<Type> operations = new List<Type>();
+        private static readonly List<Type> operations = new List<Type>();
 
         private static void addTypes(Type[] types)
         {
             foreach(var t in types)
             {
-                if (t != null &&
-                        !t.IsAbstract
+                if (t?.IsAbstract == false
                         && typeof(Operation).IsAssignableFrom(t)
                         && t.GetConstructor(Type.EmptyTypes) != null)
+                {
                     operations.Add(t);
+                }
             }
         }
 
@@ -80,7 +87,7 @@ namespace MuMech
             // Use reflection to discover all classes that inherit from Operation and have a defalt constructor
             if (operations.Count == 0)
             {
-                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     try
                     {

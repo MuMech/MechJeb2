@@ -6,29 +6,29 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionDockingAutopilot : MechJebModuleScriptAction
 	{
-		public static String NAME = "DockingAutopilot";
-		private MechJebModuleDockingAutopilot autopilot;
-		private MechJebModuleDockingGuidance moduleGuidance;
+		public static string NAME = "DockingAutopilot";
+		private readonly MechJebModuleDockingAutopilot autopilot;
+		private readonly MechJebModuleDockingGuidance moduleGuidance;
 		[Persistent(pass = (int)Pass.Type)]
-		private double speedLimit;
+		private readonly double speedLimit;
 		[Persistent(pass = (int)Pass.Type)]
-		private double rol;
+		private readonly double rol;
 		[Persistent(pass = (int)Pass.Type)]
-		private bool forceRol;
+		private readonly bool forceRol;
 		[Persistent(pass = (int)Pass.Type)]
-		private double overridenSafeDistance;
+		private readonly double overridenSafeDistance;
 		[Persistent(pass = (int)Pass.Type)]
-		private bool overrideSafeDistance;
+		private readonly bool overrideSafeDistance;
 		[Persistent(pass = (int)Pass.Type)]
-		private bool overrideTargetSize;
+		private readonly bool overrideTargetSize;
 		[Persistent(pass = (int)Pass.Type)]
-		private double overridenTargetSize;
+		private readonly double overridenTargetSize;
 		[Persistent(pass = (int)Pass.Type)]
-		private float safeDistance;
+		private readonly float safeDistance;
 		[Persistent(pass = (int)Pass.Type)]
-		private float targetSize;
+		private readonly float targetSize;
 		[Persistent(pass = (int)Pass.Type)]
-		private bool drawBoundingBox;
+		private readonly bool drawBoundingBox;
 
 		public MechJebModuleScriptActionDockingAutopilot (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -47,7 +47,7 @@ namespace MuMech
 			this.drawBoundingBox = autopilot.drawBoundingBox;
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			autopilot.users.Add(this.moduleGuidance);
 			autopilot.speedLimit = speedLimit;
@@ -66,13 +66,13 @@ namespace MuMech
 			base.activateAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			autopilot.users.Remove(this.moduleGuidance);
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -84,7 +84,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (this.isStarted() && !this.isExecuted() && autopilot.dockingStep == MechJebModuleDockingAutopilot.DockingStep.OFF)
 			{
@@ -92,7 +92,7 @@ namespace MuMech
 			}
 		}
 
-		override public void onAbord()
+		public override void onAbord()
 		{
 			this.autopilot.enabled = false;
 			base.onAbord();

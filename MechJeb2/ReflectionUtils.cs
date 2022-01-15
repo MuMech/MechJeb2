@@ -9,7 +9,7 @@ namespace MuMech
 
         public static bool isAssemblyLoaded(string assemblyName)
         {
-            foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
+            foreach (var assembly in AssemblyLoader.loadedAssemblies)
             {
                 try
                 {
@@ -27,10 +27,10 @@ namespace MuMech
             return false;
         }
 
-        public static FieldInfo getFieldByReflection(String assemblyString, String className, String fieldName, BindingFlags flags = BindingFlags.Public|BindingFlags.Instance|BindingFlags.Static) {
-                string assemblyName = "";
+        public static FieldInfo getFieldByReflection(string assemblyString, string className, string fieldName, BindingFlags flags = BindingFlags.Public|BindingFlags.Instance|BindingFlags.Static) {
+                var assemblyName = "";
 
-                foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
+                foreach (var loaded in AssemblyLoader.loadedAssemblies)
                 {
                     if (loaded.assembly.GetName().Name == assemblyString)
                     {
@@ -44,7 +44,7 @@ namespace MuMech
                     return null;
                 }
 
-                Type type = Type.GetType(className + ", " + assemblyName);
+                var type = Type.GetType(className + ", " + assemblyName);
 
                 if (type == null)
                 {
@@ -55,11 +55,11 @@ namespace MuMech
                 return type.GetField(fieldName, flags);
         }
 
-        public static MethodInfo getMethodByReflection(String assemblyString, String className, String methodName, BindingFlags flags)
+        public static MethodInfo getMethodByReflection(string assemblyString, string className, string methodName, BindingFlags flags)
         {
-            string assemblyName = "";
+            var assemblyName = "";
 
-            foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
+            foreach (var loaded in AssemblyLoader.loadedAssemblies)
             {
                 if (loaded.assembly.GetName().Name == assemblyString)
                 {
@@ -73,7 +73,7 @@ namespace MuMech
                 return null;
             }
 
-            Type type = Type.GetType(className + ", " + assemblyName);
+            var type = Type.GetType(className + ", " + assemblyName);
 
             if (type == null)
             {
@@ -83,11 +83,11 @@ namespace MuMech
             return type.GetMethod(methodName, flags);
         }
 
-        public static MethodInfo getMethodByReflection(String assemblyString, String className, String methodName, BindingFlags flags, Type[] args)
+        public static MethodInfo getMethodByReflection(string assemblyString, string className, string methodName, BindingFlags flags, Type[] args)
         {
-            string assemblyName = "";
+            var assemblyName = "";
 
-            foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
+            foreach (var loaded in AssemblyLoader.loadedAssemblies)
             {
                 if (loaded.assembly.GetName().Name == assemblyString)
                 {
@@ -101,7 +101,7 @@ namespace MuMech
                 return null;
             }
 
-            Type type = Type.GetType(className + ", " + assemblyName);
+            var type = Type.GetType(className + ", " + assemblyName);
 
             if (type == null)
             {

@@ -45,8 +45,10 @@ namespace MuMech
                 btWhite.normal.textColor = Color.white;
                 btWhite.fixedWidth = 35;
 
-                btAuto = new GUIStyle (btNormal);
-                btAuto.padding = new RectOffset (8, 8, 8, 8);
+                btAuto = new GUIStyle(btNormal)
+                {
+                    padding = new RectOffset(8, 8, 8, 8)
+                };
                 btAuto.normal.textColor = Color.red;
                 btAuto.onActive = btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;
             }
@@ -57,7 +59,10 @@ namespace MuMech
                 }
             } else if (core.attitude.enabled && core.attitude.users.Count (u => !this.Equals (u)) > 0) {
                 if (core.attitude.users.Contains (this))
+                {
                     core.attitude.users.Remove (this); // so we don't suddenly turn on when the other autopilot finishes
+                }
+
                 GUILayout.Button ("Auto", btAuto, GUILayout.ExpandWidth (true));
             } else {
                 if (GUILayout.Button (Localizer.Format("#MechJeb_Aircraftauto_button2"))) {//Engage autopilot
@@ -66,20 +71,27 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal ();
-            bool AltitudeHold = autopilot.AltitudeHoldEnabled;
+            var AltitudeHold = autopilot.AltitudeHoldEnabled;
             autopilot.AltitudeHoldEnabled = GUILayout.Toggle (autopilot.AltitudeHoldEnabled, Localizer.Format("#MechJeb_Aircraftauto_Label1"), GUILayout.Width (140));//Altitude Hold
             if (AltitudeHold != autopilot.AltitudeHoldEnabled) {
                 if (autopilot.AltitudeHoldEnabled)
+                {
                     autopilot.EnableAltitudeHold ();
+                }
                 else
+                {
                     autopilot.DisableAltitudeHold ();
+                }
             }
-            bool change = false;
+            var change = false;
             if (GUILayout.Button("-", GUILayout.Width(18))) { AltitudeTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             AltitudeTargettmp.text = GUILayout.TextField (AltitudeTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
             if (GUILayout.Button("+", GUILayout.Width(18))) { AltitudeTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             if (AltitudeTargettmp < 0)
+            {
                 AltitudeTargettmp = 0;
+            }
+
             GUILayout.Label ("m", GUILayout.ExpandWidth (true));
             if (change || GUILayout.Button (Localizer.Format("#MechJeb_Aircraftauto_btnset1"), autopilot.AltitudeTarget == AltitudeTargettmp ? btWhite : btGreen)) {//Set
                 autopilot.AltitudeTarget = AltitudeTargettmp;
@@ -88,14 +100,18 @@ namespace MuMech
 
 
             if (!autopilot.AltitudeHoldEnabled) {
-                bool _VertSpeedHoldEnabled = autopilot.VertSpeedHoldEnabled;
+                var _VertSpeedHoldEnabled = autopilot.VertSpeedHoldEnabled;
                 GUILayout.BeginHorizontal ();
                 autopilot.VertSpeedHoldEnabled = GUILayout.Toggle (autopilot.VertSpeedHoldEnabled, Localizer.Format("#MechJeb_Aircraftauto_Label2"), GUILayout.Width (140));//Vertical Speed Hold
                 if (_VertSpeedHoldEnabled != autopilot.VertSpeedHoldEnabled) {
                     if (autopilot.VertSpeedHoldEnabled)
+                    {
                         autopilot.EnableVertSpeedHold ();
+                    }
                     else
+                    {
                         autopilot.DisableVertSpeedHold ();
+                    }
                 }
                 change = false;
                 if (GUILayout.Button("-", GUILayout.Width(18))) { VertSpeedTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
@@ -124,13 +140,17 @@ namespace MuMech
 
 
             GUILayout.BeginHorizontal ();
-            bool _HeadingHoldEnabled = autopilot.HeadingHoldEnabled;
+            var _HeadingHoldEnabled = autopilot.HeadingHoldEnabled;
             autopilot.HeadingHoldEnabled = GUILayout.Toggle (autopilot.HeadingHoldEnabled, Localizer.Format("#MechJeb_Aircraftauto_Label4"), GUILayout.Width (140));//"Heading Hold"
             if (_HeadingHoldEnabled != autopilot.HeadingHoldEnabled) {
                 if (autopilot.HeadingHoldEnabled)
+                {
                     autopilot.EnableHeadingHold ();
+                }
                 else
+                {
                     autopilot.DisableHeadingHold ();
+                }
             }
             change = false;
             if (GUILayout.Button("-", GUILayout.Width(18))) { HeadingTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
@@ -174,20 +194,27 @@ namespace MuMech
 
 
             GUILayout.BeginHorizontal ();
-            bool _AutoThrustCtrl = autopilot.SpeedHoldEnabled;
+            var _AutoThrustCtrl = autopilot.SpeedHoldEnabled;
             autopilot.SpeedHoldEnabled = GUILayout.Toggle (autopilot.SpeedHoldEnabled, Localizer.Format("#MechJeb_Aircraftauto_Label7"), GUILayout.Width (140));//Speed Hold
             if (autopilot.SpeedHoldEnabled != _AutoThrustCtrl) {
                 if (autopilot.SpeedHoldEnabled)
+                {
                     autopilot.EnableSpeedHold ();
+                }
                 else
+                {
                     autopilot.DisableSpeedHold ();
+                }
             }
             change = false;
             if (GUILayout.Button("-", GUILayout.Width(18))) { SpeedTargettmp.val -= (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             SpeedTargettmp.text = GUILayout.TextField (SpeedTargettmp.text, GUILayout.ExpandWidth (true), GUILayout.Width (60));
             if (GUILayout.Button("+", GUILayout.Width(18))) { SpeedTargettmp.val += (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); change = true; }
             if (SpeedTargettmp < 0)
+            {
                 SpeedTargettmp = 0;
+            }
+
             GUILayout.Label ("m/s", GUILayout.ExpandWidth (true));
             if (change || GUILayout.Button (Localizer.Format("#MechJeb_Aircraftauto_btnset7"), autopilot.SpeedTarget == SpeedTargettmp ? btWhite : btGreen)) {//Set
                 autopilot.SpeedTarget = SpeedTargettmp;
@@ -213,7 +240,9 @@ namespace MuMech
                 autopilot.AccKd.text = GUILayout.TextField (autopilot.AccKd.text, GUILayout.Width (40));
                 GUILayout.EndHorizontal ();
                 if (autopilot.SpeedHoldEnabled)
+                {
                     GUILayout.Label (Localizer.Format("#MecgJeb_Aircraftauto_error1", autopilot.a_err.ToString ("F2"),autopilot.RealAccelerationTarget.ToString ("F2"),autopilot.cur_acc.ToString ("F2")),GUILayout.ExpandWidth (false));//"error:"<<1>>" Target:"<<2>> " Cur:"<<3>>
+                }
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_Pitch"), GUILayout.ExpandWidth(true));//"VertSpeed"
@@ -225,7 +254,9 @@ namespace MuMech
                 autopilot.PitKd.text = GUILayout.TextField(autopilot.PitKd.text, GUILayout.Width(40));
                 GUILayout.EndHorizontal();
                 if (autopilot.VertSpeedHoldEnabled)
-                   GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.pitch_err.ToString("F2"), autopilot.RealPitchTarget.ToString("F2"), vesselState.currentPitch.ToString("F2"), autopilot.pitch_act.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
+                {
+                    GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.pitch_err.ToString("F2"), autopilot.RealPitchTarget.ToString("F2"), vesselState.currentPitch.ToString("F2"), autopilot.pitch_act.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
+                }
 
                 GUILayout.BeginHorizontal ();
                 GUILayout.Label (Localizer.Format("#MechJeb_Aircraftauto_Label10"), GUILayout.ExpandWidth (true));//Roll
@@ -237,7 +268,9 @@ namespace MuMech
                 autopilot.RolKd.text = GUILayout.TextField (autopilot.RolKd.text, GUILayout.Width (40));
                 GUILayout.EndHorizontal ();
                 if (autopilot.RollHoldEnabled)
+                {
                     GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.roll_err.ToString("F2"), autopilot.RealRollTarget.ToString("F2"), (-vesselState.currentRoll).ToString("F2"), autopilot.roll_act.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
+                }
 
                 GUILayout.BeginHorizontal ();
                 GUILayout.Label ("Yaw", GUILayout.ExpandWidth (true));
@@ -249,7 +282,9 @@ namespace MuMech
                 autopilot.YawKd.text = GUILayout.TextField (autopilot.YawKd.text, GUILayout.Width (40));
                 GUILayout.EndHorizontal ();
                 if (autopilot.HeadingHoldEnabled)
+                {
                     GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.yaw_err.ToString("F2"), autopilot.RealYawTarget.ToString("F2"), autopilot.curr_yaw.ToString("F2"), autopilot.yaw_act.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
+                }
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label (Localizer.Format("#MechJeb_Aircraftauto_Limits"), GUILayout.ExpandWidth (false));//Yaw Control Limit

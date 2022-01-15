@@ -40,7 +40,7 @@ namespace MuMech
             double u;
             double v;
             double w;
-            int i = 0;
+            var i = 0;
 
             //
             //  C is the square of the inverse of the golden ratio.
@@ -51,7 +51,7 @@ namespace MuMech
 
             sa = a;
             sb = b;
-            x  = sa + c * (b - a);
+            x  = sa + (c * (b - a));
             w  = x;
             v  = w;
             e  = 0.0;
@@ -62,12 +62,15 @@ namespace MuMech
             while (true)
             {
                 m  = 0.5 * (sa + sb);
-                t  = eps * Math.Abs(x) + tol;
+                t  = (eps * Math.Abs(x)) + tol;
                 t2 = 2.0 * t;
                 //
                 //  Check the stopping criterion.
                 //
-                if (Math.Abs(x - m) <= t2 - 0.5 * (sb - sa)) break;
+                if (Math.Abs(x - m) <= t2 - (0.5 * (sb - sa)))
+                {
+                    break;
+                }
                 //
                 //  Fit a parabola.
                 //
@@ -79,9 +82,13 @@ namespace MuMech
                 {
                     r = (x - w) * (fx - fv);
                     q = (x - v) * (fx - fw);
-                    p = (x - v) * q - (x - w) * r;
+                    p = ((x - v) * q) - ((x - w) * r);
                     q = 2.0 * (q - r);
-                    if (0.0 < q) p = -p;
+                    if (0.0 < q)
+                    {
+                        p = -p;
+                    }
+
                     q = Math.Abs(q);
                     r = e;
                     e = d;
@@ -102,9 +109,13 @@ namespace MuMech
                     if (u - sa < t2 || sb - u < t2)
                     {
                         if (x < m)
+                        {
                             d = t;
+                        }
                         else
+                        {
                             d = -t;
+                        }
                     }
                 }
                 //
@@ -113,9 +124,14 @@ namespace MuMech
                 else
                 {
                     if (x < m)
+                    {
                         e = sb - x;
+                    }
                     else
+                    {
                         e = sa - x;
+                    }
+
                     d = c * e;
                 }
 
@@ -123,11 +139,17 @@ namespace MuMech
                 //  F must not be evaluated too close to X.
                 //
                 if (t <= Math.Abs(d))
+                {
                     u = x + d;
+                }
                 else if (0.0 < d)
+                {
                     u = x + t;
+                }
                 else
+                {
                     u = x - t;
+                }
 
                 fu = f(u, o);
                 //
@@ -136,9 +158,14 @@ namespace MuMech
                 if (fu <= fx)
                 {
                     if (u < x)
+                    {
                         sb = x;
+                    }
                     else
+                    {
                         sa = x;
+                    }
+
                     v  = w;
                     fv = fw;
                     w  = x;
@@ -149,9 +176,13 @@ namespace MuMech
                 else
                 {
                     if (u < x)
+                    {
                         sa = u;
+                    }
                     else
+                    {
                         sb = u;
+                    }
 
                     if (fu <= fw || w == x)
                     {
@@ -168,7 +199,9 @@ namespace MuMech
                 }
 
                 if (i++ >= maxiter)
+                {
                     throw new TimeoutException("BrentRoot's minimization method: maximum iterations exceeded");
+                }
             }
 
             y = fx;

@@ -21,8 +21,8 @@ namespace MuMech
         ///
         public static double MinimumTimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double LAN, double inc)
         {
-            double one = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, inc);
-            double two = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, -inc);
+            var one = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, inc);
+            var two = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, -inc);
             return Math.Min(one, two);
         }
 
@@ -39,22 +39,23 @@ namespace MuMech
         public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double LAN, double inc)
         {
             // alpha is the 90 degree angle between the line of longitude and the equator and omitted
-            double beta = OrbitalManeuverCalculator.HeadingForInclination(inc, latitude) * UtilMath.Deg2Rad;
-            double c = Math.Abs(latitude) * UtilMath.Deg2Rad; // Abs for south hemisphere launch sites
+            var beta = OrbitalManeuverCalculator.HeadingForInclination(inc, latitude) * UtilMath.Deg2Rad;
+            var c = Math.Abs(latitude) * UtilMath.Deg2Rad; // Abs for south hemisphere launch sites
             // b is how many radians to the west of the launch site that the LAN is (east in south hemisphere)
-            double b = Math.Atan2( 2 * Math.Sin(beta), Math.Cos(beta) / Math.Tan(c/2) + Math.Tan(c/2) * Math.Cos(beta) ); // napier's analogies
+            var b = Math.Atan2( 2 * Math.Sin(beta), (Math.Cos(beta) / Math.Tan(c/2)) + (Math.Tan(c/2) * Math.Cos(beta))); // napier's analogies
             // LAN if we launched now
-            double LANnow = celestialLongitude - Math.Sign(latitude) * b * UtilMath.Rad2Deg;
+            var LANnow = celestialLongitude - (Math.Sign(latitude) * b * UtilMath.Rad2Deg);
 
 
             return MuUtils.ClampDegrees360( LAN - LANnow ) / 360 * rotationPeriod;
         }
 
         /// <summary>
-        /// Single impulse transfer from an ellipitical, non-coplanar parking orbit to an arbitrary hyperbolic v-infinity target.
-        ///
+        /// <para>Single impulse transfer from an ellipitical, non-coplanar parking orbit to an arbitrary hyperbolic v-infinity target.</para>
+        /// <para>
         /// Ocampo, C., & Saudemont, R. R. (2010). Initial Trajectory Model for a Multi-Maneuver Moon-to-Earth Abort Sequence.
         /// Journal of Guidance, Control, and Dynamics, 33(4), 1184–1194.
+        /// </para>
         /// </summary>
         ///
         /// <param name="mu">Gravitational parameter of central body.</param>
@@ -69,19 +70,21 @@ namespace MuMech
         public static void singleImpulseHyperbolicBurn(double mu, Vector3d r0, Vector3d v0, Vector3d vInf,
                 out Vector3d vNeg, out Vector3d vPos, out Vector3d r, out double dt, bool debug = false)
         {
-            Func<double, object?, double> f = delegate(double testrot, object ign) {
-                singleImpulseHyperbolicBurn(mu, r0, v0, vInf, out Vector3d vneg, out Vector3d vpos, out _, out _, (float)testrot, debug);
+            Func<double, object, double> f = (double testrot, object ign) =>
+            {
+                singleImpulseHyperbolicBurn(mu, r0, v0, vInf, out var vneg, out var vpos, out _, out _, (float)testrot, debug);
                 return (vpos - vneg).magnitude;
             };
-            BrentMin.Minimize(f, -30, 30, 1e-6, out double rot, out double _, null);
+            BrentMin.Minimize(f, -30, 30, 1e-6, out var rot, out var _, null);
             singleImpulseHyperbolicBurn(mu, r0, v0, vInf, out vNeg, out vPos, out r, out dt, (float)rot, debug);
         }
 
         /// <summary>
-        /// This is the implementation function of the single impulse transfer from an elliptical, non-coplanar parking orbit.
-        ///
+        /// <para>This is the implementation function of the single impulse transfer from an elliptical, non-coplanar parking orbit.</para>
+        /// <para>
         /// It could be called directly with e.g. rotation of zero to bypass the line search for the rotation which wil be nearly
         /// optimal in many cases, but fails in the kinds of nearly coplanar conditions which are common in KSP.
+        /// </para>
         /// </summary>
         ///
         /// <param name="mu">Gravitational parameter of central body.</param>
@@ -100,10 +103,11 @@ namespace MuMech
         }
 
         /// <summary>
-        /// This is the implementation function of the single impulse transfer from an elliptical, non-coplanar parking orbit.
-        ///
+        /// <para>This is the implementation function of the single impulse transfer from an elliptical, non-coplanar parking orbit.</para>
+        /// <para>
         /// It could be called directly with e.g. rotation of zero to bypass the line search for the rotation which wil be nearly
         /// optimal in many cases, but fails in the kinds of nearly coplanar conditions which are common in KSP.
+        /// </para>
         /// </summary>
         ///
         /// <param name="mu">Gravitational parameter of central body.</param>
@@ -126,32 +130,36 @@ namespace MuMech
             }
 
             // angular momentum of the parking orbit
-            Vector3d h0 = RCross(r0, v0);
+            var h0 = RCross(r0, v0);
 
             // semi major axis of parking orbit
-            double a0 = 1.0 / (2.0 / r0.magnitude - v0.sqrMagnitude / mu);
+            var a0 = 1.0 / ((2.0 / r0.magnitude) - (v0.sqrMagnitude / mu));
 
             // sma of hyperbolic ejection orbit
-            double af = - mu / vInf.sqrMagnitude;
+            var af = - mu / vInf.sqrMagnitude;
 
             // parking orbit angular momentum unit
-            Vector3d h0_hat = h0/h0.magnitude;
+            var h0_hat = h0/h0.magnitude;
 
             // eccentricity vector of the parking orbit
-            Vector3d ecc = RCross(v0,h0)/mu - r0/r0.magnitude;
+            var ecc = (RCross(v0,h0)/mu) - (r0 /r0.magnitude);
 
             // eccentricity of the parking orbit.
-            double e0 = ecc.magnitude;
+            var e0 = ecc.magnitude;
 
             // semilatus rectum of parking orbit
-            double p0 = a0 * ( 1 - e0 * e0 );
+            var p0 = a0 * ( 1 - (e0 * e0));
 
             // parking orbit periapsis position unit vector
             Vector3d rp0_hat;
             if ( Math.Abs(e0) > 1e-14 )
+            {
                 rp0_hat = ecc/e0;
+            }
             else
+            {
                 rp0_hat = r0/r0.magnitude;
+            }
 
             if (debug)
             {
@@ -159,10 +167,10 @@ namespace MuMech
             }
 
             // parking orbit periapsis velocity unit vector
-            Vector3d vp0_hat = RCross(h0, rp0_hat).normalized;
+            var vp0_hat = RCross(h0, rp0_hat).normalized;
 
             // direction of hyperbolic v-infinity vector
-            Vector3d v_inf_hat = vInf.normalized;
+            var v_inf_hat = vInf.normalized;
 
             // 2 cases for finding hf_hat
             Vector3d hf_hat;
@@ -197,10 +205,10 @@ namespace MuMech
             }
 
             // true anomaly of r1 on the parking orbit
-            double nu_10 = Math.Sign(Vector3d.Dot(h0_hat, RCross(rp0_hat, r1_hat))) * Math.Acos(Vector3d.Dot(rp0_hat,r1_hat));
+            var nu_10 = Math.Sign(Vector3d.Dot(h0_hat, RCross(rp0_hat, r1_hat))) * Math.Acos(Vector3d.Dot(rp0_hat,r1_hat));
 
             // length of the position vector of the burn on the parking orbit
-            double r1 = p0 / ( 1 + e0 * Math.Cos(nu_10) );
+            var r1 = p0 / ( 1 + (e0 * Math.Cos(nu_10)));
 
             // position of the burn
             r = r1 * r1_hat;
@@ -211,56 +219,56 @@ namespace MuMech
             }
 
             // constant
-            double k = - af / r1;
+            var k = - af / r1;
 
             // angle between vInf and the r1 burn
-            double delta_nu = Math.Acos(MuUtils.Clamp(Vector3d.Dot(r1_hat, v_inf_hat), -1, 1));
+            var delta_nu = Math.Acos(MuUtils.Clamp(Vector3d.Dot(r1_hat, v_inf_hat), -1, 1));
 
             // eccentricity of the hyperbolic ejection orbit
-            double sindnu  = Math.Sin(delta_nu);
-            double sin2dnu = sindnu * sindnu;
-            double cosdnu  = Math.Cos(delta_nu);
-            double ef = Math.Max(Math.Sqrt(sin2dnu + 2*k*k + 2*k*(1-cosdnu) + sindnu*Math.Sqrt(sin2dnu + 4*k*(1-cosdnu)))/(Math.Sqrt(2)*k), 1 + MuUtils.DBL_EPSILON);
+            var sindnu  = Math.Sin(delta_nu);
+            var sin2dnu = sindnu * sindnu;
+            var cosdnu  = Math.Cos(delta_nu);
+            var ef = Math.Max(Math.Sqrt(sin2dnu + (2 *k*k) + (2 *k*(1-cosdnu)) + (sindnu *Math.Sqrt(sin2dnu + (4 *k*(1-cosdnu))))) /(Math.Sqrt(2)*k), 1 + MuUtils.DBL_EPSILON);
 
             // semilatus rectum of hyperbolic ejection orbit
-            double pf = af * ( 1 - ef*ef );
+            var pf = af * ( 1 - (ef * ef));
 
             // true anomaly of the vInf on the hyperbolic ejection orbit
-            double nu_inf = Math.Acos(-1/ef);
+            var nu_inf = Math.Acos(-1/ef);
 
             // true anomaly of the burn on the hyperbolic ejection orbit
-            double nu_1f = Math.Acos(MuUtils.Clamp(-1/ef * cosdnu + Math.Sqrt(ef*ef-1)/ef * sindnu, -1, 1));
+            var nu_1f = Math.Acos(MuUtils.Clamp((-1/ef * cosdnu) + (Math.Sqrt((ef * ef) - 1)/ef * sindnu), -1, 1));
 
             // turning angle of the hyperbolic orbit
-            double delta = 2 * Math.Asin(1/ef);
+            var delta = 2 * Math.Asin(1/ef);
 
             // incoming hyperbolic velocity unit vector
-            Vector3d v_inf_minus_hat = Math.Cos(delta) * v_inf_hat + Math.Sin(delta) * RCross(v_inf_hat, hf_hat);
+            var v_inf_minus_hat = (Math.Cos(delta) * v_inf_hat) + (Math.Sin(delta) * RCross(v_inf_hat, hf_hat));
 
             // periapsis position and velocity vectors of the hyperbolic ejection orbit
-            Vector3d rpf_hat = v_inf_minus_hat - v_inf_hat;
-            rpf_hat = rpf_hat / rpf_hat.magnitude;
-            Vector3d vpf_hat = v_inf_minus_hat + v_inf_hat;
-            vpf_hat = vpf_hat / vpf_hat.magnitude;
+            var rpf_hat = v_inf_minus_hat - v_inf_hat;
+            rpf_hat /= rpf_hat.magnitude;
+            var vpf_hat = v_inf_minus_hat + v_inf_hat;
+            vpf_hat /= vpf_hat.magnitude;
 
             // compute the velocity on the hyperbola and the parking orbit
-            vPos = Math.Sqrt(mu/pf) * ( -Math.Sin(nu_1f) * rpf_hat + ( ef + Math.Cos(nu_1f) ) * vpf_hat );
-            vNeg = Math.Sqrt(mu/p0) * ( -Math.Sin(nu_10) * rp0_hat + ( e0 + Math.Cos(nu_10) ) * vp0_hat );
+            vPos = Math.Sqrt(mu/pf) * ((-Math.Sin(nu_1f) * rpf_hat) + (( ef + Math.Cos(nu_1f) ) * vpf_hat));
+            vNeg = Math.Sqrt(mu/p0) * ((-Math.Sin(nu_10) * rp0_hat) + (( e0 + Math.Cos(nu_10) ) * vp0_hat));
 
             // compute nu of the reference position on the parking orbit
-            Vector3d r0_hat = r0/r0.magnitude;
-            double nu0 = Math.Sign(Vector3d.Dot(h0_hat, RCross(rp0_hat, r0_hat))) * Math.Acos(Vector3d.Dot(rp0_hat,r0_hat));
+            var r0_hat = r0/r0.magnitude;
+            var nu0 = Math.Sign(Vector3d.Dot(h0_hat, RCross(rp0_hat, r0_hat))) * Math.Acos(Vector3d.Dot(rp0_hat,r0_hat));
 
             // mean angular motion of the parking orbit (rad/time)
-            double n = 1/Math.Sqrt( a0*a0*a0 / mu );
+            var n = 1/Math.Sqrt( a0*a0*a0 / mu );
 
             // eccentric anomalies of reference position and r1 on the parking orbit (rad)
-            double E0 = Math.Atan2(Math.Sqrt(1 - e0*e0) * Math.Sin(nu0), e0 + Math.Cos(nu0));
-            double E1 = Math.Atan2(Math.Sqrt(1 - e0*e0) * Math.Sin(nu_10), e0 + Math.Cos(nu_10));
+            var E0 = Math.Atan2(Math.Sqrt(1 - (e0 * e0)) * Math.Sin(nu0), e0 + Math.Cos(nu0));
+            var E1 = Math.Atan2(Math.Sqrt(1 - (e0 * e0)) * Math.Sin(nu_10), e0 + Math.Cos(nu_10));
 
             // mean anomalies of reference position and r1 on the parking orbit (rad)
-            double M0 = E0 - e0 * Math.Sin( E0 );
-            double M1 = E1 - e0 * Math.Sin( E1 );
+            var M0 = E0 - (e0 * Math.Sin( E0 ));
+            var M1 = E1 - (e0 * Math.Sin( E1 ));
 
             if (debug)
             {

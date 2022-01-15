@@ -18,12 +18,18 @@ namespace MuMech
             if (GUILayout.Button(buttonText))
             {
                 if (ExtendingOrRetracting())
+                {
                     return;
+                }
 
                 if (!extended)
+                {
                     ExtendAll();
+                }
                 else
+                {
                     RetractAll();
+                }
             }
         }
 

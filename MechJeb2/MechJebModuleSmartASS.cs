@@ -74,13 +74,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public Vector6.Direction advDirection = Vector6.Direction.FORWARD;
         [Persistent(pass = (int)Pass.Local)]
-        public Boolean forceRol = false;
+        public bool forceRol = false;
 
         [Persistent(pass = (int)Pass.Local)]
-        public Boolean forcePitch = true;
+        public bool forcePitch = true;
 
         [Persistent(pass = (int)Pass.Local)]
-        public Boolean forceYaw = true;
+        public bool forceYaw = true;
 
 
         [Persistent(pass = (int)Pass.Global)]
@@ -121,7 +121,7 @@ namespace MuMech
         protected void ForceRoll()
         {
             GUILayout.BeginHorizontal();
-            bool _forceRol = forceRol;
+            var _forceRol = forceRol;
             forceRol = GUILayout.Toggle(forceRol, Localizer.Format("#MechJeb_SmartASS_checkbox3"), GUILayout.ExpandWidth(false));//"Force Roll :"
             if (_forceRol != forceRol)
             {
@@ -136,7 +136,9 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
             if (target != Target.OFF)
+            {
                 Engage(false);
+            }
         }
 
 
@@ -167,7 +169,10 @@ namespace MuMech
                 if (autoDisableSmartASS)
                 {
                     target = Target.OFF;
-                    if (core.attitude.users.Contains(this)) core.attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    if (core.attitude.users.Contains(this))
+                    {
+                        core.attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    }
                 }
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button57"), btAuto, GUILayout.ExpandWidth(true));//"AUTO"
             }
@@ -227,7 +232,7 @@ namespace MuMech
                         TargetButton(Target.VERTICAL_PLUS);
                         GUILayout.EndHorizontal();
                         if (target == Target.SURFACE) {
-                            bool changed = false;
+                            var changed = false;
                         	GUILayout.BeginHorizontal();
                             forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("HDG", srfHdg, "°", 37);
@@ -298,7 +303,7 @@ namespace MuMech
                             core.attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         } else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE)
                         {
-                            bool changed = false;
+                            var changed = false;
                             GUILayout.BeginHorizontal();
                             forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 37);
@@ -418,9 +423,9 @@ namespace MuMech
 
         public void Engage(bool resetPID = true)
         {
-            Quaternion attitude = new Quaternion();
-            Vector3d direction = Vector3d.zero;
-            AttitudeReference reference = AttitudeReference.ORBIT;
+            var attitude = new Quaternion();
+            var direction = Vector3d.zero;
+            var reference = AttitudeReference.ORBIT;
             switch (target)
             {
                 case Target.OFF:
@@ -528,9 +533,13 @@ namespace MuMech
             }
 
             if (direction != Vector3d.zero)
+            {
                 core.attitude.attitudeTo(direction, reference, this);
+            }
             else
+            {
                 core.attitude.attitudeTo(attitude, reference, this);
+            }
 
             if (resetPID) { core.attitude.Controller.Reset(); }
         }

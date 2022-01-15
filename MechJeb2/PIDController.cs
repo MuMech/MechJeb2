@@ -19,8 +19,8 @@ namespace MuMech
         public double Compute(double error)
         {
             intAccum += error * TimeWarp.fixedDeltaTime;
-            double action = (Kp * error) + (Ki * intAccum) + (Kd * (error - prevError) / TimeWarp.fixedDeltaTime);
-            double clamped = Math.Max(min, Math.Min(max, action));
+            var action = (Kp * error) + (Ki * intAccum) + (Kd * (error - prevError) / TimeWarp.fixedDeltaTime);
+            var clamped = Math.Max(min, Math.Min(max, action));
             if (clamped != action)
             {
                 intAccum -= error * TimeWarp.fixedDeltaTime;
@@ -77,8 +77,8 @@ namespace MuMech
         public Vector3d Compute(Vector3d error)
         {
             intAccum += error * TimeWarp.fixedDeltaTime;
-            Vector3d action = (Kp * error) + (Ki * intAccum) + (Kd * (error - prevError) / TimeWarp.fixedDeltaTime);
-            Vector3d clamped = new Vector3d(Math.Max(min, Math.Min(max, action.x)), Math.Max(min, Math.Min(max, action.y)), Math.Max(min, Math.Min(max, action.z)));
+            var action = (Kp * error) + (Ki * intAccum) + (Kd * (error - prevError) / TimeWarp.fixedDeltaTime);
+            var clamped = new Vector3d(Math.Max(min, Math.Min(max, action.x)), Math.Max(min, Math.Min(max, action.y)), Math.Max(min, Math.Min(max, action.z)));
             if (Math.Abs((clamped - action).magnitude) > 0.01)
             {
                 intAccum -= error * TimeWarp.fixedDeltaTime;
@@ -145,7 +145,7 @@ namespace MuMech
 
             propAct = error * Kp;
 
-            Vector3d action = propAct + derivativeAct + intAccum;
+            var action = propAct + derivativeAct + intAccum;
 
             // action clamp
             action = new Vector3d(Math.Max(min, Math.Min(max, action.x)),
@@ -157,7 +157,7 @@ namespace MuMech
 		public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d Wlimit )
 		{
 			derivativeAct = omega * Kd;
-            Wlimit = Wlimit * Kd;
+            Wlimit *= Kd;
 
 			// integral actíon + Anti Windup
 			intAccum.x = (Math.Abs(derivativeAct.x) < 0.6 * max) ? intAccum.x + (error.x * Ki * TimeWarp.fixedDeltaTime) : 0.9 * intAccum.x;
@@ -166,7 +166,7 @@ namespace MuMech
 
 			propAct = error * Kp;
 
-			Vector3d action = propAct + intAccum;
+			var action = propAct + intAccum;
 
             // Clamp (propAct + intAccum) to limit the angular velocity:
 			action = new Vector3d(Math.Max(-Wlimit.x, Math.Min(Wlimit.x, action.x)),
@@ -239,7 +239,7 @@ namespace MuMech
 
             propAct = Vector3d.Scale(error, Kp);
 
-            Vector3d action = propAct + intAccum;
+            var action = propAct + intAccum;
 
             // Clamp (propAct + intAccum) to limit the angular velocity:
             action = new Vector3d(Math.Max(-Wlimit.x, Math.Min(Wlimit.x, action.x)),

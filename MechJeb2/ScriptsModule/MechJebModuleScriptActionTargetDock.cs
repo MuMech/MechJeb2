@@ -6,11 +6,11 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionTargetDock : MechJebModuleScriptAction
 	{
-		public static String NAME = "TargetDock";
+		public static string NAME = "TargetDock";
 
-		private List<Part> dockingPartsList = new List<Part>();
-		private List<String> dockingPartsNames = new List<String>();
-		private List<String> controlPartsNames = new List<String>();
+		private readonly List<Part> dockingPartsList = new List<Part>();
+		private readonly List<string> dockingPartsNames = new List<string>();
+		private readonly List<string> controlPartsNames = new List<string>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -27,11 +27,11 @@ namespace MuMech
 			this.dockingPartsList.Clear();
 			this.dockingPartsNames.Clear();
 			this.controlPartsNames.Clear();
-			foreach (Vessel vessel in FlightGlobals.Vessels)
+			foreach (var vessel in FlightGlobals.Vessels)
 			{
 				if (vessel.state != Vessel.State.DEAD)
 				{
-					foreach (ModuleDockingNode node in vessel.FindPartModulesImplementing<ModuleDockingNode>())
+					foreach (var node in vessel.FindPartModulesImplementing<ModuleDockingNode>())
 					{
 						this.dockingPartsList.Add(node.part);
 						this.dockingPartsNames.Add(node.part.partInfo.title);
@@ -41,46 +41,40 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>() != null && dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>() != null)
 			{
-				//Check if the target dock is a shielded dock: Open the shield
-				if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator != null)
-				{
-					if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
-					{
-						if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
-						{
-							dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
-						}
-					}
-				}
-				//Check if the "Control" dock is a shielded dock: Open the shield
-				if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator != null)
-				{
-					if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.actionAvailable)
-					{
-						if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
-						{
-							dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
-						}
-					}
-				}
-				dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().SetAsTarget(); //Set target
+                //Check if the target dock is a shielded dock: Open the shield
+                if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator?.actionAvailable == true)
+                {
+                    if (dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+                    {
+                        dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+                    }
+                }
+                //Check if the "Control" dock is a shielded dock: Open the shield
+                if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator?.actionAvailable == true)
+                {
+                    if (dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Progress == 0)
+                    {
+                        dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().deployAnimator.Toggle();
+                    }
+                }
+                dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>().SetAsTarget(); //Set target
 				this.core.target.Set(dockingPartsList[selectedPartIndex].GetModule<ModuleDockingNode>());
 				dockingPartsList[controlFromPartIndex].GetModule<ModuleDockingNode>().MakeReferenceTransform(); //set "control from here"
 			}
 			this.endAction ();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -139,12 +133,12 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0 && controlFromPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{
-				int i = 0;
-				foreach (Part part in dockingPartsList)
+				var i = 0;
+				foreach (var part in dockingPartsList)
 				{
 					if (part.flightID == selectedPartFlightID)
 					{

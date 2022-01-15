@@ -115,22 +115,22 @@ namespace MuMech
 		[ValueInfoItem("#MechJeb_Speederror", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed error
 		public double speedErr;
 		public double tgtSpeed;
-		public MuMech.MovingAverage etaSpeed = new MovingAverage(50);
+		public MovingAverage etaSpeed = new MovingAverage(50);
 		private double lastETA = 0;
 		private float lastThrottle = 0;
 		double curSpeed;
 
 		public double HeadingToPos(Vector3 fromPos, Vector3 toPos)
 		{
-			Transform origin = mainBody.transform;
+			var origin = mainBody.transform;
 
 			// thanks to Cilph who did most of this since I don't understand anything ~ BR2k
-			Vector3 up = fromPos - origin.position; // position relative to origin, "up" vector
+			var up = fromPos - origin.position; // position relative to origin, "up" vector
 			up.Normalize();
 
 			// mark north and target directions on horizontal plane
-			Vector3 north = Vector3.ProjectOnPlane(origin.up, up);
-			Vector3 target = Vector3.ProjectOnPlane(toPos - fromPos, up); // no need to normalize
+			var north = Vector3.ProjectOnPlane(origin.up, up);
+			var target = Vector3.ProjectOnPlane(toPos - fromPos, up); // no need to normalize
 
 			// apply protractor
 			return Vector3.SignedAngle(north, target, up);
@@ -146,7 +146,7 @@ namespace MuMech
 			if (wheelbases.Count == 0) { OnVesselModified(vessel); }
 			traction = 0;
 
-			for (int i = 0; i < wheelbases.Count; i++)
+			for (var i = 0; i < wheelbases.Count; i++)
 			{
 				if (wheelbases[i].isGrounded)
 				{
@@ -175,9 +175,9 @@ namespace MuMech
 		public override void Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
 		{ // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up -- should be done now?
 			if (orbit.referenceBody != lastBody) { WaypointIndex = -1; Waypoints.Clear(); }
-			MechJebWaypoint wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
+			var wp = (WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null);
 
-			bool brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
+			var brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
 			curSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 
 			CalculateTraction();
@@ -187,27 +187,29 @@ namespace MuMech
 			{
 				if (ControlHeading)
 				{
-					double newHeading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
+					var newHeading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
 
 					// update GUI text only if the value changed
 					if (newHeading != heading)
-						heading.val = newHeading;
-				}
+                    {
+                        heading.val = newHeading;
+                    }
+                }
 				if (ControlSpeed)
 				{
-					MechJebWaypoint nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
-					float distance = Vector3.Distance(vessel.CoM, wp.Position);
+					var nextWP = (WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : (LoopWaypoints ? Waypoints[0] : null));
+					var distance = Vector3.Distance(vessel.CoM, wp.Position);
 					if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
 					// var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
 					double maxSpeed = (wp.MaxSpeed > 0 ? wp.MaxSpeed : speed); // speed used to go towards the waypoint, using the waypoints maxSpeed if set or just stick with the set speed
-					double minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
+					var minSpeed = (wp.MinSpeed > 0 ? wp.MinSpeed :
 								(nextWP != null ? TurningSpeed((nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed), MuUtils.ClampDegrees180(heading - HeadingToPos(wp.Position, nextWP.Position))) :
 								(distance - wp.Radius > 50 ? turnSpeed.val : 1)));
 					minSpeed = (wp.Quicksave ? 1 : minSpeed);
 					// ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
-					double newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
+					var newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
 					newSpeed = (newSpeed > turnSpeed ? TurningSpeed(newSpeed, headingErr) : newSpeed); // reduce speed when turning a lot
-					float radius = Math.Max(wp.Radius, 10);
+					var radius = Math.Max(wp.Radius, 10);
 					if (distance < radius)
 					{
 						if (WaypointIndex + 1 >= Waypoints.Count) // last waypoint
@@ -246,15 +248,12 @@ namespace MuMech
 							if (wp.Quicksave)
 							{
 								newSpeed = 0;
-								if (curSpeed < brakeSpeedLimit)
-								{
-									if (FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR)
-									{
-										WaypointIndex++;
-										QuickSaveLoad.QuickSave();
-									}
-								}
-							}
+                                if (curSpeed < brakeSpeedLimit && FlightGlobals.ClearToSave() == ClearToSaveStatus.CLEAR)
+                                {
+                                    WaypointIndex++;
+                                    QuickSaveLoad.QuickSave();
+                                }
+                            }
 							else
 							{
 								WaypointIndex++;
@@ -275,9 +274,9 @@ namespace MuMech
 				headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
 				if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
 				{
-					float limit = (Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Square(curSpeed)), 0.1f, 1f) : 1f);
+					var limit = (Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Square(curSpeed)), 0.1f, 1f) : 1f);
 					// turnSpeed needs to be higher than curSpeed or it will never steer as much as it could even at 0.2m/s above it
-					double act = headingPID.Compute(headingErr);
+					var act = headingPID.Compute(headingErr);
 					if (traction >= tractionLimit) {
 						s.wheelSteer = Mathf.Clamp((float)act, -limit, limit);
 						// prevents it from flying above a waypoint and landing with steering at max while still going fast
@@ -298,9 +297,9 @@ namespace MuMech
 				speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
 				if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
 				{
-					float act = (float)speedPID.Compute(speedErr);
-					s.wheelThrottle = Mathf.Clamp(act, -1f, 1f);
-					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
+					var act = (float)speedPID.Compute(speedErr);
+                    s.wheelThrottle = Mathf.Clamp(act, -1f, 1f);
+					if (curSpeed < 0 && s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
 					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
 					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Math.Sign(curSpeed) == 0) {
 						brake = true;
@@ -311,24 +310,25 @@ namespace MuMech
 
 			if (StabilityControl)
 			{
-				RaycastHit hit;
-				Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
-				Vector3 norm = hit.normal;
+                Physics.Raycast(vessel.CoM + (vesselState.surfaceVelocity * terrainLookAhead) + (vesselState.up * 100), -vesselState.up, out var hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
+                var norm = hit.normal;
 
 				if (!core.attitude.users.Contains(this))
 				{
 					core.attitude.users.Add(this);
 				}
-				float fSpeed = (float)curSpeed;
-				Vector3 fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
-							vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed) : // and then add the steering
+				var fSpeed = (float)curSpeed;
+				var fwd = (Vector3)(traction > 0 ? // V when the speed is low go for the vessels forward, else with a bit of velocity
+                            (vesselState.forward * 4) - (vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed)) : // and then add the steering
 							vesselState.surfaceVelocity); // in the air so follow velocity
 				Vector3.OrthoNormalize(ref norm, ref fwd);
-				Quaternion quat = Quaternion.LookRotation(fwd, norm);
+				var quat = Quaternion.LookRotation(fwd, norm);
 
 				if (vesselState.torqueAvailable.sqrMagnitude > 0)
-					core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
-			}
+                {
+                    core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+                }
+            }
 
 			if (BrakeOnEnergyDepletion)
 			{
@@ -455,12 +455,12 @@ namespace MuMech
 
 			if (local != null)
 			{
-				ConfigNode wps = local.GetNode("Waypoints");
-				if (wps != null && wps.HasNode("Waypoint"))
+				var wps = local.GetNode("Waypoints");
+				if (wps?.HasNode("Waypoint") == true)
 				{
 					int.TryParse(wps.GetValue("Index"), out WaypointIndex);
 					Waypoints.Clear();
-					foreach (ConfigNode cn in wps.GetNodes("Waypoint"))
+					foreach (var cn in wps.GetNodes("Waypoint"))
 					{
 						Waypoints.Add(new MechJebWaypoint(cn));
 					}
@@ -472,14 +472,17 @@ namespace MuMech
 		{
 			base.OnSave(local, type, global);
 
-			if (local == null) return;
+			if (local == null)
+            {
+                return;
+            }
 
-			if (local.HasNode("Waypoints")) { local.RemoveNode("Waypoints"); }
+            if (local.HasNode("Waypoints")) { local.RemoveNode("Waypoints"); }
 
 			if (Waypoints.Count > 0) {
-				ConfigNode cn = local.AddNode("Waypoints");
+				var cn = local.AddNode("Waypoints");
 				cn.AddValue("Index", WaypointIndex);
-				foreach (MechJebWaypoint wp in Waypoints) {
+				foreach (var wp in Waypoints) {
 					cn.AddNode(wp.ToConfigNode());
 				}
 			}

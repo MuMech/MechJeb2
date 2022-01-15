@@ -6,11 +6,11 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionThrottle : MechJebModuleScriptAction //TODO: Experimental script module. Not working for the moment
 	{
-		public static String NAME = "Throttle";
+		public static string NAME = "Throttle";
 
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt burnIndex = 0;
-		private List<String> burnRates = new List<String>();
+		private readonly List<string> burnRates = new List<string>();
 
 		public MechJebModuleScriptActionThrottle (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -27,13 +27,13 @@ namespace MuMech
 			burnRates.Add("100%");
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 
-			float throttle = (float)burnIndex*0.1f;
+			var throttle = (float)burnIndex*0.1f;
 			//core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
-			Vessel vessel = FlightGlobals.ActiveVessel;
+			var vessel = FlightGlobals.ActiveVessel;
 			if (core.rcs.enabled)
 			{
 				Vector3d target = vessel.ReferenceTransform.InverseTransformDirection(new Vector3d(vessel.up.x*throttle, vessel.up.y*throttle, vessel.up.z*throttle));
@@ -54,12 +54,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

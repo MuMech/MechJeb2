@@ -54,8 +54,11 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button1")))//"\nRestore factory default settings\n"
             {
                 KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_global.cfg").Delete();
-                if (vessel != null && vessel.vesselName != null)
+                if (vessel?.vesselName != null)
+                {
                     KSP.IO.FileInfo.CreateForType<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg").Delete();
+                }
+
                 core.ReloadAllComputerModules();
                 GuiUtils.SetGUIScale(1);
             }
@@ -96,14 +99,16 @@ namespace MuMech
             dontUseDropDownMenu = GUILayout.Toggle(dontUseDropDownMenu, Localizer.Format("#MechJeb_Settings_checkbox1"));//"Replace drop down menu with arrow selector"
             GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
 
-            MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+            var ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.useTitlebarDragging").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Menu.useAppLauncher").DrawItem();
             if (ToolbarManager.ToolbarAvailable || core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
+            {
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
+            }
 
             ed.registry.Find(i => i.id == "General:Menu.MenuPosition").DrawItem();
 

@@ -20,7 +20,7 @@ namespace MuMech
 
             core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox1"));//RCS auto mode
 
-            int currentController = core.attitude.activeController;
+            var currentController = core.attitude.activeController;
             if (GUILayout.Toggle(currentController == 0, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox2")))//MJAttitudeController
             {
                 currentController = 0;
@@ -71,7 +71,7 @@ namespace MuMech
                     GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
-                Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.InvertNoNaN());
+                var ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.InvertNoNaN());
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label4"), GUILayout.ExpandWidth(true));//MOI / torque
@@ -103,7 +103,7 @@ namespace MuMech
             }
 
 
-            MechJebModuleDebugArrows arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
+            var arrows = core.GetComputerModule<MechJebModuleDebugArrows>();
 
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeAdjust_Label9"), arrows.arrowsLength, "", 50);//Arrows length
 

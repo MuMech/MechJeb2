@@ -1,4 +1,4 @@
-/*************************************************************************
+﻿/*************************************************************************
 ALGLIB 3.18.0 (source code generated 2021-10-25)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
@@ -17,9 +17,7 @@ A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
-#pragma warning disable 162
-#pragma warning disable 164
-#pragma warning disable 219
+#pragma warning disable 162, 164, 219
 using System;
 
 public partial class alglib
@@ -47,7 +45,7 @@ public partial class alglib
             _innerobj = new hqrnd.hqrndstate();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new hqrndstate((hqrnd.hqrndstate)_innerobj.make_copy());
         }
@@ -56,7 +54,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private hqrnd.hqrndstate _innerobj;
+        private readonly hqrnd.hqrndstate _innerobj;
         public hqrnd.hqrndstate innerobj { get { return _innerobj; } }
         public hqrndstate(hqrnd.hqrndstate obj)
         {
@@ -77,7 +75,7 @@ public partial class alglib
         hqrnd.hqrndrandomize(state.innerobj, null);
     }
     
-    public static void hqrndrandomize(out hqrndstate state, alglib.xparams _params)
+    public static void hqrndrandomize(out hqrndstate state, xparams _params)
     {
         state = new hqrndstate();
         hqrnd.hqrndrandomize(state.innerobj, _params);
@@ -95,7 +93,7 @@ public partial class alglib
         hqrnd.hqrndseed(s1, s2, state.innerobj, null);
     }
     
-    public static void hqrndseed(int s1, int s2, out hqrndstate state, alglib.xparams _params)
+    public static void hqrndseed(int s1, int s2, out hqrndstate state, xparams _params)
     {
         state = new hqrndstate();
         hqrnd.hqrndseed(s1, s2, state.innerobj, _params);
@@ -116,7 +114,7 @@ public partial class alglib
         return hqrnd.hqrnduniformr(state.innerobj, null);
     }
     
-    public static double hqrnduniformr(hqrndstate state, alglib.xparams _params)
+    public static double hqrnduniformr(hqrndstate state, xparams _params)
     {
     
         return hqrnd.hqrnduniformr(state.innerobj, _params);
@@ -140,7 +138,7 @@ public partial class alglib
         return hqrnd.hqrnduniformi(state.innerobj, n, null);
     }
     
-    public static int hqrnduniformi(hqrndstate state, int n, alglib.xparams _params)
+    public static int hqrnduniformi(hqrndstate state, int n, xparams _params)
     {
     
         return hqrnd.hqrnduniformi(state.innerobj, n, _params);
@@ -163,7 +161,7 @@ public partial class alglib
         return hqrnd.hqrndnormal(state.innerobj, null);
     }
     
-    public static double hqrndnormal(hqrndstate state, alglib.xparams _params)
+    public static double hqrndnormal(hqrndstate state, xparams _params)
     {
     
         return hqrnd.hqrndnormal(state.innerobj, _params);
@@ -185,7 +183,7 @@ public partial class alglib
         hqrnd.hqrndnormalv(state.innerobj, n, ref x, null);
     }
     
-    public static void hqrndnormalv(hqrndstate state, int n, out double[] x, alglib.xparams _params)
+    public static void hqrndnormalv(hqrndstate state, int n, out double[] x, xparams _params)
     {
         x = new double[0];
         hqrnd.hqrndnormalv(state.innerobj, n, ref x, _params);
@@ -207,7 +205,7 @@ public partial class alglib
         hqrnd.hqrndnormalm(state.innerobj, m, n, ref x, null);
     }
     
-    public static void hqrndnormalm(hqrndstate state, int m, int n, out double[,] x, alglib.xparams _params)
+    public static void hqrndnormalm(hqrndstate state, int m, int n, out double[,] x, xparams _params)
     {
         x = new double[0,0];
         hqrnd.hqrndnormalm(state.innerobj, m, n, ref x, _params);
@@ -228,7 +226,7 @@ public partial class alglib
         hqrnd.hqrndunit2(state.innerobj, ref x, ref y, null);
     }
     
-    public static void hqrndunit2(hqrndstate state, out double x, out double y, alglib.xparams _params)
+    public static void hqrndunit2(hqrndstate state, out double x, out double y, xparams _params)
     {
         x = 0;
         y = 0;
@@ -253,7 +251,7 @@ public partial class alglib
         hqrnd.hqrndnormal2(state.innerobj, ref x1, ref x2, null);
     }
     
-    public static void hqrndnormal2(hqrndstate state, out double x1, out double x2, alglib.xparams _params)
+    public static void hqrndnormal2(hqrndstate state, out double x1, out double x2, xparams _params)
     {
         x1 = 0;
         x2 = 0;
@@ -274,7 +272,7 @@ public partial class alglib
         return hqrnd.hqrndexponential(state.innerobj, lambdav, null);
     }
     
-    public static double hqrndexponential(hqrndstate state, double lambdav, alglib.xparams _params)
+    public static double hqrndexponential(hqrndstate state, double lambdav, xparams _params)
     {
     
         return hqrnd.hqrndexponential(state.innerobj, lambdav, _params);
@@ -302,7 +300,7 @@ public partial class alglib
         return hqrnd.hqrnddiscrete(state.innerobj, x, n, null);
     }
     
-    public static double hqrnddiscrete(hqrndstate state, double[] x, int n, alglib.xparams _params)
+    public static double hqrnddiscrete(hqrndstate state, double[] x, int n, xparams _params)
     {
     
         return hqrnd.hqrnddiscrete(state.innerobj, x, n, _params);
@@ -333,7 +331,7 @@ public partial class alglib
         return hqrnd.hqrndcontinuous(state.innerobj, x, n, null);
     }
     
-    public static double hqrndcontinuous(hqrndstate state, double[] x, int n, alglib.xparams _params)
+    public static double hqrndcontinuous(hqrndstate state, double[] x, int n, xparams _params)
     {
     
         return hqrnd.hqrndcontinuous(state.innerobj, x, n, _params);
@@ -365,7 +363,7 @@ public partial class alglib
             _innerobj = new xdebug.xdebugrecord1();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new xdebugrecord1((xdebug.xdebugrecord1)_innerobj.make_copy());
         }
@@ -374,7 +372,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private xdebug.xdebugrecord1 _innerobj;
+        private readonly xdebug.xdebugrecord1 _innerobj;
         public xdebug.xdebugrecord1 innerobj { get { return _innerobj; } }
         public xdebugrecord1(xdebug.xdebugrecord1 obj)
         {
@@ -399,7 +397,7 @@ public partial class alglib
         xdebug.xdebuginitrecord1(rec1.innerobj, null);
     }
     
-    public static void xdebuginitrecord1(out xdebugrecord1 rec1, alglib.xparams _params)
+    public static void xdebuginitrecord1(out xdebugrecord1 rec1, xparams _params)
     {
         rec1 = new xdebugrecord1();
         xdebug.xdebuginitrecord1(rec1.innerobj, _params);
@@ -420,7 +418,7 @@ public partial class alglib
         return xdebug.xdebugb1count(a, null);
     }
     
-    public static int xdebugb1count(bool[] a, alglib.xparams _params)
+    public static int xdebugb1count(bool[] a, xparams _params)
     {
     
         return xdebug.xdebugb1count(a, _params);
@@ -442,7 +440,7 @@ public partial class alglib
         xdebug.xdebugb1not(a, null);
     }
     
-    public static void xdebugb1not(ref bool[] a, alglib.xparams _params)
+    public static void xdebugb1not(ref bool[] a, xparams _params)
     {
     
         xdebug.xdebugb1not(a, _params);
@@ -464,7 +462,7 @@ public partial class alglib
         xdebug.xdebugb1appendcopy(ref a, null);
     }
     
-    public static void xdebugb1appendcopy(ref bool[] a, alglib.xparams _params)
+    public static void xdebugb1appendcopy(ref bool[] a, xparams _params)
     {
     
         xdebug.xdebugb1appendcopy(ref a, _params);
@@ -486,7 +484,7 @@ public partial class alglib
         xdebug.xdebugb1outeven(n, ref a, null);
     }
     
-    public static void xdebugb1outeven(int n, out bool[] a, alglib.xparams _params)
+    public static void xdebugb1outeven(int n, out bool[] a, xparams _params)
     {
         a = new bool[0];
         xdebug.xdebugb1outeven(n, ref a, _params);
@@ -507,7 +505,7 @@ public partial class alglib
         return xdebug.xdebugi1sum(a, null);
     }
     
-    public static int xdebugi1sum(int[] a, alglib.xparams _params)
+    public static int xdebugi1sum(int[] a, xparams _params)
     {
     
         return xdebug.xdebugi1sum(a, _params);
@@ -529,7 +527,7 @@ public partial class alglib
         xdebug.xdebugi1neg(a, null);
     }
     
-    public static void xdebugi1neg(ref int[] a, alglib.xparams _params)
+    public static void xdebugi1neg(ref int[] a, xparams _params)
     {
     
         xdebug.xdebugi1neg(a, _params);
@@ -551,7 +549,7 @@ public partial class alglib
         xdebug.xdebugi1appendcopy(ref a, null);
     }
     
-    public static void xdebugi1appendcopy(ref int[] a, alglib.xparams _params)
+    public static void xdebugi1appendcopy(ref int[] a, xparams _params)
     {
     
         xdebug.xdebugi1appendcopy(ref a, _params);
@@ -575,7 +573,7 @@ public partial class alglib
         xdebug.xdebugi1outeven(n, ref a, null);
     }
     
-    public static void xdebugi1outeven(int n, out int[] a, alglib.xparams _params)
+    public static void xdebugi1outeven(int n, out int[] a, xparams _params)
     {
         a = new int[0];
         xdebug.xdebugi1outeven(n, ref a, _params);
@@ -596,7 +594,7 @@ public partial class alglib
         return xdebug.xdebugr1sum(a, null);
     }
     
-    public static double xdebugr1sum(double[] a, alglib.xparams _params)
+    public static double xdebugr1sum(double[] a, xparams _params)
     {
     
         return xdebug.xdebugr1sum(a, _params);
@@ -618,7 +616,7 @@ public partial class alglib
         xdebug.xdebugr1neg(a, null);
     }
     
-    public static void xdebugr1neg(ref double[] a, alglib.xparams _params)
+    public static void xdebugr1neg(ref double[] a, xparams _params)
     {
     
         xdebug.xdebugr1neg(a, _params);
@@ -640,7 +638,7 @@ public partial class alglib
         xdebug.xdebugr1appendcopy(ref a, null);
     }
     
-    public static void xdebugr1appendcopy(ref double[] a, alglib.xparams _params)
+    public static void xdebugr1appendcopy(ref double[] a, xparams _params)
     {
     
         xdebug.xdebugr1appendcopy(ref a, _params);
@@ -664,7 +662,7 @@ public partial class alglib
         xdebug.xdebugr1outeven(n, ref a, null);
     }
     
-    public static void xdebugr1outeven(int n, out double[] a, alglib.xparams _params)
+    public static void xdebugr1outeven(int n, out double[] a, xparams _params)
     {
         a = new double[0];
         xdebug.xdebugr1outeven(n, ref a, _params);
@@ -685,7 +683,7 @@ public partial class alglib
         return xdebug.xdebugc1sum(a, null);
     }
     
-    public static complex xdebugc1sum(complex[] a, alglib.xparams _params)
+    public static complex xdebugc1sum(complex[] a, xparams _params)
     {
     
         return xdebug.xdebugc1sum(a, _params);
@@ -707,7 +705,7 @@ public partial class alglib
         xdebug.xdebugc1neg(a, null);
     }
     
-    public static void xdebugc1neg(ref complex[] a, alglib.xparams _params)
+    public static void xdebugc1neg(ref complex[] a, xparams _params)
     {
     
         xdebug.xdebugc1neg(a, _params);
@@ -729,7 +727,7 @@ public partial class alglib
         xdebug.xdebugc1appendcopy(ref a, null);
     }
     
-    public static void xdebugc1appendcopy(ref complex[] a, alglib.xparams _params)
+    public static void xdebugc1appendcopy(ref complex[] a, xparams _params)
     {
     
         xdebug.xdebugc1appendcopy(ref a, _params);
@@ -753,7 +751,7 @@ public partial class alglib
         xdebug.xdebugc1outeven(n, ref a, null);
     }
     
-    public static void xdebugc1outeven(int n, out complex[] a, alglib.xparams _params)
+    public static void xdebugc1outeven(int n, out complex[] a, xparams _params)
     {
         a = new complex[0];
         xdebug.xdebugc1outeven(n, ref a, _params);
@@ -774,7 +772,7 @@ public partial class alglib
         return xdebug.xdebugb2count(a, null);
     }
     
-    public static int xdebugb2count(bool[,] a, alglib.xparams _params)
+    public static int xdebugb2count(bool[,] a, xparams _params)
     {
     
         return xdebug.xdebugb2count(a, _params);
@@ -796,7 +794,7 @@ public partial class alglib
         xdebug.xdebugb2not(a, null);
     }
     
-    public static void xdebugb2not(ref bool[,] a, alglib.xparams _params)
+    public static void xdebugb2not(ref bool[,] a, xparams _params)
     {
     
         xdebug.xdebugb2not(a, _params);
@@ -818,7 +816,7 @@ public partial class alglib
         xdebug.xdebugb2transpose(ref a, null);
     }
     
-    public static void xdebugb2transpose(ref bool[,] a, alglib.xparams _params)
+    public static void xdebugb2transpose(ref bool[,] a, xparams _params)
     {
     
         xdebug.xdebugb2transpose(ref a, _params);
@@ -840,7 +838,7 @@ public partial class alglib
         xdebug.xdebugb2outsin(m, n, ref a, null);
     }
     
-    public static void xdebugb2outsin(int m, int n, out bool[,] a, alglib.xparams _params)
+    public static void xdebugb2outsin(int m, int n, out bool[,] a, xparams _params)
     {
         a = new bool[0,0];
         xdebug.xdebugb2outsin(m, n, ref a, _params);
@@ -861,7 +859,7 @@ public partial class alglib
         return xdebug.xdebugi2sum(a, null);
     }
     
-    public static int xdebugi2sum(int[,] a, alglib.xparams _params)
+    public static int xdebugi2sum(int[,] a, xparams _params)
     {
     
         return xdebug.xdebugi2sum(a, _params);
@@ -883,7 +881,7 @@ public partial class alglib
         xdebug.xdebugi2neg(a, null);
     }
     
-    public static void xdebugi2neg(ref int[,] a, alglib.xparams _params)
+    public static void xdebugi2neg(ref int[,] a, xparams _params)
     {
     
         xdebug.xdebugi2neg(a, _params);
@@ -905,7 +903,7 @@ public partial class alglib
         xdebug.xdebugi2transpose(ref a, null);
     }
     
-    public static void xdebugi2transpose(ref int[,] a, alglib.xparams _params)
+    public static void xdebugi2transpose(ref int[,] a, xparams _params)
     {
     
         xdebug.xdebugi2transpose(ref a, _params);
@@ -927,7 +925,7 @@ public partial class alglib
         xdebug.xdebugi2outsin(m, n, ref a, null);
     }
     
-    public static void xdebugi2outsin(int m, int n, out int[,] a, alglib.xparams _params)
+    public static void xdebugi2outsin(int m, int n, out int[,] a, xparams _params)
     {
         a = new int[0,0];
         xdebug.xdebugi2outsin(m, n, ref a, _params);
@@ -948,7 +946,7 @@ public partial class alglib
         return xdebug.xdebugr2sum(a, null);
     }
     
-    public static double xdebugr2sum(double[,] a, alglib.xparams _params)
+    public static double xdebugr2sum(double[,] a, xparams _params)
     {
     
         return xdebug.xdebugr2sum(a, _params);
@@ -970,7 +968,7 @@ public partial class alglib
         xdebug.xdebugr2neg(a, null);
     }
     
-    public static void xdebugr2neg(ref double[,] a, alglib.xparams _params)
+    public static void xdebugr2neg(ref double[,] a, xparams _params)
     {
     
         xdebug.xdebugr2neg(a, _params);
@@ -992,7 +990,7 @@ public partial class alglib
         xdebug.xdebugr2transpose(ref a, null);
     }
     
-    public static void xdebugr2transpose(ref double[,] a, alglib.xparams _params)
+    public static void xdebugr2transpose(ref double[,] a, xparams _params)
     {
     
         xdebug.xdebugr2transpose(ref a, _params);
@@ -1014,7 +1012,7 @@ public partial class alglib
         xdebug.xdebugr2outsin(m, n, ref a, null);
     }
     
-    public static void xdebugr2outsin(int m, int n, out double[,] a, alglib.xparams _params)
+    public static void xdebugr2outsin(int m, int n, out double[,] a, xparams _params)
     {
         a = new double[0,0];
         xdebug.xdebugr2outsin(m, n, ref a, _params);
@@ -1035,7 +1033,7 @@ public partial class alglib
         return xdebug.xdebugc2sum(a, null);
     }
     
-    public static complex xdebugc2sum(complex[,] a, alglib.xparams _params)
+    public static complex xdebugc2sum(complex[,] a, xparams _params)
     {
     
         return xdebug.xdebugc2sum(a, _params);
@@ -1057,7 +1055,7 @@ public partial class alglib
         xdebug.xdebugc2neg(a, null);
     }
     
-    public static void xdebugc2neg(ref complex[,] a, alglib.xparams _params)
+    public static void xdebugc2neg(ref complex[,] a, xparams _params)
     {
     
         xdebug.xdebugc2neg(a, _params);
@@ -1079,7 +1077,7 @@ public partial class alglib
         xdebug.xdebugc2transpose(ref a, null);
     }
     
-    public static void xdebugc2transpose(ref complex[,] a, alglib.xparams _params)
+    public static void xdebugc2transpose(ref complex[,] a, xparams _params)
     {
     
         xdebug.xdebugc2transpose(ref a, _params);
@@ -1101,7 +1099,7 @@ public partial class alglib
         xdebug.xdebugc2outsincos(m, n, ref a, null);
     }
     
-    public static void xdebugc2outsincos(int m, int n, out complex[,] a, alglib.xparams _params)
+    public static void xdebugc2outsincos(int m, int n, out complex[,] a, xparams _params)
     {
         a = new complex[0,0];
         xdebug.xdebugc2outsincos(m, n, ref a, _params);
@@ -1122,7 +1120,7 @@ public partial class alglib
         return xdebug.xdebugmaskedbiasedproductsum(m, n, a, b, c, null);
     }
     
-    public static double xdebugmaskedbiasedproductsum(int m, int n, double[,] a, double[,] b, bool[,] c, alglib.xparams _params)
+    public static double xdebugmaskedbiasedproductsum(int m, int n, double[,] a, double[,] b, bool[,] c, xparams _params)
     {
     
         return xdebug.xdebugmaskedbiasedproductsum(m, n, a, b, c, _params);
@@ -1150,7 +1148,7 @@ public partial class alglib
             _innerobj = new nearestneighbor.kdtreerequestbuffer();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new kdtreerequestbuffer((nearestneighbor.kdtreerequestbuffer)_innerobj.make_copy());
         }
@@ -1159,7 +1157,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private nearestneighbor.kdtreerequestbuffer _innerobj;
+        private readonly nearestneighbor.kdtreerequestbuffer _innerobj;
         public nearestneighbor.kdtreerequestbuffer innerobj { get { return _innerobj; } }
         public kdtreerequestbuffer(nearestneighbor.kdtreerequestbuffer obj)
         {
@@ -1182,7 +1180,7 @@ public partial class alglib
             _innerobj = new nearestneighbor.kdtree();
         }
         
-        public override alglib.alglibobject make_copy()
+        public override alglibobject make_copy()
         {
             return new kdtree((nearestneighbor.kdtree)_innerobj.make_copy());
         }
@@ -1191,7 +1189,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private nearestneighbor.kdtree _innerobj;
+        private readonly nearestneighbor.kdtree _innerobj;
         public nearestneighbor.kdtree innerobj { get { return _innerobj; } }
         public kdtree(nearestneighbor.kdtree obj)
         {
@@ -1222,7 +1220,7 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreeserialize(kdtree obj, out string s_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         nearestneighbor.kdtreealloc(s, obj.innerobj, null);
         s.sstart_str();
@@ -1237,7 +1235,7 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreeunserialize(string s_in, out kdtree obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new kdtree();
         s.ustart_str(s_in);
         nearestneighbor.kdtreeunserialize(s, obj.innerobj, null);
@@ -1258,7 +1256,7 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreeserialize(kdtree obj, System.IO.Stream stream_out)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         s.alloc_start();
         nearestneighbor.kdtreealloc(s, obj.innerobj, null);
         s.sstart_stream(stream_out);
@@ -1272,7 +1270,7 @@ public partial class alglib
     *************************************************************************/
     public static void kdtreeunserialize(System.IO.Stream stream_in, out kdtree obj)
     {
-        alglib.serializer s = new alglib.serializer();
+        var s = new serializer();
         obj = new kdtree();
         s.ustart_stream(stream_in);
         nearestneighbor.kdtreeunserialize(s, obj.innerobj, null);
@@ -1320,7 +1318,7 @@ public partial class alglib
         nearestneighbor.kdtreebuild(xy, n, nx, ny, normtype, kdt.innerobj, null);
     }
     
-    public static void kdtreebuild(double[,] xy, int n, int nx, int ny, int normtype, out kdtree kdt, alglib.xparams _params)
+    public static void kdtreebuild(double[,] xy, int n, int nx, int ny, int normtype, out kdtree kdt, xparams _params)
     {
         kdt = new kdtree();
         nearestneighbor.kdtreebuild(xy, n, nx, ny, normtype, kdt.innerobj, _params);
@@ -1337,7 +1335,7 @@ public partial class alglib
         return;
     }
             
-    public static void kdtreebuild(double[,] xy, int nx, int ny, int normtype, out kdtree kdt, alglib.xparams _params)
+    public static void kdtreebuild(double[,] xy, int nx, int ny, int normtype, out kdtree kdt, xparams _params)
     {
         int n;
     
@@ -1391,7 +1389,7 @@ public partial class alglib
         nearestneighbor.kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt.innerobj, null);
     }
     
-    public static void kdtreebuildtagged(double[,] xy, int[] tags, int n, int nx, int ny, int normtype, out kdtree kdt, alglib.xparams _params)
+    public static void kdtreebuildtagged(double[,] xy, int[] tags, int n, int nx, int ny, int normtype, out kdtree kdt, xparams _params)
     {
         kdt = new kdtree();
         nearestneighbor.kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt.innerobj, _params);
@@ -1401,7 +1399,10 @@ public partial class alglib
     {
         int n;
         if( (ap.rows(xy)!=ap.len(tags)))
+        {
             throw new alglibexception("Error while calling 'kdtreebuildtagged': looks like one of arguments has wrong size");
+        }
+
         kdt = new kdtree();
         n = ap.rows(xy);
         nearestneighbor.kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt.innerobj, null);
@@ -1409,11 +1410,14 @@ public partial class alglib
         return;
     }
             
-    public static void kdtreebuildtagged(double[,] xy, int[] tags, int nx, int ny, int normtype, out kdtree kdt, alglib.xparams _params)
+    public static void kdtreebuildtagged(double[,] xy, int[] tags, int nx, int ny, int normtype, out kdtree kdt, xparams _params)
     {
         int n;
         if( (ap.rows(xy)!=ap.len(tags)))
+        {
             throw new alglibexception("Error while calling 'kdtreebuildtagged': looks like one of arguments has wrong size");
+        }
+
         kdt = new kdtree();
         n = ap.rows(xy);
         nearestneighbor.kdtreebuildtagged(xy, tags, n, nx, ny, normtype, kdt.innerobj, _params);
@@ -1454,7 +1458,7 @@ public partial class alglib
         nearestneighbor.kdtreecreaterequestbuffer(kdt.innerobj, buf.innerobj, null);
     }
     
-    public static void kdtreecreaterequestbuffer(kdtree kdt, out kdtreerequestbuffer buf, alglib.xparams _params)
+    public static void kdtreecreaterequestbuffer(kdtree kdt, out kdtreerequestbuffer buf, xparams _params)
     {
         buf = new kdtreerequestbuffer();
         nearestneighbor.kdtreecreaterequestbuffer(kdt.innerobj, buf.innerobj, _params);
@@ -1500,7 +1504,7 @@ public partial class alglib
         return nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch, null);
     }
     
-    public static int kdtreequeryknn(kdtree kdt, double[] x, int k, bool selfmatch, alglib.xparams _params)
+    public static int kdtreequeryknn(kdtree kdt, double[] x, int k, bool selfmatch, xparams _params)
     {
     
         return nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch, _params);
@@ -1512,18 +1516,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch, null);
+        var result = nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch, null);
     
         return result;
     }
             
-    public static int kdtreequeryknn(kdtree kdt, double[] x, int k, alglib.xparams _params)
+    public static int kdtreequeryknn(kdtree kdt, double[] x, int k, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch, _params);
+        var result = nearestneighbor.kdtreequeryknn(kdt.innerobj, x, k, selfmatch, _params);
     
         return result;
     }
@@ -1575,7 +1579,7 @@ public partial class alglib
         return nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, null);
     }
     
-    public static int kdtreetsqueryknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, bool selfmatch, alglib.xparams _params)
+    public static int kdtreetsqueryknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, bool selfmatch, xparams _params)
     {
     
         return nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, _params);
@@ -1587,18 +1591,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, null);
+        var result = nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, null);
     
         return result;
     }
             
-    public static int kdtreetsqueryknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, alglib.xparams _params)
+    public static int kdtreetsqueryknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, _params);
+        var result = nearestneighbor.kdtreetsqueryknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, _params);
     
         return result;
     }
@@ -1648,7 +1652,7 @@ public partial class alglib
         return nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch, null);
     }
     
-    public static int kdtreequeryrnn(kdtree kdt, double[] x, double r, bool selfmatch, alglib.xparams _params)
+    public static int kdtreequeryrnn(kdtree kdt, double[] x, double r, bool selfmatch, xparams _params)
     {
     
         return nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch, _params);
@@ -1660,18 +1664,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch, null);
+        var result = nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch, null);
     
         return result;
     }
             
-    public static int kdtreequeryrnn(kdtree kdt, double[] x, double r, alglib.xparams _params)
+    public static int kdtreequeryrnn(kdtree kdt, double[] x, double r, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch, _params);
+        var result = nearestneighbor.kdtreequeryrnn(kdt.innerobj, x, r, selfmatch, _params);
     
         return result;
     }
@@ -1720,7 +1724,7 @@ public partial class alglib
         return nearestneighbor.kdtreequeryrnnu(kdt.innerobj, x, r, selfmatch, null);
     }
     
-    public static int kdtreequeryrnnu(kdtree kdt, double[] x, double r, bool selfmatch, alglib.xparams _params)
+    public static int kdtreequeryrnnu(kdtree kdt, double[] x, double r, bool selfmatch, xparams _params)
     {
     
         return nearestneighbor.kdtreequeryrnnu(kdt.innerobj, x, r, selfmatch, _params);
@@ -1732,18 +1736,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryrnnu(kdt.innerobj, x, r, selfmatch, null);
+        var result = nearestneighbor.kdtreequeryrnnu(kdt.innerobj, x, r, selfmatch, null);
     
         return result;
     }
             
-    public static int kdtreequeryrnnu(kdtree kdt, double[] x, double r, alglib.xparams _params)
+    public static int kdtreequeryrnnu(kdtree kdt, double[] x, double r, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryrnnu(kdt.innerobj, x, r, selfmatch, _params);
+        var result = nearestneighbor.kdtreequeryrnnu(kdt.innerobj, x, r, selfmatch, _params);
     
         return result;
     }
@@ -1800,7 +1804,7 @@ public partial class alglib
         return nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch, null);
     }
     
-    public static int kdtreetsqueryrnn(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, bool selfmatch, alglib.xparams _params)
+    public static int kdtreetsqueryrnn(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, bool selfmatch, xparams _params)
     {
     
         return nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch, _params);
@@ -1812,18 +1816,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch, null);
+        var result = nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch, null);
     
         return result;
     }
             
-    public static int kdtreetsqueryrnn(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, alglib.xparams _params)
+    public static int kdtreetsqueryrnn(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch, _params);
+        var result = nearestneighbor.kdtreetsqueryrnn(kdt.innerobj, buf.innerobj, x, r, selfmatch, _params);
     
         return result;
     }
@@ -1879,7 +1883,7 @@ public partial class alglib
         return nearestneighbor.kdtreetsqueryrnnu(kdt.innerobj, buf.innerobj, x, r, selfmatch, null);
     }
     
-    public static int kdtreetsqueryrnnu(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, bool selfmatch, alglib.xparams _params)
+    public static int kdtreetsqueryrnnu(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, bool selfmatch, xparams _params)
     {
     
         return nearestneighbor.kdtreetsqueryrnnu(kdt.innerobj, buf.innerobj, x, r, selfmatch, _params);
@@ -1891,18 +1895,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryrnnu(kdt.innerobj, buf.innerobj, x, r, selfmatch, null);
+        var result = nearestneighbor.kdtreetsqueryrnnu(kdt.innerobj, buf.innerobj, x, r, selfmatch, null);
     
         return result;
     }
             
-    public static int kdtreetsqueryrnnu(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, alglib.xparams _params)
+    public static int kdtreetsqueryrnnu(kdtree kdt, kdtreerequestbuffer buf, double[] x, double r, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryrnnu(kdt.innerobj, buf.innerobj, x, r, selfmatch, _params);
+        var result = nearestneighbor.kdtreetsqueryrnnu(kdt.innerobj, buf.innerobj, x, r, selfmatch, _params);
     
         return result;
     }
@@ -1954,7 +1958,7 @@ public partial class alglib
         return nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps, null);
     }
     
-    public static int kdtreequeryaknn(kdtree kdt, double[] x, int k, bool selfmatch, double eps, alglib.xparams _params)
+    public static int kdtreequeryaknn(kdtree kdt, double[] x, int k, bool selfmatch, double eps, xparams _params)
     {
     
         return nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps, _params);
@@ -1966,18 +1970,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps, null);
+        var result = nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps, null);
     
         return result;
     }
             
-    public static int kdtreequeryaknn(kdtree kdt, double[] x, int k, double eps, alglib.xparams _params)
+    public static int kdtreequeryaknn(kdtree kdt, double[] x, int k, double eps, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps, _params);
+        var result = nearestneighbor.kdtreequeryaknn(kdt.innerobj, x, k, selfmatch, eps, _params);
     
         return result;
     }
@@ -2036,7 +2040,7 @@ public partial class alglib
         return nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps, null);
     }
     
-    public static int kdtreetsqueryaknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, bool selfmatch, double eps, alglib.xparams _params)
+    public static int kdtreetsqueryaknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, bool selfmatch, double eps, xparams _params)
     {
     
         return nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps, _params);
@@ -2048,18 +2052,18 @@ public partial class alglib
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps, null);
+        var result = nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps, null);
     
         return result;
     }
             
-    public static int kdtreetsqueryaknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, double eps, alglib.xparams _params)
+    public static int kdtreetsqueryaknn(kdtree kdt, kdtreerequestbuffer buf, double[] x, int k, double eps, xparams _params)
     {
         bool selfmatch;
     
     
         selfmatch = true;
-        int result = nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps, _params);
+        var result = nearestneighbor.kdtreetsqueryaknn(kdt.innerobj, buf.innerobj, x, k, selfmatch, eps, _params);
     
         return result;
     }
@@ -2104,7 +2108,7 @@ public partial class alglib
         return nearestneighbor.kdtreequerybox(kdt.innerobj, boxmin, boxmax, null);
     }
     
-    public static int kdtreequerybox(kdtree kdt, double[] boxmin, double[] boxmax, alglib.xparams _params)
+    public static int kdtreequerybox(kdtree kdt, double[] boxmin, double[] boxmax, xparams _params)
     {
     
         return nearestneighbor.kdtreequerybox(kdt.innerobj, boxmin, boxmax, _params);
@@ -2156,7 +2160,7 @@ public partial class alglib
         return nearestneighbor.kdtreetsquerybox(kdt.innerobj, buf.innerobj, boxmin, boxmax, null);
     }
     
-    public static int kdtreetsquerybox(kdtree kdt, kdtreerequestbuffer buf, double[] boxmin, double[] boxmax, alglib.xparams _params)
+    public static int kdtreetsquerybox(kdtree kdt, kdtreerequestbuffer buf, double[] boxmin, double[] boxmax, xparams _params)
     {
     
         return nearestneighbor.kdtreetsquerybox(kdt.innerobj, buf.innerobj, boxmin, boxmax, _params);
@@ -2202,7 +2206,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsx(kdt.innerobj, ref x, null);
     }
     
-    public static void kdtreequeryresultsx(kdtree kdt, ref double[,] x, alglib.xparams _params)
+    public static void kdtreequeryresultsx(kdtree kdt, ref double[,] x, xparams _params)
     {
     
         nearestneighbor.kdtreequeryresultsx(kdt.innerobj, ref x, _params);
@@ -2249,7 +2253,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsxy(kdt.innerobj, ref xy, null);
     }
     
-    public static void kdtreequeryresultsxy(kdtree kdt, ref double[,] xy, alglib.xparams _params)
+    public static void kdtreequeryresultsxy(kdtree kdt, ref double[,] xy, xparams _params)
     {
     
         nearestneighbor.kdtreequeryresultsxy(kdt.innerobj, ref xy, _params);
@@ -2296,7 +2300,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultstags(kdt.innerobj, ref tags, null);
     }
     
-    public static void kdtreequeryresultstags(kdtree kdt, ref int[] tags, alglib.xparams _params)
+    public static void kdtreequeryresultstags(kdtree kdt, ref int[] tags, xparams _params)
     {
     
         nearestneighbor.kdtreequeryresultstags(kdt.innerobj, ref tags, _params);
@@ -2342,7 +2346,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsdistances(kdt.innerobj, ref r, null);
     }
     
-    public static void kdtreequeryresultsdistances(kdtree kdt, ref double[] r, alglib.xparams _params)
+    public static void kdtreequeryresultsdistances(kdtree kdt, ref double[] r, xparams _params)
     {
     
         nearestneighbor.kdtreequeryresultsdistances(kdt.innerobj, ref r, _params);
@@ -2385,7 +2389,7 @@ public partial class alglib
         nearestneighbor.kdtreetsqueryresultsx(kdt.innerobj, buf.innerobj, ref x, null);
     }
     
-    public static void kdtreetsqueryresultsx(kdtree kdt, kdtreerequestbuffer buf, ref double[,] x, alglib.xparams _params)
+    public static void kdtreetsqueryresultsx(kdtree kdt, kdtreerequestbuffer buf, ref double[,] x, xparams _params)
     {
     
         nearestneighbor.kdtreetsqueryresultsx(kdt.innerobj, buf.innerobj, ref x, _params);
@@ -2429,7 +2433,7 @@ public partial class alglib
         nearestneighbor.kdtreetsqueryresultsxy(kdt.innerobj, buf.innerobj, ref xy, null);
     }
     
-    public static void kdtreetsqueryresultsxy(kdtree kdt, kdtreerequestbuffer buf, ref double[,] xy, alglib.xparams _params)
+    public static void kdtreetsqueryresultsxy(kdtree kdt, kdtreerequestbuffer buf, ref double[,] xy, xparams _params)
     {
     
         nearestneighbor.kdtreetsqueryresultsxy(kdt.innerobj, buf.innerobj, ref xy, _params);
@@ -2478,7 +2482,7 @@ public partial class alglib
         nearestneighbor.kdtreetsqueryresultstags(kdt.innerobj, buf.innerobj, ref tags, null);
     }
     
-    public static void kdtreetsqueryresultstags(kdtree kdt, kdtreerequestbuffer buf, ref int[] tags, alglib.xparams _params)
+    public static void kdtreetsqueryresultstags(kdtree kdt, kdtreerequestbuffer buf, ref int[] tags, xparams _params)
     {
     
         nearestneighbor.kdtreetsqueryresultstags(kdt.innerobj, buf.innerobj, ref tags, _params);
@@ -2526,7 +2530,7 @@ public partial class alglib
         nearestneighbor.kdtreetsqueryresultsdistances(kdt.innerobj, buf.innerobj, ref r, null);
     }
     
-    public static void kdtreetsqueryresultsdistances(kdtree kdt, kdtreerequestbuffer buf, ref double[] r, alglib.xparams _params)
+    public static void kdtreetsqueryresultsdistances(kdtree kdt, kdtreerequestbuffer buf, ref double[] r, xparams _params)
     {
     
         nearestneighbor.kdtreetsqueryresultsdistances(kdt.innerobj, buf.innerobj, ref r, _params);
@@ -2550,7 +2554,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsxi(kdt.innerobj, ref x, null);
     }
     
-    public static void kdtreequeryresultsxi(kdtree kdt, out double[,] x, alglib.xparams _params)
+    public static void kdtreequeryresultsxi(kdtree kdt, out double[,] x, xparams _params)
     {
         x = new double[0,0];
         nearestneighbor.kdtreequeryresultsxi(kdt.innerobj, ref x, _params);
@@ -2574,7 +2578,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsxyi(kdt.innerobj, ref xy, null);
     }
     
-    public static void kdtreequeryresultsxyi(kdtree kdt, out double[,] xy, alglib.xparams _params)
+    public static void kdtreequeryresultsxyi(kdtree kdt, out double[,] xy, xparams _params)
     {
         xy = new double[0,0];
         nearestneighbor.kdtreequeryresultsxyi(kdt.innerobj, ref xy, _params);
@@ -2598,7 +2602,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultstagsi(kdt.innerobj, ref tags, null);
     }
     
-    public static void kdtreequeryresultstagsi(kdtree kdt, out int[] tags, alglib.xparams _params)
+    public static void kdtreequeryresultstagsi(kdtree kdt, out int[] tags, xparams _params)
     {
         tags = new int[0];
         nearestneighbor.kdtreequeryresultstagsi(kdt.innerobj, ref tags, _params);
@@ -2622,7 +2626,7 @@ public partial class alglib
         nearestneighbor.kdtreequeryresultsdistancesi(kdt.innerobj, ref r, null);
     }
     
-    public static void kdtreequeryresultsdistancesi(kdtree kdt, out double[] r, alglib.xparams _params)
+    public static void kdtreequeryresultsdistancesi(kdtree kdt, out double[] r, xparams _params)
     {
         r = new double[0];
         nearestneighbor.kdtreequeryresultsdistancesi(kdt.innerobj, ref r, _params);
@@ -2655,12 +2659,14 @@ public partial class alglib
             public override void init()
             {
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                hqrndstate _result = new hqrndstate();
-                _result.s1 = s1;
-                _result.s2 = s2;
-                _result.magicv = magicv;
+                var _result = new hqrndstate
+                {
+                    s1 = s1,
+                    s2 = s2,
+                    magicv = magicv
+                };
                 return _result;
             }
         };
@@ -2682,10 +2688,10 @@ public partial class alglib
              Copyright 02.12.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void hqrndrandomize(hqrndstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int s0 = 0;
-            int s1 = 0;
+            var s0 = 0;
+            var s1 = 0;
 
             s0 = math.randominteger(hqrndm1);
             s1 = math.randominteger(hqrndm2);
@@ -2702,7 +2708,7 @@ public partial class alglib
         public static void hqrndseed(int s1,
             int s2,
             hqrndstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -2723,8 +2729,8 @@ public partial class alglib
             {
                 s2 = -(s2+1);
             }
-            state.s1 = s1%(hqrndm1-1)+1;
-            state.s2 = s2%(hqrndm2-1)+1;
+            state.s1 = (s1 %(hqrndm1-1)) + 1;
+            state.s2 = (s2 %(hqrndm2-1)) + 1;
             state.magicv = hqrndmagic;
         }
 
@@ -2739,7 +2745,7 @@ public partial class alglib
              Copyright 02.12.2009 by Bochkanov Sergey
         *************************************************************************/
         public static double hqrnduniformr(hqrndstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -2762,13 +2768,13 @@ public partial class alglib
         *************************************************************************/
         public static int hqrnduniformi(hqrndstate state,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int maxcnt = 0;
-            int mx = 0;
-            int a = 0;
-            int b = 0;
+            var result = 0;
+            var maxcnt = 0;
+            var mx = 0;
+            var a = 0;
+            var b = 0;
 
             alglib.ap.assert(n>0, "HQRNDUniformI: N<=0!");
             maxcnt = hqrndmax+1;
@@ -2809,7 +2815,7 @@ public partial class alglib
                     alglib.ap.assert(n/maxcnt<=maxcnt, "HQRNDUniformI: N is too large");
                     a = hqrnduniformi(state, maxcnt, _params);
                     b = hqrnduniformi(state, n/maxcnt, _params);
-                    result = a+maxcnt*b;
+                    result = a+ (maxcnt * b);
                 }
                 else
                 {
@@ -2830,17 +2836,17 @@ public partial class alglib
                     //   This stage is essential in order to avoid bias in the result.
                     // * otherwise, we return A*MaxCnt+N
                     //
-                    alglib.ap.assert(n/maxcnt+1<=maxcnt, "HQRNDUniformI: N is too large");
+                    alglib.ap.assert((n / maxcnt) + 1<=maxcnt, "HQRNDUniformI: N is too large");
                     result = -1;
                     do
                     {
                         a = hqrnduniformi(state, maxcnt, _params);
-                        b = hqrnduniformi(state, n/maxcnt+1, _params);
+                        b = hqrnduniformi(state, (n / maxcnt) + 1, _params);
                         if( b==n/maxcnt && a>=n%maxcnt )
                         {
                             continue;
                         }
-                        result = a+maxcnt*b;
+                        result = a+ (maxcnt * b);
                     }
                     while( result<0 );
                 }
@@ -2855,13 +2861,13 @@ public partial class alglib
                 // return "HQRNDIntegerBase() mod N" - it will be skewed for
                 // large N's in [0.1*HQRNDMax...HQRNDMax].
                 //
-                mx = maxcnt-maxcnt%n;
+                mx = maxcnt- (maxcnt % n);
                 do
                 {
                     result = hqrndintegerbase(state, _params);
                 }
                 while( result>=mx );
-                result = result%n;
+                result %= n;
             }
             return result;
         }
@@ -2879,7 +2885,7 @@ public partial class alglib
              Copyright 02.12.2009 by Bochkanov Sergey
         *************************************************************************/
         public static double hqrndnormal(hqrndstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double v1 = 0;
@@ -2904,10 +2910,10 @@ public partial class alglib
         public static void hqrndnormalv(hqrndstate state,
             int n,
             ref double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int n2 = 0;
+            var i = 0;
+            var n2 = 0;
             double v1 = 0;
             double v2 = 0;
 
@@ -2918,8 +2924,8 @@ public partial class alglib
             for(i=0; i<=n2-1; i++)
             {
                 hqrndnormal2(state, ref v1, ref v2, _params);
-                x[2*i+0] = v1;
-                x[2*i+1] = v2;
+                x[(2 * i) + 0] = v1;
+                x[(2 * i) + 1] = v2;
             }
             if( n%2!=0 )
             {
@@ -2943,11 +2949,11 @@ public partial class alglib
             int m,
             int n,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int n2 = 0;
+            var i = 0;
+            var j = 0;
+            var n2 = 0;
             double v1 = 0;
             double v2 = 0;
 
@@ -2960,8 +2966,8 @@ public partial class alglib
                 for(j=0; j<=n2-1; j++)
                 {
                     hqrndnormal2(state, ref v1, ref v2, _params);
-                    x[i,2*j+0] = v1;
-                    x[i,2*j+1] = v2;
+                    x[i, (2 * j) + 0] = v1;
+                    x[i, (2 * j) + 1] = v2;
                 }
                 if( n%2!=0 )
                 {
@@ -2983,7 +2989,7 @@ public partial class alglib
         public static void hqrndunit2(hqrndstate state,
             ref double x,
             ref double y,
-            alglib.xparams _params)
+            xparams _params)
         {
             double v = 0;
             double mx = 0;
@@ -3000,8 +3006,8 @@ public partial class alglib
             mx = Math.Max(Math.Abs(x), Math.Abs(y));
             mn = Math.Min(Math.Abs(x), Math.Abs(y));
             v = mx*Math.Sqrt(1+math.sqr(mn/mx));
-            x = x/v;
-            y = y/v;
+            x /= v;
+            y /= v;
         }
 
 
@@ -3019,7 +3025,7 @@ public partial class alglib
         public static void hqrndnormal2(hqrndstate state,
             ref double x1,
             ref double x2,
-            alglib.xparams _params)
+            xparams _params)
         {
             double u = 0;
             double v = 0;
@@ -3030,8 +3036,8 @@ public partial class alglib
 
             while( true )
             {
-                u = 2*hqrnduniformr(state, _params)-1;
-                v = 2*hqrnduniformr(state, _params)-1;
+                u = (2 *hqrnduniformr(state, _params)) - 1;
+                v = (2 *hqrnduniformr(state, _params)) - 1;
                 s = math.sqr(u)+math.sqr(v);
                 if( (double)(s)>(double)(0) && (double)(s)<(double)(1) )
                 {
@@ -3059,7 +3065,7 @@ public partial class alglib
         *************************************************************************/
         public static double hqrndexponential(hqrndstate state,
             double lambdav,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -3088,7 +3094,7 @@ public partial class alglib
         public static double hqrnddiscrete(hqrndstate state,
             double[] x,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
 
@@ -3121,12 +3127,12 @@ public partial class alglib
         public static double hqrndcontinuous(hqrndstate state,
             double[] x,
             int n,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
             double mx = 0;
             double mn = 0;
-            int i = 0;
+            var i = 0;
 
             alglib.ap.assert(n>0, "HQRNDContinuous: N<=0");
             alglib.ap.assert(n<=alglib.ap.len(x), "HQRNDContinuous: Length(X)<N");
@@ -3141,7 +3147,7 @@ public partial class alglib
             alglib.ap.assert((double)(mx)>=(double)(mn), "HQRNDDiscrete: X is not sorted by ascending");
             if( (double)(mx)!=(double)(mn) )
             {
-                result = (mx-mn)*hqrnduniformr(state, _params)+mn;
+                result = ((mx-mn)*hqrnduniformr(state, _params)) + mn;
             }
             else
             {
@@ -3157,23 +3163,23 @@ public partial class alglib
         L'Ecuyer, Efficient and portable combined random number generators
         *************************************************************************/
         private static int hqrndintegerbase(hqrndstate state,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int k = 0;
+            var result = 0;
+            var k = 0;
 
             alglib.ap.assert(state.magicv==hqrndmagic, "HQRNDIntegerBase: State is not correctly initialized!");
             k = state.s1/53668;
-            state.s1 = 40014*(state.s1-k*53668)-k*12211;
+            state.s1 = (40014 *(state.s1- (k * 53668))) - k*12211;
             if( state.s1<0 )
             {
-                state.s1 = state.s1+2147483563;
+                state.s1 += 2147483563;
             }
             k = state.s2/52774;
-            state.s2 = 40692*(state.s2-k*52774)-k*3791;
+            state.s2 = (40692 *(state.s2- (k * 52774))) - k*3791;
             if( state.s2<0 )
             {
-                state.s2 = state.s2+2147483399;
+                state.s2 += 2147483399;
             }
             
             //
@@ -3182,9 +3188,9 @@ public partial class alglib
             result = state.s1-state.s2;
             if( result<1 )
             {
-                result = result+2147483562;
+                result += 2147483562;
             }
-            result = result-1;
+            result--;
             return result;
         }
 
@@ -3212,12 +3218,14 @@ public partial class alglib
             {
                 a = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                xdebugrecord1 _result = new xdebugrecord1();
-                _result.i = i;
-                _result.c = c;
-                _result.a = (double[])a.Clone();
+                var _result = new xdebugrecord1
+                {
+                    i = i,
+                    c = c,
+                    a = (double[])a.Clone()
+                };
                 return _result;
             }
         };
@@ -3237,7 +3245,7 @@ public partial class alglib
              Copyright 27.05.2014 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebuginitrecord1(xdebugrecord1 rec1,
-            alglib.xparams _params)
+            xparams _params)
         {
             rec1.i = 1;
             rec1.c.x = 1;
@@ -3258,17 +3266,17 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static int xdebugb1count(bool[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int i = 0;
+            var result = 0;
+            var i = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
                 if( a[i] )
                 {
-                    result = result+1;
+                    result++;
                 }
             }
             return result;
@@ -3286,9 +3294,9 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugb1not(bool[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
@@ -3308,10 +3316,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugb1appendcopy(ref bool[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            bool[] b = new bool[0];
+            var i = 0;
+            var b = new bool[0];
 
             b = new bool[alglib.ap.len(a)];
             for(i=0; i<=alglib.ap.len(b)-1; i++)
@@ -3338,9 +3346,9 @@ public partial class alglib
         *************************************************************************/
         public static void xdebugb1outeven(int n,
             ref bool[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             a = new bool[0];
 
@@ -3362,15 +3370,15 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static int xdebugi1sum(int[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int i = 0;
+            var result = 0;
+            var i = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
-                result = result+a[i];
+                result += a[i];
             }
             return result;
         }
@@ -3387,9 +3395,9 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugi1neg(int[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
@@ -3409,10 +3417,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugi1appendcopy(ref int[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int[] b = new int[0];
+            var i = 0;
+            var b = new int[0];
 
             b = new int[alglib.ap.len(a)];
             for(i=0; i<=alglib.ap.len(b)-1; i++)
@@ -3441,9 +3449,9 @@ public partial class alglib
         *************************************************************************/
         public static void xdebugi1outeven(int n,
             ref int[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             a = new int[0];
 
@@ -3472,15 +3480,15 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static double xdebugr1sum(double[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
+            var i = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
-                result = result+a[i];
+                result += a[i];
             }
             return result;
         }
@@ -3497,9 +3505,9 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugr1neg(double[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
@@ -3519,10 +3527,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugr1appendcopy(ref double[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            double[] b = new double[0];
+            var i = 0;
+            var b = new double[0];
 
             b = new double[alglib.ap.len(a)];
             for(i=0; i<=alglib.ap.len(b)-1; i++)
@@ -3551,9 +3559,9 @@ public partial class alglib
         *************************************************************************/
         public static void xdebugr1outeven(int n,
             ref double[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             a = new double[0];
 
@@ -3582,15 +3590,15 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static complex xdebugc1sum(complex[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
             complex result = 0;
-            int i = 0;
+            var i = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
-                result = result+a[i];
+                result += a[i];
             }
             return result;
         }
@@ -3607,9 +3615,9 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugc1neg(complex[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             for(i=0; i<=alglib.ap.len(a)-1; i++)
             {
@@ -3629,10 +3637,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugc1appendcopy(ref complex[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            complex[] b = new complex[0];
+            var i = 0;
+            var b = new complex[0];
 
             b = new complex[alglib.ap.len(a)];
             for(i=0; i<=alglib.ap.len(b)-1; i++)
@@ -3661,9 +3669,9 @@ public partial class alglib
         *************************************************************************/
         public static void xdebugc1outeven(int n,
             ref complex[] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             a = new complex[0];
 
@@ -3693,11 +3701,11 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static int xdebugb2count(bool[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int i = 0;
-            int j = 0;
+            var result = 0;
+            var i = 0;
+            var j = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
@@ -3706,7 +3714,7 @@ public partial class alglib
                 {
                     if( a[i,j] )
                     {
-                        result = result+1;
+                        result++;
                     }
                 }
             }
@@ -3725,10 +3733,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugb2not(bool[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
             {
@@ -3751,11 +3759,11 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugb2transpose(ref bool[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            bool[,] b = new bool[0,0];
+            var i = 0;
+            var j = 0;
+            var b = new bool[0,0];
 
             b = new bool[alglib.ap.rows(a), alglib.ap.cols(a)];
             for(i=0; i<=alglib.ap.rows(b)-1; i++)
@@ -3789,10 +3797,10 @@ public partial class alglib
         public static void xdebugb2outsin(int m,
             int n,
             ref bool[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             a = new bool[0,0];
 
@@ -3801,7 +3809,7 @@ public partial class alglib
             {
                 for(j=0; j<=alglib.ap.cols(a)-1; j++)
                 {
-                    a[i,j] = (double)(Math.Sin(3*i+5*j))>(double)(0);
+                    a[i,j] = (double)(Math.Sin((3 * i) + 5*j))>(double)(0);
                 }
             }
         }
@@ -3817,18 +3825,18 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static int xdebugi2sum(int[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int i = 0;
-            int j = 0;
+            var result = 0;
+            var i = 0;
+            var j = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
             {
                 for(j=0; j<=alglib.ap.cols(a)-1; j++)
                 {
-                    result = result+a[i,j];
+                    result += a[i,j];
                 }
             }
             return result;
@@ -3846,10 +3854,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugi2neg(int[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
             {
@@ -3872,11 +3880,11 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugi2transpose(ref int[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int[,] b = new int[0,0];
+            var i = 0;
+            var j = 0;
+            var b = new int[0,0];
 
             b = new int[alglib.ap.rows(a), alglib.ap.cols(a)];
             for(i=0; i<=alglib.ap.rows(b)-1; i++)
@@ -3910,10 +3918,10 @@ public partial class alglib
         public static void xdebugi2outsin(int m,
             int n,
             ref int[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             a = new int[0,0];
 
@@ -3922,7 +3930,7 @@ public partial class alglib
             {
                 for(j=0; j<=alglib.ap.cols(a)-1; j++)
                 {
-                    a[i,j] = Math.Sign(Math.Sin(3*i+5*j));
+                    a[i,j] = Math.Sign(Math.Sin((3 * i) + 5*j));
                 }
             }
         }
@@ -3938,18 +3946,18 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static double xdebugr2sum(double[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
             {
                 for(j=0; j<=alglib.ap.cols(a)-1; j++)
                 {
-                    result = result+a[i,j];
+                    result += a[i,j];
                 }
             }
             return result;
@@ -3967,10 +3975,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugr2neg(double[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
             {
@@ -3993,11 +4001,11 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugr2transpose(ref double[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            double[,] b = new double[0,0];
+            var i = 0;
+            var j = 0;
+            var b = new double[0,0];
 
             b = new double[alglib.ap.rows(a), alglib.ap.cols(a)];
             for(i=0; i<=alglib.ap.rows(b)-1; i++)
@@ -4031,10 +4039,10 @@ public partial class alglib
         public static void xdebugr2outsin(int m,
             int n,
             ref double[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             a = new double[0,0];
 
@@ -4043,7 +4051,7 @@ public partial class alglib
             {
                 for(j=0; j<=alglib.ap.cols(a)-1; j++)
                 {
-                    a[i,j] = Math.Sin(3*i+5*j);
+                    a[i,j] = Math.Sin((3 * i) + 5*j);
                 }
             }
         }
@@ -4059,18 +4067,18 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static complex xdebugc2sum(complex[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
             complex result = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             result = 0;
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
             {
                 for(j=0; j<=alglib.ap.cols(a)-1; j++)
                 {
-                    result = result+a[i,j];
+                    result += a[i,j];
                 }
             }
             return result;
@@ -4088,10 +4096,10 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugc2neg(complex[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             for(i=0; i<=alglib.ap.rows(a)-1; i++)
             {
@@ -4114,11 +4122,11 @@ public partial class alglib
              Copyright 11.10.2013 by Bochkanov Sergey
         *************************************************************************/
         public static void xdebugc2transpose(ref complex[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            complex[,] b = new complex[0,0];
+            var i = 0;
+            var j = 0;
+            var b = new complex[0,0];
 
             b = new complex[alglib.ap.rows(a), alglib.ap.cols(a)];
             for(i=0; i<=alglib.ap.rows(b)-1; i++)
@@ -4152,10 +4160,10 @@ public partial class alglib
         public static void xdebugc2outsincos(int m,
             int n,
             ref complex[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             a = new complex[0,0];
 
@@ -4164,8 +4172,8 @@ public partial class alglib
             {
                 for(j=0; j<=alglib.ap.cols(a)-1; j++)
                 {
-                    a[i,j].x = Math.Sin(3*i+5*j);
-                    a[i,j].y = Math.Cos(3*i+5*j);
+                    a[i,j].x = Math.Sin((3 * i) + 5*j);
+                    a[i,j].y = Math.Cos((3 * i) + 5*j);
                 }
             }
         }
@@ -4185,11 +4193,11 @@ public partial class alglib
             double[,] a,
             double[,] b,
             bool[,] c,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(m>=alglib.ap.rows(a));
             alglib.ap.assert(m>=alglib.ap.rows(b));
@@ -4204,7 +4212,7 @@ public partial class alglib
                 {
                     if( c[i,j] )
                     {
-                        result = result+a[i,j]*(1+b[i,j]);
+                        result += (a[i,j]*(1+b[i,j]));
                     }
                 }
             }
@@ -4252,23 +4260,25 @@ public partial class alglib
                 curboxmin = new double[0];
                 curboxmax = new double[0];
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                kdtreerequestbuffer _result = new kdtreerequestbuffer();
-                _result.x = (double[])x.Clone();
-                _result.boxmin = (double[])boxmin.Clone();
-                _result.boxmax = (double[])boxmax.Clone();
-                _result.kneeded = kneeded;
-                _result.rneeded = rneeded;
-                _result.selfmatch = selfmatch;
-                _result.approxf = approxf;
-                _result.kcur = kcur;
-                _result.idx = (int[])idx.Clone();
-                _result.r = (double[])r.Clone();
-                _result.buf = (double[])buf.Clone();
-                _result.curboxmin = (double[])curboxmin.Clone();
-                _result.curboxmax = (double[])curboxmax.Clone();
-                _result.curdist = curdist;
+                var _result = new kdtreerequestbuffer
+                {
+                    x = (double[])x.Clone(),
+                    boxmin = (double[])boxmin.Clone(),
+                    boxmax = (double[])boxmax.Clone(),
+                    kneeded = kneeded,
+                    rneeded = rneeded,
+                    selfmatch = selfmatch,
+                    approxf = approxf,
+                    kcur = kcur,
+                    idx = (int[])idx.Clone(),
+                    r = (double[])r.Clone(),
+                    buf = (double[])buf.Clone(),
+                    curboxmin = (double[])curboxmin.Clone(),
+                    curboxmax = (double[])curboxmax.Clone(),
+                    curdist = curdist
+                };
                 return _result;
             }
         };
@@ -4305,21 +4315,23 @@ public partial class alglib
                 splits = new double[0];
                 innerbuf = new kdtreerequestbuffer();
             }
-            public override alglib.apobject make_copy()
+            public override apobject make_copy()
             {
-                kdtree _result = new kdtree();
-                _result.n = n;
-                _result.nx = nx;
-                _result.ny = ny;
-                _result.normtype = normtype;
-                _result.xy = (double[,])xy.Clone();
-                _result.tags = (int[])tags.Clone();
-                _result.boxmin = (double[])boxmin.Clone();
-                _result.boxmax = (double[])boxmax.Clone();
-                _result.nodes = (int[])nodes.Clone();
-                _result.splits = (double[])splits.Clone();
-                _result.innerbuf = (kdtreerequestbuffer)innerbuf.make_copy();
-                _result.debugcounter = debugcounter;
+                var _result = new kdtree
+                {
+                    n = n,
+                    nx = nx,
+                    ny = ny,
+                    normtype = normtype,
+                    xy = (double[,])xy.Clone(),
+                    tags = (int[])tags.Clone(),
+                    boxmin = (double[])boxmin.Clone(),
+                    boxmax = (double[])boxmax.Clone(),
+                    nodes = (int[])nodes.Clone(),
+                    splits = (double[])splits.Clone(),
+                    innerbuf = (kdtreerequestbuffer)innerbuf.make_copy(),
+                    debugcounter = debugcounter
+                };
                 return _result;
             }
         };
@@ -4372,10 +4384,10 @@ public partial class alglib
             int ny,
             int normtype,
             kdtree kdt,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int[] tags = new int[0];
-            int i = 0;
+            var tags = new int[0];
+            var i = 0;
 
             alglib.ap.assert(n>=0, "KDTreeBuild: N<0");
             alglib.ap.assert(nx>=1, "KDTreeBuild: NX<1");
@@ -4440,14 +4452,14 @@ public partial class alglib
             int ny,
             int normtype,
             kdtree kdt,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int nodesoffs = 0;
-            int splitsoffs = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var i = 0;
+            var j = 0;
+            var nodesoffs = 0;
+            var splitsoffs = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             alglib.ap.assert(n>=0, "KDTreeBuildTagged: N<0");
             alglib.ap.assert(nx>=1, "KDTreeBuildTagged: NX<1");
@@ -4491,7 +4503,7 @@ public partial class alglib
                     kdt.xy[i,i_] = xy[i,i_];
                 }
                 i1_ = (0) - (nx);
-                for(i_=nx; i_<=2*nx+ny-1;i_++)
+                for(i_=nx; i_<= (2 * nx) + ny-1;i_++)
                 {
                     kdt.xy[i,i_] = xy[i,i_+i1_];
                 }
@@ -4566,7 +4578,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreecreaterequestbuffer(kdtree kdt,
             kdtreerequestbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
             buf.x = new double[kdt.nx];
             buf.boxmin = new double[kdt.nx];
@@ -4618,9 +4630,9 @@ public partial class alglib
             double[] x,
             int k,
             bool selfmatch,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             alglib.ap.assert(k>=1, "KDTreeQueryKNN: K<1!");
             alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryKNN: Length(X)<NX!");
@@ -4676,9 +4688,9 @@ public partial class alglib
             double[] x,
             int k,
             bool selfmatch,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             alglib.ap.assert(k>=1, "KDTreeTsQueryKNN: K<1!");
             alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeTsQueryKNN: Length(X)<NX!");
@@ -4731,9 +4743,9 @@ public partial class alglib
             double[] x,
             double r,
             bool selfmatch,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             alglib.ap.assert((double)(r)>(double)(0), "KDTreeQueryRNN: incorrect R!");
             alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryRNN: Length(X)<NX!");
@@ -4785,9 +4797,9 @@ public partial class alglib
             double[] x,
             double r,
             bool selfmatch,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             alglib.ap.assert((double)(r)>(double)(0), "KDTreeQueryRNNU: incorrect R!");
             alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeQueryRNNU: Length(X)<NX!");
@@ -4848,9 +4860,9 @@ public partial class alglib
             double[] x,
             double r,
             bool selfmatch,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             alglib.ap.assert(math.isfinite(r) && (double)(r)>(double)(0), "KDTreeTsQueryRNN: incorrect R!");
             alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeTsQueryRNN: Length(X)<NX!");
@@ -4910,9 +4922,9 @@ public partial class alglib
             double[] x,
             double r,
             bool selfmatch,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             alglib.ap.assert(math.isfinite(r) && (double)(r)>(double)(0), "KDTreeTsQueryRNNU: incorrect R!");
             alglib.ap.assert(alglib.ap.len(x)>=kdt.nx, "KDTreeTsQueryRNNU: Length(X)<NX!");
@@ -4968,9 +4980,9 @@ public partial class alglib
             int k,
             bool selfmatch,
             double eps,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             result = kdtreetsqueryaknn(kdt, kdt.innerbuf, x, k, selfmatch, eps, _params);
             return result;
@@ -5031,11 +5043,11 @@ public partial class alglib
             int k,
             bool selfmatch,
             double eps,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int i = 0;
-            int j = 0;
+            var result = 0;
+            var i = 0;
+            var j = 0;
 
             alglib.ap.assert(k>0, "KDTreeTsQueryAKNN: incorrect K!");
             alglib.ap.assert((double)(eps)>=(double)(0), "KDTreeTsQueryAKNN: incorrect Eps!");
@@ -5138,9 +5150,9 @@ public partial class alglib
         public static int kdtreequerybox(kdtree kdt,
             double[] boxmin,
             double[] boxmax,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
+            var result = 0;
 
             result = kdtreetsquerybox(kdt, kdt.innerbuf, boxmin, boxmax, _params);
             return result;
@@ -5191,10 +5203,10 @@ public partial class alglib
             kdtreerequestbuffer buf,
             double[] boxmin,
             double[] boxmax,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int j = 0;
+            var result = 0;
+            var j = 0;
 
             alglib.ap.assert(alglib.ap.len(boxmin)>=kdt.nx, "KDTreeTsQueryBox: Length(BoxMin)<NX!");
             alglib.ap.assert(alglib.ap.len(boxmax)>=kdt.nx, "KDTreeTsQueryBox: Length(BoxMax)<NX!");
@@ -5276,7 +5288,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultsx(kdtree kdt,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             kdtreetsqueryresultsx(kdt, kdt.innerbuf, ref x, _params);
         }
@@ -5319,7 +5331,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultsxy(kdtree kdt,
             ref double[,] xy,
-            alglib.xparams _params)
+            xparams _params)
         {
             kdtreetsqueryresultsxy(kdt, kdt.innerbuf, ref xy, _params);
         }
@@ -5362,7 +5374,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultstags(kdtree kdt,
             ref int[] tags,
-            alglib.xparams _params)
+            xparams _params)
         {
             kdtreetsqueryresultstags(kdt, kdt.innerbuf, ref tags, _params);
         }
@@ -5404,7 +5416,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultsdistances(kdtree kdt,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
             kdtreetsqueryresultsdistances(kdt, kdt.innerbuf, ref r, _params);
         }
@@ -5444,12 +5456,12 @@ public partial class alglib
         public static void kdtreetsqueryresultsx(kdtree kdt,
             kdtreerequestbuffer buf,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var i = 0;
+            var k = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             if( buf.kcur==0 )
             {
@@ -5506,12 +5518,12 @@ public partial class alglib
         public static void kdtreetsqueryresultsxy(kdtree kdt,
             kdtreerequestbuffer buf,
             ref double[,] xy,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var i = 0;
+            var k = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             if( buf.kcur==0 )
             {
@@ -5573,10 +5585,10 @@ public partial class alglib
         public static void kdtreetsqueryresultstags(kdtree kdt,
             kdtreerequestbuffer buf,
             ref int[] tags,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
 
             if( buf.kcur==0 )
             {
@@ -5633,10 +5645,10 @@ public partial class alglib
         public static void kdtreetsqueryresultsdistances(kdtree kdt,
             kdtreerequestbuffer buf,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int k = 0;
+            var i = 0;
+            var k = 0;
 
             if( buf.kcur==0 )
             {
@@ -5692,7 +5704,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultsxi(kdtree kdt,
             ref double[,] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             x = new double[0,0];
 
@@ -5714,7 +5726,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultsxyi(kdtree kdt,
             ref double[,] xy,
-            alglib.xparams _params)
+            xparams _params)
         {
             xy = new double[0,0];
 
@@ -5736,7 +5748,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultstagsi(kdtree kdt,
             ref int[] tags,
-            alglib.xparams _params)
+            xparams _params)
         {
             tags = new int[0];
 
@@ -5758,7 +5770,7 @@ public partial class alglib
         *************************************************************************/
         public static void kdtreequeryresultsdistancesi(kdtree kdt,
             ref double[] r,
-            alglib.xparams _params)
+            xparams _params)
         {
             r = new double[0];
 
@@ -5779,9 +5791,9 @@ public partial class alglib
         public static void kdtreeexplorebox(kdtree kdt,
             ref double[] boxmin,
             ref double[] boxmax,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
 
             apserv.rvectorsetlengthatleast(ref boxmin, kdt.nx, _params);
             apserv.rvectorsetlengthatleast(ref boxmax, kdt.nx, _params);
@@ -5815,7 +5827,7 @@ public partial class alglib
         public static void kdtreeexplorenodetype(kdtree kdt,
             int node,
             ref int nodetype,
-            alglib.xparams _params)
+            xparams _params)
         {
             nodetype = 0;
 
@@ -5864,11 +5876,11 @@ public partial class alglib
             int node,
             ref double[,] xy,
             ref int k,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int offs = 0;
-            int i = 0;
-            int j = 0;
+            var offs = 0;
+            var i = 0;
+            var j = 0;
 
             k = 0;
 
@@ -5918,7 +5930,7 @@ public partial class alglib
             ref double s,
             ref int nodele,
             ref int nodege,
-            alglib.xparams _params)
+            xparams _params)
         {
             d = 0;
             s = 0;
@@ -5948,9 +5960,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 14.03.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static void kdtreealloc(alglib.serializer s,
+        public static void kdtreealloc(serializer s,
             kdtree tree,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -5981,9 +5993,9 @@ public partial class alglib
           -- ALGLIB --
              Copyright 14.03.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static void kdtreeserialize(alglib.serializer s,
+        public static void kdtreeserialize(serializer s,
             kdtree tree,
-            alglib.xparams _params)
+            xparams _params)
         {
             
             //
@@ -6014,12 +6026,12 @@ public partial class alglib
           -- ALGLIB --
              Copyright 14.03.2011 by Bochkanov Sergey
         *************************************************************************/
-        public static void kdtreeunserialize(alglib.serializer s,
+        public static void kdtreeunserialize(serializer s,
             kdtree tree,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i0 = 0;
-            int i1 = 0;
+            var i0 = 0;
+            var i1 = 0;
 
             
             //
@@ -6099,11 +6111,11 @@ public partial class alglib
             double r,
             bool selfmatch,
             bool orderedbydist,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int result = 0;
-            int i = 0;
-            int j = 0;
+            var result = 0;
+            var i = 0;
+            var j = 0;
 
             
             //
@@ -6179,12 +6191,12 @@ public partial class alglib
             int d,
             double s,
             ref int i3,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int ileft = 0;
-            int iright = 0;
+            var i = 0;
+            var j = 0;
+            var ileft = 0;
+            var iright = 0;
             double v = 0;
 
             i3 = 0;
@@ -6212,7 +6224,7 @@ public partial class alglib
                     // XY[ILeft] is on its place.
                     // Advance ILeft.
                     //
-                    ileft = ileft+1;
+                    ileft++;
                 }
                 else
                 {
@@ -6221,7 +6233,7 @@ public partial class alglib
                     // XY[ILeft,..] must be at IRight.
                     // Swap and advance IRight.
                     //
-                    for(i=0; i<=2*kdt.nx+kdt.ny-1; i++)
+                    for(i=0; i<= (2 *kdt.nx) + kdt.ny-1; i++)
                     {
                         v = kdt.xy[ileft,i];
                         kdt.xy[ileft,i] = kdt.xy[iright,i];
@@ -6230,16 +6242,16 @@ public partial class alglib
                     j = kdt.tags[ileft];
                     kdt.tags[ileft] = kdt.tags[iright];
                     kdt.tags[iright] = j;
-                    iright = iright-1;
+                    iright--;
                 }
             }
             if( kdt.xy[ileft,d]<=s )
             {
-                ileft = ileft+1;
+                ileft++;
             }
             else
             {
-                iright = iright-1;
+                iright--;
             }
             i3 = ileft;
         }
@@ -6265,29 +6277,29 @@ public partial class alglib
             int i1,
             int i2,
             int maxleafsize,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int n = 0;
-            int nx = 0;
-            int ny = 0;
-            int i = 0;
-            int j = 0;
-            int oldoffs = 0;
-            int i3 = 0;
-            int cntless = 0;
-            int cntgreater = 0;
+            var n = 0;
+            var nx = 0;
+            var ny = 0;
+            var i = 0;
+            var j = 0;
+            var oldoffs = 0;
+            var i3 = 0;
+            var cntless = 0;
+            var cntgreater = 0;
             double minv = 0;
             double maxv = 0;
-            int minidx = 0;
-            int maxidx = 0;
-            int d = 0;
+            var minidx = 0;
+            var maxidx = 0;
+            var d = 0;
             double ds = 0;
             double s = 0;
             double v = 0;
             double v0 = 0;
             double v1 = 0;
-            int i_ = 0;
-            int i1_ = 0;
+            var i_ = 0;
+            var i1_ = 0;
 
             alglib.ap.assert(kdt.n>0, "KDTreeGenerateTreeRec: internal error");
             alglib.ap.assert(i2>i1, "KDTreeGenerateTreeRec: internal error");
@@ -6299,7 +6311,7 @@ public partial class alglib
             {
                 kdt.nodes[nodesoffs+0] = i2-i1;
                 kdt.nodes[nodesoffs+1] = i1;
-                nodesoffs = nodesoffs+2;
+                nodesoffs += 2;
                 return;
             }
             
@@ -6329,7 +6341,7 @@ public partial class alglib
             {
                 kdt.nodes[nodesoffs+0] = i2-i1;
                 kdt.nodes[nodesoffs+1] = i1;
-                nodesoffs = nodesoffs+2;
+                nodesoffs += 2;
                 return;
             }
             
@@ -6341,7 +6353,7 @@ public partial class alglib
             // (MinV=MaxV) we enforce D-th dimension of bounding
             // box to become exactly zero and repeat tree construction.
             //
-            s = kdt.innerbuf.curboxmin[d]+0.5*ds;
+            s = kdt.innerbuf.curboxmin[d]+ (0.5 * ds);
             i1_ = (i1) - (0);
             for(i_=0; i_<=i2-i1-1;i_++)
             {
@@ -6369,11 +6381,11 @@ public partial class alglib
                 }
                 if( v<s )
                 {
-                    cntless = cntless+1;
+                    cntless++;
                 }
                 if( v>s )
                 {
-                    cntgreater = cntgreater+1;
+                    cntgreater++;
                 }
             }
             if( minv==maxv )
@@ -6418,7 +6430,7 @@ public partial class alglib
                     s = minv;
                     if( minidx!=i1 )
                     {
-                        for(i=0; i<=2*nx+ny-1; i++)
+                        for(i=0; i<= (2 * nx) + ny-1; i++)
                         {
                             v = kdt.xy[minidx,i];
                             kdt.xy[minidx,i] = kdt.xy[i1,i];
@@ -6441,7 +6453,7 @@ public partial class alglib
                     s = maxv;
                     if( maxidx!=i2-1 )
                     {
-                        for(i=0; i<=2*nx+ny-1; i++)
+                        for(i=0; i<= (2 * nx) + ny-1; i++)
                         {
                             v = kdt.xy[maxidx,i];
                             kdt.xy[maxidx,i] = kdt.xy[i2-1,i];
@@ -6463,8 +6475,8 @@ public partial class alglib
             kdt.nodes[nodesoffs+2] = splitsoffs;
             kdt.splits[splitsoffs+0] = s;
             oldoffs = nodesoffs;
-            nodesoffs = nodesoffs+splitnodesize;
-            splitsoffs = splitsoffs+1;
+            nodesoffs += splitnodesize;
+            splitsoffs++;
             
             //
             // Recursive generation:
@@ -6501,25 +6513,25 @@ public partial class alglib
         private static void kdtreequerynnrec(kdtree kdt,
             kdtreerequestbuffer buf,
             int offs,
-            alglib.xparams _params)
+            xparams _params)
         {
             double ptdist = 0;
-            int i = 0;
-            int j = 0;
-            int nx = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int d = 0;
+            var i = 0;
+            var j = 0;
+            var nx = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var d = 0;
             double s = 0;
             double v = 0;
             double t1 = 0;
-            int childbestoffs = 0;
-            int childworstoffs = 0;
-            int childoffs = 0;
+            var childbestoffs = 0;
+            var childworstoffs = 0;
+            var childoffs = 0;
             double prevdist = 0;
-            bool todive = new bool();
-            bool bestisleft = new bool();
-            bool updatemin = new bool();
+            var todive = new bool();
+            var bestisleft = new bool();
+            var updatemin = new bool();
 
             alglib.ap.assert(kdt.n>0, "KDTreeQueryNNRec: internal error");
             
@@ -6550,14 +6562,14 @@ public partial class alglib
                     {
                         for(j=0; j<=nx-1; j++)
                         {
-                            ptdist = ptdist+Math.Abs(kdt.xy[i,j]-buf.x[j]);
+                            ptdist += Math.Abs(kdt.xy[i,j]-buf.x[j]);
                         }
                     }
                     if( kdt.normtype==2 )
                     {
                         for(j=0; j<=nx-1; j++)
                         {
-                            ptdist = ptdist+math.sqr(kdt.xy[i,j]-buf.x[j]);
+                            ptdist += math.sqr(kdt.xy[i,j]-buf.x[j]);
                         }
                     }
                     
@@ -6777,15 +6789,15 @@ public partial class alglib
         private static void kdtreequeryboxrec(kdtree kdt,
             kdtreerequestbuffer buf,
             int offs,
-            alglib.xparams _params)
+            xparams _params)
         {
-            bool inbox = new bool();
-            int nx = 0;
-            int i1 = 0;
-            int i2 = 0;
-            int i = 0;
-            int j = 0;
-            int d = 0;
+            var inbox = new bool();
+            var nx = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var i = 0;
+            var j = 0;
+            var d = 0;
             double s = 0;
             double v = 0;
 
@@ -6841,7 +6853,7 @@ public partial class alglib
                     //
                     buf.r[buf.kcur] = 0.0;
                     buf.idx[buf.kcur] = i;
-                    buf.kcur = buf.kcur+1;
+                    buf.kcur++;
                 }
                 return;
             }
@@ -6897,9 +6909,9 @@ public partial class alglib
         private static void kdtreeinitbox(kdtree kdt,
             double[] x,
             kdtreerequestbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             double vx = 0;
             double vmin = 0;
             double vmax = 0;
@@ -6968,13 +6980,13 @@ public partial class alglib
                     buf.curboxmax[i] = vmax;
                     if( vx<vmin )
                     {
-                        buf.curdist = buf.curdist+math.sqr(vmin-vx);
+                        buf.curdist += math.sqr(vmin-vx);
                     }
                     else
                     {
                         if( vx>vmax )
                         {
-                            buf.curdist = buf.curdist+math.sqr(vx-vmax);
+                            buf.curdist += math.sqr(vx-vmax);
                         }
                     }
                 }
@@ -6995,7 +7007,7 @@ public partial class alglib
         private static void kdtreeallocdatasetindependent(kdtree kdt,
             int nx,
             int ny,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(kdt.n>0, "KDTreeAllocDatasetIndependent: internal error");
             kdt.boxmin = new double[nx];
@@ -7017,10 +7029,10 @@ public partial class alglib
             int n,
             int nx,
             int ny,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(n>0, "KDTreeAllocDatasetDependent: internal error");
-            kdt.xy = new double[n, 2*nx+ny];
+            kdt.xy = new double[n, (2 * nx) + ny];
             kdt.tags = new int[n];
             kdt.nodes = new int[splitnodesize*2*n];
             kdt.splits = new double[2*n];
@@ -7036,7 +7048,7 @@ public partial class alglib
         *************************************************************************/
         private static void checkrequestbufferconsistency(kdtree kdt,
             kdtreerequestbuffer buf,
-            alglib.xparams _params)
+            xparams _params)
         {
             alglib.ap.assert(alglib.ap.len(buf.x)>=kdt.nx, "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");
             alglib.ap.assert(alglib.ap.len(buf.idx)>=kdt.n, "KDTree: dimensions of kdtreerequestbuffer are inconsistent with kdtree structure");

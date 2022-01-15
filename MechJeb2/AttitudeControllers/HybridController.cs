@@ -7,10 +7,10 @@ namespace MuMech.AttitudeControllers
     class HybridController : BaseAttitudeController
     {
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDouble maxStoppingTime = new EditableDouble(2);
+        private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
+        private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
 
         [Persistent(pass = (int) Pass.Global)]
         private bool useControlRange = true;
@@ -59,29 +59,29 @@ namespace MuMech.AttitudeControllers
 
         public void UpdatePhi()
         {
-            Transform vesselTransform = ac.vessel.ReferenceTransform;
+            var vesselTransform = ac.vessel.ReferenceTransform;
 
             // 1. The Euler(-90) here is because the unity transform puts "up" as the pointy end, which is wrong.  The rotation means that
             // "forward" becomes the pointy end, and "up" and "right" correctly define e.g. AoA/pitch and AoS/yaw.  This is just KSP being KSP.
             // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame.
-            Quaternion deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0))  * ac.RequestedAttitude;
+            var deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0))  * ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
             Vector3d ea = deltaRotation.eulerAngles;
-            double pitch = ea[0] * UtilMath.Deg2Rad;
-            double yaw = ea[1] *UtilMath.Deg2Rad;
-            double roll = ea[2] *UtilMath.Deg2Rad;
+            var pitch = ea[0] * UtilMath.Deg2Rad;
+            var yaw = ea[1] *UtilMath.Deg2Rad;
+            var roll = ea[2] *UtilMath.Deg2Rad;
 
             // law of cosines for the "distance" of the miss in radians
             phiTotal = Math.Acos( MuUtils.Clamp( Math.Cos(pitch)*Math.Cos(yaw), -1, 1 ) );
 
             // this is the initial direction of the great circle route of the requested transform
             // (pitch is latitude, yaw is -longitude, and we are "navigating" from 0,0)
-            Vector3d temp = new Vector3d(Math.Sin(pitch), Math.Cos(pitch) * Math.Sin(-yaw), 0);
+            var temp = new Vector3d(Math.Sin(pitch), Math.Cos(pitch) * Math.Sin(-yaw), 0);
             temp = temp.normalized * phiTotal;
 
             // we assemble phi in the pitch, roll, yaw basis that vessel.MOI uses (right handed basis)
-            Vector3d phi = new Vector3d(
+            var phi = new Vector3d(
                     MuUtils.ClampRadiansPi(temp[0]), // pitch distance around the geodesic
                     MuUtils.ClampRadiansPi(roll),
                     MuUtils.ClampRadiansPi(temp[1]) // yaw distance around the geodesic
@@ -90,7 +90,9 @@ namespace MuMech.AttitudeControllers
             phi.Scale(ac.AxisControl);
 
             if (useInertia)
+            {
                 phi -= ac.inertia;
+            }
 
             phiVector = phi;
         }
@@ -101,7 +103,7 @@ namespace MuMech.AttitudeControllers
 
             UpdatePhi();
 
-            for(int i = 0; i < 3; i++) {
+            for(var i = 0; i < 3; i++) {
                 MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
             }
 
@@ -132,10 +134,12 @@ namespace MuMech.AttitudeControllers
         private void UpdateControl(FlightCtrlState c) {
             /* TODO: static engine torque and/or differential throttle */
 
-            for(int i = 0; i < 3; i++) {
+            for(var i = 0; i < 3; i++) {
                 Actuation[i] = TargetTorque[i] / ControlTorque[i];
                 if (Math.Abs(Actuation[i]) < EPSILON || double.IsNaN(Actuation[i]))
+                {
                     Actuation[i] = 0;
+                }
             }
         }
 

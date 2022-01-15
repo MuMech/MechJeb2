@@ -53,16 +53,22 @@ namespace MuMech
             targetLatitude = latitude;
             targetLongitude = longitude;
 
-            Set(new PositionTarget(String.Format(GetPositionTargetString(), latitude, longitude)));
+            Set(new PositionTarget(string.Format(GetPositionTargetString(), latitude, longitude)));
         }
 
 
         [ValueInfoItem("#MechJeb_Targetcoordinates", InfoItem.Category.Target)]//Target coordinates
         public string GetPositionTargetString()
         {
-            if (target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
+            if (target is PositionTarget)
+            {
+                return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
+            }
 
-            if (NormalTargetExists) return Coordinates.ToStringDMS(TargetOrbit.referenceBody.GetLatitude(Position), TargetOrbit.referenceBody.GetLongitude(Position), true);
+            if (NormalTargetExists)
+            {
+                return Coordinates.ToStringDMS(TargetOrbit.referenceBody.GetLatitude(Position), TargetOrbit.referenceBody.GetLongitude(Position), true);
+            }
 
             return "N/A";
         }
@@ -82,7 +88,7 @@ namespace MuMech
         {
             pickingPositionTarget = true;
             MapView.EnterMapView();
-            string message = Localizer.Format("#MechJeb_pickingPositionMsg",mainBody.displayName);//"Click to select a target on " +  + "'s surface.\n(Leave map view to cancel.)"
+            var message = Localizer.Format("#MechJeb_pickingPositionMsg",mainBody.displayName);//"Click to select a target on " +  + "'s surface.\n(Leave map view to cancel.)"
             ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
         }
 
@@ -132,7 +138,10 @@ namespace MuMech
         {
             get {
                 if (target == null)
+                {
                     return null;
+                }
+
                 return target.GetOrbit();
             }
         }
@@ -167,7 +176,11 @@ namespace MuMech
         {
             get
             {
-                if (CanAlign) return -Transform.forward;
+                if (CanAlign)
+                {
+                    return -Transform.forward;
+                }
+
                 return -Transform.up;
             }
         }
@@ -191,12 +204,9 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             //Restore the saved target when we are made active vessel
-            if (!wasActiveVessel && vessel.isActiveVessel)
+            if (!wasActiveVessel && vessel.isActiveVessel && target?.GetVessel() != null)
             {
-                if (target != null && target.GetVessel() != null)
-                {
-                    vessel.targetObject = target;
-                }
+                vessel.targetObject = target;
             }
 
             //notice when the user switches targets
@@ -217,11 +227,19 @@ namespace MuMech
             
             // .23 temp fix until I understand better what's going on
             if (targetBody == null)
+            {
                 targetBody = vessel.mainBody;
-            
+            }
+
             //Update targets that need updating:
-            if (target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
-            else if (target is PositionTarget) ((PositionTarget)target).Update(targetBody, targetLatitude, targetLongitude);
+            if (target is DirectionTarget)
+            {
+                ((DirectionTarget)target).Update(targetDirection);
+            }
+            else if (target is PositionTarget)
+            {
+                ((PositionTarget)target).Update(targetBody, targetLatitude, targetLongitude);
+            }
 
             wasActiveVessel = vessel.isActiveVessel;
         }
@@ -231,9 +249,13 @@ namespace MuMech
             if (MapView.MapIsEnabled && pickingPositionTarget)
             {
                 if (!GuiUtils.MouseIsOverWindow(core) && GuiUtils.GetMouseCoordinates(mainBody) != null)
+                {
                     Cursor.visible = false;
+                }
                 else
+                {
                     Cursor.visible = true;
+                }
             }
         }
 
@@ -247,29 +269,30 @@ namespace MuMech
         void DoCoordinatePicking()
         {
             if (pickingPositionTarget && !MapView.MapIsEnabled)
+            {
                 StopPickPositionTargetOnMap();  //stop picking on leaving map view
+            }
 
             if (!pickingPositionTarget)
-                return;
-
-            if (MapView.MapIsEnabled && vessel.isActiveVessel)
             {
-                if (!GuiUtils.MouseIsOverWindow(core))
+                return;
+            }
+
+            if (MapView.MapIsEnabled && vessel.isActiveVessel && !GuiUtils.MouseIsOverWindow(core))
+            {
+                var mouseCoords = GuiUtils.GetMouseCoordinates(mainBody);
+
+                if (mouseCoords != null)
                 {
-                    Coordinates mouseCoords = GuiUtils.GetMouseCoordinates(mainBody);
+                    GLUtils.DrawGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
 
-                    if (mouseCoords != null)
+                    var biome = mainBody.GetExperimentBiomeSafe(mouseCoords.latitude, mouseCoords.longitude);
+                    GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal() + "\n" + biome);
+
+                    if (Input.GetMouseButtonDown(0))
                     {
-                        GLUtils.DrawGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
-
-                        string biome = mainBody.GetExperimentBiomeSafe(mouseCoords.latitude, mouseCoords.longitude);
-                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal() + "\n" + biome);
-
-                        if (Input.GetMouseButtonDown(0))
-                        {
-                            SetPositionTarget(mainBody, mouseCoords.latitude, mouseCoords.longitude);
-                            StopPickPositionTargetOnMap();
-                        }
+                        SetPositionTarget(mainBody, mouseCoords.latitude, mouseCoords.longitude);
+                        StopPickPositionTargetOnMap();
                     }
                 }
             }
@@ -277,14 +300,40 @@ namespace MuMech
 
         void DrawMapViewTarget()
         {
-            if (HighLogic.LoadedSceneIsEditor) return;
-            if (!MapView.MapIsEnabled) return;
-            if (!vessel.isActiveVessel || vessel.GetMasterMechJeb() != core) return;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                return;
+            }
 
-            if (target == null) return;
-            if (!(target is PositionTarget) && !(target is Vessel)) return;
-            if ((target is Vessel) && (!((Vessel)target).LandedOrSplashed || (((Vessel)target).mainBody != vessel.mainBody))) return;
-            if (target is DirectionTarget) return;
+            if (!MapView.MapIsEnabled)
+            {
+                return;
+            }
+
+            if (!vessel.isActiveVessel || vessel.GetMasterMechJeb() != core)
+            {
+                return;
+            }
+
+            if (target == null)
+            {
+                return;
+            }
+
+            if (!(target is PositionTarget) && !(target is Vessel))
+            {
+                return;
+            }
+
+            if ((target is Vessel) && (!((Vessel)target).LandedOrSplashed || (((Vessel)target).mainBody != vessel.mainBody)))
+            {
+                return;
+            }
+
+            if (target is DirectionTarget)
+            {
+                return;
+            }
 
             GLUtils.DrawGroundMarker(targetBody, targetLatitude, targetLongitude, Color.red, true);
         }

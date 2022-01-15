@@ -1,4 +1,4 @@
-/**************************************************************************
+﻿/**************************************************************************
 ALGLIB 3.18.0 (source code generated 2021-10-25)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
@@ -107,11 +107,11 @@ public partial class alglib
         }
         public static bool operator==(complex lhs, complex rhs)
         {
-            return ((double)lhs.x==(double)rhs.x) & ((double)lhs.y==(double)rhs.y);
+            return ((double)lhs.x==(double)rhs.x) && ((double)lhs.y==(double)rhs.y);
         }
         public static bool operator!=(complex lhs, complex rhs)
         {
-            return ((double)lhs.x!=(double)rhs.x) | ((double)lhs.y!=(double)rhs.y);
+            return ((double)lhs.x!=(double)rhs.x) || ((double)lhs.y!=(double)rhs.y);
         }
         public static complex operator+(complex lhs)
         {
@@ -131,7 +131,7 @@ public partial class alglib
         }
         public static complex operator*(complex lhs, complex rhs)
         { 
-            return new complex(lhs.x*rhs.x-lhs.y*rhs.y, lhs.x*rhs.y+lhs.y*rhs.x);
+            return new complex((lhs.x*rhs.x) - lhs.y*rhs.y, (lhs.x*rhs.y) + lhs.y*rhs.x);
         }
         public static complex operator/(complex lhs, complex rhs)
         {
@@ -141,16 +141,16 @@ public partial class alglib
             if( System.Math.Abs(rhs.y)<System.Math.Abs(rhs.x) )
             {
                 e = rhs.y/rhs.x;
-                f = rhs.x+rhs.y*e;
-                result.x = (lhs.x+lhs.y*e)/f;
-                result.y = (lhs.y-lhs.x*e)/f;
+                f = rhs.x+ (rhs.y*e);
+                result.x = (lhs.x+ (lhs.y*e)) /f;
+                result.y = (lhs.y- (lhs.x*e)) /f;
             }
             else
             {
                 e = rhs.x/rhs.y;
-                f = rhs.y+rhs.x*e;
-                result.x = (lhs.y+lhs.x*e)/f;
-                result.y = (-lhs.x+lhs.y*e)/f;
+                f = rhs.y+ (rhs.x*e);
+                result.x = (lhs.y+ (lhs.x*e)) /f;
+                result.y = (-lhs.x+ (lhs.y*e)) /f;
             }
             return result;
         }
@@ -159,42 +159,40 @@ public partial class alglib
             return x.GetHashCode() ^ y.GetHashCode(); 
         }
         public override bool Equals(object obj) 
-        { 
-            if( obj is byte)
-                return Equals(new complex((byte)obj));
-            if( obj is sbyte)
-                return Equals(new complex((sbyte)obj));
-            if( obj is short)
-                return Equals(new complex((short)obj));
-            if( obj is ushort)
-                return Equals(new complex((ushort)obj));
-            if( obj is int)
-                return Equals(new complex((int)obj));
-            if( obj is uint)
-                return Equals(new complex((uint)obj));
-            if( obj is long)
-                return Equals(new complex((long)obj));
-            if( obj is ulong)
-                return Equals(new complex((ulong)obj));
-            if( obj is float)
-                return Equals(new complex((float)obj));
-            if( obj is double)
-                return Equals(new complex((double)obj));
-            if( obj is decimal)
-                return Equals(new complex((double)(decimal)obj));
-            return base.Equals(obj); 
+        {
+            return obj switch
+            {
+                byte _ => Equals(new complex((byte)obj)),
+                sbyte _ => Equals(new complex((sbyte)obj)),
+                short _ => Equals(new complex((short)obj)),
+                ushort _ => Equals(new complex((ushort)obj)),
+                int _ => Equals(new complex((int)obj)),
+                uint _ => Equals(new complex((uint)obj)),
+                long _ => Equals(new complex((long)obj)),
+                ulong _ => Equals(new complex((ulong)obj)),
+                float _ => Equals(new complex((float)obj)),
+                double _ => Equals(new complex((double)obj)),
+                decimal _ => Equals(new complex((double)(decimal)obj)),
+                _ => base.Equals(obj)
+            };
         }    
-    }    
-    
+    }
+
     /********************************************************************
     Class defining an ALGLIB exception
     ********************************************************************/
-    public class alglibexception : System.Exception
+    [Serializable]
+    public class alglibexception : Exception
     {
         public string msg;
         public alglibexception(string s)
         {
             msg = s;
+        }
+
+        protected alglibexception(System.Runtime.Serialization.SerializationInfo serializationInfo,System.Runtime.Serialization.StreamingContext streamingContext)
+        {
+            throw new NotImplementedException();
         }
     }
     
@@ -204,7 +202,9 @@ public partial class alglib
     public static void AE_CRITICAL_ASSERT(bool x)
     {
         if( !x )
+        {
             System.Environment.FailFast("ALGLIB: critical error");
+        }
     }
     
     /********************************************************************
@@ -257,11 +257,11 @@ public partial class alglib
             flags = v;
         }
     }
-    private static ulong FLG_THREADING_MASK          = 0x7;
-    private static   int FLG_THREADING_SHIFT         = 0;
-    private static ulong FLG_THREADING_USE_GLOBAL    = 0x0;
-    private static ulong FLG_THREADING_SERIAL        = 0x1;
-    private static ulong FLG_THREADING_PARALLEL      = 0x2;
+    private static readonly ulong FLG_THREADING_MASK          = 0x7;
+    private static readonly int FLG_THREADING_SHIFT         = 0;
+    private static readonly ulong FLG_THREADING_USE_GLOBAL    = 0x0;
+    private static readonly ulong FLG_THREADING_SERIAL        = 0x1;
+    private static readonly ulong FLG_THREADING_PARALLEL      = 0x2;
     public static xparams serial   = new xparams(FLG_THREADING_SERIAL);
     public static xparams parallel = new xparams(FLG_THREADING_PARALLEL);
 
@@ -283,7 +283,7 @@ public partial class alglib
     
     public static void ae_set_global_threading(ulong flg_value)
     {
-        flg_value = flg_value&FLG_THREADING_MASK;
+        flg_value &= FLG_THREADING_MASK;
         AE_CRITICAL_ASSERT(flg_value==FLG_THREADING_SERIAL || flg_value==FLG_THREADING_PARALLEL);
         global_threading_flags = (byte)(flg_value>>FLG_THREADING_SHIFT);
     }
@@ -296,7 +296,10 @@ public partial class alglib
     static ulong ae_get_effective_threading(xparams p)
     {
         if( p==null || (p.flags&FLG_THREADING_MASK)==FLG_THREADING_USE_GLOBAL )
+        {
             return ((ulong)global_threading_flags)<<FLG_THREADING_SHIFT;
+        }
+
         return p.flags&FLG_THREADING_MASK;
     }
     
@@ -317,7 +320,7 @@ public partial class alglib
     IMPORTANT (2): memory owned by object will be recycled by GC  in  any
                    case. This method just enforces IMMEDIATE deallocation.
     ********************************************************************/
-    public static void deallocateimmediately<T>(ref T obj) where T : alglib.alglibobject
+    public static void deallocateimmediately<T>(ref T obj) where T : alglibobject
     {
         obj._deallocate();
         obj = null;
@@ -381,9 +384,12 @@ public partial class alglib
     ************************************************************************/
     public static int get_effective_workers(int nworkers)
     {
-        int ncores = System.Environment.ProcessorCount;
+        var ncores = System.Environment.ProcessorCount;
         if( nworkers>=1 )
+        {
             return nworkers>ncores ? ncores : nworkers;
+        }
+
         return ncores+nworkers>=1 ? ncores+nworkers : 1;
     }
     
@@ -438,23 +444,25 @@ public partial class alglib
             ia = new int[0];
             ba = new bool[0];
             ra = new double[0];
-            ca = new alglib.complex[0];
+            ca = new complex[0];
         }
         public override apobject make_copy()
         {
-            rcommstate result = new rcommstate();
-            result.stage = stage;
-            result.ia = (int[])ia.Clone();
-            result.ba = (bool[])ba.Clone();
-            result.ra = (double[])ra.Clone();
-            result.ca = (alglib.complex[])ca.Clone();
+            var result = new rcommstate
+            {
+                stage = stage,
+                ia = (int[])ia.Clone(),
+                ba = (bool[])ba.Clone(),
+                ra = (double[])ra.Clone(),
+                ca = (complex[])ca.Clone()
+            };
             return result;
         }
         public int stage;
         public int[] ia;
         public bool[] ba;
         public double[] ra;
-        public alglib.complex[] ca;
+        public complex[] ca;
     };
 
     /********************************************************************
@@ -470,7 +478,7 @@ public partial class alglib
         { return a.GetLength(1); }
         public static void swap<T>(ref T a, ref T b)
         {
-            T t = a;
+            var t = a;
             a = b;
             b = t;
         }
@@ -480,7 +488,10 @@ public partial class alglib
             if( !cond )
             {
                 if( trace_mode!=TRACE_MODE.NONE )
+                {
                     trace("---!!! CRITICAL ERROR !!!--- exception with message '"+s+"' was generated\n");
+                }
+
                 throw new alglibexception(s);
             }
         }
@@ -512,9 +523,12 @@ public partial class alglib
         ****************************************************************/
         public static int threshold2dps(double threshold)
         {
-            int result = 0;
+            var result = 0;
             double t;
-            for (result = 0, t = 1; t / 10 > threshold*(1+1E-10); result++, t /= 10) ;
+            for (result = 0, t = 1; t / 10 > threshold*(1+1E-10); result++, t /= 10)
+            {
+            }
+
             return result;
         }
 
@@ -523,11 +537,11 @@ public partial class alglib
         ****************************************************************/
         public static string format(complex a, int _dps)
         {
-            int dps = Math.Abs(_dps);
-            string fmt = _dps>=0 ? "F" : "E";
-            string fmtx = String.Format("{{0:"+fmt+"{0}}}", dps);
-            string fmty = String.Format("{{0:"+fmt+"{0}}}", dps);
-            string result = String.Format(fmtx, a.x) + (a.y >= 0 ? "+" : "-") + String.Format(fmty, Math.Abs(a.y)) + "i";
+            var dps = Math.Abs(_dps);
+            var fmt = _dps>=0 ? "F" : "E";
+            var fmtx = string.Format("{{0:"+fmt+"{0}}}", dps);
+            var fmty = string.Format("{{0:"+fmt+"{0}}}", dps);
+            var result = string.Format(fmtx, a.x) + (a.y >= 0 ? "+" : "-") + string.Format(fmty, Math.Abs(a.y)) + "i";
             result = result.Replace(',', '.');
             return result;
         }
@@ -537,14 +551,21 @@ public partial class alglib
         ****************************************************************/
         public static string format(bool[] a)
         {
-            string[] result = new string[len(a)];
+            var result = new string[len(a)];
             int i;
             for(i=0; i<len(a); i++)
-                if( a[i] )
+            {
+                if ( a[i] )
+                {
                     result[i] = "true";
+                }
                 else
+                {
                     result[i] = "false";
-            return "{"+String.Join(",",result)+"}";
+                }
+            }
+
+            return "{"+ string.Join(",",result)+"}";
         }
         
         /****************************************************************
@@ -552,11 +573,14 @@ public partial class alglib
         ****************************************************************/
         public static string format(int[] a)
         {
-            string[] result = new string[len(a)];
+            var result = new string[len(a)];
             int i;
             for (i = 0; i < len(a); i++)
+            {
                 result[i] = a[i].ToString();
-            return "{" + String.Join(",", result) + "}";
+            }
+
+            return "{" + string.Join(",", result) + "}";
         }
 
         /****************************************************************
@@ -564,17 +588,17 @@ public partial class alglib
         ****************************************************************/
         public static string format(double[] a, int _dps)
         {
-            int dps = Math.Abs(_dps);
-            string sfmt = _dps >= 0 ? "F" : "E";
-            string fmt = String.Format("{{0:" + sfmt + "{0}}}", dps);
-            string[] result = new string[len(a)];
+            var dps = Math.Abs(_dps);
+            var sfmt = _dps >= 0 ? "F" : "E";
+            var fmt = string.Format("{{0:" + sfmt + "{0}}}", dps);
+            var result = new string[len(a)];
             int i;
             for (i = 0; i < len(a); i++)
             {
-                result[i] = String.Format(fmt, a[i]);
+                result[i] = string.Format(fmt, a[i]);
                 result[i] = result[i].Replace(',', '.');
             }
-            return "{" + String.Join(",", result) + "}";
+            return "{" + string.Join(",", result) + "}";
         }
 
         /****************************************************************
@@ -582,18 +606,18 @@ public partial class alglib
         ****************************************************************/
         public static string format(complex[] a, int _dps)
         {
-            int dps = Math.Abs(_dps);
-            string fmt = _dps >= 0 ? "F" : "E";
-            string fmtx = String.Format("{{0:"+fmt+"{0}}}", dps);
-            string fmty = String.Format("{{0:"+fmt+"{0}}}", dps);
-            string[] result = new string[len(a)];
+            var dps = Math.Abs(_dps);
+            var fmt = _dps >= 0 ? "F" : "E";
+            var fmtx = string.Format("{{0:"+fmt+"{0}}}", dps);
+            var fmty = string.Format("{{0:"+fmt+"{0}}}", dps);
+            var result = new string[len(a)];
             int i;
             for (i = 0; i < len(a); i++)
             {
-                result[i] = String.Format(fmtx, a[i].x) + (a[i].y >= 0 ? "+" : "-") + String.Format(fmty, Math.Abs(a[i].y)) + "i";
+                result[i] = string.Format(fmtx, a[i].x) + (a[i].y >= 0 ? "+" : "-") + string.Format(fmty, Math.Abs(a[i].y)) + "i";
                 result[i] = result[i].Replace(',', '.');
             }
-            return "{" + String.Join(",", result) + "}";
+            return "{" + string.Join(",", result) + "}";
         }
 
         /****************************************************************
@@ -604,15 +628,18 @@ public partial class alglib
             int i, j, m, n;
             n = cols(a);
             m = rows(a);
-            bool[] line = new bool[n];
-            string[] result = new string[m];
+            var line = new bool[n];
+            var result = new string[m];
             for (i = 0; i < m; i++)
             {
                 for (j = 0; j < n; j++)
+                {
                     line[j] = a[i, j];
+                }
+
                 result[i] = format(line);
             }
-            return "{" + String.Join(",", result) + "}";
+            return "{" + string.Join(",", result) + "}";
         }
 
         /****************************************************************
@@ -623,15 +650,18 @@ public partial class alglib
             int i, j, m, n;
             n = cols(a);
             m = rows(a);
-            int[] line = new int[n];
-            string[] result = new string[m];
+            var line = new int[n];
+            var result = new string[m];
             for (i = 0; i < m; i++)
             {
                 for (j = 0; j < n; j++)
+                {
                     line[j] = a[i, j];
+                }
+
                 result[i] = format(line);
             }
-            return "{" + String.Join(",", result) + "}";
+            return "{" + string.Join(",", result) + "}";
         }
 
         /****************************************************************
@@ -642,15 +672,18 @@ public partial class alglib
             int i, j, m, n;
             n = cols(a);
             m = rows(a);
-            double[] line = new double[n];
-            string[] result = new string[m];
+            var line = new double[n];
+            var result = new string[m];
             for (i = 0; i < m; i++)
             {
                 for (j = 0; j < n; j++)
+                {
                     line[j] = a[i, j];
+                }
+
                 result[i] = format(line, dps);
             }
-            return "{" + String.Join(",", result) + "}";
+            return "{" + string.Join(",", result) + "}";
         }
 
         /****************************************************************
@@ -661,15 +694,18 @@ public partial class alglib
             int i, j, m, n;
             n = cols(a);
             m = rows(a);
-            complex[] line = new complex[n];
-            string[] result = new string[m];
+            var line = new complex[n];
+            var result = new string[m];
             for (i = 0; i < m; i++)
             {
                 for (j = 0; j < n; j++)
+                {
                     line[j] = a[i, j];
+                }
+
                 result[i] = format(line, dps);
             }
-            return "{" + String.Join(",", result) + "}";
+            return "{" + string.Join(",", result) + "}";
         }
 
         /****************************************************************
@@ -682,10 +718,16 @@ public partial class alglib
             int i, j, n;
             double err, mx, v1, v2;
             if( rows(a)!=cols(a) )
+            {
                 return false;
+            }
+
             n = rows(a);
             if( n==0 )
+            {
                 return true;
+            }
+
             mx = 0;
             err = 0;
             for( i=0; i<n; i++)
@@ -695,20 +737,32 @@ public partial class alglib
                     v1 = a[i,j];
                     v2 = a[j,i];
                     if( !math.isfinite(v1) )
+                    {
                         return false;
-                    if( !math.isfinite(v2) )
+                    }
+
+                    if ( !math.isfinite(v2) )
+                    {
                         return false;
+                    }
+
                     err = Math.Max(err, Math.Abs(v1-v2));
                     mx  = Math.Max(mx,  Math.Abs(v1));
                     mx  = Math.Max(mx,  Math.Abs(v2));
                 }
                 v1 = a[i,i];
                 if( !math.isfinite(v1) )
+                {
                     return false;
+                }
+
                 mx = Math.Max(mx, Math.Abs(v1));
             }
             if( mx==0 )
+            {
                 return true;
+            }
+
             return err/mx<=1.0E-14;
         }
         
@@ -723,10 +777,16 @@ public partial class alglib
             double err, mx;
             complex v1, v2, vt;
             if( rows(a)!=cols(a) )
+            {
                 return false;
+            }
+
             n = rows(a);
             if( n==0 )
+            {
                 return true;
+            }
+
             mx = 0;
             err = 0;
             for( i=0; i<n; i++)
@@ -736,13 +796,25 @@ public partial class alglib
                     v1 = a[i,j];
                     v2 = a[j,i];
                     if( !math.isfinite(v1.x) )
+                    {
                         return false;
-                    if( !math.isfinite(v1.y) )
+                    }
+
+                    if ( !math.isfinite(v1.y) )
+                    {
                         return false;
-                    if( !math.isfinite(v2.x) )
+                    }
+
+                    if ( !math.isfinite(v2.x) )
+                    {
                         return false;
-                    if( !math.isfinite(v2.y) )
+                    }
+
+                    if ( !math.isfinite(v2.y) )
+                    {
                         return false;
+                    }
+
                     vt.x = v1.x-v2.x;
                     vt.y = v1.y+v2.y;
                     err = Math.Max(err, math.abscomplex(vt));
@@ -751,14 +823,23 @@ public partial class alglib
                 }
                 v1 = a[i,i];
                 if( !math.isfinite(v1.x) )
+                {
                     return false;
-                if( !math.isfinite(v1.y) )
+                }
+
+                if ( !math.isfinite(v1.y) )
+                {
                     return false;
+                }
+
                 err = Math.Max(err, Math.Abs(v1.y));
                 mx = Math.Max(mx, math.abscomplex(v1));
             }
             if( mx==0 )
+            {
                 return true;
+            }
+
             return err/mx<=1.0E-14;
         }
         
@@ -770,13 +851,24 @@ public partial class alglib
         {
             int i, j, n;
             if( rows(a)!=cols(a) )
+            {
                 return false;
+            }
+
             n = rows(a);
             if( n==0 )
+            {
                 return true;
-            for( i=0; i<n; i++)
-                for(j=i+1; j<n; j++)
+            }
+
+            for ( i=0; i<n; i++)
+            {
+                for (j=i+1; j<n; j++)
+                {
                     a[i,j] = a[j,i];
+                }
+            }
+
             return true;
         }
         
@@ -788,17 +880,26 @@ public partial class alglib
             int i, j, n;
             complex v;
             if( rows(a)!=cols(a) )
+            {
                 return false;
+            }
+
             n = rows(a);
             if( n==0 )
+            {
                 return true;
-            for( i=0; i<n; i++)
-                for(j=i+1; j<n; j++)
+            }
+
+            for ( i=0; i<n; i++)
+            {
+                for (j=i+1; j<n; j++)
                 {
                     v = a[j,i];
                     a[i,j].x = v.x;
                     a[i,j].y = -v.y;
                 }
+            }
+
             return true;
         }
         
@@ -831,16 +932,22 @@ public partial class alglib
         {
             // trace disabled
             if( trace_mode==TRACE_MODE.NONE )
+            {
                 return false;
-            
+            }
+
             // contains tag (followed by comma, which means exact match)
-            if( trace_tags.Contains(","+tag.ToLower()+",") )
+            if ( trace_tags.Contains(","+tag.ToLower()+",") )
+            {
                 return true;
-            
+            }
+
             // contains tag (followed by dot, which means match with child)
-            if( trace_tags.Contains(","+tag.ToLower()+".") )
+            if ( trace_tags.Contains(","+tag.ToLower()+".") )
+            {
                 return true;
-            
+            }
+
             // nothing
             return false;
         }
@@ -848,8 +955,11 @@ public partial class alglib
         public static void trace(string s)
         {
             if( trace_mode==TRACE_MODE.NONE )
+            {
                 return;
-            if( trace_mode==TRACE_MODE.FILE )
+            }
+
+            if ( trace_mode==TRACE_MODE.FILE )
             {
                 System.IO.File.AppendAllText(trace_filename,s);
                 return;
@@ -863,7 +973,7 @@ public partial class alglib
     public class math
     {
         //public static System.Random RndObject = new System.Random(System.DateTime.Now.Millisecond);
-        public static System.Random rndobject = new System.Random(System.DateTime.Now.Millisecond + 1000*System.DateTime.Now.Second + 60*1000*System.DateTime.Now.Minute);
+        public static Random rndobject = new Random(System.DateTime.Now.Millisecond + (1000 *System.DateTime.Now.Second) + (60 *1000*System.DateTime.Now.Minute));
 
         public const double machineepsilon = 5E-16;
         public const double maxrealnumber = 1E300;
@@ -871,7 +981,7 @@ public partial class alglib
         
         public static bool isfinite(double d)
         {
-            return !System.Double.IsNaN(d) && !System.Double.IsInfinity(d);
+            return !double.IsNaN(d) && !double.IsInfinity(d);
         }
         
         public static double randomreal()
@@ -882,7 +992,7 @@ public partial class alglib
         }
         public static int randominteger(int N)
         {
-            int r = 0;
+            var r = 0;
             lock(rndobject){ r = rndobject.Next(N); }
             return r;
         }
@@ -902,11 +1012,13 @@ public partial class alglib
             w = xabs>yabs ? xabs : yabs;
             v = xabs<yabs ? xabs : yabs; 
             if( v==0 )
+            {
                 return w;
+            }
             else
             {
-                double t = v/w;
-                return w*System.Math.Sqrt(1+t*t);
+                var t = v/w;
+                return w*System.Math.Sqrt(1+ (t * t));
             }
         }
         public static complex conj(complex z)
@@ -915,7 +1027,7 @@ public partial class alglib
         }    
         public static complex csqr(complex z)
         {
-            return new complex(z.x*z.x-z.y*z.y, 2*z.x*z.y); 
+            return new complex((z.x*z.x) - z.y*z.y, 2*z.x*z.y); 
         }
 
     }
@@ -974,7 +1086,7 @@ public partial class alglib
         //
         // Parameters
         //
-        bool skip_first_row = (flags&CSV_SKIP_HEADERS)!=0;
+        var skip_first_row = (flags&CSV_SKIP_HEADERS)!=0;
         
         //
         // Prepare empty output array
@@ -988,22 +1100,28 @@ public partial class alglib
         // * append trailing '\n' and '\0' characters
         // Return if file contains only spaces/newlines.
         //
-        byte b_space = System.Convert.ToByte(' ');
-        byte b_tab   = System.Convert.ToByte('\t');
-        byte b_lf    = System.Convert.ToByte('\n');
-        byte b_cr    = System.Convert.ToByte('\r');
-        byte b_comma = System.Convert.ToByte(',');
-        byte b_fullstop= System.Convert.ToByte('.');
-        byte[] v0 = System.IO.File.ReadAllBytes(filename);
+        var b_space = System.Convert.ToByte(' ');
+        var b_tab   = System.Convert.ToByte('\t');
+        var b_lf    = System.Convert.ToByte('\n');
+        var b_cr    = System.Convert.ToByte('\r');
+        var b_comma = System.Convert.ToByte(',');
+        var b_fullstop= System.Convert.ToByte('.');
+        var v0 = System.IO.File.ReadAllBytes(filename);
         if( v0.Length==0 )
-            return;
-        byte[] v1 = new byte[v0.Length+2];
-        int filesize = v0.Length;
-        for(int i=0; i<filesize; i++)
-            v1[i] = v0[i]==0 ? b_space : v0[i];
-        for(; filesize>0; )
         {
-            byte c = v1[filesize-1];
+            return;
+        }
+
+        var v1 = new byte[v0.Length+2];
+        var filesize = v0.Length;
+        for(var i=0; i<filesize; i++)
+        {
+            v1[i] = v0[i]==0 ? b_space : v0[i];
+        }
+
+        for (; filesize>0; )
+        {
+            var c = v1[filesize-1];
             if( c==b_space || c==b_tab || c==b_cr || c==b_lf )
             {
                 filesize--;
@@ -1012,7 +1130,10 @@ public partial class alglib
             break;
         }
         if( filesize==0 )
+        {
             return;
+        }
+
         v1[filesize+0] = b_lf;
         v1[filesize+1] = 0x0;
         filesize+=2;
@@ -1023,49 +1144,73 @@ public partial class alglib
         //
         int rows_count, cols_count, max_length = 0;
         cols_count = 1;
-        for(int idx=0; idx<filesize; idx++)
+        for(var idx=0; idx<filesize; idx++)
         {
             if( v1[idx]==separator )
+            {
                 cols_count++;
-            if( v1[idx]==b_lf )
+            }
+
+            if ( v1[idx]==b_lf )
+            {
                 break;
+            }
         }
         rows_count = 0;
-        for(int idx=0; idx<filesize; idx++)
-            if( v1[idx]==b_lf )
+        for(var idx=0; idx<filesize; idx++)
+        {
+            if ( v1[idx]==b_lf )
+            {
                 rows_count++;
-        if( rows_count==1 && skip_first_row ) // empty output, return
+            }
+        }
+
+        if ( rows_count==1 && skip_first_row ) // empty output, return
+        {
             return;
-        int[] offsets = new int[rows_count*cols_count];
-        int[] lengths = new int[rows_count*cols_count];
-        int cur_row_idx = 0;
-        for(int row_start=0; v1[row_start]!=0x0; )
+        }
+
+        var offsets = new int[rows_count*cols_count];
+        var lengths = new int[rows_count*cols_count];
+        var cur_row_idx = 0;
+        for(var row_start=0; v1[row_start]!=0x0; )
         {
             // determine row length
             int row_length;
-            for(row_length=0; v1[row_start+row_length]!=b_lf; row_length++);
-            
+            for(row_length=0; v1[row_start+row_length]!=b_lf; row_length++)
+            {
+            }
+
             // determine cols count, perform integrity check
-            int cur_cols_cnt=1;
-            for(int idx=0; idx<row_length; idx++)
-                if( v1[row_start+idx]==separator )
-                    cur_cols_cnt++;
-            if( cols_count!=cur_cols_cnt )
-                throw new alglib.alglibexception("read_csv: non-rectangular contents, rows have different sizes");
-            
-            // store offsets and lengths of the fields
-            int cur_offs = 0;
-            int cur_col_idx = 0;
-            for(int idx=0; idx<row_length+1; idx++)
-                if( v1[row_start+idx]==separator || v1[row_start+idx]==b_lf )
+            var cur_cols_cnt=1;
+            for(var idx=0; idx<row_length; idx++)
+            {
+                if ( v1[row_start+idx]==separator )
                 {
-                    offsets[cur_row_idx*cols_count+cur_col_idx] = row_start+cur_offs;
-                    lengths[cur_row_idx*cols_count+cur_col_idx] = idx-cur_offs;
+                    cur_cols_cnt++;
+                }
+            }
+
+            if ( cols_count!=cur_cols_cnt )
+            {
+                throw new alglibexception("read_csv: non-rectangular contents, rows have different sizes");
+            }
+
+            // store offsets and lengths of the fields
+            var cur_offs = 0;
+            var cur_col_idx = 0;
+            for(var idx=0; idx<row_length+1; idx++)
+            {
+                if ( v1[row_start+idx]==separator || v1[row_start+idx]==b_lf )
+                {
+                    offsets[(cur_row_idx * cols_count) + cur_col_idx] = row_start+cur_offs;
+                    lengths[(cur_row_idx * cols_count) + cur_col_idx] = idx-cur_offs;
                     max_length = idx-cur_offs>max_length ? idx-cur_offs : max_length;
                     cur_offs = idx+1;
                     cur_col_idx++;
                 }
-            
+            }
+
             // advance row start
             cur_row_idx++;
             row_start = row_start+row_length+1;
@@ -1074,28 +1219,33 @@ public partial class alglib
         //
         // Convert
         //
-        int row0 = skip_first_row ? 1 : 0;
-        int row1 = rows_count;
-        System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.CreateSpecificCulture(""); // invariant culture
+        var row0 = skip_first_row ? 1 : 0;
+        var row1 = rows_count;
+        var culture = System.Globalization.CultureInfo.CreateSpecificCulture(""); // invariant culture
         matrix = new double[row1-row0, cols_count];
         alglib.AE_CRITICAL_ASSERT(culture.NumberFormat.NumberDecimalSeparator==".");
-        for(int ridx=row0; ridx<row1; ridx++)
-            for(int cidx=0; cidx<cols_count; cidx++)
+        for(var ridx=row0; ridx<row1; ridx++)
+        {
+            for (var cidx=0; cidx<cols_count; cidx++)
             {
-                int field_len  = lengths[ridx*cols_count+cidx];
-                int field_offs = offsets[ridx*cols_count+cidx];
+                var field_len  = lengths[(ridx * cols_count) + cidx];
+                var field_offs = offsets[(ridx * cols_count) + cidx];
                 
                 // replace , by full stop
-                for(int idx=0; idx<field_len; idx++)
-                    if( v1[field_offs+idx]==b_comma )
+                for(var idx=0; idx<field_len; idx++)
+                {
+                    if ( v1[field_offs+idx]==b_comma )
+                    {
                         v1[field_offs+idx] = b_fullstop;
-                
+                    }
+                }
+
                 // convert
-                string s_val = System.Text.Encoding.ASCII.GetString(v1, field_offs, field_len);
-                double d_val;
-                Double.TryParse(s_val, System.Globalization.NumberStyles.Float, culture, out d_val);
+                var s_val = System.Text.Encoding.ASCII.GetString(v1, field_offs, field_len);
+                double.TryParse(s_val, System.Globalization.NumberStyles.Float, culture, out var d_val);
                 matrix[ridx-row0,cidx] = d_val;
             }
+        }
     }
     
     
@@ -1119,8 +1269,8 @@ public partial class alglib
         private System.IO.Stream io_stream;
         
         // local temporaries
-        private char[] entry_buf_char;
-        private byte[] entry_buf_byte; 
+        private readonly char[] entry_buf_char;
+        private readonly byte[] entry_buf_byte; 
         
         public serializer()
         {
@@ -1148,16 +1298,22 @@ public partial class alglib
         public void alloc_entry()
         {
             if( mode!=SMODE.ALLOC )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
             entries_needed++;
         }
 
         public void alloc_byte_array(byte[] a)
         {
             if( mode!=SMODE.ALLOC )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            int n = ap.len(a);
-            n = n/8 + (n%8>0 ? 1 : 0);
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
+            var n = ap.len(a);
+            n = (n / 8) + (n%8>0 ? 1 : 0);
             entries_needed += 1+n;
         }
 
@@ -1167,10 +1323,12 @@ public partial class alglib
             
             // check and change mode
             if( mode!=SMODE.ALLOC )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-            
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
             // if no entries needes (degenerate case)
-            if( entries_needed==0 )
+            if ( entries_needed==0 )
             {
                 bytes_asked = 4; /* a pair of chars for \r\n, one for space, one for dot */ 
                 return bytes_asked;
@@ -1186,8 +1344,8 @@ public partial class alglib
             }
             
             // calculate result size
-            result  = ((rows-1)*SER_ENTRIES_PER_ROW+lastrowsize)*SER_ENTRY_LENGTH;  /* data size */
-            result +=  (rows-1)*(SER_ENTRIES_PER_ROW-1)+(lastrowsize-1);            /* space symbols */
+            result  = (((rows-1)*SER_ENTRIES_PER_ROW) + lastrowsize)*SER_ENTRY_LENGTH;  /* data size */
+            result += ((rows-1)*(SER_ENTRIES_PER_ROW-1)) + (lastrowsize-1);            /* space symbols */
             result += rows*2;                                                       /* newline symbols */
             result += 1;                                                            /* trailing dot */
             bytes_asked = result;
@@ -1196,7 +1354,7 @@ public partial class alglib
 
         public void sstart_str()
         {
-            int allocsize = get_alloc_size();
+            var allocsize = get_alloc_size();
             
             // clear input/output buffers which may hold pointers to unneeded memory
             // NOTE: it also helps us to avoid errors when data are written to incorrect location
@@ -1204,7 +1362,10 @@ public partial class alglib
             
             // check and change mode
             if( mode!=SMODE.ALLOC )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
             mode = SMODE.TO_STRING;
             
             // other preparations
@@ -1221,7 +1382,10 @@ public partial class alglib
             
             // check and change mode
             if( mode!=SMODE.ALLOC )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
             mode = SMODE.TO_STREAM;
             io_stream = o_stream;
         }
@@ -1234,7 +1398,10 @@ public partial class alglib
             
             // check and change mode
             if( mode!=SMODE.DEFAULT )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
             mode = SMODE.FROM_STRING;
             
             in_str = s.ToCharArray();
@@ -1249,7 +1416,10 @@ public partial class alglib
             
             // check and change mode
             if( mode!=SMODE.DEFAULT )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
             mode = SMODE.FROM_STREAM;
             io_stream = i_stream;
         }
@@ -1258,7 +1428,7 @@ public partial class alglib
         {
             // prepare serialization
             char[] arr_out = null;
-            int cnt_out = 0;
+            var cnt_out = 0;
             if( mode==SMODE.TO_STRING )
             {
                 arr_out = out_str;
@@ -1270,19 +1440,32 @@ public partial class alglib
                 cnt_out = 0;
             }
             else
-                throw new alglib.alglibexception("ALGLIB: internal error during serialization");
-            
+            {
+                throw new alglibexception("ALGLIB: internal error during serialization");
+            }
+
             // serialize
-            if( val_idx==0 )
+            if ( val_idx==0 )
+            {
                 bool2str(  v0, arr_out, ref cnt_out);
+            }
             else if( val_idx==1 )
+            {
                 int2str(   v1, arr_out, ref cnt_out);
+            }
             else if( val_idx==2 )
+            {
                 double2str(v2, arr_out, ref cnt_out);
+            }
             else if( val_idx==3 )
+            {
                 ulong2str( v3, arr_out, ref cnt_out);
+            }
             else
-                throw new alglib.alglibexception("ALGLIB: internal error during serialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during serialization");
+            }
+
             entries_saved++;
             if( entries_saved%SER_ENTRIES_PER_ROW!=0 )
             {
@@ -1304,35 +1487,50 @@ public partial class alglib
             }
             else if( mode==SMODE.TO_STREAM )
             {
-                for(int k=0; k<cnt_out; k++)
+                for(var k=0; k<cnt_out; k++)
+                {
                     entry_buf_byte[k] = (byte)entry_buf_char[k];
+                }
+
                 io_stream.Write(entry_buf_byte, 0, cnt_out);
                 return;
             }
             else
-                throw new alglib.alglibexception("ALGLIB: internal error during serialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during serialization");
+            }
         }
 
         private void unstream_entry_char()
         {
             if( mode!=SMODE.FROM_STREAM )
-                throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+            {
+                throw new alglibexception("ALGLIB: internal error during unserialization");
+            }
+
             int c;
             for(;;)
             {
                 c = io_stream.ReadByte();
                 if( c<0 )
-                    throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
-                if( c!=' ' && c!='\t' && c!='\n' && c!='\r' )
+                {
+                    throw new alglibexception("ALGLIB: internal error during unserialization");
+                }
+
+                if ( c!=' ' && c!='\t' && c!='\n' && c!='\r' )
+                {
                     break;
+                }
             }
             entry_buf_char[0] = (char)c;
-            for(int k=1; k<SER_ENTRY_LENGTH; k++)
+            for(var k=1; k<SER_ENTRY_LENGTH; k++)
             {
                 c = io_stream.ReadByte();
                 entry_buf_char[k] = (char)c;
                 if( c<0 || c==' ' || c=='\t' || c=='\n' || c=='\r' )
-                    throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+                {
+                    throw new alglibexception("ALGLIB: internal error during unserialization");
+                }
             }
             entry_buf_char[SER_ENTRY_LENGTH] = (char)0;
         }
@@ -1359,21 +1557,24 @@ public partial class alglib
 
         public void serialize_byte_array(byte[] v)
         {
-            int chunk_size = 8;
+            var chunk_size = 8;
             
             // save array length
-            int n = ap.len(v);
+            var n = ap.len(v);
             serialize_int(n);
             
             // determine entries count
-            int entries_count = n/chunk_size + (n%chunk_size>0 ? 1 : 0);
-            for(int eidx=0; eidx<entries_count; eidx++)
+            var entries_count = (n / chunk_size) + (n%chunk_size>0 ? 1 : 0);
+            for(var eidx=0; eidx<entries_count; eidx++)
             {
-                int elen = n-eidx*chunk_size;
+                var elen = n- (eidx * chunk_size);
                 elen = elen>chunk_size ? chunk_size : elen;
                 ulong tmp = 0x0;
-                for(int i=0; i<elen; i++)
-                    tmp = tmp | (((ulong)v[eidx*chunk_size+i])<<(8*i));
+                for(var i=0; i<elen; i++)
+                {
+                    tmp |= (((ulong)v[(eidx * chunk_size) + i])<<(8*i));
+                }
+
                 serialize_ulong(tmp);
             }
         }
@@ -1381,72 +1582,86 @@ public partial class alglib
         public bool unserialize_bool()
         {
             if( mode==SMODE.FROM_STRING )
+            {
                 return str2bool(in_str, ref bytes_read);
-            if( mode==SMODE.FROM_STREAM )
+            }
+
+            if ( mode==SMODE.FROM_STREAM )
             {
                 unstream_entry_char();
-                int dummy = 0;
+                var dummy = 0;
                 return str2bool(entry_buf_char, ref dummy);
             }
-            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            throw new alglibexception("ALGLIB: internal error during (un)serialization");
         }
 
         public int unserialize_int()
         {
             if( mode==SMODE.FROM_STRING )
+            {
                 return str2int(in_str, ref bytes_read);
-            if( mode==SMODE.FROM_STREAM )
+            }
+
+            if ( mode==SMODE.FROM_STREAM )
             {
                 unstream_entry_char();
-                int dummy = 0;
+                var dummy = 0;
                 return str2int(entry_buf_char, ref dummy);
             }
-            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            throw new alglibexception("ALGLIB: internal error during (un)serialization");
         }
 
         public double unserialize_double()
         {
             if( mode==SMODE.FROM_STRING )
+            {
                 return str2double(in_str, ref bytes_read);
-            if( mode==SMODE.FROM_STREAM )
+            }
+
+            if ( mode==SMODE.FROM_STREAM )
             {
                 unstream_entry_char();
-                int dummy = 0;
+                var dummy = 0;
                 return str2double(entry_buf_char, ref dummy);
             }
-            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            throw new alglibexception("ALGLIB: internal error during (un)serialization");
         }
 
         public ulong unserialize_ulong()
         {
             if( mode==SMODE.FROM_STRING )
+            {
                 return str2ulong(in_str, ref bytes_read);
-            if( mode==SMODE.FROM_STREAM )
+            }
+
+            if ( mode==SMODE.FROM_STREAM )
             {
                 unstream_entry_char();
-                int dummy = 0;
+                var dummy = 0;
                 return str2ulong(entry_buf_char, ref dummy);
             }
-            throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
+            throw new alglibexception("ALGLIB: internal error during (un)serialization");
         }
 
         public byte[] unserialize_byte_array()
         {
-            int chunk_size = 8;
+            var chunk_size = 8;
             
             // read array length, allocate output
-            int n = unserialize_int();
-            byte[] result = new byte[n];
+            var n = unserialize_int();
+            var result = new byte[n];
             
             // determine entries count
-            int entries_count = n/chunk_size + (n%chunk_size>0 ? 1 : 0);
-            for(int eidx=0; eidx<entries_count; eidx++)
+            var entries_count = (n / chunk_size) + (n%chunk_size>0 ? 1 : 0);
+            for(var eidx=0; eidx<entries_count; eidx++)
             {
-                int elen = n-eidx*chunk_size;
+                var elen = n- (eidx * chunk_size);
                 elen = elen>chunk_size ? chunk_size : elen;
-                ulong tmp = unserialize_ulong();
-                for(int i=0; i<elen; i++)
-                    result[eidx*chunk_size+i] = unchecked((byte)(tmp>>(8*i)));
+                var tmp = unserialize_ulong();
+                for(var i=0; i<elen; i++)
+                {
+                    result[(eidx * chunk_size) + i] = unchecked((byte)(tmp>>(8*i)));
+                }
             }
             
             // done
@@ -1480,23 +1695,32 @@ public partial class alglib
             {
                 for(;;)
                 {
-                    int c = io_stream.ReadByte();
+                    var c = io_stream.ReadByte();
                     if( c==' ' || c=='\t' || c=='\n' || c=='\r' )
+                    {
                         continue;
-                    if( c=='.' )
+                    }
+
+                    if ( c=='.' )
+                    {
                         break;
-                    throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+                    }
+
+                    throw new alglibexception("ALGLIB: internal error during unserialization");
                 }
                 return;
             }
-            throw new alglib.alglibexception("ALGLIB: internal error during unserialization");
+            throw new alglibexception("ALGLIB: internal error during unserialization");
         }
 
         public string get_string()
         {
             if( mode!=SMODE.TO_STRING )
-                throw new alglib.alglibexception("ALGLIB: internal error during (un)serialization");
-             return new string(out_str, 0, bytes_written);
+            {
+                throw new alglibexception("ALGLIB: internal error during (un)serialization");
+            }
+
+            return new string(out_str, 0, bytes_written);
         }
 
 
@@ -1506,7 +1730,7 @@ public partial class alglib
 
         If v is negative or greater than 63, this function returns '?'.
         ************************************************************************/
-        private static char[] _sixbits2char_tbl = new char[64]{ 
+        private static readonly char[] _sixbits2char_tbl = new char[64]{ 
                 '0', '1', '2', '3', '4', '5', '6', '7',
                 '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
                 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
@@ -1518,7 +1742,10 @@ public partial class alglib
         private static char sixbits2char(int v)
         {
             if( v<0 || v>63 )
+            {
                 return '?';
+            }
+
             return _sixbits2char_tbl[v];
         }
         
@@ -1528,7 +1755,7 @@ public partial class alglib
         This function is inverse of ae_sixbits2char()
         If c is not correct character, this function returns -1.
         ************************************************************************/
-        private static int[] _char2sixbits_tbl = new int[128] {
+        private static readonly int[] _char2sixbits_tbl = new int[128] {
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1595,10 +1822,13 @@ public partial class alglib
         ************************************************************************/
         private static void bool2str(bool v, char[] buf, ref int offs)
         {
-            char c = v ? '1' : '0';
+            var c = v ? '1' : '0';
             int i;
             for(i=0; i<SER_ENTRY_LENGTH; i++)
+            {
                 buf[offs+i] = c;
+            }
+
             offs += SER_ENTRY_LENGTH;
         }
 
@@ -1618,13 +1848,16 @@ public partial class alglib
         private static bool str2bool(char[] buf, ref int offs)
         {
             bool was0, was1;
-            string emsg = "ALGLIB: unable to read boolean value from stream";
+            var emsg = "ALGLIB: unable to read boolean value from stream";
             
             was0 = false;
             was1 = false;
             while( buf[offs]==' ' || buf[offs]=='\t' || buf[offs]=='\n' || buf[offs]=='\r' )
+            {
                 offs++;
-            while( buf[offs]!=' ' && buf[offs]!='\t' && buf[offs]!='\n' && buf[offs]!='\r' && buf[offs]!=0 )
+            }
+
+            while ( buf[offs]!=' ' && buf[offs]!='\t' && buf[offs]!='\n' && buf[offs]!='\r' && buf[offs]!=0 )
             {
                 if( buf[offs]=='0' )
                 {
@@ -1638,12 +1871,18 @@ public partial class alglib
                     offs++;
                     continue;
                 }
-                throw new alglib.alglibexception(emsg);
+                throw new alglibexception(emsg);
             }
             if( (!was0) && (!was1) )
-                throw new alglib.alglibexception(emsg);
-            if( was0 && was1 )
-                throw new alglib.alglibexception(emsg);
+            {
+                throw new alglibexception(emsg);
+            }
+
+            if ( was0 && was1 )
+            {
+                throw new alglibexception(emsg);
+            }
+
             return was1 ? true : false;
         }
 
@@ -1662,9 +1901,9 @@ public partial class alglib
         private static void int2str(int v, char[] buf, ref int offs)
         {
             int i;
-            byte[] _bytes = System.BitConverter.GetBytes((int)v);
-            byte[]  bytes = new byte[9];
-            int[] sixbits = new int[12];
+            var _bytes = System.BitConverter.GetBytes((int)v);
+            var  bytes = new byte[9];
+            var sixbits = new int[12];
             byte c;
             
             //
@@ -1674,12 +1913,21 @@ public partial class alglib
             // conversion to six-bit representation
             //
             if( !System.BitConverter.IsLittleEndian )
+            {
                 System.Array.Reverse(_bytes);
+            }
+
             c = v<0 ? (byte)0xFF : (byte)0x00;
             for(i=0; i<sizeof(int); i++)
+            {
                 bytes[i] = _bytes[i];
-            for(i=sizeof(int); i<8; i++)
+            }
+
+            for (i=sizeof(int); i<8; i++)
+            {
                 bytes[i] = c;
+            }
+
             bytes[8] = 0;
             
             //
@@ -1691,7 +1939,10 @@ public partial class alglib
             threebytes2foursixbits(bytes, 3, sixbits, 4);
             threebytes2foursixbits(bytes, 6, sixbits, 8);        
             for(i=0; i<SER_ENTRY_LENGTH; i++)
+            {
                 buf[offs+i] = sixbits2char(sixbits[i]);
+            }
+
             offs += SER_ENTRY_LENGTH;
         }
 
@@ -1710,11 +1961,11 @@ public partial class alglib
         ************************************************************************/
         private static int str2int(char[] buf, ref int offs)
         {
-            string emsg =       "ALGLIB: unable to read integer value from stream";
-            string emsg3264 =   "ALGLIB: unable to read integer value from stream (value does not fit into 32 bits)";
-            int[] sixbits = new int[12];
-            byte[] bytes = new byte[9];
-            byte[] _bytes = new byte[sizeof(int)];
+            var emsg =       "ALGLIB: unable to read integer value from stream";
+            var emsg3264 =   "ALGLIB: unable to read integer value from stream (value does not fit into 32 bits)";
+            var sixbits = new int[12];
+            var bytes = new byte[9];
+            var _bytes = new byte[sizeof(int)];
             int sixbitsread, i;
             byte c;
             
@@ -1728,32 +1979,55 @@ public partial class alglib
             //
             sixbitsread = 0;
             while( buf[offs]==' ' || buf[offs]=='\t' || buf[offs]=='\n' || buf[offs]=='\r' )
+            {
                 offs++;
-            while( buf[offs]!=' ' && buf[offs]!='\t' && buf[offs]!='\n' && buf[offs]!='\r' && buf[offs]!=0 )
+            }
+
+            while ( buf[offs]!=' ' && buf[offs]!='\t' && buf[offs]!='\n' && buf[offs]!='\r' && buf[offs]!=0 )
             {
                 int d;
                 d = char2sixbits(buf[offs]);
                 if( d<0 || sixbitsread>=SER_ENTRY_LENGTH )
-                    throw new alglib.alglibexception(emsg);
+                {
+                    throw new alglibexception(emsg);
+                }
+
                 sixbits[sixbitsread] = d;
                 sixbitsread++;
                 offs++;
             }
             if( sixbitsread==0 )
-                throw new alglib.alglibexception(emsg);
-            for(i=sixbitsread; i<12; i++)
+            {
+                throw new alglibexception(emsg);
+            }
+
+            for (i=sixbitsread; i<12; i++)
+            {
                 sixbits[i] = 0;
+            }
+
             foursixbits2threebytes(sixbits, 0, bytes, 0);
             foursixbits2threebytes(sixbits, 4, bytes, 3);
             foursixbits2threebytes(sixbits, 8, bytes, 6);
             c = (bytes[sizeof(int)-1] & 0x80)!=0 ? (byte)0xFF : (byte)0x00;
             for(i=sizeof(int); i<8; i++)
-                if( bytes[i]!=c )
-                    throw new alglib.alglibexception(emsg3264);
-            for(i=0; i<sizeof(int); i++)
-                _bytes[i] = bytes[i];        
-            if( !System.BitConverter.IsLittleEndian )
+            {
+                if ( bytes[i]!=c )
+                {
+                    throw new alglibexception(emsg3264);
+                }
+            }
+
+            for (i=0; i<sizeof(int); i++)
+            {
+                _bytes[i] = bytes[i];
+            }
+
+            if ( !System.BitConverter.IsLittleEndian )
+            {
                 System.Array.Reverse(_bytes);
+            }
+
             return System.BitConverter.ToInt32(_bytes,0);
         }
         
@@ -1771,13 +2045,13 @@ public partial class alglib
         private static void double2str(double v, char[] buf, ref int offs)
         {
             int i;
-            int[] sixbits = new int[12];
-            byte[] bytes = new byte[9];
+            var sixbits = new int[12];
+            var bytes = new byte[9];
 
             //
             // handle special quantities
             //
-            if( System.Double.IsNaN(v) )
+            if(double.IsNaN(v) )
             {
                 buf[offs+0] = '.';
                 buf[offs+1] = 'n';
@@ -1793,7 +2067,7 @@ public partial class alglib
                 offs += SER_ENTRY_LENGTH;
                 return;
             }
-            if( System.Double.IsPositiveInfinity(v) )
+            if(double.IsPositiveInfinity(v) )
             {
                 buf[offs+0] = '.';
                 buf[offs+1] = 'p';
@@ -1809,7 +2083,7 @@ public partial class alglib
                 offs += SER_ENTRY_LENGTH;
                 return;
             }
-            if( System.Double.IsNegativeInfinity(v) )
+            if(double.IsNegativeInfinity(v) )
             {
                 buf[offs+0] = '.';
                 buf[offs+1] = 'n';
@@ -1834,18 +2108,30 @@ public partial class alglib
             // 4. convert to six-bit representation
             //    (last 12th element of sixbits is always zero, we do not output it)
             //
-            byte[] _bytes = System.BitConverter.GetBytes((double)v);
+            var _bytes = System.BitConverter.GetBytes((double)v);
             if( !System.BitConverter.IsLittleEndian )
+            {
                 System.Array.Reverse(_bytes);
-            for(i=0; i<sizeof(double); i++)
+            }
+
+            for (i=0; i<sizeof(double); i++)
+            {
                 bytes[i] = _bytes[i];
-            for(i=sizeof(double); i<9; i++)
+            }
+
+            for (i=sizeof(double); i<9; i++)
+            {
                 bytes[i] = 0;
+            }
+
             threebytes2foursixbits(bytes, 0, sixbits, 0);
             threebytes2foursixbits(bytes, 3, sixbits, 4);
             threebytes2foursixbits(bytes, 6, sixbits, 8);
             for(i=0; i<SER_ENTRY_LENGTH; i++)
+            {
                 buf[offs+i] = sixbits2char(sixbits[i]);
+            }
+
             offs += SER_ENTRY_LENGTH;
         }
         
@@ -1863,8 +2149,8 @@ public partial class alglib
         private static void ulong2str(ulong v, char[] buf, ref int offs)
         {
             int i;
-            int[] sixbits = new int[12];
-            byte[] bytes = new byte[9];
+            var sixbits = new int[12];
+            var bytes = new byte[9];
             
             //
             // process general case:
@@ -1874,18 +2160,30 @@ public partial class alglib
             // 4. convert to six-bit representation
             //    (last 12th element of sixbits is always zero, we do not output it)
             //
-            byte[] _bytes = System.BitConverter.GetBytes((ulong)v);
+            var _bytes = System.BitConverter.GetBytes((ulong)v);
             if( !System.BitConverter.IsLittleEndian )
+            {
                 System.Array.Reverse(_bytes);
-            for(i=0; i<sizeof(ulong); i++)
+            }
+
+            for (i=0; i<sizeof(ulong); i++)
+            {
                 bytes[i] = _bytes[i];
-            for(i=sizeof(ulong); i<9; i++)
+            }
+
+            for (i=sizeof(ulong); i<9; i++)
+            {
                 bytes[i] = 0;
+            }
+
             threebytes2foursixbits(bytes, 0, sixbits, 0);
             threebytes2foursixbits(bytes, 3, sixbits, 4);
             threebytes2foursixbits(bytes, 6, sixbits, 8);
             for(i=0; i<SER_ENTRY_LENGTH; i++)
+            {
                 buf[offs+i] = sixbits2char(sixbits[i]);
+            }
+
             offs += SER_ENTRY_LENGTH;
         }
 
@@ -1904,10 +2202,10 @@ public partial class alglib
         ************************************************************************/
         private static double str2double(char[] buf, ref int offs)
         {
-            string emsg = "ALGLIB: unable to read double value from stream";
-            int[] sixbits = new int[12];
-            byte[]  bytes = new byte[9];
-            byte[] _bytes = new byte[sizeof(double)];
+            var emsg = "ALGLIB: unable to read double value from stream";
+            var sixbits = new int[12];
+            var  bytes = new byte[9];
+            var _bytes = new byte[sizeof(double)];
             int sixbitsread, i;
             
             
@@ -1915,31 +2213,33 @@ public partial class alglib
             // skip leading spaces
             //
             while( buf[offs]==' ' || buf[offs]=='\t' || buf[offs]=='\n' || buf[offs]=='\r' )
+            {
                 offs++;
-            
-              
+            }
+
+
             //
             // Handle special cases
             //
-            if( buf[offs]=='.' )
+            if ( buf[offs]=='.' )
             {
-                string s = new string(buf, offs, SER_ENTRY_LENGTH);
+                var s = new string(buf, offs, SER_ENTRY_LENGTH);
                 if( s==".nan_______" )
                 {
                     offs += SER_ENTRY_LENGTH;
-                    return System.Double.NaN;
+                    return double.NaN;
                 }
                 if( s==".posinf____" )
                 {
                     offs += SER_ENTRY_LENGTH;
-                    return System.Double.PositiveInfinity;
+                    return double.PositiveInfinity;
                 }
                 if( s==".neginf____" )
                 {
                     offs += SER_ENTRY_LENGTH;
-                    return System.Double.NegativeInfinity;
+                    return double.NegativeInfinity;
                 }
-                throw new alglib.alglibexception(emsg);
+                throw new alglibexception(emsg);
             }
             
             // 
@@ -1956,21 +2256,33 @@ public partial class alglib
                 int d;
                 d = char2sixbits(buf[offs]);
                 if( d<0 || sixbitsread>=SER_ENTRY_LENGTH )
-                    throw new alglib.alglibexception(emsg);
+                {
+                    throw new alglibexception(emsg);
+                }
+
                 sixbits[sixbitsread] = d;
                 sixbitsread++;
                 offs++;
             }
             if( sixbitsread!=SER_ENTRY_LENGTH )
-                throw new alglib.alglibexception(emsg);
+            {
+                throw new alglibexception(emsg);
+            }
+
             sixbits[SER_ENTRY_LENGTH] = 0;
             foursixbits2threebytes(sixbits, 0, bytes, 0);
             foursixbits2threebytes(sixbits, 4, bytes, 3);
             foursixbits2threebytes(sixbits, 8, bytes, 6);
             for(i=0; i<sizeof(double); i++)
-                _bytes[i] = bytes[i];        
-            if( !System.BitConverter.IsLittleEndian )
-                System.Array.Reverse(_bytes);        
+            {
+                _bytes[i] = bytes[i];
+            }
+
+            if ( !System.BitConverter.IsLittleEndian )
+            {
+                System.Array.Reverse(_bytes);
+            }
+
             return System.BitConverter.ToDouble(_bytes,0);
         }
 
@@ -1989,10 +2301,10 @@ public partial class alglib
         ************************************************************************/
         private static ulong str2ulong(char[] buf, ref int offs)
         {
-            string emsg = "ALGLIB: unable to read ulong value from stream";
-            int[] sixbits = new int[12];
-            byte[]  bytes = new byte[9];
-            byte[] _bytes = new byte[sizeof(ulong)];
+            var emsg = "ALGLIB: unable to read ulong value from stream";
+            var sixbits = new int[12];
+            var  bytes = new byte[9];
+            var _bytes = new byte[sizeof(ulong)];
             int sixbitsread, i;
             
             
@@ -2000,8 +2312,10 @@ public partial class alglib
             // skip leading spaces
             //
             while( buf[offs]==' ' || buf[offs]=='\t' || buf[offs]=='\n' || buf[offs]=='\r' )
+            {
                 offs++;
-            
+            }
+
             // 
             // 1. read and decode six-bit digits
             // 2. check that all 11 digits were read
@@ -2015,21 +2329,33 @@ public partial class alglib
                 int d;
                 d = char2sixbits(buf[offs]);
                 if( d<0 || sixbitsread>=SER_ENTRY_LENGTH )
-                    throw new alglib.alglibexception(emsg);
+                {
+                    throw new alglibexception(emsg);
+                }
+
                 sixbits[sixbitsread] = d;
                 sixbitsread++;
                 offs++;
             }
             if( sixbitsread!=SER_ENTRY_LENGTH )
-                throw new alglib.alglibexception(emsg);
+            {
+                throw new alglibexception(emsg);
+            }
+
             sixbits[SER_ENTRY_LENGTH] = 0;
             foursixbits2threebytes(sixbits, 0, bytes, 0);
             foursixbits2threebytes(sixbits, 4, bytes, 3);
             foursixbits2threebytes(sixbits, 8, bytes, 6);
             for(i=0; i<sizeof(ulong); i++)
-                _bytes[i] = bytes[i];        
-            if( !System.BitConverter.IsLittleEndian )
-                System.Array.Reverse(_bytes);        
+            {
+                _bytes[i] = bytes[i];
+            }
+
+            if ( !System.BitConverter.IsLittleEndian )
+            {
+                System.Array.Reverse(_bytes);
+            }
+
             return System.BitConverter.ToUInt64(_bytes,0);
         }
     }
@@ -2116,15 +2442,17 @@ public partial class alglib
             public override apobject make_copy()
             {
                 sharedpoolentry ptr, buf;
-                shared_pool result = new shared_pool();
+                var result = new shared_pool();
                 
                 /* create lock */
                 ae_init_lock(ref result.pool_lock);
     
                 /* copy seed object */
                 if( seed_object!=null )
+                {
                     result.seed_object = seed_object.make_copy();
-                
+                }
+
                 /*
                  * copy recycled objects:
                  * 1. copy to temporary list (objects are inserted to beginning, order is reversed)
@@ -2133,15 +2461,17 @@ public partial class alglib
                 buf = null;
                 for(ptr=recycled_objects; ptr!=null; ptr=ptr.next_entry)
                 {
-                    sharedpoolentry tmp = new sharedpoolentry();
-                    tmp.obj =  ptr.obj.make_copy();
-                    tmp.next_entry = buf;
+                    var tmp = new sharedpoolentry
+                    {
+                        obj = ptr.obj.make_copy(),
+                        next_entry = buf
+                    };
                     buf = tmp;
                 }
                 result.recycled_objects = null;
                 for(ptr=buf; ptr!=null;)
                 {
-                    sharedpoolentry next_ptr = ptr.next_entry;
+                    var next_ptr = ptr.next_entry;
                     ptr.next_entry = result.recycled_objects;
                     result.recycled_objects = ptr;
                     ptr = next_ptr;
@@ -2171,12 +2501,18 @@ public partial class alglib
             
             /* very unlikely because no one will wait for such amount of cycles */
             if( cnt>0x12345678 )
+            {
                 never_change_it = cnt%10;
-            
+            }
+
             /* spin wait, test condition which will never be true */
-            for(i=0; i<cnt; i++)
-                if( never_change_it>0 )
+            for (i=0; i<cnt; i++)
+            {
+                if ( never_change_it>0 )
+                {
                     never_change_it--;
+                }
+            }
         }
 
 
@@ -2194,8 +2530,10 @@ public partial class alglib
         ************************************************************************/
         public static void ae_init_lock(ref ae_lock obj)
         {
-            obj = new ae_lock();
-            obj.is_locked = 0;
+            obj = new ae_lock
+            {
+                is_locked = 0
+            };
         }
 
 
@@ -2205,15 +2543,20 @@ public partial class alglib
         ************************************************************************/
         public static void ae_acquire_lock(ae_lock obj)
         {
-            int cnt = 0;
+            var cnt = 0;
             for(;;)
             {
                 if( System.Threading.Interlocked.CompareExchange(ref obj.is_locked, 1, 0)==0 )
+                {
                     return;
+                }
+
                 ae_spin_wait(AE_LOCK_CYCLES);
                 cnt++;
                 if( cnt%AE_LOCK_TESTS_BEFORE_YIELD==0 )
+                {
                     ae_yield();
+                }
             }
         }
 
@@ -2261,7 +2604,7 @@ public partial class alglib
         NOTE: this function is NOT thread-safe. It does not acquire pool lock, so
               you should NOT call it when lock can be used by another thread.
         ************************************************************************/
-        public static void ae_shared_pool_set_seed(shared_pool dst, alglib.apobject seed_object)
+        public static void ae_shared_pool_set_seed(shared_pool dst, apobject seed_object)
         {
             dst.seed_object = seed_object.make_copy();
             dst.recycled_objects = null;
@@ -2279,9 +2622,9 @@ public partial class alglib
         NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
               operation and can be used simultaneously from several threads.
         ************************************************************************/
-        public static void ae_shared_pool_retrieve<T>(shared_pool pool, ref T obj) where T : alglib.apobject
+        public static void ae_shared_pool_retrieve<T>(shared_pool pool, ref T obj) where T : apobject
         {
-            alglib.apobject new_obj;
+            apobject new_obj;
             
             /* assert that pool was seeded */
             alglib.ap.assert(pool.seed_object!=null, "ALGLIB: shared pool is not seeded, PoolRetrieve() failed");
@@ -2293,7 +2636,7 @@ public partial class alglib
             if( pool.recycled_objects!=null )
             {
                 /* retrieve entry/object from list of recycled objects */
-                sharedpoolentry result = pool.recycled_objects;
+                var result = pool.recycled_objects;
                 pool.recycled_objects = pool.recycled_objects.next_entry;
                 new_obj = result.obj;
                 result.obj = null;
@@ -2339,7 +2682,7 @@ public partial class alglib
         NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
               operation and can be used simultaneously from several threads.
         ************************************************************************/
-        public static void ae_shared_pool_recycle<T>(shared_pool pool, ref T obj) where T : alglib.apobject
+        public static void ae_shared_pool_recycle<T>(shared_pool pool, ref T obj) where T : apobject
         {
             sharedpoolentry new_entry;
             
@@ -2418,7 +2761,7 @@ public partial class alglib
         pool                pool
         obj                 reference
         ************************************************************************/
-        public static void ae_shared_pool_first_recycled<T>(shared_pool pool, ref T obj) where T : alglib.apobject
+        public static void ae_shared_pool_first_recycled<T>(shared_pool pool, ref T obj) where T : apobject
         {   
             /* modify internal enumeration counter */
             pool.enumeration_counter = pool.recycled_objects;
@@ -2452,7 +2795,7 @@ public partial class alglib
         pool                pool
         obj                 target variable
         ************************************************************************/
-        public static void ae_shared_pool_next_recycled<T>(shared_pool pool, ref T obj) where T : alglib.apobject
+        public static void ae_shared_pool_next_recycled<T>(shared_pool pool, ref T obj) where T : apobject
         {   
             /* exit on end of list */
             if( pool.enumeration_counter==null )
@@ -2660,10 +3003,10 @@ public partial class alglib
         public static double rdotv(int n,
             double[] x,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -2681,7 +3024,7 @@ public partial class alglib
             result = 0;
             for(i=0; i<=n-1; i++)
             {
-                result = result+x[i]*y[i];
+                result += (x[i]*y[i]);
             }
             return result;
         }
@@ -2705,10 +3048,10 @@ public partial class alglib
             double[] x,
             double[,] a,
             int i,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -2726,7 +3069,7 @@ public partial class alglib
             result = 0;
             for(j=0; j<=n-1; j++)
             {
-                result = result+x[j]*a[i,j];
+                result += (x[j]*a[i,j]);
             }
             return result;
         }
@@ -2751,10 +3094,10 @@ public partial class alglib
             int ia,
             double[,] b,
             int ib,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -2772,7 +3115,7 @@ public partial class alglib
             result = 0;
             for(j=0; j<=n-1; j++)
             {
-                result = result+a[ia,j]*b[ib,j];
+                result += (a[ia,j]*b[ib,j]);
             }
             return result;
         }
@@ -2792,10 +3135,10 @@ public partial class alglib
         *************************************************************************/
         public static double rdotv2(int n,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
+            var i = 0;
             double v = 0;
             
             #if ALGLIB_USE_SIMD
@@ -2815,7 +3158,7 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 v = x[i];
-                result = result+v*v;
+                result += (v * v);
             }
             return result;
         }
@@ -3201,7 +3544,7 @@ public partial class alglib
             double alpha,
             double[] y,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             int i;
             
@@ -3219,7 +3562,7 @@ public partial class alglib
 
             for(i=0; i<=n-1; i++)
             {
-                x[i] = x[i]+alpha*y[i];
+                x[i] = x[i]+ (alpha *y[i]);
             }
         }
 
@@ -3246,9 +3589,9 @@ public partial class alglib
             int offsy,
             double[] x,
             int offsx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3264,7 +3607,7 @@ public partial class alglib
 
             for(i=0; i<=n-1; i++)
             {
-                x[offsx+i] = x[offsx+i]+alpha*y[offsy+i];
+                x[offsx+i] = x[offsx+i]+ (alpha *y[offsy+i]);
             }
         }
 
@@ -3289,9 +3632,9 @@ public partial class alglib
             double[] y,
             double[,] x,
             int rowidx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3307,7 +3650,7 @@ public partial class alglib
 
             for(i=0; i<=n-1; i++)
             {
-                x[rowidx,i] = x[rowidx,i]+alpha*y[i];
+                x[rowidx,i] = x[rowidx,i]+ (alpha *y[i]);
             }
         }
 
@@ -3328,9 +3671,9 @@ public partial class alglib
         public static void rmergemulv(int n,
             double[] y,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3368,9 +3711,9 @@ public partial class alglib
             double[] y,
             double[,] x,
             int rowidx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3408,9 +3751,9 @@ public partial class alglib
             double[,] y,
             int rowidx,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3447,9 +3790,9 @@ public partial class alglib
         public static void rmergemaxv(int n,
             double[] y,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3487,9 +3830,9 @@ public partial class alglib
             double[] y,
             double[,] x,
             int rowidx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3527,9 +3870,9 @@ public partial class alglib
             double[,] x,
             int rowidx,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3566,9 +3909,9 @@ public partial class alglib
         public static void rmergeminv(int n,
             double[] y,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3606,9 +3949,9 @@ public partial class alglib
             double[] y,
             double[,] x,
             int rowidx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3646,9 +3989,9 @@ public partial class alglib
             double[,] x,
             int rowidx,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3689,9 +4032,9 @@ public partial class alglib
             double[,] y,
             int ridx,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3707,7 +4050,7 @@ public partial class alglib
 
             for(i=0; i<=n-1; i++)
             {
-                x[i] = x[i]+alpha*y[ridx,i];
+                x[i] = x[i]+ (alpha *y[ridx,i]);
             }
         }
 
@@ -3734,9 +4077,9 @@ public partial class alglib
             int ridxsrc,
             double[,] x,
             int ridxdst,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3752,7 +4095,7 @@ public partial class alglib
 
             for(i=0; i<=n-1; i++)
             {
-                x[ridxdst,i] = x[ridxdst,i]+alpha*y[ridxsrc,i];
+                x[ridxdst,i] = x[ridxdst,i]+ (alpha *y[ridxsrc,i]);
             }
         }
 
@@ -3773,9 +4116,9 @@ public partial class alglib
         public static void rmulv(int n,
             double v,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3813,9 +4156,9 @@ public partial class alglib
             double v,
             double[,] x,
             int rowidx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3854,9 +4197,9 @@ public partial class alglib
             double v,
             double[] x,
             int offsx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -3892,10 +4235,10 @@ public partial class alglib
         *************************************************************************/
         public static double rmaxv(int n,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
+            var i = 0;
             double v = 0;
 
             if( n<=0 )
@@ -3931,10 +4274,10 @@ public partial class alglib
         *************************************************************************/
         public static double rmaxabsv(int n,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
+            var i = 0;
             double v = 0;
 
             result = 0;
@@ -3966,10 +4309,10 @@ public partial class alglib
         public static double rmaxr(int n,
             double[,] x,
             int rowidx,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
+            var i = 0;
             double v = 0;
 
             if( n<=0 )
@@ -4006,10 +4349,10 @@ public partial class alglib
         public static double rmaxabsr(int n,
             double[,] x,
             int rowidx,
-            alglib.xparams _params)
+            xparams _params)
         {
             double result = 0;
-            int i = 0;
+            var i = 0;
             double v = 0;
 
             result = 0;
@@ -4041,9 +4384,9 @@ public partial class alglib
         public static void rsetv(int n,
             double v,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4081,9 +4424,9 @@ public partial class alglib
             double v,
             double[] x,
             int offsx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4120,9 +4463,9 @@ public partial class alglib
         public static void isetv(int n,
             int v,
             int[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             for(j=0; j<=n-1; j++)
             {
@@ -4147,9 +4490,9 @@ public partial class alglib
         public static void bsetv(int n,
             bool v,
             bool[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
 
             for(j=0; j<=n-1; j++)
             {
@@ -4175,10 +4518,10 @@ public partial class alglib
             int n,
             double v,
             double[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4228,9 +4571,9 @@ public partial class alglib
             double v,
             double[,] a,
             int i,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4271,9 +4614,9 @@ public partial class alglib
         public static void rcopyv(int n,
             double[] x,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4313,9 +4656,9 @@ public partial class alglib
         public static void bcopyv(int n,
             bool[] x,
             bool[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
 
             for(j=0; j<=n-1; j++)
             {
@@ -4340,9 +4683,9 @@ public partial class alglib
         public static void icopyv(int n,
             int[] x,
             int[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4381,9 +4724,9 @@ public partial class alglib
             double v,
             double[] x,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4424,9 +4767,9 @@ public partial class alglib
             double[] x,
             double[,] y,
             int ridx,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
+            var i = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4465,9 +4808,9 @@ public partial class alglib
             double[] x,
             double[,] a,
             int i,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4506,9 +4849,9 @@ public partial class alglib
             double[,] a,
             int i,
             double[] x,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4551,9 +4894,9 @@ public partial class alglib
             int i,
             double[,] b,
             int k,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4596,9 +4939,9 @@ public partial class alglib
             int offsx,
             double[] y,
             int offsy,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4641,9 +4984,9 @@ public partial class alglib
             int offsx,
             int[] y,
             int offsy,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int j = 0;
+            var j = 0;
             
             #if ALGLIB_USE_SIMD
             if( n>=_ABLASF_KERNEL_SIZE1 )
@@ -4840,10 +5183,10 @@ public partial class alglib
             double[] x,
             double beta,
             double[] y,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
 
             
@@ -4899,9 +5242,9 @@ public partial class alglib
                     v = 0;
                     for(j=0; j<=n-1; j++)
                     {
-                        v = v+a[i,j]*x[j];
+                        v += (a[i,j]*x[j]);
                     }
-                    y[i] = alpha*v+y[i];
+                    y[i] = (alpha * v) + y[i];
                 }
                 return;
             }
@@ -4916,7 +5259,7 @@ public partial class alglib
                     v = alpha*x[i];
                     for(j=0; j<=m-1; j++)
                     {
-                        y[j] = y[j]+v*a[i,j];
+                        y[j] = y[j]+ (v *a[i,j]);
                     }
                 }
                 return;
@@ -4980,10 +5323,10 @@ public partial class alglib
             double beta,
             double[] y,
             int iy,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
 
             
@@ -5039,9 +5382,9 @@ public partial class alglib
                     v = 0;
                     for(j=0; j<=n-1; j++)
                     {
-                        v = v+a[ia+i,ja+j]*x[ix+j];
+                        v += (a[ia+i,ja+j]*x[ix+j]);
                     }
-                    y[iy+i] = alpha*v+y[iy+i];
+                    y[iy+i] = (alpha * v) + y[iy+i];
                 }
                 return;
             }
@@ -5056,7 +5399,7 @@ public partial class alglib
                     v = alpha*x[ix+i];
                     for(j=0; j<=m-1; j++)
                     {
-                        y[iy+j] = y[iy+j]+v*a[ia+i,ja+j];
+                        y[iy+j] = y[iy+j]+ (v *a[ia+i,ja+j]);
                     }
                 }
                 return;
@@ -5090,10 +5433,10 @@ public partial class alglib
             double[] u,
             double[] v,
             double[,] a,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double s = 0;
 
             if( (m<=0 || n<=0) || (double)(alpha)==(double)(0) )
@@ -5105,7 +5448,7 @@ public partial class alglib
                 s = alpha*u[i];
                 for(j=0; j<=n-1; j++)
                 {
-                    a[i,j] = a[i,j]+s*v[j];
+                    a[i,j] = a[i,j]+ (s *v[j]);
                 }
             }
         }
@@ -5151,10 +5494,10 @@ public partial class alglib
             int optype,
             double[] x,
             int ix,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
+            var i = 0;
+            var j = 0;
             double v = 0;
 
             if( n<=0 )
@@ -5168,11 +5511,11 @@ public partial class alglib
                     v = x[ix+i];
                     for(j=i+1; j<=n-1; j++)
                     {
-                        v = v-a[ia+i,ja+j]*x[ix+j];
+                        v -= (a[ia+i,ja+j]*x[ix+j]);
                     }
                     if( !isunit )
                     {
-                        v = v/a[ia+i,ja+i];
+                        v /= a[ia+i,ja+i];
                     }
                     x[ix+i] = v;
                 }
@@ -5185,11 +5528,11 @@ public partial class alglib
                     v = x[ix+i];
                     for(j=0; j<=i-1; j++)
                     {
-                        v = v-a[ia+i,ja+j]*x[ix+j];
+                        v -= (a[ia+i,ja+j]*x[ix+j]);
                     }
                     if( !isunit )
                     {
-                        v = v/a[ia+i,ja+i];
+                        v /= a[ia+i,ja+i];
                     }
                     x[ix+i] = v;
                 }
@@ -5202,7 +5545,7 @@ public partial class alglib
                     v = x[ix+i];
                     if( !isunit )
                     {
-                        v = v/a[ia+i,ja+i];
+                        v /= a[ia+i,ja+i];
                     }
                     x[ix+i] = v;
                     if( v==0 )
@@ -5211,7 +5554,7 @@ public partial class alglib
                     }
                     for(j=i+1; j<=n-1; j++)
                     {
-                        x[ix+j] = x[ix+j]-v*a[ia+i,ja+j];
+                        x[ix+j] = x[ix+j]- (v *a[ia+i,ja+j]);
                     }
                 }
                 return;
@@ -5223,7 +5566,7 @@ public partial class alglib
                     v = x[ix+i];
                     if( !isunit )
                     {
-                        v = v/a[ia+i,ja+i];
+                        v /= a[ia+i,ja+i];
                     }
                     x[ix+i] = v;
                     if( v==0 )
@@ -5232,7 +5575,7 @@ public partial class alglib
                     }
                     for(j=0; j<=i-1; j++)
                     {
-                        x[ix+j] = x[ix+j]-v*a[ia+i,ja+j];
+                        x[ix+j] = x[ix+j]- (v *a[ia+i,ja+j]);
                     }
                 }
                 return;
@@ -5639,7 +5982,7 @@ public partial class alglib
             double[,] _c,
             int ic,
             int jc,
-            alglib.xparams _params)
+            xparams _params)
         {
             #if !ALGLIB_USE_SIMD
             return false;
@@ -5755,7 +6098,7 @@ public partial class alglib
     *************************************************************************/
     public partial class spchol
     {
-        private static int spsymmgetmaxsimd(alglib.xparams _params)
+        private static int spsymmgetmaxsimd(xparams _params)
         {
         #if ALGLIB_USE_SIMD
             return 4;
@@ -5789,22 +6132,22 @@ public partial class alglib
             int sstride,
             double[] simdbuf,
             int simdwidth,
-            alglib.xparams _params)
+            xparams _params)
         {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int baseoffs = 0;
+            var i = 0;
+            var j = 0;
+            var k = 0;
+            var baseoffs = 0;
             double v = 0;
 
             for(k=0; k<=offdiagsize-1; k++)
             {
                 i = superrowidx[rbase+k];
-                baseoffs = offss+(k+blocksize)*sstride;
+                baseoffs = offss+ ((k+blocksize)*sstride);
                 v = simdbuf[i*simdwidth];
                 for(j=0; j<=blocksize-1; j++)
                 {
-                    v = v-rowstorage[baseoffs+j]*x[cols0+j];
+                    v -= (rowstorage[baseoffs+j]*x[cols0+j]);
                 }
                 simdbuf[i*simdwidth] = v;
             }
@@ -6103,7 +6446,7 @@ public partial class alglib
             int[] raw2smap,
             int[] superrowidx,
             int urbase,
-            alglib.xparams _params)
+            xparams _params)
         {
             #if ALGLIB_USE_SIMD
             unsafe
@@ -6120,11 +6463,11 @@ public partial class alglib
             //
             // Fallback pure C# code
             //
-            bool result = new bool();
-            int k = 0;
-            int targetrow = 0;
-            int targetcol = 0;
-            int offsk = 0;
+            var result = new bool();
+            var k = 0;
+            var targetrow = 0;
+            var targetcol = 0;
+            var offsk = 0;
             double d0 = 0;
             double d1 = 0;
             double d2 = 0;
@@ -6149,10 +6492,10 @@ public partial class alglib
             double uk1 = 0;
             double uk2 = 0;
             double uk3 = 0;
-            int srccol0 = 0;
-            int srccol1 = 0;
-            int srccol2 = 0;
-            int srccol3 = 0;
+            var srccol0 = 0;
+            var srccol1 = 0;
+            var srccol2 = 0;
+            var srccol3 = 0;
 
             
             //
@@ -6244,76 +6587,76 @@ public partial class alglib
             {
                 if( urank>=1 )
                 {
-                    u00 = d0*rowstorage[offsu+srccol0*urowstride+0];
+                    u00 = d0*rowstorage[offsu+ (srccol0 * urowstride) + 0];
                 }
                 if( urank>=2 )
                 {
-                    u01 = d1*rowstorage[offsu+srccol0*urowstride+1];
+                    u01 = d1*rowstorage[offsu+ (srccol0 * urowstride) + 1];
                 }
                 if( urank>=3 )
                 {
-                    u02 = d2*rowstorage[offsu+srccol0*urowstride+2];
+                    u02 = d2*rowstorage[offsu+ (srccol0 * urowstride) + 2];
                 }
                 if( urank>=4 )
                 {
-                    u03 = d3*rowstorage[offsu+srccol0*urowstride+3];
+                    u03 = d3*rowstorage[offsu+ (srccol0 * urowstride) + 3];
                 }
             }
             if( srccol1>=0 )
             {
                 if( urank>=1 )
                 {
-                    u10 = d0*rowstorage[offsu+srccol1*urowstride+0];
+                    u10 = d0*rowstorage[offsu+ (srccol1 * urowstride) + 0];
                 }
                 if( urank>=2 )
                 {
-                    u11 = d1*rowstorage[offsu+srccol1*urowstride+1];
+                    u11 = d1*rowstorage[offsu+ (srccol1 * urowstride) + 1];
                 }
                 if( urank>=3 )
                 {
-                    u12 = d2*rowstorage[offsu+srccol1*urowstride+2];
+                    u12 = d2*rowstorage[offsu+ (srccol1 * urowstride) + 2];
                 }
                 if( urank>=4 )
                 {
-                    u13 = d3*rowstorage[offsu+srccol1*urowstride+3];
+                    u13 = d3*rowstorage[offsu+ (srccol1 * urowstride) + 3];
                 }
             }
             if( srccol2>=0 )
             {
                 if( urank>=1 )
                 {
-                    u20 = d0*rowstorage[offsu+srccol2*urowstride+0];
+                    u20 = d0*rowstorage[offsu+ (srccol2 * urowstride) + 0];
                 }
                 if( urank>=2 )
                 {
-                    u21 = d1*rowstorage[offsu+srccol2*urowstride+1];
+                    u21 = d1*rowstorage[offsu+ (srccol2 * urowstride) + 1];
                 }
                 if( urank>=3 )
                 {
-                    u22 = d2*rowstorage[offsu+srccol2*urowstride+2];
+                    u22 = d2*rowstorage[offsu+ (srccol2 * urowstride) + 2];
                 }
                 if( urank>=4 )
                 {
-                    u23 = d3*rowstorage[offsu+srccol2*urowstride+3];
+                    u23 = d3*rowstorage[offsu+ (srccol2 * urowstride) + 3];
                 }
             }
             if( srccol3>=0 )
             {
                 if( urank>=1 )
                 {
-                    u30 = d0*rowstorage[offsu+srccol3*urowstride+0];
+                    u30 = d0*rowstorage[offsu+ (srccol3 * urowstride) + 0];
                 }
                 if( urank>=2 )
                 {
-                    u31 = d1*rowstorage[offsu+srccol3*urowstride+1];
+                    u31 = d1*rowstorage[offsu+ (srccol3 * urowstride) + 1];
                 }
                 if( urank>=3 )
                 {
-                    u32 = d2*rowstorage[offsu+srccol3*urowstride+2];
+                    u32 = d2*rowstorage[offsu+ (srccol3 * urowstride) + 2];
                 }
                 if( urank>=4 )
                 {
-                    u33 = d3*rowstorage[offsu+srccol3*urowstride+3];
+                    u33 = d3*rowstorage[offsu+ (srccol3 * urowstride) + 3];
                 }
             }
             
@@ -6324,58 +6667,58 @@ public partial class alglib
             {
                 for(k=0; k<=uheight-1; k++)
                 {
-                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
-                    offsk = offsu+k*urowstride;
+                    targetrow = offss+ (raw2smap[superrowidx[urbase+k]]*4);
+                    offsk = offsu+ (k * urowstride);
                     uk0 = rowstorage[offsk+0];
-                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0;
-                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0;
-                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0;
-                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0;
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]- (u00 * uk0);
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]- (u10 * uk0);
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]- (u20 * uk0);
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]- (u30 * uk0);
                 }
             }
             if( urank==2 )
             {
                 for(k=0; k<=uheight-1; k++)
                 {
-                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
-                    offsk = offsu+k*urowstride;
+                    targetrow = offss+ (raw2smap[superrowidx[urbase+k]]*4);
+                    offsk = offsu+ (k * urowstride);
                     uk0 = rowstorage[offsk+0];
                     uk1 = rowstorage[offsk+1];
-                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1;
-                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1;
-                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1;
-                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1;
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]- (u00 * uk0) - u01*uk1;
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]- (u10 * uk0) - u11*uk1;
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]- (u20 * uk0) - u21*uk1;
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]- (u30 * uk0) - u31*uk1;
                 }
             }
             if( urank==3 )
             {
                 for(k=0; k<=uheight-1; k++)
                 {
-                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
-                    offsk = offsu+k*urowstride;
+                    targetrow = offss+ (raw2smap[superrowidx[urbase+k]]*4);
+                    offsk = offsu+ (k * urowstride);
                     uk0 = rowstorage[offsk+0];
                     uk1 = rowstorage[offsk+1];
                     uk2 = rowstorage[offsk+2];
-                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1-u02*uk2;
-                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1-u12*uk2;
-                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1-u22*uk2;
-                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1-u32*uk2;
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]- (u00 * uk0) - u01*uk1- (u02 * uk2);
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]- (u10 * uk0) - u11*uk1- (u12 * uk2);
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]- (u20 * uk0) - u21*uk1- (u22 * uk2);
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]- (u30 * uk0) - u31*uk1- (u32 * uk2);
                 }
             }
             if( urank==4 )
             {
                 for(k=0; k<=uheight-1; k++)
                 {
-                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
-                    offsk = offsu+k*urowstride;
+                    targetrow = offss+ (raw2smap[superrowidx[urbase+k]]*4);
+                    offsk = offsu+ (k * urowstride);
                     uk0 = rowstorage[offsk+0];
                     uk1 = rowstorage[offsk+1];
                     uk2 = rowstorage[offsk+2];
                     uk3 = rowstorage[offsk+3];
-                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1-u02*uk2-u03*uk3;
-                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1-u12*uk2-u13*uk3;
-                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1-u22*uk2-u23*uk3;
-                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1-u32*uk2-u33*uk3;
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]- (u00 * uk0) - u01*uk1- (u02 * uk2) - u03*uk3;
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]- (u10 * uk0) - u11*uk1- (u12 * uk2) - u13*uk3;
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]- (u20 * uk0) - u21*uk1- (u22 * uk2) - u23*uk3;
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]- (u30 * uk0) - u31*uk1- (u32 * uk2) - u33*uk3;
                 }
             }
             result = true;
@@ -6574,7 +6917,7 @@ public partial class alglib
             int[] raw2smap,
             int[] superrowidx,
             int urbase,
-            alglib.xparams _params)
+            xparams _params)
         {
             #if ALGLIB_USE_SIMD
             unsafe
@@ -6590,10 +6933,10 @@ public partial class alglib
             //
             // Fallback pure C# code
             //
-            bool result = new bool();
-            int k = 0;
-            int targetrow = 0;
-            int offsk = 0;
+            var result = new bool();
+            var k = 0;
+            var targetrow = 0;
+            var offsk = 0;
             double d0 = 0;
             double d1 = 0;
             double d2 = 0;
@@ -6623,34 +6966,34 @@ public partial class alglib
             d1 = diagd[offsd+1];
             d2 = diagd[offsd+2];
             d3 = diagd[offsd+3];
-            u00 = d0*rowstorage[offsu+0*4+0];
-            u01 = d1*rowstorage[offsu+0*4+1];
-            u02 = d2*rowstorage[offsu+0*4+2];
-            u03 = d3*rowstorage[offsu+0*4+3];
-            u10 = d0*rowstorage[offsu+1*4+0];
-            u11 = d1*rowstorage[offsu+1*4+1];
-            u12 = d2*rowstorage[offsu+1*4+2];
-            u13 = d3*rowstorage[offsu+1*4+3];
-            u20 = d0*rowstorage[offsu+2*4+0];
-            u21 = d1*rowstorage[offsu+2*4+1];
-            u22 = d2*rowstorage[offsu+2*4+2];
-            u23 = d3*rowstorage[offsu+2*4+3];
-            u30 = d0*rowstorage[offsu+3*4+0];
-            u31 = d1*rowstorage[offsu+3*4+1];
-            u32 = d2*rowstorage[offsu+3*4+2];
-            u33 = d3*rowstorage[offsu+3*4+3];
+            u00 = d0*rowstorage[offsu+ (0 * 4) + 0];
+            u01 = d1*rowstorage[offsu+ (0 * 4) + 1];
+            u02 = d2*rowstorage[offsu+ (0 * 4) + 2];
+            u03 = d3*rowstorage[offsu+ (0 * 4) + 3];
+            u10 = d0*rowstorage[offsu+ (1 * 4) + 0];
+            u11 = d1*rowstorage[offsu+ (1 * 4) + 1];
+            u12 = d2*rowstorage[offsu+ (1 * 4) + 2];
+            u13 = d3*rowstorage[offsu+ (1 * 4) + 3];
+            u20 = d0*rowstorage[offsu+ (2 * 4) + 0];
+            u21 = d1*rowstorage[offsu+ (2 * 4) + 1];
+            u22 = d2*rowstorage[offsu+ (2 * 4) + 2];
+            u23 = d3*rowstorage[offsu+ (2 * 4) + 3];
+            u30 = d0*rowstorage[offsu+ (3 * 4) + 0];
+            u31 = d1*rowstorage[offsu+ (3 * 4) + 1];
+            u32 = d2*rowstorage[offsu+ (3 * 4) + 2];
+            u33 = d3*rowstorage[offsu+ (3 * 4) + 3];
             for(k=0; k<=uheight-1; k++)
             {
-                targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
-                offsk = offsu+k*4;
+                targetrow = offss+ (raw2smap[superrowidx[urbase+k]]*4);
+                offsk = offsu+ (k * 4);
                 uk0 = rowstorage[offsk+0];
                 uk1 = rowstorage[offsk+1];
                 uk2 = rowstorage[offsk+2];
                 uk3 = rowstorage[offsk+3];
-                rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1-u02*uk2-u03*uk3;
-                rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1-u12*uk2-u13*uk3;
-                rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1-u22*uk2-u23*uk3;
-                rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1-u32*uk2-u33*uk3;
+                rowstorage[targetrow+0] = rowstorage[targetrow+0]- (u00 * uk0) - u01*uk1- (u02 * uk2) - u03*uk3;
+                rowstorage[targetrow+1] = rowstorage[targetrow+1]- (u10 * uk0) - u11*uk1- (u12 * uk2) - u13*uk3;
+                rowstorage[targetrow+2] = rowstorage[targetrow+2]- (u20 * uk0) - u21*uk1- (u22 * uk2) - u23*uk3;
+                rowstorage[targetrow+3] = rowstorage[targetrow+3]- (u30 * uk0) - u31*uk1- (u32 * uk2) - u33*uk3;
             }
             result = true;
             return result;

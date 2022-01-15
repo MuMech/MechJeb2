@@ -6,22 +6,26 @@ namespace MuMech
     {
         public static bool HasModule<T>(this Part part) where T : PartModule
         {
-            for (int i = 0; i < part.Modules.Count; i++)
+            for (var i = 0; i < part.Modules.Count; i++)
             {
                 if (part.Modules[i] is T)
+                {
                     return true;
+                }
             }
             return false;
         }
 
         public static T GetModule<T>(this Part part) where T : PartModule
         {
-            for (int i = 0; i < part.Modules.Count; i++)
+            for (var i = 0; i < part.Modules.Count; i++)
             {
-                PartModule pm = part.Modules[i];
-                T module = pm as T;
+                var pm = part.Modules[i];
+                var module = pm as T;
                 if (module != null)
+                {
                     return module;
+                }
             }
             return null;
         }
@@ -29,12 +33,11 @@ namespace MuMech
         // An allocation free version of GetModuleMass
         public static float GetModuleMassNoAlloc(this Part p, float defaultMass, ModifierStagingSituation sit)
         {
-            float mass = 0f;
+            var mass = 0f;
 
-            for (int i = 0; i < p.Modules.Count; i++)
+            foreach (var item in p.Modules)
             {
-                IPartMassModifier m = p.Modules[i] as IPartMassModifier;
-                if (m != null)
+                if (item is IPartMassModifier m)
                 {
                     mass += m.GetModuleMass(defaultMass, sit);
                 }
@@ -44,20 +47,22 @@ namespace MuMech
 
         public static bool EngineHasFuel(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            for (var i = 0; i < p.Modules.Count; i++)
             {
-                PartModule m = p.Modules[i];
-                ModuleEngines eng = m as ModuleEngines;
+                var m = p.Modules[i];
+                var eng = m as ModuleEngines;
                 if (eng != null)
+                {
                     return !eng.getFlameoutState && !eng.engineShutdown;
+                }
             }
             return false;
         }
 
         public static double FlowRateAtConditions(this ModuleEngines e, double throttle, double flowMultiplier)
         {
-            float minFuelFlow = e.minFuelFlow;
-            float maxFuelFlow = e.maxFuelFlow;
+            var minFuelFlow = e.minFuelFlow;
+            var maxFuelFlow = e.maxFuelFlow;
 
             // Some brilliant engine mod seems to consider that FuelFlow is not something they should properly initialize
             if (minFuelFlow == 0 && e.minThrust > 0)
@@ -81,28 +86,38 @@ namespace MuMech
             if (e.atmChangeFlow)
             {
                 if (e.useAtmCurve)
+                {
                     flowMultiplier = e.atmCurve.Evaluate((float)atmDensity * 40 / 49);
+                }
                 else
+                {
                     flowMultiplier = atmDensity * 40 / 49;
+                }
             }
 
             double ratio = 1.0f;  // FIXME: should be sum of propellant.totalAmount / sum of propellant.totalCapacity?
                                   // (but the FuelFlowSimulation that uses this takes very large timesteps anyway)
             if (e.useThrustCurve)
+            {
                 flowMultiplier *= e.thrustCurve.Evaluate((float)ratio);
+            }
 
             if (e.useVelCurve)
+            {
                 flowMultiplier *= e.velCurve.Evaluate((float)machNumber);
+            }
 
             if (flowMultiplier > e.flowMultCap)
             {
-                double excess = flowMultiplier - e.flowMultCap;
-                flowMultiplier = e.flowMultCap + excess / (e.flowMultCapSharpness + excess / e.flowMultCap);
+                var excess = flowMultiplier - e.flowMultCap;
+                flowMultiplier = e.flowMultCap + (excess / (e.flowMultCapSharpness + (excess / e.flowMultCap)));
             }
 
             // some engines have e.CLAMP set to float.MaxValue so we have to have the e.CLAMP < 1 sanity check here
             if (flowMultiplier < e.CLAMP && e.CLAMP < 1)
+            {
                 flowMultiplier = e.CLAMP;
+            }
 
             return flowMultiplier;
         }
@@ -113,53 +128,71 @@ namespace MuMech
             double isp = 0;
             isp = e.atmosphereCurve.Evaluate((float)atmPressure);
             if (e.useThrottleIspCurve)
+            {
                 isp *= Mathf.Lerp(1f, e.throttleIspCurve.Evaluate((float)throttle), e.throttleIspCurveAtmStrength.Evaluate((float)atmPressure));
+            }
+
             if (e.useAtmCurveIsp)
+            {
                 isp *= e.atmCurveIsp.Evaluate((float)atmDensity * 40 / 49);
+            }
+
             if (e.useVelCurveIsp)
+            {
                 isp *= e.velCurveIsp.Evaluate((float)machNumber);
+            }
+
             return isp;
         }
 
         public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            for (var i = 0; i < p.Modules.Count; i++)
             {
-                PartModule m = p.Modules[i];
-                ModuleDecouple mDecouple = m as ModuleDecouple;
+                var m = p.Modules[i];
+                var mDecouple = m as ModuleDecouple;
                 if (mDecouple != null)
                 {
                     if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn)
                     {
                         decoupledPart = mDecouple.ExplosiveNode.attachedPart;
                         if (decoupledPart == p.parent)
+                        {
                             decoupledPart = p;
+                        }
+
                         return true;
                     }
                     break;
                 }
 
-                ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
+                var mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
                 if (mAnchoredDecoupler != null)
                 {
                     if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn)
                     {
                         decoupledPart = mAnchoredDecoupler.ExplosiveNode.attachedPart;
                         if (decoupledPart == p.parent)
+                        {
                             decoupledPart = p;
+                        }
+
                         return true;
                     }
                     break;
                 }
 
-                ModuleDockingNode mDockingNode = m as ModuleDockingNode;
+                var mDockingNode = m as ModuleDockingNode;
                 if (mDockingNode != null)
                 {
                     if (mDockingNode.staged && mDockingNode.stagingEnabled && p.stagingOn)
                     {
                         decoupledPart = mDockingNode.referenceNode.attachedPart;
                         if (decoupledPart == p.parent)
+                        {
                             decoupledPart = p;
+                        }
+
                         return true;
                     }
                     break;
@@ -193,29 +226,38 @@ namespace MuMech
 
         public static bool IsEngine(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            for (var i = 0; i < p.Modules.Count; i++)
             {
-                PartModule m = p.Modules[i];
-                if (m is ModuleEngines) return true;
+                var m = p.Modules[i];
+                if (m is ModuleEngines)
+                {
+                    return true;
+                }
             }
             return false;
         }
 
         public static bool IsThrottleLockedEngine(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            for (var i = 0; i < p.Modules.Count; i++)
             {
-                PartModule m = p.Modules[i];
-                if (m is ModuleEngines engines && engines.throttleLocked) return true;
+                var m = p.Modules[i];
+                if (m is ModuleEngines engines && engines.throttleLocked)
+                {
+                    return true;
+                }
             }
             return false;
         }
 
         public static bool IsParachute(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            for (var i = 0; i < p.Modules.Count; i++)
             {
-                if (p.Modules[i] is ModuleParachute) return true;
+                if (p.Modules[i] is ModuleParachute)
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -223,25 +265,39 @@ namespace MuMech
         // TODO add some kind of cache ? This is called a lot but reply false 99.9999% oif the time
         public static bool IsLaunchClamp(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            for (var i = 0; i < p.Modules.Count; i++)
             {
-                if (p.Modules[i] is LaunchClamp) return true;
+                if (p.Modules[i] is LaunchClamp)
+                {
+                    return true;
+                }
             }
             return false;
         }
 
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
-            Part decoupledPart;
-            if (((p.IsUnfiredDecoupler(out decoupledPart) && p == decoupledPart) || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
-            if (p.parent == null) return false;
-            if (p.parent.IsUnfiredDecoupler(out decoupledPart) && p == decoupledPart && p.parent.inverseStage == stage) return true;
+            if (((p.IsUnfiredDecoupler(out var decoupledPart) && p == decoupledPart) || p.IsLaunchClamp()) && p.inverseStage == stage)
+            {
+                return true;
+            }
+
+            if (p.parent == null)
+            {
+                return false;
+            }
+
+            if (p.parent.IsUnfiredDecoupler(out decoupledPart) && p == decoupledPart && p.parent.inverseStage == stage)
+            {
+                return true;
+            }
+
             return p.parent.IsDecoupledInStage(stage);
         }
 
         public static bool IsPhysicallySignificant(this Part p)
         {
-            bool physicallySignificant = (p.physicalSignificance != Part.PhysicalSignificance.NONE);
+            var physicallySignificant = (p.physicalSignificance != Part.PhysicalSignificance.NONE);
 
             // part.PhysicsSignificance is not initialized in the Editor for all part. but physicallySignificant is useful there.
             if (HighLogic.LoadedSceneIsEditor)
@@ -274,24 +330,29 @@ namespace MuMech
 
         public static Vector3Pair GetBoundingBox(this Part part)
         {
-            Vector3 minBounds = new Vector3();
-            Vector3 maxBounds = new Vector3();
+            var minBounds = new Vector3();
+            var maxBounds = new Vector3();
 
-            foreach (Transform t in part.FindModelComponents<Transform>())
+            foreach (var t in part.FindModelComponents<Transform>())
             {
-                MeshFilter mf = t.GetComponent<MeshFilter>();
+                var mf = t.GetComponent<MeshFilter>();
                 if (mf == null)
+                {
                     continue;
-                Mesh m = mf.mesh;
+                }
+
+                var m = mf.mesh;
 
                 if (m == null)
+                {
                     continue;
+                }
 
                 var matrix = part.vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
 
-                foreach (Vector3 vertex in m.vertices)
+                foreach (var vertex in m.vertices)
                 {
-                    Vector3 v = matrix.MultiplyPoint3x4(vertex);
+                    var v = matrix.MultiplyPoint3x4(vertex);
                     maxBounds.x = Mathf.Max(maxBounds.x, v.x);
                     minBounds.x = Mathf.Min(minBounds.x, v.x);
                     maxBounds.y = Mathf.Max(maxBounds.y, v.y);

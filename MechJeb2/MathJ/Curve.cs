@@ -25,7 +25,7 @@ namespace MuMech.MathJ
 
         public virtual void Add(double time, T value, T tangent)
         {
-            if (Keyframes.TryGetValue(time, out Keyframe<T> old))
+            if (Keyframes.TryGetValue(time, out var old))
             {
                 old.OutTangent = tangent;
                 old.OutValue   = value;
@@ -33,7 +33,7 @@ namespace MuMech.MathJ
             }
             else
             {
-                Keyframe<T> frame = Keyframe<T>.Get(time, value, tangent, tangent);
+                var frame = Keyframe<T>.Get(time, value, tangent, tangent);
 
                 Keyframes.Add(frame);
             }
@@ -48,7 +48,7 @@ namespace MuMech.MathJ
 
         public virtual T Evaluate(double time)
         {
-            (Keyframe<T> min, Keyframe<T> max) = Keyframes.FindRange(time);
+            (var min, var max) = Keyframes.FindRange(time);
 
             return EvaluationFunction(min.Time, min.OutValue, min.OutTangent, min.OutWeight, max.Time, max.InValue, max.InTangent, max.InWeight,
                 time);
@@ -56,8 +56,10 @@ namespace MuMech.MathJ
 
         public virtual void Clear()
         {
-            foreach (Keyframe<T> keyframe in Keyframes)
+            foreach (var keyframe in Keyframes)
+            {
                 keyframe.Dispose();
+            }
 
             Keyframes.Clear();
         }
@@ -104,27 +106,39 @@ namespace MuMech.MathJ
             public void Dispose()
             {
                 if (InValue is double[] invalue)
+                {
                     Utils.DoublePool.Return(invalue);
+                }
+
                 if (OutValue is double[] outvalue)
+                {
                     Utils.DoublePool.Return(outvalue);
+                }
+
                 if (InTangent is double[] intangent)
+                {
                     Utils.DoublePool.Return(intangent);
+                }
+
                 if (OutTangent is double[] outtangent)
+                {
                     Utils.DoublePool.Return(outtangent);
+                }
+
                 KeyframePool.Return(this);
             }
 
             public static Keyframe<T2> Get(double time, T2 inValue, T2 outValue, T2 inTangent, T2 outTangent, double inWeight = 1 / 3d,
                 double outWeight = 1 / 3d)
             {
-                Keyframe<T2> keyframe = KeyframePool.Get();
+                var keyframe = KeyframePool.Get();
                 keyframe.Update(time, inValue, outValue, inTangent, outTangent, inWeight, outWeight);
                 return keyframe;
             }
 
             public static Keyframe<T2> Get(double time, T2 value, T2 inTangent, T2 outTangent)
             {
-                Keyframe<T2> keyframe = KeyframePool.Get();
+                var keyframe = KeyframePool.Get();
                 keyframe.Update(time, value, inTangent, outTangent);
                 return keyframe;
             }

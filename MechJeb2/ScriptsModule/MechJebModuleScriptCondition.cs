@@ -6,26 +6,26 @@ namespace MuMech
 {
 	public class MechJebModuleScriptCondition
 	{
-		private List<String> conditionsList;
-		private List<String> modifiersList;
+		private readonly List<string> conditionsList;
+		private readonly List<string> modifiersList;
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedCondition;
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedModifier;
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble value0 = new EditableDouble(0);
+		private readonly EditableDouble value0 = new EditableDouble(0);
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble value1 = new EditableDouble(0);
+		private readonly EditableDouble value1 = new EditableDouble(0);
 		[Persistent(pass = (int)Pass.Type)]
 		private int value0unit = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private int value1unit = 0;
-		private MechJebModuleScript scriptModule;
-		private MechJebCore core;
-		private MechJebModuleScriptAction action;
-		private MechJebModuleInfoItems moduleInfoItems;
-		private string[] units0list = {"", "k", "M", "G"};
-		private string[] units1list = { "", "k", "M", "G" };
+		private readonly MechJebModuleScript scriptModule;
+		private readonly MechJebCore core;
+		private readonly MechJebModuleScriptAction action;
+		private readonly MechJebModuleInfoItems moduleInfoItems;
+		private readonly string[] units0list = {"", "k", "M", "G"};
+		private readonly string[] units1list = { "", "k", "M", "G" };
 		private double valueWhenConditionCheck = double.NaN;
 		private string stringWhenConditionCheck = "N/A";
 		private bool conditionVerified = false;
@@ -36,8 +36,8 @@ namespace MuMech
 			this.core = core;
 			this.action = action;
 			moduleInfoItems = core.GetComputerModule<MechJebModuleInfoItems>();
-			conditionsList = new List<String>();
-			modifiersList = new List<String>();
+			conditionsList = new List<string>();
+			modifiersList = new List<string>();
 			conditionsList.Add("Altitude");
 			conditionsList.Add("Speed");
 			conditionsList.Add("Distance to target");
@@ -96,7 +96,7 @@ namespace MuMech
 			}
 			if (action.isStarted() || action.isExecuted())
 			{
-				GUIStyle s = new GUIStyle(GUI.skin.label);
+				var s = new GUIStyle(GUI.skin.label);
 				if (this.conditionVerified)
 				{
 					s.normal.textColor = Color.green;
@@ -112,7 +112,7 @@ namespace MuMech
 
 		public bool checkCondition()
 		{
-			double value0ref = value0.val;
+			var value0ref = value0.val;
 			if (this.value0unit == 1)
 			{
 				value0ref *= 1000;
@@ -125,7 +125,7 @@ namespace MuMech
 			{
 				value0ref *= 1000000000;
 			}
-			double value1ref = value1.val;
+			var value1ref = value1.val;
 			if (this.value1unit == 1)
 			{
 				value1ref *= 1000;
@@ -140,10 +140,10 @@ namespace MuMech
 			}
 
 			this.conditionVerified = false;
-			double valueToCompare = getValueToCompare();
+			var valueToCompare = getValueToCompare();
 			this.valueWhenConditionCheck = valueToCompare;
 			this.stringWhenConditionCheck = this.getValueToCompareString();
-			if (valueToCompare == double.NaN)
+			if (double.IsNaN(valueToCompare))
 			{
 				return false;
 			}
@@ -177,7 +177,7 @@ namespace MuMech
 			return this.valueWhenConditionCheck;
 		}
 
-		public String getStringWhenConditionCheck()
+		public string getStringWhenConditionCheck()
 		{
 			return this.stringWhenConditionCheck;
 		}
@@ -424,34 +424,54 @@ namespace MuMech
 
 		public double TargetDistance()
 		{
-			if (core.target.Target == null) return double.NaN;
-			return core.target.Distance;
+			if (core.target.Target == null)
+            {
+                return double.NaN;
+            }
+
+            return core.target.Distance;
 		}
 
 		public double TargetApoapsis()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.ApA;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.ApA;
 		}
 
 		public double TargetPeriapsis()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.PeA;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.PeA;
 		}
 
 		public double TargetTimeToClosestApproach()
 		{
 			if (core.target.Target != null && core.vesselState.altitudeTrue < 1000.0) { return GuiUtils.FromToETA(core.vessel.CoM, core.target.Transform.position); }
-			if (!core.target.NormalTargetExists) return double.NaN;
-			if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody) return double.NaN;
-			if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return double.NaN; }
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody)
+            {
+                return double.NaN;
+            }
+
+            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return double.NaN; }
 			if (core.vesselState.altitudeTrue < 1000.0)
 			{
 				double a = (core.vessel.mainBody.transform.position - core.vessel.transform.position).magnitude;
 				double b = (core.vessel.mainBody.transform.position - core.target.Transform.position).magnitude;
-				double c = Vector3d.Distance(core.vessel.transform.position, core.target.Position);
-				double ang = Math.Acos(((a * a + b * b) - c * c) / (double)(2f * a * b));
+				var c = Vector3d.Distance(core.vessel.transform.position, core.target.Position);
+				var ang = Math.Acos((((a * a) + (b * b)) - (c * c)) / (double)(2f * a * b));
 				return ang * core.vessel.mainBody.Radius / core.vesselState.speedSurfaceHorizontal;
 			}
 			return this.scriptModule.orbit.NextClosestApproachTime(core.target.TargetOrbit, core.vesselState.time) - core.vesselState.time;
@@ -459,141 +479,247 @@ namespace MuMech
 
 		public double TargetClosestApproachDistance()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody) return double.NaN;
-			if (core.vesselState.altitudeTrue < 1000.0) { return double.NaN; }
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody)
+            {
+                return double.NaN;
+            }
+
+            if (core.vesselState.altitudeTrue < 1000.0) { return double.NaN; }
 			if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return double.NaN; }
 			return this.scriptModule.orbit.NextClosestApproachDistance(core.target.TargetOrbit, core.vesselState.time);
 		}
 
 		public double PeriapsisInTargetSOI()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
 
-			Orbit o = core.vessel.orbit;
+            var o = core.vessel.orbit;
 			while (o != null && o.referenceBody != (CelestialBody)core.vessel.targetObject)
-				o = o.nextPatch;
+            {
+                o = o.nextPatch;
+            }
 
-			if (o == null) return double.NaN;
+            if (o == null)
+            {
+                return double.NaN;
+            }
 
-			return o.PeA;
+            return o.PeA;
 		}
 
 		public double TargetRelativeVelocity()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.RelativeVelocity.magnitude;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.RelativeVelocity.magnitude;
 		}
 
 		public double TargetInclination()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.inclination;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.inclination;
 		}
 
 		public double TargetOrbitPeriod()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.period;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.period;
 		}
 
 		public double TargetOrbitSpeed()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.GetVel().magnitude;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.GetVel().magnitude;
 		}
 
 		public double TargetOrbitTimeToAp()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.timeToAp;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.timeToAp;
 		}
 
 		public double TargetOrbitTimeToPe()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.timeToPe;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.timeToPe;
 		}
 
         public double TargetLAN()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.LAN;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.LAN;
 		}
 
 		public double TargetAoP()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.argumentOfPeriapsis;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.argumentOfPeriapsis;
 		}
 
 		public double TargetEccentricity()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.eccentricity;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.eccentricity;
 		}
 
 		public double TargetSMA()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			return core.target.TargetOrbit.semiMajorAxis;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            return core.target.TargetOrbit.semiMajorAxis;
 		}
 
 		public double PhaseAngle()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody) return double.NaN;
-			if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return double.NaN; }
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
+
+            if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody)
+            {
+                return double.NaN;
+            }
+
+            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return double.NaN; }
 
 			return this.scriptModule.orbit.PhaseAngle(core.target.TargetOrbit, core.vesselState.time);
 		}
 
 		public double TargetPlanetPhaseAngle()
 		{
-			if (!(core.target.Target is CelestialBody)) return double.NaN;
-			if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody.referenceBody) return double.NaN;
+			if (!(core.target.Target is CelestialBody))
+            {
+                return double.NaN;
+            }
 
-			return this.scriptModule.mainBody.orbit.PhaseAngle(core.target.TargetOrbit, core.vesselState.time);
+            if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody.referenceBody)
+            {
+                return double.NaN;
+            }
+
+            return this.scriptModule.mainBody.orbit.PhaseAngle(core.target.TargetOrbit, core.vesselState.time);
 		}
 
 		public double RelativeInclinationToTarget()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody) return double.NaN;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
 
-			return this.scriptModule.orbit.RelativeInclination(core.target.TargetOrbit);
+            if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody)
+            {
+                return double.NaN;
+            }
+
+            return this.scriptModule.orbit.RelativeInclination(core.target.TargetOrbit);
 		}
 
 		public double TimeToAscendingNodeWithTarget()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody) return double.NaN;
-			if (!this.scriptModule.orbit.AscendingNodeExists(core.target.TargetOrbit)) return double.NaN;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
 
-			return this.scriptModule.orbit.TimeOfAscendingNode(core.target.TargetOrbit, core.vesselState.time) - core.vesselState.time;
+            if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody)
+            {
+                return double.NaN;
+            }
+
+            if (!this.scriptModule.orbit.AscendingNodeExists(core.target.TargetOrbit))
+            {
+                return double.NaN;
+            }
+
+            return this.scriptModule.orbit.TimeOfAscendingNode(core.target.TargetOrbit, core.vesselState.time) - core.vesselState.time;
 		}
 
 		public double TimeToDescendingNodeWithTarget()
 		{
-			if (!core.target.NormalTargetExists) return double.NaN;
-			if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody) return double.NaN;
-			if (!this.scriptModule.orbit.DescendingNodeExists(core.target.TargetOrbit)) return double.NaN;
+			if (!core.target.NormalTargetExists)
+            {
+                return double.NaN;
+            }
 
-			return this.scriptModule.orbit.TimeOfDescendingNode(core.target.TargetOrbit, core.vesselState.time) - core.vesselState.time;
+            if (core.target.TargetOrbit.referenceBody != this.scriptModule.orbit.referenceBody)
+            {
+                return double.NaN;
+            }
+
+            if (!this.scriptModule.orbit.DescendingNodeExists(core.target.TargetOrbit))
+            {
+                return double.NaN;
+            }
+
+            return this.scriptModule.orbit.TimeOfDescendingNode(core.target.TargetOrbit, core.vesselState.time) - core.vesselState.time;
 		}
 
 		public double TimeToEquatorialAscendingNode()
 		{
-			if (!this.scriptModule.orbit.AscendingNodeEquatorialExists()) return double.NaN;
+			if (!this.scriptModule.orbit.AscendingNodeEquatorialExists())
+            {
+                return double.NaN;
+            }
 
-			return this.scriptModule.orbit.TimeOfAscendingNodeEquatorial(core.vesselState.time) - core.vesselState.time;
+            return this.scriptModule.orbit.TimeOfAscendingNodeEquatorial(core.vesselState.time) - core.vesselState.time;
 		}
 
 		public double TimeToEquatorialDescendingNode()
 		{
-			if (!this.scriptModule.orbit.DescendingNodeEquatorialExists()) return double.NaN;
+			if (!this.scriptModule.orbit.DescendingNodeEquatorialExists())
+            {
+                return double.NaN;
+            }
 
-			return this.scriptModule.orbit.TimeOfDescendingNodeEquatorial(core.vesselState.time) - core.vesselState.time;
+            return this.scriptModule.orbit.TimeOfDescendingNodeEquatorial(core.vesselState.time) - core.vesselState.time;
 		}
 	}
 }
