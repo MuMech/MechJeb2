@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.17.0 (source code generated 2020-12-27)
+ALGLIB 3.18.0 (source code generated 2021-10-25)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -382,6 +382,7 @@ public partial class alglib
 
         public const double odesolvermaxgrow = 3.0;
         public const double odesolvermaxshrink = 10.0;
+        public const double odesolverguaranteeddecay = 0.9;
 
 
         /*************************************************************************
@@ -778,7 +779,7 @@ public partial class alglib
             }
             if( (double)(err)>(double)(state.eps) )
             {
-                h = h2;
+                h = Math.Min(h2, odesolverguaranteeddecay*h);
                 goto lbl_6;
             }
             

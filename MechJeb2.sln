@@ -1,10 +1,19 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32104.313
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{7463AD31-7AA1-4C46-97BA-9C3823929E41}") = "MechJeb2", "MechJeb2\MechJeb2.csproj", "{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJeb2", "MechJeb2\MechJeb2.csproj", "{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}"
 EndProject
-Project("{7463AD31-7AA1-4C46-97BA-9C3823929E41}") = "MechJeb2Tests", "MechJeb2Tests\MechJeb2Tests.csproj", "{F04CC01F-41F2-4016-AD6E-06750DB2F155}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJeb2Tests", "MechJeb2Tests\MechJeb2Tests.csproj", "{F04CC01F-41F2-4016-AD6E-06750DB2F155}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{ED6897C3-200B-47DB-84B0-7A91F324031E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		LandingSites.cfg = LandingSites.cfg
+		MechJebEdu.cfg = MechJebEdu.cfg
+		Plans.txt = Plans.txt
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,5 +32,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F853724E-B055-4A0F-86AC-32E5C4D8CCFA}
 	EndGlobalSection
 EndGlobal
