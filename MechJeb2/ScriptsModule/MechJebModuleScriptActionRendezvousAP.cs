@@ -8,13 +8,13 @@ namespace MuMech
 	{
 		public static String NAME = "RendezvousAP";
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble desiredDistance = 100;
+		private readonly EditableDouble desiredDistance = 100;
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble maxPhasingOrbits = 5;
+		private readonly EditableDouble maxPhasingOrbits = 5;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool autowarp;
-		MechJebModuleRendezvousAutopilot autopilot;
-		MechJebModuleRendezvousAutopilotWindow module;
+        readonly MechJebModuleRendezvousAutopilot autopilot;
+        readonly MechJebModuleRendezvousAutopilotWindow module;
 
 		public MechJebModuleScriptActionRendezvousAP (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -23,17 +23,17 @@ namespace MuMech
 			this.readModuleConfiguration();
 		}
 
-		override public void readModuleConfiguration()
+		public override void readModuleConfiguration()
 		{
 			autowarp = core.node.autowarp;
 		}
 
-		override public void writeModuleConfiguration()
+		public override void writeModuleConfiguration()
 		{
 			core.node.autowarp = autowarp;
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 
@@ -44,14 +44,14 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 
 			autopilot.users.Remove(module);
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -78,7 +78,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (this.isStarted() && !this.isExecuted() && autopilot.enabled == false)
 			{

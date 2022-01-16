@@ -7,13 +7,13 @@ namespace MuMech
 	public class MechJebModuleScriptActionCrewTransfer : MechJebModuleScriptAction
 	{
 		public static String NAME = "CrewTransfer";
-		private List<Part> crewableParts = new List<Part>();
-		private List<String> crewablePartsNamesS = new List<String>();
+		private readonly List<Part> crewableParts = new List<Part>();
+		private readonly List<String> crewablePartsNamesS = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexS = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndexT = 0;
-		private List<String> crewablePartsNamesT = new List<String>();
+		private readonly List<String> crewablePartsNamesT = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedKerbal = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -22,8 +22,8 @@ namespace MuMech
 		private uint selectedPartTFlightID = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private String selectedKerbalName;
-		private List<ProtoCrewMember> kerbalsList = new List<ProtoCrewMember>();
-		private List<String> kerbalsNames = new List<String>();
+		private readonly List<ProtoCrewMember> kerbalsList = new List<ProtoCrewMember>();
+		private readonly List<String> kerbalsNames = new List<String>();
 		private bool partHighlightedS = false;
 		private bool partHighlightedT = false;
 
@@ -88,7 +88,7 @@ namespace MuMech
 			GameEvents.onVesselChange.Fire(FlightGlobals.ActiveVessel);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (crewableParts [selectedPartIndexT].protoModuleCrew.Count < crewableParts [selectedPartIndexT].CrewCapacity)
@@ -98,12 +98,12 @@ namespace MuMech
 			this.endAction ();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -162,7 +162,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartSFlightID != 0 && selectedPartTFlightID != 0 && selectedKerbalName != null) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{

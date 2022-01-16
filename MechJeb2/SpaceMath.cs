@@ -69,7 +69,7 @@ namespace MuMech
         public static void singleImpulseHyperbolicBurn(double mu, Vector3d r0, Vector3d v0, Vector3d vInf,
                 out Vector3d vNeg, out Vector3d vPos, out Vector3d r, out double dt, bool debug = false)
         {
-            Func<double, object?, double> f = delegate(double testrot, object ign) {
+            Func<double, object, double> f = delegate(double testrot, object ign) {
                 singleImpulseHyperbolicBurn(mu, r0, v0, vInf, out Vector3d vneg, out Vector3d vpos, out _, out _, (float)testrot, debug);
                 return (vpos - vneg).magnitude;
             };

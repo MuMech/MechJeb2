@@ -16,15 +16,15 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         EditableDouble normalPlusDelta = 0;
         [Persistent(pass = (int)Pass.Global)]
-        EditableTime timeOffset = 0;
+        readonly EditableTime timeOffset = 0;
 
         ManeuverNode node;
         ManeuverGizmo gizmo;
 
         enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING };
-        static int numSnaps = Enum.GetNames(typeof(Snap)).Length;
+        static readonly int numSnaps = Enum.GetNames(typeof(Snap)).Length;
         Snap snap = Snap.PERIAPSIS;
-        string[] snapStrings = new string[] { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") };//"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
+        readonly string[] snapStrings = new string[] { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") };//"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
 
         void GizmoUpdateHandler(Vector3d dV, double UT)
         {

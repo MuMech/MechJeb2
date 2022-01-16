@@ -21,7 +21,7 @@ namespace MuMech
         double input_dt;
 
         //parameters of the problem:
-        Orbit initialOrbit = new Orbit();
+        readonly Orbit initialOrbit = new Orbit();
         bool bodyHasAtmosphere;
         //double seaLevelAtmospheres;
         //double scaleHeight;
@@ -42,8 +42,7 @@ namespace MuMech
         QuaternionD attitude;
 
         bool orbitReenters;
-
-        ReferenceFrame referenceFrame = new ReferenceFrame();
+        readonly ReferenceFrame referenceFrame = new ReferenceFrame();
 
         double dt;
         double max_dt;

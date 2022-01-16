@@ -16,16 +16,16 @@ namespace MuMech
 {
     public class MechJebCore : PartModule, IComparable<MechJebCore>
     {
-        private List<ComputerModule> unorderedComputerModules = new List<ComputerModule>();
-        private List<ComputerModule> modulesToLoad = new List<ComputerModule>();
+        private readonly List<ComputerModule> unorderedComputerModules = new List<ComputerModule>();
+        private readonly List<ComputerModule> modulesToLoad = new List<ComputerModule>();
 
-        private Dictionary<Type, List<ComputerModule>> sortedModules = new Dictionary<Type, List<ComputerModule>>();
-        private Dictionary<object, List<DisplayModule>> sortedDisplayModules = new Dictionary<object, List<DisplayModule>>();
+        private readonly Dictionary<Type, List<ComputerModule>> sortedModules = new Dictionary<Type, List<ComputerModule>>();
+        private readonly Dictionary<object, List<DisplayModule>> sortedDisplayModules = new Dictionary<object, List<DisplayModule>>();
 
         // Reference to the parts base config. See Onload for explanation
-        private static Dictionary<string, ConfigNode> savedConfig = new Dictionary<string, ConfigNode>();
+        private static readonly Dictionary<string, ConfigNode> savedConfig = new Dictionary<string, ConfigNode>();
 
-        private List<Callback> postDrawQueue = new List<Callback>();
+        private readonly List<Callback> postDrawQueue = new List<Callback>();
 
         private static List<Type> moduleRegistry;
 
@@ -1242,7 +1242,7 @@ namespace MuMech
         }
 
 
-        public new static void print(object message)
+        public static new void print(object message)
         {
             MonoBehaviour.print("[MechJeb2] " + message);
         }

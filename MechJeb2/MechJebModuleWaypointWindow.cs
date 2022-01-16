@@ -114,7 +114,7 @@ namespace MuMech
 	public class MechJebWaypointRoute : List<MechJebWaypoint> {
 		public string Name;
 
-		private CelestialBody body;
+		private readonly CelestialBody body;
 		public CelestialBody Body {
 			get { return body; }
 		}
@@ -231,7 +231,7 @@ namespace MuMech
 		private Rect[] waypointRects = new Rect[0];
 		private int lastIndex = -1;
 		private int settingPageIndex = 0;
-		private string[] settingPages = new string[] { "Rover", "Waypoints" };
+		private readonly string[] settingPages = new string[] { "Rover", "Waypoints" };
 //		private static LineRenderer redLine;
 //		private static LineRenderer greenLine;
 

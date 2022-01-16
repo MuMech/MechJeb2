@@ -9,7 +9,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newPeA = new EditableDoubleMult(100000, 1000);
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationPeriapsis ()
         {

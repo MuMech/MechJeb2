@@ -13,7 +13,7 @@ namespace MuMech
             LimitedTime,
             Porkchop
         }
-        static string[] modeNames = {Localizer.Format("#MechJeb_adv_modeName1"), Localizer.Format("#MechJeb_adv_modeName2") };//"Limited time","Porkchop selection"
+        static readonly string[] modeNames = {Localizer.Format("#MechJeb_adv_modeName1"), Localizer.Format("#MechJeb_adv_modeName2") };//"Limited time","Porkchop selection"
         public override string getName() { return Localizer.Format("#MechJeb_AdvancedTransfer_title");}//"advanced transfer to another planet"
 
         double minDepartureTime;

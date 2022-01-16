@@ -9,7 +9,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult newSMA = new EditableDoubleMult(800000, 1000);
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationSemiMajor ()
         {

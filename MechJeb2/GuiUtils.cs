@@ -555,9 +555,9 @@ namespace MuMech
             // Result to be returned to the owner
             private static int selectedItem;
             // Unity identifier of the window, just needs to be unique
-            private static int id = GUIUtility.GetControlID(FocusType.Passive);
+            private static readonly int id = GUIUtility.GetControlID(FocusType.Passive);
             // ComboBox GUI Style
-            private static GUIStyle style;
+            private static readonly GUIStyle style;
 
             static ComboBox()
             {
@@ -703,8 +703,8 @@ namespace MuMech
         public static Color setColor;
         private static Color lastSetColor;
 
-        private static int textureWidth = 240;
-        private static int textureHeight = 240;
+        private static readonly int textureWidth = 240;
+        private static readonly int textureHeight = 240;
 
         private static float saturationSlider = 0.0F;
         private static float alphaSlider = 0.0F;
@@ -766,8 +766,8 @@ namespace MuMech
     }
     public static class ColorPickerRGB
     {
-        private static int textureWidth = 240;
-        private static int textureHeight = 10;
+        private static readonly int textureWidth = 240;
+        private static readonly int textureHeight = 10;
 
         private static Texture2D rTexture;
         private static Texture2D gTexture;

@@ -19,7 +19,7 @@ namespace UnityToolbag
         private static bool _instanceExists;
 
         private static Thread _mainThread;
-        private static object _lockObject = new object();
+        private static readonly object _lockObject = new object();
         private static readonly Queue _actions = new Queue();
 
         /// <summary>

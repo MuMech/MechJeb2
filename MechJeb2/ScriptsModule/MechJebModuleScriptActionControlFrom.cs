@@ -7,8 +7,8 @@ namespace MuMech
 	public class MechJebModuleScriptActionControlFrom : MechJebModuleScriptAction
 	{
 		public static String NAME = "ControlFrom";
-		private List<Part> controlPartsList = new List<Part>();
-		private List<String> controlPartsNames = new List<String>();
+		private readonly List<Part> controlPartsList = new List<Part>();
+		private readonly List<String> controlPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -35,7 +35,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (selectedPartIndex < controlPartsList.Count)
@@ -48,12 +48,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -90,7 +90,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0 && selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{

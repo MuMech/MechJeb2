@@ -8,7 +8,7 @@ namespace MuMech
 		public static String NAME = "Timer";
 
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableInt time = 10;
+		private readonly EditableInt time = 10;
 		private int spendTime = 0;
 		private int initTime = 10;
 		private float startTime;
@@ -17,19 +17,19 @@ namespace MuMech
 		{
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			startTime = Time.time;
 			initTime = time;
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (!this.isExecuted() && this.isStarted())
 			{
@@ -41,7 +41,7 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

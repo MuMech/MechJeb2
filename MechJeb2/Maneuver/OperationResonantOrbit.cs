@@ -12,7 +12,7 @@ namespace MuMech
         public EditableInt resonanceNumerator = 2;
         [Persistent(pass = (int)Pass.Global)]
         public EditableInt resonanceDenominator = 3;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationResonantOrbit ()
         {

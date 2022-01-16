@@ -68,7 +68,7 @@ namespace MuMech
 
         private enum PARAMS { TORQUE_X, TORQUE_Y, TORQUE_Z, TRANS_X, TRANS_Y, TRANS_Z, WASTE, FUDGE };
 
-        private int PARAMLength = Enum.GetValues(typeof (PARAMS)).Length;
+        private readonly int PARAMLength = Enum.GetValues(typeof (PARAMS)).Length;
 
         public void UpdateTuningParameters(RCSSolverTuningParams tuningParams)
         {
@@ -299,37 +299,37 @@ namespace MuMech
         public int cacheMisses { get; private set; }
         public int cacheSize { get { return results.Count; } }
 
-        private RCSSolver solver = new RCSSolver();
-        private MovingAverage _calculationTime = new MovingAverage(10);
+        private readonly RCSSolver solver = new RCSSolver();
+        private readonly MovingAverage _calculationTime = new MovingAverage(10);
 
         // A moving average reduces measurement error due to ship flexing.
-        private MovingAverage _comError = new MovingAverage(10);
+        private readonly MovingAverage _comError = new MovingAverage(10);
 
-        private Queue tasks = Queue.Synchronized(new Queue());
-        private AutoResetEvent workEvent = new AutoResetEvent(false);
+        private readonly Queue tasks = Queue.Synchronized(new Queue());
+        private readonly AutoResetEvent workEvent = new AutoResetEvent(false);
         private bool stopRunning = false;
         private Thread t = null;
         private bool isWorking = false;
 
         private int lastPartCount = 0;
-        private List<ModuleRCS> lastDisabled = new List<ModuleRCS>();
+        private readonly List<ModuleRCS> lastDisabled = new List<ModuleRCS>();
         private Vector3 lastCoM = Vector3.zero;
 
         // Entries in the results queue have been calculated by the solver thread
         // but not yet added to the results dictionary. GetThrottles() will check
         // the results dictionary first, and then, if no result was found, empty the
         // results queue into the results dictionary.
-        private Queue resultsQueue = Queue.Synchronized(new Queue());
-        private Dictionary<RCSSolverKey, double[]> results = new Dictionary<RCSSolverKey, double[]>();
+        private readonly Queue resultsQueue = Queue.Synchronized(new Queue());
+        private readonly Dictionary<RCSSolverKey, double[]> results = new Dictionary<RCSSolverKey, double[]>();
         public HashSet<RCSSolverKey> pending = new HashSet<RCSSolverKey>();
         private List<RCSSolver.Thruster> thrusters = new List<RCSSolver.Thruster>();
         private double[] originalThrottles;
         private double[] zeroThrottles;
-        private double[] double0 = new double[0];
+        private readonly double[] double0 = new double[0];
 
         // Make a separate list of thrusters to give to clients, just to be sure
         // they don't mess up our internal one.
-        private List<RCSSolver.Thruster> callerThrusters = new List<RCSSolver.Thruster>();
+        private readonly List<RCSSolver.Thruster> callerThrusters = new List<RCSSolver.Thruster>();
 
         public void UpdateTuningParameters(RCSSolverTuningParams tuningParams)
         {

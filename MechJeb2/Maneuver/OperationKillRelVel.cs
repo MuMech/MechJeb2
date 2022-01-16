@@ -7,7 +7,7 @@ namespace MuMech
     {
         public override string getName() { return Localizer.Format("#MechJeb_match_v_title");}//match velocities with target
 
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationKillRelVel ()
         {

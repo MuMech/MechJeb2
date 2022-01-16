@@ -18,8 +18,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Type)]
         private EditableAngle targetLongitude;
         */
-        private List<String> bodiesNamesList = new List<String>();
-        private List<String> targetTypes = new List<String>();
+        private readonly List<String> bodiesNamesList = new List<String>();
+        private readonly List<String> targetTypes = new List<String>();
 
         public MechJebModuleScriptActionTarget (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
         {
@@ -43,7 +43,7 @@ namespace MuMech
             return null;
         }
 
-        override public void activateAction()
+        public override void activateAction()
         {
             base.activateAction();
             if (this.targetType == 0)
@@ -65,12 +65,12 @@ namespace MuMech
             this.endAction ();
         }
 
-        override public  void endAction()
+        public override  void endAction()
         {
             base.endAction();
         }
 
-        override public void WindowGUI(int windowID)
+        public override void WindowGUI(int windowID)
         {
             base.preWindowGUI(windowID);
             base.WindowGUI(windowID);

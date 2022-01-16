@@ -257,11 +257,11 @@ public partial class alglib
             flags = v;
         }
     }
-    private static ulong FLG_THREADING_MASK          = 0x7;
-    private static   int FLG_THREADING_SHIFT         = 0;
-    private static ulong FLG_THREADING_USE_GLOBAL    = 0x0;
-    private static ulong FLG_THREADING_SERIAL        = 0x1;
-    private static ulong FLG_THREADING_PARALLEL      = 0x2;
+    private static readonly ulong FLG_THREADING_MASK          = 0x7;
+    private static readonly int FLG_THREADING_SHIFT         = 0;
+    private static readonly ulong FLG_THREADING_USE_GLOBAL    = 0x0;
+    private static readonly ulong FLG_THREADING_SERIAL        = 0x1;
+    private static readonly ulong FLG_THREADING_PARALLEL      = 0x2;
     public static xparams serial   = new xparams(FLG_THREADING_SERIAL);
     public static xparams parallel = new xparams(FLG_THREADING_PARALLEL);
 
@@ -1119,8 +1119,8 @@ public partial class alglib
         private System.IO.Stream io_stream;
         
         // local temporaries
-        private char[] entry_buf_char;
-        private byte[] entry_buf_byte; 
+        private readonly char[] entry_buf_char;
+        private readonly byte[] entry_buf_byte; 
         
         public serializer()
         {
@@ -1506,7 +1506,7 @@ public partial class alglib
 
         If v is negative or greater than 63, this function returns '?'.
         ************************************************************************/
-        private static char[] _sixbits2char_tbl = new char[64]{ 
+        private static readonly char[] _sixbits2char_tbl = new char[64]{ 
                 '0', '1', '2', '3', '4', '5', '6', '7',
                 '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
                 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
@@ -1528,7 +1528,7 @@ public partial class alglib
         This function is inverse of ae_sixbits2char()
         If c is not correct character, this function returns -1.
         ************************************************************************/
-        private static int[] _char2sixbits_tbl = new int[128] {
+        private static readonly int[] _char2sixbits_tbl = new int[128] {
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,

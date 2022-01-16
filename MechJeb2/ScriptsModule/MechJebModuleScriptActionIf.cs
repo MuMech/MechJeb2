@@ -7,12 +7,12 @@ namespace MuMech
 	public class MechJebModuleScriptActionIf : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
 	{
 		public static String NAME = "If";
-		private MechJebModuleScriptActionsList actionsThen;
-		private MechJebModuleScriptActionsList actionsElse;
-		private MechJebModuleScriptCondition condition;
-		private GUIStyle sBorderY;
-		private GUIStyle sBorderG;
-		private GUIStyle sBorderR;
+		private readonly MechJebModuleScriptActionsList actionsThen;
+		private readonly MechJebModuleScriptActionsList actionsElse;
+		private readonly MechJebModuleScriptCondition condition;
+		private readonly GUIStyle sBorderY;
+		private readonly GUIStyle sBorderG;
+		private readonly GUIStyle sBorderR;
 
 		public MechJebModuleScriptActionIf (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -60,7 +60,7 @@ namespace MuMech
 			sBorderR.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (condition.checkCondition())
@@ -73,12 +73,12 @@ namespace MuMech
 			}
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
@@ -138,7 +138,7 @@ namespace MuMech
 			return lists;
 		}
 
-		override public void afterOnFixedUpdate() {
+		public override void afterOnFixedUpdate() {
 			if (this.condition.getConditionVerified())
 			{
 				actionsThen.OnFixedUpdate();
@@ -149,7 +149,7 @@ namespace MuMech
 			}
 		}
 
-		override public void postLoad(ConfigNode node) {
+		public override void postLoad(ConfigNode node) {
 			ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
 			ConfigNode nodeListThen = node.GetNode("ActionsListThen");
 			if (nodeListThen != null)
@@ -163,7 +163,7 @@ namespace MuMech
 			}
 		}
 
-		override public void postSave(ConfigNode node) {
+		public override void postSave(ConfigNode node) {
 			ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
 			conditionNode.CopyTo(node.AddNode("Condition"));
 			ConfigNode nodeListThen = new ConfigNode("ActionsListThen");

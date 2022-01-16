@@ -7,9 +7,9 @@ namespace MuMech
 	{
 		public static String NAME = "Tolerance";
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble tolerance;
+		private readonly EditableDouble tolerance;
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble leadTime;
+		private readonly EditableDouble leadTime;
 
 		public MechJebModuleScriptActionTolerance (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -17,7 +17,7 @@ namespace MuMech
 			leadTime = new EditableDouble(core.node.leadTime.val);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			core.node.tolerance = tolerance;
@@ -25,12 +25,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 

@@ -186,7 +186,7 @@ namespace MuMech
         int selectedItemIndex = -1;
         [Persistent(pass = (int)Pass.Global)]
         InfoItem.Category itemCategory = InfoItem.Category.Orbit;
-        static string[] categories = Enum.GetNames(typeof(InfoItem.Category));
+        static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
         int presetIndex = 0;
 
         private bool editingBackground = false;
@@ -609,18 +609,18 @@ namespace MuMech
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.
     public class ValueInfoItem : InfoItem
     {
-        string units;
-        string format;
+        readonly string units;
+        readonly string format;
         public const string SI = "SI";
         public const string TIME = "TIME";
         public const string ANGLE = "ANGLE";
         public const string ANGLE_NS = "ANGLE_NS";
         public const string ANGLE_EW = "ANGLE_EW";
-        int siSigFigs; //only used with the "SI" format
-        int siMaxPrecision; //only used with the "SI" format
-        int timeDecimalPlaces; //only used with the "TIME" format
+        readonly int siSigFigs; //only used with the "SI" format
+        readonly int siMaxPrecision; //only used with the "SI" format
+        readonly int timeDecimalPlaces; //only used with the "TIME" format
 
-        Func<object> getValue;
+        readonly Func<object> getValue;
 
         private string stringValue;
         private int cacheValidity = -1;
@@ -691,7 +691,7 @@ namespace MuMech
 
     public class ActionInfoItem : InfoItem
     {
-        Action action;
+        readonly Action action;
 
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
@@ -709,8 +709,8 @@ namespace MuMech
 
     public class ToggleInfoItem : InfoItem
     {
-        object obj;
-        MemberInfo member;
+        readonly object obj;
+        readonly MemberInfo member;
 
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
             : base(attribute)
@@ -739,7 +739,7 @@ namespace MuMech
 
     public class GeneralInfoItem : InfoItem
     {
-        Action draw;
+        readonly Action draw;
 
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
             : base(attribute)
@@ -759,7 +759,7 @@ namespace MuMech
     {
         public string rightLabel;
         public float width;
-        IEditable val;
+        readonly IEditable val;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)

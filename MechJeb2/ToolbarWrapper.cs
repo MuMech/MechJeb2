@@ -452,8 +452,8 @@ namespace MuMech
             }
         }
 
-        private object realGameScenesVisibility;
-        private PropertyInfo visibleProperty;
+        private readonly object realGameScenesVisibility;
+        private readonly PropertyInfo visibleProperty;
 
         public GameScenesVisibility(params GameScenes[] gameScenes)
         {
@@ -487,13 +487,13 @@ namespace MuMech
             }
         }
 
-        private object realPopupMenuDrawable;
-        private MethodInfo updateMethod;
-        private MethodInfo drawMethod;
-        private MethodInfo addOptionMethod;
-        private MethodInfo addSeparatorMethod;
-        private MethodInfo destroyMethod;
-        private EventInfo onAnyOptionClickedEvent;
+        private readonly object realPopupMenuDrawable;
+        private readonly MethodInfo updateMethod;
+        private readonly MethodInfo drawMethod;
+        private readonly MethodInfo addOptionMethod;
+        private readonly MethodInfo addSeparatorMethod;
+        private readonly MethodInfo destroyMethod;
+        private readonly EventInfo onAnyOptionClickedEvent;
 
         public PopupMenuDrawable()
         {
@@ -554,10 +554,10 @@ namespace MuMech
         private static bool? toolbarAvailable = null;
         private static IToolbarManager instance_;
 
-        private object realToolbarManager;
-        private MethodInfo addMethod;
-        private Dictionary<object, IButton> buttons = new Dictionary<object, IButton>();
-        private ToolbarTypes types = new ToolbarTypes();
+        private readonly object realToolbarManager;
+        private readonly MethodInfo addMethod;
+        private readonly Dictionary<object, IButton> buttons = new Dictionary<object, IButton>();
+        private readonly ToolbarTypes types = new ToolbarTypes();
 
         private ToolbarManager(object realToolbarManager)
         {
@@ -577,11 +577,11 @@ namespace MuMech
 
     internal class Button : IButton
     {
-        private object realButton;
-        private ToolbarTypes types;
-        private Delegate realClickHandler;
-        private Delegate realMouseEnterHandler;
-        private Delegate realMouseLeaveHandler;
+        private readonly object realButton;
+        private readonly ToolbarTypes types;
+        private readonly Delegate realClickHandler;
+        private readonly Delegate realMouseEnterHandler;
+        private readonly Delegate realMouseLeaveHandler;
 
         internal Button(object realButton, ToolbarTypes types)
         {

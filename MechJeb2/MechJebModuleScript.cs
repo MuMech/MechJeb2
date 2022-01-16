@@ -10,18 +10,18 @@ namespace MuMech
 	public class MechJebModuleScript : DisplayModule, IMechJebModuleScriptActionsListParent
 	{
 		private bool started = false;
-		private MechJebModuleScriptActionsList actionsList;
+		private readonly MechJebModuleScriptActionsList actionsList;
 		public Texture2D imageRed = new Texture2D(20, 20);
 		public Texture2D imageGreen = new Texture2D(20, 20);
 		public Texture2D imageGray = new Texture2D(20, 20);
 		[Persistent(pass = (int)(Pass.Local))]
 		private bool minifiedGUI = false;
-		private List<String> scriptsList = new List<String>();
-		private List<String> memorySlotsList = new List<String>();
+		private readonly List<String> scriptsList = new List<String>();
+		private readonly List<String> memorySlotsList = new List<String>();
 		[Persistent(pass = (int)(Pass.Type))]
-		private String[] scriptNames = {"","","","","","","",""};
+		private readonly String[] scriptNames = {"","","","","","","",""};
 		[Persistent(pass = (int)(Pass.Type))]
-		private String[] globalScriptNames = { "", "", "", "", "", "", "", "" };
+		private readonly String[] globalScriptNames = { "", "", "", "", "", "", "", "" };
 		[Persistent(pass = (int)(Pass.Local))]
 		private int selectedSlot = 0;
 		[Persistent(pass = (int)(Pass.Local))]
@@ -36,7 +36,7 @@ namespace MuMech
 		//Warmup time for restoring after load
 		private bool warmingUp = false;
 		private int spendTime = 0;
-		private int initTime = 5; //Add a 5s warmup time
+		private readonly int initTime = 5; //Add a 5s warmup time
 		private float startTime = 0f;
 		private bool deployScriptNameField = false;
 		//Flash message to notify user
@@ -44,7 +44,7 @@ namespace MuMech
 		private int flashMessageType = 0; //0=yellow, 1=red (error)
 		private float flashMessageStartTime = 0f;
 		private bool waitingDeletionConfirmation = false;
-		private List<String> compatiblePluginsInstalled = new List<String>();
+		private readonly List<String> compatiblePluginsInstalled = new List<String>();
 		private bool addActionDisabled = false;
 		private int old_selectedMemorySlotType;
 

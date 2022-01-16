@@ -9,7 +9,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newInc = 0;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationInclination ()
         {

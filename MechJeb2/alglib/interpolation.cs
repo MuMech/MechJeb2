@@ -49,7 +49,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private ratint.barycentricinterpolant _innerobj;
+        private readonly ratint.barycentricinterpolant _innerobj;
         public ratint.barycentricinterpolant innerobj { get { return _innerobj; } }
         public barycentricinterpolant(ratint.barycentricinterpolant obj)
         {
@@ -341,7 +341,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwcalcbuffer _innerobj;
+        private readonly idw.idwcalcbuffer _innerobj;
         public idw.idwcalcbuffer innerobj { get { return _innerobj; } }
         public idwcalcbuffer(idw.idwcalcbuffer obj)
         {
@@ -373,7 +373,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwmodel _innerobj;
+        private readonly idw.idwmodel _innerobj;
         public idw.idwmodel innerobj { get { return _innerobj; } }
         public idwmodel(idw.idwmodel obj)
         {
@@ -405,7 +405,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwbuilder _innerobj;
+        private readonly idw.idwbuilder _innerobj;
         public idw.idwbuilder innerobj { get { return _innerobj; } }
         public idwbuilder(idw.idwbuilder obj)
         {
@@ -445,7 +445,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private idw.idwreport _innerobj;
+        private readonly idw.idwreport _innerobj;
         public idw.idwreport innerobj { get { return _innerobj; } }
         public idwreport(idw.idwreport obj)
         {
@@ -1854,7 +1854,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline1d.spline1dinterpolant _innerobj;
+        private readonly spline1d.spline1dinterpolant _innerobj;
         public spline1d.spline1dinterpolant innerobj { get { return _innerobj; } }
         public spline1dinterpolant(spline1d.spline1dinterpolant obj)
         {
@@ -1899,7 +1899,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline1d.spline1dfitreport _innerobj;
+        private readonly spline1d.spline1dfitreport _innerobj;
         public spline1d.spline1dfitreport innerobj { get { return _innerobj; } }
         public spline1dfitreport(spline1d.spline1dfitreport obj)
         {
@@ -3239,7 +3239,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.polynomialfitreport _innerobj;
+        private readonly lsfit.polynomialfitreport _innerobj;
         public lsfit.polynomialfitreport innerobj { get { return _innerobj; } }
         public polynomialfitreport(lsfit.polynomialfitreport obj)
         {
@@ -3282,7 +3282,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.barycentricfitreport _innerobj;
+        private readonly lsfit.barycentricfitreport _innerobj;
         public lsfit.barycentricfitreport innerobj { get { return _innerobj; } }
         public barycentricfitreport(lsfit.barycentricfitreport obj)
         {
@@ -3356,7 +3356,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.lsfitreport _innerobj;
+        private readonly lsfit.lsfitreport _innerobj;
         public lsfit.lsfitreport innerobj { get { return _innerobj; } }
         public lsfitreport(lsfit.lsfitreport obj)
         {
@@ -3400,7 +3400,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lsfit.lsfitstate _innerobj;
+        private readonly lsfit.lsfitstate _innerobj;
         public lsfit.lsfitstate innerobj { get { return _innerobj; } }
         public lsfitstate(lsfit.lsfitstate obj)
         {
@@ -7268,7 +7268,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private parametric.pspline2interpolant _innerobj;
+        private readonly parametric.pspline2interpolant _innerobj;
         public parametric.pspline2interpolant innerobj { get { return _innerobj; } }
         public pspline2interpolant(parametric.pspline2interpolant obj)
         {
@@ -7303,7 +7303,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private parametric.pspline3interpolant _innerobj;
+        private readonly parametric.pspline3interpolant _innerobj;
         public parametric.pspline3interpolant innerobj { get { return _innerobj; } }
         public pspline3interpolant(parametric.pspline3interpolant obj)
         {
@@ -8012,7 +8012,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline2d.spline2dinterpolant _innerobj;
+        private readonly spline2d.spline2dinterpolant _innerobj;
         public spline2d.spline2dinterpolant innerobj { get { return _innerobj; } }
         public spline2dinterpolant(spline2d.spline2dinterpolant obj)
         {
@@ -8044,7 +8044,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline2d.spline2dbuilder _innerobj;
+        private readonly spline2d.spline2dbuilder _innerobj;
         public spline2d.spline2dbuilder innerobj { get { return _innerobj; } }
         public spline2dbuilder(spline2d.spline2dbuilder obj)
         {
@@ -8084,7 +8084,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline2d.spline2dfitreport _innerobj;
+        private readonly spline2d.spline2dfitreport _innerobj;
         public spline2d.spline2dfitreport innerobj { get { return _innerobj; } }
         public spline2dfitreport(spline2d.spline2dfitreport obj)
         {
@@ -9229,7 +9229,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private spline3d.spline3dinterpolant _innerobj;
+        private readonly spline3d.spline3dinterpolant _innerobj;
         public spline3d.spline3dinterpolant innerobj { get { return _innerobj; } }
         public spline3dinterpolant(spline3d.spline3dinterpolant obj)
         {
@@ -9777,7 +9777,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private rbf.rbfcalcbuffer _innerobj;
+        private readonly rbf.rbfcalcbuffer _innerobj;
         public rbf.rbfcalcbuffer innerobj { get { return _innerobj; } }
         public rbfcalcbuffer(rbf.rbfcalcbuffer obj)
         {
@@ -9812,7 +9812,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private rbf.rbfmodel _innerobj;
+        private readonly rbf.rbfmodel _innerobj;
         public rbf.rbfmodel innerobj { get { return _innerobj; } }
         public rbfmodel(rbf.rbfmodel obj)
         {
@@ -9858,7 +9858,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private rbf.rbfreport _innerobj;
+        private readonly rbf.rbfreport _innerobj;
         public rbf.rbfreport innerobj { get { return _innerobj; } }
         public rbfreport(rbf.rbfreport obj)
         {

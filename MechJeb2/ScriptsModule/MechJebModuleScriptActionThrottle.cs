@@ -10,7 +10,7 @@ namespace MuMech
 
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt burnIndex = 0;
-		private List<String> burnRates = new List<String>();
+		private readonly List<String> burnRates = new List<String>();
 
 		public MechJebModuleScriptActionThrottle (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -27,7 +27,7 @@ namespace MuMech
 			burnRates.Add("100%");
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 
@@ -54,12 +54,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

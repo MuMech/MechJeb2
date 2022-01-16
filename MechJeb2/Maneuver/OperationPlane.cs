@@ -7,7 +7,7 @@ namespace MuMech
     {
         public override string getName() { return Localizer.Format("#MechJeb_match_planes_title");}//match planes with target
 
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationPlane ()
         {

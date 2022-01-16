@@ -28,7 +28,7 @@ namespace MuMech
 
         private static readonly Pool<SimulatedParachute> pool = new Pool<SimulatedParachute>(Create, Reset);
 
-        public new static int PoolSize
+        public static new int PoolSize
         {
             get { return pool.Size; }
         }

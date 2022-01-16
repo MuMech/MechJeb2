@@ -14,8 +14,8 @@ namespace MuMech
         }
 
         // Keep all Operation objects so parameters are saved
-        Operation[] operation = Operation.getAvailableOperations();
-        string[] operationNames;
+        readonly Operation[] operation = Operation.getAvailableOperations();
+        readonly string[] operationNames;
 
         [Persistent(pass = (int)Pass.Global)]
         int operationId = 0;

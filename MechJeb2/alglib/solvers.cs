@@ -50,7 +50,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private polynomialsolver.polynomialsolverreport _innerobj;
+        private readonly polynomialsolver.polynomialsolverreport _innerobj;
         public polynomialsolver.polynomialsolverreport innerobj { get { return _innerobj; } }
         public polynomialsolverreport(polynomialsolver.polynomialsolverreport obj)
         {
@@ -142,7 +142,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private directdensesolvers.densesolverreport _innerobj;
+        private readonly directdensesolvers.densesolverreport _innerobj;
         public directdensesolvers.densesolverreport innerobj { get { return _innerobj; } }
         public densesolverreport(directdensesolvers.densesolverreport obj)
         {
@@ -178,7 +178,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private directdensesolvers.densesolverlsreport _innerobj;
+        private readonly directdensesolvers.densesolverlsreport _innerobj;
         public directdensesolvers.densesolverlsreport innerobj { get { return _innerobj; } }
         public densesolverlsreport(directdensesolvers.densesolverlsreport obj)
         {
@@ -2779,7 +2779,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private directsparsesolvers.sparsesolverreport _innerobj;
+        private readonly directsparsesolvers.sparsesolverreport _innerobj;
         public directsparsesolvers.sparsesolverreport innerobj { get { return _innerobj; } }
         public sparsesolverreport(directsparsesolvers.sparsesolverreport obj)
         {
@@ -3012,7 +3012,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private iterativesparse.sparsesolverstate _innerobj;
+        private readonly iterativesparse.sparsesolverstate _innerobj;
         public iterativesparse.sparsesolverstate innerobj { get { return _innerobj; } }
         public sparsesolverstate(iterativesparse.sparsesolverstate obj)
         {
@@ -3825,7 +3825,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lincg.lincgstate _innerobj;
+        private readonly lincg.lincgstate _innerobj;
         public lincg.lincgstate innerobj { get { return _innerobj; } }
         public lincgstate(lincg.lincgstate obj)
         {
@@ -3861,7 +3861,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private lincg.lincgreport _innerobj;
+        private readonly lincg.lincgreport _innerobj;
         public lincg.lincgreport innerobj { get { return _innerobj; } }
         public lincgreport(lincg.lincgreport obj)
         {
@@ -4193,7 +4193,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private linlsqr.linlsqrstate _innerobj;
+        private readonly linlsqr.linlsqrstate _innerobj;
         public linlsqr.linlsqrstate innerobj { get { return _innerobj; } }
         public linlsqrstate(linlsqr.linlsqrstate obj)
         {
@@ -4228,7 +4228,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private linlsqr.linlsqrreport _innerobj;
+        private readonly linlsqr.linlsqrreport _innerobj;
         public linlsqr.linlsqrreport innerobj { get { return _innerobj; } }
         public linlsqrreport(linlsqr.linlsqrreport obj)
         {
@@ -4604,7 +4604,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private nleq.nleqstate _innerobj;
+        private readonly nleq.nleqstate _innerobj;
         public nleq.nleqstate innerobj { get { return _innerobj; } }
         public nleqstate(nleq.nleqstate obj)
         {
@@ -4640,7 +4640,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private nleq.nleqreport _innerobj;
+        private readonly nleq.nleqreport _innerobj;
         public nleq.nleqreport innerobj { get { return _innerobj; } }
         public nleqreport(nleq.nleqreport obj)
         {

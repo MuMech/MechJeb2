@@ -415,7 +415,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mlpbase.modelerrors _innerobj;
+        private readonly mlpbase.modelerrors _innerobj;
         public mlpbase.modelerrors innerobj { get { return _innerobj; } }
         public modelerrors(mlpbase.modelerrors obj)
         {
@@ -447,7 +447,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mlpbase.multilayerperceptron _innerobj;
+        private readonly mlpbase.multilayerperceptron _innerobj;
         public mlpbase.multilayerperceptron innerobj { get { return _innerobj; } }
         public multilayerperceptron(mlpbase.multilayerperceptron obj)
         {
@@ -2775,7 +2775,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mlpe.mlpensemble _innerobj;
+        private readonly mlpe.mlpensemble _innerobj;
         public mlpe.mlpensemble innerobj { get { return _innerobj; } }
         public mlpensemble(mlpe.mlpensemble obj)
         {
@@ -3378,7 +3378,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private clustering.clusterizerstate _innerobj;
+        private readonly clustering.clusterizerstate _innerobj;
         public clustering.clusterizerstate innerobj { get { return _innerobj; } }
         public clusterizerstate(clustering.clusterizerstate obj)
         {
@@ -3516,7 +3516,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private clustering.ahcreport _innerobj;
+        private readonly clustering.ahcreport _innerobj;
         public clustering.ahcreport innerobj { get { return _innerobj; } }
         public ahcreport(clustering.ahcreport obj)
         {
@@ -3589,7 +3589,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private clustering.kmeansreport _innerobj;
+        private readonly clustering.kmeansreport _innerobj;
         public clustering.kmeansreport innerobj { get { return _innerobj; } }
         public kmeansreport(clustering.kmeansreport obj)
         {
@@ -4345,7 +4345,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private dforest.decisionforestbuilder _innerobj;
+        private readonly dforest.decisionforestbuilder _innerobj;
         public dforest.decisionforestbuilder innerobj { get { return _innerobj; } }
         public decisionforestbuilder(dforest.decisionforestbuilder obj)
         {
@@ -4381,7 +4381,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private dforest.decisionforestbuffer _innerobj;
+        private readonly dforest.decisionforestbuffer _innerobj;
         public dforest.decisionforestbuffer innerobj { get { return _innerobj; } }
         public decisionforestbuffer(dforest.decisionforestbuffer obj)
         {
@@ -4413,7 +4413,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private dforest.decisionforest _innerobj;
+        private readonly dforest.decisionforest _innerobj;
         public dforest.decisionforest innerobj { get { return _innerobj; } }
         public decisionforest(dforest.decisionforest obj)
         {
@@ -4528,7 +4528,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private dforest.dfreport _innerobj;
+        private readonly dforest.dfreport _innerobj;
         public dforest.dfreport innerobj { get { return _innerobj; } }
         public dfreport(dforest.dfreport obj)
         {
@@ -5776,7 +5776,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private linreg.linearmodel _innerobj;
+        private readonly linreg.linearmodel _innerobj;
         public linreg.linearmodel innerobj { get { return _innerobj; } }
         public linearmodel(linreg.linearmodel obj)
         {
@@ -5831,7 +5831,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private linreg.lrreport _innerobj;
+        private readonly linreg.lrreport _innerobj;
         public linreg.lrreport innerobj { get { return _innerobj; } }
         public lrreport(linreg.lrreport obj)
         {
@@ -6390,7 +6390,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private ssa.ssamodel _innerobj;
+        private readonly ssa.ssamodel _innerobj;
         public ssa.ssamodel innerobj { get { return _innerobj; } }
         public ssamodel(ssa.ssamodel obj)
         {
@@ -8024,7 +8024,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mcpd.mcpdstate _innerobj;
+        private readonly mcpd.mcpdstate _innerobj;
         public mcpd.mcpdstate innerobj { get { return _innerobj; } }
         public mcpdstate(mcpd.mcpdstate obj)
         {
@@ -8072,7 +8072,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mcpd.mcpdreport _innerobj;
+        private readonly mcpd.mcpdreport _innerobj;
         public mcpd.mcpdreport innerobj { get { return _innerobj; } }
         public mcpdreport(mcpd.mcpdreport obj)
         {
@@ -8913,7 +8913,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private logit.logitmodel _innerobj;
+        private readonly logit.logitmodel _innerobj;
         public logit.logitmodel innerobj { get { return _innerobj; } }
         public logitmodel(logit.logitmodel obj)
         {
@@ -8949,7 +8949,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private logit.mnlreport _innerobj;
+        private readonly logit.mnlreport _innerobj;
         public logit.mnlreport innerobj { get { return _innerobj; } }
         public mnlreport(logit.mnlreport obj)
         {
@@ -9295,7 +9295,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private knn.knnbuffer _innerobj;
+        private readonly knn.knnbuffer _innerobj;
         public knn.knnbuffer innerobj { get { return _innerobj; } }
         public knnbuffer(knn.knnbuffer obj)
         {
@@ -9328,7 +9328,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private knn.knnbuilder _innerobj;
+        private readonly knn.knnbuilder _innerobj;
         public knn.knnbuilder innerobj { get { return _innerobj; } }
         public knnbuilder(knn.knnbuilder obj)
         {
@@ -9360,7 +9360,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private knn.knnmodel _innerobj;
+        private readonly knn.knnmodel _innerobj;
         public knn.knnmodel innerobj { get { return _innerobj; } }
         public knnmodel(knn.knnmodel obj)
         {
@@ -9410,7 +9410,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private knn.knnreport _innerobj;
+        private readonly knn.knnreport _innerobj;
         public knn.knnreport innerobj { get { return _innerobj; } }
         public knnreport(knn.knnreport obj)
         {
@@ -10211,7 +10211,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mlptrain.mlpreport _innerobj;
+        private readonly mlptrain.mlpreport _innerobj;
         public mlptrain.mlpreport innerobj { get { return _innerobj; } }
         public mlpreport(mlptrain.mlpreport obj)
         {
@@ -10248,7 +10248,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mlptrain.mlpcvreport _innerobj;
+        private readonly mlptrain.mlpcvreport _innerobj;
         public mlptrain.mlpcvreport innerobj { get { return _innerobj; } }
         public mlpcvreport(mlptrain.mlpcvreport obj)
         {
@@ -10283,7 +10283,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mlptrain.mlptrainer _innerobj;
+        private readonly mlptrain.mlptrainer _innerobj;
         public mlptrain.mlptrainer innerobj { get { return _innerobj; } }
         public mlptrainer(mlptrain.mlptrainer obj)
         {

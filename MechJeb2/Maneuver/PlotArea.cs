@@ -7,7 +7,7 @@ namespace MuMech
     {
         public delegate void AreaChanged(double minx, double maxx, double miny, double maxy);
 
-        static GUIStyle selectionStyle;
+        static readonly GUIStyle selectionStyle;
 
         public bool draggable = true;
 
@@ -16,14 +16,14 @@ namespace MuMech
 
         private bool mouseDown;
 
-        private double minx;
-        private double maxx;
-        private double miny;
-        private double maxy;
+        private readonly double minx;
+        private readonly double maxx;
+        private readonly double miny;
+        private readonly double maxy;
 
-        private Texture2D texture;
+        private readonly Texture2D texture;
 
-        private AreaChanged callback;
+        private readonly AreaChanged callback;
 
         public PlotArea (double minx, double maxx, double miny, double maxy, Texture2D texture, AreaChanged callback)
         {

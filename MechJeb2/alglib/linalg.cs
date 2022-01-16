@@ -2807,7 +2807,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private sparse.sparsematrix _innerobj;
+        private readonly sparse.sparsematrix _innerobj;
         public sparse.sparsematrix innerobj { get { return _innerobj; } }
         public sparsematrix(sparse.sparsematrix obj)
         {
@@ -2844,7 +2844,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private sparse.sparsebuffers _innerobj;
+        private readonly sparse.sparsebuffers _innerobj;
         public sparse.sparsebuffers innerobj { get { return _innerobj; } }
         public sparsebuffers(sparse.sparsebuffers obj)
         {
@@ -5112,7 +5112,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private evd.eigsubspacestate _innerobj;
+        private readonly evd.eigsubspacestate _innerobj;
         public evd.eigsubspacestate innerobj { get { return _innerobj; } }
         public eigsubspacestate(evd.eigsubspacestate obj)
         {
@@ -5147,7 +5147,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private evd.eigsubspacereport _innerobj;
+        private readonly evd.eigsubspacereport _innerobj;
         public evd.eigsubspacereport innerobj { get { return _innerobj; } }
         public eigsubspacereport(evd.eigsubspacereport obj)
         {
@@ -6373,7 +6373,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private trfac.sparsedecompositionanalysis _innerobj;
+        private readonly trfac.sparsedecompositionanalysis _innerobj;
         public trfac.sparsedecompositionanalysis innerobj { get { return _innerobj; } }
         public sparsedecompositionanalysis(trfac.sparsedecompositionanalysis obj)
         {
@@ -8051,7 +8051,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private normestimator.normestimatorstate _innerobj;
+        private readonly normestimator.normestimatorstate _innerobj;
         public normestimator.normestimatorstate innerobj { get { return _innerobj; } }
         public normestimatorstate(normestimator.normestimatorstate obj)
         {
@@ -8214,7 +8214,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private matinv.matinvreport _innerobj;
+        private readonly matinv.matinvreport _innerobj;
         public matinv.matinvreport innerobj { get { return _innerobj; } }
         public matinvreport(matinv.matinvreport obj)
         {

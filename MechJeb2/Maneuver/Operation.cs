@@ -61,7 +61,7 @@ namespace MuMech
             }
         }
 
-        private static List<Type> operations = new List<Type>();
+        private static readonly List<Type> operations = new List<Type>();
 
         private static void addTypes(Type[] types)
         {

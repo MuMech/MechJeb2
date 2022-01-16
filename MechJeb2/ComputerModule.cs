@@ -245,7 +245,7 @@ namespace MuMech
     //module only gets disabled when all of its users have disabled it.
     public class UserPool : List<object>
     {
-        ComputerModule controlledModule;
+        readonly ComputerModule controlledModule;
 
         public UserPool(ComputerModule controlledModule)
             : base()

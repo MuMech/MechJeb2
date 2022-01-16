@@ -161,7 +161,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private optguardapi.optguardreport _innerobj;
+        private readonly optguardapi.optguardreport _innerobj;
         public optguardapi.optguardreport innerobj { get { return _innerobj; } }
         public optguardreport(optguardapi.optguardreport obj)
         {
@@ -243,7 +243,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private optguardapi.optguardnonc0report _innerobj;
+        private readonly optguardapi.optguardnonc0report _innerobj;
         public optguardapi.optguardnonc0report innerobj { get { return _innerobj; } }
         public optguardnonc0report(optguardapi.optguardnonc0report obj)
         {
@@ -328,7 +328,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private optguardapi.optguardnonc1test0report _innerobj;
+        private readonly optguardapi.optguardnonc1test0report _innerobj;
         public optguardapi.optguardnonc1test0report innerobj { get { return _innerobj; } }
         public optguardnonc1test0report(optguardapi.optguardnonc1test0report obj)
         {
@@ -425,7 +425,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private optguardapi.optguardnonc1test1report _innerobj;
+        private readonly optguardapi.optguardnonc1test1report _innerobj;
         public optguardapi.optguardnonc1test1report innerobj { get { return _innerobj; } }
         public optguardnonc1test1report(optguardapi.optguardnonc1test1report obj)
         {
@@ -474,7 +474,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minlbfgs.minlbfgsstate _innerobj;
+        private readonly minlbfgs.minlbfgsstate _innerobj;
         public minlbfgs.minlbfgsstate innerobj { get { return _innerobj; } }
         public minlbfgsstate(minlbfgs.minlbfgsstate obj)
         {
@@ -530,7 +530,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minlbfgs.minlbfgsreport _innerobj;
+        private readonly minlbfgs.minlbfgsreport _innerobj;
         public minlbfgs.minlbfgsreport innerobj { get { return _innerobj; } }
         public minlbfgsreport(minlbfgs.minlbfgsreport obj)
         {
@@ -1671,7 +1671,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minbleic.minbleicstate _innerobj;
+        private readonly minbleic.minbleicstate _innerobj;
         public minbleic.minbleicstate innerobj { get { return _innerobj; } }
         public minbleicstate(minbleic.minbleicstate obj)
         {
@@ -1746,7 +1746,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minbleic.minbleicreport _innerobj;
+        private readonly minbleic.minbleicreport _innerobj;
         public minbleic.minbleicreport innerobj { get { return _innerobj; } }
         public minbleicreport(minbleic.minbleicreport obj)
         {
@@ -2951,7 +2951,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minqp.minqpstate _innerobj;
+        private readonly minqp.minqpstate _innerobj;
         public minqp.minqpstate innerobj { get { return _innerobj; } }
         public minqpstate(minqp.minqpstate obj)
         {
@@ -3067,7 +3067,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minqp.minqpreport _innerobj;
+        private readonly minqp.minqpreport _innerobj;
         public minqp.minqpreport innerobj { get { return _innerobj; } }
         public minqpreport(minqp.minqpreport obj)
         {
@@ -4676,7 +4676,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minlm.minlmstate _innerobj;
+        private readonly minlm.minlmstate _innerobj;
         public minlm.minlmstate innerobj { get { return _innerobj; } }
         public minlmstate(minlm.minlmstate obj)
         {
@@ -4737,7 +4737,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minlm.minlmreport _innerobj;
+        private readonly minlm.minlmreport _innerobj;
         public minlm.minlmreport innerobj { get { return _innerobj; } }
         public minlmreport(minlm.minlmreport obj)
         {
@@ -5985,7 +5985,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mincg.mincgstate _innerobj;
+        private readonly mincg.mincgstate _innerobj;
         public mincg.mincgstate innerobj { get { return _innerobj; } }
         public mincgstate(mincg.mincgstate obj)
         {
@@ -6041,7 +6041,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mincg.mincgreport _innerobj;
+        private readonly mincg.mincgreport _innerobj;
         public mincg.mincgreport innerobj { get { return _innerobj; } }
         public mincgreport(mincg.mincgreport obj)
         {
@@ -7171,7 +7171,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minlp.minlpstate _innerobj;
+        private readonly minlp.minlpstate _innerobj;
         public minlp.minlpstate innerobj { get { return _innerobj; } }
         public minlpstate(minlp.minlpstate obj)
         {
@@ -7256,7 +7256,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minlp.minlpreport _innerobj;
+        private readonly minlp.minlpreport _innerobj;
         public minlp.minlpreport innerobj { get { return _innerobj; } }
         public minlpreport(minlp.minlpreport obj)
         {
@@ -8039,7 +8039,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minnlc.minnlcstate _innerobj;
+        private readonly minnlc.minnlcstate _innerobj;
         public minnlc.minnlcstate innerobj { get { return _innerobj; } }
         public minnlcstate(minnlc.minnlcstate obj)
         {
@@ -8128,7 +8128,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minnlc.minnlcreport _innerobj;
+        private readonly minnlc.minnlcreport _innerobj;
         public minnlc.minnlcreport innerobj { get { return _innerobj; } }
         public minnlcreport(minnlc.minnlcreport obj)
         {
@@ -9965,7 +9965,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minns.minnsstate _innerobj;
+        private readonly minns.minnsstate _innerobj;
         public minns.minnsstate innerobj { get { return _innerobj; } }
         public minnsstate(minns.minnsstate obj)
         {
@@ -10029,7 +10029,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minns.minnsreport _innerobj;
+        private readonly minns.minnsreport _innerobj;
         public minns.minnsreport innerobj { get { return _innerobj; } }
         public minnsreport(minns.minnsreport obj)
         {
@@ -10926,7 +10926,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mincomp.minasastate _innerobj;
+        private readonly mincomp.minasastate _innerobj;
         public mincomp.minasastate innerobj { get { return _innerobj; } }
         public minasastate(mincomp.minasastate obj)
         {
@@ -10962,7 +10962,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private mincomp.minasareport _innerobj;
+        private readonly mincomp.minasareport _innerobj;
         public mincomp.minasareport innerobj { get { return _innerobj; } }
         public minasareport(mincomp.minasareport obj)
         {
@@ -11318,7 +11318,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minbc.minbcstate _innerobj;
+        private readonly minbc.minbcstate _innerobj;
         public minbc.minbcstate innerobj { get { return _innerobj; } }
         public minbcstate(minbc.minbcstate obj)
         {
@@ -11374,7 +11374,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private minbc.minbcreport _innerobj;
+        private readonly minbc.minbcreport _innerobj;
         public minbc.minbcreport innerobj { get { return _innerobj; } }
         public minbcreport(minbc.minbcreport obj)
         {
@@ -12469,7 +12469,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private opts.lptestproblem _innerobj;
+        private readonly opts.lptestproblem _innerobj;
         public opts.lptestproblem innerobj { get { return _innerobj; } }
         public lptestproblem(opts.lptestproblem obj)
         {

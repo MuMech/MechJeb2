@@ -8,8 +8,8 @@ namespace MuMech
     {
         public static String NAME = "Manoeuver";
 
-        private List<Operation> operation;
-        private List<String> operationNames;
+        private readonly List<Operation> operation;
+        private readonly List<String> operationNames;
         private int operationId = 0;
         [Persistent(pass = (int)Pass.Type)]
         private String operationName;
@@ -31,7 +31,7 @@ namespace MuMech
             //operationNames = new List<Operation>(operation).ConvertAll(x => x.getName()).ToArray();
         }
 
-        override public void activateAction() {
+        public override void activateAction() {
             base.activateAction();
             Vessel vessel = FlightGlobals.ActiveVessel;
             double UT = this.scriptModule.vesselState.time;
@@ -47,11 +47,11 @@ namespace MuMech
             //	core.node.ExecuteOneNode(this);
             this.endAction();
         }
-        override public  void endAction() {
+        public override  void endAction() {
             base.endAction();
         }
 
-        override public void postLoad(ConfigNode node)
+        public override void postLoad(ConfigNode node)
         {
             for (int i = 0; i < operation.Count; i++) //We select the operation ID based on the operation name. This will help when future operations will be added in the list
             {
@@ -113,7 +113,7 @@ namespace MuMech
             }
         }
 
-        override public void postSave(ConfigNode node)
+        public override void postSave(ConfigNode node)
         {
             ConfigNode operationBaseNode = ConfigNode.CreateConfigFromObject(operation[operationId], (int)Pass.Global, null);
             operationBaseNode.CopyTo(node.AddNode("Operation"));
@@ -179,7 +179,7 @@ namespace MuMech
             }
         }
 
-        override public void WindowGUI(int windowID) {
+        public override void WindowGUI(int windowID) {
             base.preWindowGUI(windowID);
             base.WindowGUI(windowID);
             operationId = GuiUtils.ComboBox.Box(operationId, operationNames.ToArray(), operationNames);

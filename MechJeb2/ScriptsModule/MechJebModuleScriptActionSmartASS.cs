@@ -7,30 +7,30 @@ namespace MuMech
 	public class MechJebModuleScriptActionSmartASS : MechJebModuleScriptAction
 	{
 		public static String NAME = "SmartASS";
-		private MechJebModuleSmartASS smartAss;
+		private readonly MechJebModuleSmartASS smartAss;
 
-		private static MechJebModuleSmartASS.Mode[] Target2Mode = MechJebModuleSmartASS.Target2Mode;
-		private static bool[] TargetIsMode = MechJebModuleSmartASS.TargetIsMode;
-		private static string[] ModeTexts = MechJebModuleSmartASS.ScriptModeTexts;
-		private static string[] TargetTexts = MechJebModuleSmartASS.ScriptTargetTexts;
+		private static readonly MechJebModuleSmartASS.Mode[] Target2Mode = MechJebModuleSmartASS.Target2Mode;
+		private static readonly bool[] TargetIsMode = MechJebModuleSmartASS.TargetIsMode;
+		private static readonly string[] ModeTexts = MechJebModuleSmartASS.ScriptModeTexts;
+		private static readonly string[] TargetTexts = MechJebModuleSmartASS.ScriptTargetTexts;
 
 		// Target/Mode -> Mode index
-		private int[] targetModeSelectorIdxs = new int[TargetTexts.Length];
-		private int[] modeModeSelectorIdxs   = new int[ModeTexts.Length];
+		private readonly int[] targetModeSelectorIdxs = new int[TargetTexts.Length];
+		private readonly int[] modeModeSelectorIdxs   = new int[ModeTexts.Length];
 		// Mode index -> Mode/Target
-		private List<bool> isTargetMode                        = new List<bool>();
-		private List<MechJebModuleSmartASS.Target> targetModes = new List<MechJebModuleSmartASS.Target>();
-		private List<MechJebModuleSmartASS.Mode> modeModes     = new List<MechJebModuleSmartASS.Mode>();
-		private List<String> modeStrings                       = new List<String>();
+		private readonly List<bool> isTargetMode                        = new List<bool>();
+		private readonly List<MechJebModuleSmartASS.Target> targetModes = new List<MechJebModuleSmartASS.Target>();
+		private readonly List<MechJebModuleSmartASS.Mode> modeModes     = new List<MechJebModuleSmartASS.Mode>();
+		private readonly List<String> modeStrings                       = new List<String>();
 
 		// Target -> Target index
-		private int[] targetSelectorIdxs = new int[TargetTexts.Length];
+		private readonly int[] targetSelectorIdxs = new int[TargetTexts.Length];
 		// Mode -> Target index -> Target
-		private List<MechJebModuleSmartASS.Target>[] targets = new List<MechJebModuleSmartASS.Target>[ModeTexts.Length];
-		private List<String>[] targetStrings                 = new List<String>[ModeTexts.Length];
+		private readonly List<MechJebModuleSmartASS.Target>[] targets = new List<MechJebModuleSmartASS.Target>[ModeTexts.Length];
+		private readonly List<String>[] targetStrings                 = new List<String>[ModeTexts.Length];
 
-		private static string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
-		private static string[] DirectionTexts = Enum.GetNames(typeof(Vector6.Direction));
+		private static readonly string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
+		private static readonly string[] DirectionTexts = Enum.GetNames(typeof(Vector6.Direction));
 
 		private MechJebModuleSmartASS.Target target;
 		[Persistent(pass = (int)Pass.Type)]
@@ -103,7 +103,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			this.smartAss.mode = Target2Mode[(int)target];
@@ -123,12 +123,12 @@ namespace MuMech
 			this.smartAss.Engage();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			foreach (MechJebModuleSmartASS.Target target in Enum.GetValues(typeof(MechJebModuleSmartASS.Target)))
 			{
@@ -140,7 +140,7 @@ namespace MuMech
 			}
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (!this.isStarted() || this.isExecuted())
 			{
@@ -159,7 +159,7 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

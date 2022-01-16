@@ -7,9 +7,9 @@ namespace MuMech
 	public class MechJebModuleScriptActionWhile : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
 	{
 		public static String NAME = "While";
-		private MechJebModuleScriptActionsList actions;
-		private MechJebModuleScriptCondition condition;
-		private GUIStyle sBorder;
+		private readonly MechJebModuleScriptActionsList actions;
+		private readonly MechJebModuleScriptCondition condition;
+		private readonly GUIStyle sBorder;
 
 		public MechJebModuleScriptActionWhile (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -38,18 +38,18 @@ namespace MuMech
 			sBorder.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			this.actions.start();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
@@ -93,11 +93,11 @@ namespace MuMech
 			return lists;
 		}
 
-		override public void afterOnFixedUpdate() {
+		public override void afterOnFixedUpdate() {
 			actions.OnFixedUpdate();
 		}
 
-		override public void postLoad(ConfigNode node) {
+		public override void postLoad(ConfigNode node) {
 			ConfigNode.LoadObjectFromConfig(condition, node.GetNode("Condition"));
 			ConfigNode nodeList = node.GetNode("ActionsList");
 			if (nodeList != null)
@@ -106,7 +106,7 @@ namespace MuMech
 			}
 		}
 
-		override public void postSave(ConfigNode node) {
+		public override void postSave(ConfigNode node) {
 			ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
 			conditionNode.CopyTo(node.AddNode("Condition"));
 			ConfigNode nodeListThen = new ConfigNode("ActionsList");

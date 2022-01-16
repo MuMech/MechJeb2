@@ -14,7 +14,7 @@ namespace MuMech
 
         public MechJebModuleAscentClassic path { get { return autopilot.ascentPath as MechJebModuleAscentClassic; } }
         public MechJebModuleAscentAutopilot autopilot;
-        static Texture2D pathTexture = new Texture2D(400, 100);
+        static readonly Texture2D pathTexture = new Texture2D(400, 100);
         private MechJebModuleFlightRecorder recorder;
         private double lastMaxAtmosphereAltitude = -1;
 

@@ -6,10 +6,10 @@ namespace MuMech.AttitudeControllers
     class KosAttitudeController : BaseAttitudeController
     {
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDouble maxStoppingTime = new EditableDouble(2);
+        private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
+        private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
         //public double RollControlRange {
         //    get { return this.rollControlRange; }
         //    set { this.rollControlRange.val = Math.Max(EPSILON, Math.Min(Math.PI, value)); }

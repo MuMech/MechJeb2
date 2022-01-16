@@ -7,8 +7,8 @@ namespace MuMech
 	public class MechJebModuleScriptActionDockingShield : MechJebModuleScriptAction
 	{
 		public static String NAME = "DockingShield";
-		private List<Part> dockingPartsList = new List<Part>();
-		private List<String> dockingPartsNames = new List<String>();
+		private readonly List<Part> dockingPartsList = new List<Part>();
+		private readonly List<String> dockingPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -16,7 +16,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		private bool partHighlighted = false;
-		private List<String> actionTypes = new List<String>();
+		private readonly List<String> actionTypes = new List<String>();
 
 		public MechJebModuleScriptActionDockingShield (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -44,7 +44,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			if (dockingPartsList[selectedPartIndex] != null)
 			{
@@ -72,12 +72,12 @@ namespace MuMech
 			base.activateAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (this.started && !this.executed)
 			{
@@ -91,7 +91,7 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -130,7 +130,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{

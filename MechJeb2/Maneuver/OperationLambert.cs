@@ -8,7 +8,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime interceptInterval = 3600;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationLambert ()
         {
