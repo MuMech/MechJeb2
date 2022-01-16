@@ -18,7 +18,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool simpleTransfer = false;
 
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationGeneric ()
         {

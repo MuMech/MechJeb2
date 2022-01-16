@@ -7,18 +7,18 @@ namespace MuMech
 {
 	public class MechJebModuleScriptActionsList
 	{
-		private List<MechJebModuleScriptAction> actionsList = new List<MechJebModuleScriptAction>();
+		private readonly List<MechJebModuleScriptAction> actionsList = new List<MechJebModuleScriptAction>();
 		private String[] actionGroups;
 		private String[][] actionNames;
-		private MechJebModuleScript scriptModule;
+		private readonly MechJebModuleScript scriptModule;
 		private int selectedGroupIndex = 0;
 		private int old_selectedGroupIndex = 0;
 		private int selectedActionIndex = 0;
 		private bool started = false;
 		private bool executed = false;
-		private IMechJebModuleScriptActionsListParent parent;
-		private int depth = 0;
-		private MechJebCore core;
+		private readonly IMechJebModuleScriptActionsListParent parent;
+		private readonly int depth = 0;
+		private readonly MechJebCore core;
 		private int currentIndex;
 
 		public MechJebModuleScriptActionsList(MechJebCore core, MechJebModuleScript scriptModule, IMechJebModuleScriptActionsListParent parent, int depth)

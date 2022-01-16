@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 3.17.0 (source code generated 2020-12-27)
+ALGLIB 3.18.0 (source code generated 2021-10-25)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -17,6 +17,13 @@ A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 **************************************************************************/
+#if ALGLIB_USE_SIMD
+#define _ALGLIB_ALREADY_DEFINED_SIMD_ALIASES
+using Sse2 = System.Runtime.Intrinsics.X86.Sse2;
+using Avx2 = System.Runtime.Intrinsics.X86.Avx2;
+using Fma  = System.Runtime.Intrinsics.X86.Fma;
+using Intrinsics = System.Runtime.Intrinsics;
+#endif
 using System;
 public partial class alglib
 {
@@ -250,11 +257,11 @@ public partial class alglib
             flags = v;
         }
     }
-    private static ulong FLG_THREADING_MASK          = 0x7;
-    private static   int FLG_THREADING_SHIFT         = 0;
-    private static ulong FLG_THREADING_USE_GLOBAL    = 0x0;
-    private static ulong FLG_THREADING_SERIAL        = 0x1;
-    private static ulong FLG_THREADING_PARALLEL      = 0x2;
+    private static readonly ulong FLG_THREADING_MASK          = 0x7;
+    private static readonly int FLG_THREADING_SHIFT         = 0;
+    private static readonly ulong FLG_THREADING_USE_GLOBAL    = 0x0;
+    private static readonly ulong FLG_THREADING_SERIAL        = 0x1;
+    private static readonly ulong FLG_THREADING_PARALLEL      = 0x2;
     public static xparams serial   = new xparams(FLG_THREADING_SERIAL);
     public static xparams parallel = new xparams(FLG_THREADING_PARALLEL);
 
@@ -1112,8 +1119,8 @@ public partial class alglib
         private System.IO.Stream io_stream;
         
         // local temporaries
-        private char[] entry_buf_char;
-        private byte[] entry_buf_byte; 
+        private readonly char[] entry_buf_char;
+        private readonly byte[] entry_buf_byte; 
         
         public serializer()
         {
@@ -1499,7 +1506,7 @@ public partial class alglib
 
         If v is negative or greater than 63, this function returns '?'.
         ************************************************************************/
-        private static char[] _sixbits2char_tbl = new char[64]{ 
+        private static readonly char[] _sixbits2char_tbl = new char[64]{ 
                 '0', '1', '2', '3', '4', '5', '6', '7',
                 '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
                 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
@@ -1521,7 +1528,7 @@ public partial class alglib
         This function is inverse of ae_sixbits2char()
         If c is not correct character, this function returns -1.
         ************************************************************************/
-        private static int[] _char2sixbits_tbl = new int[128] {
+        private static readonly int[] _char2sixbits_tbl = new int[128] {
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,
@@ -2487,6 +2494,4170 @@ public partial class alglib
         }
     }
 }
+#if ALGLIB_NO_FAST_KERNELS==false
+#if ALGLIB_USE_SIMD && !_ALGLIB_ALREADY_DEFINED_SIMD_ALIASES
+#define _ALGLIB_ALREADY_DEFINED_SIMD_ALIASES
+using Sse2 = System.Runtime.Intrinsics.X86.Sse2;
+using Avx2 = System.Runtime.Intrinsics.X86.Avx2;
+using Fma  = System.Runtime.Intrinsics.X86.Fma;
+using Intrinsics = System.Runtime.Intrinsics;
+#endif
+#pragma warning disable 164
+#pragma warning disable 219
+public partial class alglib
+{
+    #if ALGLIB_USE_SIMD
+    private static int _ABLASF_KERNEL_SIZE1 =  8;
+    private static int _ABLASF_KERNEL_SIZE2 =  8;
+    private static int _ABLASF_KERNEL_SIZE3 =  8;
+    #endif
+    
+    /*************************************************************************
+    ABLASF kernels
+    *************************************************************************/
+    public partial class ablasf
+    {
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rdot() and similar funcs
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rdot(
+            int n,
+            double *A,
+            double *B,
+            out double R)
+        {
+            R = 0;
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_dot = Intrinsics.Vector256<double>.Zero;
+                for(i=0; i<head; i+=4)
+                {
+                    avx_dot = Fma.MultiplyAdd(
+                                Avx2.LoadVector256(A+i),
+                                Avx2.LoadVector256(B+i),
+                                avx_dot
+                                );
+                }
+                double *vdot = stackalloc double[4];
+                Avx2.Store(vdot, avx_dot);
+                for(i=head; i<n; i++)
+                    vdot[0] += A[i]*B[i];
+                R = vdot[0]+vdot[1]+vdot[2]+vdot[3];
+                return true;
+            }
+            #endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_dot = Intrinsics.Vector256<double>.Zero;
+                for(i=0; i<head; i+=4)
+                {
+                    avx_dot = Avx2.Add(
+                                Avx2.Multiply(
+                                    Avx2.LoadVector256(A+i),
+                                    Avx2.LoadVector256(B+i)
+                                    ),
+                                avx_dot
+                                );
+                }
+                double *vdot = stackalloc double[4];
+                Avx2.Store(vdot, avx_dot);
+                for(i=head; i<n; i++)
+                    vdot[0] += A[i]*B[i];
+                R = vdot[0]+vdot[1]+vdot[2]+vdot[3];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rdotv2()
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rdotv2(
+            int n,
+            double *A,
+            out double R)
+        {
+            R = 0;
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_dot = Intrinsics.Vector256<double>.Zero;
+                for(i=0; i<head; i+=4)
+                {
+                    Intrinsics.Vector256<double> Ai = Avx2.LoadVector256(A+i);
+                    avx_dot = Fma.MultiplyAdd(Ai, Ai, avx_dot);
+                }
+                double *vdot = stackalloc double[4];
+                Avx2.Store(vdot, avx_dot);
+                for(i=head; i<n; i++)
+                    vdot[0] += A[i]*A[i];
+                R = vdot[0]+vdot[1]+vdot[2]+vdot[3];
+                return true;
+            }
+            #endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_dot = Intrinsics.Vector256<double>.Zero;
+                for(i=0; i<head; i+=4)
+                {
+                    Intrinsics.Vector256<double> Ai = Avx2.LoadVector256(A+i);
+                    avx_dot = Avx2.Add(Avx2.Multiply(Ai, Ai), avx_dot);
+                }
+                double *vdot = stackalloc double[4];
+                Avx2.Store(vdot, avx_dot);
+                for(i=head; i<n; i++)
+                    vdot[0] += A[i]*A[i];
+                R = vdot[0]+vdot[1]+vdot[2]+vdot[3];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        
+        /*************************************************************************
+        Computes dot product (X,Y) for elements [0,N) of X[] and Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+            Y       -   array[N], vector to process
+
+        RESULT:
+            (X,Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rdotv(int n,
+            double[] x,
+            double[] y,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        double r;
+                        if( try_rdot(n, py, px, out r) )
+                            return r;
+                    }
+                }
+            #endif
+
+            result = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                result = result+x[i]*y[i];
+            }
+            return result;
+        }
+
+        /*************************************************************************
+        Computes dot product (X,A[i]) for elements [0,N) of vector X[] and row A[i,*]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+            A       -   array[?,N], matrix to process
+            I       -   row index
+
+        RESULT:
+            (X,Ai)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rdotvr(int n,
+            double[] x,
+            double[,] a,
+            int i,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, pa=a)
+                    {
+                        double r;
+                        if( try_rdot(n, px, pa+i*a.GetLength(1), out r) )
+                            return r;
+                    }
+                }
+            #endif
+
+            result = 0;
+            for(j=0; j<=n-1; j++)
+            {
+                result = result+x[j]*a[i,j];
+            }
+            return result;
+        }
+
+        /*************************************************************************
+        Computes dot product (X,A[i]) for rows A[ia,*] and B[ib,*]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+            A       -   array[?,N], matrix to process
+            I       -   row index
+
+        RESULT:
+            (X,Ai)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rdotrr(int n,
+            double[,] a,
+            int ia,
+            double[,] b,
+            int ib,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* pa=a, pb=b)
+                    {
+                        double r;
+                        if( try_rdot(n, pa+ia*a.GetLength(1), pb+ib*b.GetLength(1), out r) )
+                            return r;
+                    }
+                }
+            #endif
+
+            result = 0;
+            for(j=0; j<=n-1; j++)
+            {
+                result = result+a[ia,j]*b[ib,j];
+            }
+            return result;
+        }
+
+        /*************************************************************************
+        Computes dot product (X,X) for elements [0,N) of X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+
+        RESULT:
+            (X,X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rdotv2(int n,
+            double[] x,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        double r;
+                        if( try_rdotv2(n, px, out r) )
+                            return r;
+                    }
+                }
+            #endif
+
+            result = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i];
+                result = result+v*v;
+            }
+            return result;
+        }
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for raddv() and similar funcs
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_raddv(
+            int n,
+            double vSrc,
+            double *Src,
+            double *Dst)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_vsrc = Avx2.BroadcastScalarToVector256(&vSrc);
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Fma.MultiplyAdd(
+                            Avx2.LoadVector256(Src+i),
+                            avx_vsrc,
+                            Avx2.LoadVector256(Dst+i)
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] += vSrc*Src[i];
+                return true;
+            }
+            #endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_vsrc = Avx2.BroadcastScalarToVector256(&vSrc);
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Add(
+                            Avx2.Multiply(
+                                Avx2.LoadVector256(Src+i),
+                                avx_vsrc
+                                ),
+                            Avx2.LoadVector256(Dst+i)
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] += vSrc*Src[i];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rmul()
+        
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rmulv(
+            int n,
+            double vDst,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_vdst = Avx2.BroadcastScalarToVector256(&vDst);
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Multiply(
+                            Avx2.LoadVector256(Dst+i),
+                            avx_vdst
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] *= vDst;
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rcopy()
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rcopy(
+            int n,
+            double *Src,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.LoadVector256(Src+i)
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] = Src[i];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for icopy()
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_icopy(
+            int n,
+            int *Src,
+            int *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n8 = n>>3;
+                int head = n8<<3;
+                for(i=0; i<head; i+=8)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.LoadVector256(Src+i)
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] = Src[i];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rcopymul()
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rcopymul(
+            int n,
+            double vSrc,
+            double *Src,
+            double *Dst)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_vsrc = Avx2.BroadcastScalarToVector256(&vSrc);
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Multiply(
+                            Avx2.LoadVector256(Src+i),
+                            avx_vsrc)
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] = vSrc*Src[i];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rset()
+        
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rset(
+            int n,
+            double vDst,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_vdst = Avx2.BroadcastScalarToVector256(&vDst);
+                for(i=0; i<head; i+=4)
+                    Avx2.Store(Dst+i, avx_vdst);
+                for(i=head; i<n; i++)
+                    Dst[i] = vDst;
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for mergemul()
+        
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rmergemul(
+            int n,
+            double *Src,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Multiply(
+                            Avx2.LoadVector256(Dst+i),
+                            Avx2.LoadVector256(Src+i)
+                            )
+                        );
+                for(i=head; i<n; i++)
+                    Dst[i] *= Src[i];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for mergemax()
+        
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rmergemax(
+            int n,
+            double *Src,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Max(
+                            Avx2.LoadVector256(Dst+i),
+                            Avx2.LoadVector256(Src+i)
+                            )
+                        );
+                for(i=head; i<n; i++)
+                    Dst[i] = System.Math.Max(Dst[i],Src[i]);
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for mergemin()
+        
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rmergemin(
+            int n,
+            double *Src,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Min(
+                            Avx2.LoadVector256(Dst+i),
+                            Avx2.LoadVector256(Src+i)
+                            )
+                        );
+                for(i=head; i<n; i++)
+                    Dst[i] = System.Math.Min(Dst[i],Src[i]);
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        /*************************************************************************
+        Performs inplace addition of Y[] to X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Alpha   -   multiplier
+            Y       -   array[N], vector to process
+            X       -   array[N], vector to process
+
+        RESULT:
+            X := X + alpha*Y
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void raddv(int n,
+            double alpha,
+            double[] y,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_raddv(n, alpha, py, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]+alpha*y[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace addition of Y[] to X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Alpha   -   multiplier
+            Y       -   source vector
+            OffsY   -   source offset
+            X       -   destination vector
+            OffsX   -   destination offset
+
+        RESULT:
+            X := X + alpha*Y
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void raddvx(int n,
+            double alpha,
+            double[] y,
+            int offsy,
+            double[] x,
+            int offsx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_raddv(n, alpha, py+offsy, px+offsx) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[offsx+i] = x[offsx+i]+alpha*y[offsy+i];
+            }
+        }
+
+
+        /*************************************************************************
+        Performs inplace addition of vector Y[] to row X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Alpha   -   multiplier
+            Y       -   vector to add
+            X       -   target row RowIdx
+
+        RESULT:
+            X := X + alpha*Y
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void raddvr(int n,
+            double alpha,
+            double[] y,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_raddv(n, alpha, py, px+rowidx*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = x[rowidx,i]+alpha*y[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise multiplication of vector X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            X       -   target vector
+
+        RESULT:
+            X := componentwise(X*Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergemulv(int n,
+            double[] y,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemul(n, py, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]*y[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise multiplication of row X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise(X*Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergemulvr(int n,
+            double[] y,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemul(n, py, px+rowidx*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = x[rowidx,i]*y[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise multiplication of row X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise(X*Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergemulrv(int n,
+            double[,] y,
+            int rowidx,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemul(n, py+rowidx*y.GetLength(1), px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]*y[rowidx,i];
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise max of vector X[] and vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            X       -   target vector
+
+        RESULT:
+            X := componentwise_max(X,Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergemaxv(int n,
+            double[] y,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemax(n, py, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = System.Math.Max(x[i], y[i]);
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise max of row X[] and vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise_max(X,Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergemaxvr(int n,
+            double[] y,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemax(n, py, px+rowidx*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = System.Math.Max(x[rowidx,i], y[i]);
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise max of row X[I] and vector Y[] 
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   matrix, I-th row is source
+            X       -   target row RowIdx
+
+        RESULT:
+            Y := componentwise_max(Y,X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergemaxrv(int n,
+            double[,] x,
+            int rowidx,
+            double[] y,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemax(n, px+rowidx*x.GetLength(1), py) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                y[i] = System.Math.Max(y[i], x[rowidx,i]);
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise max of vector X[] and vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            X       -   target vector
+
+        RESULT:
+            X := componentwise_max(X,Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergeminv(int n,
+            double[] y,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemin(n, py, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = System.Math.Min(x[i], y[i]);
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise max of row X[] and vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise_max(X,Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergeminvr(int n,
+            double[] y,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemin(n, py, px+rowidx*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = System.Math.Min(x[rowidx,i], y[i]);
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise max of row X[I] and vector Y[] 
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   matrix, I-th row is source
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise_max(X,Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergeminrv(int n,
+            double[,] x,
+            int rowidx,
+            double[] y,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemin(n, px+rowidx*x.GetLength(1), py) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                y[i] = System.Math.Min(y[i], x[rowidx,i]);
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace addition of Y[RIdx,...] to X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Alpha   -   multiplier
+            Y       -   array[?,N], matrix whose RIdx-th row is added
+            RIdx    -   row index
+            X       -   array[N], vector to process
+
+        RESULT:
+            X := X + alpha*Y
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void raddrv(int n,
+            double alpha,
+            double[,] y,
+            int ridx,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_raddv(n, alpha, py+ridx*y.GetLength(1), px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]+alpha*y[ridx,i];
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace addition of Y[RIdx,...] to X[RIdxDst]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Alpha   -   multiplier
+            Y       -   array[?,N], matrix whose RIdxSrc-th row is added
+            RIdxSrc -   source row index
+            X       -   array[?,N], matrix whose RIdxDst-th row is target
+            RIdxDst -   destination row index
+
+        RESULT:
+            X := X + alpha*Y
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void raddrr(int n,
+            double alpha,
+            double[,] y,
+            int ridxsrc,
+            double[,] x,
+            int ridxdst,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_raddv(n, alpha, py+ridxsrc*y.GetLength(1), px+ridxdst*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[ridxdst,i] = x[ridxdst,i]+alpha*y[ridxsrc,i];
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace multiplication of X[] by V
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+            V       -   multiplier
+
+        OUTPUT PARAMETERS:
+            X       -   elements 0...N-1 multiplied by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmulv(int n,
+            double v,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        if( try_rmulv(n, v, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]*v;
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace multiplication of X[] by V
+
+        INPUT PARAMETERS:
+            N       -   row length
+            X       -   array[?,N], row to process
+            V       -   multiplier
+
+        OUTPUT PARAMETERS:
+            X       -   elements 0...N-1 of row RowIdx are multiplied by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmulr(int n,
+            double v,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        if( try_rmulv(n, v, px+rowidx*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = x[rowidx,i]*v;
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace multiplication of X[OffsX:OffsX+N-1] by V
+
+        INPUT PARAMETERS:
+            N       -   subvector length
+            X       -   vector to process
+            V       -   multiplier
+
+        OUTPUT PARAMETERS:
+            X       -   elements OffsX:OffsX+N-1 multiplied by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmulvx(int n,
+            double v,
+            double[] x,
+            int offsx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        if( try_rmulv(n, v, px+offsx) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[offsx+i] = x[offsx+i]*v;
+            }
+        }
+
+        /*************************************************************************
+        Returns maximum X
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+
+        OUTPUT PARAMETERS:
+            max(X[i])
+            zero for N=0
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rmaxv(int n,
+            double[] x,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+
+            if( n<=0 )
+            {
+                result = 0;
+                return result;
+            }
+            result = x[0];
+            for(i=1; i<=n-1; i++)
+            {
+                v = x[i];
+                if( v>result )
+                {
+                    result = v;
+                }
+            }
+            return result;
+        }
+
+        /*************************************************************************
+        Returns maximum |X|
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+
+        OUTPUT PARAMETERS:
+            max(|X[i]|)
+            zero for N=0
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rmaxabsv(int n,
+            double[] x,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+
+            result = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = System.Math.Abs(x[i]);
+                if( v>result )
+                {
+                    result = v;
+                }
+            }
+            return result;
+        }
+
+        /*************************************************************************
+        Returns maximum X
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   matrix to process, RowIdx-th row is processed
+
+        OUTPUT PARAMETERS:
+            max(X[RowIdx,i])
+            zero for N=0
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rmaxr(int n,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+
+            if( n<=0 )
+            {
+                result = 0;
+                return result;
+            }
+            result = x[rowidx,0];
+            for(i=1; i<=n-1; i++)
+            {
+                v = x[rowidx,i];
+                if( v>result )
+                {
+                    result = v;
+                }
+            }
+            return result;
+        }
+
+        /*************************************************************************
+        Returns maximum |X|
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   matrix to process, RowIdx-th row is processed
+
+        OUTPUT PARAMETERS:
+            max(|X[RowIdx,i]|)
+            zero for N=0
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rmaxabsr(int n,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+
+            result = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = System.Math.Abs(x[rowidx,i]);
+                if( v>result )
+                {
+                    result = v;
+                }
+            }
+            return result;
+        }
+
+        /*************************************************************************
+        Sets vector X[] to V
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            V       -   value to set
+            X       -   array[N]
+
+        OUTPUT PARAMETERS:
+            X       -   leading N elements are replaced by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsetv(int n,
+            double v,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        if( try_rset(n, v, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                x[j] = v;
+            }
+        }
+
+        /*************************************************************************
+        Sets X[OffsX:OffsX+N-1] to V
+
+        INPUT PARAMETERS:
+            N       -   subvector length
+            V       -   value to set
+            X       -   array[N]
+
+        OUTPUT PARAMETERS:
+            X       -   X[OffsX:OffsX+N-1] is replaced by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsetvx(int n,
+            double v,
+            double[] x,
+            int offsx,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        if( try_rset(n, v, px+offsx) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                x[offsx+j] = v;
+            }
+        }
+
+        /*************************************************************************
+        Sets vector X[] to V
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            V       -   value to set
+            X       -   array[N]
+
+        OUTPUT PARAMETERS:
+            X       -   leading N elements are replaced by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void isetv(int n,
+            int v,
+            int[] x,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            for(j=0; j<=n-1; j++)
+            {
+                x[j] = v;
+            }
+        }
+
+        /*************************************************************************
+        Sets vector X[] to V
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            V       -   value to set
+            X       -   array[N]
+
+        OUTPUT PARAMETERS:
+            X       -   leading N elements are replaced by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bsetv(int n,
+            bool v,
+            bool[] x,
+            alglib.xparams _params)
+        {
+            int j = 0;
+
+            for(j=0; j<=n-1; j++)
+            {
+                x[j] = v;
+            }
+        }
+
+        /*************************************************************************
+        Sets matrix A[] to V
+
+        INPUT PARAMETERS:
+            M, N    -   rows/cols count
+            V       -   value to set
+            A       -   array[M,N]
+
+        OUTPUT PARAMETERS:
+            A       -   leading M rows, N cols are replaced by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsetm(int m,
+            int n,
+            double v,
+            double[,] a,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* pa=a)
+                    {
+                        for(i=0; i<m; i++)
+                        {
+                            double *prow = pa+i*a.GetLength(1);
+                            if( !try_rset(n, v, prow) )
+                            {
+                                for(j=0; j<n; j++)
+                                    prow[j] = v;
+                            }
+                        }
+                    }
+                    return;
+                }
+            #endif
+
+            for(i=0; i<=m-1; i++)
+            {
+                for(j=0; j<=n-1; j++)
+                {
+                    a[i,j] = v;
+                }
+            }
+        }
+
+        /*************************************************************************
+        Sets row I of A[,] to V
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            V       -   value to set
+            A       -   array[N,N] or larger
+            I       -   row index
+
+        OUTPUT PARAMETERS:
+            A       -   leading N elements of I-th row are replaced by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsetr(int n,
+            double v,
+            double[,] a,
+            int i,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* pa=a)
+                    {
+                        if( try_rset(n, v, pa+i*a.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+
+            for(j=0; j<=n-1; j++)
+            {
+                a[i,j] = v;
+            }
+        }
+
+        /*************************************************************************
+        Copies vector X[] to Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], source
+            Y       -   preallocated array[N]
+
+        OUTPUT PARAMETERS:
+            Y       -   leading N elements are replaced by X
+
+            
+        NOTE: destination and source should NOT overlap
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopyv(int n,
+            double[] x,
+            double[] y,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rcopy(n, px, py) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                y[j] = x[j];
+            }
+        }
+        
+        /*************************************************************************
+        Copies vector X[] to Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], source
+            Y       -   preallocated array[N]
+
+        OUTPUT PARAMETERS:
+            Y       -   leading N elements are replaced by X
+
+            
+        NOTE: destination and source should NOT overlap
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bcopyv(int n,
+            bool[] x,
+            bool[] y,
+            alglib.xparams _params)
+        {
+            int j = 0;
+
+            for(j=0; j<=n-1; j++)
+            {
+                y[j] = x[j];
+            }
+        }
+        
+        /*************************************************************************
+        Copies vector X[] to Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   source array
+            Y       -   preallocated array[N]
+
+        OUTPUT PARAMETERS:
+            Y       -   X copied to Y
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void icopyv(int n,
+            int[] x,
+            int[] y,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(int* px=x, py=y)
+                    {
+                        if( try_icopy(n, px, py) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                y[j] = x[j];
+            }
+        }
+ 
+        /*************************************************************************
+        Performs copying with multiplication of V*X[] to Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            V       -   multiplier
+            X       -   array[N], source
+            Y       -   preallocated array[N]
+
+        OUTPUT PARAMETERS:
+            Y       -   array[N], Y = V*X
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopymulv(int n,
+            double v,
+            double[] x,
+            double[] y,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rcopymul(n, v, px, py) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                y[i] = v*x[i];
+            }
+        }
+        
+        /*************************************************************************
+        Performs copying with multiplication of V*X[] to Y[I,*]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            V       -   multiplier
+            X       -   array[N], source
+            Y       -   preallocated array[?,N]
+            RIdx    -   destination row index
+
+        OUTPUT PARAMETERS:
+            Y       -   Y[RIdx,...] = V*X
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopymulvr(int n,
+            double v,
+            double[] x,
+            double[,] y,
+            int ridx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rcopymul(n, v, px, py+ridx*y.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                y[ridx,i] = v*x[i];
+            }
+        }
+        
+        /*************************************************************************
+        Copies vector X[] to row I of A[,]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], source
+            A       -   preallocated 2D array large enough to store result
+            I       -   destination row index
+
+        OUTPUT PARAMETERS:
+            A       -   leading N elements of I-th row are replaced by X
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopyvr(int n,
+            double[] x,
+            double[,] a,
+            int i,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, pa=a)
+                    {
+                        if( try_rcopy(n, px, pa+i*a.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                a[i,j] = x[j];
+            }
+        }
+        
+        /*************************************************************************
+        Copies row I of A[,] to vector X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            A       -   2D array, source
+            I       -   source row index
+            X       -   preallocated destination
+
+        OUTPUT PARAMETERS:
+            X       -   array[N], destination
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopyrv(int n,
+            double[,] a,
+            int i,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, pa=a)
+                    {
+                        if( try_rcopy(n, pa+i*a.GetLength(1), px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                x[j] = a[i,j];
+            }
+        }
+        
+        /*************************************************************************
+        Copies row I of A[,] to row K of B[,].
+
+        A[i,...] and B[k,...] may overlap.
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            A       -   2D array, source
+            I       -   source row index
+            B       -   preallocated destination
+            K       -   destination row index
+
+        OUTPUT PARAMETERS:
+            B       -   row K overwritten
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopyrr(int n,
+            double[,] a,
+            int i,
+            double[,] b,
+            int k,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* pa=a, pb=b)
+                    {
+                        if( try_rcopy(n, pa+i*a.GetLength(1), pb+k*b.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                b[k,j] = a[i,j];
+            }
+        }
+
+        /*************************************************************************
+        Copies vector X[] to Y[], extended version
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   source array
+            OffsX   -   source offset
+            Y       -   preallocated array[N]
+            OffsY   -   destination offset
+
+        OUTPUT PARAMETERS:
+            Y       -   N elements starting from OffsY are replaced by X[OffsX:OffsX+N-1]
+            
+        NOTE: destination and source should NOT overlap
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopyvx(int n,
+            double[] x,
+            int offsx,
+            double[] y,
+            int offsy,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rcopy(n, px+offsx, py+offsy) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                y[offsy+j] = x[offsx+j];
+            }
+        }
+
+        /*************************************************************************
+        Copies vector X[] to Y[], extended version
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   source array
+            OffsX   -   source offset
+            Y       -   preallocated array[N]
+            OffsY   -   destination offset
+
+        OUTPUT PARAMETERS:
+            Y       -   N elements starting from OffsY are replaced by X[OffsX:OffsX+N-1]
+            
+        NOTE: destination and source should NOT overlap
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void icopyvx(int n,
+            int[] x,
+            int offsx,
+            int[] y,
+            int offsy,
+            alglib.xparams _params)
+        {
+            int j = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(int* px=x, py=y)
+                    {
+                        if( try_icopy(n, px+offsx, py+offsy) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(j=0; j<=n-1; j++)
+            {
+                y[offsy+j] = x[offsx+j];
+            }
+        }
+        
+        
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rgemv() and rgemvx()
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rgemv(
+            int m,
+            int n,
+            double  alpha,
+            double* a,
+            int stride_a,
+            int opa,
+            double* x,
+            double* y)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                if( opa==0 )
+                {
+                    
+                    //
+                    // y += A*x
+                    //
+                    int n4 = n>>2;
+                    int head = n4<<2;
+                    double *a_row = a;
+                    int i, j;
+                    double *vdot = stackalloc double[4];
+                    for(i=0; i<m; i++)
+                    {
+                        Intrinsics.Vector256<double> simd_dot = Intrinsics.Vector256<double>.Zero;
+                        for(j=0; j<head; j+=4)
+                            simd_dot = Fma.MultiplyAdd(Fma.LoadVector256(a_row+j), Fma.LoadVector256(x+j), simd_dot);
+                        Fma.Store(vdot, simd_dot);
+                        for(j=head; j<n; j++)
+                            vdot[0] += a_row[j]*x[j];
+                        double v = vdot[0]+vdot[1]+vdot[2]+vdot[3];
+                        y[i] = alpha*v+y[i];
+                        a_row += stride_a;
+                    }
+                    return true;
+                }
+                if( opa==1 )
+                {
+                    
+                    //
+                    // y += A^T*x
+                    //
+                    double *a_row = a;
+                    int i, j;
+                    int m4 = m>>2;
+                    int head = m4<<2;
+                    for(i=0; i<n; i++)
+                    {
+                        double v = alpha*x[i];
+                        Intrinsics.Vector256<double> simd_v = Fma.BroadcastScalarToVector256(&v);
+                        for(j=0; j<head; j+=4)
+                            Fma.Store(y+j, Fma.MultiplyAdd(Fma.LoadVector256(a_row+j), simd_v, Fma.LoadVector256(y+j)));
+                        for(j=head; j<m; j++)
+                            y[j] += v*a_row[j];
+                        a_row += stride_a;
+                    }
+                    return true;
+                }
+                return false;
+            }
+            #endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                if( opa==0 )
+                {
+                    
+                    //
+                    // y += A*x
+                    //
+                    int n4 = n>>2;
+                    int head = n4<<2;
+                    double *a_row = a;
+                    int i, j;
+                    double *vdot = stackalloc double[4];
+                    for(i=0; i<m; i++)
+                    {
+                        Intrinsics.Vector256<double> simd_dot = Intrinsics.Vector256<double>.Zero;
+                        for(j=0; j<head; j+=4)
+                            simd_dot = Avx2.Add(Avx2.Multiply(Avx2.LoadVector256(a_row+j), Avx2.LoadVector256(x+j)), simd_dot);
+                        Avx2.Store(vdot, simd_dot);
+                        for(j=head; j<n; j++)
+                            vdot[0] += a_row[j]*x[j];
+                        double v = vdot[0]+vdot[1]+vdot[2]+vdot[3];
+                        y[i] = alpha*v+y[i];
+                        a_row += stride_a;
+                    }
+                    return true;
+                }
+                if( opa==1 )
+                {
+                    
+                    //
+                    // y += A^T*x
+                    //
+                    double *a_row = a;
+                    int i, j;
+                    int m4 = m>>2;
+                    int head = m4<<2;
+                    for(i=0; i<n; i++)
+                    {
+                        double v = alpha*x[i];
+                        Intrinsics.Vector256<double> simd_v = Avx2.BroadcastScalarToVector256(&v);
+                        for(j=0; j<head; j+=4)
+                            Avx2.Store(y+j, Avx2.Add(Avx2.Multiply(Avx2.LoadVector256(a_row+j), simd_v), Avx2.LoadVector256(y+j)));
+                        for(j=head; j<m; j++)
+                            y[j] += v*a_row[j];
+                        a_row += stride_a;
+                    }
+                    return true;
+                }
+                return false;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        
+        /*************************************************************************
+        Matrix-vector product: y := alpha*op(A)*x + beta*y
+
+        NOTE: this  function  expects  Y  to  be  large enough to store result. No
+              automatic preallocation happens for  smaller  arrays.  No  integrity
+              checks is performed for sizes of A, x, y.
+
+        INPUT PARAMETERS:
+            M   -   number of rows of op(A)
+            N   -   number of columns of op(A)
+            Alpha-  coefficient
+            A   -   source matrix
+            OpA -   operation type:
+                    * OpA=0     =>  op(A) = A
+                    * OpA=1     =>  op(A) = A^T
+            X   -   input vector, has at least N elements
+            Beta-   coefficient
+            Y   -   preallocated output array, has at least M elements
+
+        OUTPUT PARAMETERS:
+            Y   -   vector which stores result
+
+        HANDLING OF SPECIAL CASES:
+            * if M=0, then subroutine does nothing. It does not even touch arrays.
+            * if N=0 or Alpha=0.0, then:
+              * if Beta=0, then Y is filled by zeros. A and X are  not  referenced
+                at all. Initial values of Y are ignored (we do not  multiply  Y by
+                zero, we just rewrite it by zeros)
+              * if Beta<>0, then Y is replaced by Beta*Y
+            * if M>0, N>0, Alpha<>0, but  Beta=0,  then  Y  is  replaced  by  A*x;
+               initial state of Y is ignored (rewritten by  A*x,  without  initial
+               multiplication by zeros).
+
+
+          -- ALGLIB routine --
+
+             01.09.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        public static void rgemv(int m,
+            int n,
+            double alpha,
+            double[,] a,
+            int opa,
+            double[] x,
+            double beta,
+            double[] y,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            double v = 0;
+
+            
+            //
+            // Properly premultiply Y by Beta.
+            //
+            // Quick exit for M=0, N=0 or Alpha=0.
+            // After this block we have M>0, N>0, Alpha<>0.
+            //
+            if( m<=0 )
+            {
+                return;
+            }
+            if( (double)(beta)!=(double)(0) )
+            {
+                rmulv(m, beta, y, _params);
+            }
+            else
+            {
+                rsetv(m, 0.0, y, _params);
+            }
+            if( n<=0 || (double)(alpha)==(double)(0.0) )
+            {
+                return;
+            }
+            
+            //
+            // Try fast kernel
+            //
+            #if ALGLIB_USE_SIMD
+            if( (opa==0 && n>=_ABLASF_KERNEL_SIZE2) || (opa==1 && m>=_ABLASF_KERNEL_SIZE2) )
+                unsafe
+                {
+                    fixed(double* pa=a, px=x, py=y)
+                    {
+                        if( try_rgemv(m, n, alpha, pa, a.GetLength(1), opa, px, py) )
+                            return;
+                    }
+                }
+            #endif
+            
+            //
+            // Generic code
+            //
+            if( opa==0 )
+            {
+                
+                //
+                // y += A*x
+                //
+                for(i=0; i<=m-1; i++)
+                {
+                    v = 0;
+                    for(j=0; j<=n-1; j++)
+                    {
+                        v = v+a[i,j]*x[j];
+                    }
+                    y[i] = alpha*v+y[i];
+                }
+                return;
+            }
+            if( opa==1 )
+            {
+                
+                //
+                // y += A^T*x
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    v = alpha*x[i];
+                    for(j=0; j<=m-1; j++)
+                    {
+                        y[j] = y[j]+v*a[i,j];
+                    }
+                }
+                return;
+            }
+        }
+        
+        /*************************************************************************
+        Matrix-vector product: y := alpha*op(A)*x + beta*y
+
+        Here x, y, A are subvectors/submatrices of larger vectors/matrices.
+
+        NOTE: this  function  expects  Y  to  be  large enough to store result. No
+              automatic preallocation happens for  smaller  arrays.  No  integrity
+              checks is performed for sizes of A, x, y.
+
+        INPUT PARAMETERS:
+            M   -   number of rows of op(A)
+            N   -   number of columns of op(A)
+            Alpha-  coefficient
+            A   -   source matrix
+            IA  -   submatrix offset (row index)
+            JA  -   submatrix offset (column index)
+            OpA -   operation type:
+                    * OpA=0     =>  op(A) = A
+                    * OpA=1     =>  op(A) = A^T
+            X   -   input vector, has at least N+IX elements
+            IX  -   subvector offset
+            Beta-   coefficient
+            Y   -   preallocated output array, has at least M+IY elements
+            IY  -   subvector offset
+
+        OUTPUT PARAMETERS:
+            Y   -   vector which stores result
+
+        HANDLING OF SPECIAL CASES:
+            * if M=0, then subroutine does nothing. It does not even touch arrays.
+            * if N=0 or Alpha=0.0, then:
+              * if Beta=0, then Y is filled by zeros. A and X are  not  referenced
+                at all. Initial values of Y are ignored (we do not  multiply  Y by
+                zero, we just rewrite it by zeros)
+              * if Beta<>0, then Y is replaced by Beta*Y
+            * if M>0, N>0, Alpha<>0, but  Beta=0,  then  Y  is  replaced  by  A*x;
+               initial state of Y is ignored (rewritten by  A*x,  without  initial
+               multiplication by zeros).
+
+
+          -- ALGLIB routine --
+
+             01.09.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        public static void rgemvx(int m,
+            int n,
+            double alpha,
+            double[,] a,
+            int ia,
+            int ja,
+            int opa,
+            double[] x,
+            int ix,
+            double beta,
+            double[] y,
+            int iy,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            double v = 0;
+
+            
+            //
+            // Properly premultiply Y by Beta.
+            //
+            // Quick exit for M=0, N=0 or Alpha=0.
+            // After this block we have M>0, N>0, Alpha<>0.
+            //
+            if( m<=0 )
+            {
+                return;
+            }
+            if( (double)(beta)!=(double)(0) )
+            {
+                rmulvx(m, beta, y, iy, _params);
+            }
+            else
+            {
+                rsetvx(m, 0.0, y, iy, _params);
+            }
+            if( n<=0 || (double)(alpha)==(double)(0.0) )
+            {
+                return;
+            }
+            
+            //
+            // Try fast kernel
+            //
+            #if ALGLIB_USE_SIMD
+            if( (opa==0 && n>=_ABLASF_KERNEL_SIZE2) || (opa==1 && m>=_ABLASF_KERNEL_SIZE2) )
+                unsafe
+                {
+                    fixed(double* pa=a, px=x, py=y)
+                    {
+                        if( try_rgemv(m, n, alpha, pa+ia*a.GetLength(1)+ja, a.GetLength(1), opa, px+ix, py+iy) )
+                            return;
+                    }
+                }
+            #endif
+            
+            //
+            // Generic code
+            //
+            if( opa==0 )
+            {
+                
+                //
+                // y += A*x
+                //
+                for(i=0; i<=m-1; i++)
+                {
+                    v = 0;
+                    for(j=0; j<=n-1; j++)
+                    {
+                        v = v+a[ia+i,ja+j]*x[ix+j];
+                    }
+                    y[iy+i] = alpha*v+y[iy+i];
+                }
+                return;
+            }
+            if( opa==1 )
+            {
+                
+                //
+                // y += A^T*x
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    v = alpha*x[ix+i];
+                    for(j=0; j<=m-1; j++)
+                    {
+                        y[iy+j] = y[iy+j]+v*a[ia+i,ja+j];
+                    }
+                }
+                return;
+            }
+        }
+        
+        
+        /*************************************************************************
+        Rank-1 correction: A := A + alpha*u*v'
+
+        NOTE: this  function  expects  A  to  be  large enough to store result. No
+              automatic preallocation happens for  smaller  arrays.  No  integrity
+              checks is performed for sizes of A, u, v.
+
+        INPUT PARAMETERS:
+            M   -   number of rows
+            N   -   number of columns
+            A   -   target MxN matrix
+            Alpha-  coefficient
+            U   -   vector #1
+            V   -   vector #2
+
+
+          -- ALGLIB routine --
+             07.09.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        public static void rger(int m,
+            int n,
+            double alpha,
+            double[] u,
+            double[] v,
+            double[,] a,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            double s = 0;
+
+            if( (m<=0 || n<=0) || (double)(alpha)==(double)(0) )
+            {
+                return;
+            }
+            for(i=0; i<=m-1; i++)
+            {
+                s = alpha*u[i];
+                for(j=0; j<=n-1; j++)
+                {
+                    a[i,j] = a[i,j]+s*v[j];
+                }
+            }
+        }
+        
+        
+        /*************************************************************************
+        This subroutine solves linear system op(A)*x=b where:
+        * A is NxN upper/lower triangular/unitriangular matrix
+        * X and B are Nx1 vectors
+        * "op" may be identity transformation or transposition
+
+        Solution replaces X.
+
+        IMPORTANT: * no overflow/underflow/denegeracy tests is performed.
+                   * no integrity checks for operand sizes, out-of-bounds accesses
+                     and so on is performed
+
+        INPUT PARAMETERS
+            N   -   matrix size, N>=0
+            A       -   matrix, actial matrix is stored in A[IA:IA+N-1,JA:JA+N-1]
+            IA      -   submatrix offset
+            JA      -   submatrix offset
+            IsUpper -   whether matrix is upper triangular
+            IsUnit  -   whether matrix is unitriangular
+            OpType  -   transformation type:
+                        * 0 - no transformation
+                        * 1 - transposition
+            X       -   right part, actual vector is stored in X[IX:IX+N-1]
+            IX      -   offset
+            
+        OUTPUT PARAMETERS
+            X       -   solution replaces elements X[IX:IX+N-1]
+
+          -- ALGLIB routine --
+             (c) 07.09.2021 Bochkanov Sergey
+        *************************************************************************/
+        public static void rtrsvx(int n,
+            double[,] a,
+            int ia,
+            int ja,
+            bool isupper,
+            bool isunit,
+            int optype,
+            double[] x,
+            int ix,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            double v = 0;
+
+            if( n<=0 )
+            {
+                return;
+            }
+            if( optype==0 && isupper )
+            {
+                for(i=n-1; i>=0; i--)
+                {
+                    v = x[ix+i];
+                    for(j=i+1; j<=n-1; j++)
+                    {
+                        v = v-a[ia+i,ja+j]*x[ix+j];
+                    }
+                    if( !isunit )
+                    {
+                        v = v/a[ia+i,ja+i];
+                    }
+                    x[ix+i] = v;
+                }
+                return;
+            }
+            if( optype==0 && !isupper )
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    v = x[ix+i];
+                    for(j=0; j<=i-1; j++)
+                    {
+                        v = v-a[ia+i,ja+j]*x[ix+j];
+                    }
+                    if( !isunit )
+                    {
+                        v = v/a[ia+i,ja+i];
+                    }
+                    x[ix+i] = v;
+                }
+                return;
+            }
+            if( optype==1 && isupper )
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    v = x[ix+i];
+                    if( !isunit )
+                    {
+                        v = v/a[ia+i,ja+i];
+                    }
+                    x[ix+i] = v;
+                    if( v==0 )
+                    {
+                        continue;
+                    }
+                    for(j=i+1; j<=n-1; j++)
+                    {
+                        x[ix+j] = x[ix+j]-v*a[ia+i,ja+j];
+                    }
+                }
+                return;
+            }
+            if( optype==1 && !isupper )
+            {
+                for(i=n-1; i>=0; i--)
+                {
+                    v = x[ix+i];
+                    if( !isunit )
+                    {
+                        v = v/a[ia+i,ja+i];
+                    }
+                    x[ix+i] = v;
+                    if( v==0 )
+                    {
+                        continue;
+                    }
+                    for(j=0; j<=i-1; j++)
+                    {
+                        x[ix+j] = x[ix+j]-v*a[ia+i,ja+j];
+                    }
+                }
+                return;
+            }
+            alglib.ap.assert(false, "rTRSVX: unexpected operation type");
+        }
+        
+        
+        /*************************************************************************
+        Fast kernel (new version with AVX2/FMA)
+
+          -- ALGLIB routine --
+             19.09.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        Block packing function for fast rGEMM. Loads long  WIDTH*LENGTH  submatrix
+        with LENGTH<=BLOCK_SIZE and WIDTH<=MICRO_SIZE into contiguous  MICRO_SIZE*
+        BLOCK_SIZE row-wise 'horizontal' storage (hence H in the function name).
+
+        The matrix occupies first ROUND_LENGTH cols of the  storage  (with  LENGTH
+        being rounded up to nearest SIMD granularity).  ROUND_LENGTH  is  returned
+        as result. It is guaranteed that ROUND_LENGTH depends only on LENGTH,  and
+        that it will be same for all function calls.
+
+        Unused rows and columns in [LENGTH,ROUND_LENGTH) range are filled by zeros;
+        unused cols in [ROUND_LENGTH,BLOCK_SIZE) range are ignored.
+
+        * op=0 means that source is an WIDTH*LENGTH matrix stored with  src_stride
+          stride. The matrix is NOT transposed on load.
+        * op=1 means that source is an LENGTH*WIDTH matrix  stored with src_stride
+          that is loaded with transposition
+        * present version of the function supports only MICRO_SIZE=2, the behavior
+          is undefined for other micro sizes.
+        * the target is properly aligned; the source can be unaligned.
+
+        Requires AVX2, does NOT check its presense.
+
+        The function is present in two versions, one  with  variable  opsrc_length
+        and another one with opsrc_length==block_size==32.
+
+          -- ALGLIB routine --
+             19.07.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe int ablasf_packblkh_avx2(
+            double *src,
+            int src_stride,
+            int op,
+            int opsrc_length,
+            int opsrc_width,
+            double   *dst,
+            int block_size,
+            int micro_size)
+        {
+            int i;
+            
+            /*
+             * Write to the storage
+             */
+            if( op==0 )
+            {
+                /*
+                 * Copy without transposition
+                 */
+                int len8=(opsrc_length>>3)<<3;
+                double *src1 = src+src_stride;
+                double *dst1 = dst+block_size;
+                if( opsrc_width==2 )
+                {
+                    /*
+                     * Width=2
+                     */
+                    for(i=0; i<len8; i+=8)
+                    {
+                        Avx2.StoreAligned(dst+i,    Avx2.LoadVector256(src+i));
+                        Avx2.StoreAligned(dst+i+4,  Avx2.LoadVector256(src+i+4));
+                        Avx2.StoreAligned(dst1+i,   Avx2.LoadVector256(src1+i));
+                        Avx2.StoreAligned(dst1+i+4, Avx2.LoadVector256(src1+i+4));
+                    }
+                    for(i=len8; i<opsrc_length; i++)
+                    {
+                        dst[i]  = src[i];
+                        dst1[i] = src1[i];
+                    }
+                }
+                else
+                {
+                    /*
+                     * Width=1, pad by zeros
+                     */
+                    Intrinsics.Vector256<double> vz = Intrinsics.Vector256<double>.Zero;
+                    for(i=0; i<len8; i+=8)
+                    {
+                        Avx2.StoreAligned(dst+i,    Avx2.LoadVector256(src+i));
+                        Avx2.StoreAligned(dst+i+4,  Avx2.LoadVector256(src+i+4));
+                        Avx2.StoreAligned(dst1+i,   vz);
+                        Avx2.StoreAligned(dst1+i+4, vz);
+                    }
+                    for(i=len8; i<opsrc_length; i++)
+                    {
+                        dst[i]  = src[i];
+                        dst1[i] = 0.0;
+                    }
+                }
+            }
+            else
+            {
+                /*
+                 * Copy with transposition
+                 */
+                int stride2 = src_stride<<1;
+                int stride3 = src_stride+stride2;
+                int stride4 = src_stride<<2;
+                int len4=(opsrc_length>>2)<<2;
+                double *srci = src;
+                double *dst1 = dst+block_size;
+                if( opsrc_width==2 )
+                {
+                    /*
+                     * Width=2
+                     */
+                    for(i=0; i<len4; i+=4)
+                    {
+                        Intrinsics.Vector128<double> s0 = Sse2.LoadVector128(srci),         s1 = Sse2.LoadVector128(srci+src_stride);
+                        Intrinsics.Vector128<double> s2 = Sse2.LoadVector128(srci+stride2), s3 = Sse2.LoadVector128(srci+stride3);
+                        Sse2.Store(dst+i,    Sse2.UnpackLow( s0,s1));
+                        Sse2.Store(dst1+i,   Sse2.UnpackHigh(s0,s1));
+                        Sse2.Store(dst+i+2,  Sse2.UnpackLow( s2,s3));
+                        Sse2.Store(dst1+i+2, Sse2.UnpackHigh(s2,s3));
+                        srci += stride4;
+                    }
+                    for(i=len4; i<opsrc_length; i++)
+                    {
+                        dst[i]  = srci[0];
+                        dst1[i] = srci[1];
+                        srci += src_stride;
+                    }
+                }
+                else
+                {
+                    /*
+                     * Width=1, pad by zeros
+                     */
+                    Intrinsics.Vector128<double> vz = Intrinsics.Vector128<double>.Zero;
+                    for(i=0; i<len4; i+=4)
+                    {
+                        Intrinsics.Vector128<double> s0 = Sse2.LoadVector128(srci), s1 = Sse2.LoadVector128(srci+src_stride);
+                        Intrinsics.Vector128<double> s2 = Sse2.LoadVector128(srci+stride2), s3 = Sse2.LoadVector128(srci+stride3);
+                        Sse2.Store(dst+i,    Sse2.UnpackLow(s0,s1));
+                        Sse2.Store(dst+i+2,  Sse2.UnpackLow(s2,s3));
+                        Sse2.Store(dst1+i,   vz);
+                        Sse2.Store(dst1+i+2, vz);
+                        srci += stride4;
+                    }
+                    for(i=len4; i<opsrc_length; i++)
+                    {
+                        dst[i]  = srci[0];
+                        dst1[i] = 0.0;
+                        srci += src_stride;
+                    }
+                }
+            }
+            
+            /*
+             * Pad by zeros, if needed
+             */
+            int round_length = ((opsrc_length+3)>>2)<<2;
+            for(i=opsrc_length; i<round_length; i++)
+            {
+                dst[i] = 0;
+                dst[i+block_size] = 0;
+            }
+            return round_length;
+        }
+        
+        /*************************************************************************
+        Computes  product   A*transpose(B)  of two MICRO_SIZE*ROUND_LENGTH rowwise 
+        'horizontal' matrices, stored with stride=block_size, and writes it to the
+        row-wise matrix C.
+
+        ROUND_LENGTH is expected to be properly SIMD-rounded length,  as  returned
+        by ablasf_packblkh_avx2().
+
+        Present version of the function supports only MICRO_SIZE=2,  the  behavior
+        is undefined for other micro sizes.
+
+        Assumes that at least AVX2 is present; additionally checks for FMA and tries
+        to use it.
+
+          -- ALGLIB routine --
+             19.07.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe void ablasf_dotblkh_avx2_fma(
+            double *src_a,
+            double *src_b,
+            int round_length,
+            int block_size,
+            int micro_size,
+            double *dst,
+            int dst_stride)
+        {
+            int z;
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                /*
+                 * Try FMA version
+                 */
+                Intrinsics.Vector256<double> r00 = Intrinsics.Vector256<double>.Zero,
+                                             r01 = Intrinsics.Vector256<double>.Zero,
+                                             r10 = Intrinsics.Vector256<double>.Zero,
+                                             r11 = Intrinsics.Vector256<double>.Zero;
+                if( (round_length&0x7)!=0 )
+                {
+                    /*
+                     * round_length is multiple of 4, but not multiple of 8
+                     */
+                    for(z=0; z<round_length; z+=4, src_a+=4, src_b+=4)
+                    {
+                        Intrinsics.Vector256<double> a0 = Fma.LoadAlignedVector256(src_a);
+                        Intrinsics.Vector256<double> a1 = Fma.LoadAlignedVector256(src_a+block_size);
+                        Intrinsics.Vector256<double> b0 = Fma.LoadAlignedVector256(src_b);
+                        Intrinsics.Vector256<double> b1 = Fma.LoadAlignedVector256(src_b+block_size);
+                        r00 = Fma.MultiplyAdd(a0, b0, r00);
+                        r01 = Fma.MultiplyAdd(a0, b1, r01);
+                        r10 = Fma.MultiplyAdd(a1, b0, r10);
+                        r11 = Fma.MultiplyAdd(a1, b1, r11);
+                    }
+                }
+                else
+                {
+                    /*
+                     * round_length is multiple of 8
+                     */
+                    for(z=0; z<round_length; z+=8, src_a+=8, src_b+=8)
+                    {
+                        Intrinsics.Vector256<double> a0 = Fma.LoadAlignedVector256(src_a);
+                        Intrinsics.Vector256<double> a1 = Fma.LoadAlignedVector256(src_a+block_size);
+                        Intrinsics.Vector256<double> b0 = Fma.LoadAlignedVector256(src_b);
+                        Intrinsics.Vector256<double> b1 = Fma.LoadAlignedVector256(src_b+block_size);
+                        Intrinsics.Vector256<double> c0 = Fma.LoadAlignedVector256(src_a+4);
+                        Intrinsics.Vector256<double> c1 = Fma.LoadAlignedVector256(src_a+block_size+4);
+                        Intrinsics.Vector256<double> d0 = Fma.LoadAlignedVector256(src_b+4);
+                        Intrinsics.Vector256<double> d1 = Fma.LoadAlignedVector256(src_b+block_size+4);
+                        r00 = Fma.MultiplyAdd(c0, d0, Fma.MultiplyAdd(a0, b0, r00));
+                        r01 = Fma.MultiplyAdd(c0, d1, Fma.MultiplyAdd(a0, b1, r01));
+                        r10 = Fma.MultiplyAdd(c1, d0, Fma.MultiplyAdd(a1, b0, r10));
+                        r11 = Fma.MultiplyAdd(c1, d1, Fma.MultiplyAdd(a1, b1, r11));
+                    }
+                }
+                Intrinsics.Vector256<double> sum0 = Fma.HorizontalAdd(r00,r01);
+                Intrinsics.Vector256<double> sum1 = Fma.HorizontalAdd(r10,r11);
+                Sse2.Store(dst,            Sse2.Add(Fma.ExtractVector128(sum0,0), Fma.ExtractVector128(sum0,1)));
+                Sse2.Store(dst+dst_stride, Sse2.Add(Fma.ExtractVector128(sum1,0), Fma.ExtractVector128(sum1,1)));
+            }
+            else
+            #endif // no-fma
+            {
+                /*
+                 * Only AVX2 is present
+                 */
+                Intrinsics.Vector256<double> r00 = Intrinsics.Vector256<double>.Zero,
+                                             r01 = Intrinsics.Vector256<double>.Zero,
+                                             r10 = Intrinsics.Vector256<double>.Zero,
+                                             r11 = Intrinsics.Vector256<double>.Zero;
+                if( (round_length&0x7)!=0 )
+                {
+                    /*
+                     * round_length is multiple of 4, but not multiple of 8
+                     */
+                    for(z=0; z<round_length; z+=4, src_a+=4, src_b+=4)
+                    {
+                        Intrinsics.Vector256<double> a0 = Avx2.LoadAlignedVector256(src_a);
+                        Intrinsics.Vector256<double> a1 = Avx2.LoadAlignedVector256(src_a+block_size);
+                        Intrinsics.Vector256<double> b0 = Avx2.LoadAlignedVector256(src_b);
+                        Intrinsics.Vector256<double> b1 = Avx2.LoadAlignedVector256(src_b+block_size);
+                        r00 = Avx2.Add(Avx2.Multiply(a0, b0), r00);
+                        r01 = Avx2.Add(Avx2.Multiply(a0, b1), r01);
+                        r10 = Avx2.Add(Avx2.Multiply(a1, b0), r10);
+                        r11 = Avx2.Add(Avx2.Multiply(a1, b1), r11);
+                    }
+                }
+                else
+                {
+                    /*
+                     * round_length is multiple of 8
+                     */
+                    for(z=0; z<round_length; z+=8, src_a+=8, src_b+=8)
+                    {
+                        Intrinsics.Vector256<double> a0 = Avx2.LoadAlignedVector256(src_a);
+                        Intrinsics.Vector256<double> a1 = Avx2.LoadAlignedVector256(src_a+block_size);
+                        Intrinsics.Vector256<double> b0 = Avx2.LoadAlignedVector256(src_b);
+                        Intrinsics.Vector256<double> b1 = Avx2.LoadAlignedVector256(src_b+block_size);
+                        Intrinsics.Vector256<double> c0 = Avx2.LoadAlignedVector256(src_a+4);
+                        Intrinsics.Vector256<double> c1 = Avx2.LoadAlignedVector256(src_a+block_size+4);
+                        Intrinsics.Vector256<double> d0 = Avx2.LoadAlignedVector256(src_b+4);
+                        Intrinsics.Vector256<double> d1 = Avx2.LoadAlignedVector256(src_b+block_size+4);
+                        r00 = Avx2.Add(Avx2.Multiply(c0, d0), Avx2.Add(Avx2.Multiply(a0, b0), r00));
+                        r01 = Avx2.Add(Avx2.Multiply(c0, d1), Avx2.Add(Avx2.Multiply(a0, b1), r01));
+                        r10 = Avx2.Add(Avx2.Multiply(c1, d0), Avx2.Add(Avx2.Multiply(a1, b0), r10));
+                        r11 = Avx2.Add(Avx2.Multiply(c1, d1), Avx2.Add(Avx2.Multiply(a1, b1), r11));
+                    }
+                }
+                Intrinsics.Vector256<double> sum0 = Avx2.HorizontalAdd(r00,r01);
+                Intrinsics.Vector256<double> sum1 = Avx2.HorizontalAdd(r10,r11);
+                Sse2.Store(dst,            Sse2.Add(Avx2.ExtractVector128(sum0,0), Avx2.ExtractVector128(sum0,1)));
+                Sse2.Store(dst+dst_stride, Sse2.Add(Avx2.ExtractVector128(sum1,0), Avx2.ExtractVector128(sum1,1)));
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+        }
+        
+        /*************************************************************************
+        Y := alpha*X + beta*Y
+
+        Requires AVX2, does NOT check its presense.
+
+          -- ALGLIB routine --
+             19.07.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe void ablasf_daxpby_avx2(
+            int    n,
+            double alpha,
+            double *src,
+            double beta,
+            double *dst)
+        {
+            if( beta==1.0 )
+            {
+                /*
+                 * The most optimized case: DST := alpha*SRC + DST
+                 *
+                 * First, we process leading elements with generic C code until DST is aligned.
+                 * Then, we process central part, assuming that DST is properly aligned.
+                 * Finally, we process tail.
+                 */
+                int i, n4;
+                Intrinsics.Vector256<double> avx_alpha = Intrinsics.Vector256.Create(alpha);
+                while( n>0 && ((((ulong)dst)&31)!=0) )
+                {
+                    *dst += alpha*(*src);
+                    n--;
+                    dst++;
+                    src++;
+                }
+                n4=(n>>2)<<2;
+                for(i=0; i<n4; i+=4)
+                    Avx2.StoreAligned(dst+i, Avx2.Add(Avx2.Multiply(avx_alpha, Avx2.LoadVector256(src+i)), Avx2.LoadAlignedVector256(dst+i)));
+                for(i=n4; i<n; i++)
+                    dst[i] = alpha*src[i]+dst[i];
+            }
+            else if( beta!=0.0 )
+            {
+                /*
+                 * Well optimized: DST := alpha*SRC + beta*DST
+                 */
+                int i, n4;
+                Intrinsics.Vector256<double> avx_alpha = Intrinsics.Vector256.Create(alpha);
+                Intrinsics.Vector256<double> avx_beta  = Intrinsics.Vector256.Create(beta);
+                while( n>0 && ((((ulong)dst)&31)!=0) )
+                {
+                    *dst = alpha*(*src) + beta*(*dst);
+                    n--;
+                    dst++;
+                    src++;
+                }
+                n4=(n>>2)<<2;
+                for(i=0; i<n4; i+=4)
+                    Avx2.StoreAligned(dst+i, Avx2.Add(Avx2.Multiply(avx_alpha, Avx2.LoadVector256(src+i)), Avx2.Multiply(avx_beta,Avx2.LoadAlignedVector256(dst+i))));
+                for(i=n4; i<n; i++)
+                    dst[i] = alpha*src[i]+beta*dst[i];
+            }
+            else
+            {
+                /*
+                 * Easy case: DST := alpha*SRC
+                 */
+                int i;
+                for(i=0; i<n; i++)
+                    dst[i] = alpha*src[i];
+            }
+        }
+        #endif
+
+        private static bool rgemm32basecase(int m,
+            int n,
+            int k,
+            double alpha,
+            double[,] _a,
+            int ia,
+            int ja,
+            int optypea,
+            double[,] _b,
+            int ib,
+            int jb,
+            int optypeb,
+            double beta,
+            double[,] _c,
+            int ic,
+            int jc,
+            alglib.xparams _params)
+        {
+            #if !ALGLIB_USE_SIMD
+            return false;
+            #else
+            //
+            // Quick exit
+            //
+            int block_size = 32;
+            if( m<=_ABLASF_KERNEL_SIZE3 || n<=_ABLASF_KERNEL_SIZE3 || k<=_ABLASF_KERNEL_SIZE3 )
+                return false;
+            if( m>block_size || n>block_size || k>block_size || m==0 || n==0 || !Avx2.IsSupported )
+                return false;
+            
+            //
+            // Pin arrays and multiply using SIMD
+            //
+            int micro_size = 2;
+            int alignment_doubles = 4;
+            ulong alignment_bytes = (ulong)(alignment_doubles*sizeof(double));
+            unsafe
+            {
+                fixed(double *c = &_c[ic,jc])
+                {
+                    int out0, out1;
+                    int stride_c = _c.GetLength(1);
+                    
+                    /*
+                     * Do we have alpha*A*B ?
+                     */
+                    if( alpha!=0 && k>0 )
+                    {
+                        fixed(double* a=&_a[ia,ja], b=&_b[ib,jb])
+                        {
+                            /*
+                             * Prepare structures
+                             */
+                            int base0, base1, offs0;
+                            int stride_a = _a.GetLength(1);
+                            int stride_b = _b.GetLength(1);
+                            double*      _blka = stackalloc double[block_size*micro_size+alignment_doubles];
+                            double* _blkb_long = stackalloc double[block_size*block_size+alignment_doubles];
+                            double*      _blkc = stackalloc double[micro_size*block_size+alignment_doubles];
+                            double* blka          = (double*)(((((ulong)_blka)+alignment_bytes-1)/alignment_bytes)*alignment_bytes);
+                            double* storageb_long = (double*)(((((ulong)_blkb_long)+alignment_bytes-1)/alignment_bytes)*alignment_bytes);
+                            double* blkc          = (double*)(((((ulong)_blkc)+alignment_bytes-1)/alignment_bytes)*alignment_bytes);
+                            
+                            /*
+                             * Pack transform(B) into precomputed block form
+                             */
+                            for(base1=0; base1<n; base1+=micro_size)
+                            {
+                                int lim1 = n-base1<micro_size ? n-base1 : micro_size;
+                                double *curb = storageb_long+base1*block_size;
+                                ablasf_packblkh_avx2(
+                                    b + (optypeb==0 ? base1 : base1*stride_b), stride_b, optypeb==0 ? 1 : 0, k, lim1,
+                                    curb, block_size, micro_size);
+                            }
+                            
+                            /*
+                             * Output
+                             */
+                            for(base0=0; base0<m; base0+=micro_size)
+                            {
+                                /*
+                                 * Load block row of transform(A)
+                                 */
+                                int lim0    = m-base0<micro_size ? m-base0 : micro_size;
+                                int round_k = ablasf_packblkh_avx2(
+                                    a + (optypea==0 ? base0*stride_a : base0), stride_a, optypea, k, lim0,
+                                    blka, block_size, micro_size);
+                                    
+                                /*
+                                 * Compute block(A)'*entire(B)
+                                 */
+                                for(base1=0; base1<n; base1+=micro_size)
+                                    ablasf_dotblkh_avx2_fma(blka, storageb_long+base1*block_size, round_k, block_size, micro_size, blkc+base1, block_size);
+
+                                /*
+                                 * Output block row of block(A)'*entire(B)
+                                 */
+                                for(offs0=0; offs0<lim0; offs0++)
+                                    ablasf_daxpby_avx2(n, alpha, blkc+offs0*block_size, beta, c+(base0+offs0)*stride_c);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        /*
+                         * No A*B, just beta*C (degenerate case, not optimized)
+                         */
+                        if( beta==0 )
+                        {
+                            for(out0=0; out0<m; out0++)
+                                for(out1=0; out1<n; out1++)
+                                    c[out0*stride_c+out1] = 0.0;
+                        }
+                        else if( beta!=1 )
+                        {
+                            for(out0=0; out0<m; out0++)
+                                for(out1=0; out1<n; out1++)
+                                    c[out0*stride_c+out1] *= beta;
+                        }
+                    }
+                }
+            }
+            return true;
+            #endif
+        }
+    }
+        
+    /*************************************************************************
+    Sparse Cholesky/LDLT kernels
+    *************************************************************************/
+    public partial class spchol
+    {
+        private static int spsymmgetmaxsimd(alglib.xparams _params)
+        {
+        #if ALGLIB_USE_SIMD
+            return 4;
+        #else
+            return 1;
+        #endif
+        }
+
+        /*************************************************************************
+        Solving linear system: propagating computed supernode.
+
+        Propagates computed supernode to the rest of the RHS  using  SIMD-friendly
+        RHS storage format.
+
+        INPUT PARAMETERS:
+
+        OUTPUT PARAMETERS:
+
+          -- ALGLIB routine --
+             08.09.2021
+             Bochkanov Sergey
+        *************************************************************************/
+        private static void propagatefwd(double[] x,
+            int cols0,
+            int blocksize,
+            int[] superrowidx,
+            int rbase,
+            int offdiagsize,
+            double[] rowstorage,
+            int offss,
+            int sstride,
+            double[] simdbuf,
+            int simdwidth,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int baseoffs = 0;
+            double v = 0;
+
+            for(k=0; k<=offdiagsize-1; k++)
+            {
+                i = superrowidx[rbase+k];
+                baseoffs = offss+(k+blocksize)*sstride;
+                v = simdbuf[i*simdwidth];
+                for(j=0; j<=blocksize-1; j++)
+                {
+                    v = v-rowstorage[baseoffs+j]*x[cols0+j];
+                }
+                simdbuf[i*simdwidth] = v;
+            }
+        }
+
+        /*************************************************************************
+        Fast kernels for small supernodal updates: special 4x4x4x4 function.
+
+        ! See comments on UpdateSupernode() for information  on generic supernodal
+        ! updates, including notation used below.
+
+        The generic update has following form:
+
+            S := S - scatter(U*D*Uc')
+
+        This specialized function performs AxBxCx4 update, i.e.:
+        * S is a tHeight*A matrix with row stride equal to 4 (usually it means that
+          it has 3 or 4 columns)
+        * U is a uHeight*B matrix
+        * Uc' is a B*C matrix, with C<=A
+        * scatter() scatters rows and columns of U*Uc'
+          
+        Return value:
+        * True if update was applied
+        * False if kernel refused to perform an update (quick exit for unsupported
+          combinations of input sizes)
+
+          -- ALGLIB routine --
+             20.09.2020
+             Bochkanov Sergey
+        *************************************************************************/
+        #if ALGLIB_USE_SIMD
+        private static unsafe bool try_updatekernelabc4(double* rowstorage,
+            int offss,
+            int twidth,
+            int offsu,
+            int uheight,
+            int urank,
+            int urowstride,
+            int uwidth,
+            double* diagd,
+            int offsd,
+            int* raw2smap,
+            int* superrowidx,
+            int urbase)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int k;
+                int targetrow;
+                int targetcol;
+                
+                /*
+                 * Filter out unsupported combinations (ones that are too sparse for the non-SIMD code)
+                 */
+                if( twidth<3||twidth>4 )
+                    return false;
+                if( uwidth<1||uwidth>4 )
+                    return false;
+                if( urank>4 )
+                    return false;
+                
+                /*
+                 * Shift input arrays to the beginning of the working area.
+                 * Prepare SIMD masks
+                 */
+                Intrinsics.Vector256<double> v_rankmask = Fma.CompareGreaterThan(
+                    Intrinsics.Vector256.Create((double)urank, (double)urank, (double)urank, (double)urank),
+                    Intrinsics.Vector256.Create(0.0, 1.0, 2.0, 3.0));
+                double *update_storage = rowstorage+offsu;
+                double *target_storage = rowstorage+offss;
+                superrowidx += urbase;
+                
+                /*
+                 * Load head of the update matrix
+                 */
+                Intrinsics.Vector256<double> v_d0123 = Fma.MaskLoad(diagd+offsd, v_rankmask);
+                Intrinsics.Vector256<double> u_0_0123 = Intrinsics.Vector256<double>.Zero;
+                Intrinsics.Vector256<double> u_1_0123 = Intrinsics.Vector256<double>.Zero;
+                Intrinsics.Vector256<double> u_2_0123 = Intrinsics.Vector256<double>.Zero;
+                Intrinsics.Vector256<double> u_3_0123 = Intrinsics.Vector256<double>.Zero;
+                for(k=0; k<=uwidth-1; k++)
+                {
+                    targetcol = raw2smap[superrowidx[k]];
+                    if( targetcol==0 )
+                        u_0_0123 = Fma.Multiply(v_d0123, Fma.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                    if( targetcol==1 )
+                        u_1_0123 = Fma.Multiply(v_d0123, Fma.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                    if( targetcol==2 )
+                        u_2_0123 = Fma.Multiply(v_d0123, Fma.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                    if( targetcol==3 )
+                        u_3_0123 = Fma.Multiply(v_d0123, Fma.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                }
+                
+                /*
+                 * Transpose head
+                 */
+                Intrinsics.Vector256<double> u01_lo = Fma.UnpackLow( u_0_0123,u_1_0123);
+                Intrinsics.Vector256<double> u01_hi = Fma.UnpackHigh(u_0_0123,u_1_0123);
+                Intrinsics.Vector256<double> u23_lo = Fma.UnpackLow( u_2_0123,u_3_0123);
+                Intrinsics.Vector256<double> u23_hi = Fma.UnpackHigh(u_2_0123,u_3_0123);
+                Intrinsics.Vector256<double> u_0123_0 = Fma.Permute2x128(u01_lo, u23_lo, 0x20);
+                Intrinsics.Vector256<double> u_0123_1 = Fma.Permute2x128(u01_hi, u23_hi, 0x20);
+                Intrinsics.Vector256<double> u_0123_2 = Fma.Permute2x128(u23_lo, u01_lo, 0x13);
+                Intrinsics.Vector256<double> u_0123_3 = Fma.Permute2x128(u23_hi, u01_hi, 0x13);
+                
+                /*
+                 * Run update
+                 */
+                if( urank==1 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Fma.Store(target_storage+targetrow,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+0), u_0123_0,
+                                Fma.LoadVector256(target_storage+targetrow)));
+                    }
+                }
+                if( urank==2 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Fma.Store(target_storage+targetrow,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+1), u_0123_1,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+0), u_0123_0,
+                                Fma.LoadVector256(target_storage+targetrow))));
+                    }
+                }
+                if( urank==3 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Fma.Store(target_storage+targetrow,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+2), u_0123_2,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+1), u_0123_1,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+0), u_0123_0,
+                                Fma.LoadVector256(target_storage+targetrow)))));
+                    }
+                }
+                if( urank==4 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Fma.Store(target_storage+targetrow,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+3), u_0123_3,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+2), u_0123_2,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+1), u_0123_1,
+                            Fma.MultiplyAddNegated(Fma.BroadcastScalarToVector256(update_row+0), u_0123_0,
+                                Fma.LoadVector256(target_storage+targetrow))))));
+                    }
+                }
+                return true;
+            }
+            #endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int k;
+                int targetrow;
+                int targetcol;
+                
+                /*
+                 * Filter out unsupported combinations (ones that are too sparse for the non-SIMD code)
+                 */
+                if( twidth<3||twidth>4 )
+                    return false;
+                if( uwidth<1||uwidth>4 )
+                    return false;
+                if( urank>4 )
+                    return false;
+                
+                /*
+                 * Shift input arrays to the beginning of the working area.
+                 * Prepare SIMD masks
+                 */
+                Intrinsics.Vector256<double> v_rankmask = Avx2.CompareGreaterThan(
+                    Intrinsics.Vector256.Create((double)urank, (double)urank, (double)urank, (double)urank),
+                    Intrinsics.Vector256.Create(0.0, 1.0, 2.0, 3.0));
+                double *update_storage = rowstorage+offsu;
+                double *target_storage = rowstorage+offss;
+                superrowidx += urbase;
+                
+                /*
+                 * Load head of the update matrix
+                 */
+                Intrinsics.Vector256<double> v_d0123 = Avx2.MaskLoad(diagd+offsd, v_rankmask);
+                Intrinsics.Vector256<double> u_0_0123 = Intrinsics.Vector256<double>.Zero;
+                Intrinsics.Vector256<double> u_1_0123 = Intrinsics.Vector256<double>.Zero;
+                Intrinsics.Vector256<double> u_2_0123 = Intrinsics.Vector256<double>.Zero;
+                Intrinsics.Vector256<double> u_3_0123 = Intrinsics.Vector256<double>.Zero;
+                for(k=0; k<=uwidth-1; k++)
+                {
+                    targetcol = raw2smap[superrowidx[k]];
+                    if( targetcol==0 )
+                        u_0_0123 = Avx2.Multiply(v_d0123, Avx2.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                    if( targetcol==1 )
+                        u_1_0123 = Avx2.Multiply(v_d0123, Avx2.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                    if( targetcol==2 )
+                        u_2_0123 = Avx2.Multiply(v_d0123, Avx2.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                    if( targetcol==3 )
+                        u_3_0123 = Avx2.Multiply(v_d0123, Avx2.MaskLoad(update_storage+k*urowstride, v_rankmask));
+                }
+                
+                /*
+                 * Transpose head
+                 */
+                Intrinsics.Vector256<double> u01_lo = Avx2.UnpackLow( u_0_0123,u_1_0123);
+                Intrinsics.Vector256<double> u01_hi = Avx2.UnpackHigh(u_0_0123,u_1_0123);
+                Intrinsics.Vector256<double> u23_lo = Avx2.UnpackLow( u_2_0123,u_3_0123);
+                Intrinsics.Vector256<double> u23_hi = Avx2.UnpackHigh(u_2_0123,u_3_0123);
+                Intrinsics.Vector256<double> u_0123_0 = Avx2.Permute2x128(u01_lo, u23_lo, 0x20);
+                Intrinsics.Vector256<double> u_0123_1 = Avx2.Permute2x128(u01_hi, u23_hi, 0x20);
+                Intrinsics.Vector256<double> u_0123_2 = Avx2.Permute2x128(u23_lo, u01_lo, 0x13);
+                Intrinsics.Vector256<double> u_0123_3 = Avx2.Permute2x128(u23_hi, u01_hi, 0x13);
+                
+                /*
+                 * Run update
+                 */
+                if( urank==1 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Avx2.Store(target_storage+targetrow,
+                            Avx2.Subtract(Avx2.LoadVector256(target_storage+targetrow),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+0), u_0123_0)));
+                    }
+                }
+                if( urank==2 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Avx2.Store(target_storage+targetrow,
+                            Avx2.Subtract(Avx2.Subtract(Avx2.LoadVector256(target_storage+targetrow),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+1), u_0123_1)),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+0), u_0123_0)));
+                    }
+                }
+                if( urank==3 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Avx2.Store(target_storage+targetrow,
+                            Avx2.Subtract(Avx2.Subtract(Avx2.Subtract(Avx2.LoadVector256(target_storage+targetrow),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+2), u_0123_2)),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+1), u_0123_1)),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+0), u_0123_0)));
+                    }
+                }
+                if( urank==4 )
+                {
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        targetrow = raw2smap[superrowidx[k]]*4;
+                        double *update_row = rowstorage+offsu+k*urowstride;
+                        Avx2.Store(target_storage+targetrow,
+                            Avx2.Subtract(Avx2.Subtract(Avx2.Subtract(Avx2.Subtract(Avx2.LoadVector256(target_storage+targetrow),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+3), u_0123_3)),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+2), u_0123_2)),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+1), u_0123_1)),
+                                Avx2.Multiply(Avx2.BroadcastScalarToVector256(update_row+0), u_0123_0)));
+                    }
+                }
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        private static bool updatekernelabc4(double[] rowstorage,
+            int offss,
+            int twidth,
+            int offsu,
+            int uheight,
+            int urank,
+            int urowstride,
+            int uwidth,
+            double[] diagd,
+            int offsd,
+            int[] raw2smap,
+            int[] superrowidx,
+            int urbase,
+            alglib.xparams _params)
+        {
+            #if ALGLIB_USE_SIMD
+            unsafe
+            {
+                fixed(double* p_rowstorage=rowstorage, p_diagd = diagd)
+                fixed(int* p_raw2smap=raw2smap, p_superrowidx=superrowidx)
+                {
+                    if( try_updatekernelabc4(p_rowstorage, offss, twidth, offsu, uheight, urank, urowstride, uwidth, p_diagd, offsd, p_raw2smap, p_superrowidx, urbase) )
+                        return true;
+                }
+            }
+            #endif
+            
+            //
+            // Fallback pure C# code
+            //
+            bool result = new bool();
+            int k = 0;
+            int targetrow = 0;
+            int targetcol = 0;
+            int offsk = 0;
+            double d0 = 0;
+            double d1 = 0;
+            double d2 = 0;
+            double d3 = 0;
+            double u00 = 0;
+            double u01 = 0;
+            double u02 = 0;
+            double u03 = 0;
+            double u10 = 0;
+            double u11 = 0;
+            double u12 = 0;
+            double u13 = 0;
+            double u20 = 0;
+            double u21 = 0;
+            double u22 = 0;
+            double u23 = 0;
+            double u30 = 0;
+            double u31 = 0;
+            double u32 = 0;
+            double u33 = 0;
+            double uk0 = 0;
+            double uk1 = 0;
+            double uk2 = 0;
+            double uk3 = 0;
+            int srccol0 = 0;
+            int srccol1 = 0;
+            int srccol2 = 0;
+            int srccol3 = 0;
+
+            
+            //
+            // Filter out unsupported combinations (ones that are too sparse for the non-SIMD code)
+            //
+            result = false;
+            if( twidth<3 || twidth>4 )
+            {
+                return result;
+            }
+            if( uwidth<3 || uwidth>4 )
+            {
+                return result;
+            }
+            if( urank>4 )
+            {
+                return result;
+            }
+            
+            //
+            // Determine source columns for target columns, -1 if target column
+            // is not updated.
+            //
+            srccol0 = -1;
+            srccol1 = -1;
+            srccol2 = -1;
+            srccol3 = -1;
+            for(k=0; k<=uwidth-1; k++)
+            {
+                targetcol = raw2smap[superrowidx[urbase+k]];
+                if( targetcol==0 )
+                {
+                    srccol0 = k;
+                }
+                if( targetcol==1 )
+                {
+                    srccol1 = k;
+                }
+                if( targetcol==2 )
+                {
+                    srccol2 = k;
+                }
+                if( targetcol==3 )
+                {
+                    srccol3 = k;
+                }
+            }
+            
+            //
+            // Load update matrix into aligned/rearranged 4x4 storage
+            //
+            d0 = 0;
+            d1 = 0;
+            d2 = 0;
+            d3 = 0;
+            u00 = 0;
+            u01 = 0;
+            u02 = 0;
+            u03 = 0;
+            u10 = 0;
+            u11 = 0;
+            u12 = 0;
+            u13 = 0;
+            u20 = 0;
+            u21 = 0;
+            u22 = 0;
+            u23 = 0;
+            u30 = 0;
+            u31 = 0;
+            u32 = 0;
+            u33 = 0;
+            if( urank>=1 )
+            {
+                d0 = diagd[offsd+0];
+            }
+            if( urank>=2 )
+            {
+                d1 = diagd[offsd+1];
+            }
+            if( urank>=3 )
+            {
+                d2 = diagd[offsd+2];
+            }
+            if( urank>=4 )
+            {
+                d3 = diagd[offsd+3];
+            }
+            if( srccol0>=0 )
+            {
+                if( urank>=1 )
+                {
+                    u00 = d0*rowstorage[offsu+srccol0*urowstride+0];
+                }
+                if( urank>=2 )
+                {
+                    u01 = d1*rowstorage[offsu+srccol0*urowstride+1];
+                }
+                if( urank>=3 )
+                {
+                    u02 = d2*rowstorage[offsu+srccol0*urowstride+2];
+                }
+                if( urank>=4 )
+                {
+                    u03 = d3*rowstorage[offsu+srccol0*urowstride+3];
+                }
+            }
+            if( srccol1>=0 )
+            {
+                if( urank>=1 )
+                {
+                    u10 = d0*rowstorage[offsu+srccol1*urowstride+0];
+                }
+                if( urank>=2 )
+                {
+                    u11 = d1*rowstorage[offsu+srccol1*urowstride+1];
+                }
+                if( urank>=3 )
+                {
+                    u12 = d2*rowstorage[offsu+srccol1*urowstride+2];
+                }
+                if( urank>=4 )
+                {
+                    u13 = d3*rowstorage[offsu+srccol1*urowstride+3];
+                }
+            }
+            if( srccol2>=0 )
+            {
+                if( urank>=1 )
+                {
+                    u20 = d0*rowstorage[offsu+srccol2*urowstride+0];
+                }
+                if( urank>=2 )
+                {
+                    u21 = d1*rowstorage[offsu+srccol2*urowstride+1];
+                }
+                if( urank>=3 )
+                {
+                    u22 = d2*rowstorage[offsu+srccol2*urowstride+2];
+                }
+                if( urank>=4 )
+                {
+                    u23 = d3*rowstorage[offsu+srccol2*urowstride+3];
+                }
+            }
+            if( srccol3>=0 )
+            {
+                if( urank>=1 )
+                {
+                    u30 = d0*rowstorage[offsu+srccol3*urowstride+0];
+                }
+                if( urank>=2 )
+                {
+                    u31 = d1*rowstorage[offsu+srccol3*urowstride+1];
+                }
+                if( urank>=3 )
+                {
+                    u32 = d2*rowstorage[offsu+srccol3*urowstride+2];
+                }
+                if( urank>=4 )
+                {
+                    u33 = d3*rowstorage[offsu+srccol3*urowstride+3];
+                }
+            }
+            
+            //
+            // Run update
+            //
+            if( urank==1 )
+            {
+                for(k=0; k<=uheight-1; k++)
+                {
+                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
+                    offsk = offsu+k*urowstride;
+                    uk0 = rowstorage[offsk+0];
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0;
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0;
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0;
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0;
+                }
+            }
+            if( urank==2 )
+            {
+                for(k=0; k<=uheight-1; k++)
+                {
+                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
+                    offsk = offsu+k*urowstride;
+                    uk0 = rowstorage[offsk+0];
+                    uk1 = rowstorage[offsk+1];
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1;
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1;
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1;
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1;
+                }
+            }
+            if( urank==3 )
+            {
+                for(k=0; k<=uheight-1; k++)
+                {
+                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
+                    offsk = offsu+k*urowstride;
+                    uk0 = rowstorage[offsk+0];
+                    uk1 = rowstorage[offsk+1];
+                    uk2 = rowstorage[offsk+2];
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1-u02*uk2;
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1-u12*uk2;
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1-u22*uk2;
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1-u32*uk2;
+                }
+            }
+            if( urank==4 )
+            {
+                for(k=0; k<=uheight-1; k++)
+                {
+                    targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
+                    offsk = offsu+k*urowstride;
+                    uk0 = rowstorage[offsk+0];
+                    uk1 = rowstorage[offsk+1];
+                    uk2 = rowstorage[offsk+2];
+                    uk3 = rowstorage[offsk+3];
+                    rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1-u02*uk2-u03*uk3;
+                    rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1-u12*uk2-u13*uk3;
+                    rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1-u22*uk2-u23*uk3;
+                    rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1-u32*uk2-u33*uk3;
+                }
+            }
+            result = true;
+            return result;
+        }
+
+        /*************************************************************************
+        Fast kernels for small supernodal updates: special 4x4x4x4 function.
+
+        ! See comments on UpdateSupernode() for information  on generic supernodal
+        ! updates, including notation used below.
+
+        The generic update has following form:
+
+            S := S - scatter(U*D*Uc')
+
+        This specialized function performs 4x4x4x4 update, i.e.:
+        * S is a tHeight*4 matrix
+        * U is a uHeight*4 matrix
+        * Uc' is a 4*4 matrix
+        * scatter() scatters rows of U*Uc', but does not scatter columns (they are
+          densely packed).
+          
+        Return value:
+        * True if update was applied
+        * False if kernel refused to perform an update.
+
+          -- ALGLIB routine --
+             20.09.2020
+             Bochkanov Sergey
+        *************************************************************************/
+        #if ALGLIB_USE_SIMD
+        private static unsafe bool try_updatekernel4444(double* rowstorage,
+            int offss,
+            int sheight,
+            int offsu,
+            int uheight,
+            double *diagd,
+            int offsd,
+            int[] raw2smap,
+            int[] superrowidx,
+            int urbase)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int k, targetrow, offsk;
+                Intrinsics.Vector256<double> v_negd_u0, v_negd_u1, v_negd_u2, v_negd_u3, v_negd;
+                Intrinsics.Vector256<double> v_w0, v_w1, v_w2, v_w3, u01_lo, u01_hi, u23_lo, u23_hi;
+                
+                /*
+                 * Compute W = -D*transpose(U[0:3])
+                 */
+                v_negd = Avx2.Multiply(Avx2.LoadVector256(diagd+offsd),Intrinsics.Vector256.Create(-1.0));
+                v_negd_u0   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+0*4),v_negd);
+                v_negd_u1   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+1*4),v_negd);
+                v_negd_u2   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+2*4),v_negd);
+                v_negd_u3   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+3*4),v_negd);
+                u01_lo = Avx2.UnpackLow( v_negd_u0,v_negd_u1);
+                u01_hi = Avx2.UnpackHigh(v_negd_u0,v_negd_u1);
+                u23_lo = Avx2.UnpackLow( v_negd_u2,v_negd_u3);
+                u23_hi = Avx2.UnpackHigh(v_negd_u2,v_negd_u3);
+                v_w0 = Avx2.Permute2x128(u01_lo, u23_lo, 0x20);
+                v_w1 = Avx2.Permute2x128(u01_hi, u23_hi, 0x20);
+                v_w2 = Avx2.Permute2x128(u23_lo, u01_lo, 0x13);
+                v_w3 = Avx2.Permute2x128(u23_hi, u01_hi, 0x13);
+                
+                //
+                // Compute update S:= S + row_scatter(U*W)
+                //
+                if( sheight==uheight )
+                {
+                    /*
+                     * No row scatter, the most efficient code
+                     */
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        Intrinsics.Vector256<double> target;
+                        
+                        targetrow = offss+k*4;
+                        offsk = offsu+k*4;
+                        
+                        target = Avx2.LoadVector256(rowstorage+targetrow);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+0),v_w0,target);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+1),v_w1,target);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+2),v_w2,target);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+3),v_w3,target);
+                        Avx2.Store(rowstorage+targetrow, target);
+                    }
+                }
+                else
+                {
+                    /*
+                     * Row scatter is performed, less efficient code using double mapping to determine target row index
+                     */
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        Intrinsics.Vector256<double> target;
+                        
+                        targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
+                        offsk = offsu+k*4;
+                        
+                        target = Avx2.LoadVector256(rowstorage+targetrow);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+0),v_w0,target);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+1),v_w1,target);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+2),v_w2,target);
+                        target = Fma.MultiplyAdd(Avx2.BroadcastScalarToVector256(rowstorage+offsk+3),v_w3,target);
+                        Avx2.Store(rowstorage+targetrow, target);
+                    }
+                }
+                return true;
+            }
+            #endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int k, targetrow, offsk;
+                Intrinsics.Vector256<double> v_negd_u0, v_negd_u1, v_negd_u2, v_negd_u3, v_negd;
+                Intrinsics.Vector256<double> v_w0, v_w1, v_w2, v_w3, u01_lo, u01_hi, u23_lo, u23_hi;
+                
+                /*
+                 * Compute W = -D*transpose(U[0:3])
+                 */
+                v_negd = Avx2.Multiply(Avx2.LoadVector256(diagd+offsd),Intrinsics.Vector256.Create(-1.0));
+                v_negd_u0   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+0*4),v_negd);
+                v_negd_u1   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+1*4),v_negd);
+                v_negd_u2   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+2*4),v_negd);
+                v_negd_u3   = Avx2.Multiply(Avx2.LoadVector256(rowstorage+offsu+3*4),v_negd);
+                u01_lo = Avx2.UnpackLow( v_negd_u0,v_negd_u1);
+                u01_hi = Avx2.UnpackHigh(v_negd_u0,v_negd_u1);
+                u23_lo = Avx2.UnpackLow( v_negd_u2,v_negd_u3);
+                u23_hi = Avx2.UnpackHigh(v_negd_u2,v_negd_u3);
+                v_w0 = Avx2.Permute2x128(u01_lo, u23_lo, 0x20);
+                v_w1 = Avx2.Permute2x128(u01_hi, u23_hi, 0x20);
+                v_w2 = Avx2.Permute2x128(u23_lo, u01_lo, 0x13);
+                v_w3 = Avx2.Permute2x128(u23_hi, u01_hi, 0x13);
+                
+                //
+                // Compute update S:= S + row_scatter(U*W)
+                //
+                if( sheight==uheight )
+                {
+                    /*
+                     * No row scatter, the most efficient code
+                     */
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        Intrinsics.Vector256<double> target;
+                        
+                        targetrow = offss+k*4;
+                        offsk = offsu+k*4;
+                        
+                        target = Avx2.LoadVector256(rowstorage+targetrow);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+0),v_w0),target);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+1),v_w1),target);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+2),v_w2),target);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+3),v_w3),target);
+                        Avx2.Store(rowstorage+targetrow, target);
+                    }
+                }
+                else
+                {
+                    /*
+                     * Row scatter is performed, less efficient code using double mapping to determine target row index
+                     */
+                    for(k=0; k<=uheight-1; k++)
+                    {
+                        Intrinsics.Vector256<double> target;
+                        
+                        targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
+                        offsk = offsu+k*4;
+                        
+                        target = Avx2.LoadVector256(rowstorage+targetrow);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+0),v_w0),target);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+1),v_w1),target);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+2),v_w2),target);
+                        target = Avx2.Add(Avx2.Multiply(Avx2.BroadcastScalarToVector256(rowstorage+offsk+3),v_w3),target);
+                        Avx2.Store(rowstorage+targetrow, target);
+                    }
+                }
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        private static bool updatekernel4444(double[] rowstorage,
+            int offss,
+            int sheight,
+            int offsu,
+            int uheight,
+            double[] diagd,
+            int offsd,
+            int[] raw2smap,
+            int[] superrowidx,
+            int urbase,
+            alglib.xparams _params)
+        {
+            #if ALGLIB_USE_SIMD
+            unsafe
+            {
+                fixed(double* p_rowstorage=rowstorage, p_diagd = diagd)
+                {
+                    if( try_updatekernel4444(p_rowstorage, offss, sheight, offsu, uheight, p_diagd, offsd, raw2smap, superrowidx, urbase) )
+                        return true;
+                }
+            }
+            #endif
+            
+            //
+            // Fallback pure C# code
+            //
+            bool result = new bool();
+            int k = 0;
+            int targetrow = 0;
+            int offsk = 0;
+            double d0 = 0;
+            double d1 = 0;
+            double d2 = 0;
+            double d3 = 0;
+            double u00 = 0;
+            double u01 = 0;
+            double u02 = 0;
+            double u03 = 0;
+            double u10 = 0;
+            double u11 = 0;
+            double u12 = 0;
+            double u13 = 0;
+            double u20 = 0;
+            double u21 = 0;
+            double u22 = 0;
+            double u23 = 0;
+            double u30 = 0;
+            double u31 = 0;
+            double u32 = 0;
+            double u33 = 0;
+            double uk0 = 0;
+            double uk1 = 0;
+            double uk2 = 0;
+            double uk3 = 0;
+
+            d0 = diagd[offsd+0];
+            d1 = diagd[offsd+1];
+            d2 = diagd[offsd+2];
+            d3 = diagd[offsd+3];
+            u00 = d0*rowstorage[offsu+0*4+0];
+            u01 = d1*rowstorage[offsu+0*4+1];
+            u02 = d2*rowstorage[offsu+0*4+2];
+            u03 = d3*rowstorage[offsu+0*4+3];
+            u10 = d0*rowstorage[offsu+1*4+0];
+            u11 = d1*rowstorage[offsu+1*4+1];
+            u12 = d2*rowstorage[offsu+1*4+2];
+            u13 = d3*rowstorage[offsu+1*4+3];
+            u20 = d0*rowstorage[offsu+2*4+0];
+            u21 = d1*rowstorage[offsu+2*4+1];
+            u22 = d2*rowstorage[offsu+2*4+2];
+            u23 = d3*rowstorage[offsu+2*4+3];
+            u30 = d0*rowstorage[offsu+3*4+0];
+            u31 = d1*rowstorage[offsu+3*4+1];
+            u32 = d2*rowstorage[offsu+3*4+2];
+            u33 = d3*rowstorage[offsu+3*4+3];
+            for(k=0; k<=uheight-1; k++)
+            {
+                targetrow = offss+raw2smap[superrowidx[urbase+k]]*4;
+                offsk = offsu+k*4;
+                uk0 = rowstorage[offsk+0];
+                uk1 = rowstorage[offsk+1];
+                uk2 = rowstorage[offsk+2];
+                uk3 = rowstorage[offsk+3];
+                rowstorage[targetrow+0] = rowstorage[targetrow+0]-u00*uk0-u01*uk1-u02*uk2-u03*uk3;
+                rowstorage[targetrow+1] = rowstorage[targetrow+1]-u10*uk0-u11*uk1-u12*uk2-u13*uk3;
+                rowstorage[targetrow+2] = rowstorage[targetrow+2]-u20*uk0-u21*uk1-u22*uk2-u23*uk3;
+                rowstorage[targetrow+3] = rowstorage[targetrow+3]-u30*uk0-u31*uk1-u32*uk2-u33*uk3;
+            }
+            result = true;
+            return result;
+        }
+    }
+}
+#endif
 public partial class alglib
 {
     public partial class smp

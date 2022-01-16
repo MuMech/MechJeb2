@@ -9,26 +9,26 @@ namespace MuMech
 		public static String NAME = "Warp";
 
 		public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
-		static string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry" };
+		static readonly string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry" };
 		[Persistent(pass = (int)Pass.Type)]
 		public WarpTarget warpTarget = WarpTarget.Periapsis;
 		[Persistent(pass = (int)Pass.Type)]
-		EditableDouble phaseAngle = 0;
+        readonly EditableDouble phaseAngle = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		public EditableTime leadTime = 0;
 		[Persistent(pass = (int)Pass.Type)]
-		EditableTime timeOffset = 0;
+        readonly EditableTime timeOffset = 0;
 		double targetUT = 0;
 		private bool warping;
 		private int spendTime = 0;
-		private int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
+		private readonly int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
 		private float startTime = 0f;
 
 		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			warping = true;
@@ -107,12 +107,12 @@ namespace MuMech
 			}
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -156,7 +156,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			//Check the end of the action
 			if (this.isStarted() && !this.isExecuted() && !warping && startTime == 0f)
@@ -199,7 +199,7 @@ namespace MuMech
 			}
 		}
 
-		override public void onAbord()
+		public override void onAbord()
 		{
 			warping = false;
 			core.warp.MinimumWarp(true);

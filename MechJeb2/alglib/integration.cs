@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.17.0 (source code generated 2020-12-27)
+ALGLIB 3.18.0 (source code generated 2021-10-25)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -645,7 +645,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private autogk.autogkreport _innerobj;
+        private readonly autogk.autogkreport _innerobj;
         public autogk.autogkreport innerobj { get { return _innerobj; } }
         public autogkreport(autogk.autogkreport obj)
         {
@@ -688,7 +688,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private autogk.autogkstate _innerobj;
+        private readonly autogk.autogkstate _innerobj;
         public autogk.autogkstate innerobj { get { return _innerobj; } }
         public autogkstate(autogk.autogkstate obj)
         {

@@ -9,9 +9,9 @@ namespace MuMech
 		public static String NAME = "Rendezvous";
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType;
-		private List<String> actionTypes = new List<String>();
+		private readonly List<String> actionTypes = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
+		private readonly EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
 		public MechJebModuleScriptActionRendezvous (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -23,7 +23,7 @@ namespace MuMech
 
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			Vessel vessel = this.scriptModule.vessel;
@@ -107,12 +107,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

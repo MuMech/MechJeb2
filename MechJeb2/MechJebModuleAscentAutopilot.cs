@@ -450,7 +450,7 @@ namespace MuMech
         float raiseApoapsisLastThrottle = 0;
         double raiseApoapsisLastApR = 0;
         double raiseApoapsisLastUT = 0;
-        MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
+        readonly MovingAverage raiseApoapsisRatePerThrottle = new MovingAverage(3, 0);
 
         public virtual void timedLaunchHook()
         {

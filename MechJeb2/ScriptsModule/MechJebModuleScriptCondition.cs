@@ -6,26 +6,26 @@ namespace MuMech
 {
 	public class MechJebModuleScriptCondition
 	{
-		private List<String> conditionsList;
-		private List<String> modifiersList;
+		private readonly List<String> conditionsList;
+		private readonly List<String> modifiersList;
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedCondition;
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedModifier;
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble value0 = new EditableDouble(0);
+		private readonly EditableDouble value0 = new EditableDouble(0);
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableDouble value1 = new EditableDouble(0);
+		private readonly EditableDouble value1 = new EditableDouble(0);
 		[Persistent(pass = (int)Pass.Type)]
 		private int value0unit = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private int value1unit = 0;
-		private MechJebModuleScript scriptModule;
-		private MechJebCore core;
-		private MechJebModuleScriptAction action;
-		private MechJebModuleInfoItems moduleInfoItems;
-		private string[] units0list = {"", "k", "M", "G"};
-		private string[] units1list = { "", "k", "M", "G" };
+		private readonly MechJebModuleScript scriptModule;
+		private readonly MechJebCore core;
+		private readonly MechJebModuleScriptAction action;
+		private readonly MechJebModuleInfoItems moduleInfoItems;
+		private readonly string[] units0list = {"", "k", "M", "G"};
+		private readonly string[] units1list = { "", "k", "M", "G" };
 		private double valueWhenConditionCheck = double.NaN;
 		private string stringWhenConditionCheck = "N/A";
 		private bool conditionVerified = false;

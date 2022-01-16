@@ -9,7 +9,7 @@ namespace MuMech
 	{
 		public static String NAME = "ActionGroup";
 
-		private List<String> actionGroups = new List<String>();
+		private readonly List<String> actionGroups = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int selectedActionId;
 
@@ -35,7 +35,7 @@ namespace MuMech
 			actionGroups.Add("Stage");
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			KSPActionGroup selectedGroup = KSPActionGroup.Abort;
@@ -115,12 +115,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

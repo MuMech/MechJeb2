@@ -8,8 +8,8 @@ namespace MuMech
 	{
 		public static String NAME = "SAS";
 
-		private List<Part> commandParts = new List<Part>();
-		private List<String> commandPartsNames = new List<String>();
+		private readonly List<Part> commandParts = new List<Part>();
+		private readonly List<String> commandPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType;
 		[Persistent(pass = (int)Pass.Type)]
@@ -19,7 +19,7 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		bool partHighlighted = false;
-		private List<String> actionTypes = new List<String>();
+		private readonly List<String> actionTypes = new List<String>();
 
 		public MechJebModuleScriptActionSAS (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -44,7 +44,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			Vessel vessel;
@@ -67,12 +67,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -109,7 +109,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{

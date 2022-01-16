@@ -37,7 +37,7 @@ namespace MuMech
         public EditableDouble tuningParamFactorWaste = 1;
 
         // Variables for RCS solving.
-        private RCSSolverThread solverThread = new RCSSolverThread();
+        private readonly RCSSolverThread solverThread = new RCSSolverThread();
         private List<RCSSolver.Thruster> thrusters = null;
         private double[] throttles = null;
 

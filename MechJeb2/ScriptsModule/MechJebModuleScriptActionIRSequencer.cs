@@ -8,13 +8,13 @@ namespace MuMech
 	public class MechJebModuleScriptActionIRSequencer : MechJebModuleScriptAction
 	{
 		public static String NAME = "IRSequencer";
-		private List<Part> irsequencerParts = new List<Part>();
-		private List<String> irsequencerPartsNames = new List<String>();
-		private List<PartModule> irsequencerModules = new List<PartModule>();
-		private List<List<String>> irsequencerSequenceNames = new List<List<String>>();
-		private List<List<object>> irsequencerSequences = new List<List<object>>();
-		private List<String> currentIrsequencerSequenceNames = new List<String>();
-		private List<object> currentIrsequencerSequences = new List<object>();
+		private readonly List<Part> irsequencerParts = new List<Part>();
+		private readonly List<String> irsequencerPartsNames = new List<String>();
+		private readonly List<PartModule> irsequencerModules = new List<PartModule>();
+		private readonly List<List<String>> irsequencerSequenceNames = new List<List<String>>();
+		private readonly List<List<object>> irsequencerSequences = new List<List<object>>();
+		private readonly List<String> currentIrsequencerSequenceNames = new List<String>();
+		private readonly List<object> currentIrsequencerSequences = new List<object>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
@@ -27,7 +27,7 @@ namespace MuMech
 		private int actionType;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool waitFinish = true;
-		private List<String> actionTypes = new List<String>();
+		private readonly List<String> actionTypes = new List<String>();
 		private bool partHighlighted = false;
 		private int old_selectedPartIndex = 0;
 
@@ -108,7 +108,7 @@ namespace MuMech
 			this.old_selectedPartIndex = this.selectedPartIndex;
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (this.selectedPartIndex < this.irsequencerModules.Count)
@@ -138,12 +138,12 @@ namespace MuMech
 			}
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			//If we are waiting for the sequence to finish, we check the status
 			if (!this.isExecuted() && this.isStarted())
@@ -155,7 +155,7 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -218,7 +218,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{

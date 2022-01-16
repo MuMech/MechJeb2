@@ -5,7 +5,7 @@ namespace MuMech
 {
 	public abstract class MechJebModuleScriptAction
 	{
-		private String name = "DEFAULT";
+		private readonly String name = "DEFAULT";
 		protected bool started = false;
 		protected bool executed = false;
 		protected MechJebModuleScript scriptModule;
@@ -84,7 +84,7 @@ namespace MuMech
 			GUILayout.BeginHorizontal();
 		}
 
-		virtual public void WindowGUI(int windowID)
+		public virtual void WindowGUI(int windowID)
 		{
 			if (this.isStarted())
 			{

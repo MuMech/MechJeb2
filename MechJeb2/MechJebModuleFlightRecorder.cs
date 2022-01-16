@@ -131,7 +131,7 @@ namespace MuMech
         public double[] maximums;
         public double[] minimums;
 
-        private bool paused = false;
+        private readonly bool paused = false;
 
         [Persistent(pass = (int)Pass.Local)]
         [ValueInfoItem("#MechJeb_MarkUT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]//Mark UT

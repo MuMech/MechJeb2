@@ -11,11 +11,11 @@ namespace MuMech
 
     public class TimeSelector
     {
-        private string[] timeRefNames;
+        private readonly string[] timeRefNames;
 
         public double universalTime;
 
-        private TimeReference[] allowedTimeRef;
+        private readonly TimeReference[] allowedTimeRef;
         [Persistent(pass = (int)Pass.Global)]
         private int currentTimeRef;
 

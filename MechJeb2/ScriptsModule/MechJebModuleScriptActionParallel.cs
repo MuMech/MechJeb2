@@ -7,10 +7,10 @@ namespace MuMech
 	public class MechJebModuleScriptActionParallel : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
 	{
 		public static String NAME = "Parallel";
-		private MechJebModuleScriptActionsList actions1;
-		private MechJebModuleScriptActionsList actions2;
-		private GUIStyle sBorderY;
-		private GUIStyle sBorderB;
+		private readonly MechJebModuleScriptActionsList actions1;
+		private readonly MechJebModuleScriptActionsList actions2;
+		private readonly GUIStyle sBorderY;
+		private readonly GUIStyle sBorderB;
 		private int countEndList = 0;
 		private bool panel1Hidden = false;
 		private bool panel2Hidden = false;
@@ -52,19 +52,19 @@ namespace MuMech
 			sBorderY.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			this.actions1.start();
 			this.actions2.start();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
@@ -164,7 +164,7 @@ namespace MuMech
 			return lists;
 		}
 
-		override public void afterOnFixedUpdate() {
+		public override void afterOnFixedUpdate() {
 			if (actions1.isStarted() && !actions1.isExecuted())
 			{
 				actions1.OnFixedUpdate();
@@ -175,7 +175,7 @@ namespace MuMech
 			}
 		}
 
-		override public void postLoad(ConfigNode node) {
+		public override void postLoad(ConfigNode node) {
 			ConfigNode nodeList1 = node.GetNode("ActionsList1");
 			if (nodeList1 != null)
 			{
@@ -188,7 +188,7 @@ namespace MuMech
 			}
 		}
 
-		override public void postSave(ConfigNode node) {
+		public override void postSave(ConfigNode node) {
 			ConfigNode nodeList1 = new ConfigNode("ActionsList1");
 			actions1.SaveConfig(nodeList1);
 			node.AddNode(nodeList1);

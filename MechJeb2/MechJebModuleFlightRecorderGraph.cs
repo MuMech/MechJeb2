@@ -62,9 +62,9 @@ namespace MuMech
         private CelestialBody oldMainBody;
         private static readonly int typeCount = Enum.GetValues(typeof(recordType)).Length;
 
-        private graphState[] graphStates;
+        private readonly graphState[] graphStates;
         private double lastMaximumAltitude;
-        private double precision = 0.2;
+        private readonly double precision = 0.2;
 
         private int width = 512;
         private int height = 256;

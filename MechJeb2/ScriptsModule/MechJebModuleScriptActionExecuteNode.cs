@@ -11,7 +11,7 @@ namespace MuMech
 		private bool autowarp = true;
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionType;
-		private List<String> actionTypes = new List<String>();
+		private readonly List<String> actionTypes = new List<String>();
 		private int startNodeCount = 0;
 
 		public MechJebModuleScriptActionExecuteNode (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
@@ -20,7 +20,7 @@ namespace MuMech
 			actionTypes.Add("All nodes");
 		}
 
-		override public void activateAction() {
+		public override void activateAction() {
 			base.activateAction();
 			if (core.node != null)
 			{
@@ -38,17 +38,17 @@ namespace MuMech
 				core.node.autowarp = autowarp;
 			}
 		}
-		override public  void endAction() {
+		public override  void endAction() {
 			base.endAction();
 		}
 
-		override public void readModuleConfiguration() {
+		public override void readModuleConfiguration() {
 		}
 
-		override public void writeModuleConfiguration() {
+		public override void writeModuleConfiguration() {
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			//Check if we have less nodes than when we start. If yes, it means the node is executed.

@@ -7,15 +7,15 @@ namespace MuMech
 	public class MechJebModuleScriptActionActiveVessel : MechJebModuleScriptAction
 	{
 		public static String NAME = "ActiveVessel";
-		private List<Part> commandParts = new List<Part>();
-		private List<String> commandPartsNames = new List<String>();
+		private readonly List<Part> commandParts = new List<Part>();
+		private readonly List<String> commandPartsNames = new List<String>();
 		[Persistent(pass = (int)Pass.Type)]
 		private EditableInt selectedPartIndex = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private uint selectedPartFlightID = 0;
 		bool partHighlighted = false;
 		private int spendTime = 0;
-		private int initTime = 5; //Add a 5s timer after the action
+		private readonly int initTime = 5; //Add a 5s timer after the action
 		private float startTime = 0f;
 
 		public MechJebModuleScriptActionActiveVessel (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
@@ -38,7 +38,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			FlightGlobals.SetActiveVessel(commandParts[selectedPartIndex].vessel);
@@ -46,12 +46,12 @@ namespace MuMech
 			//crewableParts[selectedPartIndex].vessel.MakeActive();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void afterOnFixedUpdate()
+		public override void afterOnFixedUpdate()
 		{
 			if (!this.isExecuted() && this.isStarted() && startTime == 0f)
 			{
@@ -67,7 +67,7 @@ namespace MuMech
 			}
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
@@ -102,7 +102,7 @@ namespace MuMech
 			base.postWindowGUI(windowID);
 		}
 
-		override public void postLoad(ConfigNode node)
+		public override void postLoad(ConfigNode node)
 		{
 			if (selectedPartFlightID != 0) //We check if a previous flightID was set on the parts. When switching MechJeb Cores and performing save/load of the script, the port order may change so we try to rely on the flight ID to select the right part.
 			{

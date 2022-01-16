@@ -33,7 +33,7 @@ namespace MuMech
             readModuleConfiguration();
         }
 
-        override public void readModuleConfiguration()
+        public override void readModuleConfiguration()
         {
             autopilotConfig = ConfigNode.CreateConfigFromObject(autopilot);
             ascentPathConfig = ConfigNode.CreateConfigFromObject(ascentPath);
@@ -42,7 +42,7 @@ namespace MuMech
             // FIXME: missing autowarp
         }
 
-        override public void writeModuleConfiguration()
+        public override void writeModuleConfiguration()
         {
             ConfigNode.LoadObjectFromConfig(autopilot, autopilotConfig);
             autopilot.doWiring();
@@ -51,7 +51,7 @@ namespace MuMech
             ConfigNode.LoadObjectFromConfig(core.thrust, thrustConfig);
         }
 
-        override public void WindowGUI(int windowID)
+        public override void WindowGUI(int windowID)
         {
             base.preWindowGUI(windowID);
             base.WindowGUI(windowID);
@@ -106,7 +106,7 @@ namespace MuMech
             base.postWindowGUI(windowID);
         }
 
-        override public void afterOnFixedUpdate()
+        public override void afterOnFixedUpdate()
         {
             if (autopilot != null)
             {
@@ -117,7 +117,7 @@ namespace MuMech
             }
         }
 
-        override public void activateAction()
+        public override void activateAction()
         {
             base.activateAction();
             writeModuleConfiguration();
@@ -134,13 +134,13 @@ namespace MuMech
             Debug.Log("Autopilot should be engaged!");
         }
 
-        override public void endAction()
+        public override void endAction()
         {
             base.endAction();
             autopilot.users.Remove(this);
         }
 
-        override public void postLoad(ConfigNode node)
+        public override void postLoad(ConfigNode node)
         {
             autopilotConfig = node.GetNode("autopilotConfig");
             ascentPathConfig = node.GetNode("ascentPathConfig");
@@ -148,7 +148,7 @@ namespace MuMech
             thrustConfig = node.GetNode("thrustConfig");
         }
 
-        override public void postSave(ConfigNode node)
+        public override void postSave(ConfigNode node)
         {
             autopilotConfig.CopyTo(node.AddNode("autopilotConfig"));
             ascentPathConfig.CopyTo(node.AddNode("ascentPathConfig"));
@@ -156,7 +156,7 @@ namespace MuMech
             thrustConfig.CopyTo(node.AddNode("thrustConfig"));
         }
 
-        override public void onAbord()
+        public override void onAbord()
         {
             // ascentModule.launchingToInterplanetary = ascentModule.launchingToPlane = ascentModule.launchingToRendezvous = autopilot.timedLaunch = false;
             base.onAbord();

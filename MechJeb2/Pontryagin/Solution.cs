@@ -8,9 +8,9 @@ namespace MuMech
     public class Solution
     {
         public  double t0; // kerbal time
-        private double t_scale;
-        private double v_scale;
-        private double r_scale;
+        private readonly double t_scale;
+        private readonly double v_scale;
+        private readonly double r_scale;
 
         public Solution(double t_scale, double v_scale, double r_scale, double t0)
         {

@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.17.0 (source code generated 2020-12-27)
+ALGLIB 3.18.0 (source code generated 2021-10-25)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -53,7 +53,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private odesolver.odesolverstate _innerobj;
+        private readonly odesolver.odesolverstate _innerobj;
         public odesolver.odesolverstate innerobj { get { return _innerobj; } }
         public odesolverstate(odesolver.odesolverstate obj)
         {
@@ -87,7 +87,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private odesolver.odesolverreport _innerobj;
+        private readonly odesolver.odesolverreport _innerobj;
         public odesolver.odesolverreport innerobj { get { return _innerobj; } }
         public odesolverreport(odesolver.odesolverreport obj)
         {
@@ -382,6 +382,7 @@ public partial class alglib
 
         public const double odesolvermaxgrow = 3.0;
         public const double odesolvermaxshrink = 10.0;
+        public const double odesolverguaranteeddecay = 0.9;
 
 
         /*************************************************************************
@@ -778,7 +779,7 @@ public partial class alglib
             }
             if( (double)(err)>(double)(state.eps) )
             {
-                h = h2;
+                h = Math.Min(h2, odesolverguaranteeddecay*h);
                 goto lbl_6;
             }
             

@@ -8,7 +8,7 @@ namespace MuMech
 
         public override string getName() {return Localizer.Format("#MechJeb_Maneu_circularize_title");}//"circularize"
 
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationCircularize()
         {

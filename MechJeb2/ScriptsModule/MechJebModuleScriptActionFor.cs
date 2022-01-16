@@ -7,11 +7,11 @@ namespace MuMech
 	public class MechJebModuleScriptActionFor : MechJebModuleScriptAction, IMechJebModuleScriptActionsListParent, IMechJebModuleScriptActionContainer
 	{
 		public static String NAME = "For";
-		private MechJebModuleScriptActionsList actions;
+		private readonly MechJebModuleScriptActionsList actions;
 		[Persistent(pass = (int)Pass.Type)]
-		private EditableInt times = 2;
+		private readonly EditableInt times = 2;
 		private int executedTimes = 0;
-		private GUIStyle sBorder;
+		private readonly GUIStyle sBorder;
 
 		public MechJebModuleScriptActionFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -39,19 +39,19 @@ namespace MuMech
 			sBorder.padding = new RectOffset(1, 1, 1, 1);
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			this.executedTimes = 0;
 			this.actions.start();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.normal.textColor = Color.yellow;
@@ -114,11 +114,11 @@ namespace MuMech
 			return lists;
 		}
 
-		override public void afterOnFixedUpdate() {
+		public override void afterOnFixedUpdate() {
 			actions.OnFixedUpdate();
 		}
 
-		override public void postLoad(ConfigNode node) {
+		public override void postLoad(ConfigNode node) {
 			ConfigNode nodeList = node.GetNode("ActionsList");
 			if (nodeList != null)
 			{
@@ -126,7 +126,7 @@ namespace MuMech
 			}
 		}
 
-		override public void postSave(ConfigNode node) {
+		public override void postSave(ConfigNode node) {
 			ConfigNode nodeList = new ConfigNode("ActionsList");
 			actions.SaveConfig(nodeList);
 			node.AddNode(nodeList);

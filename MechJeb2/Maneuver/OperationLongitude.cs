@@ -10,7 +10,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble newLAN = 0;
-        private TimeSelector timeSelector;
+        private readonly TimeSelector timeSelector;
 
         public OperationLongitude ()
         {

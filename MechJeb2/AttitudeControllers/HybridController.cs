@@ -7,10 +7,10 @@ namespace MuMech.AttitudeControllers
     class HybridController : BaseAttitudeController
     {
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDouble maxStoppingTime = new EditableDouble(2);
+        private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
         [Persistent(pass = (int)Pass.Global)]
-        private EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
+        private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
 
         [Persistent(pass = (int) Pass.Global)]
         private bool useControlRange = true;

@@ -14,8 +14,8 @@ namespace MuMech
 		private EditableInt scriptSlot = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool autoStart = true;
-		private List<String> scriptsList = new List<String>();
-		private List<String> memorySlotsList = new List<String>();
+		private readonly List<String> scriptsList = new List<String>();
+		private readonly List<String> memorySlotsList = new List<String>();
 
 		public MechJebModuleScriptActionLoadScript (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -28,7 +28,7 @@ namespace MuMech
 			this.memorySlotsList.Add("Vessel Memory");
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			this.scriptModule.stop();
@@ -41,12 +41,12 @@ namespace MuMech
 			//Don't call "End Action" as we already clear the task list and don't want to start the next one.
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

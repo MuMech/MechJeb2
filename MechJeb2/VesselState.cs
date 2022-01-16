@@ -52,8 +52,8 @@ namespace MuMech
 
         private Vessel vesselRef = null;
 
-        private EngineInfo einfo = new EngineInfo();
-        private IntakeInfo iinfo = new IntakeInfo();
+        private readonly EngineInfo einfo = new EngineInfo();
+        private readonly IntakeInfo iinfo = new IntakeInfo();
         public readonly List<EngineWrapper> enginesWrappers = new List<EngineWrapper>();
 
         [ValueInfoItem("#MechJeb_UniversalTime", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)]//Universal Time
@@ -310,7 +310,7 @@ namespace MuMech
         public delegate void VesselStatePartExtension(Part p);
         public delegate void VesselStatePartModuleExtension(PartModule pm);
 
-        private Dictionary<ModuleEngines, ModuleGimbal> engines = new Dictionary<ModuleEngines, ModuleGimbal>();
+        private readonly Dictionary<ModuleEngines, ModuleGimbal> engines = new Dictionary<ModuleEngines, ModuleGimbal>();
 
         public List<VesselStatePartExtension> vesselStatePartExtensions = new List<VesselStatePartExtension>();
         public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
@@ -1437,7 +1437,7 @@ namespace MuMech
             private Vector3d CoM;
             private float atmP0; // pressure now
             private float atmP1; // pressure after one timestep
-            private Queue rotSave = new Queue();
+            private readonly Queue rotSave = new Queue();
 
             public void Update(Vector3d c, Vessel vessel)
             {

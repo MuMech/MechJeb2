@@ -8,7 +8,7 @@ namespace MuMech
     public class MechJebModuleWarpHelper : DisplayModule
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
-        static string[] warpTargetStrings = new string[] { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") };//"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
+        static readonly string[] warpTargetStrings = new string[] { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") };//"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
 
@@ -16,13 +16,12 @@ namespace MuMech
         public EditableTime leadTime = 0;
 
         public bool warping = false;
-
-        EditableTime timeOffset = 0;
+        readonly EditableTime timeOffset = 0;
 
         double targetUT = 0;
 
         [Persistent(pass = (int)(Pass.Local|Pass.Type|Pass.Global))]
-        EditableDouble phaseAngle = 0;
+        readonly EditableDouble phaseAngle = 0;
 
         protected override void WindowGUI(int windowID)
         {

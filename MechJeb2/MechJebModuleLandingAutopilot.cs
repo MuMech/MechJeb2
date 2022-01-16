@@ -577,9 +577,9 @@ namespace MuMech
     //A descent speed policy that gives the max safe speed if our entire velocity were straight down
     class SafeDescentSpeedPolicy : IDescentSpeedPolicy
     {
-        double terrainRadius;
-        double g;
-        double thrust;
+        readonly double terrainRadius;
+        readonly double g;
+        readonly double thrust;
 
         public SafeDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
@@ -597,9 +597,9 @@ namespace MuMech
 
     class PoweredCoastDescentSpeedPolicy : IDescentSpeedPolicy
     {
-        float terrainRadius;
-        float g;
-        float thrust;
+        readonly float terrainRadius;
+        readonly float g;
+        readonly float thrust;
 
         public PoweredCoastDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
@@ -624,9 +624,9 @@ namespace MuMech
 
     class GravityTurnDescentSpeedPolicy : IDescentSpeedPolicy
     {
-        double terrainRadius;
-        double g;
-        double thrust;
+        readonly double terrainRadius;
+        readonly double g;
+        readonly double thrust;
 
         public GravityTurnDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
@@ -682,8 +682,8 @@ namespace MuMech
         LinearRegression regression;
         ReentrySimulation.Result lastResult; //  store the last result so that we can check if any new result is actually a new one, or the same one again.
         ReentrySimulation.Result lastErrorResult; //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
-        CelestialBody body;
-        MechJebModuleLandingAutopilot autoPilot;
+        readonly CelestialBody body;
+        readonly MechJebModuleLandingAutopilot autoPilot;
         bool parachutePresent = false;
         double maxSemiDeployHeight;
         double minSemiDeployHeight;
@@ -855,9 +855,9 @@ namespace MuMech
     // A class to hold a set of x,y data and perform linear regression analysis on it
     class LinearRegression
     {
-        double[] x;
-        double[] y;
-        int maxDataPoints;
+        readonly double[] x;
+        readonly double[] y;
+        readonly int maxDataPoints;
         int dataPointCount;
         int currentDataPoint;
         double sumX;

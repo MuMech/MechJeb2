@@ -18,8 +18,8 @@ namespace MuMech {
         }
 
         private Orbit target;
-        private double tc1, tc1_bar;
-        private double tc2, tc2_bar;
+        private readonly double tc1, tc1_bar;
+        private readonly double tc2, tc2_bar;
         private double Tf;
         private Vector3d rT;
         private Vector3d vT;

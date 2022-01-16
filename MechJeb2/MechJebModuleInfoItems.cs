@@ -190,7 +190,7 @@ namespace MuMech
             }
         }
 
-        private MovingAverage rcsThrustAvg = new MovingAverage(10);
+        private readonly MovingAverage rcsThrustAvg = new MovingAverage(10);
 
         [ValueInfoItem("#MechJeb_RCSthrust", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "N")]//RCS thrust
         public double RCSThrust()
@@ -224,7 +224,7 @@ namespace MuMech
             return rcsThrust;
         }
 
-        private MovingAverage rcsTranslationEfficiencyAvg = new MovingAverage(10);
+        private readonly MovingAverage rcsTranslationEfficiencyAvg = new MovingAverage(10);
 
         [ValueInfoItem("#MechJeb_RCSTranslationEfficiency", InfoItem.Category.Misc)]//RCS translation efficiency
         public string RCSTranslationEfficiency()

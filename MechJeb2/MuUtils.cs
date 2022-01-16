@@ -261,8 +261,8 @@ namespace MuMech
 
     public class MovingAverage
     {
-        private double[] store;
-        private int storeSize;
+        private readonly double[] store;
+        private readonly int storeSize;
         private int nextIndex = 0;
 
         public double value
@@ -316,8 +316,8 @@ namespace MuMech
 
     public class MovingAverage3d
     {
-        private Vector3d[] store;
-        private int storeSize;
+        private readonly Vector3d[] store;
+        private readonly int storeSize;
         private int nextIndex = 0;
 
         public Vector3d value
@@ -471,7 +471,7 @@ namespace MuMech
     //Represents a 2x2 matrix
     public class Matrix2x2
     {
-        double a, b, c, d;
+        readonly double a, b, c, d;
 
         //  [a    b]
         //  [      ]

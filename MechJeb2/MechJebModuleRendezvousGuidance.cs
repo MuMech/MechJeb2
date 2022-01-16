@@ -8,7 +8,7 @@ namespace MuMech
     {
         public MechJebModuleRendezvousGuidance(MechJebCore core) : base(core) { }
 
-        EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
+        readonly EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
         protected override void WindowGUI(int windowID)
         {

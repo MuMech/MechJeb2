@@ -13,7 +13,7 @@ namespace MuMech
 		private EditableInt stage = 0;
 		[Persistent(pass = (int)Pass.Type)]
 		private bool nextStage = true;
-		private List<String> stagesList = new List<String>();
+		private readonly List<String> stagesList = new List<String>();
 
 		public MechJebModuleScriptActionStaging (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
@@ -23,7 +23,7 @@ namespace MuMech
 			}
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (nextStage)
@@ -37,12 +37,12 @@ namespace MuMech
 			this.endAction ();
 		}
 
-		override public  void endAction()
+		public override  void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID)
+		public override void WindowGUI(int windowID)
 		{
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);

@@ -12,8 +12,8 @@ namespace MuMech
 		private int actionType;
 		[Persistent(pass = (int)Pass.Type)]
 		private int actionObject;
-		private List<String> actionTypes = new List<String>();
-		private List<String> actionObjects = new List<String>();
+		private readonly List<String> actionTypes = new List<String>();
+		private readonly List<String> actionObjects = new List<String>();
 		private String errorMessage = "";
 
 		public MechJebModuleScriptActionRCS (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
@@ -26,7 +26,7 @@ namespace MuMech
 			actionObjects.Add("Zero Rvel");
 		}
 
-		override public void activateAction()
+		public override void activateAction()
 		{
 			base.activateAction();
 			if (actionObject == 0)
@@ -84,12 +84,12 @@ namespace MuMech
 			this.endAction();
 		}
 
-		override public void endAction()
+		public override void endAction()
 		{
 			base.endAction();
 		}
 
-		override public void WindowGUI(int windowID) {
+		public override void WindowGUI(int windowID) {
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
 			if (errorMessage.Length == 0)

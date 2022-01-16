@@ -119,7 +119,7 @@ namespace MuMech
         /// the aircraft is perpendicular to the initial approach point
         /// at a distance of turn diameter.
         /// </summary>
-        private double angleToFinalApproachPointTurnDiameter = 20.0;
+        private readonly double angleToFinalApproachPointTurnDiameter = 20.0;
 
         /// <summary>
         /// Touchdown AoA and speed recorded for smooth main gear touchdown.
@@ -130,13 +130,13 @@ namespace MuMech
         /// <summary>
         /// Threshold in seconds to move on to the next waypoint.
         /// </summary>
-        private double secondsThresholdToNextWaypoint = 5.0;
+        private readonly double secondsThresholdToNextWaypoint = 5.0;
 
         /// <summary>
         /// The lowest altitude which may be used which will provide a minimum
         /// clearence above all objects in the area.
         /// </summary>
-        private double minimumSectorAltitude = 1500;
+        private readonly double minimumSectorAltitude = 1500;
 
         public void Autoland(object controller)
         {

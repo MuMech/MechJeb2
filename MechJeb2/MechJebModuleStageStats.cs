@@ -63,7 +63,7 @@ namespace MuMech
 
         private int needRebuild = 1;
 
-        private FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
+        private readonly FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
 
         long millisecondsBetweenSimulations;
 
