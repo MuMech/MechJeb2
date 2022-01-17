@@ -39,6 +39,16 @@ indent_size = 2
 # Dotnet code style settings:
 [*.{cs,vb}]
 
+# https://github.com/JosefPihrt/Roslynator/blob/master/src/Analyzers/README.md
+# https://github.com/JosefPihrt/Roslynator/blob/master/src/Analyzers/Analyzers.xml
+roslynator_accessibility_modifiers = explicit
+roslynator_enum_has_flag_style = operator
+roslynator_empty_string_style = literal
+roslynator_object_creation_parentheses_style = omit
+roslynator_null_check_style = equality_operator
+roslynator_array_creation_type_style = explicit
+roslynator_object_creation_type_style = explicit
+
 # IDE0055: Fix formatting
 dotnet_diagnostic.IDE0055.severity = warning
 
