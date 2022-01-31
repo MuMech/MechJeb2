@@ -1324,7 +1324,7 @@ namespace MuMech
             }
         }
 
-         void UpdateMoIAndAngularMom(Vessel vessel)
+        void UpdateMoIAndAngularMom(Vessel vessel)
         {
             MoI = vessel.MOI;
             angularMomentum = vessel.angularMomentum;
