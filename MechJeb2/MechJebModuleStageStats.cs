@@ -195,8 +195,10 @@ namespace MuMech
 
                 Profiler.BeginSample("StartSimulation_Init");
 
-                sims[0].Init(parts, dVLinearThrust);
-                sims[1].Init(parts, dVLinearThrust);
+                FuelFlowSimulation first = sims[0];
+                FuelFlowSimulation second = sims[1];
+                first.Init(parts, dVLinearThrust);
+                second.CopyFrom(first);
 
                 Profiler.EndSample();
 
