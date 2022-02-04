@@ -46,8 +46,8 @@
       <HintPath>..\packages\FunicularSwitch.3.0.2\lib\netstandard2.0\FunicularSwitch.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="NSubstitute, Version=4.2.0.0, Culture=neutral, PublicKeyToken=92dd2e9066daa5ca, processorArchitecture=MSIL">
-      <HintPath>..\packages\NSubstitute.4.2.2\lib\net46\NSubstitute.dll</HintPath>
+    <Reference Include="NSubstitute, Version=4.3.0.0, Culture=neutral, PublicKeyToken=92dd2e9066daa5ca, processorArchitecture=MSIL">
+      <HintPath>..\packages\NSubstitute.4.3.0\lib\net46\NSubstitute.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Private>False</Private>
@@ -96,6 +96,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Analyzer Include="..\packages\IDisposableAnalyzers.4.0.1\analyzers\dotnet\cs\IDisposableAnalyzers.dll" />
+    <Analyzer Include="..\packages\SonarAnalyzer.CSharp.8.35.0.42613\analyzers\Google.Protobuf.dll" />
+    <Analyzer Include="..\packages\SonarAnalyzer.CSharp.8.35.0.42613\analyzers\SonarAnalyzer.CFG.dll" />
+    <Analyzer Include="..\packages\SonarAnalyzer.CSharp.8.35.0.42613\analyzers\SonarAnalyzer.CSharp.dll" />
+    <Analyzer Include="..\packages\SonarAnalyzer.CSharp.8.35.0.42613\analyzers\SonarAnalyzer.dll" />
     <Analyzer Include="..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
