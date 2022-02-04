@@ -111,11 +111,11 @@ namespace MuMech
                 prev_autoDeploy = false;
             }
 
-            bool allRetracted = AllRetracted();
-            if (extended != !allRetracted)  //State changed?
-                buttonText=getButtonText(allRetracted ? DeployablePartState.RETRACTED : DeployablePartState.EXTENDED);
+            bool extendedThisPass = !AllRetracted();
+            if (extended != extendedThisPass)
+                buttonText = getButtonText(extendedThisPass ? DeployablePartState.EXTENDED : DeployablePartState.RETRACTED);
 
-            extended = !allRetracted;
+            extended = extendedThisPass;
         }
 
         protected bool ExtendingOrRetracting()
