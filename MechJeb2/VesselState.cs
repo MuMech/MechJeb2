@@ -917,19 +917,22 @@ namespace MuMech
         private Vector3 lastFarForce, lastFarTorque;
         private Vector3d lastSurfaceVelocity;
         private double lastAltitudeASL;
+        private float lastAoA;
         private const double _dVelocitySqrThreshold = 100;
-        private const double _dVelocitySqrMinThreshold = 0.0001;
+        private const double _dVelocitySqrMinThreshold = 1;
         private const double _dAltitudeThreshold = 300;
-        private const float _fOrientationThreshold = 5;
+        private const float _fAoAThreshold = 2;
         private void CalculateVesselAeroForcesWithCache(Vessel v, out Vector3 farForce, out Vector3 farTorque, Vector3d surfaceVelocity, double altitudeASL) 
         {
+            float AoA = Vector3.Angle(v.rootPart.transform.TransformDirection(Vector3.up), surfaceVelocity);
             if ((lastSurfaceVelocity - surfaceVelocity).sqrMagnitude > _dVelocitySqrThreshold
                 || Math.Abs(altitudeASL - lastAltitudeASL) > _dAltitudeThreshold
-                || (surfaceVelocity.sqrMagnitude > _dVelocitySqrMinThreshold && Vector3.Angle(lastSurfaceVelocity, surfaceVelocity) > _fOrientationThreshold))
+                || (surfaceVelocity.sqrMagnitude > _dVelocitySqrMinThreshold && AoA - lastAoA > _fAoAThreshold))
             {
                 FARCalculateVesselAeroForces(v, out farForce, out farTorque, surfaceVelocity, altitudeASL);
                 lastSurfaceVelocity = surfaceVelocity;
                 lastAltitudeASL = altitudeASL;
+                lastAoA = AoA;
                 lastFarForce = farForce;
                 lastFarTorque = farTorque;
             } else
