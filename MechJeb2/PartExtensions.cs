@@ -42,16 +42,12 @@ namespace MuMech
             return mass;
         }
 
+        public static bool EngineHasFuel(this ModuleEngines me) => !me.getFlameoutState && !me.engineShutdown;
+
         public static bool EngineHasFuel(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                PartModule m = p.Modules[i];
-                ModuleEngines eng = m as ModuleEngines;
-                if (eng != null)
-                    return !eng.getFlameoutState && !eng.engineShutdown;
-            }
-            return false;
+            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+            return eng != null && eng.EngineHasFuel();
         }
 
         public static double FlowRateAtConditions(this ModuleEngines e, double throttle, double flowMultiplier)
