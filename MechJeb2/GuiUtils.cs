@@ -329,6 +329,20 @@ namespace MuMech
                 return _middleRightLabel;
             }
         }
+        
+        static GUIStyle _UpperCenterLabel;
+        public static GUIStyle UpperCenterLabel
+        {
+            get
+            {
+                if (_UpperCenterLabel == null)
+                {
+                    _UpperCenterLabel = new GUIStyle(GUI.skin.label);
+                    _UpperCenterLabel.alignment = TextAnchor.UpperCenter;
+                }
+                return _UpperCenterLabel;
+            }
+        }
 
         static GUIStyle _labelNoWrap;
         public static GUIStyle LabelNoWrap
@@ -343,6 +357,52 @@ namespace MuMech
                     };
                 }
                 return _labelNoWrap;
+            }
+        }
+
+
+        static GUIStyle _greenToggle;
+        public static GUIStyle greenToggle
+        {
+            get
+            {
+                if (_greenToggle == null)
+                {
+                    _greenToggle = new GUIStyle(GUI.skin.toggle);
+                    _greenToggle.onHover.textColor = Color.green;
+                    _greenToggle.onNormal.textColor = Color.green;
+                }
+                return _greenToggle;
+            }
+        }
+
+        static GUIStyle _redToggle;
+        public static GUIStyle redToggle
+        {
+            get
+            {
+                if (_redToggle == null)
+                {
+                    _redToggle = new GUIStyle(GUI.skin.toggle);
+                    _redToggle.onHover.textColor = Color.red;
+                    _redToggle.onNormal.textColor = Color.red;
+                }
+                return _redToggle;
+            }
+        }
+
+        static GUIStyle _yellowToggle;
+        public static GUIStyle yellowToggle
+        {
+            get
+            {
+                if (_yellowToggle == null)
+                {
+                    _yellowToggle = new GUIStyle(GUI.skin.toggle);
+                    _yellowToggle.onHover.textColor = Color.yellow;
+                    _yellowToggle.onNormal.textColor = Color.yellow;
+                }
+                return _yellowToggle;
             }
         }
 

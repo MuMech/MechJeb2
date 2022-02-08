@@ -201,9 +201,7 @@ namespace MuMech
 			}
 			if (selectedGroupIndex == 10 && depth >= 4) //Block more than 4 depth
 			{
-				GUIStyle s2 = new GUIStyle(GUI.skin.label);
-				s2.normal.textColor = Color.red;
-				GUILayout.Label(Localizer.Format("#MechJeb_ScriptMod_label5"), s2, GUILayout.ExpandWidth(false));//"Program depth is limited to 4"
+				GUILayout.Label(Localizer.Format("#MechJeb_ScriptMod_label5"),GuiUtils.redLabel, GUILayout.ExpandWidth(false));//"Program depth is limited to 4"
 			}
 			else
 			{

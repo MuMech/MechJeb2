@@ -120,10 +120,8 @@ namespace MuMech
             }
 
             GUILayout.FlexibleSpace();
-
-            GUIStyle tsty = new GUIStyle(GUI.skin.label);
-            tsty.alignment = TextAnchor.UpperCenter;
-            GUILayout.Label("Automation", tsty, GUILayout.ExpandWidth(true));
+            
+            GUILayout.Label("Automation", GuiUtils.UpperCenterLabel, GUILayout.ExpandWidth(true));
 
             buttonStyle.normal.textColor = buttonStyle.focused.textColor = buttonStyle.hover.textColor = buttonStyle.active.textColor = buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = buttonStyle.onActive.textColor = (abort != AbortStage.OFF) ? Color.red : Color.green;
 

@@ -96,16 +96,13 @@ namespace MuMech
 			}
 			if (action.isStarted() || action.isExecuted())
 			{
-				GUIStyle s = new GUIStyle(GUI.skin.label);
 				if (this.conditionVerified)
 				{
-					s.normal.textColor = Color.green;
-					GUILayout.Label("(Verified " + this.getStringWhenConditionCheck() + ")", s, GUILayout.ExpandWidth(false));
+					GUILayout.Label("(Verified " + this.getStringWhenConditionCheck() + ")", GuiUtils.greenLabel, GUILayout.ExpandWidth(false));
 				}
 				else
 				{
-					s.normal.textColor = Color.red;
-					GUILayout.Label("(NOT Verified " + this.getStringWhenConditionCheck() + ")", s, GUILayout.ExpandWidth(false));
+					GUILayout.Label("(NOT Verified " + this.getStringWhenConditionCheck() + ")",GuiUtils.redLabel, GUILayout.ExpandWidth(false));
 				}
 			}
 		}

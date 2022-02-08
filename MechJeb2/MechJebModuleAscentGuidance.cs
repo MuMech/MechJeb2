@@ -305,9 +305,7 @@ namespace MuMech
                         GUILayout.Space(25);
                         if (autopilot.limitAoA)
                         {
-                            GUIStyle sl = new GUIStyle(GUI.skin.label);
-                            if (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure)
-                                sl.normal.textColor = sl.hover.textColor = Color.green;
+                            GUIStyle sl = (autopilot.limitingAoA && vesselState.dynamicPressure < autopilot.aoALimitFadeoutPressure) ? GuiUtils.greenLabel : GuiUtils.skin.label;
                             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ascent_label24"), autopilot.aoALimitFadeoutPressure, "Pa", 50, sl);//Dynamic Pressure Fadeout
                         }
                         GUILayout.EndHorizontal();
@@ -572,9 +570,7 @@ namespace MuMech
                 }
                 if (core.DeactivateControl)
                 {
-                    GUIStyle s = new GUIStyle(GUI.skin.label);
-                    s.normal.textColor = Color.red;
-                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label36"), s);//CONTROL DISABLED (AVIONICS)
+                    GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label36"), GuiUtils.redLabel);//CONTROL DISABLED (AVIONICS)
                 }
             }
 

@@ -52,8 +52,7 @@ namespace MuMech
         public void LimitToMaxDynamicPressureInfoItem()
         {
             GUILayout.BeginHorizontal();
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.DynamicPressure) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            GUIStyle s = limiter == LimitMode.DynamicPressure ? GuiUtils.greenToggle : GuiUtils.skin.toggle;
             limitDynamicPressure = GUILayout.Toggle(limitDynamicPressure, Localizer.Format("#MechJeb_Ascent_checkbox11"), s, GUILayout.Width(140));//"Limit Q to"
             maxDynamicPressure.text = GUILayout.TextField(maxDynamicPressure.text, GUILayout.Width(80));
             GUILayout.Label("pa", GUILayout.ExpandWidth(false));
@@ -66,8 +65,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_PreventEngineOverheats", InfoItem.Category.Thrust)]//Prevent engine overheats
         public void LimitToPreventOverheatsInfoItem()
         {
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.Temperature) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            GUIStyle s = limiter == LimitMode.Temperature ? GuiUtils.greenToggle : GuiUtils.skin.toggle;
             limitToPreventOverheats = GUILayout.Toggle(limitToPreventOverheats, Localizer.Format("#MechJeb_Ascent_checkbox12"), s);//"Prevent engine overheats"
         }
 
@@ -84,8 +82,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_PreventJetFlameout", InfoItem.Category.Thrust)]//Prevent jet flameout
         public void LimitToPreventFlameoutInfoItem()
         {
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.Flameout) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            GUIStyle s = limiter == LimitMode.Flameout ? GuiUtils.greenToggle : GuiUtils.skin.toggle;
             limitToPreventFlameout = GUILayout.Toggle(limitToPreventFlameout, Localizer.Format("#MechJeb_Ascent_checkbox13"), s);//"Prevent jet flameout"
         }
 
@@ -95,8 +92,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_PreventUnstableIgnition", InfoItem.Category.Thrust)]//Prevent unstable ignition
         public void LimitToPreventUnstableIgnitionInfoItem()
         {
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.UnstableIgnition) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            GUIStyle s = (limiter == LimitMode.UnstableIgnition) ? GuiUtils.greenToggle : GuiUtils.skin.toggle;
             limitToPreventUnstableIgnition = GUILayout.Toggle(limitToPreventUnstableIgnition, Localizer.Format("#MechJeb_Ascent_checkbox14"), s);//"Prevent unstable ignition"
         }
 
@@ -106,8 +102,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_UseRCStoullage", InfoItem.Category.Thrust)]//Use RCS to ullage
         public void AutoRCsUllageInfoItem()
         {
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.AutoRCSUllage) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            GUIStyle s = limiter == LimitMode.AutoRCSUllage ? GuiUtils.greenToggle : GuiUtils.skin.toggle;
             autoRCSUllaging = GUILayout.Toggle(autoRCSUllaging, Localizer.Format("#MechJeb_Ascent_checkbox15"), s);//"Use RCS to ullage"
         }
 
@@ -129,8 +124,7 @@ namespace MuMech
         public void LimitAccelerationInfoItem()
         {
             GUILayout.BeginHorizontal();
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.Acceleration) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            GUIStyle s = limiter == LimitMode.Acceleration ? GuiUtils.greenToggle : GuiUtils.skin.toggle;
             limitAcceleration = GUILayout.Toggle(limitAcceleration, Localizer.Format("#MechJeb_Ascent_checkbox16"), s, GUILayout.Width(140));//"Limit acceleration to"
             maxAcceleration.text = GUILayout.TextField(maxAcceleration.text, GUILayout.Width(30));
             GUILayout.Label("m/s²", GUILayout.ExpandWidth(false));
@@ -147,8 +141,7 @@ namespace MuMech
         public void LimitThrottleInfoItem()
         {
             GUILayout.BeginHorizontal();
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.Throttle) s.onHover.textColor = s.onNormal.textColor = maxThrottle > 0d ? Color.green : Color.red;
+            GUIStyle s = limiter == LimitMode.Throttle ? maxThrottle > 0d ? GuiUtils.greenToggle : GuiUtils.redToggle : GuiUtils.skin.toggle;
             limitThrottle = GUILayout.Toggle(limitThrottle, Localizer.Format("#MechJeb_Ascent_checkbox17"), s, GUILayout.Width(110));//"Limit throttle to"
             maxThrottle.text = GUILayout.TextField(maxThrottle.text, GUILayout.Width(30));
             GUILayout.Label("%", GUILayout.ExpandWidth(false));
@@ -165,8 +158,7 @@ namespace MuMech
         public void LimiterMinThrottleInfoItem()
         {
             GUILayout.BeginHorizontal();
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (limiter == LimitMode.MinThrottle) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            GUIStyle s = (limiter == LimitMode.MinThrottle) ? GuiUtils.greenToggle : GuiUtils.skin.toggle;
             limiterMinThrottle = GUILayout.Toggle(limiterMinThrottle, Localizer.Format("#MechJeb_Ascent_checkbox18"), s, GUILayout.Width(160));//"Keep limited throttle over"
             minThrottle.text = GUILayout.TextField(minThrottle.text, GUILayout.Width(30));
             GUILayout.Label("%", GUILayout.ExpandWidth(false));
@@ -180,11 +172,7 @@ namespace MuMech
         public void  DifferentialThrottle()
         {
             bool oldDifferentialThrottle = core.thrust.differentialThrottle;
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
-            if (differentialThrottle && vessel.LiftedOff())
-            {
-                s.onHover.textColor = s.onNormal.textColor = core.thrust.differentialThrottleSuccess == DifferentialThrottleStatus.Success ? Color.green : Color.yellow;
-            }
+            GUIStyle s = differentialThrottle && vessel.LiftedOff() ? core.thrust.differentialThrottleSuccess == DifferentialThrottleStatus.Success ? GuiUtils.greenToggle : GuiUtils.yellowToggle : GuiUtils.skin.toggle;
             differentialThrottle = GUILayout.Toggle(differentialThrottle, Localizer.Format("#MechJeb_Ascent_checkbox19"), s);//"Differential throttle"
 
             if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
