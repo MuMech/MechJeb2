@@ -98,6 +98,13 @@ namespace MuMech
             return isp;
         }
 
+        public static bool IsDecoupler(this Part p)
+        {
+            return p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null || 
+                                 p.FindModuleImplementing<ModuleDockingNode>() != null || 
+                                 p.Modules["ProceduralFairingDecoupler"] != null);
+        }
+
         public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
         {
             for (int i = 0; i < p.Modules.Count; i++)
