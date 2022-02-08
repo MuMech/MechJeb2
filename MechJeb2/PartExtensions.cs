@@ -102,7 +102,7 @@ namespace MuMech
         {
             return p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null || 
                                  p.FindModuleImplementing<ModuleDockingNode>() != null || 
-                                 p.Modules["ProceduralFairingDecoupler"] != null);
+                                 p.Modules.Contains("ProceduralFairingDecoupler"));
         }
 
         public static bool IsUnfiredDecoupler(this ModuleDecouplerBase decoupler, out Part decoupledPart)

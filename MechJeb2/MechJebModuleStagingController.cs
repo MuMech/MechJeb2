@@ -319,7 +319,7 @@ namespace MuMech
         public bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             foreach (PartModule pm in allDecouplers)
-                if (pm.part.inverseStage == inverseStage && pm.part.IsUnfiredDecoupler(out Part decoupledPart) && HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
+                if (pm.part.inverseStage == inverseStage && pm.IsUnfiredDecoupler(out Part decoupledPart) && HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
                     return true;
             return false;
         }
@@ -436,7 +436,7 @@ namespace MuMech
         public bool InverseStageDecouplesDeactivatedEngineOrTank(int inverseStage)
         {
             foreach (PartModule pm in allDecouplers)
-                if (pm.part.inverseStage == inverseStage && pm.part.IsUnfiredDecoupler(out Part decoupledPart) && HasDeactivatedEngineOrTankDescendant(decoupledPart))
+                if (pm.part.inverseStage == inverseStage && pm.IsUnfiredDecoupler(out Part decoupledPart) && HasDeactivatedEngineOrTankDescendant(decoupledPart))
                     return true;
             return false;
         }
