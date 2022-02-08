@@ -75,8 +75,6 @@ namespace MuMech
 
             GameEvents.onStageActivate.Add(stageActivate);
             GameEvents.onVesselResumeStaging.Add(VesselResumeStage);
-            if (HighLogic.LoadedSceneIsFlight)
-                GameEvents.onVesselWasModified.Add(OnVesselModified);
         }
 
         private void OnVesselModified(Vessel v)
@@ -93,9 +91,7 @@ namespace MuMech
             engines.Clear();
             foreach (Part p in vessel.Parts)
                 if (p.IsEngine() && !p.IsSepratron())
-                    foreach (PartModule pm in p.Modules)
-                        if (pm is ModuleEngines eng)
-                            engines.Add(eng);
+                    engines.AddRange(p.FindModulesImplementing<ModuleEngines>());
         }
 
         private void ClearCaches()
@@ -202,8 +198,17 @@ namespace MuMech
         double stageCountdownStart = 0;
         private Vessel currentActiveVessel;
 
+        private bool initializedOnce = false;
         public override void OnUpdate()
         {
+            if (!initializedOnce)
+            {
+                if (HighLogic.LoadedSceneIsFlight) GameEvents.onVesselWasModified.Add(OnVesselModified);
+                initializedOnce = true;
+                ClearCaches();
+                BuildEnginesCache(allModuleEngines);
+            }
+
             //Commenting this because now we support autostaging on non active vessels
             //if (!vessel.isActiveVessel)
             //    return;
@@ -337,7 +342,7 @@ namespace MuMech
             foreach (ModuleEngines engine in allEngines)
             {
                 Part p = engine.part;
-                if (p.inverseStage >= vessel.currentStage && p.IsEngine() && !p.IsSepratron() && !p.IsDecoupledInStage(vessel.currentStage - 1) && engine.isEnabled)
+                if (p.inverseStage >= vessel.currentStage && !p.IsDecoupledInStage(vessel.currentStage - 1) && engine.isEnabled)
                     activeModuleEngines.Add(engine);
             }
         }

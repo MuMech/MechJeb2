@@ -176,7 +176,7 @@ namespace MuMech
             return (me != null && me.throttleLocked);
         }
 
-        public static bool IsParachute(this Part p) => p.FindModulesImplementing<ModuleParachute>() != null;
+        public static bool IsParachute(this Part p) => p.FindModuleImplementing<ModuleParachute>() != null;
 
         public static bool IsLaunchClamp(this Part p) => p.FindModuleImplementing<LaunchClamp>() != null;
         
