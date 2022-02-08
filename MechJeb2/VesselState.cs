@@ -913,6 +913,35 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
+        //FARCalculateVesselAeroForces(vessel,out farForce,out farTorque,surfaceVelocity,altitudeASL);
+        private Vector3 lastFarForce, lastFarTorque;
+        private Vector3d lastSurfaceVelocity;
+        private double lastAltitudeASL;
+        private float lastAoA;
+        private const double _dVelocitySqrThreshold = 100;
+        private const double _dVelocitySqrMinThreshold = 1;
+        private const double _dAltitudeThreshold = 300;
+        private const float _fAoAThreshold = 2;
+        private void CalculateVesselAeroForcesWithCache(Vessel v, out Vector3 farForce, out Vector3 farTorque, Vector3d surfaceVelocity, double altitudeASL) 
+        {
+            float AoA = Vector3.Angle(v.rootPart.transform.TransformDirection(Vector3.up), surfaceVelocity);
+            if ((lastSurfaceVelocity - surfaceVelocity).sqrMagnitude > _dVelocitySqrThreshold
+                || Math.Abs(altitudeASL - lastAltitudeASL) > _dAltitudeThreshold
+                || (surfaceVelocity.sqrMagnitude > _dVelocitySqrMinThreshold && AoA - lastAoA > _fAoAThreshold))
+            {
+                FARCalculateVesselAeroForces(v, out farForce, out farTorque, surfaceVelocity, altitudeASL);
+                lastSurfaceVelocity = surfaceVelocity;
+                lastAltitudeASL = altitudeASL;
+                lastAoA = AoA;
+                lastFarForce = farForce;
+                lastFarTorque = farTorque;
+            } else
+            {
+                farForce = lastFarForce;
+                farTorque = lastFarTorque;
+            }
+        }
+
         // Loop over all the parts in the vessel and calculate some things.
         void AnalyzeParts(Vessel vessel, EngineInfo einfo, IntakeInfo iinfo)
         {
@@ -1171,7 +1200,7 @@ namespace MuMech
             {
                 Vector3 farForce = Vector3.zero;
                 Vector3 farTorque = Vector3.zero;
-                FARCalculateVesselAeroForces(vessel, out farForce, out farTorque, surfaceVelocity, altitudeASL);
+                CalculateVesselAeroForcesWithCache(vessel, out farForce, out farTorque, surfaceVelocity, altitudeASL);
 
                 Vector3d farDragVector = Vector3d.Dot(farForce, -surfaceVelocity.normalized) * -surfaceVelocity.normalized;
                 drag = farDragVector.magnitude / mass;
@@ -1300,45 +1329,8 @@ namespace MuMech
 
         void UpdateMoIAndAngularMom(Vessel vessel)
         {
-            // stock code + fix
-            Matrix4x4 tensor = Matrix4x4.zero;
-            Matrix4x4 partTensor = Matrix4x4.identity;
-            Matrix4x4 inertiaMatrix = Matrix4x4.identity;
-            Matrix4x4 productMatrix = Matrix4x4.identity;
-
-            QuaternionD invQuat = QuaternionD.Inverse(vessel.ReferenceTransform.rotation);
-            Transform vesselReferenceTransform = vessel.ReferenceTransform;
-            int count = vessel.parts.Count;
-            for (int i = 0; i < count; ++i)
-            {
-                Part part = vessel.parts[i];
-                if (part.rb != null)
-                {
-                    KSPUtil.ToDiagonalMatrix2(part.rb.inertiaTensor, ref partTensor);
-
-                    Quaternion rot = (Quaternion)invQuat * part.transform.rotation * part.rb.inertiaTensorRotation;
-                    Quaternion inv = Quaternion.Inverse(rot);
-
-                    Matrix4x4 rotMatrix = Matrix4x4.TRS(Vector3.zero, rot, Vector3.one);
-                    Matrix4x4 invMatrix = Matrix4x4.TRS(Vector3.zero, inv, Vector3.one);
-
-                    KSPUtil.Add(ref tensor, rotMatrix * partTensor * invMatrix);
-                    Vector3 position = vesselReferenceTransform.InverseTransformDirection(part.rb.position - vessel.CoMD);
-
-                    KSPUtil.ToDiagonalMatrix2(part.rb.mass * position.sqrMagnitude, ref inertiaMatrix);
-                    KSPUtil.Add(ref tensor, inertiaMatrix);
-
-                    KSPUtil.OuterProduct2(position, -part.rb.mass * position, ref productMatrix);
-                    KSPUtil.Add(ref tensor, productMatrix);
-                }
-            }
-            //MoI = vessel.MOI = KSPUtil.Diag(tensor);
-            MoI = KSPUtil.Diag(tensor);
-            angularMomentum = Vector3d.zero;
-            angularMomentum.x = (float)(MoI.x * vessel.angularVelocity.x);
-            angularMomentum.y = (float)(MoI.y * vessel.angularVelocity.y);
-            angularMomentum.z = (float)(MoI.z * vessel.angularVelocity.z);
-
+            MoI = vessel.MOI;
+            angularMomentum = vessel.angularMomentum;
             angularVelocityAvg.value = angularVelocity;
         }
 
