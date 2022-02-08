@@ -105,61 +105,61 @@ namespace MuMech
                                  p.Modules["ProceduralFairingDecoupler"] != null);
         }
 
-        public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
+        public static bool IsUnfiredDecoupler(this ModuleDecouplerBase decoupler, out Part decoupledPart)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            if (!decoupler.isDecoupled && decoupler.stagingEnabled && decoupler.part.stagingOn)
             {
-                PartModule m = p.Modules[i];
-                ModuleDecouple mDecouple = m as ModuleDecouple;
-                if (mDecouple != null)
-                {
-                    if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn)
-                    {
-                        decoupledPart = mDecouple.ExplosiveNode.attachedPart;
-                        if (decoupledPart == p.parent)
-                            decoupledPart = p;
-                        return true;
-                    }
-                    break;
-                }
+                decoupledPart = decoupler.ExplosiveNode.attachedPart;
+                if (decoupledPart == decoupler.part.parent)
+                    decoupledPart = decoupler.part;
+                return true;
+            }
+            decoupledPart = null;
+            return false;
+        }
 
-                ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
-                if (mAnchoredDecoupler != null)
-                {
-                    if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn)
-                    {
-                        decoupledPart = mAnchoredDecoupler.ExplosiveNode.attachedPart;
-                        if (decoupledPart == p.parent)
-                            decoupledPart = p;
-                        return true;
-                    }
-                    break;
-                }
+        public static bool IsUnfiredDecoupler(this ModuleDockingNode mDockingNode, out Part decoupledPart)
+        {
+            if (mDockingNode.staged && mDockingNode.stagingEnabled && mDockingNode.part.stagingOn)
+            {
+                decoupledPart = mDockingNode.referenceNode.attachedPart;
+                if (decoupledPart == mDockingNode.part.parent)
+                    decoupledPart = mDockingNode.part;
+                return true;
+            }
+            decoupledPart = null;
+            return false;
+        }
 
-                ModuleDockingNode mDockingNode = m as ModuleDockingNode;
-                if (mDockingNode != null)
+        public static bool IsUnfiredProceduralFairingDecoupler(this PartModule decoupler, out Part decoupledPart)
+        {
+            if (VesselState.isLoadedProceduralFairing && decoupler.moduleName == "ProceduralFairingDecoupler")
+            {
+                if (!decoupler.Fields["decoupled"].GetValue<bool>(decoupler) && decoupler.part.stagingOn)
                 {
-                    if (mDockingNode.staged && mDockingNode.stagingEnabled && p.stagingOn)
-                    {
-                        decoupledPart = mDockingNode.referenceNode.attachedPart;
-                        if (decoupledPart == p.parent)
-                            decoupledPart = p;
-                        return true;
-                    }
-                    break;
-                }
-
-                if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler")
-                {
-                    if (!m.Fields["decoupled"].GetValue<bool>(m) && p.stagingOn)
-                    {
-                        // ProceduralFairingDecoupler always decouple from their parents
-                        decoupledPart = p;
-                        return true;
-                    }
-                    break;
+                    // ProceduralFairingDecoupler always decouple from their parents
+                    decoupledPart = decoupler.part;
+                    return true;
                 }
             }
+            decoupledPart = null;
+            return false;
+        }
+
+        public static bool IsUnfiredDecoupler(this PartModule m, out Part decoupledPart)
+        {
+            if (m is ModuleDecouplerBase && IsUnfiredDecoupler(m as ModuleDecouplerBase, out decoupledPart)) return true;
+            if (m is ModuleDockingNode && IsUnfiredDecoupler(m as ModuleDockingNode, out decoupledPart)) return true;
+            if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" && m.IsUnfiredProceduralFairingDecoupler(out decoupledPart)) return true;
+            decoupledPart = null;
+            return false;
+        }
+
+        public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
+        {
+            foreach (PartModule m in p.Modules)
+                if (m.IsUnfiredDecoupler(out decoupledPart))
+                    return true;
             decoupledPart = null;
             return false;
         }
