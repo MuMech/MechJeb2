@@ -23,8 +23,7 @@ namespace MuMech
 
             if (!waitForPhaseAngle)
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label) {normal = {textColor = Color.yellow}};
-                GUILayout.Label(Localizer.Format("#MechJeb_transfer_Label4"), s);//Using this mode voids your warranty
+                GUILayout.Label(Localizer.Format("#MechJeb_transfer_Label4"), GuiUtils.yellowLabel);//Using this mode voids your warranty
             }
         }
 

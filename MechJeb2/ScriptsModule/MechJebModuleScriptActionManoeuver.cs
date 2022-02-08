@@ -195,9 +195,7 @@ namespace MuMech
             base.postWindowGUI(windowID);
             if (operation[operationId].getErrorMessage().Length > 0)
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                s.normal.textColor = Color.yellow;
-                GUILayout.Label(operation[operationId].getErrorMessage(), s);
+                GUILayout.Label(operation[operationId].getErrorMessage(),GuiUtils.yellowLabel);
             }
         }
     }

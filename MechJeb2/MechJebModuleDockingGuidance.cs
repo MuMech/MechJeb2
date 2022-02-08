@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 using KSP.Localization;
 
@@ -29,16 +29,12 @@ namespace MuMech
             // GetReferenceTransformPart is null after undocking ...
             if (vessel.GetReferenceTransformPart() == null || !vessel.GetReferenceTransformPart().Modules.Contains("ModuleDockingNode"))
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                s.normal.textColor = Color.yellow;
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label2"),s);//Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label2"),GuiUtils.yellowLabel);//Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
             }
 
             if (!(core.target.Target is ModuleDockingNode))
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                s.normal.textColor = Color.yellow;
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"), s);//Warning: target is not a docking port. Right click the target docking port and select "Set as target"
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),GuiUtils.yellowLabel);//Warning: target is not a docking port. Right click the target docking port and select "Set as target"
             }
 
             bool onAxisNodeExists = false;
@@ -53,9 +49,7 @@ namespace MuMech
 
             if (!onAxisNodeExists)
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                s.normal.textColor = Color.yellow;
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label4"), s);//Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select "Control from here."
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label4"),GuiUtils.yellowLabel);//Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select "Control from here."
             }
 
             bool active = GUILayout.Toggle(autopilot.enabled, Localizer.Format("#MechJeb_Docking_checkbox1"));// "Autopilot enabled"

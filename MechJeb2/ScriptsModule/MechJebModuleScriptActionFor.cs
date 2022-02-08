@@ -11,13 +11,16 @@ namespace MuMech
 		[Persistent(pass = (int)Pass.Type)]
 		private readonly EditableInt times = 2;
 		private int executedTimes = 0;
-		private readonly GUIStyle sBorder;
+		private static GUIStyle sBorder;
 
 		public MechJebModuleScriptActionFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actions = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
-			sBorder = new GUIStyle();
-			sBorder.border = new RectOffset(1, 1, 1, 1);
+            if (sBorder == null)
+            {
+                sBorder = new GUIStyle();
+                sBorder.border = new RectOffset(1, 1, 1, 1);
+            }
 			Texture2D background = new Texture2D(16, 16, TextureFormat.RGBA32, false);
 			for (int x = 0; x < background.width; x++)
 			{
@@ -53,18 +56,14 @@ namespace MuMech
 
 		public override void WindowGUI(int windowID)
 		{
-			GUIStyle s = new GUIStyle(GUI.skin.label);
-			s.normal.textColor = Color.yellow;
 			GUILayout.BeginVertical(sBorder);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label("Repeat", s, GUILayout.ExpandWidth(false));
+			GUILayout.Label("Repeat",GuiUtils.yellowLabel, GUILayout.ExpandWidth(false));
 			if (this.isStarted() && !this.isExecuted())
 			{
-				s = new GUIStyle(GUI.skin.label);
-				s.normal.textColor = Color.red;
 				GUILayout.Label(times.val + " times. Executed", GUILayout.ExpandWidth(false));
-				GUILayout.Label(this.executedTimes + "", s, GUILayout.ExpandWidth(false));
+				GUILayout.Label(this.executedTimes + "", GuiUtils.redLabel, GUILayout.ExpandWidth(false));
 				GUILayout.Label("/" + times.val, GUILayout.ExpandWidth(false));
 			}
 			else

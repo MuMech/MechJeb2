@@ -84,13 +84,13 @@ namespace MuMech
 				switch (core.thrust.differentialThrottleSuccess)
 				{
 					case MechJebModuleThrustController.DifferentialThrottleStatus.MoreEnginesRequired:
-						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label3"), new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });//"Differential throttle failed\nMore engines required"
+						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label3"), GuiUtils.yellowLabel);//"Differential throttle failed\nMore engines required"
 						break;
 					case MechJebModuleThrustController.DifferentialThrottleStatus.AllEnginesOff:
-						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label4"), new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });//"Differential throttle failed\nNo active engine"
+						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label4"), GuiUtils.yellowLabel);//"Differential throttle failed\nNo active engine"
 						break;
 					case MechJebModuleThrustController.DifferentialThrottleStatus.SolverFailed:
-						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label5"), new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow } });//"Differential throttle failed\nCannot find solution"
+						GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label5"), GuiUtils.yellowLabel);//"Differential throttle failed\nCannot find solution"
 						break;
 					case MechJebModuleThrustController.DifferentialThrottleStatus.Success:
 						break;

@@ -65,9 +65,7 @@ namespace MuMech
 
 					if (autopilot.maxPhasingOrbits < 5)
 					{
-						GUIStyle s = new GUIStyle(GUI.skin.label);
-						s.normal.textColor = Color.yellow;
-						GUILayout.Label("Max # of phasing orb. must be at least 5.", s);
+						GUILayout.Label("Max # of phasing orb. must be at least 5.",GuiUtils.yellowLabel);
 					}
 				}
 				else

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using KSP.UI.Screens;
@@ -207,15 +207,15 @@ namespace MuMech
         public void LimitElectricInfoItem()
         {
             GUILayout.BeginHorizontal();
-            GUIStyle s = new GUIStyle(GUI.skin.toggle);
+            GUIStyle s = GuiUtils.skin.label;
             if (limiter == LimitMode.Electric)
             {
                 if (vesselState.throttleLimit <0.001)
-                    s.onHover.textColor = s.onNormal.textColor = Color.red;
+                    s = GuiUtils.redLabel;
                 else
-                    s.onHover.textColor = s.onNormal.textColor = Color.yellow;
+                    s = GuiUtils.yellowLabel;
             }
-            else if (ElectricEngineRunning()) s.onHover.textColor = s.onNormal.textColor = Color.green;
+            else if (ElectricEngineRunning()) s = GuiUtils.greenLabel;
 
             electricThrottle = GUILayout.Toggle(electricThrottle, Localizer.Format("#MechJeb_Ascent_checkbox20"), s, GUILayout.Width(110));//"Electric limit Lo"
             electricThrottleLo.text = GUILayout.TextField(electricThrottleLo.text, GUILayout.Width(30));

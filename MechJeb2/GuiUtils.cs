@@ -242,6 +242,94 @@ namespace MuMech
             }
         }
 
+        static GUIStyle _yellowLabel;
+        public static GUIStyle yellowLabel
+        {
+            get
+            {
+                if (_yellowLabel == null)
+                {
+                    _yellowLabel = new GUIStyle(GUI.skin.label);
+                    _yellowLabel.normal.textColor = Color.yellow;
+                    _yellowLabel.hover.textColor = Color.yellow;
+                }
+                return _yellowLabel;
+            }
+        }
+
+        static GUIStyle _redLabel;
+        public static GUIStyle redLabel
+        {
+            get
+            {
+                if (_redLabel == null)
+                {
+                    _redLabel = new GUIStyle(GUI.skin.label);
+                    _redLabel.normal.textColor = Color.red;
+                    _redLabel.hover.textColor = Color.red;
+                }
+                return _redLabel;
+            }
+        }
+
+        static GUIStyle _greenLabel;
+        public static GUIStyle greenLabel
+        {
+            get
+            {
+                if (_greenLabel == null)
+                {
+                    _greenLabel = new GUIStyle(GUI.skin.label);
+                    _greenLabel.normal.textColor = Color.green;
+                    _greenLabel.hover.textColor = Color.green;
+                }
+                return _greenLabel;
+            }
+        }
+
+        static GUIStyle _orangeLabel;
+        public static GUIStyle orangeLabel
+        {
+            get
+            {
+                if (_orangeLabel == null)
+                {
+                    _orangeLabel = new GUIStyle(GUI.skin.label);
+                    _orangeLabel.normal.textColor = Color.green;
+                    _orangeLabel.hover.textColor = Color.green;
+                }
+                return _orangeLabel;
+            }
+        }
+
+        static GUIStyle _middleCenterLabel;
+        public static GUIStyle middleCenterLabel
+        {
+            get
+            {
+                if (_middleCenterLabel == null)
+                {
+                    _middleCenterLabel = new GUIStyle(GUI.skin.label);
+                    _middleCenterLabel.alignment = TextAnchor.MiddleCenter;
+                }
+                return _middleCenterLabel;
+            }
+        }
+
+        static GUIStyle _middleRightLabel;
+        public static GUIStyle middleRightLabel
+        {
+            get
+            {
+                if (_middleRightLabel == null)
+                {
+                    _middleRightLabel = new GUIStyle(GUI.skin.label);
+                    _middleRightLabel.alignment = TextAnchor.MiddleRight;
+                }
+                return _middleRightLabel;
+            }
+        }
+
         static GUIStyle _labelNoWrap;
         public static GUIStyle LabelNoWrap
         {
@@ -383,9 +471,43 @@ namespace MuMech
             return index;
         }
 
+        private static GUIStyle _arrowSelectorStyeGuiStyleExpand;
+        public static GUIStyle arrowSelectorStyeGuiStyleExpand
+        {
+            get
+            {
+                if (_arrowSelectorStyeGuiStyleExpand == null)
+                {
+                    _arrowSelectorStyeGuiStyleExpand = new GUIStyle(GUI.skin.label)
+                    {
+                        alignment = TextAnchor.MiddleCenter,
+                        stretchWidth = true
+                    };
+                }
+                return _arrowSelectorStyeGuiStyleExpand;
+            }
+        }
+
+        private static GUIStyle _arrowSelectorStyeGuiStyleNoExpand;
+        public static GUIStyle arrowSelectorStyeGuiStyleNoExpand
+        {
+            get
+            {
+                if (_arrowSelectorStyeGuiStyleNoExpand == null)
+                {
+                    _arrowSelectorStyeGuiStyleNoExpand = new GUIStyle(GUI.skin.label)
+                    {
+                        alignment = TextAnchor.MiddleCenter,
+                        stretchWidth = false
+                    };
+                }
+                return _arrowSelectorStyeGuiStyleNoExpand;
+            }
+        }
+
         public static int ArrowSelector(int index, int modulo, string label, bool expandWidth = true)
         {
-            Action drawLabel = () => GUILayout.Label(label, new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = expandWidth });
+            Action drawLabel = () => GUILayout.Label(label, expandWidth ? arrowSelectorStyeGuiStyleExpand : arrowSelectorStyeGuiStyleNoExpand);
             return ArrowSelector(index, modulo, drawLabel);
         }
 

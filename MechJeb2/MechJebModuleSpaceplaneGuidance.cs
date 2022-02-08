@@ -29,8 +29,6 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
-            GUIStyle s = new GUIStyle(GUI.skin.label);
-            s.alignment = TextAnchor.MiddleCenter;
 
             List<Runway> availableRunways = MechJebModuleSpaceplaneAutopilot.runways.Where(p => p.body == mainBody).ToList();
             if (runwayIndex > availableRunways.Count)
@@ -38,7 +36,7 @@ namespace MuMech
 
             if (availableRunways.Any())
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label1"), s);//Landing
+                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label1"),GuiUtils.middleCenterLabel);//Landing
 
                 runwayIndex = GuiUtils.ComboBox.Box(runwayIndex, availableRunways.Select(p => p.name).ToArray(), this);
                 autoland.runway = availableRunways[runwayIndex];

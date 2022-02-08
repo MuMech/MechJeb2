@@ -112,9 +112,7 @@ namespace MuMech
 
             if (operation[operationId].getErrorMessage().Length > 0)
             {
-                GUIStyle s = new GUIStyle(GUI.skin.label);
-                s.normal.textColor = Color.yellow;
-                GUILayout.Label(operation[operationId].getErrorMessage(), s);
+                GUILayout.Label(operation[operationId].getErrorMessage(),GuiUtils.yellowLabel);
             }
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button3")))//Remove ALL nodes

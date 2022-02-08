@@ -510,8 +510,7 @@ namespace MuMech
 
             const int w = 80;
             const int h = 20;
-            GUIStyle centeredStyle = new GUIStyle(GUI.skin.label) {alignment = TextAnchor.MiddleRight};
-
+            
             graphState state = graphStates[scaleIdx];
             if (state.labels == null)
                 return;
@@ -521,7 +520,7 @@ namespace MuMech
             float yBase = r.yMax + (float) (state.minimum * invScaleY);
             for (int i = 0; i < count; i++)
             {
-                GUI.Label(new Rect(r.xMin - w, yBase - (float)(invScaleY * state.labelsPos[i]) - h * 0.5f, w, h), state.labels[i], centeredStyle);
+                GUI.Label(new Rect(r.xMin - w, yBase - (float)(invScaleY * state.labelsPos[i]) - h * 0.5f, w, h), state.labels[i], GuiUtils.middleRightLabel);
             }
         }
 

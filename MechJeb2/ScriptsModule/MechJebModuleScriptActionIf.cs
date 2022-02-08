@@ -10,55 +10,64 @@ namespace MuMech
 		private readonly MechJebModuleScriptActionsList actionsThen;
 		private readonly MechJebModuleScriptActionsList actionsElse;
 		private readonly MechJebModuleScriptCondition condition;
-		private readonly GUIStyle sBorderY;
-		private readonly GUIStyle sBorderG;
-		private readonly GUIStyle sBorderR;
+		private static GUIStyle sBorderY;
+		private static GUIStyle sBorderG;
+		private static GUIStyle sBorderR;
+        readonly Texture2D backgroundY;
+        readonly Texture2D backgroundG;
+        readonly Texture2D backgroundR;
 
-		public MechJebModuleScriptActionIf (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+        public MechJebModuleScriptActionIf (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
 		{
 			actionsThen = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			actionsElse = new MechJebModuleScriptActionsList(core, scriptModule, this, actionsList.getDepth() + 1);
 			condition = new MechJebModuleScriptCondition(scriptModule, core, this);
-			sBorderY = new GUIStyle();
-			sBorderY.border = new RectOffset(1, 1, 1, 1);
-			sBorderG = new GUIStyle();
-			sBorderG.border = new RectOffset(1, 1, 1, 1);
-			sBorderR = new GUIStyle();
-			sBorderR.border = new RectOffset(1, 1, 1, 1);
-			Texture2D backgroundY = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-			Texture2D backgroundG = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-			Texture2D backgroundR = new Texture2D(16, 16, TextureFormat.RGBA32, false);
-			for (int x = 0; x < backgroundY.width; x++)
-			{
-				for (int y = 0; y < backgroundY.height; y++)
-				{
-					if (x == 0 || x == 15 || y == 0 || y == 15)
-					{
-						backgroundY.SetPixel(x, y, Color.yellow);
-						backgroundG.SetPixel(x, y, Color.green);
-						backgroundR.SetPixel(x, y, Color.red);
-					}
-					else
-					{
-						backgroundY.SetPixel(x, y, Color.clear);
-						backgroundG.SetPixel(x, y, Color.clear);
-						backgroundR.SetPixel(x, y, Color.clear);
-					}
-				}
-			}
-			backgroundY.Apply();
-			backgroundG.Apply();
-			backgroundR.Apply();
-			sBorderY.normal.background = backgroundY;
-			sBorderY.onNormal.background = backgroundY;
-			sBorderG.normal.background = backgroundG;
-			sBorderG.onNormal.background = backgroundG;
-			sBorderR.normal.background = backgroundR;
-			sBorderR.onNormal.background = backgroundR;
-			sBorderY.padding = new RectOffset(1, 1, 1, 1);
-			sBorderG.padding = new RectOffset(1, 1, 1, 1);
-			sBorderR.padding = new RectOffset(1, 1, 1, 1);
-		}
+            if (sBorderY == null)
+            {
+                sBorderY = new GUIStyle();
+                sBorderY.border = new RectOffset(1,1,1,1);
+                sBorderG = new GUIStyle();
+                sBorderG.border = new RectOffset(1,1,1,1);
+                sBorderR = new GUIStyle();
+                sBorderR.border = new RectOffset(1,1,1,1);
+                sBorderY.padding = new RectOffset(1,1,1,1);
+                sBorderG.padding = new RectOffset(1,1,1,1);
+                sBorderR.padding = new RectOffset(1,1,1,1);
+            }
+            if (backgroundY == null)
+            {
+                backgroundY = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+                backgroundG = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+                backgroundR = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+                for (int x = 0; x < backgroundY.width; x++)
+                {
+                    for (int y = 0; y < backgroundY.height; y++)
+                    {
+                        if (x == 0 || x == 15 || y == 0 || y == 15)
+                        {
+                            backgroundY.SetPixel(x, y, Color.yellow);
+                            backgroundG.SetPixel(x, y, Color.green);
+                            backgroundR.SetPixel(x, y, Color.red);
+                        }
+                        else
+                        {
+                            backgroundY.SetPixel(x, y, Color.clear);
+                            backgroundG.SetPixel(x, y, Color.clear);
+                            backgroundR.SetPixel(x, y, Color.clear);
+                        }
+                    }
+                }
+                backgroundY.Apply();
+                backgroundG.Apply();
+                backgroundR.Apply();
+                sBorderY.normal.background = backgroundY;
+                sBorderY.onNormal.background = backgroundY;
+                sBorderG.normal.background = backgroundG;
+                sBorderG.onNormal.background = backgroundG;
+                sBorderR.normal.background = backgroundR;
+                sBorderR.onNormal.background = backgroundR;
+            }
+        }
 
 		public override void activateAction()
 		{
@@ -80,15 +89,12 @@ namespace MuMech
 
 		public override void WindowGUI(int windowID)
 		{
-			GUIStyle s = new GUIStyle(GUI.skin.label);
-			s.normal.textColor = Color.yellow;
 			GUILayout.BeginVertical(sBorderY);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label("If", s, GUILayout.ExpandWidth(false));
+			GUILayout.Label("If",GuiUtils.yellowLabel, GUILayout.ExpandWidth(false));
 			condition.WindowGUI(windowID);
-			s.normal.textColor = Color.yellow;
-			GUILayout.Label("Then", s, GUILayout.ExpandWidth(false));
+			GUILayout.Label("Then",GuiUtils.yellowLabel, GUILayout.ExpandWidth(false));
 			base.postWindowGUI(windowID);
 
 			GUILayout.BeginHorizontal();
@@ -100,7 +106,7 @@ namespace MuMech
 			GUILayout.BeginHorizontal();
 			GUILayout.Space(50);
 			GUILayout.BeginVertical();
-			GUILayout.Label("Else", s, GUILayout.ExpandWidth(false));
+			GUILayout.Label("Else",GuiUtils.yellowLabel, GUILayout.ExpandWidth(false));
 			GUILayout.EndVertical();
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();

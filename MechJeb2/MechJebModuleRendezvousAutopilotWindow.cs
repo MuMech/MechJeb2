@@ -48,9 +48,7 @@ namespace MuMech
 
                 if (autopilot.maxPhasingOrbits < 5)
                 {
-                    GUIStyle s = new GUIStyle(GUI.skin.label);
-                    s.normal.textColor = Color.yellow;
-                    GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label6"), s);//"Max # of phasing orbits must be at least 5."
+                    GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label6"),GuiUtils.yellowLabel);//"Max # of phasing orbits must be at least 5."
                 }
 
                 if (autopilot.enabled) GUILayout.Label( Localizer.Format("#MechJeb_RZauto_label7", autopilot.status));//"Status: <<1>>"

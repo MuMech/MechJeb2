@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using KSP.Localization;
@@ -43,6 +43,8 @@ namespace MuMech
         public override bool draggable { get { return _draggable;}}
 
         const int porkchop_Height = 200;
+
+        private static GUIStyle progressStyle;
 
         private string CheckPreconditions(Orbit o, MechJebModuleTargetController target)
         {
@@ -199,14 +201,15 @@ namespace MuMech
             }
             else
             {
-                GUIStyle progressStyle = new GUIStyle
-                {
-                    font = GuiUtils.skin.font,
-                    fontSize = GuiUtils.skin.label.fontSize,
-                    fontStyle = GuiUtils.skin.label.fontStyle,
-                    normal = {textColor = GuiUtils.skin.label.normal.textColor}
-                };
-
+                if (progressStyle == null)
+                    progressStyle = new GUIStyle
+                    {
+                        font = GuiUtils.skin.font,
+                        fontSize = GuiUtils.skin.label.fontSize,
+                        fontStyle = GuiUtils.skin.label.fontStyle,
+                        normal = {textColor = GuiUtils.skin.label.normal.textColor}
+                    
+                    };
                 GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth), GUILayout.Height(porkchop_Height));//"Computing:"
             }
             GUILayout.BeginHorizontal();

@@ -340,16 +340,8 @@ namespace MuMech
 					if (this.flashMessage.Length > 0)
 					{
 						GUILayout.BeginHorizontal();
-						GUIStyle sflash = new GUIStyle(GUI.skin.label);
-						if (this.flashMessageType == 1)
-						{
-							sflash.normal.textColor = Color.red;
-						}
-						else
-						{
-							sflash.normal.textColor = Color.yellow;
-						}
-						GUILayout.Label(this.flashMessage, sflash);
+                        GUIStyle sFlash = this.flashMessageType == 1 ? GuiUtils.redLabel : GuiUtils.yellowLabel;
+						GUILayout.Label(this.flashMessage,sFlash);
 						GUILayout.EndHorizontal();
 					}
 				}

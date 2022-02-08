@@ -66,12 +66,10 @@ namespace MuMech
 
 		public override void WindowGUI(int windowID)
 		{
-			GUIStyle s = new GUIStyle(GUI.skin.label);
-			s.normal.textColor = Color.yellow;
 			GUILayout.BeginVertical(sBorderY);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label("Parallel Execution", s, GUILayout.ExpandWidth(false));
+			GUILayout.Label("Parallel Execution", GuiUtils.yellowLabel, GUILayout.ExpandWidth(false));
 			if (this.panel1Hidden)
 			{
 				if (GUILayout.Button("<<Show Panel 1", GUILayout.ExpandWidth(false)))

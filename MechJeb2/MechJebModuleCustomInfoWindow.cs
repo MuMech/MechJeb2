@@ -448,9 +448,7 @@ namespace MuMech
                 scrollPos = GUILayout.BeginScrollView(scrollPos);
                 for (int i = 0; i < editedWindow.items.Count; i++)
                 {
-                    GUIStyle s = new GUIStyle(GUI.skin.label);
-                    if (i == selectedItemIndex) s.normal.textColor = Color.yellow;
-
+                    GUIStyle s = i == selectedItemIndex ? GuiUtils.yellowLabel:GUI.skin.label;
                     if (GUILayout.Button(Localizer.Format(editedWindow.items[i].description), s)) selectedItemIndex = i;//
                 }
                 GUILayout.EndScrollView();
@@ -499,7 +497,7 @@ namespace MuMech
                 GUILayout.EndScrollView();
             }
 
-            GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label5"), new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });//Window presets:
+            GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label5"), GuiUtils.middleCenterLabel);//Window presets:
 
             presetIndex = GuiUtils.ArrowSelector(presetIndex, CustomWindowPresets.presets.Length, () =>
             {

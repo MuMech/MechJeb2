@@ -72,7 +72,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label5"));//"Turn end altitude: "
-                GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude, -1, 2) + "m", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight }, GUILayout.ExpandWidth(true));
+                GUILayout.Label(MuUtils.ToSI(path.autoTurnEndAltitude, -1, 2) + "m", GuiUtils.middleRightLabel, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
             else

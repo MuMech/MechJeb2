@@ -51,12 +51,10 @@ namespace MuMech
 
 		public override void WindowGUI(int windowID)
 		{
-			GUIStyle s = new GUIStyle(GUI.skin.label);
-			s.normal.textColor = Color.yellow;
 			GUILayout.BeginVertical(sBorder);
 			base.preWindowGUI(windowID);
 			base.WindowGUI(windowID);
-			GUILayout.Label("While", s, GUILayout.ExpandWidth(false));
+			GUILayout.Label("While",GuiUtils.yellowLabel, GUILayout.ExpandWidth(false));
 			condition.WindowGUI(windowID);
 			base.postWindowGUI(windowID);
 			GUILayout.BeginHorizontal();

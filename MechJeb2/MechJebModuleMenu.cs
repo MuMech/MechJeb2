@@ -175,6 +175,9 @@ namespace MuMech
 
         private static ApplicationLauncherButton mjButton;
 
+        private static GUIStyle toggleInactive;
+        private static GUIStyle toggleActive;
+
         protected override void WindowGUI(int windowID)
         {
             if (HideMenuButton && GUI.Button(new Rect(2, 2, 16, 16), ""))
@@ -182,11 +185,14 @@ namespace MuMech
                 ShowHideWindow();
             }
 
-            GUIStyle toggleInactive = new GUIStyle(GUI.skin.toggle);
-            toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
+            if (toggleInactive == null)
+            {
+                toggleInactive = new GUIStyle(GUI.skin.toggle);
+                toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
-            GUIStyle toggleActive = new GUIStyle(toggleInactive);
-            toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
+                toggleActive = new GUIStyle(toggleInactive);
+                toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
+            }
 
             List<DisplayModule> displayModules = core.GetDisplayModules(DisplayOrder.instance);
             int i = 0;

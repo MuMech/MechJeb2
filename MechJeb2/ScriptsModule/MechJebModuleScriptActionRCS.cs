@@ -99,9 +99,7 @@ namespace MuMech
 			}
 			else
 			{
-				GUIStyle s = new GUIStyle(GUI.skin.label);
-				s.normal.textColor = Color.yellow;
-				GUILayout.Label(this.errorMessage, s);			
+				GUILayout.Label(this.errorMessage,GuiUtils.yellowLabel);
 			}
 			base.postWindowGUI(windowID);
 		}

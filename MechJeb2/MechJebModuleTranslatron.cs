@@ -29,6 +29,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble trans_spd = new EditableDouble(0);
 
+        private static GUIStyle buttonStyle;
+
         public MechJebModuleTranslatron(MechJebCore core) : base(core) { }
 
         public override string GetName()
@@ -48,11 +50,14 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            GUIStyle sty = new GUIStyle(GUI.skin.button);
-            sty.normal.textColor = sty.focused.textColor = Color.white;
-            sty.hover.textColor = sty.active.textColor = Color.yellow;
-            sty.onNormal.textColor = sty.onFocused.textColor = sty.onHover.textColor = sty.onActive.textColor = Color.green;
-            sty.padding = new RectOffset(8, 8, 8, 8);
+            if (buttonStyle==null)
+            {
+                buttonStyle = new GUIStyle(GUI.skin.button);
+                buttonStyle.normal.textColor = buttonStyle.focused.textColor = Color.white;
+                buttonStyle.hover.textColor = buttonStyle.active.textColor = Color.yellow;
+                buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = buttonStyle.onActive.textColor = Color.green;
+                buttonStyle.padding = new RectOffset(8, 8, 8, 8);
+            }
 
             GUILayout.BeginVertical();
 
@@ -64,9 +69,9 @@ namespace MuMech
                     autoMode = true;
                 }
 
-                sty.normal.textColor = Color.red;
-                sty.onActive = sty.onFocused = sty.onHover = sty.onNormal = sty.active = sty.focused = sty.hover = sty.normal;
-                GUILayout.Button(Localizer.Format("#MechJeb_Trans_auto"), sty, GUILayout.ExpandWidth(true));
+                buttonStyle.normal.textColor = Color.red;
+                buttonStyle.onActive = buttonStyle.onFocused = buttonStyle.onHover = buttonStyle.onNormal = buttonStyle.active = buttonStyle.focused = buttonStyle.hover = buttonStyle.normal;
+                GUILayout.Button(Localizer.Format("#MechJeb_Trans_auto"), buttonStyle, GUILayout.ExpandWidth(true));
             }
             else
             {
@@ -76,7 +81,7 @@ namespace MuMech
                     autoMode = false;
                 }
 
-                MechJebModuleThrustController.TMode newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, sty);
+                MechJebModuleThrustController.TMode newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, buttonStyle);
                 SetMode(newMode);
 
                 float val = (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
@@ -102,7 +107,7 @@ namespace MuMech
                 }
                 GUILayout.EndHorizontal();
 
-                if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act")+":", sty, GUILayout.ExpandWidth(true)) || change)
+                if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act")+":", buttonStyle, GUILayout.ExpandWidth(true)) || change)
                 {
                     core.thrust.trans_spd_act = (float)trans_spd.val;
                     GUIUtility.keyboardControl = 0;
@@ -120,9 +125,9 @@ namespace MuMech
             tsty.alignment = TextAnchor.UpperCenter;
             GUILayout.Label("Automation", tsty, GUILayout.ExpandWidth(true));
 
-            sty.normal.textColor = sty.focused.textColor = sty.hover.textColor = sty.active.textColor = sty.onNormal.textColor = sty.onFocused.textColor = sty.onHover.textColor = sty.onActive.textColor = (abort != AbortStage.OFF) ? Color.red : Color.green;
+            buttonStyle.normal.textColor = buttonStyle.focused.textColor = buttonStyle.hover.textColor = buttonStyle.active.textColor = buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = buttonStyle.onActive.textColor = (abort != AbortStage.OFF) ? Color.red : Color.green;
 
-            if (GUILayout.Button((abort != AbortStage.OFF) ? Localizer.Format("#MechJeb_Trans_NOPANIC") : Localizer.Format("#MechJeb_Trans_PANIC"), sty, GUILayout.ExpandWidth(true)))
+            if (GUILayout.Button((abort != AbortStage.OFF) ? Localizer.Format("#MechJeb_Trans_NOPANIC") : Localizer.Format("#MechJeb_Trans_PANIC"), buttonStyle, GUILayout.ExpandWidth(true)))
             {
                 PanicSwitch();
             }
