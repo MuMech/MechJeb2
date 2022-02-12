@@ -19,14 +19,19 @@ namespace MuMech
         public string MechJeb_Ascent_label21, MechJeb_Ascent_label22, MechJeb_Ascent_label23, MechJeb_Ascent_label24, MechJeb_Ascent_label25;
         public string MechJeb_Ascent_label26, MechJeb_Ascent_label27, MechJeb_Ascent_label28, MechJeb_Ascent_label29, MechJeb_Ascent_label30;
         public string MechJeb_Ascent_label31, MechJeb_Ascent_label32, MechJeb_Ascent_label33, MechJeb_Ascent_label34, MechJeb_Ascent_label35;
-        public string MechJeb_Ascent_label36, MechJeb_Ascent_label37;
+        public string MechJeb_Ascent_label36, MechJeb_Ascent_label37, MechJeb_Ascent_label38, MechJeb_Ascent_label39, MechJeb_Ascent_label40;
+        public string MechJeb_Ascent_label41, MechJeb_Ascent_label42, MechJeb_Ascent_label44;
         public string MechJeb_Ascent_attachAlt, MechJeb_Ascent_warnAttachAltHigh, MechJeb_Ascent_warnAttachAltLow;
         public string MechJeb_Ascent_LaunchToTargetLan, MechJeb_Ascent_LaunchToLan, MechJeb_Ascent_LaunchingToTargetLAN, MechJeb_Ascent_LaunchingToManualLAN;
         public string MechJeb_Ascent_msg2, MechJeb_Ascent_msg3;
+        public string MechJeb_Ascent_hotStaging, MechJeb_Ascent_dropSolids, MechJeb_Ascent_leadTime;
 
         public string MechJeb_Ascent_checkbox2, MechJeb_Ascent_checkbox3, MechJeb_Ascent_checkbox4, MechJeb_Ascent_checkbox5;
         public string MechJeb_Ascent_checkbox6, MechJeb_Ascent_checkbox7, MechJeb_Ascent_checkbox8, MechJeb_Ascent_checkbox9, MechJeb_Ascent_checkbox10;
         public string MechJeb_Ascent_checkbox11, MechJeb_Ascent_checkbox12, MechJeb_Ascent_checkbox13, MechJeb_Ascent_checkbox14, MechJeb_Ascent_checkbox15;
+
+        public string MechJeb_Ascent_status9, MechJeb_Ascent_status10;
+        public string MechJeb_Ascent_status11;
 
         public string MechJeb_Ascent_checkbox16, MechJeb_Ascent_checkbox17, MechJeb_Ascent_checkbox18, MechJeb_Ascent_checkbox19, MechJeb_Ascent_checkbox20;
         public string MechJeb_NavBallGuidance_btn1, MechJeb_NavBallGuidance_btn2;
@@ -108,6 +113,13 @@ namespace MuMech
                 MechJeb_Ascent_label35 = Localizer.Format("#MechJeb_Ascent_label35");
                 MechJeb_Ascent_label36 = Localizer.Format("#MechJeb_Ascent_label36");
                 MechJeb_Ascent_label37 = Localizer.Format("#MechJeb_Ascent_label37");
+                MechJeb_Ascent_label38 = Localizer.Format("#MechJeb_Ascent_label38");
+                MechJeb_Ascent_label39 = Localizer.Format("#MechJeb_Ascent_label39");
+                MechJeb_Ascent_label40 = Localizer.Format("#MechJeb_Ascent_label40");
+                MechJeb_Ascent_label41 = Localizer.Format("#MechJeb_Ascent_label41");
+                MechJeb_Ascent_label42 = Localizer.Format("#MechJeb_Ascent_label42");
+
+                MechJeb_Ascent_label44 = Localizer.Format("#MechJeb_Ascent_label44");
 
                 MechJeb_Ascent_checkbox2 = Localizer.Format("#MechJeb_Ascent_checkbox2");
                 MechJeb_Ascent_checkbox3 = Localizer.Format("#MechJeb_Ascent_checkbox3");
@@ -129,6 +141,10 @@ namespace MuMech
                 MechJeb_Ascent_checkbox19 = Localizer.Format("#MechJeb_Ascent_checkbox19");
                 MechJeb_Ascent_checkbox20 = Localizer.Format("#MechJeb_Ascent_checkbox20");
 
+                MechJeb_Ascent_status9 = Localizer.Format("#MechJeb_Ascent_status9");
+                MechJeb_Ascent_status10 = Localizer.Format("#MechJeb_Ascent_status10");
+                MechJeb_Ascent_status11 = Localizer.Format("#MechJeb_Ascent_status11");
+                
 
                 MechJeb_Ascent_attachAlt = Localizer.Format("#MechJeb_Ascent_attachAlt");
                 MechJeb_Ascent_warnAttachAltHigh = Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh");
@@ -140,6 +156,9 @@ namespace MuMech
 
                 MechJeb_Ascent_msg2 = Localizer.Format("#MechJeb_Ascent_msg2");
                 MechJeb_Ascent_msg3 = Localizer.Format("#MechJeb_Ascent_msg3");
+                MechJeb_Ascent_hotStaging = Localizer.Format("#MechJeb_Ascent_hotStaging");
+                MechJeb_Ascent_dropSolids = Localizer.Format("#MechJeb_Ascent_dropSolids");
+                MechJeb_Ascent_leadTime = Localizer.Format("#MechJeb_Ascent_leadTime");
 
                 MechJeb_NavBallGuidance_btn1 = Localizer.Format("#MechJeb_NavBallGuidance_btn1");
                 MechJeb_NavBallGuidance_btn2 = Localizer.Format("#MechJeb_NavBallGuidance_btn2");
