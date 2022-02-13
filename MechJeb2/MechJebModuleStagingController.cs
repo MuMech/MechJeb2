@@ -105,33 +105,45 @@ namespace MuMech
             autostagingOnce = false;
         }
 
+        private readonly string sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label39} <";
+        private readonly string sFairingMinAltitude = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label40} >";
+        private readonly string sFairingMaxAerothermalFlux = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label41} <";
+        private readonly string sHotstaging = $"{CachedLocalizer.Instance.MechJeb_Ascent_hotStaging} {CachedLocalizer.Instance.MechJeb_Ascent_leadTime}";
+        private readonly string sDropSolids = $"{CachedLocalizer.Instance.MechJeb_Ascent_dropSolids} {CachedLocalizer.Instance.MechJeb_Ascent_leadTime}";
+        private readonly string sLeadTime = $"{CachedLocalizer.Instance.MechJeb_Ascent_leadTime}: ";
         [GeneralInfoItem("#MechJeb_AutostagingSettings", InfoItem.Category.Misc)]//Autostaging settings
         public void AutostageSettingsInfoItem()
         {
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Delays: pre:",autostagePreDelay,"s",35,horizontalFraming: false);
-            GuiUtils.SimpleTextBox("  post:",autostagePostDelay,"s",35,horizontalFraming: false);
+            GUILayout.Label("Delays: ");
+            GUILayout.Space(30);
+            GuiUtils.SimpleTextBox("pre: ",autostagePreDelay,"s",35,horizontalFraming: false);
+            GUILayout.FlexibleSpace();
+            GuiUtils.SimpleTextBox("post: ",autostagePostDelay,"s",35,horizontalFraming: false);
             GUILayout.EndHorizontal();
 
             ClampAutostageThrust();
 
             GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label38);//"Stage fairings when:"
-            GuiUtils.SimpleTextBox($"  {CachedLocalizer.Instance.MechJeb_Ascent_label39} <", fairingMaxDynamicPressure, "kPa", 50);//"dynamic pressure"
-            GuiUtils.SimpleTextBox($"  {CachedLocalizer.Instance.MechJeb_Ascent_label40} >", fairingMinAltitude, "km", 50);//altitude
-            GuiUtils.SimpleTextBox($"  {CachedLocalizer.Instance.MechJeb_Ascent_label41} <", fairingMaxAerothermalFlux, "W/m²", 50);//aerothermal flux
+            GuiUtils.SimpleTextBox(sFairingMinDynamicPressure, fairingMaxDynamicPressure, "kPa", 50);//"dynamic pressure"
+            GuiUtils.SimpleTextBox(sFairingMinAltitude, fairingMinAltitude, "km", 50);//altitude
+            GuiUtils.SimpleTextBox(sFairingMaxAerothermalFlux, fairingMaxAerothermalFlux, "W/m²", 50);//aerothermal flux
 
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label42, autostageLimit);//"Stop at stage #"
-            //GuiUtils.ToggledTextBox(ref hotStaging,CachedLocalizer.Instance.MechJeb_Ascent_hotStaging,hotStagingLeadTime,$"s {CachedLocalizer.Instance.MechJeb_Ascent_leadTime}",width: 35);
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label42, autostageLimit, width: 40);//"Stop at stage #"
 
+            GUILayout.BeginHorizontal();
             hotStaging = GUILayout.Toggle(hotStaging,CachedLocalizer.Instance.MechJeb_Ascent_hotStaging);//"Support hotstaging"
-            if (hotStaging)
-                GuiUtils.SimpleTextBox($"  {CachedLocalizer.Instance.MechJeb_Ascent_leadTime}", hotStagingLeadTime, "s");//"lead time"
+            GUILayout.FlexibleSpace();
+            GuiUtils.SimpleTextBox(sLeadTime,hotStagingLeadTime,"s",35);//"lead time"
+            GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
             dropSolids = GUILayout.Toggle(dropSolids,CachedLocalizer.Instance.MechJeb_Ascent_dropSolids);//"Drop solids early"
-            if (dropSolids)
-                GuiUtils.SimpleTextBox($"  {CachedLocalizer.Instance.MechJeb_Ascent_leadTime}", dropSolidsLeadTime, "s");//"lead time"
+            GUILayout.FlexibleSpace();
+            GuiUtils.SimpleTextBox(sLeadTime,dropSolidsLeadTime,"s",35);//"lead time"
+            GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
         }
@@ -147,17 +159,10 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)]//Clamp Autostage Thrust
         public void ClampAutostageThrust()
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label44);//"Clamp AutoStage Thrust "
-            string cur = GUILayout.TextField(core.staging.clampAutoStageThrustPct.text, 5);
-            if (!cur.Equals(core.staging.clampAutoStageThrustPct.text))
-            {
-                core.staging.clampAutoStageThrustPct.text = cur;
+            double prev = core.staging.clampAutoStageThrustPct;
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label44,core.staging.clampAutoStageThrustPct,"%",width: 50);//"Clamp AutoStage Thrust "
+            if (prev != core.staging.clampAutoStageThrustPct)
                 core.staging.clampAutoStageThrustPct = UtilMath.Clamp(core.staging.clampAutoStageThrustPct,0,100);
-            }
-            GUILayout.Label("%");
-            
-            GUILayout.EndHorizontal();
         }
 
         //internal state:
