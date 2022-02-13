@@ -36,6 +36,7 @@ namespace MuMech
         public string MechJeb_Ascent_checkbox16, MechJeb_Ascent_checkbox17, MechJeb_Ascent_checkbox18, MechJeb_Ascent_checkbox19, MechJeb_Ascent_checkbox20;
         public string MechJeb_NavBallGuidance_btn1, MechJeb_NavBallGuidance_btn2;
 
+        public string MechJeb_InfoItems_UnlimitedText;
         public string MechJeb_InfoItems_label1;
         public string MechJeb_InfoItems_showEmpty, MechJeb_InfoItems_hideEmpty;
         public string MechJeb_InfoItems_button5;
@@ -163,6 +164,7 @@ namespace MuMech
             MechJeb_Ascent_dropSolids = Localizer.Format("#MechJeb_Ascent_dropSolids");
             MechJeb_Ascent_leadTime = Localizer.Format("#MechJeb_Ascent_leadTime");
 
+            MechJeb_InfoItems_UnlimitedText = Localizer.Format("#MechJeb_InfoItems_UnlimitedText");
             MechJeb_InfoItems_label1 = Localizer.Format("#MechJeb_InfoItems_label1");
 
             MechJeb_InfoItems_button5 = Localizer.Format("#MechJeb_InfoItems_button5");

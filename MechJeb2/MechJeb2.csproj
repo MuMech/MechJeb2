@@ -169,6 +169,7 @@
     <Compile Include="MechJebModuleWaypointWindow.cs" />
     <Compile Include="MechJebPod.cs" />
     <Compile Include="MechjebBundlesManager.cs" />
+    <Compile Include="MechJebStageStatsHelper.cs" />
     <Compile Include="ModExtensionDemo.cs" />
     <Compile Include="MuUtils.cs" />
     <Compile Include="OrbitExtensions.cs" />

@@ -54,8 +54,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_SurfaceTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)]//Surface TWR
         public double SurfaceTWR()
         {
-            if (HighLogic.LoadedSceneIsEditor) return MaxAcceleration() / 9.81;
-            else return vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81);
+            return HighLogic.LoadedSceneIsEditor ? MaxAcceleration() / 9.81 : vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81);
         }
 
         [ValueInfoItem("#MechJeb_LocalTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)]//Local TWR
@@ -90,8 +89,7 @@ namespace MuMech
 
         public string OrbitSummary(Orbit o)
         {
-            if (o.eccentricity > 1) return "hyperbolic, Pe = " + MuUtils.ToSI(o.PeA, 2) + "m";
-            else return MuUtils.ToSI(o.PeA, 2) + "m x " + MuUtils.ToSI(o.ApA, 2) + "m";
+            return (o.eccentricity > 1) ? $"hyperbolic, Pe = {MuUtils.ToSI(o.PeA,2)}m" : $"{MuUtils.ToSI(o.PeA,2)}m x {MuUtils.ToSI(o.ApA,2)}m";
         }
 
         public string OrbitSummaryWithInclination(Orbit o)
@@ -304,7 +302,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_AngularVelocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)]//Angular Velocity
         public string angularVelocity()
         {
-            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg, "F3") + "°/s" ;
+            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg, "F3") + "°/s";
         }
 
         [ValueInfoItem("#MechJeb_CurrentAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Current acceleration
@@ -363,11 +361,7 @@ namespace MuMech
         {
             SpaceCenterFacility rolloutFacility = (EditorDriver.editorFacility == EditorFacility.VAB) ? SpaceCenterFacility.LaunchPad : SpaceCenterFacility.Runway;
             float maximumVesselMass = GameVariables.Instance.GetCraftMassLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(rolloutFacility), EditorDriver.editorFacility == EditorFacility.VAB);
-
-            if(maximumVesselMass < float.MaxValue)
-                return string.Format("{0} t", maximumVesselMass.ToString("F3"));
-            else
-                return Localizer.Format("#MechJeb_InfoItems_UnlimitedText");//"Unlimited"
+            return (maximumVesselMass < float.MaxValue) ? $"{maximumVesselMass:F3} t" : CachedLocalizer.Instance.MechJeb_InfoItems_UnlimitedText;//"Unlimited"
         }
 
         [ValueInfoItem("#MechJeb_DryMass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")]//Dry mass
@@ -849,194 +843,10 @@ namespace MuMech
         public bool showEmpty = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool timeSeconds = false;
-
-
-        private static readonly string[] StageDisplayStates = {Localizer.Format("#MechJeb_InfoItems_button1"), Localizer.Format("#MechJeb_InfoItems_button2"), Localizer.Format("#MechJeb_InfoItems_button3"), Localizer.Format("#MechJeb_InfoItems_button4") };//"Short stats""Long stats""Full stats""Custom"
-
-        private FuelFlowSimulation.FuelStats[] vacStats;
-        private FuelFlowSimulation.FuelStats[] atmoStats;
-        private string[] bodies;
-
-        [GeneralInfoItem("#MechJeb_StageStatsAll", InfoItem.Category.Vessel, showInEditor = true)]//Stage stats (all)
-        public void AllStageStats()
-        {
-            Profiler.BeginSample("AllStageStats.init");
-            // Unity throws an exception if we change our layout between the Layout event and
-            // the Repaint event, so only get new data right before the Layout event.
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
-            if (Event.current.type == EventType.Layout)
-            {
-                stats.RequestUpdate(this);
-            }
-
-            vacStats = stats.vacStats;
-            atmoStats = stats.atmoStats;
-
-            Profiler.EndSample();
-
-            Profiler.BeginSample("AllStageStats.UI1");
-
-            int numStages = atmoStats.Length;
-            var stages = Enumerable.Range(0, numStages).Where(s => showEmpty || atmoStats[s].DeltaV > 0).ToArray();
-
-            GUILayout.BeginVertical();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label1"), GUILayout.ExpandWidth(true));//"Stage stats"
-
-            if (GUILayout.Button(timeSeconds ? "s" : "dhms", GUILayout.ExpandWidth(false)))
-            {
-                timeSeconds = !timeSeconds;
-            }
-
-            if (GUILayout.Button(showEmpty ?  Localizer.Format("#MechJeb_InfoItems_showEmpty") :Localizer.Format("#MechJeb_InfoItems_hideEmpty"), GUILayout.ExpandWidth(false)))
-            {
-                showEmpty = !showEmpty;
-            }
-
-            if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
-            {
-                StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
-            }
-
-            if (!HighLogic.LoadedSceneIsEditor)
-            {
-                if (GUILayout.Button(liveSLT ?  Localizer.Format("#MechJeb_InfoItems_button5") :Localizer.Format("#MechJeb_InfoItems_button6"), GUILayout.ExpandWidth(false)))//"Live SLT" "0Alt SLT"
-                {
-                    liveSLT = !liveSLT;
-                }
-                stats.liveSLT = liveSLT;
-            }
-            GUILayout.EndHorizontal();
-
-            double geeASL;
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                GUILayout.BeginHorizontal();
-                if (bodies == null)
-                    bodies = FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray();
-
-                // We're in the VAB/SPH
-                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this, false);
-                stats.editorBody = FlightGlobals.Bodies[TWRBody];
-                geeASL = FlightGlobals.Bodies[TWRBody].GeeASL;
-
-                GUILayout.BeginVertical();
-
-                GUILayout.BeginHorizontal();
-                altSLTScale = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GUILayout.ExpandWidth(true));
-                stats.altSLT = Math.Pow(altSLTScale, 2) * stats.editorBody.atmosphereDepth;
-                GUILayout.Label(MuUtils.ToSI(stats.altSLT, 2) + "m", GUILayout.Width(80));
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                machScale = GUILayout.HorizontalSlider(machScale, 0, 1, GUILayout.ExpandWidth(true));
-                stats.mach = Math.Pow(machScale * 2, 3);
-                GUILayout.Label(stats.mach.ToString("F1") + " M", GUILayout.Width(80));
-                GUILayout.EndHorizontal();
-
-                GUILayout.EndVertical();
-
-                GUILayout.EndHorizontal();
-            }
-            else
-            {
-                // We're in flight
-                stats.editorBody = mainBody;
-                geeASL = mainBody.GeeASL;
-            }
-
-            switch (StageDisplayState)
-            {
-                case 0:
-                    showVacInitialTWR = showAtmoInitialTWR = showVacDeltaV = showAtmoDeltaV = showTime = true;
-                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showVacMaxTWR = showAtmoMaxTWR = showISP = false;
-                    break;
-                case 1:
-                    showInitialMass = showFinalMass = showVacInitialTWR = showAtmoInitialTWR = showVacMaxTWR = showAtmoMaxTWR = showVacDeltaV = showTime = showAtmoDeltaV = true;
-                    showStagedMass = showBurnedMass = showISP = false;
-                    break;
-                case 2:
-                    showInitialMass = showFinalMass = showStagedMass = showBurnedMass = showVacInitialTWR = showAtmoInitialTWR = showAtmoMaxTWR = showVacMaxTWR = showVacDeltaV = showTime = showAtmoDeltaV = showISP = true;
-                    break;
-            }
-
-            Profiler.EndSample();
-
-            Profiler.BeginSample("AllStageStats.UI2");
-
-            GUILayout.BeginHorizontal();
-            DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn0"), stages.Select(s => s.ToString()));
-
-            Profiler.EndSample();
-
-            Profiler.BeginSample("AllStageStats.UI3");
-
-            bool noChange = true;
-            if (showInitialMass) noChange &= showInitialMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn1"), stages.Select(s => atmoStats[s].StartMass.ToString("F3") + " t"));//"Start Mass"
-
-            Profiler.EndSample();
-
-            Profiler.BeginSample("AllStageStats.UI4");
-
-            if (showFinalMass) noChange &= showFinalMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn2"), stages.Select(s => atmoStats[s].EndMass.ToString("F3") + " t"));//"End mass"
-            if (showStagedMass) noChange &= showStagedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn3"), stages.Select(s => atmoStats[s].StagedMass.ToString("F3") + " t"));//"Staged Mass"
-            if (showBurnedMass) noChange &= showBurnedMass = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn4"), stages.Select(s => atmoStats[s].ResourceMass.ToString("F3") + " t"));//"Burned Mass"
-            if (showVacInitialTWR) noChange &= showVacInitialTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn5"), stages.Select(s => vacStats[s].StartTWR(geeASL).ToString("F2")));//"TWR"
-            if (showVacMaxTWR) noChange &= showVacMaxTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn6"), stages.Select(s => vacStats[s].MaxTWR(geeASL).ToString("F2")));//"Max TWR"
-            if (showAtmoInitialTWR) noChange &= showAtmoInitialTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn7"), stages.Select(s => atmoStats[s].StartTWR(geeASL).ToString("F2")));//"SLT"
-            if (showAtmoMaxTWR) noChange &= showAtmoMaxTWR = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn8"), stages.Select(s => atmoStats[s].MaxTWR(geeASL).ToString("F2")));//"Max SLT"
-            if (showISP) noChange &= showISP = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn9"), stages.Select(s => atmoStats[s].Isp.ToString("F2")));//"ISP"
-            if (showAtmoDeltaV) noChange &= showAtmoDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn10"), stages.Select(s => atmoStats[s].DeltaV.ToString("F0") + " m/s"));//"Atmo ΔV"
-            if (showVacDeltaV) noChange &= showVacDeltaV = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn11"), stages.Select(s => vacStats[s].DeltaV.ToString("F0") + " m/s"));//"Vac ΔV"
-            if (showTime) noChange &= showTime = !DrawStageStatsColumn(Localizer.Format("#MechJeb_InfoItems_StatsColumn12"), stages.Select(s => timeSeconds ? atmoStats[s].DeltaTime.ToString("F2") + "s": GuiUtils.TimeToDHMS(atmoStats[s].DeltaTime, 1)));//"Time"
-
-            if (!noChange)
-                StageDisplayState = 3;
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical();
-            Profiler.EndSample();
-        }
-
-        static GUIStyle _columnStyle;
-        public static GUIStyle ColumnStyle
-        {
-            get
-            {
-                if (_columnStyle == null)
-                {
-                    _columnStyle = new GUIStyle(GuiUtils.yellowOnHover)
-                    {
-                        alignment = TextAnchor.MiddleRight,
-                        wordWrap = false,
-                        padding = new RectOffset(2, 2, 0, 0)
-                    };
-                }
-                return _columnStyle;
-            }
-        }
-
-        bool DrawStageStatsColumn(string header, IEnumerable<string> data)
-        {
-            GUILayout.BeginVertical();
-            bool ret = GUILayout.Button(header + "   ", ColumnStyle);
-
-            foreach (string datum in data) GUILayout.Label(datum + "   ", ColumnStyle);
-
-            GUILayout.EndVertical();
-
-            return ret;
-        }
-
-        /*[ActionInfoItem("Update stage stats", InfoItem.Category.Vessel, showInEditor = true)]
-        public void UpdateStageStats()
-        {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
-
-            stats.RequestUpdate(this);
-        }*/
+        
+        // Leave this stub here until I figure out how to properly target in the new class
+        [GeneralInfoItem("#MechJeb_StageStatsAll",InfoItem.Category.Vessel,showInEditor = true)]//Stage stats (all)
+        public void AllStageStats() { }
 
         [ValueInfoItem("#MechJeb_StageDv_vac", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]//Stage ΔV (vac)
         public double StageDeltaVVacuum()
@@ -1329,16 +1139,17 @@ namespace MuMech
                 //string name = type.ToString();
                 if (typeof(IDisposable).IsAssignableFrom(type))
                     type = type.GetGenericArguments()[0];
-                string name = type.Name;
+                var name = StringBuilderCache.Acquire();
+                name.Append(type.Name);
                 var generics = type.GetGenericArguments();
                 for (int i = 0; i < generics.Length; i++)
                 {
-                    if (i == 0) name += "<";
-                    if (i > 0) name += ",";
-                    name += type.GetGenericArguments()[i].Name;
-                    if (i == generics.Length - 1) name += ">";
+                    if (i == 0) name.Append("<");
+                    if (i > 0) name.Append(",");
+                    name.Append(type.GetGenericArguments()[i].Name);
+                    if (i == generics.Length - 1) name.Append(">");
                 }
-                GuiUtils.SimpleLabel(name, pair.Value.allocated + "/" + pair.Value.maxSize);
+                GuiUtils.SimpleLabel(name.ToStringAndRelease(), pair.Value.allocated + "/" + pair.Value.maxSize);
             }
             GUILayout.EndHorizontal();
         }
