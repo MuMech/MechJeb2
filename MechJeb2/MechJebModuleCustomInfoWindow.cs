@@ -24,12 +24,8 @@ namespace MuMech
             get { return isCompact; }
             set
             {
+                dirty = isCompact != value;
                 isCompact = value;
-                if (isCompact != value)
-                {
-                    isCompact = value;
-                    dirty = true;
-                }
             }
         }
 
@@ -43,6 +39,12 @@ namespace MuMech
         public Texture2D background;
 
         private GUISkin localSkin;
+
+        private System.TimeSpan refreshInterval = System.TimeSpan.FromSeconds(0.1);
+        private System.DateTime lastRefresh = System.DateTime.MinValue;
+        [SerializeField]
+        [Persistent(pass = (int)Pass.Global)]
+        private EditableInt refreshRate = 10;
 
         public override void OnDestroy()
         {
@@ -58,25 +60,50 @@ namespace MuMech
             //Do nothing: custom info windows will be saved in MechJebModuleCustomWindowEditor.OnSave
         }
 
+        public virtual void UpdateWindowItems()
+        {
+            System.DateTime now = System.DateTime.Now;
+            if (now - lastRefresh < refreshInterval) return;
+            foreach (InfoItem item in items)
+                item.UpdateItem();
+            lastRefresh = now;
+        }
+
+        private bool advancedSettings = false;
+        private void RefreshRateGUI()
+        {
+            int oldRate = refreshRate;
+            if (advancedSettings = GUILayout.Toggle(advancedSettings,"Advanced Window Settings"))
+                GuiUtils.SimpleTextBox("Update Interval",refreshRate,"Hz");
+            if (oldRate != refreshRate)
+            {
+                refreshRate = Math.Max(refreshRate,1);
+                refreshInterval = System.TimeSpan.FromSeconds(1d / refreshRate);
+            }
+        }
+
         protected override void WindowGUI(int windowID)
         {
             GUI.skin = isCompact ? GuiUtils.compactSkin : GuiUtils.skin;
             GUI.contentColor = text;
 
+            // Only run the updater during the Layout pass, not the Repaint pass
+            if (Event.current.type == EventType.Layout)
+                UpdateWindowItems();
+
             GUILayout.BeginVertical();
-            for (int i = 0; i < items.Count; i++)
+
+            foreach (InfoItem item in items)
             {
-                InfoItem item = items[i];
                 if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
-                {
                     item.DrawItem();
-                }
                 else
-                {
-                    GUILayout.Label(Localizer.Format(item.name));//
-                }
+                    GUILayout.Label(item.localizedName);//
             }
-            if (items.Count == 0) GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Label1"));//Add items to this window with the custom window editor.
+            if (items.Count == 0) GUILayout.Label(CachedLocalizer.Instance.MechJeb_WindowEd_CustomInfoWindow_Label1);//Add items to this window with the custom window editor.
+
+            RefreshRateGUI();
+
             GUILayout.EndVertical();
 
             if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
@@ -520,7 +547,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return Localizer.Format("#MechJeb_WindowEd_title");//Custom Window Editor
+            return CachedLocalizer.Instance.MechJeb_WindowEd_title;//Custom Window Editor
         }
 
         public override string IconName()
@@ -570,6 +597,7 @@ namespace MuMech
     public class InfoItem
     {
         public string name;
+        public string localizedName;
         public string description;
         public bool showInEditor;
         public bool showInFlight;
@@ -595,6 +623,7 @@ namespace MuMech
         public InfoItem(InfoItemAttribute attribute)
         {
             name = attribute.name;
+            localizedName = Localizer.Format(name);
             category = attribute.category;
             description = attribute.description;
             showInEditor = attribute.showInEditor;
@@ -602,6 +631,8 @@ namespace MuMech
         }
 
         public virtual void DrawItem() { }
+        public virtual void UpdateItem() { }
+
     }
 
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.
@@ -622,6 +653,7 @@ namespace MuMech
 
         private string stringValue;
         private int cacheValidity = -1;
+        public bool externalRefresh = false;
 
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
@@ -650,9 +682,9 @@ namespace MuMech
         {
             if (value == null) return "null";
 
-            if (value is string) return (string)value + " " + units;
+            if (value is string) return $"{(string)value} {units}";
 
-            if (value is int) return ((int)value).ToString() + " " + units;
+            if (value is int) return $"{(int)value} {units}";
 
             double doubleValue = -999;
             if (value is double) doubleValue = (double)value;
@@ -664,25 +696,36 @@ namespace MuMech
 
             if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue, timeDecimalPlaces);
             else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
-            else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "N" : "S");
-            else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + " " + (doubleValue > 0 ? "E" : "W");
+            else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + (doubleValue > 0 ? " N" : " S");
+            else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + (doubleValue > 0 ? " E" : " W");
             else if (format == SI) return (MuUtils.ToSI(doubleValue, siMaxPrecision, siSigFigs) + units);
             else return doubleValue.ToString(format) + " " + units;
         }
 
-        public override void DrawItem()
+        private void UpdateItemCache()
         {
             int frameCount = Time.frameCount;
             if (frameCount != cacheValidity)
             {
                 object value = getValue();
-                stringValue = GetStringValue(value);
+                stringValue = Localizer.Format(GetStringValue(value));
                 cacheValidity = frameCount;
             }
+        }
 
+        public override void UpdateItem()
+        {
+            externalRefresh = true;
+            cacheValidity = 0;
+            UpdateItemCache();
+        }
+
+        public override void DrawItem()
+        {
+            if (!externalRefresh) UpdateItemCache();
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format(name), GUILayout.ExpandWidth(true));//
-            GUILayout.Label(Localizer.Format(stringValue), GUILayout.ExpandWidth(false));//
+            GUILayout.Label(localizedName);//
+            GUILayout.Label(stringValue, GUILayout.ExpandWidth(false));//
             GUILayout.EndHorizontal();
         }
     }
@@ -701,7 +744,7 @@ namespace MuMech
 
         public override void DrawItem()
         {
-            if (GUILayout.Button(Localizer.Format(name))) action();//
+            if (GUILayout.Button(localizedName)) action();//
         }
     }
 
@@ -725,7 +768,7 @@ namespace MuMech
             if (member is FieldInfo) currentValue = (bool)(((FieldInfo)member).GetValue(obj));
             else if (member is PropertyInfo) currentValue = (bool)(((PropertyInfo)member).GetValue(obj, new object[] { }));
 
-            bool newValue = GUILayout.Toggle(currentValue,Localizer.Format(name));//
+            bool newValue = GUILayout.Toggle(currentValue,localizedName);//
 
             if (newValue != currentValue)
             {
@@ -775,7 +818,7 @@ namespace MuMech
         {
             if (val != null)
             {
-                GuiUtils.SimpleTextBox(Localizer.Format(name), val, rightLabel, width);//
+                GuiUtils.SimpleTextBox(localizedName, val, rightLabel, width);//
             }
         }
     }
