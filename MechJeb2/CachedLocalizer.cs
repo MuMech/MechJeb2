@@ -36,6 +36,15 @@ namespace MuMech
         public string MechJeb_Ascent_checkbox16, MechJeb_Ascent_checkbox17, MechJeb_Ascent_checkbox18, MechJeb_Ascent_checkbox19, MechJeb_Ascent_checkbox20;
         public string MechJeb_NavBallGuidance_btn1, MechJeb_NavBallGuidance_btn2;
 
+        public string MechJeb_InfoItems_label1;
+        public string MechJeb_InfoItems_showEmpty, MechJeb_InfoItems_hideEmpty;
+        public string MechJeb_InfoItems_button5;
+        public string MechJeb_InfoItems_button6;
+        public string MechJeb_InfoItems_StatsColumn0;
+        public string MechJeb_InfoItems_StatsColumn1, MechJeb_InfoItems_StatsColumn2, MechJeb_InfoItems_StatsColumn3, MechJeb_InfoItems_StatsColumn4, MechJeb_InfoItems_StatsColumn5;
+        public string MechJeb_InfoItems_StatsColumn6, MechJeb_InfoItems_StatsColumn7, MechJeb_InfoItems_StatsColumn8, MechJeb_InfoItems_StatsColumn9, MechJeb_InfoItems_StatsColumn10;
+        public string MechJeb_InfoItems_StatsColumn11, MechJeb_InfoItems_StatsColumn12;
+
         public string MechJeb_Ascent_title, MechJeb_WindowEd_title;
         public string MechJeb_WindowEd_CustomInfoWindow_Label1;
 
@@ -49,7 +58,7 @@ namespace MuMech
 
         public void OnDestroy() => Instance = null;
 
-        public void Start() => UpdateCachedStrings();
+        public void Awake() => UpdateCachedStrings();
 
         private void UpdateCachedStrings()
         {
@@ -153,6 +162,28 @@ namespace MuMech
             MechJeb_Ascent_hotStaging = Localizer.Format("#MechJeb_Ascent_hotStaging");
             MechJeb_Ascent_dropSolids = Localizer.Format("#MechJeb_Ascent_dropSolids");
             MechJeb_Ascent_leadTime = Localizer.Format("#MechJeb_Ascent_leadTime");
+
+            MechJeb_InfoItems_label1 = Localizer.Format("#MechJeb_InfoItems_label1");
+
+            MechJeb_InfoItems_button5 = Localizer.Format("#MechJeb_InfoItems_button5");
+            MechJeb_InfoItems_button6 = Localizer.Format("#MechJeb_InfoItems_button6");
+
+            MechJeb_InfoItems_StatsColumn0 = Localizer.Format("#MechJeb_InfoItems_StatsColumn0");
+            MechJeb_InfoItems_StatsColumn1 = Localizer.Format("#MechJeb_InfoItems_StatsColumn1");
+            MechJeb_InfoItems_StatsColumn2 = Localizer.Format("#MechJeb_InfoItems_StatsColumn2");
+            MechJeb_InfoItems_StatsColumn3 = Localizer.Format("#MechJeb_InfoItems_StatsColumn3");
+            MechJeb_InfoItems_StatsColumn4 = Localizer.Format("#MechJeb_InfoItems_StatsColumn4");
+            MechJeb_InfoItems_StatsColumn5 = Localizer.Format("#MechJeb_InfoItems_StatsColumn5");
+            MechJeb_InfoItems_StatsColumn6 = Localizer.Format("#MechJeb_InfoItems_StatsColumn6");
+            MechJeb_InfoItems_StatsColumn7 = Localizer.Format("#MechJeb_InfoItems_StatsColumn7");
+            MechJeb_InfoItems_StatsColumn8 = Localizer.Format("#MechJeb_InfoItems_StatsColumn8");
+            MechJeb_InfoItems_StatsColumn9 = Localizer.Format("#MechJeb_InfoItems_StatsColumn9");
+            MechJeb_InfoItems_StatsColumn10 = Localizer.Format("#MechJeb_InfoItems_StatsColumn10");
+            MechJeb_InfoItems_StatsColumn11 = Localizer.Format("#MechJeb_InfoItems_StatsColumn11");
+            MechJeb_InfoItems_StatsColumn12 = Localizer.Format("#MechJeb_InfoItems_StatsColumn12");
+
+            MechJeb_InfoItems_showEmpty = Localizer.Format("#MechJeb_InfoItems_showEmpty");
+            MechJeb_InfoItems_hideEmpty = Localizer.Format("#MechJeb_InfoItems_hideEmpty");
 
             MechJeb_NavBallGuidance_btn1 = Localizer.Format("#MechJeb_NavBallGuidance_btn1");
             MechJeb_NavBallGuidance_btn2 = Localizer.Format("#MechJeb_NavBallGuidance_btn2");
