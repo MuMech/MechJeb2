@@ -1198,7 +1198,7 @@ namespace MuMech
             Orbit next_orbit = OrbitPool.Borrow();
 
             bool ok = PatchedConics.CalculatePatch(orbit, next_orbit, burnUT, solverParameters, null);
-            while (ok & (orbit.referenceBody!=target) && (orbit.EndUT < arrivalUT) )
+            while (ok && (orbit.referenceBody!=target) && (orbit.EndUT < arrivalUT))
             {
                 OrbitPool.Release(orbit);
                 orbit = next_orbit;

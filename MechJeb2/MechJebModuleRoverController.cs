@@ -300,7 +300,7 @@ namespace MuMech
 				{
 					float act = (float)speedPID.Compute(speedErr);
 					s.wheelThrottle = Mathf.Clamp(act, -1f, 1f);
-					if (curSpeed < 0 & s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
+					if (curSpeed < 0 && s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
 					if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
 					if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Math.Sign(curSpeed) == 0) {
 						brake = true;
