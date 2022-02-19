@@ -232,19 +232,6 @@
     <Compile Include="Vector6.cs" />
     <Compile Include="VesselExtensions.cs" />
     <Compile Include="VesselState.cs" />
-    <Compile Include="alglib\alglibinternal.cs" />
-    <Compile Include="alglib\alglibmisc.cs" />
-    <Compile Include="alglib\ap.cs" />
-    <Compile Include="alglib\dataanalysis.cs" />
-    <Compile Include="alglib\diffequations.cs" />
-    <Compile Include="alglib\fasttransforms.cs" />
-    <Compile Include="alglib\integration.cs" />
-    <Compile Include="alglib\interpolation.cs" />
-    <Compile Include="alglib\linalg.cs" />
-    <Compile Include="alglib\optimization.cs" />
-    <Compile Include="alglib\solvers.cs" />
-    <Compile Include="alglib\specialfunctions.cs" />
-    <Compile Include="alglib\statistics.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx" />
@@ -260,6 +247,9 @@
     <None Include="UnityToolbag\Future\README.md" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="alglib.net, Version=3.18.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\alglib.net.3.18.2\lib\net48\alglib.net.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
@@ -268,6 +258,7 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="mscorlib">
     </Reference>
     <Reference Include="System">
