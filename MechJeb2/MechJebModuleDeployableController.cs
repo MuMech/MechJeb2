@@ -141,16 +141,8 @@ namespace MuMech
         {
             base.OnStart(state);
             if (HighLogic.LoadedSceneIsFlight)
-            {
                 DiscoverDeployablePartModules();
-                GameEvents.onVesselWasModified.Add(OnVesselModified);
-            }
         }
-        public override void OnDestroy()
-        {
-            if (HighLogic.LoadedSceneIsFlight) GameEvents.onVesselWasModified.Remove(OnVesselModified);
-            base.OnDestroy();
-        }
-        public void OnVesselModified(Vessel v) => DiscoverDeployablePartModules();
+        public override void OnVesselWasModified(Vessel v) => DiscoverDeployablePartModules();
     }
 }
