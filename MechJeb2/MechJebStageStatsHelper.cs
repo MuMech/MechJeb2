@@ -189,8 +189,10 @@ namespace MuMech
                     case 2:
                         SetAllStageVisibility(true);
                         break;
+                    case 3:
+                        LoadStageVisibility();
+                        break;
                 }
-                SaveStageVisibility();
             }
 
             if (!HighLogic.LoadedSceneIsEditor)
