@@ -843,10 +843,21 @@ namespace MuMech
         public bool showEmpty = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool timeSeconds = false;
+        private MechJebStageStatsHelper stageStatsHelper = null;
         
         // Leave this stub here until I figure out how to properly target in the new class
         [GeneralInfoItem("#MechJeb_StageStatsAll",InfoItem.Category.Vessel,showInEditor = true)]//Stage stats (all)
-        public void AllStageStats() { }
+        public void AllStageStats() 
+        {
+            if (stageStatsHelper == null)
+                stageStatsHelper = new MechJebStageStatsHelper(this);
+            stageStatsHelper.AllStageStats();
+        }
+
+        public void UpdateItems()
+        {
+            stageStatsHelper?.UpdateStageStats();
+        }
 
         [ValueInfoItem("#MechJeb_StageDv_vac", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)]//Stage ΔV (vac)
         public double StageDeltaVVacuum()

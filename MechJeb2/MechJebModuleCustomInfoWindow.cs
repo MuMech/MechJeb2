@@ -781,6 +781,7 @@ namespace MuMech
     public class GeneralInfoItem : InfoItem
     {
         readonly Action draw;
+        readonly object obj;
 
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
             : base(attribute)
@@ -788,11 +789,18 @@ namespace MuMech
             id = this.GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             draw = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
+            this.obj = obj;
         }
 
         public override void DrawItem()
         {
             draw();
+        }
+
+        public override void UpdateItem()
+        {
+            if (obj is MechJebModuleInfoItems items)
+                items.UpdateItems();
         }
     }
 
