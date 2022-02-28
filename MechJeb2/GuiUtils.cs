@@ -414,6 +414,7 @@ namespace MuMech
         public static int scaledScreenWidth = 1;
         public static int scaledScreenHeight = 1;
         public static bool dontUseDropDownMenu = false;
+        public static bool showAdvancedWindowSettings = false;
         public static GUISkin defaultSkin;
         public static GUISkin compactSkin;
         public static GUISkin transparentSkin;
