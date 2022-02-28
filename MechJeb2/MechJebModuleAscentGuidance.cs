@@ -123,7 +123,8 @@ namespace MuMech
 
         private void VisibleSectionsGUIElements(out bool showTargeting, out bool showGuidanceSettings, out bool showSettings, out bool showStatus)
         {
-            Profiler.BeginSample("MJ.GUIWindow.TopButtons_PVG2buttons4toggles");
+            Profiler.BeginSample("MJ.GUIWindow.TopButtons");
+            GUILayout.BeginVertical(GUI.skin.box);
             showTargeting = autopilot.showTargeting;
             showGuidanceSettings = autopilot.showGuidanceSettings;
             showSettings = autopilot.showSettings;
@@ -148,6 +149,7 @@ namespace MuMech
             if (ascentPathIdx == ascentType.PVG)
                 showStatus = GUILayout.Toggle(showStatus,CachedLocalizer.Instance.MechJeb_Ascent_button7,showStatus ? btActive : btNormal);
             GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
             Profiler.EndSample();
         }
 
@@ -155,7 +157,8 @@ namespace MuMech
         {
             if (!autopilot.showTargeting) return;
 
-            Profiler.BeginSample("MJ.GUIWindow.ShowTargeting_PVG_3TextBox_1ToggledTextBox_1Button");
+            Profiler.BeginSample("MJ.GUIWindow.ShowTargeting");
+            GUILayout.BeginVertical(GUI.skin.box);
 
             if (ascentPathIdx == ascentType.PVG)
             {
@@ -190,15 +193,17 @@ namespace MuMech
 
             autopilot.desiredInclination = desiredInclination;
 
+            GUILayout.EndVertical();
             Profiler.EndSample();
         }
 
         private void ShowGuidanceSettingsGUIElements()
         {
-            Profiler.BeginSample("MJ.GUIWindow.ShowGuidanceSettings_PVG_5TextBox_2ToggledTextBox");
+            Profiler.BeginSample("MJ.GUIWindow.ShowGuidanceSettings");
 
             if (autopilot.showGuidanceSettings)
             {
+                GUILayout.BeginVertical(GUI.skin.box);
                 if (ascentPathIdx == ascentType.GRAVITYTURN)
                 {
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label8,gtascent.turnStartAltitude,"km");//Turn start altitude:
@@ -230,6 +235,7 @@ namespace MuMech
                     }
                     GuiUtils.ToggledTextBox(ref pvgascent.FixedCoast,"Fixed Coast Length:",pvgascent.FixedCoastLength,"s",width: 40);
                 }
+                GUILayout.EndVertical();
             }
 
             autopilot.limitQaEnabled = (ascentPathIdx == ascentType.PVG);  // this is mandatory for PVG
@@ -248,6 +254,7 @@ namespace MuMech
             if (!autopilot.showSettings) return;
 
             Profiler.BeginSample("MJ.GUIWindow.AscentItems");
+            GUILayout.BeginVertical(GUI.skin.box);
 
             ToggleAscentNavballGuidanceInfoItem();
             core.thrust.LimitToPreventOverheatsInfoItem();
@@ -323,6 +330,7 @@ namespace MuMech
             }
             GUILayout.EndHorizontal();
 
+            GUILayout.EndVertical();
             Profiler.EndSample();
         }
 
@@ -331,6 +339,7 @@ namespace MuMech
             if (!autopilot.showStatus) return;
 
             Profiler.BeginSample("MJ.GUIWindow.ShowStatus");
+            GUILayout.BeginVertical(GUI.skin.box);
 
             if (ascentPathIdx == ascentType.PVG)
             {
@@ -390,16 +399,18 @@ namespace MuMech
                     }
                 }
                 Profiler.EndSample();
-
             }
 
+            GUILayout.EndVertical();
             Profiler.EndSample();
         }
 
         private void ShowAutoWarpGUIElements()
         {
             if (!vessel.LandedOrSplashed) return;
+
             Profiler.BeginSample("MJ.GUIWindow.ShowAutoWarp");
+            GUILayout.BeginVertical(GUI.skin.box);
 
             if (core.node.autowarp)
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label33,autopilot.warpCountDown,"s",35);//Launch countdown:
@@ -488,6 +499,7 @@ namespace MuMech
                 if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button17))//Abort
                     launchingToPlane = launchingToRendezvous = launchingToMatchLAN = launchingToLAN = autopilot.timedLaunch = false;
             }
+            GUILayout.EndVertical();
             Profiler.EndSample();
         }
 
@@ -555,24 +567,12 @@ namespace MuMech
             {
                 UpdateStrings();
                 //PerformanceTestGUIElements();
-                GUILayout.BeginVertical(GUI.skin.box);
                 VisibleSectionsGUIElements(out bool showTargeting,out bool showGuidanceSettings,out bool showSettings,out bool showStatus);
-                GUILayout.EndVertical();
-                GUILayout.BeginVertical(GUI.skin.box);
                 ShowTargetingGUIElements();
-                GUILayout.EndVertical();
-                GUILayout.BeginVertical(GUI.skin.box);
                 ShowGuidanceSettingsGUIElements();
-                GUILayout.EndVertical();
-                GUILayout.BeginVertical(GUI.skin.box);
                 ShowAscentSettingsGUIElements(out bool forceRoll,out bool correctiveSteering,out bool limitAoA,out bool autostage);
-                GUILayout.EndVertical();
-                GUILayout.BeginVertical(GUI.skin.box);
                 ShowStatusGUIElements();
-                GUILayout.EndVertical();
-                GUILayout.BeginVertical(GUI.skin.box);
                 ShowAutoWarpGUIElements();
-                GUILayout.EndVertical();
 
                 if (autopilot.enabled) GUILayout.Label(autopilotStatus);//Autopilot status:
                 if (core.DeactivateControl)
