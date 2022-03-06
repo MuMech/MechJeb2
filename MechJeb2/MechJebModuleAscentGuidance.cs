@@ -84,6 +84,7 @@ namespace MuMech
             }
         }
 
+        // Dev instrumentation: remove when ready to merge the PR.
         private void PerformanceTestGUIElements()
         {
             Profiler.BeginSample("MJ.GUIWindow.StringOps");
@@ -182,7 +183,7 @@ namespace MuMech
 
             GUIStyle si = (Math.Abs(desiredInclination) < Math.Abs(vesselState.latitude) - 2.001) ? GuiUtils.orangeLabel : GuiUtils.skin.label;
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label6,desiredInclination,"º",50,si,horizontalFraming: false);//Orbit inc.
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label6,desiredInclination,"º",75,si,horizontalFraming: false);//Orbit inc.
             if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button13, GuiUtils.ExpandWidth(false)))//Current
                 desiredInclination.val = Math.Round(vesselState.latitude,2);
             GUILayout.EndHorizontal();
@@ -408,6 +409,7 @@ namespace MuMech
         private void ShowAutoWarpGUIElements()
         {
             if (!vessel.LandedOrSplashed) return;
+            const int LAN_width = 60;
 
             Profiler.BeginSample("MJ.GUIWindow.ShowAutoWarp");
             GUILayout.BeginVertical(GUI.skin.box);
@@ -435,7 +437,7 @@ namespace MuMech
                 }
 
                 //Launch into plane of target
-                if (targetExists && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_button15,autopilot.launchLANDifference,"º",width: 40)) //Launch into plane of target
+                if (targetExists && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_button15,autopilot.launchLANDifference,"º",width: LAN_width)) //Launch into plane of target
                 {
                     launchingToPlane = true;
                     autopilot.StartCountdown(vesselState.time +
@@ -451,7 +453,7 @@ namespace MuMech
 
                 //Launch to target LAN
                 if (targetExists && ascentPathIdx == ascentType.PVG
-                    && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_LaunchToTargetLan,autopilot.launchLANDifference,"º",width: 40)) //Launch to target LAN
+                    && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_LaunchToTargetLan,autopilot.launchLANDifference,"º",width: LAN_width)) //Launch to target LAN
                 {
                     launchingToMatchLAN = true;
                     autopilot.StartCountdown(vesselState.time +
@@ -468,7 +470,7 @@ namespace MuMech
                 //Launch to LAN
                 if (ascentPathIdx == ascentType.PVG)
                 {
-                    if (GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_LaunchToLan,desiredLAN,"º",width: 40)) //Launch to LAN
+                    if (GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_LaunchToLan,desiredLAN,"º",width: LAN_width)) //Launch to LAN
                     {
                         launchingToLAN = true;
                         autopilot.StartCountdown(vesselState.time +
