@@ -114,6 +114,7 @@ namespace MuMech
             fuelStats.StartMass    = VesselMass(_simStage);
             fuelStats.StartThrust  = VesselThrust();
             fuelStats.EndThrust    = VesselThrust();
+            fuelStats.SpoolUpTime  = VesselSpoolupTime();
             fuelStats.EndMass      = fuelStats.StartMass;
             fuelStats.ResourceMass = 0;
             fuelStats.MaxAccel     = fuelStats.EndMass > 0 ? fuelStats.EndThrust / fuelStats.EndMass : 0;
@@ -166,6 +167,7 @@ namespace MuMech
             fuelStats.StartMass = VesselMass(_simStage);
             // over a single timestep the thrust is considered constant, we don't support thrust curves.
             fuelStats.StartThrust = fuelStats.EndThrust = VesselThrust();
+            fuelStats.SpoolUpTime = VesselSpoolupTime();
 
             using (Disposable<List<FuelNode>> engines = FindActiveEngines())
             {
@@ -325,6 +327,25 @@ namespace MuMech
             for (int i = 0; i < activeEngines.value.Count; i++) sumThrust += activeEngines.value[i].partThrust;
 
             return sumThrust;
+        }
+
+        private double VesselSpoolupTime()
+        {
+            double sumThrust = 0;
+            double sumSpoolup = 0;
+
+            using Disposable<List<FuelNode>> activeEngines = FindActiveEngines();
+
+            for (int i = 0; i < activeEngines.value.Count; i++)
+            {
+                double thrust = activeEngines.value[i].partThrust;
+                sumThrust += thrust;
+                sumSpoolup += activeEngines.value[i].partSpoolupTime * thrust;
+            }
+            if (sumThrust > 0)
+                sumSpoolup /= sumThrust;
+
+            return sumSpoolup;
         }
 
         //Returns a list of engines that fire during the current simulated stage.
