@@ -69,19 +69,20 @@ namespace MuMech
                     }
                     moduleResiduals = temp ?? 0;
 
-                    temp = 0;
+                    float? temp2 = 0;
                     if (RFspoolUpTime != null)
                     {
                         try
                         {
-                            temp = RFspoolUpTime.GetValue(engineModule) as double?;
+                            temp2 = RFspoolUpTime.GetValue(engineModule) as float?;
                         }
                         catch (ArgumentException)
                         {
-                            temp = 0;
+                            //FuelFlowSimulation.print("For engine " + engineModule.part.partName + " failed to find spoolup time field!");
+                            temp2 = 0;
                         }
                     }
-                    moduleSpoolupTime = temp ?? 0;
+                    moduleSpoolupTime = temp2 ?? 0;
                 }
             }
 
@@ -569,6 +570,7 @@ namespace MuMech
                     }
                     if (partThrust > 0)
                         partSpoolupTime /= partThrust;
+                    //FuelFlowSimulation.print("For all engines, found spoolup time " + partSpoolupTime + " (with total thrust " + partThrust);
                 }
             }
 

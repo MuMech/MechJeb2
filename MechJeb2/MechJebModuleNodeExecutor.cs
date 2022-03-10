@@ -134,9 +134,8 @@ namespace MuMech
             {
                 if (remainingDeltaV < tolerance)
                 {
-                    if (vessel.patchedConicSolver.maneuverNodes.Count > 0)
-                        vessel.patchedConicSolver.maneuverNodes[0].RemoveSelf();
-                
+                    burnTriggered = false;
+
                     Abort();
                     return;
                 }
@@ -160,6 +159,8 @@ namespace MuMech
                 BurnTime(remainingDeltaV,out halfBurnTime,out spool);
 
                 double timeToNode = hasNode ? node.UT - vesselState.time - spool : -1;
+                //print("$$$$$$$ Executor: Node UT " + node.UT.ToString("F3") + ", spool " + spool.ToString("F3")
+                //    + " with vessel time " + vesselState.time.ToString("F3") + " , so time to node " + timeToNode.ToString("F3") + ". ===half= " + halfBurnTime.ToString("F3"));
                 if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode <= 0.0225) || timeToNode < 0)
                 {
                     burnTriggered = true;
@@ -361,6 +362,7 @@ namespace MuMech
                 halfBurnTime += s.SpoolUpTime;
                 burnTime += s.SpoolUpTime;
                 spoolupTime += s.SpoolUpTime;
+                //print("** Execute: For stage " + i + ", found spoolup " + s.SpoolUpTime);
             }
 
             /* infinity means acceleration is zero for some reason, which is dangerous nonsense, so use zero instead */
@@ -373,6 +375,8 @@ namespace MuMech
             {
                 burnTime = 0.0;
             }
+
+            //print("******** Found total spoolup time " + spoolupTime);
 
             return burnTime;
         }

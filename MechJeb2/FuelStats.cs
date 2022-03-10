@@ -52,7 +52,7 @@ namespace MuMech
                     ResourceMass = StartMass - s.EndMass,
                     StartThrust  = StartThrust,
                     EndThrust    = s.EndThrust,
-                    SpoolUpTime  = s.SpoolUpTime,
+                    SpoolUpTime  = Math.Max(SpoolUpTime, s.SpoolUpTime),
                     MaxAccel     = Math.Max(MaxAccel, s.MaxAccel),
                     DeltaTime    = DeltaTime + (s.DeltaTime < float.MaxValue && !double.IsInfinity(s.DeltaTime) ? s.DeltaTime : 0),
                     DeltaV       = DeltaV + s.DeltaV,

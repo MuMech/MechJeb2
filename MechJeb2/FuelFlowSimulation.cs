@@ -111,10 +111,13 @@ namespace MuMech
             for (int i = 0; i < _nodes.Count; i++) _nodes[i].SetConsumptionRates(throttle, staticPressure, atmDensity, machNumber);
 
             var fuelStats = new FuelStats();
+            double thrust, spoolup;
+            thrust = VesselThrustAndSpoolup(out spoolup);
+            //FuelFlowSimulation.print("Found spoolup time " + spoolup + " on fuel node in stage " + _simStage);
             fuelStats.StartMass    = VesselMass(_simStage);
-            fuelStats.StartThrust  = VesselThrust();
-            fuelStats.EndThrust    = VesselThrust();
-            fuelStats.SpoolUpTime  = VesselSpoolupTime();
+            fuelStats.StartThrust  = thrust;
+            fuelStats.EndThrust    = thrust;
+            fuelStats.SpoolUpTime  = spoolup;
             fuelStats.EndMass      = fuelStats.StartMass;
             fuelStats.ResourceMass = 0;
             fuelStats.MaxAccel     = fuelStats.EndMass > 0 ? fuelStats.EndThrust / fuelStats.EndMass : 0;
@@ -166,8 +169,10 @@ namespace MuMech
 
             fuelStats.StartMass = VesselMass(_simStage);
             // over a single timestep the thrust is considered constant, we don't support thrust curves.
-            fuelStats.StartThrust = fuelStats.EndThrust = VesselThrust();
-            fuelStats.SpoolUpTime = VesselSpoolupTime();
+            double spoolup;
+            double thrust = VesselThrustAndSpoolup(out spoolup);
+            fuelStats.StartThrust = fuelStats.EndThrust = thrust;
+            fuelStats.SpoolUpTime = spoolup;
 
             using (Disposable<List<FuelNode>> engines = FindActiveEngines())
             {
@@ -318,21 +323,10 @@ namespace MuMech
             return sum;
         }
 
-        private double VesselThrust()
+        private double VesselThrustAndSpoolup(out double sumSpoolup)
         {
             double sumThrust = 0;
-
-            using Disposable<List<FuelNode>> activeEngines = FindActiveEngines();
-
-            for (int i = 0; i < activeEngines.value.Count; i++) sumThrust += activeEngines.value[i].partThrust;
-
-            return sumThrust;
-        }
-
-        private double VesselSpoolupTime()
-        {
-            double sumThrust = 0;
-            double sumSpoolup = 0;
+            sumSpoolup = 0;
 
             using Disposable<List<FuelNode>> activeEngines = FindActiveEngines();
 
@@ -345,7 +339,7 @@ namespace MuMech
             if (sumThrust > 0)
                 sumSpoolup /= sumThrust;
 
-            return sumSpoolup;
+            return sumThrust;
         }
 
         //Returns a list of engines that fire during the current simulated stage.
