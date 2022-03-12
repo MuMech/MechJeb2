@@ -97,6 +97,7 @@ namespace MuMech
             core.warp.MinimumWarp();
             users.Clear();
             remainingDeltaV = 0;
+            burnTriggered = false;
         }
 
         public override void OnModuleEnabled()
@@ -159,8 +160,7 @@ namespace MuMech
                 BurnTime(remainingDeltaV,out halfBurnTime,out spool);
 
                 double timeToNode = hasNode ? node.UT - vesselState.time : -1;
-                //print("$$$$$$$ Executor: Node UT " + node.UT.ToString("F3") + ", spool " + spool.ToString("F3")
-                //    + " with vessel time " + vesselState.time.ToString("F3") + " , so time to node " + timeToNode.ToString("F3") + ". ===half= " + halfBurnTime.ToString("F3"));
+                //print("$$$$$$$ Executor: Node in " + timeToNode + ", spool " + spool.ToString("F3"));
                 if ((halfBurnTime > 0 && timeToNode <= spool) || timeToNode < 0)
                 {
                     burnTriggered = true;
