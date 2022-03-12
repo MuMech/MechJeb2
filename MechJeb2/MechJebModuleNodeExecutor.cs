@@ -158,10 +158,10 @@ namespace MuMech
                 double halfBurnTime, spool;
                 BurnTime(remainingDeltaV,out halfBurnTime,out spool);
 
-                double timeToNode = hasNode ? node.UT - vesselState.time - spool : -1;
+                double timeToNode = hasNode ? node.UT - vesselState.time : -1;
                 //print("$$$$$$$ Executor: Node UT " + node.UT.ToString("F3") + ", spool " + spool.ToString("F3")
                 //    + " with vessel time " + vesselState.time.ToString("F3") + " , so time to node " + timeToNode.ToString("F3") + ". ===half= " + halfBurnTime.ToString("F3"));
-                if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode <= 0.0225) || timeToNode < 0)
+                if ((halfBurnTime > 0 && timeToNode <= spool) || timeToNode < 0)
                 {
                     burnTriggered = true;
                     if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -248,7 +248,7 @@ namespace MuMech
                 //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
                 if (mode == Mode.ONE_NODE || mode == Mode.ALL_NODES)
                 {
-                    if ((!double.IsInfinity(halfBurnTime) && halfBurnTime > 0 && timeToNode < halfBurnTime) || timeToNode < 0)
+                    if (timeToNode < halfBurnTime)
                     {
                         burnTriggered = true;
                         if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
@@ -359,8 +359,6 @@ namespace MuMech
 
                 burnTime += stageBurnDv / stageAvgAccel;
 
-                halfBurnTime += s.SpoolUpTime;
-                burnTime += s.SpoolUpTime;
                 spoolupTime += s.SpoolUpTime;
                 //print("** Execute: For stage " + i + ", found spoolup " + s.SpoolUpTime);
             }
@@ -377,6 +375,20 @@ namespace MuMech
             }
 
             //print("******** Found total spoolup time " + spoolupTime);
+            if (spoolupTime > 0 && burnTime > 0)
+            {
+                if (burnTime < spoolupTime * 0.5d)
+                {
+                    spoolupTime = burnTime / (spoolupTime * 0.5d);
+                    burnTime += spoolupTime;
+                    halfBurnTime += spoolupTime;
+                }
+                else
+                {
+                    burnTime += spoolupTime;
+                    halfBurnTime += spoolupTime;
+                }
+            }
 
             return burnTime;
         }
