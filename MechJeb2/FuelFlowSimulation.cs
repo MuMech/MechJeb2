@@ -326,6 +326,7 @@ namespace MuMech
         private double VesselThrustAndSpoolup(out double sumSpoolup)
         {
             double sumThrust = 0;
+            double sumSpoolupThrust = 0;
             sumSpoolup = 0;
 
             using Disposable<List<FuelNode>> activeEngines = FindActiveEngines();
@@ -334,10 +335,14 @@ namespace MuMech
             {
                 double thrust = activeEngines.value[i].partThrust;
                 sumThrust += thrust;
-                sumSpoolup += activeEngines.value[i].partSpoolupTime * thrust;
+                if (_simStage == activeEngines.value[i].inverseStage)
+                {
+                    sumSpoolupThrust += thrust;
+                    sumSpoolup += activeEngines.value[i].partSpoolupTime * thrust;
+                }
             }
-            if (sumThrust > 0)
-                sumSpoolup /= sumThrust;
+            if (sumSpoolupThrust > 0)
+                sumSpoolup /= sumSpoolupThrust;
 
             return sumThrust;
         }
