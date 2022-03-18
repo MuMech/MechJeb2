@@ -509,6 +509,8 @@ namespace MuMech
             GameEvents.onShowUI.Add(OnShowGUI);
             GameEvents.onHideUI.Add(OnHideGUI);
             GameEvents.onVesselChange.Add(UnlockControl);
+            GameEvents.onVesselWasModified.Add(OnVesselWasModified);
+            GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
 
             lastSettingsSaveTime = Time.time;
 
@@ -1046,6 +1048,8 @@ namespace MuMech
             GameEvents.onShowUI.Remove(OnShowGUI);
             GameEvents.onHideUI.Remove(OnHideGUI);
             GameEvents.onVesselChange.Remove(UnlockControl);
+            GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+            GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
 
             if (weLockedInputs)
             {
@@ -1242,6 +1246,52 @@ namespace MuMech
             weLockedInputs = false;
         }
 
+        private void OnVesselWasModified(Vessel v)
+        {
+            if (v == vessel && this == vessel.GetMasterMechJeb())
+            {
+                string name = "MechJebCore.OnVesselWasModified";
+                Profiler.BeginSample(name);
+                foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.enabled))
+                {
+                    Profiler.BeginSample(module.profilerName);
+                    try
+                    {
+                        module.OnVesselWasModified(v);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"MechJeb module {module.GetType().Name} threw an exception in {name}: {e}");
+                    }
+                    Profiler.EndSample();
+                }
+                Profiler.EndSample();
+            }
+        }
+
+        // Copy-pasta, but preferred over a Reflection-based approach (pass MethodInfos around)
+        private void OnVesselStandardModification(Vessel v)
+        {
+            if (v == vessel && this == vessel.GetMasterMechJeb())
+            {
+                string name = "MechJebCore.OnVesselStandardModification";
+                Profiler.BeginSample(name);
+                foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.enabled))
+                {
+                    Profiler.BeginSample(module.profilerName);
+                    try
+                    {
+                        module.OnVesselStandardModification(v);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"MechJeb module {module.GetType().Name} threw an exception in {name}: {e}");
+                    }
+                    Profiler.EndSample();
+                }
+                Profiler.EndSample();
+            }
+        }
 
         public static new void print(object message)
         {

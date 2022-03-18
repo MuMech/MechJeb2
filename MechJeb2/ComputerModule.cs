@@ -94,6 +94,14 @@ namespace MuMech
         {
         }
 
+        public virtual void OnVesselWasModified(Vessel v)
+        {
+        }
+
+        public virtual void OnVesselStandardModification(Vessel v)
+        {
+        }
+
         public virtual void OnStart(PartModule.StartState state)
         {
         }

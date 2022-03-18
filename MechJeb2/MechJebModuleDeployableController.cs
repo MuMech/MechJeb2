@@ -25,7 +25,17 @@ namespace MuMech
         public bool prev_autoDeploy = true;
 
         protected string type = "";
-        
+
+        protected List<ModuleDeployablePart> cachedPartModules = new List<ModuleDeployablePart>(16);
+        protected void DiscoverDeployablePartModules()
+        {
+            cachedPartModules.Clear();
+            foreach (Part p in vessel.Parts)
+                foreach (PartModule pm in p.Modules)
+                    if (pm != null && pm is ModuleDeployablePart mdp && isModules(mdp))
+                        cachedPartModules.Add(mdp);
+        }
+
         protected bool isDeployable(ModuleDeployablePart sa)
         {
             return (sa.Events["Extend"].active || sa.Events["Retract"].active);
@@ -33,59 +43,22 @@ namespace MuMech
 
         public void ExtendAll()
         {
-            List<Part> vp = vessel.parts;
-            for (int i = 0; i < vp.Count; i++)
-            {
-                Part p = vp[i];
-
-                if (p.ShieldedFromAirstream)
-                    return;
-                
-                for (int j = 0; j < p.Modules.Count; j++)
-                {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
-                    if (mdp != null && isModules(mdp) && isDeployable(mdp))
-                    {
-                        mdp.Extend();
-                    }
-                }
-            };
+            foreach (ModuleDeployablePart mdp in cachedPartModules)
+                if (mdp != null && isDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
+                    mdp.Extend();
         }
         
         public void RetractAll()
         {
-            List<Part> vp = vessel.parts;
-            for (int i = 0; i < vp.Count; i++) {
-                Part p = vp[i];
-
-                if (p.ShieldedFromAirstream)
-                    return;
-
-                for (int j = 0; j < p.Modules.Count; j++)
-                {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
-                    if (mdp != null && isModules(mdp) && isDeployable(mdp))
-                    {
-                        mdp.Retract();
-                    }
-                }
-            }
+            foreach (ModuleDeployablePart mdp in cachedPartModules)
+                if (mdp != null && isDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
+                    mdp.Retract();
         }
-
         public bool AllRetracted()
         {
-            for (int i = 0; i < vessel.parts.Count; i++)
-            {
-                Part p = vessel.parts[i];
-                for (int j = 0; j < p.Modules.Count; j++)
-                {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
-                    if (mdp != null && isModules(mdp) && isDeployable(mdp) && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED)
-                    {
-                        return false;
-                    }
-                }
-            }
+            foreach (ModuleDeployablePart mdp in cachedPartModules)
+                if (mdp != null && isDeployable(mdp) && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED)
+                    return false;
             return true;
         }
 
@@ -138,32 +111,19 @@ namespace MuMech
                 prev_autoDeploy = false;
             }
 
-            bool allRetracted = AllRetracted();
-            if (allRetracted)
-                buttonText = getButtonText(DeployablePartState.RETRACTED);
-            else
-                buttonText = getButtonText(DeployablePartState.EXTENDED);
+            bool extendedThisPass = !AllRetracted();
+            if (extended != extendedThisPass)
+                buttonText = getButtonText(extendedThisPass ? DeployablePartState.EXTENDED : DeployablePartState.RETRACTED);
 
-            extended = !allRetracted;
+            extended = extendedThisPass;
         }
 
         protected bool ExtendingOrRetracting()
         {
-            for (int i = 0; i < vessel.parts.Count; i++)
-            {
-                Part p = vessel.parts[i];
-                for (int j = 0; j < p.Modules.Count; j++)
-                {
-                    ModuleDeployablePart mdp = p.Modules[j] as ModuleDeployablePart;
-
-                    if (mdp != null && isModules(mdp) && isDeployable(mdp)
-                        && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING
-                         || mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
-                    {
-                        return true;
-                    }
-                }
-            }
+            foreach (ModuleDeployablePart mdp in cachedPartModules)
+                if (mdp != null && isDeployable(mdp) 
+                    && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING || mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
+                    return true;
             return false;
         }
 
@@ -177,5 +137,12 @@ namespace MuMech
         }
 
         protected abstract string getButtonText(DeployablePartState deployablePartState);
+        public override void OnStart(PartModule.StartState state)
+        {
+            base.OnStart(state);
+            if (HighLogic.LoadedSceneIsFlight)
+                DiscoverDeployablePartModules();
+        }
+        public override void OnVesselWasModified(Vessel v) => DiscoverDeployablePartModules();
     }
 }
