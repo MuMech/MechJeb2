@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.Profiling;
 using Object = UnityEngine.Object;
 
 namespace MuMech
@@ -412,6 +414,7 @@ namespace MuMech
         public static int scaledScreenWidth = 1;
         public static int scaledScreenHeight = 1;
         public static bool dontUseDropDownMenu = false;
+        public static bool showAdvancedWindowSettings = false;
         public static GUISkin defaultSkin;
         public static GUISkin compactSkin;
         public static GUISkin transparentSkin;
@@ -492,22 +495,76 @@ namespace MuMech
             }
         }
 
-        public static void SimpleTextBox(string leftLabel, IEditable ed, string rightLabel = "", float width = 100, GUIStyle rightLabelStyle=null)
+        private static GUILayoutOption _layoutExpandWidth, _layoutNoExpandWidth;
+        public static GUILayoutOption LayoutExpandWidth => _layoutExpandWidth ??= GUILayout.ExpandWidth(true);
+        public static GUILayoutOption LayoutNoExpandWidth => _layoutNoExpandWidth ??= GUILayout.ExpandWidth(false);
+        public static GUILayoutOption ExpandWidth(bool b) => b ? LayoutExpandWidth : LayoutNoExpandWidth;
+
+        private static readonly Dictionary<float,GUILayoutOption> _layoutWidthDict = new Dictionary<float,GUILayoutOption>(16);
+        public static GUILayoutOption LayoutWidth(float width)
         {
-            if (rightLabelStyle == null)
-                rightLabelStyle = GUI.skin.label;
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(leftLabel, rightLabelStyle, GUILayout.ExpandWidth(true));
-            ed.text = GUILayout.TextField(ed.text, GUILayout.ExpandWidth(true), GUILayout.Width(width));
-            GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
+            if (_layoutWidthDict.TryGetValue(width, out GUILayoutOption option)) return option;
+            option = GUILayout.Width(width);
+            _layoutWidthDict.Add(width, option);
+            return option;
         }
+
+        public static void SimpleTextField(IEditable ed, float width=100, bool expandWidth = false)
+        {
+            Profiler.BeginSample("SimpleTextField");
+            string res = !expandWidth ? GUILayout.TextField(ed.text,LayoutWidth(width),ExpandWidth(expandWidth)) : GUILayout.TextField(ed.text,LayoutWidth(width));
+            if (!res.Equals(ed.text)) ed.text = res;
+            Profiler.EndSample();
+        }
+
+
+        #nullable enable
+        public static void SimpleTextBox(string? leftLabel, IEditable ed, string? rightLabel = null, float width = 100, GUIStyle? leftLabelStyle=null, bool horizontalFraming=true)
+        {
+            Profiler.BeginSample("SimpleTextBox");
+            if (horizontalFraming) GUILayout.BeginHorizontal();
+            if (!string.IsNullOrEmpty(leftLabel))
+            {
+                leftLabelStyle ??= GUI.skin.label;
+                GUILayout.Label(leftLabel,leftLabelStyle);
+            }
+            SimpleTextField(ed, width, expandWidth: true);
+            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel, ExpandWidth(false));
+            if (horizontalFraming) GUILayout.EndHorizontal();
+            Profiler.EndSample();
+        }
+
+        public static void ToggledTextBox(ref bool toggle, string toggleText, IEditable ed, string? rightLabel = null, GUIStyle? toggleStyle = null, float width = 100)
+        {
+            Profiler.BeginSample("ToggledTextField");
+            GUILayout.BeginHorizontal();
+            toggle = toggleStyle != null ? GUILayout.Toggle(toggle,toggleText,toggleStyle) : GUILayout.Toggle(toggle,toggleText);
+            GuiUtils.SimpleTextField(ed, width);
+            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel,ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            Profiler.EndSample();
+        }
+
+        public static bool ButtonTextBox(string buttonText,IEditable ed,string? rightLabel = null,GUIStyle? buttonStyle = null,float width = 100)
+        {
+            Profiler.BeginSample("ButtonTextBox");
+            GUILayout.BeginHorizontal();
+            bool pressed = buttonStyle != null ? GUILayout.Button(buttonText,buttonStyle) : GUILayout.Button(buttonText);
+            GuiUtils.SimpleTextField(ed,width);
+            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel,ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            Profiler.EndSample();
+            return pressed;
+        }
+
+#nullable restore
 
         public static void SimpleLabel(string leftLabel, string rightLabel = "")
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(leftLabel, GUILayout.ExpandWidth(true));
-            GUILayout.Label(rightLabel, GUILayout.ExpandWidth(false));
+            GUILayout.Label(leftLabel, ExpandWidth(true));
+            if (!string.IsNullOrEmpty(rightLabel))
+                GUILayout.Label(rightLabel, ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
 

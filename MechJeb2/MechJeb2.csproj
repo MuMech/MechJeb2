@@ -51,6 +51,7 @@
     <Compile Include="AttitudeControllers\PIDLoop.cs" />
     <Compile Include="AttitudeControllers\TorquePI.cs" />
     <Compile Include="AutopilotModule.cs" />
+    <Compile Include="CachedLocalizer.cs" />
     <Compile Include="CelestialBodyExtensions.cs" />
     <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="ComputerModule.cs" />
@@ -168,6 +169,7 @@
     <Compile Include="MechJebModuleWaypointWindow.cs" />
     <Compile Include="MechJebPod.cs" />
     <Compile Include="MechjebBundlesManager.cs" />
+    <Compile Include="MechJebStageStatsHelper.cs" />
     <Compile Include="ModExtensionDemo.cs" />
     <Compile Include="MuUtils.cs" />
     <Compile Include="OrbitExtensions.cs" />

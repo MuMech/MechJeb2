@@ -33,6 +33,9 @@ namespace MuMech
         [ToggleInfoItem("#MechJeb_rssMode", InfoItem.Category.Misc), Persistent(pass = (int)Pass.Global)]//Module disabling does not kill throttle (RSS/RO)
         public bool rssMode = false;
 
+        [Persistent(pass = (int)Pass.Global)]
+        public bool showAdvancedWindowSettings = false;
+
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
@@ -95,6 +98,9 @@ namespace MuMech
 
             dontUseDropDownMenu = GUILayout.Toggle(dontUseDropDownMenu, Localizer.Format("#MechJeb_Settings_checkbox1"));//"Replace drop down menu with arrow selector"
             GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
+
+            showAdvancedWindowSettings = GUILayout.Toggle(showAdvancedWindowSettings,"Show Advanced Window Settings");
+            GuiUtils.showAdvancedWindowSettings = showAdvancedWindowSettings;
 
             MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
