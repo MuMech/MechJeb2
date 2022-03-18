@@ -4,27 +4,8 @@ namespace MuMech
 {
     public static class PartExtensions
     {
-        public static bool HasModule<T>(this Part part) where T : PartModule
-        {
-            for (int i = 0; i < part.Modules.Count; i++)
-            {
-                if (part.Modules[i] is T)
-                    return true;
-            }
-            return false;
-        }
-
-        public static T GetModule<T>(this Part part) where T : PartModule
-        {
-            for (int i = 0; i < part.Modules.Count; i++)
-            {
-                PartModule pm = part.Modules[i];
-                T module = pm as T;
-                if (module != null)
-                    return module;
-            }
-            return null;
-        }
+        public static bool HasModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>() != null;
+        public static T GetModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>();
 
         // An allocation free version of GetModuleMass
         public static float GetModuleMassNoAlloc(this Part p, float defaultMass, ModifierStagingSituation sit)
@@ -42,16 +23,12 @@ namespace MuMech
             return mass;
         }
 
+        public static bool EngineHasFuel(this ModuleEngines me) => !me.getFlameoutState && !me.engineShutdown;
+
         public static bool EngineHasFuel(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                PartModule m = p.Modules[i];
-                ModuleEngines eng = m as ModuleEngines;
-                if (eng != null)
-                    return !eng.getFlameoutState && !eng.engineShutdown;
-            }
-            return false;
+            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+            return eng != null && eng.EngineHasFuel();
         }
 
         public static double FlowRateAtConditions(this ModuleEngines e, double throttle, double flowMultiplier)
@@ -121,61 +98,68 @@ namespace MuMech
             return isp;
         }
 
-        public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
+        public static bool IsDecoupler(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
+            return p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null || 
+                                 p.FindModuleImplementing<ModuleDockingNode>() != null || 
+                                 p.Modules.Contains("ProceduralFairingDecoupler"));
+        }
+
+        public static bool IsUnfiredDecoupler(this ModuleDecouplerBase decoupler, out Part decoupledPart)
+        {
+            if (!decoupler.isDecoupled && decoupler.stagingEnabled && decoupler.part.stagingOn)
             {
-                PartModule m = p.Modules[i];
-                ModuleDecouple mDecouple = m as ModuleDecouple;
-                if (mDecouple != null)
-                {
-                    if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn)
-                    {
-                        decoupledPart = mDecouple.ExplosiveNode.attachedPart;
-                        if (decoupledPart == p.parent)
-                            decoupledPart = p;
-                        return true;
-                    }
-                    break;
-                }
+                decoupledPart = decoupler.ExplosiveNode.attachedPart;
+                if (decoupledPart == decoupler.part.parent)
+                    decoupledPart = decoupler.part;
+                return true;
+            }
+            decoupledPart = null;
+            return false;
+        }
 
-                ModuleAnchoredDecoupler mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
-                if (mAnchoredDecoupler != null)
-                {
-                    if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn)
-                    {
-                        decoupledPart = mAnchoredDecoupler.ExplosiveNode.attachedPart;
-                        if (decoupledPart == p.parent)
-                            decoupledPart = p;
-                        return true;
-                    }
-                    break;
-                }
+        public static bool IsUnfiredDecoupler(this ModuleDockingNode mDockingNode, out Part decoupledPart)
+        {
+            if (mDockingNode.staged && mDockingNode.stagingEnabled && mDockingNode.part.stagingOn)
+            {
+                decoupledPart = mDockingNode.referenceNode.attachedPart;
+                if (decoupledPart == mDockingNode.part.parent)
+                    decoupledPart = mDockingNode.part;
+                return true;
+            }
+            decoupledPart = null;
+            return false;
+        }
 
-                ModuleDockingNode mDockingNode = m as ModuleDockingNode;
-                if (mDockingNode != null)
+        public static bool IsUnfiredProceduralFairingDecoupler(this PartModule decoupler, out Part decoupledPart)
+        {
+            if (VesselState.isLoadedProceduralFairing && decoupler.moduleName == "ProceduralFairingDecoupler")
+            {
+                if (!decoupler.Fields["decoupled"].GetValue<bool>(decoupler) && decoupler.part.stagingOn)
                 {
-                    if (mDockingNode.staged && mDockingNode.stagingEnabled && p.stagingOn)
-                    {
-                        decoupledPart = mDockingNode.referenceNode.attachedPart;
-                        if (decoupledPart == p.parent)
-                            decoupledPart = p;
-                        return true;
-                    }
-                    break;
-                }
-
-                if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler")
-                {
-                    if (!m.Fields["decoupled"].GetValue<bool>(m) && p.stagingOn)
-                    {
-                        // ProceduralFairingDecoupler always decouple from their parents
-                        decoupledPart = p;
-                        return true;
-                    }
-                    break;
+                    // ProceduralFairingDecoupler always decouple from their parents
+                    decoupledPart = decoupler.part;
+                    return true;
                 }
             }
+            decoupledPart = null;
+            return false;
+        }
+
+        public static bool IsUnfiredDecoupler(this PartModule m, out Part decoupledPart)
+        {
+            if (m is ModuleDecouplerBase && IsUnfiredDecoupler(m as ModuleDecouplerBase, out decoupledPart)) return true;
+            if (m is ModuleDockingNode && IsUnfiredDecoupler(m as ModuleDockingNode, out decoupledPart)) return true;
+            if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" && m.IsUnfiredProceduralFairingDecoupler(out decoupledPart)) return true;
+            decoupledPart = null;
+            return false;
+        }
+
+        public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
+        {
+            foreach (PartModule m in p.Modules)
+                if (m.IsUnfiredDecoupler(out decoupledPart))
+                    return true;
             decoupledPart = null;
             return false;
         }
@@ -191,45 +175,18 @@ namespace MuMech
                 && p.isControlSource == Vessel.ControlLevel.NONE;
         }
 
-        public static bool IsEngine(this Part p)
-        {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                PartModule m = p.Modules[i];
-                if (m is ModuleEngines) return true;
-            }
-            return false;
-        }
+        public static bool IsEngine(this Part p) => p.FindModuleImplementing<ModuleEngines>() != null; 
 
         public static bool IsThrottleLockedEngine(this Part p)
         {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                PartModule m = p.Modules[i];
-                if (m is ModuleEngines engines && engines.throttleLocked) return true;
-            }
-            return false;
+            ModuleEngines me = p.FindModuleImplementing<ModuleEngines>();
+            return (me != null && me.throttleLocked);
         }
 
-        public static bool IsParachute(this Part p)
-        {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                if (p.Modules[i] is ModuleParachute) return true;
-            }
-            return false;
-        }
+        public static bool IsParachute(this Part p) => p.FindModuleImplementing<ModuleParachute>() != null;
 
-        // TODO add some kind of cache ? This is called a lot but reply false 99.9999% oif the time
-        public static bool IsLaunchClamp(this Part p)
-        {
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                if (p.Modules[i] is LaunchClamp) return true;
-            }
-            return false;
-        }
-
+        public static bool IsLaunchClamp(this Part p) => p.FindModuleImplementing<LaunchClamp>() != null;
+        
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
             Part decoupledPart;
@@ -245,17 +202,8 @@ namespace MuMech
 
             // part.PhysicsSignificance is not initialized in the Editor for all part. but physicallySignificant is useful there.
             if (HighLogic.LoadedSceneIsEditor)
-            {
-                physicallySignificant = physicallySignificant && p.PhysicsSignificance != 1;
+                physicallySignificant &= p.PhysicsSignificance != 1 && !p.IsLaunchClamp();
 
-                // Testing for launch clamp only in the Editor helps with the frame rate.
-                // TODO : cache which part are LaunchClamp ?
-                if (p.HasModule<LaunchClamp>())
-                {
-                    //Launch clamp mass should be ignored.
-                    physicallySignificant = false;
-                }
-            }
             return physicallySignificant;
         }
 
