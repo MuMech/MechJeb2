@@ -19,9 +19,9 @@ namespace MuMech
     {
         private bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showVacInitialTWR, showAtmoInitialTWR;
         private bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, timeSeconds, liveSLT;
-        private int StageDisplayState, TWRBody;
+        private int TWRBody;
         private float altSLTScale, machScale;
-
+        private int StageDisplayState { get => infoItems.StageDisplayState; set => infoItems.StageDisplayState = value; }
         private readonly MechJebModuleInfoItems infoItems;
         private readonly MechJebCore core;
         private readonly MechJebModuleStageStats stats;
@@ -39,20 +39,19 @@ namespace MuMech
             showAtmoMaxTWR = items.showAtmoMaxTWR;
             showVacMaxTWR = items.showVacMaxTWR;
             showAtmoDeltaV = items.showAtmoDeltaV;
-            showVacDeltaV = items.showAtmoDeltaV;
+            showVacDeltaV = items.showVacDeltaV;
             showTime = items.showTime;
             showISP = items.showISP;
             showEmpty = items.showEmpty;
             timeSeconds = items.timeSeconds;
             liveSLT = items.liveSLT;
-            StageDisplayState = items.StageDisplayState;
             altSLTScale = items.altSLTScale;
             machScale = items.machScale;
             TWRBody = items.TWRBody;
 
             bodies = (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneIsEditor) ? FlightGlobals.Bodies.ConvertAll(b => b.GetName()).ToArray() : new [] { "None" };
             InitializeStageInfo();
-            LoadStageVisibility();
+            SetVisibility(StageDisplayState);
         }
 
         private enum StageData
@@ -144,7 +143,6 @@ namespace MuMech
             UpdateStageDisplayInfo(stages,geeASL);
         }
 
-        [GeneralInfoItem("#MechJeb_StageStatsAll",InfoItem.Category.Vessel,showInEditor = true)]//Stage stats (all)
         public void AllStageStats()
         {
             Profiler.BeginSample("AllStageStats.UI1");
@@ -169,30 +167,7 @@ namespace MuMech
             if (GUILayout.Button(StageDisplayStates[StageDisplayState],GUILayout.ExpandWidth(false)))
             {
                 StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
-                infoItems.StageDisplayState = StageDisplayState;
-                switch (StageDisplayState)
-                {
-                    case 0:
-                        SetAllStageVisibility(false);
-                        stageVisibility[StageData.VacInitialTWR] = true;
-                        stageVisibility[StageData.AtmoInitialTWR] = true;
-                        stageVisibility[StageData.VacDeltaV] = true;
-                        stageVisibility[StageData.AtmoDeltaV] = true;
-                        stageVisibility[StageData.Time] = true;
-                        break;
-                    case 1:
-                        SetAllStageVisibility(true);
-                        stageVisibility[StageData.StagedMass] = false;
-                        stageVisibility[StageData.BurnedMass] = false;
-                        stageVisibility[StageData.Isp] = false;
-                        break;
-                    case 2:
-                        SetAllStageVisibility(true);
-                        break;
-                    case 3:
-                        LoadStageVisibility();
-                        break;
-                }
+                SetVisibility(StageDisplayState);
             }
 
             if (!HighLogic.LoadedSceneIsEditor)
@@ -317,13 +292,31 @@ namespace MuMech
             showISP = infoItems.showISP = stageVisibility[StageData.Isp];
         }
 
-        /*[ActionInfoItem("Update stage stats", InfoItem.Category.Vessel, showInEditor = true)]
-        public void UpdateStageStats()
+        private void SetVisibility(int state)
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
-
-            stats.RequestUpdate(this);
-        }*/
-
+            switch (state)
+            {
+                case 0:
+                    SetAllStageVisibility(false);
+                    stageVisibility[StageData.VacInitialTWR] = true;
+                    stageVisibility[StageData.AtmoInitialTWR] = true;
+                    stageVisibility[StageData.VacDeltaV] = true;
+                    stageVisibility[StageData.AtmoDeltaV] = true;
+                    stageVisibility[StageData.Time] = true;
+                    break;
+                case 1:
+                    SetAllStageVisibility(true);
+                    stageVisibility[StageData.StagedMass] = false;
+                    stageVisibility[StageData.BurnedMass] = false;
+                    stageVisibility[StageData.Isp] = false;
+                    break;
+                case 2:
+                    SetAllStageVisibility(true);
+                    break;
+                case 3:
+                    LoadStageVisibility();
+                    break;
+            }
+        }
     }
 }
