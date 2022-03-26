@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -17,8 +17,9 @@ namespace MuMech
     {
         public class FuelNode
         {
-            // RealFuels.ModuleEngineRF ullage field to call via reflection
+            // RealFuels fields for residuals and engine spoolup time
             private static FieldInfo RFpredictedMaximumResiduals;
+            private static FieldInfo RFspoolUpTime;
 
             public static void DoReflection()
             {
@@ -29,6 +30,11 @@ namespace MuMech
                     {
                         Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
                     }
+                    RFspoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels","RealFuels.ModuleEnginesRF","effectiveSpoolUpTime");
+                    if (RFspoolUpTime == null)
+                    {
+                        Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
+                    }
                 }
             }
 
@@ -37,6 +43,7 @@ namespace MuMech
                 public readonly ModuleEngines engineModule;
                 public readonly Vector3d      thrustVector;
                 public readonly double        moduleResiduals;
+                public readonly double        moduleSpoolupTime;
 
                 public EngineInfo(ModuleEngines engineModule)
                 {
@@ -60,8 +67,22 @@ namespace MuMech
                             temp = 0;
                         }
                     }
-
                     moduleResiduals = temp ?? 0;
+
+                    float? temp2 = 0;
+                    if (RFspoolUpTime != null)
+                    {
+                        try
+                        {
+                            temp2 = RFspoolUpTime.GetValue(engineModule) as float?;
+                        }
+                        catch (ArgumentException)
+                        {
+                            //FuelFlowSimulation.print("For engine " + engineModule.part.partName + " failed to find spoolup time field!");
+                            temp2 = 0;
+                        }
+                    }
+                    moduleSpoolupTime = temp2 ?? 0;
                 }
             }
 
@@ -461,6 +482,7 @@ namespace MuMech
             }
 
             public double partThrust;
+            public double partSpoolupTime;
 
             public void SetConsumptionRates(float throttle, double atmospheres, double atmDensity, double machNumber)
             {
@@ -471,6 +493,7 @@ namespace MuMech
 
                     //double sumThrustOverIsp = 0;
                     partThrust = 0;
+                    partSpoolupTime = 0;
 
                     isDrawingResources = false;
 
@@ -492,7 +515,9 @@ namespace MuMech
                         double isp, massFlowRate;
                         EngineValuesAtConditions(engineInfo, throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate,
                             dVLinearThrust);
-                        partThrust += thrust.magnitude;
+                        double thrMagnitude = thrust.magnitude;
+                        partThrust += thrMagnitude;
+                        partSpoolupTime += thrMagnitude * engineInfo.moduleSpoolupTime;
 
                         if (massFlowRate > 0)
                             isDrawingResources = true;
@@ -543,6 +568,9 @@ namespace MuMech
                             }
                         }
                     }
+                    if (partThrust > 0)
+                        partSpoolupTime /= partThrust;
+                    //FuelFlowSimulation.print("For all engines, found spoolup time " + partSpoolupTime + " (with total thrust " + partThrust);
                 }
             }
 

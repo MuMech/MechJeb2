@@ -111,9 +111,13 @@ namespace MuMech
             for (int i = 0; i < _nodes.Count; i++) _nodes[i].SetConsumptionRates(throttle, staticPressure, atmDensity, machNumber);
 
             var fuelStats = new FuelStats();
+            double thrust, spoolup;
+            thrust = VesselThrustAndSpoolup(out spoolup);
+            //FuelFlowSimulation.print("Found spoolup time " + spoolup + " on fuel node in stage " + _simStage);
             fuelStats.StartMass    = VesselMass(_simStage);
-            fuelStats.StartThrust  = VesselThrust();
-            fuelStats.EndThrust    = VesselThrust();
+            fuelStats.StartThrust  = thrust;
+            fuelStats.EndThrust    = thrust;
+            fuelStats.SpoolUpTime  = spoolup;
             fuelStats.EndMass      = fuelStats.StartMass;
             fuelStats.ResourceMass = 0;
             fuelStats.MaxAccel     = fuelStats.EndMass > 0 ? fuelStats.EndThrust / fuelStats.EndMass : 0;
@@ -165,7 +169,10 @@ namespace MuMech
 
             fuelStats.StartMass = VesselMass(_simStage);
             // over a single timestep the thrust is considered constant, we don't support thrust curves.
-            fuelStats.StartThrust = fuelStats.EndThrust = VesselThrust();
+            double spoolup;
+            double thrust = VesselThrustAndSpoolup(out spoolup);
+            fuelStats.StartThrust = fuelStats.EndThrust = thrust;
+            fuelStats.SpoolUpTime = spoolup;
 
             using (Disposable<List<FuelNode>> engines = FindActiveEngines())
             {
@@ -316,13 +323,26 @@ namespace MuMech
             return sum;
         }
 
-        private double VesselThrust()
+        private double VesselThrustAndSpoolup(out double sumSpoolup)
         {
             double sumThrust = 0;
+            double sumSpoolupThrust = 0;
+            sumSpoolup = 0;
 
             using Disposable<List<FuelNode>> activeEngines = FindActiveEngines();
 
-            for (int i = 0; i < activeEngines.value.Count; i++) sumThrust += activeEngines.value[i].partThrust;
+            for (int i = 0; i < activeEngines.value.Count; i++)
+            {
+                double thrust = activeEngines.value[i].partThrust;
+                sumThrust += thrust;
+                if (_simStage == activeEngines.value[i].inverseStage)
+                {
+                    sumSpoolupThrust += thrust;
+                    sumSpoolup += activeEngines.value[i].partSpoolupTime * thrust;
+                }
+            }
+            if (sumSpoolupThrust > 0)
+                sumSpoolup /= sumSpoolupThrust;
 
             return sumThrust;
         }
