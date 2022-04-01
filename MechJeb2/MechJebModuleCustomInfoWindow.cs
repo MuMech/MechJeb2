@@ -65,7 +65,8 @@ namespace MuMech
             System.DateTime now = System.DateTime.Now;
             if (now - lastRefresh < refreshInterval) return;
             foreach (InfoItem item in items)
-                item.UpdateItem();
+                if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
+                    item.UpdateItem();
             lastRefresh = now;
         }
 
