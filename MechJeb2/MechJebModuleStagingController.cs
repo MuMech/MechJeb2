@@ -268,8 +268,8 @@ namespace MuMech
                     HasFairing(vessel.currentStage - 1))
                     return;
 
-                //only release launch clamps if we're at nearly full thrust
-                if (vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct &&
+                //only release launch clamps if we're at nearly full thrust and no failed engines
+                if ((vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct || AnyFailedEngines(allModuleEngines)) &&
                     InverseStageReleasesClamps(vessel.currentStage - 1))
                     return;
             }
@@ -356,6 +356,18 @@ namespace MuMech
             result = allModuleEngines.FirstOrDefault(me => me.part.inverseStage == inverseStage) != null;
             inverseStageHasEngines.Add(inverseStage, result);
             return result;
+        }
+
+        public bool AnyFailedEngines(List<ModuleEngines> allEngines)
+        {
+            foreach (ModuleEngines engine in allEngines)
+            {
+                Part p = engine.part;
+                if (p.inverseStage >= vessel.currentStage && !p.IsDecoupledInStage(vessel.currentStage - 1) && engine.isEnabled && !engine.EngineIgnited && engine.allowShutdown)
+                    return true;
+            }
+
+            return false;
         }
 
         public void UpdateActiveModuleEngines(List<ModuleEngines> allEngines)
