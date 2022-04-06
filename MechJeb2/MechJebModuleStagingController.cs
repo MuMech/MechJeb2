@@ -379,7 +379,7 @@ namespace MuMech
         // detect if this part is an SRB, will be dropped in the next stage, and we are below the enabled dropSolidsLeadTime
         public bool isBurnedOutSRBDecoupledInNextStage(Part p)
         {
-            return dropSolids && p.IsEngine() && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < dropSolidsLeadTime && p.IsDecoupledInStage(vessel.currentStage - 1);
+            return dropSolids && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < dropSolidsLeadTime && p.IsDecoupledInStage(vessel.currentStage - 1);
         }
 
         //detect if a part is above an active or idle engine in the part tree
@@ -392,7 +392,7 @@ namespace MuMech
 
             if (!p.IsSepratron() && !isBurnedOutSRBDecoupledInNextStage(p))
             {
-                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.IsEngine() && p.EngineHasFuel())
+                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel())
                 {
                     return true; // TODO: properly check if ModuleEngines is active
                 }
@@ -455,7 +455,7 @@ namespace MuMech
             if (p is null)
                 return false;
 
-            if ((p.State == PartStates.DEACTIVATED) && (p.IsEngine()) && !p.IsSepratron())
+            if ((p.State == PartStates.DEACTIVATED) && p.IsEngine() && !p.IsSepratron())
             {
                 return true; // TODO: yet more ModuleEngine lazy checks
             }
