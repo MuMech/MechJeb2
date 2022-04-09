@@ -46,6 +46,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         private EditableInt refreshRate = 10;
 
+        public void UpdateRefreshRate()
+        {
+            refreshInterval = System.TimeSpan.FromSeconds(1d / refreshRate);
+        }
+
         public override void OnDestroy()
         {
             if (background)
@@ -78,7 +83,7 @@ namespace MuMech
             if (oldRate != refreshRate)
             {
                 refreshRate = Math.Max(refreshRate,1);
-                refreshInterval = System.TimeSpan.FromSeconds(1d / refreshRate);
+                UpdateRefreshRate();
             }
         }
 
@@ -239,8 +244,10 @@ namespace MuMech
             foreach (ConfigNode windowNode in windowNodes)
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
-
+                
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
+
+                window.UpdateRefreshRate();
 
                 bool useOldConfig = true;
                 if (windowNode.HasValue("enabledEditor"))
@@ -282,7 +289,7 @@ namespace MuMech
                     window.enabledEditor = window.enabled;
                     window.enabledFlight = window.enabled;
                 }
-
+                
                 window.items = new List<InfoItem>();
 
                 if (windowNode.HasNode("items"))
