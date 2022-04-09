@@ -107,6 +107,11 @@ namespace MuMech
             return Math.Sqrt(sqrMagnitude);
         }
 
+        public double MaxMagnitude()
+        {
+            return Math.Max(positive.MaxMagnitude(),negative.MaxMagnitude());
+        }
+
         public void Load(ConfigNode node)
         {
             if (node.HasValue("positive"))

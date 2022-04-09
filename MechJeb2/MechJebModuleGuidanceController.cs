@@ -140,7 +140,9 @@ namespace MuMech
 
             if ( p != null && p.Solution != null && isTerminalGuidance() )
             {
-                bool has_rcs = vessel.hasEnabledRCSModules(); // && ( vesselState.rcsThrustAvailable.up > 0 );
+                // We might have wonky transforms and have a tiny bit of fore RCS, so require at least 10% of the max RCS thrust to be
+                // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics).
+                bool has_rcs = vessel.hasEnabledRCSModules() && vesselState.rcsThrustAvailable.up > 0.1 * vesselState.rcsThrustAvailable.MaxMagnitude();
 
                 // stopping one tick short is more accurate for rockets without RCS, but sometimes we overshoot with only one tick
                 int ticks = 1;
@@ -156,6 +158,7 @@ namespace MuMech
                 // bit of a hack to predict velocity + position in the next tick or two
                 // FIXME: what exactly does KSP do to integrate over timesteps?
                 Vector3d a0 = vessel.acceleration_immediate;
+
                 double dt = ticks * TimeWarp.fixedDeltaTime;
                 Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
                 Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 1/2 * a0 * dt * dt;
