@@ -16,7 +16,7 @@ namespace MuMech
             return sb.ToString();
         }
     }
-    
+
     public class Arc
     {
         private readonly PontryaginBase                          p;
@@ -73,7 +73,7 @@ namespace MuMech
             if (stage != null)
             {
                 Isp          = stage.Isp;
-                Thrust       = stage.EffectiveThrust; // use the effective thrust to deal with ullage motors
+                Thrust       = stage.MaxThrust; // use the effective thrust to deal with ullage motors
                 M0           = stage.StartMass;
                 AvailDV      = stage.DeltaV;
                 MaxBt        = stage.DeltaTime;
