@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace MuMech
 {
@@ -20,6 +19,7 @@ namespace MuMech
             public double ResourceMass;
             public double Isp;
             public double StagedMass;
+            public double MaxThrust;
 
             public double StartTWR(double geeASL)
             {
@@ -30,8 +30,6 @@ namespace MuMech
             {
                 return MaxAccel / (9.80665 * geeASL);
             }
-
-            public List<Part> Parts;
 
             //Computes the deltaV from the other fields. Only valid when the thrust is constant over the time interval represented.
             public void ComputeTimeStepDeltaV()
@@ -56,7 +54,8 @@ namespace MuMech
                     MaxAccel     = Math.Max(MaxAccel, s.MaxAccel),
                     DeltaTime    = DeltaTime + (s.DeltaTime < float.MaxValue && !double.IsInfinity(s.DeltaTime) ? s.DeltaTime : 0),
                     DeltaV       = DeltaV + s.DeltaV,
-                    Parts        = Parts,
+                    // this is deliberately the max thrust of the last segment in order to not count burned out ullage motors
+                    MaxThrust    = s.MaxThrust > 0 ? s.MaxThrust : MaxThrust,
                     // ReSharper disable once CompareOfFloatsByEqualityOperator
                     Isp          = StartMass == s.EndMass ? 0 : (DeltaV + s.DeltaV) / (9.80665f * Math.Log(StartMass / s.EndMass))
                 };

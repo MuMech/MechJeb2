@@ -44,10 +44,13 @@ namespace MuMech
                 public readonly Vector3d      thrustVector;
                 public readonly double        moduleResiduals;
                 public readonly double        moduleSpoolupTime;
+                public readonly double        maxThrust;
 
                 public EngineInfo(ModuleEngines engineModule)
                 {
                     this.engineModule = engineModule;
+
+                    maxThrust = engineModule.maxThrust;
 
                     thrustVector = Vector3d.zero;
 
@@ -102,14 +105,15 @@ namespace MuMech
 
             private readonly List<FuelNode> crossfeedSources = new List<FuelNode>();
 
-            public int  decoupledInStage; //the stage in which this part will be decoupled from the rocket
-            public int  inverseStage;     //stage in which this part is activated
-            public bool isLaunchClamp;    //whether this part is a launch clamp
-            public bool isSepratron;      //whether this part is a sepratron
-            public bool isEngine;         //whether this part is an engine
-            public bool isthrottleLocked;
-            public bool activatesEvenIfDisconnected;
-            public bool isDrawingResources = true; // Is the engine actually using any resources
+            public int    decoupledInStage; //the stage in which this part will be decoupled from the rocket
+            public int    inverseStage;     //stage in which this part is activated
+            public bool   isLaunchClamp;    //whether this part is a launch clamp
+            public bool   isSepratron;      //whether this part is a sepratron
+            public bool   isEngine;         //whether this part is an engine
+            public bool   isthrottleLocked;
+            public bool   activatesEvenIfDisconnected;
+            public bool   isDrawingResources = true; // Is the engine actually using any resources
+            public double maxThrust;
 
             private double resourceRequestRemainingThreshold;
             private int    resourcePriority;
@@ -300,9 +304,13 @@ namespace MuMech
                     engineInfos.Add(new EngineInfo(e));
                 }
 
+                maxThrust = 0;
                 // find our max maxEngineResiduals for this engine part from all the modules
                 foreach (EngineInfo e in engineInfos)
-                    maxEngineResiduals = Math.Max(maxEngineResiduals, e.moduleResiduals);
+                {
+                    maxEngineResiduals =  Math.Max(maxEngineResiduals,e.moduleResiduals);
+                    maxThrust          += e.maxThrust;
+                }
             }
 
             // We are not necessarily traversing from the root part but from any interior part, so that p.parent is just another potential child node

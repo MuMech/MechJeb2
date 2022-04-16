@@ -814,6 +814,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool showFinalMass = false;
         [Persistent(pass = (int)Pass.Global)]
+        public bool showMaxThrust = false;
+        [Persistent(pass = (int)Pass.Global)]
         public bool showVacInitialTWR = true;
         [Persistent(pass = (int)Pass.Global)]
         public bool showAtmoInitialTWR = false; // NK
@@ -844,10 +846,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public bool timeSeconds = false;
         private MechJebStageStatsHelper stageStatsHelper = null;
-        
+
         // Leave this stub here until I figure out how to properly target in the new class
         [GeneralInfoItem("#MechJeb_StageStatsAll",InfoItem.Category.Vessel,showInEditor = true)]//Stage stats (all)
-        public void AllStageStats() 
+        public void AllStageStats()
         {
             if (stageStatsHelper == null)
                 stageStatsHelper = new MechJebStageStatsHelper(this);

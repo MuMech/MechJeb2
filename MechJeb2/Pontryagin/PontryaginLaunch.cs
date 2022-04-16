@@ -431,7 +431,7 @@ namespace MuMech {
 
             // update initial position and guess for first arc (uses effective thrust to deal with ullage motors)
             double ve = g0 * stages[0].Isp;
-            tgo = ve * stages[0].StartMass / stages[0].EffectiveThrust * ( 1 - Math.Exp(-dV/ve) );
+            tgo = ve * stages[0].StartMass / stages[0].MaxThrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
 
             // initialize overall burn time
