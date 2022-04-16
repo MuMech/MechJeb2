@@ -4,8 +4,6 @@ VisualStudioVersion = 17.1.32104.313
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJeb2", "MechJeb2\MechJeb2.csproj", "{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJeb2Tests", "MechJeb2Tests\MechJeb2Tests.csproj", "{F04CC01F-41F2-4016-AD6E-06750DB2F155}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{ED6897C3-200B-47DB-84B0-7A91F324031E}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
