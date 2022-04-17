@@ -267,7 +267,7 @@ namespace MuMech
         private void FindSOI(ManeuverParameters maneuver, ref double utArrival)
         {
             const int VARS = 5;
-            const double DIFFSTEP = 1e-6;
+            const double DIFFSTEP = 1e-10;
             const double EPSX = 1e-4;
             const int MAXITS = 1000;
             const int EQUALITYCONSTRAINTS = 3;
@@ -334,8 +334,8 @@ namespace MuMech
         private void AdjustPeriapsis(ManeuverParameters maneuver, ref double utArrival)
         {
             const int VARS = 3;
-            const double DIFFSTEP = 1e-8;
-            const double EPSX = 1e-7;
+            const double DIFFSTEP = 1e-10;
+            const double EPSX = 1e-4;
             const int MAXITS = 1000;
             const int EQUALITYCONSTRAINTS = 1;
             const int INEQUALITYCONSTRAINTS = 0;
