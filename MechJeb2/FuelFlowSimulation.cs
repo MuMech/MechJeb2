@@ -168,6 +168,7 @@ namespace MuMech
             double thrust = VesselThrustAndSpoolup(out spoolup);
             fuelStats.StartThrust = fuelStats.EndThrust = thrust;
             fuelStats.SpoolUpTime = spoolup;
+            fuelStats.MaxThrust   = MaxThrust();
 
             using (Disposable<List<FuelNode>> engines = FindActiveEngines())
             {
@@ -195,7 +196,6 @@ namespace MuMech
             fuelStats.EndMass      = VesselMass(_simStage);
             fuelStats.ResourceMass = fuelStats.StartMass - fuelStats.EndMass;
             fuelStats.MaxAccel     = fuelStats.EndMass > 0 ? fuelStats.EndThrust / fuelStats.EndMass : 0;
-            fuelStats.MaxThrust    = MaxThrust();
             fuelStats.ComputeTimeStepDeltaV();
             fuelStats.Isp = fuelStats.StartMass > fuelStats.EndMass
                 ? fuelStats.DeltaV / (9.80665f * Math.Log(fuelStats.StartMass / fuelStats.EndMass))
@@ -327,7 +327,9 @@ namespace MuMech
 
             for (int i = 0; i < activeEngines.value.Count; i++)
             {
-                maxThrust += activeEngines.value[i].maxThrust;
+                double mt = activeEngines.value[i].maxThrust;
+                if (mt.IsFinite())
+                    maxThrust += mt;
             }
 
             return maxThrust;
