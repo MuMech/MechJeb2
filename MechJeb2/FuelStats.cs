@@ -44,12 +44,13 @@ namespace MuMech
             public FuelStats Append(FuelStats s)
             {
                 double sDeltaTime = s.DeltaTime < float.MaxValue && !double.IsInfinity(s.DeltaTime) ? s.DeltaTime : 0;
+                double sumDT = sDeltaTime + DeltaTime;
 
                 return new FuelStats
                 {
                     // we integrate to the time-averaged maxthrust to accomodate weirdness like ullage motors that burnout and tiny segments
                     // that turn off the engines for some reason.  this is so PVG has a number which is closest to reality.
-                    MaxThrust    = (MaxThrust * DeltaTime + s.MaxThrust * sDeltaTime ) / ( DeltaTime + sDeltaTime),
+                    MaxThrust    = sumDT > 1e-10 ? (MaxThrust * DeltaTime + s.MaxThrust * sDeltaTime ) / ( DeltaTime + sDeltaTime) : MaxThrust,
                     StartMass    = StartMass,
                     EndMass      = s.EndMass,
                     ResourceMass = StartMass - s.EndMass,
@@ -57,7 +58,7 @@ namespace MuMech
                     EndThrust    = s.EndThrust,
                     SpoolUpTime  = Math.Max(SpoolUpTime, s.SpoolUpTime),
                     MaxAccel     = Math.Max(MaxAccel, s.MaxAccel),
-                    DeltaTime    = DeltaTime + sDeltaTime,
+                    DeltaTime    = sumDT,
                     DeltaV       = DeltaV + s.DeltaV,
                     // ReSharper disable once CompareOfFloatsByEqualityOperator
                     Isp          = StartMass == s.EndMass ? 0 : (DeltaV + s.DeltaV) / (9.80665f * Math.Log(StartMass / s.EndMass))
