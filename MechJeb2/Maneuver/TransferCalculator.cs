@@ -342,6 +342,23 @@ namespace MuMech
 
             double[] x = new double[VARS];
 
+            Debug.Log("epoch: " + Planetarium.GetUniversalTime());
+            Debug.Log("initial orbit around source: "+ _initialOrbit.MuString());
+            Debug.Log("source: " + _initialOrbit.referenceBody.orbit.MuString());
+            Debug.Log("target: " + _targetBody.orbit.MuString());
+            Debug.Log("source mu: " + _initialOrbit.referenceBody.gravParameter);
+            Debug.Log("target mu: " + _targetBody.gravParameter);
+            Debug.Log("sun mu: " + _initialOrbit.referenceBody.referenceBody.gravParameter);
+            Debug.Log("maneuver guess dV: " + maneuver.dV);
+            Debug.Log("maneuver guess UT: " + maneuver.UT);
+            Debug.Log("arrival guess UT: " + utArrival);
+            _initialOrbit.GetOrbitalStateVectorsAtUT(maneuver.UT,out Vector3d r1,out Vector3d v1);
+            Debug.Log($"initial orbit at {maneuver.UT} x = {r1}; v = {v1}");
+            _initialOrbit.referenceBody.orbit.GetOrbitalStateVectorsAtUT(maneuver.UT,out Vector3d r2,out Vector3d v2);
+            Debug.Log($"source at {maneuver.UT} x = {r2}; v = {v2}");
+            _targetBody.orbit.GetOrbitalStateVectorsAtUT(utArrival,out Vector3d r3,out Vector3d v3);
+            Debug.Log($"source at {utArrival} x = {r3}; v = {v3}");
+
             _impulseScale = maneuver.dV.magnitude;
             _timeScale    = _initialOrbit.period;
             _initialTime  = maneuver.UT;
