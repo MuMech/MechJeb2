@@ -2,9 +2,9 @@
 
 namespace MuMech
 {
-    public class Vector6 : IConfigNode
+    public struct Vector6 : IConfigNode
     {
-        public Vector3d positive = Vector3d.zero, negative = Vector3d.zero;
+        public Vector3d positive, negative;
 
         public enum Direction { FORWARD=0, BACK=1, UP=2, DOWN=3, RIGHT=4, LEFT=5 };
 
@@ -66,7 +66,6 @@ namespace MuMech
             }
         }
 
-        public Vector6() { }
         public Vector6(Vector3d positive, Vector3d negative)
         {
             this.positive = positive;
@@ -107,6 +106,21 @@ namespace MuMech
             return Math.Sqrt(sqrMagnitude);
         }
 
+        public Vector3d SelectAxis(Vector3d other)
+        {
+            return new Vector3d
+            {
+                x = other.x > 0 ? positive.x : negative.x,
+                y = other.y > 0 ? positive.y : negative.y,
+                z = other.z > 0 ? positive.z : negative.z,
+            };
+        }
+
+        public Vector3d ToVector3d()
+        {
+            return Vector3d.Max(positive,negative);
+        }
+
         public double MaxMagnitude()
         {
             return Math.Max(positive.MaxMagnitude(),negative.MaxMagnitude());
@@ -122,6 +136,17 @@ namespace MuMech
             {
                 negative = KSPUtil.ParseVector3d(node.GetValue("negative"));
             }
+        }
+
+        public static Vector6 operator +(Vector6 a,Vector6 b)
+        {
+            Vector6 sum = new Vector6
+            {
+                positive = a.positive + b.positive,
+                negative = a.negative + b.negative
+            };
+
+            return sum;
         }
 
         public void Save(ConfigNode node)

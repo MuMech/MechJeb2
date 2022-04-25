@@ -22,7 +22,7 @@ namespace MuMech.AttitudeControllers
         public KosPIDLoop pitchRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
         public KosPIDLoop yawRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
         public KosPIDLoop rollRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        
+
         private Vector3d Actuation = Vector3d.zero;
         private Vector3d TargetTorque = Vector3d.zero;
         private Vector3d Omega = Vector3d.zero;
@@ -36,7 +36,7 @@ namespace MuMech.AttitudeControllers
         /* max angular rotation */
         private Vector3d MaxOmega = Vector3d.zero;
 
-        private Vector3d ControlTorque { get { return ac.torque; } }
+        private Vector3d ControlTorque { get { return ac.torque.ToVector3d(); } }
 
         public KosAttitudeController(MechJebModuleAttitudeController controller) : base(controller)
         {
@@ -52,7 +52,7 @@ namespace MuMech.AttitudeControllers
             deltaEuler = phiVector * Mathf.Rad2Deg;
             act = Actuation;
         }
-        
+
         /* temporary state vectors */
         private Quaternion vesselRotation;
         private Vector3d vesselForward;
@@ -60,7 +60,7 @@ namespace MuMech.AttitudeControllers
         private Vector3d vesselStarboard;
         private Vector3d targetForward;
         private Vector3d targetTop;
-        
+
         /* private Vector3d targetStarboard; */
 
         private void UpdateStateVectors() {
@@ -102,12 +102,12 @@ namespace MuMech.AttitudeControllers
 
             return Phi;
         }
-        
+
         private void UpdatePredictionPI() {
             phiTotal = PhiTotal();
 
             phiVector = PhiVector();
-            
+
             for(int i = 0; i < 3; i++) {
                 MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
             }
@@ -135,7 +135,7 @@ namespace MuMech.AttitudeControllers
             yawRatePI.ResetI();
             rollRatePI.ResetI();
         }
-        
+
 
         private void UpdateControl() {
             /* TODO: static engine torque and/or differential throttle */

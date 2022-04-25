@@ -106,7 +106,7 @@ namespace MuMech
 
         public double attitudeError;
 
-        public Vector3d torque;
+        public Vector6 torque;
         public Vector3d inertia;
 
         public MechJebModuleAttitudeController(MechJebCore core)
@@ -322,14 +322,14 @@ namespace MuMech
             torque = vesselState.torqueAvailable;
             if (core.thrust.differentialThrottle &&
                 core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
-                torque += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
+                torque.positive += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
             // Inertia is a bad name. It's the "angular distance to stop"
             inertia = 0.5 * Vector3d.Scale(
                 vesselState.angularMomentum.Sign(),
                 Vector3d.Scale(
                     Vector3d.Scale(vesselState.angularMomentum, vesselState.angularMomentum),
-                    Vector3d.Scale(torque, vesselState.MoI).InvertNoNaN()
+                    Vector3d.Scale(torque.ToVector3d(), vesselState.MoI).InvertNoNaN()
                 )
             );
             Controller.OnFixedUpdate();

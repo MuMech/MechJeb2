@@ -39,7 +39,7 @@ namespace MuMech.AttitudeControllers
         /* max angular rotation */
         private Vector3d MaxOmega = Vector3d.zero;
 
-        private Vector3d ControlTorque { get { return ac.torque; } }
+        private Vector3d ControlTorque { get { return ac.torque.ToVector3d(); } }
 
         public HybridController(MechJebModuleAttitudeController controller) : base(controller)
         {
