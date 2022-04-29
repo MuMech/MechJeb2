@@ -268,8 +268,8 @@ namespace MuMech
                     HasFairing(vessel.currentStage - 1))
                     return;
 
-                //only release launch clamps if we're at nearly full thrust
-                if (vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct &&
+                //only release launch clamps if we're at nearly full thrust and no failed engines
+                if ((vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct || AnyFailedEngines(allModuleEngines)) &&
                     InverseStageReleasesClamps(vessel.currentStage - 1))
                     return;
             }
@@ -358,6 +358,18 @@ namespace MuMech
             return result;
         }
 
+        public bool AnyFailedEngines(List<ModuleEngines> allEngines)
+        {
+            foreach (ModuleEngines engine in allEngines)
+            {
+                Part p = engine.part;
+                if (p.inverseStage >= vessel.currentStage && !p.IsDecoupledInStage(vessel.currentStage - 1) && engine.isEnabled && !engine.EngineIgnited && engine.allowShutdown)
+                    return true;
+            }
+
+            return false;
+        }
+
         public void UpdateActiveModuleEngines(List<ModuleEngines> allEngines)
         {
             activeModuleEngines.Clear();
@@ -379,7 +391,7 @@ namespace MuMech
         // detect if this part is an SRB, will be dropped in the next stage, and we are below the enabled dropSolidsLeadTime
         public bool isBurnedOutSRBDecoupledInNextStage(Part p)
         {
-            return dropSolids && p.IsEngine() && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < dropSolidsLeadTime && p.IsDecoupledInStage(vessel.currentStage - 1);
+            return dropSolids && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < dropSolidsLeadTime && p.IsDecoupledInStage(vessel.currentStage - 1);
         }
 
         //detect if a part is above an active or idle engine in the part tree
@@ -392,7 +404,7 @@ namespace MuMech
 
             if (!p.IsSepratron() && !isBurnedOutSRBDecoupledInNextStage(p))
             {
-                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.IsEngine() && p.EngineHasFuel())
+                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel())
                 {
                     return true; // TODO: properly check if ModuleEngines is active
                 }
@@ -455,7 +467,7 @@ namespace MuMech
             if (p is null)
                 return false;
 
-            if ((p.State == PartStates.DEACTIVATED) && (p.IsEngine()) && !p.IsSepratron())
+            if ((p.State == PartStates.DEACTIVATED) && p.IsEngine() && !p.IsSepratron())
             {
                 return true; // TODO: yet more ModuleEngine lazy checks
             }

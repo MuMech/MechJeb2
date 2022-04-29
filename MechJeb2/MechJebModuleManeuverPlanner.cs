@@ -124,33 +124,21 @@ namespace MuMech
             {
                 if (anyNodeExists && !core.node.enabled)
                 {
-                    if (VesselState.isLoadedPrincipia)
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button4")))//Execute next node
                     {
-                        if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7")))//Execute next Principia node
-                        {
-                            core.node.ExecuteOnePNode(this);
-                        }
-                        else if (core.node.enabled)
-                        {
-                            if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button6")))//"Abort node execution"
-                            {
-                                core.node.Abort();
-                            }
-                        }
+                        core.node.ExecuteOneNode(this);
                     }
-                    else
-                    {
-                        if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button4")))//Execute next node
-                        {
-                            core.node.ExecuteOneNode(this);
-                        }
 
-                        if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
+                    if (VesselState.isLoadedPrincipia && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7")))//Execute next Principia node
+                    {
+                        core.node.ExecuteOnePNode(this);
+                    }
+
+                    if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
+                    {
+                        if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button5")))//Execute all nodes
                         {
-                            if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button5")))//Execute all nodes
-                            {
-                                core.node.ExecuteAllNodes(this);
-                            }
+                            core.node.ExecuteAllNodes(this);
                         }
                     }
                 }
