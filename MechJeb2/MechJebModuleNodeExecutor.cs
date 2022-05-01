@@ -174,7 +174,7 @@ namespace MuMech
                         ? core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001
                         : core.attitude.attitudeAngleFromTarget() < 10))
                     {
-                        core.warp.WarpToUT(timeToNode - spool - leadTime);
+                        core.warp.WarpToUT(timeToNode + vesselState.time - spool - leadTime);
                     }
                     else
                     {
