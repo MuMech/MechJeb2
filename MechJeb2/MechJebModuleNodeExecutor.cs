@@ -124,14 +124,15 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             bool hasPrincipia = VesselState.isLoadedPrincipia;
+            bool hasNodes = vessel.patchedConicSolver.maneuverNodes.Count > 0;
             if (!vessel.patchedConicsUnlocked()
-                || (!hasPrincipia && vessel.patchedConicSolver.maneuverNodes.Count == 0))
+                || (!hasPrincipia && !hasNodes))
             {
                 Abort();
                 return;
             }
 
-            if (hasPrincipia)
+            if (hasPrincipia && mode == Mode.ONE_PNODE)
             {
                 if (remainingDeltaV < tolerance)
                 {
@@ -141,9 +142,8 @@ namespace MuMech
                     return;
                 }
                 //aim along the node
-                bool hasNode = vessel.patchedConicSolver.maneuverNodes.Count > 0;
-                ManeuverNode node = hasNode ? vessel.patchedConicSolver.maneuverNodes[0] : null;
-                if (hasNode)
+                ManeuverNode node = hasNodes ? vessel.patchedConicSolver.maneuverNodes[0] : null;
+                if (hasNodes)
                 {
                     core.attitude.attitudeTo(Vector3d.forward,AttitudeReference.MANEUVER_NODE_COT,this);
                 }
@@ -159,7 +159,7 @@ namespace MuMech
                 double halfBurnTime, spool;
                 BurnTime(remainingDeltaV,out halfBurnTime,out spool);
 
-                double timeToNode = hasNode ? node.UT - vesselState.time : -1;
+                double timeToNode = hasNodes ? node.UT - vesselState.time : -1;
                 //print("$$$$$$$ Executor: Node in " + timeToNode + ", spool " + spool.ToString("F3"));
                 if ((halfBurnTime > 0 && timeToNode <= spool) || timeToNode < 0)
                 {
@@ -209,7 +209,7 @@ namespace MuMech
                     }
                 }
             }
-            else
+            else if(hasNodes)
             {
                 //check if we've finished a node:
                 ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
