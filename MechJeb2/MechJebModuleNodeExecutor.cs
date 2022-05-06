@@ -120,9 +120,26 @@ namespace MuMech
         public bool burnTriggered = false;
         public bool alignedForBurn = false;
         protected double remainingDeltaV = 0; // for Principia
+        protected bool nearingBurn = false;
+
+        public override void Drive(FlightCtrlState s)
+        {
+            if (!burnTriggered && nearingBurn && core.thrust.limitToPreventUnstableIgnition && vesselState.lowestUllage != VesselState.UllageState.VeryStable)
+            {
+                if (vessel.hasEnabledRCSModules())
+                {
+                    if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                    {
+                        vessel.ActionGroups.SetGroup(KSPActionGroup.RCS,true);
+                    }
+                    s.Z = -1.0F;
+                }
+            }
+        }
 
         public override void OnFixedUpdate()
         {
+            nearingBurn = false;
             bool hasPrincipia = VesselState.isLoadedPrincipia;
             bool hasNodes = vessel.patchedConicSolver.maneuverNodes.Count > 0;
             if (!vessel.patchedConicsUnlocked()
@@ -182,6 +199,8 @@ namespace MuMech
                         core.warp.MinimumWarp();
                     }
                 }
+
+                nearingBurn = timeToNode - spool - leadTime <= 0;
 
                 core.thrust.targetThrottle = 0;
 
@@ -270,6 +289,8 @@ namespace MuMech
                         core.warp.MinimumWarp();
                     }
                 }
+
+                nearingBurn = timeToNode - halfBurnTime - leadTime <= 0;
 
                 core.thrust.targetThrottle = 0;
 
