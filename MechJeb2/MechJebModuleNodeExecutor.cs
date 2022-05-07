@@ -212,7 +212,7 @@ namespace MuMech
                         {
                             double timeConstant = (remainingDeltaV > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
                             core.thrust.ThrustForDV(remainingDeltaV + tolerance,timeConstant);
-                            remainingDeltaV -= vesselState.deltaT * vesselState.currentThrustAccel;
+                            // We'll subtract delta V later.
                         }
                         else
                         {
@@ -226,6 +226,15 @@ namespace MuMech
                             alignedForBurn = true;
                         }
                     }
+                }
+                if ((burnTriggered || nearingBurn) && MuUtils.PhysicsRunning())
+                {
+                    // decrement remaining dV based on engine and RCS thrust
+                    // Since this is Principia, we can't rely on the node's delta V itself updating, we have to do it ourselves.
+                    // We also can't just use vesselState.currentThrustAccel because only engines are counted.
+                    // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
+                    Vector3d dV = (vessel.acceleration_immediate - vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
+                    remainingDeltaV -= Vector3d.Dot(dV,core.attitude.targetAttitude());
                 }
             }
             else if(hasNodes)
