@@ -120,9 +120,26 @@ namespace MuMech
         public bool burnTriggered = false;
         public bool alignedForBurn = false;
         protected double remainingDeltaV = 0; // for Principia
+        protected bool nearingBurn = false;
+
+        public override void Drive(FlightCtrlState s)
+        {
+            if (!burnTriggered && nearingBurn && core.thrust.limitToPreventUnstableIgnition && vesselState.lowestUllage != VesselState.UllageState.VeryStable)
+            {
+                if (vessel.hasEnabledRCSModules())
+                {
+                    if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                    {
+                        vessel.ActionGroups.SetGroup(KSPActionGroup.RCS,true);
+                    }
+                    s.Z = -1.0F;
+                }
+            }
+        }
 
         public override void OnFixedUpdate()
         {
+            nearingBurn = false;
             bool hasPrincipia = VesselState.isLoadedPrincipia;
             bool hasNodes = vessel.patchedConicSolver.maneuverNodes.Count > 0;
             if (!vessel.patchedConicsUnlocked()
@@ -183,6 +200,8 @@ namespace MuMech
                     }
                 }
 
+                nearingBurn = timeToNode - spool - leadTime <= 0;
+
                 core.thrust.targetThrottle = 0;
 
                 if (burnTriggered)
@@ -193,7 +212,7 @@ namespace MuMech
                         {
                             double timeConstant = (remainingDeltaV > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
                             core.thrust.ThrustForDV(remainingDeltaV + tolerance,timeConstant);
-                            remainingDeltaV -= vesselState.deltaT * vesselState.currentThrustAccel;
+                            // We'll subtract delta V later.
                         }
                         else
                         {
@@ -207,6 +226,15 @@ namespace MuMech
                             alignedForBurn = true;
                         }
                     }
+                }
+                if ((burnTriggered || nearingBurn) && MuUtils.PhysicsRunning())
+                {
+                    // decrement remaining dV based on engine and RCS thrust
+                    // Since this is Principia, we can't rely on the node's delta V itself updating, we have to do it ourselves.
+                    // We also can't just use vesselState.currentThrustAccel because only engines are counted.
+                    // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
+                    Vector3d dV = (vessel.acceleration_immediate - vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
+                    remainingDeltaV -= Vector3d.Dot(dV,core.attitude.targetAttitude());
                 }
             }
             else if(hasNodes)
@@ -270,6 +298,8 @@ namespace MuMech
                         core.warp.MinimumWarp();
                     }
                 }
+
+                nearingBurn = timeToNode - halfBurnTime - leadTime <= 0;
 
                 core.thrust.targetThrottle = 0;
 
