@@ -64,7 +64,6 @@
     <Compile Include="FuelStats.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="GLUtils.cs" />
-    <Compile Include="GoodingSolver.cs" />
     <Compile Include="GuiUtils.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="LandingAutopilot\CoastToDeceleration.cs" />
@@ -114,6 +113,8 @@
     <Compile Include="Matrix3x3d.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
+    <Compile Include="MechJebLib\Maths\GoodingSolver.cs" />
+    <Compile Include="MechJebLib\Utils\Statics.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
     <Compile Include="MechJebModuleAirplaneGuidance.cs" />
     <Compile Include="MechJebModuleAscentAutopilot.cs" />

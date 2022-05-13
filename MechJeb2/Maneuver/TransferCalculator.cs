@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using MechJebLib.Maths;
 using UnityEngine;
 
 namespace MuMech
