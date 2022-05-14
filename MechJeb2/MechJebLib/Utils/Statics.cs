@@ -4,6 +4,8 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+#nullable enable
+
 using System;
 
 namespace MechJebLib.Utils
