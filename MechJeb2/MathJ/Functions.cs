@@ -1,4 +1,6 @@
 using System;
+using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech.MathJ
 {
@@ -43,7 +45,7 @@ namespace MuMech.MathJ
             {
                 double t2 = 1 - t;
                 double fg = 3 * t2 * t2 * t * wt1 + 3 * t2 * t * t * wt2S + t * t * t - x;
-                if (Math.Abs(fg) < 2 * Utils.EPS)
+                if (Math.Abs(fg) < EPS2)
                     break;
 
                 // third order householder method

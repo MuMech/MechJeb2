@@ -99,8 +99,6 @@
     <Compile Include="Maneuver\TransferCalculator.cs" />
     <Compile Include="MathExtensions.cs" />
     <Compile Include="MathJ\AVL.cs" />
-    <Compile Include="MathJ\BrentMin.cs" />
-    <Compile Include="MathJ\BrentRoot.cs" />
     <Compile Include="MathJ\CN.cs" />
     <Compile Include="MathJ\Curve.cs" />
     <Compile Include="MathJ\Event.cs" />
@@ -109,12 +107,15 @@
     <Compile Include="MathJ\ObjectPool.cs" />
     <Compile Include="MathJ\ODE.cs" />
     <Compile Include="MathJ\ODESolver.cs" />
-    <Compile Include="MathJ\Utils.cs" />
     <Compile Include="Matrix3x3d.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
-    <Compile Include="MechJebLib\Maths\GoodingSolver.cs" />
+    <Compile Include="MechJebLib\Maths\BrentMin.cs" />
+    <Compile Include="MechJebLib\Maths\BrentRoot.cs" />
+    <Compile Include="MechJebLib\Maths\Gooding.cs" />
+    <Compile Include="MechJebLib\Maths\Shepperd.cs" />
     <Compile Include="MechJebLib\Utils\Statics.cs" />
+    <Compile Include="MechJebLib\Utils\Utils.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
     <Compile Include="MechJebModuleAirplaneGuidance.cs" />
     <Compile Include="MechJebModuleAscentAutopilot.cs" />
@@ -227,7 +228,6 @@
     <Compile Include="ScriptsModule\MechJebModuleScriptActionWhile.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionsList.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptCondition.cs" />
-    <Compile Include="Shepperd.cs" />
     <Compile Include="SpaceMath.cs" />
     <Compile Include="ToolbarWrapper.cs" />
     <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />

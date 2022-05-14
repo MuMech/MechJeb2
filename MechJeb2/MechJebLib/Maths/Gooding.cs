@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Maths {
-    public class GoodingSolver {
+    public class Gooding {
 
         /*
          * R1 = position at t0

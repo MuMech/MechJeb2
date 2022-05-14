@@ -1,6 +1,9 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using MechJebLib.Maths;
+using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech.MathJ
 {
@@ -9,7 +12,7 @@ namespace MuMech.MathJ
         /// <summary>
         ///     Minimum h step (may be violated on the last step or before an event).
         /// </summary>
-        public double Hmin { get; set; } = Utils.EPS;
+        public double Hmin { get; set; } = EPS;
 
         /// <summary>
         ///     Maximum h step.
@@ -318,7 +321,7 @@ namespace MuMech.MathJ
 
                 // add this point to the interpolant
                 if (interpolant != null &&
-                    (Math.Abs(interpLeft) <= 2*Utils.EPS && Utils.NearlyEqual(t - lastInterpolant, interpDt, 1e-2) || terminate))
+                    (Math.Abs(interpLeft) <= EPS2 && NearlyEqual(t - lastInterpolant, interpDt, 1e-2) || terminate))
                 {
                     interpolant.Add(t, _y, _k7);
                     interpLeft      = interpDt;

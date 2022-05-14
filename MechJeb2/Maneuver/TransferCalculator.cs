@@ -119,7 +119,7 @@ namespace MuMech
             Vector3d v2 = v2_1;
             try
             {
-                GoodingSolver.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, v2_1, dt, 0, out v1, out v2);
+                Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, v2_1, dt, 0, out v1, out v2);
             }
             catch
             {

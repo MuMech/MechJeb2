@@ -1,7 +1,15 @@
-#nullable enable
-using System;
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
 
-namespace MuMech
+#nullable enable
+
+using System;
+using static MechJebLib.Utils.Statics;
+
+namespace MechJebLib.Maths
 {
     public static class BrentMin
     {
@@ -47,7 +55,7 @@ namespace MuMech
             //
             c = 0.5 * (3.0 - Math.Sqrt(5.0));
 
-            eps = Math.Sqrt(MuUtils.DBL_EPSILON);
+            eps = Math.Sqrt(EPS);
 
             sa = a;
             sb = b;
