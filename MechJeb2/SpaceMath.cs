@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using MechJebLib.Maths;
 
 namespace MuMech
 {
@@ -73,7 +74,7 @@ namespace MuMech
                 singleImpulseHyperbolicBurn(mu, r0, v0, vInf, out Vector3d vneg, out Vector3d vpos, out _, out _, (float)testrot, debug);
                 return (vpos - vneg).magnitude;
             };
-            BrentMin.Minimize(f, -30, 30, 1e-6, out double rot, out double _, null);
+            (double rot,_) = BrentMin.Solve(f,-30,30,null,1e-6);
             singleImpulseHyperbolicBurn(mu, r0, v0, vInf, out vNeg, out vPos, out r, out dt, (float)rot, debug);
         }
 

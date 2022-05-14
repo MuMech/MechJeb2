@@ -146,3 +146,6 @@ make install
 ## License
 
 Licensed under the [GNU General Public License, Version 3](LICENSE.md).
+
+Portions Dual-Licensed under the [GNU General Public License, Version2](GPLv2-LICENSE.md) and [MIT License](MIT-LICENSE.md), where it is documented in the affected source code headers.
+

@@ -1,3 +1,5 @@
+using MechJebLib.Utils;
+
 namespace MuMech.MathJ
 {
     public class CN : Curve<double[]>

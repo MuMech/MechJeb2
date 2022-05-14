@@ -1,9 +1,18 @@
-using System;
-using UnityEngine;
-using System.Collections.Generic;
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Copyright Sebastien Gaggini (sebastien.gaggini@gmail.com)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
 
-namespace MuMech {
-    public class GoodingSolver {
+#nullable enable
+
+using System;
+using System.Collections.Generic;
+using static MechJebLib.Utils.Statics;
+
+namespace MechJebLib.Maths {
+    public class Gooding {
 
         /*
          * R1 = position at t0
@@ -40,21 +49,21 @@ namespace MuMech {
 
             /* calculate the minimum transfer angle (radians) */
 
-            double theta = Math.Acos(MuUtils.Clamp(Vector3d.Dot(ux1, ux2), -1.0, 1.0));
+            double theta = SafeAcos(Vector3d.Dot(ux1, ux2));
 
             /* calculate the angle between the orbit normal of the initial orbit and the fundamental reference plane */
 
-            double angle_to_on = Math.Acos(MuUtils.Clamp(Vector3d.Dot(ur1xv1, uz1), -1.0, 1.0));
+            double angle_to_on = SafeAcos(Vector3d.Dot(ur1xv1, uz1));
 
             /* if angle to orbit normal is greater than 90 degrees and posigrade orbit, then flip the orbit normal and the transfer angle */
 
-            if ((angle_to_on > 0.5 * Math.PI) && (tof > 0.0)) {
-                theta = 2.0 * Math.PI - theta;
+            if ((angle_to_on > 0.5 * PI) && (tof > 0.0)) {
+                theta = TAU - theta;
                 uz1 = -uz1;
             }
 
-            if ((angle_to_on < 0.5 * Math.PI) && (tof < 0.0)) {
-                theta = 2.0 * Math.PI - theta;
+            if ((angle_to_on < 0.5 * PI) && (tof < 0.0)) {
+                theta = TAU - theta;
                 uz1 = -uz1;
             }
 
@@ -64,17 +73,18 @@ namespace MuMech {
 
             Vector3d uy2 = Vector3d.Cross(uz2, ux2).normalized;
 
-            theta = theta + 2.0 * Math.PI * Math.Abs(nrev);
+            theta += TAU * Math.Abs(nrev);
 
             VLAMB(GM, R1.magnitude, R2.magnitude, theta, tof, out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
 
-            //Debug.Log("VLAMBOUT: n= " + n + " VR11= " + VR11 + " VT11= " + VT11 + " VR12= " + VR12 + " VT12= " + VT12 + " VR21= " + VR21 + " VT21= " + VT21 + " VR22= " + VR22 + " VT22= " + VT22);
-
-            if (nrev > 0) {
-                if (n == -1) {
-                    throw new Exception("Gooding Solver found no tminimum");
-                } else if (n == 0) {
-                    throw new Exception("Gooding Solver found no solution time");
+            if (nrev > 0)
+            {
+                switch (n)
+                {
+                    case -1:
+                        throw new Exception("Gooding Solver found no tminimum");
+                    case 0:
+                        throw new Exception("Gooding Solver found no solution time");
                 }
             }
 
@@ -105,7 +115,6 @@ namespace MuMech {
         private static void VLAMB(double GM, double R1, double R2, double TH, double TDELT,
                 out int N, out double VR11, out double VT11, out double VR12, out double VT12, out double VR21, out double VT21, out double VR22, out double VT22) {
 
-            //Debug.Log("GM= " + GM + " R1= " + R1 + " R2= " + R2 + " TH= " + TH + " TDELT= " + TDELT);
             VR11 = VT11 = VR12 = VT12 = 0.0;
             VR21 = VT21 = VR22 = VT22 = 0.0;
             int M = Convert.ToInt32(Math.Floor(TH / (2.0 * Math.PI)));
@@ -466,7 +475,6 @@ Three:
                 str += String.Format("{0:F8}", l[n1]);
                 if (i % 6 == 5)
                 {
-                    Debug.Log(str);
                     str = "";
                 }
                 else
@@ -553,9 +561,6 @@ Three:
                     }
                 }
             }
-            //DebugLogList(dlist);
-
-            Debug.Log("diffmax = " + diffmax + " n1 = " + maxn1 + " n2 = " + maxn2);
         }
     }
 }
