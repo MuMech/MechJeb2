@@ -32,23 +32,51 @@ namespace MuMech
         /// </summary>
         ///
         /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
-        /// <param name="latitude">Latitude of the launchite (degrees).</param>
-        /// <param name="celestialLongitude">Celestial longitude of the current position of the launchsite.</param>
+        /// <param name="latitude">Latitude of the launch site (degrees).</param>
+        /// <param name="celestialLongitude">Celestial longitude of the current position of the launch site.</param>
         /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
         ///
         public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double LAN, double inc)
         {
-            // alpha is the 90 degree angle between the line of longitude and the equator and omitted
-            double beta = OrbitalManeuverCalculator.HeadingForInclination(inc, latitude) * UtilMath.Deg2Rad;
-            double c = Math.Abs(latitude) * UtilMath.Deg2Rad; // Abs for south hemisphere launch sites
-            // b is how many radians to the west of the launch site that the LAN is (east in south hemisphere)
-            double b = Math.Atan2( 2 * Math.Sin(beta), Math.Cos(beta) / Math.Tan(c/2) + Math.Tan(c/2) * Math.Cos(beta) ); // napier's analogies
-            // LAN if we launched now
-            double LANnow = celestialLongitude - Math.Sign(latitude) * b * UtilMath.Rad2Deg;
+            // Convert latitude and inclination to radians
+            latitude *= UtilMath.Deg2Rad;
+            bool launchSouth = inc < 0;
+            inc = Math.Abs(inc) * UtilMath.Deg2Rad;
 
+            // angleEastOfAN is the difference between the LAN and the (celestial) longitude of the launch site. This value only depends on the launch site latitude
+            // and inclination; the time we seek is exactly when the celestial longitude of the launch site is equal to LAN + angleEastOfAN.
+            double angleEastOfAN;
+            if (inc <= Math.Abs(latitude)) // Inclination is not reachable from this launch site; launch is directly east
+                angleEastOfAN = latitude < 0 ? 1.5 * Math.PI : 0.5 * Math.PI;
+            else if (Math.PI - inc <= Math.Abs(latitude)) // Inclination is not reachable from this launch site; launch is directly west
+                angleEastOfAN = latitude < 0 ? 0.5 * Math.PI : 1.5 * Math.PI;
+            else
+            {
+                // Uses Napier's rules for spherical trigonometry. This is case (R4) from https://en.wikipedia.org/wiki/Spherical_trigonometry#Napier's_rules_for_right_spherical_triangles
+                // where A = inc, a = latitude and b = angleEastOfAN
 
-            return MuUtils.ClampDegrees360( LAN - LANnow ) / 360 * rotationPeriod;
+                // Some special cases:
+                // - |tan(inc)| > |tan(latitude)|. This is not possible because of the previous two checks, ensuring that the argument to Math.Asin is always in range (-1, 1).
+                // - latitude < 0. In this case, tan(latitude) < 0 and angleEastOfAN will be a negative value. This is in fact correct and means that the ascending node is
+                //   located east of the launch site.
+                // - inc = ±π/2 rad = ±90°. Since π/2 is not exactly representable as a double, Math.tan(inc) will return a large but finite value. The result is that
+                //   angleEastOfLaunch will be almost exactly 0, which is the correct answer.
+                // - latitude = ±π/2 rad = ±90°. This can only happen when inclination is ±90° as well, therefore the previous case applies.
+                angleEastOfAN = Math.Asin(Math.Tan(latitude) / Math.Tan(inc));
+
+                // There are two solutions to sin(θ) = c. These correspond to the northerly or southerly launch opportunities.
+                if (launchSouth) angleEastOfAN = Math.PI - angleEastOfAN;
+            }
+            double LANNow = celestialLongitude - angleEastOfAN * UtilMath.Rad2Deg;
+
+            if (rotationPeriod < 0)
+            {
+                // Special case: rotationPeriod is less than 0 when the planet rotates clockwise. In that case,
+                // use an angle between -360° and 0° to get the correct time.
+                return (UtilMath.ClampDegrees360(LAN - LANNow) - 360)/ 360 * rotationPeriod;
+            }
+            return UtilMath.ClampDegrees360(LAN - LANNow) / 360 * rotationPeriod;
         }
 
         /// <summary>
