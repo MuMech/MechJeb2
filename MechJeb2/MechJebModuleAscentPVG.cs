@@ -144,7 +144,8 @@ namespace MuMech
 
             ConvertToSMAEcc(autopilot.desiredOrbitAltitude, DesiredApoapsis, out sma, out ecc);
             ConvertToVTRT(sma, ecc, AttachAltFlag ? attachAlt : autopilot.desiredOrbitAltitude, out gammaT, out rT, out vT);
-            double inclination = autopilot.desiredInclination;
+            // Negative inclination is used in the warp-to-launch code to select the window, but breaks targetting a fixed plane.
+            double inclination = Math.Abs(autopilot.desiredInclination);
 
             if (AscentGuidance.launchingToPlane && core.target.NormalTargetExists)
             {
