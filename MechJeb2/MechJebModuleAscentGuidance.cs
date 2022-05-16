@@ -457,7 +457,7 @@ namespace MuMech
                 {
                     launchingToMatchLAN = true;
                     autopilot.StartCountdown(vesselState.time +
-                            SpaceMath.MinimumTimeToPlane(
+                            SpaceMath.TimeToPlane(
                                 mainBody.rotationPeriod,
                                 vesselState.latitude,
                                 vesselState.celestialLongitude,
@@ -474,7 +474,7 @@ namespace MuMech
                     {
                         launchingToLAN = true;
                         autopilot.StartCountdown(vesselState.time +
-                                SpaceMath.MinimumTimeToPlane(
+                                SpaceMath.TimeToPlane(
                                     mainBody.rotationPeriod,
                                     vesselState.latitude,
                                     vesselState.celestialLongitude,
