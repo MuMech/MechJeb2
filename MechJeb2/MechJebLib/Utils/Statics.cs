@@ -4,9 +4,9 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-#nullable enable
-
 using System;
+
+#nullable enable
 
 namespace MechJebLib.Utils
 {
@@ -16,7 +16,6 @@ namespace MechJebLib.Utils
     public static class Statics
     {
         public const double PI  = Math.PI;
-
         public const double TAU = 2 * PI;
 
         /// <summary>
@@ -133,7 +132,7 @@ namespace MechJebLib.Utils
         /// <param name="a">first value</param>
         /// <param name="b">second value</param>
         /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
-        /// <returns>true if the valus are nearly the same</returns>
+        /// <returns>true if the values are nearly the same</returns>
         public static bool NearlyEqual(double a, double b, double epsilon = EPS)
         {
             const double minNormal = 2.2250738585072014E-308d;
@@ -146,6 +145,18 @@ namespace MechJebLib.Utils
             if (a == 0 || b == 0 || absA + absB < minNormal)
                 return diff < epsilon * minNormal;
             return diff / (absA + absB) < epsilon;
+        }
+
+        /// <summary>
+        ///     Compares two Vector3d values with a relative tolerance.
+        /// </summary>
+        /// <param name="a">first vector</param>
+        /// <param name="b">second vector</param>
+        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <returns>true if the values are nearly the same</returns>
+        public static bool NearlyEqual(Vector3d a, Vector3d b, double epsilon = EPS)
+        {
+            return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
         }
     }
 }

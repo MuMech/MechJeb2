@@ -5,6 +5,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using static MechJebLib.Utils.Statics;
 
 #nullable enable
@@ -21,15 +22,15 @@ namespace MechJebLib.Maths
         /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
         /// <param name="latitude">Latitude of the launch site (degrees).</param>
         /// <param name="celestialLongitude">Celestial longitude of the current position of the launch site.</param>
-        /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
+        /// <param name="lan">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
-        public static (double time, double inclination) MinimumTimeToPlane(double rotationPeriod,double latitude,double celestialLongitude,double LAN,double inc)
+        public static (double time, double inclination) MinimumTimeToPlane(double rotationPeriod, double latitude, double celestialLongitude,
+            double lan, double inc)
         {
-            double north = TimeToPlane(rotationPeriod,latitude,celestialLongitude,LAN,Math.Abs(inc));
-            double south = TimeToPlane(rotationPeriod,latitude,celestialLongitude,LAN,-Math.Abs(inc));
-            return north < south ? (north,Math.Abs(inc)) : (south,-Math.Abs(inc));
+            double north = TimeToPlane(rotationPeriod, latitude, celestialLongitude, lan, Math.Abs(inc));
+            double south = TimeToPlane(rotationPeriod, latitude, celestialLongitude, lan, -Math.Abs(inc));
+            return north < south ? (north, Math.Abs(inc)) : (south, -Math.Abs(inc));
         }
-
 
         /// <summary>
         ///     Find the time to a target plane defined by the LAN and inc for a rocket on the ground.
@@ -37,13 +38,13 @@ namespace MechJebLib.Maths
         /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
         /// <param name="latitude">Latitude of the launch site (degrees).</param>
         /// <param name="celestialLongitude">Celestial longitude of the current position of the launch site (degrees).</param>
-        /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
+        /// <param name="lan">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
-        public static double TimeToPlane(double rotationPeriod,double latitude,double celestialLongitude,double LAN,double inc)
+        public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double lan, double inc)
         {
             latitude           = Deg2Rad(latitude);
             celestialLongitude = Deg2Rad(celestialLongitude);
-            LAN                = Deg2Rad(LAN);
+            lan                = Deg2Rad(lan);
             inc                = Deg2Rad(inc);
 
             // handle singularities at the poles where tan(lat) is infinite
@@ -62,15 +63,57 @@ namespace MechJebLib.Maths
             if (inc < 0)
                 angleEastOfAN = PI - angleEastOfAN;
 
-            double LANNow = celestialLongitude - angleEastOfAN;
+            double lanNow = celestialLongitude - angleEastOfAN;
 
-            double LANDiff = LAN - LANNow;
+            double lanDiff = lan - lanNow;
 
             // handle planets that rotate backwards
             if (rotationPeriod < 0)
-                LANDiff = -LANDiff;
+                lanDiff = -lanDiff;
 
-            return Clamp2Pi(LANDiff) / TAU * Math.Abs(rotationPeriod);
+            return Clamp2Pi(lanDiff) / TAU * Math.Abs(rotationPeriod);
+        }
+
+        public static void CubicHermiteInterpolant(double x1, IList<double> y1, IList<double> yp1, double x2, IList<double> y2,
+            IList<double> yp2, double x, int n, IList<double> y)
+        {
+            double t = (x - x1) / (x2 - x1);
+            double t2 = t * t;
+            double t3 = t2 * t;
+            double h00 = 2 * t3 - 3 * t2 + 1;
+            double h10 = t3 - 2 * t2 + t;
+            double h01 = -2 * t3 + 3 * t2;
+            double h11 = t3 - t2;
+            for (int i = 0; i < n; i++)
+                y[i] = h00 * y1[i] + h10 * (x2 - x1) * yp1[i] + h01 * y2[i] + h11 * (x2 - x1) * yp2[i];
+        }
+
+        public static double CubicHermiteInterpolant(double x1, double y1, double yp1, double x2, double y2,
+            double yp2, double x)
+        {
+            double t = (x - x1) / (x2 - x1);
+            double t2 = t * t;
+            double t3 = t2 * t;
+            double h00 = 2 * t3 - 3 * t2 + 1;
+            double h10 = t3 - 2 * t2 + t;
+            double h01 = -2 * t3 + 3 * t2;
+            double h11 = t3 - t2;
+
+            return h00 * y1 + h10 * (x2 - x1) * yp1 + h01 * y2 + h11 * (x2 - x1) * yp2;
+        }
+
+        public static Vector3d CubicHermiteInterpolant(double x1, Vector3d y1, Vector3d yp1, double x2, Vector3d y2,
+            Vector3d yp2, double x)
+        {
+            double t = (x - x1) / (x2 - x1);
+            double t2 = t * t;
+            double t3 = t2 * t;
+            double h00 = 2 * t3 - 3 * t2 + 1;
+            double h10 = t3 - 2 * t2 + t;
+            double h01 = -2 * t3 + 3 * t2;
+            double h11 = t3 - t2;
+
+            return h00 * y1 + h10 * (x2 - x1) * yp1 + h01 * y2 + h11 * (x2 - x1) * yp2;
         }
     }
 }

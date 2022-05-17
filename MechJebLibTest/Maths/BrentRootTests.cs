@@ -6,14 +6,14 @@
 
 using System;
 using AssertExtensions;
-using Xunit;
 using MechJebLib.Maths;
 using MechJebLib.Utils;
+using Xunit;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest
+namespace MechJebLibTest.Maths
 {
-public class BrentRootTests
+    public class BrentRootTests
     {
         [Theory]
         [InlineData(2.0)]
@@ -29,7 +29,7 @@ public class BrentRootTests
         public void Test(double a0)
         {
             double ans = BrentRoot.Solve((t, o) => t * t * t - a0, 0.0, 2.0, null);
-            ans.ShouldEqual(Math.Pow(a0, 1.0 / 3.0), 8*EPS);
+            ans.ShouldEqual(Math.Pow(a0, 1.0 / 3.0), 8 * EPS);
         }
 
         [Fact]
@@ -83,7 +83,7 @@ public class BrentRootTests
 
             // finds a root even though it shouldn't
             ans = BrentRoot.Solve((t, o) => Math.Tan(t), 2, null);
-            ans.ShouldEqual(PI/2, 16*EPS);
+            ans.ShouldEqual(PI / 2, 16 * EPS);
         }
     }
 }

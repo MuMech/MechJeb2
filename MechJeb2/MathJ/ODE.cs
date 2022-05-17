@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Threading;
+using MechJebLib.Structs;
 
 //using UnityEngine;
 
@@ -9,7 +10,6 @@ namespace MuMech.MathJ
     public abstract class ODE<T> where T : ODESolver, new()
     {
         public abstract int N { get; }
-        public abstract int M { get; }
 
         public CancellationToken CancellationToken { get; set; }
 
@@ -24,19 +24,19 @@ namespace MuMech.MathJ
         {
             Integrator = new T();
             // ReSharper disable VirtualMemberCallInConstructor
-            Integrator.Initialize(dydt_internal, N, M);
+            Integrator.Initialize(dydt_internal, N);
 
             if (events != null)
                 foreach (Event e in events)
                     Integrator.AddEvent(e);
         }
 
-        public void Integrate(double[] y0, double[] yf, double t0, double tf, CN? interpolant = null)
+        public void Integrate(IList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null)
         {
             Integrator.Integrate(y0, yf, t0, tf, interpolant);
         }
 
-        private void dydt_internal(double[] y, double x, double[] dy)
+        private void dydt_internal(IList<double> y, double x, IList<double> dy)
         {
             CancellationToken.ThrowIfCancellationRequested();
 
@@ -44,11 +44,11 @@ namespace MuMech.MathJ
         }
 
         // ReSharper disable once InconsistentNaming
-        protected abstract void dydt(double[] y, double x, double[] dy);
+        protected abstract void dydt(IList<double> y, double x, IList<double> dy);
 
-        public CN GetInterpolant()
+        public Hn GetInterpolant()
         {
-            return new CN(N + M) {AutotangentOffset = N};
+            return new Hn(N);
         }
     }
 }

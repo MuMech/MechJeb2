@@ -6,6 +6,8 @@
 
 using System.Collections.Concurrent;
 
+#nullable enable
+
 namespace MechJebLib.Utils
 {
     // TODO: min and max object levels

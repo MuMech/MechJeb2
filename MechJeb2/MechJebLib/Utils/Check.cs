@@ -4,12 +4,12 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using static MechJebLib.Utils.Statics;
+
+#nullable enable
 
 namespace MechJebLib.Utils
 {
