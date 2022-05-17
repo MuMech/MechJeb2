@@ -111,6 +111,7 @@
     <Compile Include="MechJebCore.cs" />
     <Compile Include="MechJebLib\Maths\BrentMin.cs" />
     <Compile Include="MechJebLib\Maths\BrentRoot.cs" />
+    <Compile Include="MechJebLib\Maths\Functions.cs" />
     <Compile Include="MechJebLib\Maths\Gooding.cs" />
     <Compile Include="MechJebLib\Maths\Shepperd.cs" />
     <Compile Include="MechJebLib\Utils\Check.cs" />
