@@ -23,11 +23,13 @@ namespace MechJebLib.Maths
         /// <param name="celestialLongitude">Celestial longitude of the current position of the launch site.</param>
         /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
-        public static double MinimumTimeToPlane(double rotationPeriod,double latitude,double celestialLongitude,double LAN,double inc)
+        /// <param name="launchNorth">True when the returned time is until the northern launch window, false for the southern window.</param>
+        public static double MinimumTimeToPlane(double rotationPeriod,double latitude,double celestialLongitude,double LAN,double inc, out bool launchNorth)
         {
-            double one = TimeToPlane(rotationPeriod,latitude,celestialLongitude,LAN,inc);
-            double two = TimeToPlane(rotationPeriod,latitude,celestialLongitude,LAN,-inc);
-            return Math.Min(one,two);
+            double north = TimeToPlane(rotationPeriod,latitude,celestialLongitude,LAN,Math.Abs(inc));
+            double south = TimeToPlane(rotationPeriod,latitude,celestialLongitude,LAN,-Math.Abs(inc));
+            launchNorth = (north < south);
+            return Math.Min(north, south);
         }
 
 

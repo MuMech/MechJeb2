@@ -427,6 +427,7 @@ namespace MuMech
 
             if (!Launching)
             {
+                bool launchingNorth = desiredInclination > 0;
                 // Launch to Rendezvous
                 if (targetExists && ascentPathIdx != ascentType.PVG
                     && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_button14,autopilot.launchPhaseAngle,"º",width: 40)) //Launch to rendezvous:
@@ -447,7 +448,8 @@ namespace MuMech
                                 vesselState.latitude,
                                 vesselState.celestialLongitude,
                                 core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
-                                core.target.TargetOrbit.inclination
+                                core.target.TargetOrbit.inclination,
+                                out launchingNorth
                                 )
                             );
                 }
@@ -463,7 +465,8 @@ namespace MuMech
                                 vesselState.latitude,
                                 vesselState.celestialLongitude,
                                 core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
-                                desiredInclination
+                                desiredInclination,
+                                out launchingNorth
                                 )
                             );
                 }
@@ -480,13 +483,17 @@ namespace MuMech
                                     vesselState.latitude,
                                     vesselState.celestialLongitude,
                                     desiredLAN,
-                                    desiredInclination
+                                    desiredInclination,
+                                    out launchingNorth
                                     )
                                 );
                     }
 
                     autopilot.desiredLAN = desiredLAN;
                 }
+
+                // Fix up the sign of the inclination to match the window MinimumTimeToPlane selected
+                desiredInclination = launchingNorth ? Math.Abs(desiredInclination) : -Math.Abs(desiredInclination);
             }
 
             if (Launching)

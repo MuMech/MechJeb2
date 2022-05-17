@@ -242,7 +242,7 @@ namespace MuMech
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle4constraint, rT: " + rT + " vT:" + vT + " inc:" + inc + " gamma:" + gamma);
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
-                solver.flightangle4constraint(rT, vT, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad);
+                solver.flightangle4constraint(rT, vT, gamma * UtilMath.Deg2Rad, Math.Abs(inc * UtilMath.Deg2Rad));
                 p = solver;
             }
 
@@ -272,7 +272,7 @@ namespace MuMech
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle5constraint, rT: " + rT + " vT:" + vT + " inc:" + inc + " gamma:" + gamma + " LAN:" + LAN + " sma: " + sma);
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
-                solver.flightangle5constraint(rT, vT, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad);
+                solver.flightangle5constraint(rT, vT, gamma * UtilMath.Deg2Rad, Math.Abs(inc * UtilMath.Deg2Rad), LAN * UtilMath.Deg2Rad);
                 p = solver;
             }
 
@@ -330,7 +330,7 @@ namespace MuMech
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian3constraint");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
-                solver.keplerian3constraint(sma, ecc, inc * UtilMath.Deg2Rad);
+                solver.keplerian3constraint(sma, ecc, Math.Abs(inc * UtilMath.Deg2Rad));
                 p = solver;
             }
 
@@ -368,7 +368,7 @@ namespace MuMech
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian4constraintArgPfree");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
-                solver.keplerian4constraintArgPfree(sma, ecc, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad);
+                solver.keplerian4constraintArgPfree(sma, ecc, Math.Abs(inc * UtilMath.Deg2Rad), LAN * UtilMath.Deg2Rad);
                 p = solver;
             }
 
@@ -403,7 +403,7 @@ namespace MuMech
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up keplerian5constraint");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
-                solver.keplerian5constraint(sma, ecc, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad, ArgP * UtilMath.Deg2Rad);
+                solver.keplerian5constraint(sma, ecc, Math.Abs(inc * UtilMath.Deg2Rad), LAN * UtilMath.Deg2Rad, ArgP * UtilMath.Deg2Rad);
                 p = solver;
             }
 
@@ -437,7 +437,7 @@ namespace MuMech
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle3constraintMAXE");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
-                solver.flightangle3constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, numStages);
+                solver.flightangle3constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, Math.Abs(inc * UtilMath.Deg2Rad), numStages);
                 p = solver;
             }
 
@@ -470,7 +470,7 @@ namespace MuMech
                 Debug.Log("[MechJeb] MechJebModuleGuidanceController: setting up flightangle3constraintMAXE");
                 PontryaginLaunch solver = NewPontryaginForLaunch(inc, sma);
                 solver.fixedCoast = fixedCoast;
-                solver.flightangle4constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, inc * UtilMath.Deg2Rad, LAN * UtilMath.Deg2Rad, numStages);
+                solver.flightangle4constraintMAXE(rTm, gamma * UtilMath.Deg2Rad, Math.Abs(inc * UtilMath.Deg2Rad), LAN * UtilMath.Deg2Rad, numStages);
                 p = solver;
             }
 
