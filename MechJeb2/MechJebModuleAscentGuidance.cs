@@ -427,7 +427,6 @@ namespace MuMech
 
             if (!Launching)
             {
-                bool launchingNorth = desiredInclination > 0;
                 // Launch to Rendezvous
                 if (targetExists && ascentPathIdx != ascentType.PVG
                     && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_button14,autopilot.launchPhaseAngle,"º",width: 40)) //Launch to rendezvous:
@@ -449,9 +448,11 @@ namespace MuMech
                                 vesselState.celestialLongitude,
                                 core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
                                 core.target.TargetOrbit.inclination,
-                                out launchingNorth
+                                out bool launchingNorth
                                 )
                             );
+                    // Fix up the sign of the inclination to match the window MinimumTimeToPlane selected
+                    desiredInclination = launchingNorth ? Math.Abs(desiredInclination) : -Math.Abs(desiredInclination);
                 }
 
                 //Launch to target LAN
@@ -460,13 +461,12 @@ namespace MuMech
                 {
                     launchingToMatchLAN = true;
                     autopilot.StartCountdown(vesselState.time +
-                            Functions.MinimumTimeToPlane(
+                            Functions.TimeToPlane(
                                 mainBody.rotationPeriod,
                                 vesselState.latitude,
                                 vesselState.celestialLongitude,
                                 core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
-                                desiredInclination,
-                                out launchingNorth
+                                desiredInclination
                                 )
                             );
                 }
@@ -478,22 +478,18 @@ namespace MuMech
                     {
                         launchingToLAN = true;
                         autopilot.StartCountdown(vesselState.time +
-                                Functions.MinimumTimeToPlane(
+                                Functions.TimeToPlane(
                                     mainBody.rotationPeriod,
                                     vesselState.latitude,
                                     vesselState.celestialLongitude,
                                     desiredLAN,
-                                    desiredInclination,
-                                    out launchingNorth
+                                    desiredInclination
                                     )
                                 );
                     }
 
                     autopilot.desiredLAN = desiredLAN;
                 }
-
-                // Fix up the sign of the inclination to match the window MinimumTimeToPlane selected
-                desiredInclination = launchingNorth ? Math.Abs(desiredInclination) : -Math.Abs(desiredInclination);
             }
 
             if (Launching)
