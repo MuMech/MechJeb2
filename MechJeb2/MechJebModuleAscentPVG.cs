@@ -149,7 +149,7 @@ namespace MuMech
             if (AscentGuidance.launchingToPlane && core.target.NormalTargetExists)
             {
                 LAN         = core.target.TargetOrbit.LAN;
-                inclination = core.target.TargetOrbit.inclination;
+                inclination = Math.Sign(inclination) * core.target.TargetOrbit.inclination;
                 lanflag     = true;
             }
             else if (AscentGuidance.launchingToMatchLAN && core.target.NormalTargetExists)

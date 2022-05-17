@@ -441,15 +441,15 @@ namespace MuMech
                 if (targetExists && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_button15,autopilot.launchLANDifference,"º",width: LAN_width)) //Launch into plane of target
                 {
                     launchingToPlane = true;
-                    autopilot.StartCountdown(vesselState.time +
-                            Functions.MinimumTimeToPlane(
-                                mainBody.rotationPeriod,
-                                vesselState.latitude,
-                                vesselState.celestialLongitude,
-                                core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
-                                core.target.TargetOrbit.inclination
-                                )
-                            );
+                    (double timeToPlane, double inclination) = Functions.MinimumTimeToPlane(
+                            mainBody.rotationPeriod,
+                            vesselState.latitude,
+                            vesselState.celestialLongitude,
+                            core.target.TargetOrbit.LAN - autopilot.launchLANDifference,
+                            core.target.TargetOrbit.inclination
+                        );
+                    autopilot.StartCountdown(vesselState.time + timeToPlane);
+                    desiredInclination = inclination;
                 }
 
                 //Launch to target LAN
@@ -458,7 +458,7 @@ namespace MuMech
                 {
                     launchingToMatchLAN = true;
                     autopilot.StartCountdown(vesselState.time +
-                            Functions.MinimumTimeToPlane(
+                            Functions.TimeToPlane(
                                 mainBody.rotationPeriod,
                                 vesselState.latitude,
                                 vesselState.celestialLongitude,
@@ -475,7 +475,7 @@ namespace MuMech
                     {
                         launchingToLAN = true;
                         autopilot.StartCountdown(vesselState.time +
-                                Functions.MinimumTimeToPlane(
+                                Functions.TimeToPlane(
                                     mainBody.rotationPeriod,
                                     vesselState.latitude,
                                     vesselState.celestialLongitude,
@@ -491,13 +491,6 @@ namespace MuMech
 
             if (Launching)
             {
-                if (launchingToPlane)
-                {
-                    desiredInclination = MuUtils.Clamp(core.target.TargetOrbit.inclination,Math.Abs(vesselState.latitude),180 - Math.Abs(vesselState.latitude));
-                    desiredInclination *=
-                        Math.Sign(Vector3d.Dot(core.target.TargetOrbit.SwappedOrbitNormal(),
-                                    Vector3d.Cross(vesselState.CoM - mainBody.position,mainBody.transform.up)));
-                }
                 GUILayout.Label(launchTimer);
                 if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button17))//Abort
                     launchingToPlane = launchingToRendezvous = launchingToMatchLAN = launchingToLAN = autopilot.timedLaunch = false;
