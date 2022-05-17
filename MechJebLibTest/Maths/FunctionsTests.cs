@@ -160,6 +160,100 @@ namespace MechJebLibTest.Maths
         }
 
         [Fact]
+        private void EquatorialAt45()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    double lng = i * 45;
+                    double lan = j * 45;
+
+                    // advance by 90 degrees
+                    double delay = PERIOD / 8 * ((j - i + 8 + 2) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(PERIOD,45,lng,lan,0).ShouldEqual(delay,ACC);
+                    }
+
+                    // advance by 270 degrees
+                    delay = PERIOD / 8 * ((j - i + 8 + 6) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(PERIOD,-45,lng,lan,0).ShouldEqual(delay,ACC);
+                    }
+
+                    // reverse and advance by 270 degrees
+                    delay = PERIOD / 8 * ((i - j + 8 + 6) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(-PERIOD,45,lng,lan,0).ShouldEqual(delay,ACC);
+                    }
+
+                    // reverse and advance by 90 degrees
+                    delay = PERIOD / 8 * ((i - j + 8 + 2) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(-PERIOD,-45,lng,lan,0).ShouldEqual(delay,ACC);
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        private void RetrogradeEquatorialAt45()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    double lng = i * 45;
+                    double lan = j * 45;
+
+                    // advance by 270 degrees
+                    double delay = PERIOD / 8 * ((j - i + 8 + 6) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(PERIOD,45,lng,lan,180).ShouldEqual(delay,ACC2);
+                        Functions.TimeToPlane(PERIOD,45,lng,lan,-180).ShouldEqual(delay,ACC2);
+                    }
+
+                    // advance by 90 degrees
+                    delay = PERIOD / 8 * ((j - i + 8 + 2) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(PERIOD,-45,lng,lan,180).ShouldEqual(delay,ACC2);
+                        Functions.TimeToPlane(PERIOD,-45,lng,lan,-180).ShouldEqual(delay,ACC2);
+                    }
+
+                    // reverse and advance by 90 degrees
+                    delay = PERIOD / 8 * ((i - j + 8 + 2) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(-PERIOD,45,lng,lan,180).ShouldEqual(delay,ACC2);
+                        Functions.TimeToPlane(-PERIOD,45,lng,lan,-180).ShouldEqual(delay,ACC2);
+                    }
+
+                    // reverse and advance by 270 degrees
+                    delay = PERIOD / 8 * ((i - j + 8 + 6) % 8);
+
+                    if (delay != 0)
+                    {
+                        Functions.TimeToPlane(-PERIOD,-45,lng,lan,180).ShouldEqual(delay,ACC2);
+                        Functions.TimeToPlane(-PERIOD,-45,lng,lan,-180).ShouldEqual(delay,ACC2);
+                    }
+                }
+            }
+        }
+
+        [Fact]
         private void Test47AtKSCLat()
         {
             // this produces a 330 degree LAN from 28.608 so everything is 30 degrees offset
