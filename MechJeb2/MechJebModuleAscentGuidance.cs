@@ -2,6 +2,7 @@
 using UnityEngine;
 using KSP.UI.Screens;
 using KSP.Localization;
+using MechJebLib.Maths;
 using UnityEngine.Profiling;
 
 namespace MuMech
@@ -21,7 +22,7 @@ namespace MuMech
         public bool launchingToMatchLAN = false;
         public bool launchingToLAN = false;
         public bool Launching => launchingToPlane || launchingToRendezvous || launchingToMatchLAN || launchingToLAN;
-                
+
         public MechJebModuleAscentAutopilot autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
         public MechJebModuleAscentPVG pvgascent { get { return core.GetComputerModule<MechJebModuleAscentPVG>(); } }
         public MechJebModuleAscentGT gtascent { get { return core.GetComputerModule<MechJebModuleAscentGT>(); } }
@@ -441,7 +442,7 @@ namespace MuMech
                 {
                     launchingToPlane = true;
                     autopilot.StartCountdown(vesselState.time +
-                            SpaceMath.MinimumTimeToPlane(
+                            Functions.MinimumTimeToPlane(
                                 mainBody.rotationPeriod,
                                 vesselState.latitude,
                                 vesselState.celestialLongitude,
@@ -457,7 +458,7 @@ namespace MuMech
                 {
                     launchingToMatchLAN = true;
                     autopilot.StartCountdown(vesselState.time +
-                            SpaceMath.MinimumTimeToPlane(
+                            Functions.MinimumTimeToPlane(
                                 mainBody.rotationPeriod,
                                 vesselState.latitude,
                                 vesselState.celestialLongitude,
@@ -474,7 +475,7 @@ namespace MuMech
                     {
                         launchingToLAN = true;
                         autopilot.StartCountdown(vesselState.time +
-                                SpaceMath.MinimumTimeToPlane(
+                                Functions.MinimumTimeToPlane(
                                     mainBody.rotationPeriod,
                                     vesselState.latitude,
                                     vesselState.celestialLongitude,

@@ -55,6 +55,7 @@
     <ItemGroup>
         <Compile Include="AssertionExtensions.cs" />
         <Compile Include="BrentRootTests.cs" />
+        <Compile Include="Maths\FunctionsTests.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>

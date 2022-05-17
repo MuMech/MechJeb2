@@ -10,48 +10,6 @@ namespace MuMech
     public static class SpaceMath
     {
         /// <summary>
-        /// Find the time to a target plane defined by the LAN and inc for a rocket on the ground.  Wrapper which handles picking
-        /// the soonest of the northgoing and southgoing ground tracks.
-        /// </summary>
-        ///
-        /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
-        /// <param name="latitude">Latitude of the launchite (degrees).</param>
-        /// <param name="celestialLongitude">Celestial longitude of the current position of the launchsite.</param>
-        /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
-        /// <param name="inc">Inclination of the target plane (degrees).</param>
-        ///
-        public static double MinimumTimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double LAN, double inc)
-        {
-            double one = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, inc);
-            double two = TimeToPlane(rotationPeriod, latitude, celestialLongitude, LAN, -inc);
-            return Math.Min(one, two);
-        }
-
-        /// <summary>
-        /// Find the time to a target plane defined by the LAN and inc for a rocket on the ground.
-        /// </summary>
-        ///
-        /// <param name="rotationPeriod">Rotation period of the central body (seconds).</param>
-        /// <param name="latitude">Latitude of the launchite (degrees).</param>
-        /// <param name="celestialLongitude">Celestial longitude of the current position of the launchsite.</param>
-        /// <param name="LAN">Longitude of the Ascending Node of the target plane (degrees).</param>
-        /// <param name="inc">Inclination of the target plane (degrees).</param>
-        ///
-        public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double LAN, double inc)
-        {
-            // alpha is the 90 degree angle between the line of longitude and the equator and omitted
-            double beta = OrbitalManeuverCalculator.HeadingForInclination(inc, latitude) * UtilMath.Deg2Rad;
-            double c = Math.Abs(latitude) * UtilMath.Deg2Rad; // Abs for south hemisphere launch sites
-            // b is how many radians to the west of the launch site that the LAN is (east in south hemisphere)
-            double b = Math.Atan2( 2 * Math.Sin(beta), Math.Cos(beta) / Math.Tan(c/2) + Math.Tan(c/2) * Math.Cos(beta) ); // napier's analogies
-            // LAN if we launched now
-            double LANnow = celestialLongitude - Math.Sign(latitude) * b * UtilMath.Rad2Deg;
-
-
-            return MuUtils.ClampDegrees360( LAN - LANnow ) / 360 * rotationPeriod;
-        }
-
-        /// <summary>
         /// Single impulse transfer from an ellipitical, non-coplanar parking orbit to an arbitrary hyperbolic v-infinity target.
         ///
         /// Ocampo, C., & Saudemont, R. R. (2010). Initial Trajectory Model for a Multi-Maneuver Moon-to-Earth Abort Sequence.
