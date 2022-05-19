@@ -4,13 +4,13 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-#nullable enable
-
 using System;
 using MuMech;
 
+#nullable enable
+
 namespace MechJebLib.Maths {
-    public class Shepperd {
+    public static class Shepperd {
         public static void Solve(double mu, double tau, Vector3d ri, Vector3d vi, out Vector3d rf, out Vector3d vf)
         {
             double tolerance = 1.0e-12;

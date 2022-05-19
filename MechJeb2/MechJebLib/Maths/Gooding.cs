@@ -5,27 +5,27 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using static MechJebLib.Utils.Statics;
 
+#nullable enable
+
 namespace MechJebLib.Maths {
-    public class Gooding {
+    public static class Gooding {
 
         /*
-         * R1 = position at t0
-         * V1 = velocity at t0
-         * R2 = position at t1
-         * V2 = velocity at t1
+         * mu = gravitational parameter of central body
+         * r1 = position at t0
+         * v1 = velocity at t0
+         * r2 = position at t1
          * tof  = time of flight (t1 - t0) (+ posigrade "shortway", - retrograde "longway")
          * nrev = number of full revolutions (+ left-branch, - right-branch for nrev != 0)
-         * Vi = initial velocity vector of transfer orbit (Vi - V1 = deltaV)
-         * Vf = final velocity vector of transfer orbit (V2 - Vf = deltaV)
+         * Vi = initial velocity vector of transfer orbit
+         * Vf = final velocity vector of transfer orbit
          */
 
-        public static void Solve(double GM, Vector3d R1, Vector3d V1, Vector3d R2, Vector3d V2, double tof, int nrev, out Vector3d Vi, out Vector3d Vf) {
+        public static void Solve(double mu, Vector3d r1, Vector3d v1, Vector3d r2, double tof, int nrev, out Vector3d Vi, out Vector3d Vf) {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */
 
             // if we don't catch this edge condition, the solver will spin forever (internal state will NaN and produce great sadness)
@@ -40,10 +40,10 @@ namespace MechJebLib.Maths {
             Vi = Vector3d.zero;
             Vf = Vector3d.zero;
 
-            Vector3d ur1xv1 = Vector3d.Cross(R1, V1).normalized;
+            Vector3d ur1xv1 = Vector3d.Cross(r1, v1).normalized;
 
-            Vector3d ux1 = R1.normalized;
-            Vector3d ux2 = R2.normalized;
+            Vector3d ux1 = r1.normalized;
+            Vector3d ux2 = r2.normalized;
 
             Vector3d uz1 = Vector3d.Cross(ux1, ux2).normalized;
 
@@ -75,7 +75,7 @@ namespace MechJebLib.Maths {
 
             theta += TAU * Math.Abs(nrev);
 
-            VLAMB(GM, R1.magnitude, R2.magnitude, theta, tof, out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
+            VLAMB(mu, r1.magnitude, r2.magnitude, theta, tof, out n, out VR11, out VT11, out VR12, out VT12, out VR21, out VT21, out VR22, out VT22);
 
             if (nrev > 0)
             {

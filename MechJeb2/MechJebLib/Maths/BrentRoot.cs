@@ -4,10 +4,10 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-#nullable enable
-
 using System;
 using MechJebLib.Utils;
+
+#nullable enable
 
 namespace MechJebLib.Maths
 {
@@ -135,6 +135,7 @@ namespace MechJebLib.Maths
             double d = double.NaN;
             double e = double.NaN;
 
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             while (fb != 0 && a != b)
             {
                 if (fb > 0 == fc > 0)
@@ -178,6 +179,7 @@ namespace MechJebLib.Maths
                     double s = fb / fa;
                     double p;
                     double q;
+                    // ReSharper disable once CompareOfFloatsByEqualityOperator
                     if (a == c)
                     {
                         // Linear interpolation

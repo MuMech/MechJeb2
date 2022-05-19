@@ -4,11 +4,11 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-// ReSharper disable CompareOfFloatsByEqualityOperator
-#nullable enable
-
 using System;
+using System.Diagnostics.CodeAnalysis;
 using static MechJebLib.Utils.Statics;
+
+#nullable enable
 
 namespace MechJebLib.Maths
 {
@@ -27,12 +27,14 @@ namespace MechJebLib.Maths
         // fx - output of solved value
         // y - output of the function at the solved value
         //
-        public static (double x, double fx) Solve(Func<double, object?, double> f, double xmin, double xmax, object? o = null, double rtol = 1e-9, int maxiter = 50)
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
+        public static (double x, double fx) Solve(Func<double, object?, double> f, double xmin, double xmax, object? o = null, double rtol = 1e-9,
+            int maxiter = 50)
         {
-            double c = 0.5 * (3.0 - System.Math.Sqrt(5.0)); //  C is the square of the inverse of the golden ratio.
+            double c = 0.5 * (3.0 - Math.Sqrt(5.0)); //  C is the square of the inverse of the golden ratio.
             double d = 0;
             double e = 0.0;
-            double eps = System.Math.Sqrt(EPS);
+            double eps = Math.Sqrt(EPS);
             double sa = xmin;
             double sb = xmax;
 
@@ -49,12 +51,12 @@ namespace MechJebLib.Maths
             while (true)
             {
                 double m = 0.5 * (sa + sb);
-                double t = eps * System.Math.Abs(x) + rtol;
+                double t = eps * Math.Abs(x) + rtol;
                 double t2 = 2.0 * t;
                 //
                 //  Check the stopping criterion.
                 //
-                if (System.Math.Abs(x - m) <= t2 - 0.5 * (sb - sa)) break;
+                if (Math.Abs(x - m) <= t2 - 0.5 * (sb - sa)) break;
                 //
                 //  Fit a parabola.
                 //
@@ -62,21 +64,21 @@ namespace MechJebLib.Maths
                 double q = r;
                 double p = q;
 
-                if (t < System.Math.Abs(e))
+                if (t < Math.Abs(e))
                 {
                     r = (x - w) * (fx - fv);
                     q = (x - v) * (fx - fw);
                     p = (x - v) * q - (x - w) * r;
                     q = 2.0 * (q - r);
                     if (0.0 < q) p = -p;
-                    q = System.Math.Abs(q);
+                    q = Math.Abs(q);
                     r = e;
                     e = d;
                 }
 
                 double u;
 
-                if (System.Math.Abs(p) < System.Math.Abs(0.5 * q * r) &&
+                if (Math.Abs(p) < Math.Abs(0.5 * q * r) &&
                     q * (sa - x) < p &&
                     p < q * (sb - x))
                 {
@@ -111,7 +113,7 @@ namespace MechJebLib.Maths
                 //
                 //  F must not be evaluated too close to X.
                 //
-                if (t <= System.Math.Abs(d))
+                if (t <= Math.Abs(d))
                     u = x + d;
                 else if (0.0 < d)
                     u = x + t;

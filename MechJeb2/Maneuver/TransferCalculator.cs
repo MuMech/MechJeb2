@@ -115,14 +115,17 @@ namespace MuMech
             Vector3d r2 = _destination.getRelativePositionAtUT(t1);
             Vector3d v2_1 = _destination.getOrbitalVelocityAtUT(t1);
 
-            Vector3d v1 = v1_0;
-            Vector3d v2 = v2_1;
+            Vector3d v1;
+            Vector3d v2;
             try
             {
-                Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, v2_1, dt, 0, out v1, out v2);
+
+                Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, dt, 0, out v1, out v2);
             }
             catch
             {
+                v1 = v1_0;
+                v2 = v2_1;
                 // ignored
             }
 

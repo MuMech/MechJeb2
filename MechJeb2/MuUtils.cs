@@ -178,7 +178,7 @@ namespace MuMech
             set => GUIUtility.systemCopyBuffer = value;
         }
 
-        public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
+        public static ICollection<T> Swap<T>(this IList<T> list, int indexA, int indexB)
         {
             T tmp = list[indexA];
             list[indexA] = list[indexB];

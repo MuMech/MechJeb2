@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
+using MechJebLib.Structs;
 using MuMech.MathJ;
 using UnityEngine;
 
@@ -106,12 +108,11 @@ namespace MuMech
         private class VacuumThrustKernel<T> : ODE<T> where T : ODESolver, new()
         {
             public override int N => 14;
-            public override int M => 0;
 
             public Arc    arc   { get; set; }
             public double g_bar { get; set; }
 
-            protected override void dydt(double[] y, double x, double[] dy)
+            protected override void dydt(IList<double> y, double x, IList<double> dy)
             {
                 double At = arc.Thrust / (y[12] * g_bar);
                 if (arc.infinite) At = At * 2;
@@ -181,7 +182,7 @@ namespace MuMech
                 y[5] = v0_bar[2];
             }
 
-            CN interpolant = null;
+            Hn interpolant = null;
 
             if (sol != null)
             {
