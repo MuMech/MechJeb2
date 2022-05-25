@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MechJebLib.Structs;
-using MuMech.MathJ;
 
 namespace MuMech
 {

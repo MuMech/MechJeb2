@@ -4,7 +4,9 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+using System.Collections.Generic;
 using MechJebLib.Maths;
+using MechJebLib.Utils;
 
 #nullable enable
 
@@ -12,6 +14,25 @@ namespace MechJebLib.Structs
 {
     public class H1 : HBase<double>
     {
+        private static readonly ObjectPool<H1> _pool = new ObjectPool<H1>(New);
+
+        private static H1 New()
+        {
+            return new H1();
+        }
+
+        public static H1 Get()
+        {
+            H1 h = _pool.Get();
+            return h;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            _pool.Return(this);
+        }
+
         protected override double Allocate()
         {
             return 0.0;

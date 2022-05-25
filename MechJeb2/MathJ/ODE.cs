@@ -48,7 +48,7 @@ namespace MuMech.MathJ
 
         public Hn GetInterpolant()
         {
-            return new Hn(N);
+            return Hn.Get(N);
         }
     }
 }

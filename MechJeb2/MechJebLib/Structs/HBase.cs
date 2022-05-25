@@ -206,7 +206,7 @@ namespace MechJebLib.Structs
             _list.Clear();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Clear();
         }
