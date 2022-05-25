@@ -117,7 +117,7 @@
     <Compile Include="MechJebLib\Utils\Check.cs" />
     <Compile Include="MechJebLib\Utils\ObjectPool.cs" />
     <Compile Include="MechJebLib\Utils\Statics.cs" />
-    <Compile Include="MechJebLib\Utils\DoublePool.cs" />
+    <Compile Include="MechJebLib\Utils\DDArray.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
     <Compile Include="MechJebModuleAirplaneGuidance.cs" />
     <Compile Include="MechJebModuleAscentAutopilot.cs" />

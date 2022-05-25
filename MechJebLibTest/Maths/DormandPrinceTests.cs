@@ -89,28 +89,35 @@ namespace MechJebLibTest.Maths
 
             double[] y0 = {x0, v0};
             double[] yf = new double[2];
-            Hn interpolant = ode.GetInterpolant();
-
-            ode.Integrate(y0, yf, 0, 4, interpolant);
-
             double omega = Math.Sqrt(k / m);
             int t = 3;
-
-            List<double> y = interpolant.Evaluate(t);
-
             double expected = x0 * Math.Cos(omega * t) + v0 * Math.Sin(omega * t) / omega;
-            y[0].ShouldEqual(expected, 1e-4);
+            DDArray y;
 
-            DoublePool.Pool.Return(y);
-            interpolant.Clear();
+            using (Hn interpolant = ode.GetInterpolant())
+            {
+                ode.Integrate(y0, yf, 0, 4, interpolant);
 
-            long start = GC.GetAllocatedBytesForCurrentThread();
+                using (y = interpolant.Evaluate(t))
+                {
+                    y[0].ShouldEqual(expected, 1e-9);
+                }
 
-            ode.Integrate(y0, yf, 0, 4, interpolant);
-            y = interpolant.Evaluate(t);
+                interpolant.Clear();
+            }
 
-            Assert.Equal(0,GC.GetAllocatedBytesForCurrentThread() - start );
+            using (Hn interpolant = ode.GetInterpolant())
+            {
+                long start = GC.GetAllocatedBytesForCurrentThread();
+
+                ode.Integrate(y0, yf, 0, 4, interpolant);
+                using (y = interpolant.Evaluate(t))
+                {
+                    y[0].ShouldEqual(expected, 1e-9);
+                }
+
+                Assert.Equal(0,GC.GetAllocatedBytesForCurrentThread() - start );
+            }
         }
-
     }
 }

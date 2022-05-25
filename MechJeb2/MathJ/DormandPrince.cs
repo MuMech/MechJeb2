@@ -117,33 +117,33 @@ namespace MuMech.MathJ
 
         private int                                          _n;
         private Action<IList<double>, double, IList<double>> _dydt = null!;
-        private List<double>                                 _k1   = null!;
-        private List<double>                                 _k2   = null!;
-        private List<double>                                 _k3   = null!;
-        private List<double>                                 _k4   = null!;
-        private List<double>                                 _k5   = null!;
-        private List<double>                                 _k6   = null!;
-        private List<double>                                 _k7   = null!;
-        private List<double>                                 _a    = null!;
-        private List<double>                                 _err  = null!;
-        private List<double>                                 _y    = null!;
-        private List<double>                                 _newy = null!;
+        private DDArray                                 _k1   = null!;
+        private DDArray                                 _k2   = null!;
+        private DDArray                                 _k3   = null!;
+        private DDArray                                 _k4   = null!;
+        private DDArray                                 _k5   = null!;
+        private DDArray                                 _k6   = null!;
+        private DDArray                                 _k7   = null!;
+        private DDArray                                 _a    = null!;
+        private DDArray                                 _err  = null!;
+        private DDArray                                 _y    = null!;
+        private DDArray                                 _newy = null!;
 
         public override void Initialize(Action<IList<double>, double, IList<double>> dydt, int n)
         {
             _n    = n;
             _dydt = dydt;
-            _k1   = DoublePool.Pool.Rent(n);
-            _k2   = DoublePool.Pool.Rent(n);
-            _k3   = DoublePool.Pool.Rent(n);
-            _k4   = DoublePool.Pool.Rent(n);
-            _k5   = DoublePool.Pool.Rent(n);
-            _k6   = DoublePool.Pool.Rent(n);
-            _k7   = DoublePool.Pool.Rent(n);
-            _a    = DoublePool.Pool.Rent(n);
-            _err  = DoublePool.Pool.Rent(n);
-            _y    = DoublePool.Pool.Rent(n);
-            _newy = DoublePool.Pool.Rent(n);
+            _k1   = DDArray.Rent(n);
+            _k2   = DDArray.Rent(n);
+            _k3   = DDArray.Rent(n);
+            _k4   = DDArray.Rent(n);
+            _k5   = DDArray.Rent(n);
+            _k6   = DDArray.Rent(n);
+            _k7   = DDArray.Rent(n);
+            _a    = DDArray.Rent(n);
+            _err  = DDArray.Rent(n);
+            _y    = DDArray.Rent(n);
+            _newy = DDArray.Rent(n);
         }
 
         // Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)
