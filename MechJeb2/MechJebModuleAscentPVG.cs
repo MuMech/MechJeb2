@@ -128,6 +128,7 @@ namespace MuMech
         private void SetTarget()
         {
             bool lanflag = false;
+            bool targetInc = false;
 
             double sma = 0;
             double ecc = 0;
@@ -150,6 +151,7 @@ namespace MuMech
             {
                 LAN         = core.target.TargetOrbit.LAN;
                 inclination = Math.Sign(inclination) * core.target.TargetOrbit.inclination;
+                targetInc   = true;
                 lanflag     = true;
             }
             else if (AscentGuidance.launchingToMatchLAN && core.target.NormalTargetExists)
@@ -170,9 +172,9 @@ namespace MuMech
             if (lanflag)
             {
                 if (ecc < 1e-4 || AttachAltFlag)
-                    core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, coastLen, false, true);
+                    core.guidance.flightangle5constraint(rT, vT, inclination, gammaT, LAN, sma, coastLen, targetInc, true);
                 else
-                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, coastLen, false, true);
+                    core.guidance.keplerian4constraintArgPfree(sma, ecc, inclination, LAN, coastLen, targetInc, true);
             }
             else
             {
