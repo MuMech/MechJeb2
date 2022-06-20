@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using MechJebLib.Maths;
-using MechJebLib.Structs;
+using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
@@ -115,35 +115,35 @@ namespace MuMech.MathJ
             _evtDelegate = EvtWrapper;
         }
 
-        private int                                          _n;
-        private Action<IList<double>, double, IList<double>> _dydt = null!;
-        private DDArray                                 _k1   = null!;
-        private DDArray                                 _k2   = null!;
-        private DDArray                                 _k3   = null!;
-        private DDArray                                 _k4   = null!;
-        private DDArray                                 _k5   = null!;
-        private DDArray                                 _k6   = null!;
-        private DDArray                                 _k7   = null!;
-        private DDArray                                 _a    = null!;
-        private DDArray                                 _err  = null!;
-        private DDArray                                 _y    = null!;
-        private DDArray                                 _newy = null!;
+        private int                              _n;
+        private Action<DD, double, DD> _dydt = null!;
+        private DD                          _k1   = null!;
+        private DD                          _k2   = null!;
+        private DD                          _k3   = null!;
+        private DD                          _k4   = null!;
+        private DD                          _k5   = null!;
+        private DD                          _k6   = null!;
+        private DD                          _k7   = null!;
+        private DD                          _a    = null!;
+        private DD                          _err  = null!;
+        private DD                          _y    = null!;
+        private DD                          _newy = null!;
 
-        public override void Initialize(Action<IList<double>, double, IList<double>> dydt, int n)
+        public override void Initialize(Action<DD, double, DD> dydt, int n)
         {
             _n    = n;
             _dydt = dydt;
-            _k1   = DDArray.Rent(n);
-            _k2   = DDArray.Rent(n);
-            _k3   = DDArray.Rent(n);
-            _k4   = DDArray.Rent(n);
-            _k5   = DDArray.Rent(n);
-            _k6   = DDArray.Rent(n);
-            _k7   = DDArray.Rent(n);
-            _a    = DDArray.Rent(n);
-            _err  = DDArray.Rent(n);
-            _y    = DDArray.Rent(n);
-            _newy = DDArray.Rent(n);
+            _k1   = DD.Rent(n);
+            _k2   = DD.Rent(n);
+            _k3   = DD.Rent(n);
+            _k4   = DD.Rent(n);
+            _k5   = DD.Rent(n);
+            _k6   = DD.Rent(n);
+            _k7   = DD.Rent(n);
+            _a    = DD.Rent(n);
+            _err  = DD.Rent(n);
+            _y    = DD.Rent(n);
+            _newy = DD.Rent(n);
         }
 
         // Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)
@@ -155,7 +155,7 @@ namespace MuMech.MathJ
         //
         // ref: https://github.com/scipy/scipy/blob/master/scipy/integrate/dop/dopri5.f
         //
-        public override void Integrate(IList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null)
+        public override void Integrate(DD y0, DD yf, double t0, double tf, Hn? interpolant = null)
         {
             double h = Hstart;
             double t = t0;

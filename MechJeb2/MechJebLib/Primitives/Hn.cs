@@ -4,14 +4,14 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+#nullable enable
+
 using MechJebLib.Maths;
 using MechJebLib.Utils;
 
-#nullable enable
-
-namespace MechJebLib.Structs
+namespace MechJebLib.Primitives
 {
-    public class Hn : HBase<DDArray>
+    public class Hn : HBase<DD>
     {
         public int N;
 
@@ -35,61 +35,60 @@ namespace MechJebLib.Structs
             _pool.Return(this);
         }
 
-        protected override DDArray Allocate()
+        protected override DD Allocate()
         {
-            return DDArray.Rent(N);
+            return DD.Rent(N);
         }
 
-        protected override DDArray Allocate(DDArray value)
+        protected override DD Allocate(DD value)
         {
-            DDArray list = DDArray.Rent(N);
+            var list = DD.Rent(N);
             for (int i = 0; i < N; i++)
                 list[i] = value[i];
             return list;
         }
 
-        protected override void Subtract(DDArray a, DDArray b, ref DDArray result)
+        protected override void Subtract(DD a, DD b, ref DD result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] - b[i];
         }
 
-        protected override void Divide(DDArray a, double b, ref DDArray result)
+        protected override void Divide(DD a, double b, ref DD result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] / b;
         }
 
-        protected override void Multiply(DDArray a, double b, ref DDArray result)
+        protected override void Multiply(DD a, double b, ref DD result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] * b;
         }
 
-        protected override void Addition(DDArray a, DDArray b, ref DDArray result)
+        protected override void Addition(DD a, DD b, ref DD result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] + b[i];
         }
 
-        protected override DDArray Interpolant(double x1, DDArray y1, DDArray yp1, double x2, DDArray y2, DDArray yp2, double x)
+        protected override DD Interpolant(double x1, DD y1, DD yp1, double x2, DD y2, DD yp2, double x)
         {
-            DDArray foo = Utils.DDArray.Rent(N);
-            Functions.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x, N, foo);
-            return foo;
+            var ret = DD.Rent(N);
+            Functions.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x, N, ret);
+            return ret;
         }
 
-        private void DisposeKeyframe(HFrame<DDArray> frame)
+        private void DisposeKeyframe(HFrame<DD> frame)
         {
-            DDArray.Return(frame.InValue);
-            DDArray.Return(frame.OutValue);
-            DDArray.Return(frame.InTangent);
-            DDArray.Return(frame.OutTangent);
+            DD.Return(frame.Value);
+            DD.Return(frame.InTangent);
+            DD.Return(frame.OutTangent);
         }
 
         public override void Clear()
         {
-            for(int i = 0; i < _list.Count; i++)
+            for (int i = 0; i < _list.Count; i++)
                 DisposeKeyframe(_list.Values[i]);
             _list.Clear();
         }

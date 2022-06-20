@@ -4,12 +4,12 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
-#nullable enable
-
-namespace MechJebLib.Structs
+namespace MechJebLib.Primitives
 {
     public abstract class HBase<T> : IDisposable
     {
@@ -23,8 +23,8 @@ namespace MechJebLib.Structs
         public void Add(double time, T value)
         {
             _list[time] = new HFrame<T>(time, Allocate(value), Allocate(), Allocate());
-            MinTime        = Math.Min(MinTime, time);
-            MaxTime        = Math.Max(MaxTime, time);
+            MinTime     = Math.Min(MinTime, time);
+            MaxTime     = Math.Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
             _lastLo = -1;
         }
@@ -42,8 +42,8 @@ namespace MechJebLib.Structs
         {
             if (_list.ContainsKey(time))
             {
-                HFrame<T> temp = _list.Values[_list.IndexOfKey(time)];
-                temp.OutValue   = value;
+                HFrame<T> temp  = _list.Values[_list.IndexOfKey(time)];
+                temp.Value      = Allocate(value);
                 temp.OutTangent = tangent;
                 _list[time]     = temp;
             }
@@ -69,7 +69,7 @@ namespace MechJebLib.Structs
             if (_lastLo > 0 && value > _list.Keys[_lastLo])
             {
                 if (value < _list.Keys[_lastLo + 1])
-                    return ~(_lastLo+1); // return hi value for a range
+                    return ~(_lastLo + 1); // return hi value for a range
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (value == _list.Keys[_lastLo + 1])
@@ -81,7 +81,7 @@ namespace MechJebLib.Structs
                 if (value > _list.Keys[_lastLo + 1] && value < _list.Keys[_lastLo + 2])
                 {
                     _lastLo += 1;
-                    return ~(_lastLo+1); // return hi value for a range
+                    return ~(_lastLo + 1); // return hi value for a range
                 }
             }
 
@@ -106,7 +106,7 @@ namespace MechJebLib.Structs
                     hi = i - 1;
             }
 
-            _lastLo = lo-1; // Confusingly: this is the high value now
+            _lastLo = lo - 1; // Confusingly: this is the high value now
 
             return ~lo;
         }
@@ -118,6 +118,7 @@ namespace MechJebLib.Structs
         protected abstract void Multiply(T a, double b, ref T result);
         protected abstract void Addition(T a, T b, ref T result);
 
+        // FIXME: we need to average the tangents on either side
         private void RecomputeTangents(int i)
         {
             // if there is only one
@@ -148,7 +149,7 @@ namespace MechJebLib.Structs
             HFrame<T> right = _list.Values[i + 1];
 
             T slope = Allocate();
-            Subtract(right.InValue, left.OutValue, ref slope);
+            Subtract(right.Value, left.Value, ref slope);
             Divide(slope, right.Time - left.Time, ref slope);
 
             if (right.AutoTangent)
@@ -171,34 +172,35 @@ namespace MechJebLib.Structs
             if (_list.Count == 0)
                 return Allocate();
 
+            T ret = Allocate();
+            
             if (t < MinTime)
             {
-                T ret = Allocate();
+                
                 Multiply(_list.Values[0].InTangent, MinTime - t, ref ret);
-                Subtract(_list.Values[0].InValue, ret, ref ret);
+                Subtract(_list.Values[0].Value, ret, ref ret);
                 return ret;
             }
 
             if (t > MaxTime)
             {
-                T ret = Allocate();
                 Multiply(_list.Values[_list.Count - 1].OutTangent, t - MaxTime, ref ret);
-                Addition(_list.Values[_list.Count - 1].OutValue, ret, ref ret);
+                Addition(_list.Values[_list.Count - 1].Value, ret, ref ret);
                 return ret;
             }
 
             int hi = FindIndex(t);
 
             if (hi >= 0)
-                return _list.Values[hi].OutValue;
+                return Allocate(_list.Values[hi].Value);
 
             hi = ~hi;
 
             HFrame<T> testKeyframe = _list.Values[hi - 1];
             HFrame<T> testKeyframe2 = _list.Values[hi];
 
-            return Interpolant(testKeyframe.Time, testKeyframe.OutValue, testKeyframe.OutTangent,
-                testKeyframe2.Time, testKeyframe2.InValue, testKeyframe2.InTangent, t);
+            return Interpolant(testKeyframe.Time, testKeyframe.Value, testKeyframe.OutTangent,
+                testKeyframe2.Time, testKeyframe2.Value, testKeyframe2.InTangent, t);
         }
 
         public virtual void Clear()
@@ -214,17 +216,19 @@ namespace MechJebLib.Structs
 
     public struct HFrame<T>
     {
-        public          T      InTangent;
-        public          T      OutTangent;
+        public T InTangent;
+        public T OutTangent;
+
         public readonly double Time;
-        public readonly T      InValue;
-        public          T      OutValue;
-        public readonly bool   AutoTangent;
+
+        // FIXME: we don't need to support InValue/OutValue
+        public  T    Value;
+        public readonly bool AutoTangent;
 
         public HFrame(double time, T value, T inTangent, T outTangent)
         {
             Time        = time;
-            InValue     = OutValue = value;
+            Value       = value;
             InTangent   = inTangent;
             OutTangent  = outTangent;
             AutoTangent = false;

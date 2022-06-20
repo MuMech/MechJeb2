@@ -4,9 +4,10 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-using System;
-
 #nullable enable
+
+using System;
+using MechJebLib.Primitives;
 
 namespace MechJebLib.Utils
 {
@@ -40,43 +41,60 @@ namespace MechJebLib.Utils
         /// <param name="min">Min value</param>
         /// <param name="max">Max value</param>
         /// <returns>Clamped value</returns>
-        public static double Clamp(double x, double min, double max) => x < min ? min : x > max ? max : x;
+        public static double Clamp(double x, double min, double max)
+        {
+            return x < min ? min : x > max ? max : x;
+        }
 
         /// <summary>
         ///     Clamps the value between 0 and 1.
         /// </summary>
         /// <param name="x">Value to clamp</param>
         /// <returns>Clamped value</returns>
-        public static double Clamp01(double x) => Clamp(x, 0, 1);
-
+        public static double Clamp01(double x)
+        {
+            return Clamp(x, 0, 1);
+        }
 
         /// <summary>
         ///     Convert Degrees to Radians.
         /// </summary>
         /// <param name="deg">degrees</param>
         /// <returns>radians</returns>
-        public static double Deg2Rad(double deg) => deg * UtilMath.Deg2Rad;
+        public static double Deg2Rad(double deg)
+        {
+            return deg * UtilMath.Deg2Rad;
+        }
 
         /// <summary>
         ///     Convert Radians to Degrees.
         /// </summary>
         /// <param name="rad">Radians</param>
         /// <returns>Degrees</returns>
-        public static double Rad2Deg(double rad) => rad * UtilMath.Rad2Deg;
+        public static double Rad2Deg(double rad)
+        {
+            return rad * UtilMath.Rad2Deg;
+        }
 
         /// <summary>
         ///     Safe inverse cosine that clamps its input.
         /// </summary>
         /// <param name="x">Cosine value</param>
         /// <returns>Radians</returns>
-        public static double SafeAcos(double x) => Math.Acos(Clamp(x, -1.0, 1.0));
+        public static double SafeAcos(double x)
+        {
+            return Math.Acos(Clamp(x, -1.0, 1.0));
+        }
 
         /// <summary>
         ///     Safe inverse sine that clamps its input.
         /// </summary>
         /// <param name="x">Sine value</param>
         /// <returns>Radians</returns>
-        public static double SafeAsin(double x) => Math.Asin(Clamp(x, -1.0, 1.0));
+        public static double SafeAsin(double x)
+        {
+            return Math.Asin(Clamp(x, -1.0, 1.0));
+        }
 
         /// <summary>
         ///     Returns the equivalent value in radians between 0 and 2*pi.
@@ -97,7 +115,7 @@ namespace MechJebLib.Utils
         public static double ClampPi(double x)
         {
             x = Clamp2Pi(x);
-            return x > PI ? x : x -= TAU;
+            return x > PI ? x - TAU : x;
         }
 
         /// <summary>
@@ -105,14 +123,30 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x">Value</param>
         /// <returns>True if the value is finite</returns>
-        public static bool IsFinite(double x) => !double.IsNaN(x) && !double.IsInfinity(x);
+        public static bool IsFinite(double x)
+        {
+            return !double.IsNaN(x) && !double.IsInfinity(x);
+        }
 
         /// <summary>
         ///     Helper to check if a vector is finite in all its compoenents (not NaN or Ininity).
         /// </summary>
         /// <param name="v">Vector</param>
         /// <returns>True if all the components are finite</returns>
-        public static bool IsFinite(Vector3d v) => IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
+        public static bool IsFinite(V3 v)
+        {
+            return IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
+        }
+
+        /// <summary>
+        ///     Helper to check if a vector is finite in all its compoenents (not NaN or Ininity).
+        /// </summary>
+        /// <param name="v">Vector</param>
+        /// <returns>True if all the components are finite</returns>
+        public static bool IsFinite(Vector3d v)
+        {
+            return IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
+        }
 
         /// <summary>
         ///     This is like KSPs Mathfx.Approx().
@@ -135,16 +169,28 @@ namespace MechJebLib.Utils
         /// <returns>true if the values are nearly the same</returns>
         public static bool NearlyEqual(double a, double b, double epsilon = EPS)
         {
-            const double minNormal = 2.2250738585072014E-308d;
+            const double MIN_NORMAL = 2.2250738585072014E-308d;
             double absA = Math.Abs(a);
             double absB = Math.Abs(b);
             double diff = Math.Abs(a - b);
 
             if (a.Equals(b))
                 return true;
-            if (a == 0 || b == 0 || absA + absB < minNormal)
-                return diff < epsilon * minNormal;
+            if (a == 0 || b == 0 || absA + absB < MIN_NORMAL)
+                return diff < epsilon * MIN_NORMAL;
             return diff / (absA + absB) < epsilon;
+        }
+
+        /// <summary>
+        ///     Compares two V3 values with a relative tolerance.
+        /// </summary>
+        /// <param name="a">first vector</param>
+        /// <param name="b">second vector</param>
+        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <returns>true if the values are nearly the same</returns>
+        public static bool NearlyEqual(V3 a, V3 b, double epsilon = EPS)
+        {
+            return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
         }
 
         /// <summary>

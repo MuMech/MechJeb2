@@ -1,7 +1,8 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Threading;
-using MechJebLib.Structs;
+using MechJebLib.Primitives;
+using MechJebLib.Utils;
 
 //using UnityEngine;
 
@@ -31,12 +32,12 @@ namespace MuMech.MathJ
                     Integrator.AddEvent(e);
         }
 
-        public void Integrate(IList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null)
+        public void Integrate(DD y0, DD yf, double t0, double tf, Hn? interpolant = null)
         {
             Integrator.Integrate(y0, yf, t0, tf, interpolant);
         }
 
-        private void dydt_internal(IList<double> y, double x, IList<double> dy)
+        private void dydt_internal(DD y, double x, DD dy)
         {
             CancellationToken.ThrowIfCancellationRequested();
 
@@ -44,7 +45,7 @@ namespace MuMech.MathJ
         }
 
         // ReSharper disable once InconsistentNaming
-        protected abstract void dydt(IList<double> y, double x, IList<double> dy);
+        protected abstract void dydt(DD y, double x, DD dy);
 
         public Hn GetInterpolant()
         {

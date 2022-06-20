@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Structs;
+using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using MuMech.MathJ;
 using Xunit;
@@ -25,8 +25,11 @@ namespace MechJebLibTest.Maths
             ode.Integrator.Accuracy       = 1e-9;
             ode.Integrator.Hstart         = 0;
             ode.Integrator.ThrowOnMaxIter = true;
-            double[] y0 = {x0, v0};
-            double[] yf = new double[2];
+
+            var y0 = DD.Rent(2);
+            y0[0] = x0;
+            y0[1] = v0;
+            var yf = DD.Rent(2);
             ode.Integrate(y0, yf, t0, tf);
             double omega = Math.Sqrt(k / m);
             double u = x0 * Math.Cos(omega * (tf - t0)) + v0 * Math.Sin(omega * (tf - t0)) / omega;
@@ -52,7 +55,7 @@ namespace MechJebLibTest.Maths
 
             public override int N => 2;
 
-            protected override void dydt(IList<double> y, double x, IList<double> dy)
+            protected override void dydt(DD y, double x, DD dy)
             {
                 dy[0] = y[1];
                 dy[1] = -_k / _m * y[0];
@@ -87,12 +90,14 @@ namespace MechJebLibTest.Maths
             SimpleOscillator<DormandPrince> ode = new SimpleOscillator<DormandPrince>(k, m);
             ode.Integrator.Interpnum = 20;
 
-            double[] y0 = {x0, v0};
-            double[] yf = new double[2];
+            var y0 = DD.Rent(2);
+            y0[0] = x0;
+            y0[1] = v0;
+            var yf = DD.Rent(2);
             double omega = Math.Sqrt(k / m);
             int t = 3;
             double expected = x0 * Math.Cos(omega * t) + v0 * Math.Sin(omega * t) / omega;
-            DDArray y;
+            DD y;
 
             using (Hn interpolant = ode.GetInterpolant())
             {

@@ -1,51 +1,70 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
+#nullable enable
+
 using System;
-using UnityEngine;
 using System.Globalization;
+using UnityEngine;
 
-namespace MuMech
+namespace MechJebLib.Primitives
 {
-    public struct Matrix3x3d : IEquatable<Matrix3x3d>, IFormattable
+    public struct M3 : IEquatable<M3>, IFormattable
     {
-        // memory layout:
-        //
-        //                row no (=vertical)
-        //               |  0   1   2
-        //            ---+------------
-        //            0  | m00 m10 m20
-        // column no  1  | m01 m11 m21
-        // (=horiz)   2  | m02 m12 m22
+        // m00 m10 m20
+        // m01 m11 m21
+        // m02 m12 m22
 
+        // row 0:
         public double m00;
         public double m10;
         public double m20;
 
+        // row 1:
         public double m01;
         public double m11;
         public double m21;
 
+        // row 2:
         public double m02;
         public double m12;
         public double m22;
 
-        public Matrix3x3d(Vector3d column0, Vector3d column1, Vector3d column2)
+        public M3(double m00, double m01, double m02, double m10, double m11, double m12, double m20, double m21, double m22)
         {
-            this.m00 = column0.x; this.m01 = column1.x; this.m02 = column2.x;
-            this.m10 = column0.y; this.m11 = column1.y; this.m12 = column2.y;
-            this.m20 = column0.z; this.m21 = column1.z; this.m22 = column2.z;
+            this.m00 = m00;
+            this.m10 = m10;
+            this.m20 = m20;
+            this.m01 = m01;
+            this.m11 = m11;
+            this.m21 = m21;
+            this.m02 = m02;
+            this.m12 = m12;
+            this.m22 = m22;
+        }
+
+        public M3(V3 column0, V3 column1, V3 column2)
+        {
+            m00 = column0.x;
+            m01 = column1.x;
+            m02 = column2.x;
+            m10 = column0.y;
+            m11 = column1.y;
+            m12 = column2.y;
+            m20 = column0.z;
+            m21 = column1.z;
+            m22 = column2.z;
         }
 
         // Access element at [row, column].
         public double this[int row, int column]
         {
-            get
-            {
-                return this[row + column * 3];
-            }
+            get => this[row + column * 3];
 
-            set
-            {
-                this[row + column * 3] = value;
-            }
+            set => this[row + column * 3] = value;
         }
 
         // Access element at sequential index (0..8 inclusive).
@@ -73,15 +92,33 @@ namespace MuMech
             {
                 switch (index)
                 {
-                    case 0: m00 = value; break;
-                    case 1: m10 = value; break;
-                    case 2: m20 = value; break;
-                    case 3: m01 = value; break;
-                    case 4: m11 = value; break;
-                    case 5: m21 = value; break;
-                    case 6: m02 = value; break;
-                    case 7: m12 = value; break;
-                    case 8: m22 = value; break;
+                    case 0:
+                        m00 = value;
+                        break;
+                    case 1:
+                        m10 = value;
+                        break;
+                    case 2:
+                        m20 = value;
+                        break;
+                    case 3:
+                        m01 = value;
+                        break;
+                    case 4:
+                        m11 = value;
+                        break;
+                    case 5:
+                        m21 = value;
+                        break;
+                    case 6:
+                        m02 = value;
+                        break;
+                    case 7:
+                        m12 = value;
+                        break;
+                    case 8:
+                        m22 = value;
+                        break;
 
                     default:
                         throw new IndexOutOfRangeException("Invalid matrix index!");
@@ -95,25 +132,25 @@ namespace MuMech
             return GetColumn(0).GetHashCode() ^ (GetColumn(1).GetHashCode() << 2) ^ (GetColumn(2).GetHashCode() >> 2); // FIXME?
         }
 
-        // also required for being able to use Matrix3x3d as keys in hash tables
+        // also required for being able to use M3 as keys in hash tables
         public override bool Equals(object other)
         {
-            if (!(other is Matrix3x3d)) return false;
+            if (!(other is M3)) return false;
 
-            return Equals((Matrix3x3d)other);
+            return Equals((M3)other);
         }
 
-        public bool Equals(Matrix3x3d other)
+        public bool Equals(M3 other)
         {
             return GetColumn(0).Equals(other.GetColumn(0))
-                && GetColumn(1).Equals(other.GetColumn(1))
-                && GetColumn(2).Equals(other.GetColumn(2));
+                   && GetColumn(1).Equals(other.GetColumn(1))
+                   && GetColumn(2).Equals(other.GetColumn(2));
         }
 
         // Multiplies two matrices.
-        public static Matrix3x3d operator*(Matrix3x3d lhs, Matrix3x3d rhs)
+        public static M3 operator *(M3 lhs, M3 rhs)
         {
-            Matrix3x3d res;
+            M3 res;
             res.m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20;
             res.m01 = lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21;
             res.m02 = lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22;
@@ -129,10 +166,10 @@ namespace MuMech
             return res;
         }
 
-        // Transforms a [[Vector3d]] by a matrix.
-        public static Vector3d operator*(Matrix3x3d lhs, Vector3d vector)
+        // Transforms a [[V3]] by a matrix.
+        public static V3 operator *(M3 lhs, V3 vector)
         {
-            Vector3d res;
+            V3 res;
             res.x = lhs.m00 * vector.x + lhs.m01 * vector.y + lhs.m02 * vector.z;
             res.y = lhs.m10 * vector.x + lhs.m11 * vector.y + lhs.m12 * vector.z;
             res.z = lhs.m20 * vector.x + lhs.m21 * vector.y + lhs.m22 * vector.z;
@@ -140,9 +177,9 @@ namespace MuMech
         }
 
         // Multiplies a matrix by a number
-        public static Matrix3x3d operator*(Matrix3x3d lhs, double value)
+        public static M3 operator *(M3 lhs, double value)
         {
-            Matrix3x3d res;
+            M3 res;
             res.m00 = lhs.m00 * value;
             res.m01 = lhs.m00 * value;
             res.m02 = lhs.m00 * value;
@@ -158,15 +195,15 @@ namespace MuMech
             return res;
         }
 
-        public static Matrix3x3d operator*(double value, Matrix3x3d rhs)
+        public static M3 operator *(double value, M3 rhs)
         {
             return rhs * value;
         }
 
         // Divides a matrix by a number
-        public static Matrix3x3d operator/(Matrix3x3d lhs, double value)
+        public static M3 operator /(M3 lhs, double value)
         {
-            Matrix3x3d res;
+            M3 res;
             res.m00 = lhs.m00 / value;
             res.m01 = lhs.m00 / value;
             res.m02 = lhs.m00 / value;
@@ -182,53 +219,53 @@ namespace MuMech
             return res;
         }
 
-        public static Matrix3x3d operator/(double value, Matrix3x3d rhs)
+        public static M3 operator /(double value, M3 rhs)
         {
             return rhs / value;
         }
 
-        public static bool operator==(Matrix3x3d lhs, Matrix3x3d rhs)
+        public static bool operator ==(M3 lhs, M3 rhs)
         {
             // Returns false in the presence of NaN values.
             return lhs.GetColumn(0) == rhs.GetColumn(0)
-                && lhs.GetColumn(1) == rhs.GetColumn(1)
-                && lhs.GetColumn(2) == rhs.GetColumn(2);
+                   && lhs.GetColumn(1) == rhs.GetColumn(1)
+                   && lhs.GetColumn(2) == rhs.GetColumn(2);
         }
 
-        public static bool operator!=(Matrix3x3d lhs, Matrix3x3d rhs)
+        public static bool operator !=(M3 lhs, M3 rhs)
         {
             // Returns true in the presence of NaN values.
             return !(lhs == rhs);
         }
 
         // Get a column of the matrix.
-        public Vector3d GetColumn(int index)
+        public V3 GetColumn(int index)
         {
             switch (index)
             {
-                case 0: return new Vector3d(m00, m10, m20);
-                case 1: return new Vector3d(m01, m11, m21);
-                case 2: return new Vector3d(m02, m12, m22);
+                case 0: return new V3(m00, m10, m20);
+                case 1: return new V3(m01, m11, m21);
+                case 2: return new V3(m02, m12, m22);
                 default:
                     throw new IndexOutOfRangeException("Invalid column index!");
             }
         }
 
         // Returns a row of the matrix.
-        public Vector3d GetRow(int index)
+        public V3 GetRow(int index)
         {
             switch (index)
             {
-                case 0: return new Vector3d(m00, m01, m02);
-                case 1: return new Vector3d(m10, m11, m12);
-                case 2: return new Vector3d(m20, m21, m22);
+                case 0: return new V3(m00, m01, m02);
+                case 1: return new V3(m10, m11, m12);
+                case 2: return new V3(m20, m21, m22);
                 default:
                     throw new IndexOutOfRangeException("Invalid row index!");
             }
         }
 
         // Sets a column of the matrix.
-        public void SetColumn(int index, Vector3d column)
+        public void SetColumn(int index, V3 column)
         {
             this[0, index] = column.x;
             this[1, index] = column.y;
@@ -236,7 +273,7 @@ namespace MuMech
         }
 
         // Sets a row of the matrix.
-        public void SetRow(int index, Vector3d row)
+        public void SetRow(int index, V3 row)
         {
             this[index, 0] = row.x;
             this[index, 1] = row.y;
@@ -244,17 +281,17 @@ namespace MuMech
         }
 
         // Transforms a direction by this matrix.
-        public Vector3d MultiplyVector(Vector3d vector)
+        public V3 MultiplyVector(V3 vector)
         {
-            Vector3d res;
-            res.x = this.m00 * vector.x + this.m01 * vector.y + this.m02 * vector.z;
-            res.y = this.m10 * vector.x + this.m11 * vector.y + this.m12 * vector.z;
-            res.z = this.m20 * vector.x + this.m21 * vector.y + this.m22 * vector.z;
+            V3 res;
+            res.x = m00 * vector.x + m01 * vector.y + m02 * vector.z;
+            res.y = m10 * vector.x + m11 * vector.y + m12 * vector.z;
+            res.z = m20 * vector.x + m21 * vector.y + m22 * vector.z;
             return res;
         }
 
         // Creates a rotation matrix. Note: Assumes unit quaternion
-        public static Matrix3x3d Rotate(QuaternionD q)
+        public static M3 Rotate(QuaternionD q)
         {
             // Precalculate coordinate products
             double x = q.x * 2.0F;
@@ -271,42 +308,44 @@ namespace MuMech
             double wz = q.w * z;
 
             // Calculate 3x3 matrix from orthonormal basis
-            Matrix3x3d m;
-            m.m00 = 1.0f - (yy + zz); m.m10 = xy + wz; m.m20 = xz - wy;
-            m.m01 = xy - wz; m.m11 = 1.0f - (xx + zz); m.m21 = yz + wx;
-            m.m02 = xz + wy; m.m12 = yz - wx; m.m22 = 1.0f - (xx + yy);
+            M3 m;
+            m.m00 = 1.0f - (yy + zz);
+            m.m10 = xy + wz;
+            m.m20 = xz - wy;
+            m.m01 = xy - wz;
+            m.m11 = 1.0f - (xx + zz);
+            m.m21 = yz + wx;
+            m.m02 = xz + wy;
+            m.m12 = yz - wx;
+            m.m22 = 1.0f - (xx + yy);
             return m;
         }
 
-        static readonly Matrix3x3d zeroMatrix = new Matrix3x3d(new Vector3d(0, 0, 0),
-            new Vector3d(0, 0, 0),
-            new Vector3d(0, 0, 0));
-
         // Returns a matrix with all elements set to zero (RO).
-        public static Matrix3x3d zero { get { return zeroMatrix; } }
-
-        static readonly Matrix3x3d identityMatrix = new Matrix3x3d(new Vector3d(1, 0, 0),
-            new Vector3d(0, 1, 0),
-            new Vector3d(0, 0, 1));
+        public static M3 zero { get; } = new M3(new V3(0, 0, 0),
+            new V3(0, 0, 0),
+            new V3(0, 0, 0));
 
         // Returns the identity matrix (RO).
-        public static Matrix3x3d identity    { get { return identityMatrix; } }
+        public static M3 identity { get; } = new M3(new V3(1, 0, 0),
+            new V3(0, 1, 0),
+            new V3(0, 0, 1));
 
         public override string ToString()
         {
             return ToString(null, CultureInfo.InvariantCulture.NumberFormat);
         }
 
-        public string ToString(string format)
+        public string ToString(string? format)
         {
             return ToString(format, CultureInfo.InvariantCulture.NumberFormat);
         }
 
-        public string ToString(string format, IFormatProvider formatProvider)
+        public string ToString(string? format, IFormatProvider formatProvider)
         {
             if (string.IsNullOrEmpty(format))
                 format = "G9";
-            return String.Format("{0}\t{1}\t{2}\n{3}\t{4}\t{5}\n{6}\t{7}\t{8}\n",
+            return string.Format("{0}\t{1}\t{2}\n{3}\t{4}\t{5}\n{6}\t{7}\t{8}\n",
                 m00.ToString(format, formatProvider), m01.ToString(format, formatProvider), m02.ToString(format, formatProvider),
                 m10.ToString(format, formatProvider), m11.ToString(format, formatProvider), m12.ToString(format, formatProvider),
                 m20.ToString(format, formatProvider), m21.ToString(format, formatProvider), m22.ToString(format, formatProvider));
@@ -314,23 +353,27 @@ namespace MuMech
 
         // private QuaternionD    GetRotation();
 
-        private bool          IsIdentity() {
+        private bool IsIdentity()
+        {
             // FIXME: epsilon/ULPs?
             return m00 == 1.0 && m10 == 0.0 && m20 == 0.0 &&
-                m01 == 0.0 && m11 == 1.0 && m21 == 0.0 &&
-                m02 == 0.0 && m12 == 0.0 && m22 == 0.0;
+                   m01 == 0.0 && m11 == 1.0 && m21 == 0.0 &&
+                   m02 == 0.0 && m12 == 0.0 && m22 == 1.0;
         }
-        private double         GetDeterminant() {
-            return m00 * ( m11 * m22 - m21 * m12 ) - m10 * ( m01 * m22 - m21 * m02 ) + m20 * ( m01 * m12 - m11 * m02 );
+
+        private double GetDeterminant()
+        {
+            return m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m21 * m02) + m20 * (m01 * m12 - m11 * m02);
         }
 
         // public QuaternionD rotation               { get { return GetRotation(); } }
-        public bool isIdentity                   { get { return IsIdentity(); } }
-        public double determinant                 { get { return GetDeterminant(); } }
-        public static double Determinant(Matrix3x3d m) { return m.determinant; }
+        public        bool   isIdentity        => IsIdentity();
+        public        double determinant       => GetDeterminant();
+        public static double Determinant(M3 m) { return m.determinant; }
 
         // FIXME: really needs testing
-        public static Matrix3x3d Inverse(Matrix3x3d m) {
+        public static M3 Inverse(M3 m)
+        {
             double a = m.m11 * m.m22 - m.m21 * m.m12;
             double b = m.m21 * m.m02 - m.m01 * m.m22;
             double c = m.m01 * m.m12 - m.m11 * m.m02;
@@ -340,33 +383,34 @@ namespace MuMech
             double g = m.m10 * m.m21 - m.m20 * m.m11;
             double h = m.m20 * m.m01 - m.m00 * m.m21;
             double i = m.m10 * m.m01 - m.m11 * m.m00;
-            return new Matrix3x3d(new Vector3d(a, b, c),
-                    new Vector3d(d, e, f),
-                    new Vector3d(g, h, i)) * ( 1 / ( m.m00 * a + m.m10 * b + m.m20 * c ));
+            return new M3(new V3(a, b, c),
+                new V3(d, e, f),
+                new V3(g, h, i)) * (1 / (m.m00 * a + m.m10 * b + m.m20 * c));
         }
 
-        public Matrix3x3d inverse { get { return Matrix3x3d.Inverse(this); } }
+        public M3 inverse => Inverse(this);
 
-        public static Matrix3x3d Transpose(Matrix3x3d m) {
-            return new Matrix3x3d(new Vector3d(m.m00, m.m10, m.m20),
-            new Vector3d(m.m01, m.m11, m.m12),
-            new Vector3d(m.m02, m.m12, m.m22));
+        public static M3 Transpose(M3 m)
+        {
+            return new M3(new V3(m.m00, m.m10, m.m20),
+                new V3(m.m01, m.m11, m.m12),
+                new V3(m.m02, m.m12, m.m22));
         }
 
-        public Matrix3x3d transpose { get { return Matrix3x3d.Transpose(this); } }
+        public M3 transpose => Transpose(this);
 
-//        private Vector3d       GetLossyScale();
+        //        private V3       GetLossyScale();
 //        private FrustumPlanes DecomposeProjection();
-//        public Vector3d lossyScale                { get { return GetLossyScale(); } }
+//        public V3 lossyScale                { get { return GetLossyScale(); } }
 //        public FrustumPlanes decomposeProjection { get { return DecomposeProjection(); } }
 //        public bool ValidTRS();
-//        public static Matrix3x3d TRS(Vector3d pos, QuaternionD q, Vector3d s);
-//        public void SetTRS(Vector3d pos, QuaternionD q, Vector3d s) { this = Matrix3x3d.TRS(pos, q, s); }
-//        public static bool Inverse3DAffine(Matrix3x3d input, ref Matrix3x3d result);
-//        public static Matrix3x3d Ortho(double left, double right, double bottom, double top, double zNear, double zFar);
-//        public static Matrix3x3d Perspective(double fov, double aspect, double zNear, double zFar);
-//        public static Matrix3x3d LookAt(Vector3d from, Vector3d to, Vector3d up);
-//        public static Matrix3x3d Frustum(double left, double right, double bottom, double top, double zNear, double zFar);
-//        public static Matrix3x3d Frustum(FrustumPlanes fp) { return Frustum(fp.left, fp.right, fp.bottom, fp.top, fp.zNear, fp.zFar); }
+//        public static M3 TRS(V3 pos, QuaternionD q, V3 s);
+//        public void SetTRS(V3 pos, QuaternionD q, V3 s) { this = M3.TRS(pos, q, s); }
+//        public static bool Inverse3DAffine(M3 input, ref M3 result);
+//        public static M3 Ortho(double left, double right, double bottom, double top, double zNear, double zFar);
+//        public static M3 Perspective(double fov, double aspect, double zNear, double zFar);
+//        public static M3 LookAt(V3 from, V3 to, V3 up);
+//        public static M3 Frustum(double left, double right, double bottom, double top, double zNear, double zFar);
+//        public static M3 Frustum(FrustumPlanes fp) { return Frustum(fp.left, fp.right, fp.bottom, fp.top, fp.zNear, fp.zFar); }
     }
 }

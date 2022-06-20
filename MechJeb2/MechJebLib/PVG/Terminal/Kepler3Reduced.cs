@@ -1,0 +1,48 @@
+using System;
+using MechJebLib.Maths;
+using MechJebLib.Primitives;
+using static MechJebLib.Utils.Statics;
+
+namespace MechJebLib.PVG.Terminal
+{
+    public class Kepler3Reduced : IPVGTerminal
+    {
+        private readonly double hTm;
+        private readonly double PeRT;
+        private readonly double incT;
+
+        /// <summary>
+        ///     3 Constraint terminal conditions with free attachment for the minimum propellant / maximum mass problem with
+        ///     reduced transversality conditions.
+        /// 
+        ///     Pan, Binfeng, Zheng Chen, Ping Lu, and Bo Gao. “Reduced Transversality Conditions in Optimal Space Trajectories.”
+        ///     Journal of Guidance, Control, and Dynamics 36, no. 5 (September 2013): 1289–1300. https://doi.org/10.2514/1.60181.
+        /// </summary>
+        public Kepler3Reduced(double smaT, double eccT, double incT)
+        {
+            this.incT = Math.Abs(ClampPi(incT));
+            hTm       = Functions.HmagFromKeplerian(1.0, smaT, eccT);
+            PeRT      = Functions.PeriapsisFromKeplerian(smaT, eccT);
+        }
+
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
+        {
+            var hf = V3.Cross(yf.R, yf.V);
+            var n = new V3(0, 0, 1);
+
+            double rfm = yf.R.magnitude;
+            double rf3 = rfm * rfm * rfm;
+
+            // empirically found this combination worked better and tolerates ecc > 1e-4
+            // the use of energy, eccentricity and sma did not converge as well
+            double con1 = V3.Dot(hf, hf) * 0.5 - hTm * hTm * 0.5;                      // angular momentum
+            double con2 = Functions.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - PeRT; // periapsis
+            double con3 = V3.Dot(n, hf.normalized) - Math.Cos(incT);                   // inclination
+            double tv1 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf);    // free Argp
+            double tv2 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), n);     // free LAN
+            double tv3 = V3.Dot(yf.PR, yf.V) - V3.Dot(yf.PV, yf.R) / rf3;              // free TA
+
+            return (con1, con2, con3, tv1, tv2, tv3);
+        }
+    }
+}

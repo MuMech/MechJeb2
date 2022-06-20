@@ -31,23 +31,23 @@ namespace MuMech
 
         private bool ready = false;
 
-        public MechJebModuleGuidanceController guidance;
-        public MechJebModuleAttitudeController attitude;
-        public MechJebModuleStagingController staging;
-        public MechJebModuleThrustController thrust;
-        public MechJebModuleTargetController target;
-        public MechJebModuleWarpController warp;
-        public MechJebModuleRCSController rcs;
-        public MechJebModuleRCSBalancer rcsbal;
-        public MechJebModuleRoverController rover;
-        public MechJebModuleNodeExecutor node;
-        public MechJebModuleSolarPanelController solarpanel;
+        public MechJebModuleGuidanceController          guidance;
+        public MechJebModulePVGGlueBall                 glueball;
+        public MechJebModuleAttitudeController          attitude;
+        public MechJebModuleStagingController           staging;
+        public MechJebModuleThrustController            thrust;
+        public MechJebModuleTargetController            target;
+        public MechJebModuleWarpController              warp;
+        public MechJebModuleRCSController               rcs;
+        public MechJebModuleRCSBalancer                 rcsbal;
+        public MechJebModuleRoverController             rover;
+        public MechJebModuleNodeExecutor                node;
+        public MechJebModuleSolarPanelController        solarpanel;
         public MechJebModuleDeployableAntennaController antennaControl;
-        public MechJebModuleLandingAutopilot landing;
-        public MechJebModuleSettings settings;
-        public MechJebModuleAirplaneAutopilot airplane;
-        public MechJebModuleStageStats stageStats;
-        public MechJebModuleLogicalStageTracking stageTracking;
+        public MechJebModuleLandingAutopilot            landing;
+        public MechJebModuleSettings                    settings;
+        public MechJebModuleAirplaneAutopilot           airplane;
+        public MechJebModuleStageStats                  stageStats;
 
         public VesselState vesselState = new VesselState();
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]//DisabledEnabled
@@ -796,23 +796,23 @@ namespace MuMech
                 Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
             }
 
-            attitude = GetComputerModule<MechJebModuleAttitudeController>();
-            staging = GetComputerModule<MechJebModuleStagingController>();
-            thrust = GetComputerModule<MechJebModuleThrustController>();
-            target = GetComputerModule<MechJebModuleTargetController>();
-            warp = GetComputerModule<MechJebModuleWarpController>();
-            rcs = GetComputerModule<MechJebModuleRCSController>();
-            rcsbal = GetComputerModule<MechJebModuleRCSBalancer>();
-            rover = GetComputerModule<MechJebModuleRoverController>();
-            node = GetComputerModule<MechJebModuleNodeExecutor>();
-            solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
+            attitude       = GetComputerModule<MechJebModuleAttitudeController>();
+            staging        = GetComputerModule<MechJebModuleStagingController>();
+            thrust         = GetComputerModule<MechJebModuleThrustController>();
+            target         = GetComputerModule<MechJebModuleTargetController>();
+            warp           = GetComputerModule<MechJebModuleWarpController>();
+            rcs            = GetComputerModule<MechJebModuleRCSController>();
+            rcsbal         = GetComputerModule<MechJebModuleRCSBalancer>();
+            rover          = GetComputerModule<MechJebModuleRoverController>();
+            node           = GetComputerModule<MechJebModuleNodeExecutor>();
+            solarpanel     = GetComputerModule<MechJebModuleSolarPanelController>();
             antennaControl = GetComputerModule<MechJebModuleDeployableAntennaController>();
-            landing = GetComputerModule<MechJebModuleLandingAutopilot>();
-            settings = GetComputerModule<MechJebModuleSettings>();
-            airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
-            guidance = GetComputerModule<MechJebModuleGuidanceController>();
-            stageStats = GetComputerModule<MechJebModuleStageStats>();
-            stageTracking = GetComputerModule<MechJebModuleLogicalStageTracking>();
+            landing        = GetComputerModule<MechJebModuleLandingAutopilot>();
+            settings       = GetComputerModule<MechJebModuleSettings>();
+            airplane       = GetComputerModule<MechJebModuleAirplaneAutopilot>();
+            guidance       = GetComputerModule<MechJebModuleGuidanceController>();
+            glueball       = GetComputerModule<MechJebModulePVGGlueBall>();
+            stageStats     = GetComputerModule<MechJebModuleStageStats>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

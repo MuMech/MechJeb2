@@ -4,16 +4,20 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+#nullable enable
+
 using MechJebLib.Maths;
 using MechJebLib.Utils;
 
-#nullable enable
-
-namespace MechJebLib.Structs
+namespace MechJebLib.Primitives
 {
-    public class H3 : HBase<Vector3d>
+    public class H3 : HBase<V3>
     {
         private static readonly ObjectPool<H3> _pool = new ObjectPool<H3>(New);
+
+        private H3()
+        {
+        }
 
         private static H3 New()
         {
@@ -32,37 +36,37 @@ namespace MechJebLib.Structs
             _pool.Return(this);
         }
 
-        protected override Vector3d Allocate()
+        protected override V3 Allocate()
         {
-            return Vector3d.zero;
+            return V3.zero;
         }
 
-        protected override Vector3d Allocate(Vector3d value)
+        protected override V3 Allocate(V3 value)
         {
             return value;
         }
 
-        protected override void Subtract(Vector3d a, Vector3d b, ref Vector3d result)
+        protected override void Subtract(V3 a, V3 b, ref V3 result)
         {
             result = a - b;
         }
 
-        protected override void Divide(Vector3d a, double b, ref Vector3d result)
+        protected override void Divide(V3 a, double b, ref V3 result)
         {
             result = a / b;
         }
 
-        protected override void Multiply(Vector3d a, double b, ref Vector3d result)
+        protected override void Multiply(V3 a, double b, ref V3 result)
         {
             result = a * b;
         }
 
-        protected override void Addition(Vector3d a, Vector3d b, ref Vector3d result)
+        protected override void Addition(V3 a, V3 b, ref V3 result)
         {
             result = a + b;
         }
 
-        protected override Vector3d Interpolant(double x1, Vector3d y1, Vector3d yp1, double x2, Vector3d y2, Vector3d yp2, double x)
+        protected override V3 Interpolant(double x1, V3 y1, V3 yp1, double x2, V3 y2, V3 yp2, double x)
         {
             return Functions.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
         }

@@ -1,6 +1,7 @@
 ﻿using AssertExtensions;
 using Xunit;
 using MechJebLib.Maths;
+using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.Maths
@@ -430,6 +431,37 @@ namespace MechJebLibTest.Maths
                     }
                 }
             }
+        }
+
+        [Fact]
+        public void ECIToOrbTest1()
+        {
+            double mu = 3.986004418000000e+14;
+            double smaEx = 3.843084377707066e+08;
+            double eccEx = 5.328149353682574e-02;
+            double incEx = 4.950221141769940e-01;
+            double argpEx = 3.486541150390846e+00;
+            double lanEx = 4.008351366616158e-02;
+            double tanomEx = 7.853981633974483e-01;
+
+            var r = new V3(
+                -1.455451021873417e+08,
+                -3.000298697925529e+08,
+                -1.586943000620733e+08
+            );
+            var v = new V3(
+                9.572921091669031e+02,
+                -3.895747803416348e+02,
+                -2.308551508912105e+02
+            );
+
+            (double sma, double ecc, double inc, double argp, double lan, double tanom) = Functions.KeplerianFromStateVectors(mu, r, v);
+            sma.ShouldEqual(smaEx, 1e-15);
+            ecc.ShouldEqual(eccEx, 1e-14);
+            inc.ShouldEqual(incEx, 1e-15);
+            lan.ShouldEqual(lanEx, 1e-15);
+            argp.ShouldEqual(argpEx, 1e-15);
+            tanom.ShouldEqual(tanomEx, 1e-14);
         }
     }
 }

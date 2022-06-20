@@ -4,10 +4,10 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
-
-#nullable enable
 
 namespace MechJebLib.Utils
 {

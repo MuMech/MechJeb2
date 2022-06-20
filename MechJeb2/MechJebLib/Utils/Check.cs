@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
 #nullable enable
@@ -15,7 +16,7 @@ namespace MechJebLib.Utils
 {
     public static class Check
     {
-                private static void DoCheck(bool b)
+        private static void DoCheck(bool b)
         {
             if (!b) throw new FailedCheck("check failed");
         }
@@ -79,11 +80,25 @@ namespace MechJebLib.Utils
         {
             DoCheck(d > 0);
         }
+        
+        [Conditional("DEBUG")]
+        public static void PositiveFinite(double d)
+        {
+            DoCheck(d > 0);
+            DoCheck(IsFinite(d));
+        }
 
         [Conditional("DEBUG")]
         public static void Negative(double d)
         {
             DoCheck(d < 0);
+        }
+        
+        [Conditional("DEBUG")]
+        public static void NegativeFinite(double d)
+        {
+            DoCheck(d < 0);
+            DoCheck(IsFinite(d));
         }
 
         [Conditional("DEBUG")]
@@ -97,6 +112,13 @@ namespace MechJebLib.Utils
         {
             DoCheck(d != 0);
         }
+        
+        [Conditional("DEBUG")]
+        public static void NonZeroFinite(double d)
+        {
+            DoCheck(d != 0);
+            DoCheck(IsFinite(d));
+        }
 
         /*
          * Vectors
@@ -109,9 +131,22 @@ namespace MechJebLib.Utils
         }
 
         [Conditional("DEBUG")]
-        public static void NonZero(Vector3d v)
+        public static void Finite(V3 v)
         {
-            DoCheck(v != Vector3d.zero);
+            DoCheck(IsFinite(v));
+        }
+
+        [Conditional("DEBUG")]
+        public static void NonZero(V3 v)
+        {
+            DoCheck(v != V3.zero);
+        }
+        
+        [Conditional("DEBUG")]
+        public static void NonZeroFinite(V3 v)
+        {
+            DoCheck(v != V3.zero);
+            DoCheck(IsFinite(v));
         }
 
         /*
@@ -129,6 +164,5 @@ namespace MechJebLib.Utils
         {
             DoCheck(arry.Count >= len);
         }
-
     }
 }

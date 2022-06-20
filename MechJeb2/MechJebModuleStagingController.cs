@@ -236,10 +236,6 @@ namespace MuMech
                 RegenerateCaches();
             }
 
-            //Commenting this because now we support autostaging on non active vessels
-            //if (!vessel.isActiveVessel)
-            //    return;
-
             //if autostage enabled, and if we've already staged at least once, and if there are stages left,
             //and if we are allowed to continue staging, and if we didn't just fire the previous stage
             if (waitingForFirstStaging || vessel.currentStage <= 0 || vessel.currentStage <= autostageLimit || vessel.currentStage <= autostageLimitInternal
