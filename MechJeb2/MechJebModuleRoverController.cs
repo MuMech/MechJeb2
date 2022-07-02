@@ -74,7 +74,7 @@ namespace MuMech
 		[EditableInfoItem("#MechJeb_TractionBrakeLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.Type)] // Traction Brake Limit
 		public EditableDouble tractionLimit = 75;
 
-		public List<ModuleWheelBase> wheelbases = new List<ModuleWheelBase>();
+		public List<(PartModule, BaseField)> wheelbases = new List<(PartModule, BaseField)>();
 
 		public override void OnStart(PartModule.StartState state)
 		{
@@ -105,7 +105,17 @@ namespace MuMech
 				wheelbases.AddRange(vessel.Parts.Where(
 					p => p.HasModule<ModuleWheelBase>()
 					&& p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG
-				).Select(p => p.GetModule<ModuleWheelBase>()));
+				).Select(p => {
+					var pm = p.Modules.GetModule("ModuleWheelBase");
+					return (pm, pm.Fields["isGrounded"]);
+				}));
+				wheelbases.AddRange(vessel.Parts.Where(
+					p => p.Modules.Contains("KSPWheelBase") &&
+					p.Modules.Contains("KSPWheelRotation")
+				).Select(p => {
+					var pm = p.Modules.GetModule("KSPWheelBase");
+					return (pm, pm.Fields["grounded"]);
+				}));
 			}
 			catch (Exception) {}
 		}
@@ -146,9 +156,9 @@ namespace MuMech
 			if (wheelbases.Count == 0) { OnVesselModified(vessel); }
 			traction = 0;
 
-			for (int i = 0; i < wheelbases.Count; i++)
+			foreach ((PartModule pm, BaseField grounded) in wheelbases)
 			{
-				if (wheelbases[i].isGrounded)
+				if (grounded.GetValue<bool>(pm))
 				{
 					traction += 100;
 				}
