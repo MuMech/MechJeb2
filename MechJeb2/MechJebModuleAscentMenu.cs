@@ -25,8 +25,8 @@ namespace MuMech
         public bool launchingToLAN;
         public bool Launching => launchingToPlane || launchingToRendezvous || launchingToMatchLAN || launchingToLAN;
 
-        private MechJebModuleAscentAutopilot      autopilot    => core.GetComputerModule<MechJebModuleAscentAutopilot>();
-        private MechJebModuleAscentClassicMenu    _classicMenu => core.GetComputerModule<MechJebModuleAscentClassicMenu>();
+        private MechJebModuleAscentBaseAutopilot           _autopilot    => _ascentSettings.AscentAutopilot;
+        private MechJebModuleAscentClassicPathMenu    _classicPathMenu => core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
         private MechJebModuleAscentPVGStagingMenu _pvgStagingMenu;
         private MechJebModuleAscentSettings       _ascentSettings;
 
@@ -105,43 +105,21 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        private void VisibleSectionsGUIElements(out bool showTargeting, out bool showGuidanceSettings, out bool showSettings, out bool showStatus)
+        private void VisibleSectionsGUIElements()
         {
             Profiler.BeginSample("MJ.GUIWindow.TopButtons");
             GUILayout.BeginVertical(GUI.skin.box);
-            showTargeting        = _ascentSettings.showTargeting;
-            showGuidanceSettings = _ascentSettings.showGuidanceSettings;
-            showSettings         = _ascentSettings.showSettings;
-            showStatus           = _ascentSettings.showStatus;
 
-            if (autopilot.enabled && GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button1)) //Disengage autopilot
-                autopilot.users.Remove(this);
-            else if (!autopilot.enabled && GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button2)) //Engage autopilot
-                autopilot.users.Add(this);
-
-            if (_ascentSettings.ascentType == ascentType.PVG && GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button3)) //Reset Guidance (DO NOT PRESS)
-                core.guidance.Reset();
-
-            GUILayout.BeginHorizontal(); // EditorStyles.toolbar);
-            showTargeting = GUILayout.Toggle(showTargeting, CachedLocalizer.Instance.MechJeb_Ascent_button4, showTargeting ? _btActive : _btNormal);
-
-            if (_ascentSettings.ascentType == ascentType.PVG || _ascentSettings.ascentType == ascentType.GRAVITYTURN)
-                showGuidanceSettings = GUILayout.Toggle(showGuidanceSettings, CachedLocalizer.Instance.MechJeb_Ascent_button5,
-                    showGuidanceSettings ? _btActive : _btNormal);
-
-            showSettings = GUILayout.Toggle(showSettings, CachedLocalizer.Instance.MechJeb_Ascent_button6, showSettings ? _btActive : _btNormal);
-
-            if (_ascentSettings.ascentType == ascentType.PVG)
-                showStatus = GUILayout.Toggle(showStatus, CachedLocalizer.Instance.MechJeb_Ascent_button7, showStatus ? _btActive : _btNormal);
-            GUILayout.EndHorizontal();
+            if (_autopilot.enabled && GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button1)) //Disengage autopilot
+                _autopilot.users.Remove(this);
+            else if (!_autopilot.enabled && GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button2)) //Engage autopilot
+                _autopilot.users.Add(this);
             GUILayout.EndVertical();
             Profiler.EndSample();
         }
 
         private void ShowTargetingGUIElements()
         {
-            if (!_ascentSettings.showTargeting) return;
-
             Profiler.BeginSample("MJ.GUIWindow.ShowTargeting");
             GUILayout.BeginVertical(GUI.skin.box);
 
@@ -187,8 +165,7 @@ namespace MuMech
         {
             Profiler.BeginSample("MJ.GUIWindow.ShowGuidanceSettings");
 
-            if (_ascentSettings.showGuidanceSettings)
-            {
+
                 GUILayout.BeginVertical(GUI.skin.box);
                 if (_ascentSettings.ascentType == ascentType.GRAVITYTURN)
                 {
@@ -202,8 +179,7 @@ namespace MuMech
                 else if (_ascentSettings.ascentType == ascentType.PVG)
                 {
                     _pvgStagingMenu.enabled = GUILayout.Toggle(_pvgStagingMenu.enabled, "Edit Rocket Staging");
-                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label13, _ascentSettings.PitchStartVelocity, "m/s",
-                        40);                                                                                       //Booster Pitch start:
+                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label13, _ascentSettings.PitchStartVelocity, "m/s", 40);                                                                                       //Booster Pitch start:
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:
                     GuiUtils.SimpleTextBox("Q Trigger:", _ascentSettings.DynamicPressureTrigger, "kPa", 40);
                     GuiUtils.ToggledTextBox(ref _ascentSettings.StagingTriggerFlag, "PVG After Stage:", _ascentSettings.StagingTrigger, width: 40);
@@ -230,7 +206,6 @@ namespace MuMech
                 }
 
                 GUILayout.EndVertical();
-            }
 
             _ascentSettings.limitQaEnabled = _ascentSettings.ascentType == ascentType.PVG; // this is mandatory for PVG
 
@@ -246,7 +221,6 @@ namespace MuMech
             correctiveSteering = _ascentSettings.correctiveSteering;
             limitAoA           = _ascentSettings.limitAoA;
             autostage          = _ascentSettings.autostage;
-            if (!_ascentSettings.showSettings) return;
 
             Profiler.BeginSample("MJ.GUIWindow.AscentItems");
             GUILayout.BeginVertical(GUI.skin.box);
@@ -270,7 +244,7 @@ namespace MuMech
             if (_ascentSettings.forceRoll)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Space(20);
+                GUILayout.Space(15);
                 GuiUtils.SimpleTextBox(sClimb, _ascentSettings.verticalRoll, "º", 30); //climb
                 GUILayout.FlexibleSpace();
                 GuiUtils.SimpleTextBox(sTurn, _ascentSettings.turnRoll, "º", 30); //turn
@@ -341,8 +315,6 @@ namespace MuMech
 
         private void ShowStatusGUIElements()
         {
-            if (!_ascentSettings.showStatus) return;
-
             Profiler.BeginSample("MJ.GUIWindow.ShowStatus");
             GUILayout.BeginVertical(GUI.skin.box);
 
@@ -419,8 +391,8 @@ namespace MuMech
                                      width: 40)) //Launch to rendezvous:
                 {
                     launchingToRendezvous = true;
-                    autopilot.StartCountdown(vesselState.time +
-                                             LaunchTiming.TimeToPhaseAngle(_ascentSettings.launchPhaseAngle,
+                    _autopilot.StartCountdown(vesselState.time +
+                                             TimeToPhaseAngle(_ascentSettings.launchPhaseAngle,
                                                  mainBody, vesselState.longitude, core.target.TargetOrbit));
                 }
 
@@ -436,7 +408,7 @@ namespace MuMech
                         core.target.TargetOrbit.LAN - _ascentSettings.launchLANDifference,
                         core.target.TargetOrbit.inclination
                     );
-                    autopilot.StartCountdown(vesselState.time + timeToPlane);
+                    _autopilot.StartCountdown(vesselState.time + timeToPlane);
                     _ascentSettings.desiredInclination = inclination;
                 }
 
@@ -446,7 +418,7 @@ namespace MuMech
                                      "º", width: LAN_width)) //Launch to target LAN
                 {
                     launchingToMatchLAN = true;
-                    autopilot.StartCountdown(vesselState.time +
+                    _autopilot.StartCountdown(vesselState.time +
                                              Functions.TimeToPlane(
                                                  mainBody.rotationPeriod,
                                                  vesselState.latitude,
@@ -464,7 +436,7 @@ namespace MuMech
                             width: LAN_width)) //Launch to LAN
                     {
                         launchingToLAN = true;
-                        autopilot.StartCountdown(vesselState.time +
+                        _autopilot.StartCountdown(vesselState.time +
                                                  Functions.TimeToPlane(
                                                      mainBody.rotationPeriod,
                                                      vesselState.latitude,
@@ -481,7 +453,7 @@ namespace MuMech
             {
                 GUILayout.Label(launchTimer);
                 if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button17)) //Abort
-                    launchingToPlane = launchingToRendezvous = launchingToMatchLAN = launchingToLAN = autopilot.timedLaunch = false;
+                    launchingToPlane = launchingToRendezvous = launchingToMatchLAN = launchingToLAN = _autopilot.timedLaunch = false;
             }
 
             GUILayout.EndVertical();
@@ -521,11 +493,11 @@ namespace MuMech
                 else if (launchingToMatchLAN) launchTimer   = CachedLocalizer.Instance.MechJeb_Ascent_LaunchingToTargetLAN; //Launching to target LAN
                 else if (launchingToLAN) launchTimer        = CachedLocalizer.Instance.MechJeb_Ascent_LaunchingToManualLAN; //Launching to manual LAN
                 else launchTimer                            = string.Empty;
-                if (autopilot.tMinus > 3 * vesselState.deltaT)
-                    launchTimer += $": T-{GuiUtils.TimeToDHMS(autopilot.tMinus, 1)}";
+                if (_autopilot.tMinus > 3 * vesselState.deltaT)
+                    launchTimer += $": T-{GuiUtils.TimeToDHMS(_autopilot.tMinus, 1)}";
 
-                sCurrentMaxAoA  = $"º ({autopilot.currentMaxAoA:F1}°)";
-                autopilotStatus = CachedLocalizer.Instance.MechJeb_Ascent_label35 + autopilot.status;
+                sCurrentMaxAoA  = $"º ({_autopilot.currentMaxAoA:F1}°)";
+                autopilotStatus = CachedLocalizer.Instance.MechJeb_Ascent_label35 + _autopilot.Status;
                 Profiler.EndSample();
             }
         }
@@ -547,25 +519,21 @@ namespace MuMech
             SetupButtonStyles();
             GUILayout.BeginVertical();
 
-            if (autopilot != null)
+            if (_autopilot != null)
             {
                 UpdateStrings();
                 //PerformanceTestGUIElements();
-                VisibleSectionsGUIElements(out bool showTargeting, out bool showGuidanceSettings, out bool showSettings, out bool showStatus);
+                VisibleSectionsGUIElements();
                 ShowTargetingGUIElements();
                 ShowGuidanceSettingsGUIElements();
                 ShowAscentSettingsGUIElements(out bool forceRoll, out bool correctiveSteering, out bool limitAoA, out bool autostage);
                 ShowStatusGUIElements();
                 ShowAutoWarpGUIElements();
 
-                if (autopilot.enabled) GUILayout.Label(autopilotStatus); //Autopilot status:
+                if (_autopilot.enabled) GUILayout.Label(autopilotStatus); //Autopilot status:
                 if (core.DeactivateControl)
                     GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label36, GuiUtils.redLabel); //CONTROL DISABLED (AVIONICS)
-
-                _ascentSettings.showTargeting        = showTargeting;
-                _ascentSettings.showGuidanceSettings = showGuidanceSettings;
-                _ascentSettings.showSettings         = showSettings;
-                _ascentSettings.showStatus           = showStatus;
+                
                 _ascentSettings.forceRoll            = forceRoll;
                 _ascentSettings.correctiveSteering   = correctiveSteering;
                 _ascentSettings.limitAoA             = limitAoA;
@@ -583,14 +551,50 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (_ascentSettings.ascentType == ascentType.CLASSIC)
-                _classicMenu.enabled =
-                    GUILayout.Toggle(_classicMenu.enabled, CachedLocalizer.Instance.MechJeb_Ascent_checkbox10); //Edit ascent path
+                _classicPathMenu.enabled =
+                    GUILayout.Toggle(_classicPathMenu.enabled, CachedLocalizer.Instance.MechJeb_Ascent_checkbox10); //Edit ascent path
 
             RefreshRateGUI();
 
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        } 
+        
+        //Computes the time until the phase angle between the launchpad and the target equals the given angle.
+        //The convention used is that phase angle is the angle measured starting at the target and going east until
+        //you get to the launchpad.
+        //The time returned will not be exactly accurate unless the target is in an exactly circular orbit. However,
+        //the time returned will go to exactly zero when the desired phase angle is reached.
+        public static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target)
+        {
+            double launchpadAngularRate = 360 / launchBody.rotationPeriod;
+            double targetAngularRate = 360.0 / target.period;
+            if (Vector3d.Dot(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity) < 0)
+                targetAngularRate *= -1; //retrograde target
+
+            Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
+            Vector3d currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
+            currentTargetDirection = Vector3d.Exclude(launchBody.angularVelocity, currentTargetDirection);
+
+            double currentPhaseAngle = Math.Abs(Vector3d.Angle(currentLaunchpadDirection, currentTargetDirection));
+            if (Vector3d.Dot(Vector3d.Cross(currentTargetDirection, currentLaunchpadDirection), launchBody.angularVelocity) < 0)
+            {
+                currentPhaseAngle = 360 - currentPhaseAngle;
+            }
+
+            double phaseAngleRate = launchpadAngularRate - targetAngularRate;
+
+            double phaseAngleDifference = MuUtils.ClampDegrees360(phaseAngle - currentPhaseAngle);
+
+            if (phaseAngleRate < 0)
+            {
+                phaseAngleRate       *= -1;
+                phaseAngleDifference =  360 - phaseAngleDifference;
+            }
+
+
+            return phaseAngleDifference / phaseAngleRate;
         }
 
         public override GUILayoutOption[] WindowOptions()

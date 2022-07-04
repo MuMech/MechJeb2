@@ -48,6 +48,8 @@ namespace MuMech
         public MechJebModuleSettings                    settings;
         public MechJebModuleAirplaneAutopilot           airplane;
         public MechJebModuleStageStats                  stageStats;
+        public MechJebModuleAscentSettings              ascentSettings;
+        public MechJebModuleAscentBaseAutopilot                  ascent => ascentSettings.AscentAutopilot;
 
         public VesselState vesselState = new VesselState();
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]//DisabledEnabled
@@ -279,29 +281,7 @@ namespace MuMech
                 Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
             }
         }
-
-        [KSPAction("#MechJeb_AscentAPtoggle")]//Ascent AP toggle
-        public void OnAscentAPToggleAction(KSPActionParam param)
-        {
-
-            MechJebModuleAscentAutopilot autopilot = GetComputerModule<MechJebModuleAscentAutopilot>();
-            MechJebModuleAscentMenu ascentMenu = GetComputerModule<MechJebModuleAscentMenu>();
-
-
-            if (autopilot == null || ascentMenu == null)
-                return;
-
-            if (autopilot.enabled)
-            {
-                    autopilot.users.Remove(ascentMenu);
-            }
-            else
-            {
-                    autopilot.users.Add(ascentMenu);
-            }
-        }
-
-
+        
         private void EngageTranslatronControl(MechJebModuleThrustController.TMode mode)
         {
             MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
@@ -782,7 +762,7 @@ namespace MuMech
                 foreach (Type t in moduleRegistry)
                 {
                     if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
-                        && (t != typeof(AutopilotModule))
+                        && (t != typeof(AutopilotModule) && (t != typeof(MechJebModuleAscentBaseAutopilot)))
                         && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                     {
                         ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
@@ -813,6 +793,7 @@ namespace MuMech
             guidance       = GetComputerModule<MechJebModuleGuidanceController>();
             glueball       = GetComputerModule<MechJebModulePVGGlueBall>();
             stageStats     = GetComputerModule<MechJebModuleStageStats>();
+            ascentSettings = GetComputerModule<MechJebModuleAscentSettings>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

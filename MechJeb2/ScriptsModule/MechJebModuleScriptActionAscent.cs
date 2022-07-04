@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MuMech
 {
     public class MechJebModuleScriptActionAscent : MechJebModuleScriptAction
     {
-        public static string NAME = "Ascent";
-        private MechJebModuleAscentAutopilot _autopilot { get { return core.GetComputerModule<MechJebModuleAscentAutopilot>(); } }
-        private MechJebModuleAscentBase _ascentPath { get { return _autopilot.ascentPath; } }
+        public static string                      NAME = "Ascent";
+        private       MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
+        private       MechJebModuleAscentBaseAutopilot    _autopilot      => core.ascent;
 
-        private ConfigNode autopilotConfig;
-        private ConfigNode ascentPathConfig;
+        private ConfigNode ascentConfig;
         private ConfigNode stagingConfig;
         private ConfigNode thrustConfig;
 
@@ -35,8 +32,7 @@ namespace MuMech
 
         public override void readModuleConfiguration()
         {
-            autopilotConfig = ConfigNode.CreateConfigFromObject(_autopilot);
-            ascentPathConfig = ConfigNode.CreateConfigFromObject(_ascentPath);
+            ascentConfig = ConfigNode.CreateConfigFromObject(_ascentSettings);
             stagingConfig = ConfigNode.CreateConfigFromObject(core.staging);
             thrustConfig = ConfigNode.CreateConfigFromObject(core.thrust);
             // FIXME: missing autowarp
@@ -44,8 +40,7 @@ namespace MuMech
 
         public override void writeModuleConfiguration()
         {
-            ConfigNode.LoadObjectFromConfig(_autopilot, autopilotConfig);
-            ConfigNode.LoadObjectFromConfig(_ascentPath, ascentPathConfig);
+            ConfigNode.LoadObjectFromConfig(_ascentSettings, ascentConfig);
             ConfigNode.LoadObjectFromConfig(core.staging, stagingConfig);
             ConfigNode.LoadObjectFromConfig(core.thrust, thrustConfig);
         }
@@ -55,16 +50,16 @@ namespace MuMech
             base.preWindowGUI(windowID);
             base.WindowGUI(windowID);
 
-            switch (_autopilot.ascentPathIdxPublic)
+            switch (_ascentSettings.ascentType)
             {
                 case ascentType.CLASSIC:
-                    GUILayout.Label("CLASSIC ASCENT to " + (_autopilot.desiredOrbitAltitude / 1000.0) + "km");
+                    GUILayout.Label("CLASSIC ASCENT to " + (_ascentSettings.desiredOrbitAltitude / 1000.0) + "km");
                     break;
                 case ascentType.GRAVITYTURN:
-                    GUILayout.Label("GravityTurn™ ASCENT to " + (_autopilot.desiredOrbitAltitude / 1000.0) + "km");
+                    GUILayout.Label("GravityTurn™ ASCENT to " + (_ascentSettings.desiredOrbitAltitude / 1000.0) + "km");
                     break;
                 case ascentType.PVG:
-                    GUILayout.Label("PVG ASCENT to " + (_autopilot.desiredOrbitAltitude / 1000.0) + "x" + (_autopilot.DesiredApoapsis / 1000.0) + "km");
+                    GUILayout.Label("PVG ASCENT to " + (_ascentSettings.desiredOrbitAltitude / 1000.0) + "x" + (_ascentSettings.DesiredApoapsis / 1000.0) + "km");
                     break;
             }
 
@@ -87,13 +82,13 @@ namespace MuMech
 
             if (_autopilot != null)
             {
-                if (isExecuted() && _autopilot.status == "Off")
+                if (isExecuted() && _autopilot.Status == "Off")
                 {
                     GUILayout.Label ("Finished Ascent");
                 }
                 else
                 {
-                    GUILayout.Label (_autopilot.status);
+                    GUILayout.Label (_autopilot.Status);
                 }
             }
             else
@@ -107,7 +102,7 @@ namespace MuMech
         {
             if (_autopilot != null)
             {
-                if (isStarted() && !isExecuted() && _autopilot.status == "Off")
+                if (isStarted() && !isExecuted() && _autopilot.Status == "Off")
                 {
                     endAction();
                 }
@@ -127,28 +122,26 @@ namespace MuMech
                             mainBody, this.scriptModule.vesselState.longitude, targetOrbit));
             }
             */
-            _autopilot.users.Add(this);
+            _autopilot.enabled = true;
             Debug.Log("Autopilot should be engaged!");
         }
 
         public override void endAction()
         {
             base.endAction();
-            _autopilot.users.Remove(this);
+            _autopilot.enabled = false;
         }
 
         public override void postLoad(ConfigNode node)
         {
-            autopilotConfig = node.GetNode("autopilotConfig");
-            ascentPathConfig = node.GetNode("ascentPathConfig");
+            ascentConfig = node.GetNode("ascentConfig");
             stagingConfig = node.GetNode("stagingConfig");
             thrustConfig = node.GetNode("thrustConfig");
         }
 
         public override void postSave(ConfigNode node)
         {
-            autopilotConfig.CopyTo(node.AddNode("autopilotConfig"));
-            ascentPathConfig.CopyTo(node.AddNode("ascentPathConfig"));
+            ascentConfig.CopyTo(node.AddNode("ascentConfig"));
             stagingConfig.CopyTo(node.AddNode("stagingConfig"));
             thrustConfig.CopyTo(node.AddNode("thrustConfig"));
         }

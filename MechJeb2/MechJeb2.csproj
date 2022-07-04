@@ -146,12 +146,12 @@
     <Compile Include="MechJebLib\Utils\Statics.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
     <Compile Include="MechJebModuleAirplaneGuidance.cs" />
-    <Compile Include="MechJebModuleAscentAutopilot.cs" />
-    <Compile Include="MechJebModuleAscentClassic.cs" />
-    <Compile Include="MechJebModuleAscentClassicMenu.cs" />
-    <Compile Include="MechJebModuleAscentGT.cs" />
+    <Compile Include="MechJebModuleAscentBaseAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentClassicAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentClassicPathMenu.cs" />
+    <Compile Include="MechJebModuleAscentGTAutopilot.cs" />
     <Compile Include="MechJebModuleAscentMenu.cs" />
-    <Compile Include="MechJebModuleAscentPVG.cs" />
+    <Compile Include="MechJebModuleAscentPVGAutopilot.cs" />
     <Compile Include="MechJebModuleAscentPVGStagingMenu.cs" />
     <Compile Include="MechJebModuleAscentSettings.cs" />
     <Compile Include="MechJebModuleAttitudeAdjustment.cs" />

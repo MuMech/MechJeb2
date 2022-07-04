@@ -110,7 +110,7 @@ namespace MuMech
                     backgroundTexture = new Texture2D(1, height);
                 }
 
-                MechJebModuleAscentClassicMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
+                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
                 oldMainBody = mainBody;
             }
 
@@ -217,7 +217,7 @@ namespace MuMech
             realAtmo = GUILayout.Toggle(realAtmo, Localizer.Format("#MechJeb_Flightrecord_checkbox2"), GUILayout.ExpandWidth(false));//Real Atmo
 
             if (oldRealAtmo != realAtmo)
-                MechJebModuleAscentClassicMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
+                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
 
             //GUILayout.Label("", GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();

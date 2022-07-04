@@ -2,6 +2,8 @@
 
 namespace MuMech
 {
+    public enum ascentType { CLASSIC, GRAVITYTURN, PVG }
+
     public class MechJebModuleAscentSettings : ComputerModule
     {
         public MechJebModuleAscentSettings(MechJebCore core) : base(core)
@@ -53,8 +55,14 @@ namespace MuMech
         public ascentType ascentType
         {
             get => (ascentType)ascentTypeInteger;
-            set => ascentTypeInteger = (int)value;
+            set
+            {
+                ascentTypeInteger = (int)value;
+                DisableAscentModules();
+            }
         }
+
+        public MechJebModuleAscentBaseAutopilot AscentAutopilot => GetAscentModule(ascentType);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
@@ -64,9 +72,6 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble desiredLAN = new EditableDouble(0.0);
-
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool autoThrottle = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool correctiveSteering = false;
@@ -137,11 +142,6 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)] public EditableInt warpCountDown = 11;
 
-        [Persistent(pass = (int)Pass.Global)] public bool showSettings         = true;
-        [Persistent(pass = (int)Pass.Global)] public bool showTargeting        = true;
-        [Persistent(pass = (int)Pass.Global)] public bool showGuidanceSettings = true;
-        [Persistent(pass = (int)Pass.Global)] public bool showStatus           = true;
-        
         /*
          * "Classic" ascent path settings
          */
@@ -188,6 +188,35 @@ namespace MuMech
                     return Math.Min(30000, desiredOrbitAltitude * 0.85);
                 }
             }
+        }
+        
+        private readonly ascentType[] _values = (ascentType[])Enum.GetValues(typeof(ascentType));
+
+        private MechJebModuleAscentBaseAutopilot GetAscentModule(ascentType type)
+        {
+            switch (type)
+            {
+                case ascentType.CLASSIC:
+                    return core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
+                case ascentType.GRAVITYTURN:
+                    return core.GetComputerModule<MechJebModuleAscentGTAutopilot>();
+                case ascentType.PVG:
+                    return core.GetComputerModule<MechJebModuleAscentPVGAutopilot>();
+                default:
+                    return core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
+            }
+        }
+        
+        private void DisableAscentModules()
+        {
+            foreach (ascentType type in _values)
+                if (type != ascentType)
+                    GetAscentModule(type).enabled = false;
+        }
+
+        public override void OnFixedUpdate()
+        {
+            DisableAscentModules();
         }
     }
 }
