@@ -33,8 +33,8 @@ MechJeb2 is a mod for the game Kerbal Space Program. To learn how to use it, [vi
 
 #### Download
 
-Download from Curse:
-    <https://www.curseforge.com/kerbal/ksp-mods/mechjeb/download>
+Download from Jenkins:
+    <https://ksp.sarbian.com/jenkins/job/MechJeb2-Release/>
 
 #### Unpack
 
