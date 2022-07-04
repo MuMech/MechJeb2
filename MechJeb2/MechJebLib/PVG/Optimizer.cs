@@ -3,19 +3,23 @@
 using System;
 using System.Collections.Generic;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
+using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PVG
 {
-    public partial class Optimizer
+    public partial class Optimizer : IDisposable
     {
-        private readonly Problem                  _problem;
-        private readonly List<Phase>              _phases;
         public           double                   ZnormTerminationLevel = 1e-9;
         public           double                   Znorm;
         public           int                      MaxIter    { get; set; } = 20000; // this could maybe be pushed down
         public           double                   lmEpsx     { get; set; } = 1e-10; // we terminate manually at 1e-9 so could lower this?
         public           double                   lmDiffStep { get; set; } = 1e-9;
+        public           int                      LmStatus;
+        public           int                      LmIterations;
+        
+        private readonly Problem                  _problem;
+        private readonly List<Phase>              _phases;
         private readonly List<DD>                 _initial  = new List<DD>();
         private readonly List<DD>                 _terminal = new List<DD>();
         private readonly List<DD>                 _residual = new List<DD>();
@@ -23,6 +27,7 @@ namespace MechJebLib.PVG
         private readonly alglib.minlmreport       rep = new alglib.minlmreport();
         private readonly alglib.ndimensional_fvec ResidualHandle;
         private          alglib.minlmstate        _state = new alglib.minlmstate();
+        
 
         private Optimizer(Problem problem, IEnumerable<Phase> phases)
         {
@@ -161,6 +166,7 @@ namespace MechJebLib.PVG
 
         private bool terminating = false;
 
+
         internal void ResidualFunction(double[] yin, double[] zout, object? o)
         {
             if (terminating)
@@ -224,9 +230,33 @@ namespace MechJebLib.PVG
             alglib.minlmsetcond(_state, lmEpsx, MaxIter);
             alglib.minlmoptimize(_state, ResidualHandle, null, null);
             alglib.minlmresultsbuf(_state, ref yNew, rep);
+
+            LmStatus     = rep.terminationtype;
+            LmIterations = rep.iterationscount;
             
             if (rep.terminationtype != 8)
                 ResidualFunction(yNew, z, null);
+            
+            Debug.Log("solved initial: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_initial[p]));
+            }
+            
+            Debug.Log("solved terminal: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_terminal[p]));
+            }
+            
+            Debug.Log("solved residuals: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_residual[p]));
+            }
 
             return this;
         }
@@ -288,16 +318,12 @@ namespace MechJebLib.PVG
             return solution;
         }
 
-        public Optimizer Bootstrap(V3 pv0, V3 pr0, double bt)
+        public Optimizer Bootstrap(V3 pv0, V3 pr0)
         {
             ExpandArrays();
             
             using var integArray = DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
             using var integ = ArrayWrapper.Rent(integArray);
-
-            for (int p = 0; p <= lastPhase; p++)
-                if (!_phases[p].OptimizeTime)
-                    bt -= _phases[p].bt_bar;
 
             double t0 = 0;
             double lastDv = 0;
@@ -324,7 +350,7 @@ namespace MechJebLib.PVG
                     _terminal[p - 1].CopyTo(_initial[p]);
                 }
 
-                y0.Bt = phase.OptimizeTime ? bt : phase.bt_bar;
+                y0.Bt = phase.bt_bar;
 
                 double tf = t0 + y0.Bt;
                 
@@ -347,12 +373,12 @@ namespace MechJebLib.PVG
             using var integArray = DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
             using var integ = ArrayWrapper.Rent(integArray);
 
-            double tbar = solution.Tbar(solution.T0);
+            //double tbar = solution.Tbar(_problem.t0);
             
             double t0 = 0;
             double lastDv = 0;
 
-            int segmentOffset = solution.Segments - lastPhase;
+            int segmentOffset = solution.Segments - _phases.Count;
             if (segmentOffset < 0)
                 segmentOffset = 0;
             
@@ -368,8 +394,8 @@ namespace MechJebLib.PVG
                     y0.R  = _problem.r0_bar;
                     y0.V  = _problem.v0_bar;
                     y0.M  = _problem.m0_bar;
-                    y0.PV = solution.PvBar(tbar);
-                    y0.PR = solution.PrBar(tbar);
+                    y0.PV = solution.Pv(_problem.t0);
+                    y0.PR = solution.Pr(_problem.t0);
                     y0.CopyTo(integArray);
                     integ.DV = 0;
                 }
@@ -379,19 +405,15 @@ namespace MechJebLib.PVG
                     _terminal[p - 1].CopyTo(_initial[p]);
                 }
                 
-                if (p == 0)
-                {
-                    y0.Bt = solution.BtBar(segmentOffset, tbar);
-                }
-                else if (!phase.OptimizeTime)
+                if (!phase.OptimizeTime)
                 {
                     y0.Bt = phase.bt_bar;
-                }
+                } 
                 else
                 {
                     // FIXME: this needs to be smarter to deal with crazy rearrangement
-                    // - if we're looking for a coast, we should probably go searching for the one coast
-                    y0.Bt = solution.BtBar(segmentOffset, tbar);
+                    // - e.g. if we're looking for a coast, we should probably go searching for the one coast
+                    y0.Bt = solution.Bt(p + segmentOffset, _problem.t0) / _problem.Scale.timeScale;
                 }
 
                 double tf = t0 + y0.Bt;
@@ -404,6 +426,29 @@ namespace MechJebLib.PVG
 
                 t0 += tf;
             }
+            
+            CalculateResiduals();
+
+            Debug.Log("bootstrap initial: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_initial[p]));
+            }
+            
+            Debug.Log("bootstrap terminal: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_terminal[p]));
+            }
+            
+            Debug.Log("bootstrap residuals: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_residual[p]));
+            }
 
             return this;
         }
@@ -414,10 +459,14 @@ namespace MechJebLib.PVG
             return Znorm < 1e-5;
         }
 
-        public static PVGBuilder Builder()
+        public static OptimizerBuilder Builder()
         {
-            return new PVGBuilder();
+            return new OptimizerBuilder();
         }
 
+        public void Dispose()
+        {
+            // FIXME: ObjectPooling
+        }
     }
 }

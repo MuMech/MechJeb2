@@ -13,32 +13,32 @@ namespace MechJebLib.PVG.Terminal
     ///     Pan, Binfeng, Zheng Chen, Ping Lu, and Bo Gao. “Reduced Transversality Conditions in Optimal Space Trajectories.”
     ///     Journal of Guidance, Control, and Dynamics 36, no. 5 (September 2013): 1289–1300. https://doi.org/10.2514/1.60181.
     /// </summary>
-    public class Kepler5Reduced : IPVGTerminal
+    public readonly struct Kepler5Reduced : IPVGTerminal
     {
-        private readonly V3     hT;
-        private readonly V3     ehat1;
-        private readonly V3     ehat2;
-        private readonly double e1;
-        private readonly double e2;
+        private readonly V3     _hT;
+        private readonly V3     _ehat1;
+        private readonly V3     _ehat2;
+        private readonly double _e1;
+        private readonly double _e2;
 
         public Kepler5Reduced(double smaT, double eccT, double incT, double lanT, double argpT)
         {
             incT = Math.Abs(ClampPi(incT));
             
-            hT   = Functions.HvecFromKeplerian(1.0, smaT, eccT, incT, lanT);
+            _hT   = Functions.HvecFromKeplerian(1.0, smaT, eccT, incT, lanT);
 
             // r guaranteed not to be colinear with hT
             V3 r = V3.zero;
-            r[hT.min_magnitude_index] = 1.0;
+            r[_hT.min_magnitude_index] = 1.0;
 
             // basis vectors orthonormal to hT
-            ehat1 = V3.Cross(hT, r).normalized;
-            ehat2 = V3.Cross(hT, ehat1).normalized;
+            _ehat1 = V3.Cross(_hT, r).normalized;
+            _ehat2 = V3.Cross(_hT, _ehat1).normalized;
 
             // projection of eT onto ehat1/ehat2
             V3 eT = Functions.EvecFromKeplerian(eccT, incT, lanT, argpT);
-            e1 = V3.Dot(eT, ehat1);
-            e2 = V3.Dot(eT, ehat2);
+            _e1 = V3.Dot(eT, _ehat1);
+            _e2 = V3.Dot(eT, _ehat2);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
@@ -49,9 +49,9 @@ namespace MechJebLib.PVG.Terminal
             var hf = V3.Cross(yf.R, yf.V);
             V3 ef = V3.Cross(yf.V, hf) - yf.R.normalized;
 
-            V3 hmiss = hf - hT;
-            double emiss1 = e1 - V3.Dot(ef, ehat1);
-            double emiss2 = e2 - V3.Dot(ef, ehat2);
+            V3 hmiss = hf - _hT;
+            double emiss1 = _e1 - V3.Dot(ef, _ehat1);
+            double emiss2 = _e2 - V3.Dot(ef, _ehat2);
 
             double t1 = V3.Dot(yf.PR, yf.V) - V3.Dot(yf.PV, yf.R) / rf3;
 

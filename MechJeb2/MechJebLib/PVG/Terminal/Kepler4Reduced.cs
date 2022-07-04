@@ -12,16 +12,16 @@ namespace MechJebLib.PVG.Terminal
     ///     Pan, Binfeng, Zheng Chen, Ping Lu, and Bo Gao. “Reduced Transversality Conditions in Optimal Space Trajectories.”
     ///     Journal of Guidance, Control, and Dynamics 36, no. 5 (September 2013): 1289–1300. https://doi.org/10.2514/1.60181.
     /// </summary>
-    public class Kepler4Reduced : IPVGTerminal
+    public readonly struct Kepler4Reduced : IPVGTerminal
     {
-        private readonly V3     hT;
-        private readonly double PeRT;
+        private readonly V3     _hT;
+        private readonly double _peRT;
 
         public Kepler4Reduced(double smaT, double eccT, double incT, double lanT)
         {
             incT = Math.Abs(ClampPi(incT));
-            hT   = Functions.HvecFromKeplerian(1.0, smaT, eccT, incT, lanT);
-            PeRT = Functions.PeriapsisFromKeplerian(smaT, eccT);
+            _hT   = Functions.HvecFromKeplerian(1.0, smaT, eccT, incT, lanT);
+            _peRT = Functions.PeriapsisFromKeplerian(smaT, eccT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
@@ -30,9 +30,9 @@ namespace MechJebLib.PVG.Terminal
             double rf3 = rfm * rfm * rfm;
 
             var hf = V3.Cross(yf.R, yf.V);
-            V3 hmiss = hf - hT;
+            V3 hmiss = hf - _hT;
 
-            double con1 = Functions.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - PeRT; // periapsis
+            double con1 = Functions.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
             double con2 = hmiss[0];
             double con3 = hmiss[1];
             double con4 = hmiss[2];

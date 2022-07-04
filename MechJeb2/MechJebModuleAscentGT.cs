@@ -1,6 +1,4 @@
 using System;
-using KSP.UI.Screens;
-using UnityEngine;
 using KSP.Localization;
 
 /*
@@ -14,226 +12,207 @@ namespace MuMech
     {
         public MechJebModuleAscentGT(MechJebCore core) : base(core) { }
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(500, 1000);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult turnStartVelocity = new EditableDoubleMult(50);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult turnStartPitch = new EditableDoubleMult(25);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult intermediateAltitude = new EditableDoubleMult(45000, 1000);
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-            public EditableDoubleMult holdAPTime = new EditableDoubleMult(1);
-
         public override void OnModuleEnabled()
         {
             base.OnModuleEnabled();
-            maxholdAPTime = 0.0F;
-            mode = AscentMode.VERTICAL_ASCENT;
+            _maxholdAPTime = 0.0F;
+            _mode          = AscentMode.VERTICAL_ASCENT;
         }
 
-        public override void OnModuleDisabled()
+        private bool IsVerticalAscent(double altitude, double velocity)
         {
-            base.OnModuleDisabled();
-        }
-
-        public bool IsVerticalAscent(double altitude, double velocity)
-        {
-            if (altitude < turnStartAltitude && velocity < turnStartVelocity)
+            if (altitude < _ascentSettings.turnStartAltitude && velocity < _ascentSettings.turnStartVelocity)
             {
                 return true;
             }
+
             return false;
         }
 
-        enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, HOLD_AP, COAST_TO_APOAPSIS, EXIT };
-        AscentMode mode;
+        private enum AscentMode { VERTICAL_ASCENT, INITIATE_TURN, GRAVITY_TURN, HOLD_AP, COAST_TO_APOAPSIS, EXIT }
+
+        private AscentMode _mode;
 
         public override bool DriveAscent(FlightCtrlState s)
         {
-            switch (mode)
+            switch (_mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
-                    DriveVerticalAscent(s);
+                    DriveVerticalAscent();
                     break;
 
                 case AscentMode.INITIATE_TURN:
-                    DriveInitiateTurn(s);
+                    DriveInitiateTurn();
                     break;
 
                 case AscentMode.GRAVITY_TURN:
-                    DriveGravityTurn(s);
+                    DriveGravityTurn();
                     break;
 
                 case AscentMode.HOLD_AP:
-                    DriveHoldAP(s);
+                    DriveHoldAP();
                     break;
 
                 case AscentMode.COAST_TO_APOAPSIS:
-                    DriveCoastToApoapsis(s);
+                    DriveCoastToApoapsis();
                     break;
 
                 case AscentMode.EXIT:
                     return false;
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+
             return true;
         }
 
-        void DriveVerticalAscent(FlightCtrlState s)
+        private void DriveVerticalAscent()
         {
-            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) mode = AscentMode.INITIATE_TURN;
-            if (autopilot.autoThrottle && orbit.ApA > intermediateAltitude) mode = AscentMode.GRAVITY_TURN;
+            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) _mode            = AscentMode.INITIATE_TURN;
+            if (_ascentSettings.autoThrottle && orbit.ApA > _ascentSettings.intermediateAltitude) _mode = AscentMode.GRAVITY_TURN;
 
             //during the vertical ascent we just thrust straight up at max throttle
             attitudeTo(90);
 
             bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
 
-            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && (vesselState.altitudeBottom > autopilot.rollAltitude));
+            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > _ascentSettings.rollAltitude);
 
-            if (autopilot.autoThrottle) core.thrust.targetThrottle = 1.0F;
+            if (_ascentSettings.autoThrottle) core.thrust.targetThrottle = 1.0F;
 
-            if (!vessel.LiftedOff() || vessel.Landed) status = Localizer.Format("#MechJeb_Ascent_status6");//"Awaiting liftoff"
-            else status = Localizer.Format("#MechJeb_Ascent_status18");//"Vertical ascent"
+            if (!vessel.LiftedOff() || vessel.Landed) status = Localizer.Format("#MechJeb_Ascent_status6");  //"Awaiting liftoff"
+            else status                                      = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
         }
 
-        void DriveInitiateTurn(FlightCtrlState s)
+        private void DriveInitiateTurn()
         {
             //stop the intermediate "burn" when our apoapsis reaches the desired altitude
-            if (orbit.ApA > autopilot.desiredOrbitAltitude)
+            if (orbit.ApA > _ascentSettings.desiredOrbitAltitude)
             {
-                mode = AscentMode.COAST_TO_APOAPSIS;
+                _mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
             }
 
-            if ((90 - turnStartPitch) >= srfvelPitch())
+            if (90 - _ascentSettings.turnStartPitch >= srfvelPitch())
             {
-                mode = AscentMode.GRAVITY_TURN;
+                _mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            if (orbit.ApA > intermediateAltitude)
+            if (orbit.ApA > _ascentSettings.intermediateAltitude)
             {
-                mode = AscentMode.GRAVITY_TURN;
+                _mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
             //if we've fallen below the turn start altitude, go back to vertical ascent
             if (IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface))
             {
-                mode = AscentMode.VERTICAL_ASCENT;
+                _mode = AscentMode.VERTICAL_ASCENT;
                 return;
             }
 
-            attitudeTo(90 - turnStartPitch);
+            attitudeTo(90 - _ascentSettings.turnStartPitch);
 
-            if (autopilot.autoThrottle)
+            if (_ascentSettings.autoThrottle)
             {
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, intermediateAltitude + mainBody.Radius);
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, _ascentSettings.intermediateAltitude + mainBody.Radius);
                 if (core.thrust.targetThrottle < 1.0F)
                 {
-                    status = Localizer.Format("#MechJeb_Ascent_status19");//"Fine tuning intermediate altitude"
+                    status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
                     return;
                 }
             }
 
-            status = Localizer.Format("#MechJeb_Ascent_status20");//"Initiate gravity turn"
+            status = Localizer.Format("#MechJeb_Ascent_status20"); //"Initiate gravity turn"
         }
 
-        double fixedTimeToAp()
+        private double FixedTimeToAp()
         {
-            if ( vessel.orbit.timeToPe < vessel.orbit.timeToAp )
+            if (vessel.orbit.timeToPe < vessel.orbit.timeToAp)
                 return vessel.orbit.timeToAp - vessel.orbit.period;
-            else
-                return vessel.orbit.timeToAp;
+            return vessel.orbit.timeToAp;
         }
 
-        double maxholdAPTime = 0;
+        private double _maxholdAPTime;
 
-        void DriveGravityTurn(FlightCtrlState s)
+        private void DriveGravityTurn()
         {
             //stop the intermediate "burn" when our apoapsis reaches the desired altitude
-            if (orbit.ApA > autopilot.desiredOrbitAltitude)
+            if (orbit.ApA > _ascentSettings.desiredOrbitAltitude)
             {
-                mode = AscentMode.COAST_TO_APOAPSIS;
+                _mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
             }
 
 
-            if (fixedTimeToAp() < holdAPTime && maxholdAPTime > holdAPTime)
+            if (FixedTimeToAp() < _ascentSettings.holdAPTime && _maxholdAPTime > _ascentSettings.holdAPTime)
             {
-                mode = AscentMode.HOLD_AP;
+                _mode = AscentMode.HOLD_AP;
                 return;
             }
 
-            maxholdAPTime = Math.Max(maxholdAPTime, fixedTimeToAp());
+            _maxholdAPTime = Math.Max(_maxholdAPTime, FixedTimeToAp());
 
             // fade pitch from AoA at 90% of intermediateAltitude to 0 at 95% of intermediateAltitude
-            double pitchfade = MuUtils.Clamp(- 20 * vesselState.altitudeASL / intermediateAltitude + 19, 0.0, 1.0);
+            double pitchfade = MuUtils.Clamp(-20 * vesselState.altitudeASL / _ascentSettings.intermediateAltitude + 19, 0.0, 1.0);
 
             // srfvelPitch == zero AoA
             attitudeTo(srfvelPitch() * pitchfade);
 
-            if (autopilot.autoThrottle)
+            if (_ascentSettings.autoThrottle)
             {
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, intermediateAltitude + mainBody.Radius);
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, _ascentSettings.intermediateAltitude + mainBody.Radius);
                 if (core.thrust.targetThrottle < 1.0F)
                 {
-                    status = Localizer.Format("#MechJeb_Ascent_status19");//"Fine tuning intermediate altitude"
+                    status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
                     return;
                 }
             }
 
-            status = Localizer.Format("#MechJeb_Ascent_status22");//"Gravity turn"
+            status = Localizer.Format("#MechJeb_Ascent_status22"); //"Gravity turn"
         }
 
-        void DriveHoldAP(FlightCtrlState s)
+        private void DriveHoldAP()
         {
             //stop the intermediate "burn" when our apoapsis reaches the desired altitude
-            if (orbit.ApA > autopilot.desiredOrbitAltitude)
+            if (orbit.ApA > _ascentSettings.desiredOrbitAltitude)
             {
-                mode = AscentMode.COAST_TO_APOAPSIS;
+                _mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
             }
 
             // generally this is in response to typing numbers into the intermediate altitude text box and
             // an accidental transition to later in the state machine
-            if (orbit.ApA < 0.98 * intermediateAltitude)
+            if (orbit.ApA < 0.98 * _ascentSettings.intermediateAltitude)
             {
-                mode = AscentMode.GRAVITY_TURN;
+                _mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            attitudeTo(0);  /* FIXME: corrective steering */
+            attitudeTo(0); /* FIXME: corrective steering */
 
-            if (fixedTimeToAp() < holdAPTime)
-            {
-                core.thrust.targetThrottle = 1.0F;
-            }
-            else
-            {
-                core.thrust.targetThrottle = 0.1F;
-            }
-            status = Localizer.Format("#MechJeb_Ascent_status24");//"Holding AP"
+            core.thrust.targetThrottle = FixedTimeToAp() < _ascentSettings.holdAPTime ? 1.0F : 0.1F;
+
+            status = Localizer.Format("#MechJeb_Ascent_status24"); //"Holding AP"
         }
 
-        void DriveCoastToApoapsis(FlightCtrlState s)
+        private void DriveCoastToApoapsis()
         {
             core.thrust.targetThrottle = 0;
 
-            double apoapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextApoapsisTime(vesselState.time)).magnitude;
-
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
-                mode = AscentMode.EXIT;
+                _mode = AscentMode.EXIT;
                 core.warp.MinimumWarp();
                 return;
             }
 
             //if our apoapsis has fallen too far, resume the gravity turn
-            if (orbit.ApA < autopilot.desiredOrbitAltitude - 1000.0)
+            if (orbit.ApA < _ascentSettings.desiredOrbitAltitude - 1000.0)
             {
-                mode = AscentMode.HOLD_AP;
+                _mode = AscentMode.HOLD_AP;
                 core.warp.MinimumWarp();
                 return;
             }
@@ -243,10 +222,10 @@ namespace MuMech
             // follow surface velocity to reduce flipping
             attitudeTo(srfvelPitch());
 
-            if (autopilot.autoThrottle && orbit.ApA < autopilot.desiredOrbitAltitude)
+            if (_ascentSettings.autoThrottle && orbit.ApA < _ascentSettings.desiredOrbitAltitude)
             {
                 core.warp.WarpPhysicsAtRate(1);
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, autopilot.desiredOrbitAltitude + mainBody.Radius);
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, _ascentSettings.desiredOrbitAltitude + mainBody.Radius);
             }
             else
             {
@@ -257,7 +236,7 @@ namespace MuMech
                 }
             }
 
-            status = Localizer.Format("#MechJeb_Ascent_status23");//"Coasting to edge of atmosphere"
+            status = Localizer.Format("#MechJeb_Ascent_status23"); //"Coasting to edge of atmosphere"
         }
     }
 }

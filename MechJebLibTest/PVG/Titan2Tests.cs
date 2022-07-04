@@ -15,8 +15,6 @@ namespace PVG
             // this should burn the entire rocket, based on the results of FlightPathAngleEnergy3()
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
-            var pv0 = new V3(0.267847208341849, 0.249213681880407, 0.146083539316195);
-            var pr0 = new V3(0.927856590248419, 3.23482813446742e-13, 0.506051912781152);
             double t0 = 0;
             double PeR = 6.371e+6 + 185e+3;
             double ApR = 6.371e+6 + 4306022;
@@ -27,7 +25,7 @@ namespace PVG
                 .AddStageUsingBurnTime(153180, 2194400, 296, 156)
                 .AddStageUsingBurnTime(31980, 443700, 315, 180, true)
                 .Initial(r0, v0, t0, mu)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), false, false, 0)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), false, false)
                 .Build()
                 .Run();
             
@@ -75,7 +73,7 @@ namespace PVG
                 .AddStageUsingBurnTime(157355.487476332, 2340000 ,301.817977905273, 148.102380138703)
                 .AddStageUsingBurnTime(32758.6353093992, 456100.006103516, 315.000112652779 ,178.63040653022, true)
                 .Initial(r0, v0, t0, mu)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), false, false, 0)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), false, false)
                 .Build()
                 .Run();
             

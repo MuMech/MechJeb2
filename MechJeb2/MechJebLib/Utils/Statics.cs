@@ -7,6 +7,9 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using MechJebLib.Primitives;
 
 namespace MechJebLib.Utils
@@ -203,6 +206,31 @@ namespace MechJebLib.Utils
         public static bool NearlyEqual(Vector3d a, Vector3d b, double epsilon = EPS)
         {
             return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
+        }
+        
+        /// <summary>
+        ///     Debugging helper for printing double arrays to logs
+        /// </summary>
+        /// <param name="array">Array of doubles</param>
+        /// <returns>String format</returns>
+        public static string DoubleArrayString(IList<double> array)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append("[");
+            int last = array.Count - 1;
+
+            for (int i = 0; i <= last; i++)
+            {
+                sb.Append(array[i].ToString(CultureInfo.CurrentCulture));
+                if (i < last)
+                    sb.Append(",");
+            }
+
+            sb.Append("]");
+
+
+            return sb.ToString();
         }
     }
 }

@@ -12,28 +12,28 @@ namespace MechJebLib.PVG.Terminal
     /// Pan, Binfeng, Zheng Chen, Ping Lu, and Bo Gao. “Reduced Transversality Conditions in Optimal Space Trajectories.”
     /// Journal of Guidance, Control, and Dynamics 36, no. 5 (September 2013): 1289–1300. https://doi.org/10.2514/1.60181.
     /// </summary>
-    public class FlightPathAngle5Reduced : IPVGTerminal
+    public readonly struct FlightPathAngle5Reduced : IPVGTerminal
     {
-        private readonly double gammaT;
-        private readonly V3     hT;
-        private readonly double rT;
+        private readonly double _gammaT;
+        private readonly V3     _hT;
+        private readonly double _rT;
 
-        public FlightPathAngle5Reduced(double rT, double vT, double gammaT, double incT, double lanT)
+        public FlightPathAngle5Reduced(double gammaT, double rT, double vT, double incT, double lanT)
         {
-            this.gammaT = gammaT;
-            this.rT     = rT;
+            this._gammaT = gammaT;
+            this._rT     = rT;
             lanT        = Clamp2Pi(lanT);
             incT        = Math.Abs(ClampPi(incT));
-            hT          = Functions.HvecFromFlightPathAngle(rT, vT, gammaT, incT, lanT);
+            _hT          = Functions.HvecFromFlightPathAngle(rT, vT, gammaT, incT, lanT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
         {
             var hf = V3.Cross(yf.R, yf.V);
-            V3 hmiss = hf - hT;
+            V3 hmiss = hf - _hT;
 
-            double con1 = (yf.R.sqrMagnitude - rT * rT) * 0.5;
-            double con2 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(gammaT);
+            double con1 = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
+            double con2 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
             double con3 = hmiss[0];
             double con4 = hmiss[1];
             double con5 = hmiss[2];

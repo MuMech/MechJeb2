@@ -330,7 +330,7 @@ namespace MuMech
                 userCommandingRotationSmoothed--;
             }
 
-            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentMenu>().hidden) { return; }
 
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
@@ -789,7 +789,7 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden)
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentMenu>().hidden)
             {
                 return;
             }

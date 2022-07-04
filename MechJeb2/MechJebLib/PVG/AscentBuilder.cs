@@ -1,5 +1,4 @@
 using MechJebLib.Primitives;
-using UnityEngine;
 
 namespace MechJebLib.PVG
 {
@@ -38,17 +37,16 @@ namespace MechJebLib.PVG
                 return _ascent;
             }
 
-            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, bool attachAltFlag, bool lanflag, double coastLen)
+            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, bool attachAltFlag, bool lanflag)
             {
                 //Debug.Log($"SetTarget: {peR} {apR} {attR} {inclination} {lan} {attachAltFlag} {lanflag} {coastLen}");
                 _ascent._peR           = peR;
                 _ascent._apR           = apR;
                 _ascent._attR          = attR;
-                _ascent._inclination   = inclination;
-                _ascent._lan           = lan;
+                _ascent._incT   = inclination;
+                _ascent._lanT           = lan;
                 _ascent._attachAltFlag = attachAltFlag;
                 _ascent._lanflag       = lanflag;
-                _ascent._coastLen      = coastLen;
 
                 return this;
             }

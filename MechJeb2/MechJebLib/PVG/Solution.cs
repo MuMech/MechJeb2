@@ -4,11 +4,10 @@ using System;
 using System.Collections.Generic;
 using MechJebLib.Maths;
 using MechJebLib.Primitives;
-using MuMech;
 
 namespace MechJebLib.PVG
 {
-    public class Solution
+    public class Solution : IDisposable
     {
         public           double       T0;
         public           double       Tf => T0 + tmax * _timeScale;
@@ -111,6 +110,22 @@ namespace MechJebLib.PVG
             using var x = ArrayWrapper.Rent(xraw);
             return x.M * _massScale;
         }
+        
+        public double Bt(int segment, double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+            
+            return BtBar(segment, tbar) * _timeScale;
+        }
+        
+        // burntime of the segment at the given normalized time, does not go below zero
+        public double BtBar(int segment, double tbar)
+        {
+            double hi = _tmax[segment];
+            double lo = Math.Min(Math.Max(_tmin[segment], tbar), hi);
+
+            return hi - lo;
+        }
 
         public double DV(double t)
         {
@@ -162,21 +177,17 @@ namespace MechJebLib.PVG
         }
 
         // this is for terminal guidance.
-        public double TerminalGuidanceMetric(Vector3d pos, Vector3d vel)
+        public double TerminalGuidanceMetric(V3 pos, V3 vel)
         {
-            var h = Vector3d.Cross(pos, vel);
-            Vector3d hf = V3.Cross(R(Tf), V(Tf)).ToVector3d().xzy;
+            var h = V3.Cross(pos, vel);
+            var hf = V3.Cross(R(Tf), V(Tf));
 
             return (hf - h).magnitude;
         }
 
-        // burntime of the segment at the given normalized time, does not go below zero
-        public double BtBar(int segment, double tbar)
+        public void Dispose()
         {
-            double hi = _tmax[segment];
-            double lo = Math.Min(Math.Max(_tmin[segment], tbar), hi);
-
-            return hi - lo;
+            // FIXME: need to dispose properly
         }
     }
 }

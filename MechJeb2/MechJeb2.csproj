@@ -119,7 +119,7 @@
     <Compile Include="MechJebLib\PVG\Ascent.cs" />
     <Compile Include="MechJebLib\PVG\Phase.cs" />
     <Compile Include="MechJebLib\PVG\Problem.cs" />
-    <Compile Include="MechJebLib\PVG\PVGBuilder.cs" />
+    <Compile Include="MechJebLib\PVG\OptimizerBuilder.cs" />
     <Compile Include="MechJebLib\PVG\ResidualWrapper.cs" />
     <Compile Include="MechJebLib\PVG\Scale.cs" />
     <Compile Include="MechJebLib\PVG\Solution.cs" />
@@ -150,9 +150,10 @@
     <Compile Include="MechJebModuleAscentClassic.cs" />
     <Compile Include="MechJebModuleAscentClassicMenu.cs" />
     <Compile Include="MechJebModuleAscentGT.cs" />
-    <Compile Include="MechJebModuleAscentGuidance.cs" />
-    <Compile Include="MechJebModuleAscentNavBall.cs" />
+    <Compile Include="MechJebModuleAscentMenu.cs" />
     <Compile Include="MechJebModuleAscentPVG.cs" />
+    <Compile Include="MechJebModuleAscentPVGStagingMenu.cs" />
+    <Compile Include="MechJebModuleAscentSettings.cs" />
     <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
     <Compile Include="MechJebModuleAttitudeController.cs" />
     <Compile Include="MechJebModuleCustomInfoWindow.cs" />

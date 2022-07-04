@@ -182,6 +182,11 @@ namespace MuMech
         {
             return new Vector3d(vector.x, vector.y, vector.z);
         }
+        
+        public static Vector3d V3ToWorld(this V3 vector)
+        {
+            return Planetarium.fetch.rotation * vector.ToVector3d().xzy;
+        }
 
         public static Q3 ToQ3(this QuaternionD q)
         {

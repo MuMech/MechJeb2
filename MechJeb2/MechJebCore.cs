@@ -285,19 +285,19 @@ namespace MuMech
         {
 
             MechJebModuleAscentAutopilot autopilot = GetComputerModule<MechJebModuleAscentAutopilot>();
-            MechJebModuleAscentGuidance ascentGuidance = GetComputerModule<MechJebModuleAscentGuidance>();
+            MechJebModuleAscentMenu ascentMenu = GetComputerModule<MechJebModuleAscentMenu>();
 
 
-            if (autopilot == null || ascentGuidance == null)
+            if (autopilot == null || ascentMenu == null)
                 return;
 
             if (autopilot.enabled)
             {
-                    autopilot.users.Remove(ascentGuidance);
+                    autopilot.users.Remove(ascentMenu);
             }
             else
             {
-                    autopilot.users.Add(ascentGuidance);
+                    autopilot.users.Add(ascentMenu);
             }
         }
 

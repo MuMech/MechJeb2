@@ -12,12 +12,12 @@ namespace MechJebLib.PVG.Terminal
     /// In AIAA Guidance, Navigation, and Control Conference. Minneapolis, Minnesota: American Institute of Aeronautics
     /// and Astronautics, 2012. https://doi.org/10.2514/6.2012-4843.
     /// </summary>
-    public class FlightPathAngle4Propellant : IPVGTerminal
+    public readonly struct FlightPathAngle4Propellant : IPVGTerminal
     {
-        private readonly double gammaT;
-        private readonly double rT;
-        private readonly double vT;
-        private readonly double incT;
+        private readonly double _gammaT;
+        private readonly double _rT;
+        private readonly double _vT;
+        private readonly double _incT;
 
         public FlightPathAngle4Propellant(double gammaT, double rT, double vT, double incT)
         {
@@ -26,10 +26,10 @@ namespace MechJebLib.PVG.Terminal
             Check.PositiveFinite(vT);
             Check.Finite(incT);
             
-            this.gammaT = gammaT;
-            this.rT     = rT;
-            this.vT     = vT;
-            this.incT   = Math.Abs(ClampPi(incT));
+            this._gammaT = gammaT;
+            this._rT     = rT;
+            this._vT     = vT;
+            this._incT   = Math.Abs(ClampPi(incT));
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
@@ -39,13 +39,13 @@ namespace MechJebLib.PVG.Terminal
             var vn = V3.Cross(yf.V, n);
             var hf = V3.Cross(yf.R, yf.V);
 
-            double con1 = (yf.R.sqrMagnitude - rT * rT) * 0.5;
-            double con2 = (yf.V.sqrMagnitude - vT * vT) * 0.5;
-            double con3 = V3.Dot(n, hf.normalized) - Math.Cos(incT);
-            double con4 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(gammaT);
+            double con1 = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
+            double con2 = (yf.V.sqrMagnitude - _vT * _vT) * 0.5;
+            double con3 = V3.Dot(n, hf.normalized) - Math.Cos(_incT);
+            double con4 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
             double tv1 =
-                rT * rT * (V3.Dot(yf.V, yf.PR) - vT * Math.Sin(gammaT) / rT * V3.Dot(yf.R, yf.PR)) -
-                vT * vT * (V3.Dot(yf.R, yf.PV) - rT * Math.Sin(gammaT) / vT * V3.Dot(yf.V, yf.PV));
+                _rT * _rT * (V3.Dot(yf.V, yf.PR) - _vT * Math.Sin(_gammaT) / _rT * V3.Dot(yf.R, yf.PR)) -
+                _vT * _vT * (V3.Dot(yf.R, yf.PV) - _rT * Math.Sin(_gammaT) / _vT * V3.Dot(yf.V, yf.PV));
             double tv2 = V3.Dot(hf, yf.PR) * V3.Dot(hf, rn) + V3.Dot(hf, yf.PV) * V3.Dot(hf, vn);
             return (con1, con2, con3, con4, tv1, tv2);
         }

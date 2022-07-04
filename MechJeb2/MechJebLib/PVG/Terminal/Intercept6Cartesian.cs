@@ -8,21 +8,21 @@ namespace MechJebLib.PVG.Terminal
     /// This may work to bootstrap a problem, but will not be very useful for closed loop guidance once the exact solution
     /// becomes impossible.
     /// </summary>
-    public class Intercept6Cartesian : IPVGTerminal
+    public readonly struct Intercept6Cartesian : IPVGTerminal
     {
-        private V3 rT;
-        private V3 vT;
+        private readonly V3 _rT;
+        private readonly V3 _vT;
 
         public Intercept6Cartesian(V3 rT, V3 vT)
         {
-            this.rT = rT;
-            this.vT = vT;
+            this._rT = rT;
+            this._vT = vT;
         }
         
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
         {
-            V3 rmiss = yf.R - rT;
-            V3 vmiss = yf.V - vT;
+            V3 rmiss = yf.R - _rT;
+            V3 vmiss = yf.V - _vT;
 
             return (rmiss[0], rmiss[1], rmiss[2], vmiss[0], vmiss[1], vmiss[2]);
         }

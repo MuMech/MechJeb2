@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using MechJebLib.PVG;
 using static MechJebLib.Utils.Statics;
 
@@ -8,6 +9,13 @@ namespace MuMech
 {
     public enum PVGStatus { ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, FINISHED };
 
+    /// <summary>
+    /// TODO:
+    /// - relay stage information of the Solution back to the UI
+    /// - draw trajectory on the map view
+    /// - draw terminal orbit on the map view
+    /// - color coasts + burns different on the map view
+    /// </summary>
     public class MechJebModuleGuidanceController : ComputerModule
     {
         public MechJebModuleGuidanceController(MechJebCore core) : base(core) { }
@@ -67,6 +75,14 @@ namespace MuMech
                 Done();
                 return;
             }
+            
+            /* hardcoded 10 seconds of terminal guidance */
+            if ( Tgo < 10 )
+            {
+                // drop out of warp for terminal guidance (smaller time ticks => more accuracy)
+                core.warp.MinimumWarp();
+                Status = PVGStatus.TERMINAL;
+            }
 
             if ( Solution != null && IsTerminalGuidance() )
             {
@@ -93,14 +109,16 @@ namespace MuMech
                 Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
                 Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 0.5 * a0 * dt * dt;
 
-                double current = Solution.TerminalGuidanceMetric(vesselState.orbitalPosition, vesselState.orbitalVelocity);
-                double future = Solution.TerminalGuidanceMetric(x1, v1);
+                double current = Solution.TerminalGuidanceMetric(vesselState.orbitalPosition.WorldToV3(), vesselState.orbitalVelocity.WorldToV3());
+                double future = Solution.TerminalGuidanceMetric(x1.WorldToV3(), v1.WorldToV3());
 
                 // ensure that we're burning in a roughly forward direction -- no idea why, but we can get a few ticks of backwards "thrust" due to staging during terminal guidance
                 double costhrustangle = Vector3d.Dot(vesselState.forward, (vessel.acceleration_immediate - vessel.graviticAcceleration).normalized );
 
                 if ( future > current && costhrustangle > 0.5 )
                 {
+                    Debug.Log("future = " + future);
+                    Debug.Log("current = " + current);
                     if ( hasRCS && Status == PVGStatus.TERMINAL )
                     {
                         Status = PVGStatus.TERMINAL_RCS;
@@ -117,17 +135,23 @@ namespace MuMech
 
             handle_throttle();
 
-            Converge();
+            DrawTrajetory();
         }
 
-        /* meta state for consumers that means "is iF usable?" (or pitch/heading) */
+        /* is guidance usable? */
         public bool IsStable()
         {
             return IsNormal() || IsTerminalGuidance();
         }
 
+        // either ENABLED and waiting for a Solution, or executing a solution "normally" (not terminal, not failed)
+        public bool IsReady()
+        {
+            return Status == PVGStatus.ENABLED || IsNormal();
+        }
+
         // not TERMINAL guidance or TERMINAL_RCS
-        private bool IsNormal()
+        public bool IsNormal()
         {
             return Status == PVGStatus.INITIALIZED || Status == PVGStatus.BURNING || Status == PVGStatus.COASTING;
         }
@@ -142,7 +166,7 @@ namespace MuMech
             return Status == PVGStatus.BURNING;
         }
 
-        private bool IsTerminalGuidance()
+        public bool IsTerminalGuidance()
         {
             return Status == PVGStatus.TERMINAL || Status == PVGStatus.TERMINAL_RCS;
         }
@@ -153,27 +177,7 @@ namespace MuMech
             return Status == PVGStatus.ENABLED || Status == PVGStatus.INITIALIZED;
         }
         
-        private void Converge()
-        {
-            if (Solution == null)
-            {
-                Status = PVGStatus.ENABLED;
-                return;
-            }
 
-
-                /* we have a solver and have a valid solution */
-                if ( IsTerminalGuidance() )
-                    return;
-
-                /* hardcoded 10 seconds of terminal guidance */
-                if ( Tgo < 10 )
-                {
-                    // drop out of warp for terminal guidance (smaller time ticks => more accuracy)
-                    core.warp.MinimumWarp();
-                    Status = PVGStatus.TERMINAL;
-                }
-        }
         
         private bool ShouldCoast(Solution solution)
         {
@@ -247,6 +251,25 @@ namespace MuMech
             /* else leave pitch and heading at the last values, also stop updating vgo/tgo */
         }
 
+        private List<Vector3d> _trajectory = new List<Vector3d>();
+
+        private void DrawTrajetory()
+        {
+            if (Solution == null)
+                return;
+            
+            _trajectory.Clear();
+            double dt = Solution.Tf - Solution.T0;
+            
+            for (int i = 0; i <= 20; i++)
+            {
+                double t = Solution.T0 + dt * i / 20.0;
+
+                _trajectory.Add(Solution.R(t).V3ToWorld() + mainBody.position);
+            }
+            GLUtils.DrawPath(mainBody, _trajectory, Color.red, MapView.MapIsEnabled);
+        }
+
         private void ThrustOn()
         {
             core.thrust.targetThrottle = 1.0F;
@@ -280,7 +303,8 @@ namespace MuMech
         public void SetSolution(Solution solution)
         {
             this.Solution = solution;
-            Status        = PVGStatus.INITIALIZED;
+            if (Status == PVGStatus.ENABLED)
+                Status        = PVGStatus.INITIALIZED;
         }
     }
 }

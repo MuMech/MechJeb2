@@ -10,17 +10,17 @@ namespace MechJebLib.PVG.Terminal
     /// Lu, Ping, Hongsheng Sun, and Bruce Tsai. “Closed-Loop Endoatmospheric Ascent Guidance.”
     /// Journal of Guidance, Control, and Dynamics 26, no. 2 (March 2003): 283–94. https://doi.org/10.2514/2.5045.
     /// </summary>
-    public class FlightPathAngle3Energy : IPVGTerminal
+    public readonly struct FlightPathAngle3Energy : IPVGTerminal
     {
-        private readonly double gammaT;
-        private readonly double rT;
-        private readonly double incT;
+        private readonly double _gammaT;
+        private readonly double _rT;
+        private readonly double _incT;
 
         public FlightPathAngle3Energy(double gammaT, double rT, double incT)
         {
-            this.gammaT = gammaT;
-            this.rT     = rT;
-            this.incT   = Math.Abs(ClampPi(incT));
+            this._gammaT = gammaT;
+            this._rT     = rT;
+            this._incT   = Math.Abs(ClampPi(incT));
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
@@ -31,9 +31,9 @@ namespace MechJebLib.PVG.Terminal
             var rn = V3.Cross(yf.R, n);
             var vn = V3.Cross(yf.V, n);
 
-            double con1 = (yf.R.sqrMagnitude - rT * rT) * 0.5;
-            double con2 = V3.Dot(n, hf.normalized) - Math.Cos(incT);
-            double con3 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(gammaT);
+            double con1 = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
+            double con2 = V3.Dot(n, hf.normalized) - Math.Cos(_incT);
+            double con3 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
 
             double tv1 = V3.Dot(yf.V, yf.PR) * yf.R.sqrMagnitude - V3.Dot(yf.R, yf.PV) * yf.V.sqrMagnitude +
                          V3.Dot(yf.R, yf.V) * (yf.V.sqrMagnitude - V3.Dot(yf.R, yf.PR));

@@ -22,7 +22,7 @@ namespace MechJebLib.Primitives
 
         public void Add(double time, T value)
         {
-            _list[time] = new HFrame<T>(time, Allocate(value), Allocate(), Allocate());
+            _list[time] = new HFrame<T>(time, Allocate(value), Allocate(), Allocate(), true);
             MinTime     = Math.Min(MinTime, time);
             MaxTime     = Math.Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
@@ -134,35 +134,67 @@ namespace MechJebLib.Primitives
                 return;
             }
 
-            // handle left side
-            if (i != 0)
-                FixTangents(i - 1);
+            // fix the current one
+            FixTangent(i);
 
-            // handle right side
+            // fix left side
+            if (i != 0)
+                FixTangent(i - 1);
+
+            // fix right side
             if (i != _list.Count - 1)
-                FixTangents(i);
+                FixTangent(i+1);
         }
 
-        private void FixTangents(int i)
+        private void FixTangent(int i)
         {
-            HFrame<T> left = _list.Values[i];
-            HFrame<T> right = _list.Values[i + 1];
+            HFrame<T> current = _list.Values[i];
 
-            T slope = Allocate();
-            Subtract(right.Value, left.Value, ref slope);
-            Divide(slope, right.Time - left.Time, ref slope);
+            if (!current.AutoTangent)
+                return;
+            
+            T slope1 = Allocate();
 
-            if (right.AutoTangent)
+            if (i < _list.Count - 1)
             {
-                right.InTangent   = slope;
-                _list[right.Time] = right;
-            }
+                // there is a right side
+                HFrame<T> right = _list.Values[i + 1];
+                Subtract(right.Value, current.Value, ref slope1);
+                Divide(slope1, right.Time - current.Time, ref slope1);
 
-            if (left.AutoTangent)
-            {
-                left.OutTangent  = slope;
-                _list[left.Time] = left;
+                if (i == 0)
+                {
+                    // there is no left
+                    current.InTangent = current.OutTangent = slope1;
+                    _list[current.Time] = current;
+                    return;
+                }
             }
+            
+            T slope2 = Allocate();
+
+            if (i > 0)
+            {
+                // there is a left side
+                HFrame<T> left = _list.Values[i-1];
+
+                Subtract(current.Value, left.Value, ref slope2);
+                Divide(slope2, current.Time - left.Time, ref slope2);
+
+                if (i == _list.Count - 1)
+                {
+                    // there is no right
+                    current.InTangent   = current.OutTangent = slope2;
+                    _list[current.Time] = current;
+                    return;
+                }
+            }
+            
+            // there is a left and a right, so average them
+            Addition(slope1, slope2, ref slope1);
+            Divide(slope1, 2.0, ref slope1);
+            current.InTangent   = current.OutTangent = slope1;
+            _list[current.Time] = current;
         }
 
         protected abstract T Interpolant(double x1, T y1, T yp1, double x2, T y2, T yp2, double x);
@@ -225,13 +257,13 @@ namespace MechJebLib.Primitives
         public  T    Value;
         public readonly bool AutoTangent;
 
-        public HFrame(double time, T value, T inTangent, T outTangent)
+        public HFrame(double time, T value, T inTangent, T outTangent, bool autoTangent = false)
         {
             Time        = time;
             Value       = value;
             InTangent   = inTangent;
             OutTangent  = outTangent;
-            AutoTangent = false;
+            AutoTangent = autoTangent;
         }
     }
 }

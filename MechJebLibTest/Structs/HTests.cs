@@ -72,6 +72,17 @@ namespace MechJebLibTest.Structs
         }
 
         [Fact]
+        public void H1AutoTangent()
+        {
+            _interpolant1.Add(2, 1);
+            _interpolant1.Add(1, 2);
+            _interpolant1.Add(3, 2);
+            _interpolant1.Add(0, 1);
+            _interpolant1.Add(4, 1);
+            // FIXME: need a proper test of the slopes
+        }
+
+        [Fact]
         public void H3Linear()
         {
             _interpolant3.Add(0, V3.zero, V3.one);
