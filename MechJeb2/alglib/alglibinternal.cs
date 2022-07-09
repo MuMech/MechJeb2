@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.18.0 (source code generated 2021-10-25)
+ALGLIB 3.19.0 (source code generated 2022-06-07)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -1772,7 +1772,7 @@ public partial class alglib
             double result = 0;
             double r = 0;
 
-            if( (double)(y)>=(double)(1) )
+            if( y>=1 )
             {
                 
                 //
@@ -1780,7 +1780,7 @@ public partial class alglib
                 //
                 r = x/y;
                 result = v;
-                if( (double)(v)>(double)(r) )
+                if( v>r )
                 {
                     result = r;
                 }
@@ -1795,7 +1795,7 @@ public partial class alglib
                 //
                 // Y<1, we can safely multiply by Y
                 //
-                if( (double)(x)<(double)(v*y) )
+                if( x<v*y )
                 {
                     result = x/y;
                 }
@@ -2209,7 +2209,7 @@ public partial class alglib
 
         /*************************************************************************
         This function returns product of three real numbers. It is convenient when
-        you have to perform typecast-and-product of two INTEGERS.
+        you have to perform typecast-and-product of three INTEGERS.
         *************************************************************************/
         public static double rmul3(double v0,
             double v1,
@@ -2219,6 +2219,23 @@ public partial class alglib
             double result = 0;
 
             result = v0*v1*v2;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns product of four real numbers. It is convenient when
+        you have to perform typecast-and-product of four INTEGERS.
+        *************************************************************************/
+        public static double rmul4(double v0,
+            double v1,
+            double v2,
+            double v3,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = v0*v1*v2*v3;
             return result;
         }
 
@@ -3488,7 +3505,30 @@ public partial class alglib
 
 
         /*************************************************************************
-        Outputs vector A[I0,I1-1] to trace log using E8 precision
+        Outputs vector A[I0,I1-1] to trace log using E3 precision
+        *************************************************************************/
+        public static void tracevectore3(double[] a,
+            int i0,
+            int i1,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.trace("[ ");
+            for(i=i0; i<=i1-1; i++)
+            {
+                alglib.ap.trace(System.String.Format("{0,11:E3}", a[i]));
+                if( i<i1-1 )
+                {
+                    alglib.ap.trace(" ");
+                }
+            }
+            alglib.ap.trace(" ]");
+        }
+
+
+        /*************************************************************************
+        Outputs vector A[I0,I1-1] to trace log using E6 precision
         *************************************************************************/
         public static void tracevectore6(double[] a,
             int i0,
@@ -3748,6 +3788,138 @@ public partial class alglib
 
         #if ALGLIB_NO_FAST_KERNELS
         /*************************************************************************
+        Performs inplace addition of Y[]*Z[] to X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+
+        RESULT:
+            X := X + Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]+y[i]*z[i];
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs inplace subtraction of Y[]*Z[] from X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+
+        RESULT:
+            X := X - Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rnegmuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]-y[i]*z[i];
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs addition of Y[]*Z[] to X[], with result being stored to R[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+            R       -   array[N], vector to process
+
+        RESULT:
+            R := X + Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopymuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            double[] r,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                r[i] = x[i]+y[i]*z[i];
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs subtraction of Y[]*Z[] from X[], with result being stored to R[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+            R       -   array[N], vector to process
+
+        RESULT:
+            R := X - Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopynegmuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            double[] r,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                r[i] = x[i]-y[i]*z[i];
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
         Performs inplace addition of Y[] to X[]
 
         INPUT PARAMETERS:
@@ -3933,6 +4105,98 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 x[i] = x[i]*y[rowidx,i];
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs componentwise division of vector X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to divide by
+            X       -   target vector
+
+        RESULT:
+            X := componentwise(X/Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergedivv(int n,
+            double[] y,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]/y[i];
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs componentwise division of row X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to divide by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise(X/Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergedivvr(int n,
+            double[] y,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = x[rowidx,i]/y[i];
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs componentwise division of row X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to divide by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise(X/Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergedivrv(int n,
+            double[,] y,
+            int rowidx,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]/y[rowidx,i];
             }
         }
         #endif
@@ -4248,6 +4512,63 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 x[rowidx,i] = x[rowidx,i]*v;
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs inplace computation of Sqrt(X)
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+
+        OUTPUT PARAMETERS:
+            X       -   elements 0...N-1 replaced by Sqrt(X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsqrtv(int n,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = Math.Sqrt(x[i]);
+            }
+        }
+        #endif
+
+
+        #if ALGLIB_NO_FAST_KERNELS
+        /*************************************************************************
+        Performs inplace computation of Sqrt(X[RowIdx,*])
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[?,N], matrix to process
+
+        OUTPUT PARAMETERS:
+            X       -   elements 0...N-1 replaced by Sqrt(X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsqrtr(int n,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = Math.Sqrt(x[rowidx,i]);
             }
         }
         #endif
@@ -10010,6 +10331,119 @@ public partial class alglib
                 b[p1] = b[p0];
                 b[p0] = tmpr;
                 bt = tmpr;
+                t = 0;
+                while( true )
+                {
+                    k = 2*t+1;
+                    if( k+1>i )
+                    {
+                        break;
+                    }
+                    p0 = offset+t;
+                    p1 = offset+k;
+                    ak = a[p1];
+                    if( k+1<i )
+                    {
+                        ak1 = a[p1+1];
+                        if( ak1>ak )
+                        {
+                            ak = ak1;
+                            p1 = p1+1;
+                            k = k+1;
+                        }
+                    }
+                    if( at>=ak )
+                    {
+                        break;
+                    }
+                    a[p1] = at;
+                    a[p0] = ak;
+                    b[p0] = b[p1];
+                    b[p1] = bt;
+                    t = k;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Sorting function optimized for integer keys and integer labels, can be used
+        to sort middle of the array
+
+        A is sorted, and same permutations are applied to B.
+
+        NOTES:
+            this function assumes that A[] is finite; it doesn't checks that
+            condition. All other conditions (size of input arrays, etc.) are not
+            checked too.
+
+          -- ALGLIB --
+             Copyright 11.12.2008 by Bochkanov Sergey
+        *************************************************************************/
+        public static void tagsortmiddleii(ref int[] a,
+            ref int[] b,
+            int offset,
+            int n,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int k = 0;
+            int t = 0;
+            int tmp = 0;
+            int tmpi = 0;
+            int p0 = 0;
+            int p1 = 0;
+            int at = 0;
+            int ak = 0;
+            int ak1 = 0;
+            int bt = 0;
+
+            
+            //
+            // Special cases
+            //
+            if( n<=1 )
+            {
+                return;
+            }
+            
+            //
+            // General case, N>1: sort, update B
+            //
+            for(i=2; i<=n; i++)
+            {
+                t = i;
+                while( t!=1 )
+                {
+                    k = t/2;
+                    p0 = offset+k-1;
+                    p1 = offset+t-1;
+                    ak = a[p0];
+                    at = a[p1];
+                    if( ak>=at )
+                    {
+                        break;
+                    }
+                    a[p0] = at;
+                    a[p1] = ak;
+                    tmpi = b[p0];
+                    b[p0] = b[p1];
+                    b[p1] = tmpi;
+                    t = k;
+                }
+            }
+            for(i=n-1; i>=1; i--)
+            {
+                p0 = offset+0;
+                p1 = offset+i;
+                tmp = a[p1];
+                a[p1] = a[p0];
+                a[p0] = tmp;
+                at = tmp;
+                tmpi = b[p1];
+                b[p1] = b[p0];
+                b[p0] = tmpi;
+                bt = tmpi;
                 t = 0;
                 while( true )
                 {
