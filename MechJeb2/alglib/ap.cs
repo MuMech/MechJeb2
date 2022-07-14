@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 3.18.0 (source code generated 2021-10-25)
+ALGLIB 3.19.0 (source code generated 2022-06-07)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -257,11 +257,11 @@ public partial class alglib
             flags = v;
         }
     }
-    private static readonly ulong FLG_THREADING_MASK          = 0x7;
-    private static readonly int FLG_THREADING_SHIFT         = 0;
-    private static readonly ulong FLG_THREADING_USE_GLOBAL    = 0x0;
-    private static readonly ulong FLG_THREADING_SERIAL        = 0x1;
-    private static readonly ulong FLG_THREADING_PARALLEL      = 0x2;
+    private static ulong FLG_THREADING_MASK          = 0x7;
+    private static   int FLG_THREADING_SHIFT         = 0;
+    private static ulong FLG_THREADING_USE_GLOBAL    = 0x0;
+    private static ulong FLG_THREADING_SERIAL        = 0x1;
+    private static ulong FLG_THREADING_PARALLEL      = 0x2;
     public static xparams serial   = new xparams(FLG_THREADING_SERIAL);
     public static xparams parallel = new xparams(FLG_THREADING_PARALLEL);
 
@@ -1119,8 +1119,8 @@ public partial class alglib
         private System.IO.Stream io_stream;
         
         // local temporaries
-        private readonly char[] entry_buf_char;
-        private readonly byte[] entry_buf_byte; 
+        private char[] entry_buf_char;
+        private byte[] entry_buf_byte; 
         
         public serializer()
         {
@@ -1506,7 +1506,7 @@ public partial class alglib
 
         If v is negative or greater than 63, this function returns '?'.
         ************************************************************************/
-        private static readonly char[] _sixbits2char_tbl = new char[64]{ 
+        private static char[] _sixbits2char_tbl = new char[64]{ 
                 '0', '1', '2', '3', '4', '5', '6', '7',
                 '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
                 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
@@ -1528,7 +1528,7 @@ public partial class alglib
         This function is inverse of ae_sixbits2char()
         If c is not correct character, this function returns -1.
         ************************************************************************/
-        private static readonly int[] _char2sixbits_tbl = new int[128] {
+        private static int[] _char2sixbits_tbl = new int[128] {
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1,
@@ -2886,6 +2886,180 @@ public partial class alglib
             return false;
         }
         #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rmuladdv() and similar funcs
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rmuladdv(
+            int n,
+            double *Src0,
+            double *Src1,
+            double *Dst)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Fma.MultiplyAdd(
+                            Avx2.LoadVector256(Src0+i),
+                            Avx2.LoadVector256(Src1+i),
+                            Avx2.LoadVector256(Dst+i)
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] += Src0[i]*Src1[i];
+                return true;
+            }
+            #endif // no-fma
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rmuladdv() and similar funcs
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rnegmuladdv(
+            int n,
+            double *Src0,
+            double *Src1,
+            double *Dst)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Fma.MultiplyAddNegated(
+                            Avx2.LoadVector256(Src0+i),
+                            Avx2.LoadVector256(Src1+i),
+                            Avx2.LoadVector256(Dst+i)
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] -= Src0[i]*Src1[i];
+                return true;
+            }
+            #endif // no-fma
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rcopymuladdv() and similar funcs
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rcopymuladdv(
+            int n,
+            double *Src0,
+            double *Src1,
+            double *Src2,
+            double *Dst)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Fma.MultiplyAdd(
+                            Avx2.LoadVector256(Src0+i),
+                            Avx2.LoadVector256(Src1+i),
+                            Avx2.LoadVector256(Src2+i)
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] = Src2[i]+Src0[i]*Src1[i];
+                return true;
+            }
+            #endif // no-fma
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rcopymuladdv() and similar funcs
+
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rcopynegmuladdv(
+            int n,
+            double *Src0,
+            double *Src1,
+            double *Src2,
+            double *Dst)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            #if !ALGLIB_NO_FMA
+            if( Fma.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Fma.MultiplyAddNegated(
+                            Avx2.LoadVector256(Src0+i),
+                            Avx2.LoadVector256(Src1+i),
+                            Avx2.LoadVector256(Src2+i)
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] = Src2[i]-Src0[i]*Src1[i];
+                return true;
+            }
+            #endif // no-fma
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
         
         #if ALGLIB_USE_SIMD
         /*************************************************************************
@@ -2919,6 +3093,36 @@ public partial class alglib
                 }
                 for(i=head; i<n; i++)
                     Dst[i] *= vDst;
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rsqrt()
+        
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rsqrtv(
+            int n,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                    Avx2.Store(Dst+i, Avx2.Sqrt(Avx2.LoadVector256(Dst+i)));
+                for(i=head; i<n; i++)
+                    Dst[i] = System.Math.Sqrt(Dst[i]);
                 return true;
             }
             #endif // no-avx2
@@ -3100,6 +3304,43 @@ public partial class alglib
                         );
                 for(i=head; i<n; i++)
                     Dst[i] *= Src[i];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for mergediv()
+        
+          -- ALGLIB --
+             Copyright 20.07.2021 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rmergediv(
+            int n,
+            double *Src,
+            double *Dst)
+        {   
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Divide(
+                            Avx2.LoadVector256(Dst+i),
+                            Avx2.LoadVector256(Src+i)
+                            )
+                        );
+                for(i=head; i<n; i++)
+                    Dst[i] /= Src[i];
                 return true;
             }
             #endif // no-avx2
@@ -3312,6 +3553,158 @@ public partial class alglib
         }
 
         /*************************************************************************
+        Performs inplace addition of Y[]*Z[] to X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+
+        RESULT:
+            X := X + Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z)
+                    {
+                        if( try_rmuladdv(n, py, pz, px) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                x[i] += y[i]*z[i];
+        }
+        
+        /*************************************************************************
+        Performs inplace subtraction of Y[]*Z[] from X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+
+        RESULT:
+            X := X - Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rnegmuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z)
+                    {
+                        if( try_rnegmuladdv(n, py, pz, px) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                x[i] -= y[i]*z[i];
+        }
+        
+        /*************************************************************************
+        Performs addition of Y[]*Z[] to X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+            R       -   array[N], vector to process
+
+        RESULT:
+            R := X + Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopymuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            double[] r,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z, pr=r)
+                    {
+                        if( try_rcopymuladdv(n, py, pz, px, pr) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                r[i] = x[i]+y[i]*z[i];
+        }
+        
+        /*************************************************************************
+        Performs subtraction of Y[]*Z[] from X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N], vector to process
+            Z       -   array[N], vector to process
+            X       -   array[N], vector to process
+            R       -   array[N], vector to process
+
+        RESULT:
+            R := X - Y*Z
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopynegmuladdv(int n,
+            double[] y,
+            double[] z,
+            double[] x,
+            double[] r,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z, pr=r)
+                    {
+                        if( try_rcopynegmuladdv(n, py, pz, px, pr) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                r[i] = x[i]-y[i]*z[i];
+        }
+        
+        /*************************************************************************
         Performs componentwise multiplication of vector X[] by vector Y[]
 
         INPUT PARAMETERS:
@@ -3427,6 +3820,127 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 x[i] = x[i]*y[rowidx,i];
+            }
+        }
+        
+        
+        
+        /*************************************************************************
+        Performs componentwise division of vector X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to divide by
+            X       -   target vector
+
+        RESULT:
+            X := componentwise(X/Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergedivv(int n,
+            double[] y,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergediv(n, py, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]/y[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise division of row X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to divide by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise(X/Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergedivvr(int n,
+            double[] y,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergediv(n, py, px+rowidx*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = x[rowidx,i]/y[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise division of row X[] by vector Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to divide by
+            X       -   target row RowIdx
+
+        RESULT:
+            X := componentwise(X/Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergedivrv(int n,
+            double[,] y,
+            int rowidx,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergediv(n, py+rowidx*y.GetLength(1), px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = x[i]/y[rowidx,i];
             }
         }
 
@@ -3833,6 +4347,82 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 x[rowidx,i] = x[rowidx,i]*v;
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace computation of Sqrt(X)
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+
+        OUTPUT PARAMETERS:
+            X       -   elements 0...N-1 replaced by Sqrt(X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsqrtv(int n,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        if( try_rsqrtv(n, px) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = System.Math.Sqrt(x[i]);
+            }
+        }
+
+        /*************************************************************************
+        Performs inplace computation of Sqrt(X[RowIdx,*])
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[?,N], matrix to process
+
+        OUTPUT PARAMETERS:
+            X       -   elements 0...N-1 replaced by Sqrt(X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rsqrtr(int n,
+            double[,] x,
+            int rowidx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x)
+                    {
+                        if( try_rsqrtv(n, px+rowidx*x.GetLength(1)) )
+                            return;
+                    }
+                }
+            #endif
+
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[rowidx,i] = System.Math.Sqrt(x[rowidx,i]);
             }
         }
 
