@@ -13,7 +13,7 @@ namespace MechJebLib.Primitives
 {
     public class H3 : HBase<V3>
     {
-        private static readonly ObjectPool<H3> _pool = new ObjectPool<H3>(New);
+        private static readonly ObjectPool<H3> _pool = new ObjectPool<H3>(New, Clear);
 
         private H3()
         {
@@ -69,6 +69,11 @@ namespace MechJebLib.Primitives
         protected override V3 Interpolant(double x1, V3 y1, V3 yp1, double x2, V3 y2, V3 yp2, double x)
         {
             return Functions.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
+        }
+        
+        private static void Clear(H3 h)
+        {
+            h.Clear();
         }
     }
 }

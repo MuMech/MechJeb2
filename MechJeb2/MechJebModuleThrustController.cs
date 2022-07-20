@@ -137,7 +137,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
-        public bool limiterMinThrottle = false;
+        public bool limiterMinThrottle = true;
 
         [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);

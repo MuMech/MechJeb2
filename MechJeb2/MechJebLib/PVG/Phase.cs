@@ -30,28 +30,30 @@ namespace MechJebLib.PVG
         public double         DropMass = 0.0;
         public double         DropMassBar;
         public bool           OptimizeTime;
-        public bool           infinite           = false;
-        public bool           unguided           = false;
-        public bool           MassContinuity     = false;
-        public bool           CoastAfterJettison = false;
-        public bool           First              = false;
-        public bool           LastFreeBurn       = false;
+        public bool           Infinite = false;
+        public bool           Unguided;
+        public bool           MassContinuity = false;
+        public bool           First          = false;
+        public bool           LastFreeBurn   = false;
+        public int            KSPStage;
         public IPVGIntegrator Integrator;
         public bool           Coast => thrust_bar == 0;
+        public V3             u0;
 
-        private Phase(double m0, double thrust, double isp, double mf, double bt)
+        private Phase(double m0, double thrust, double isp, double mf, double bt, int kspStage)
         {
-            this.m0      = m0;
-            this.thrust  = thrust;
-            this.isp     = isp;
-            this.mf      = mf;
-            this.bt      = bt;
-            ve           = isp * G0;
-            a0           = thrust / m0;
-            tau          = ve / a0;
-            mdot         = thrust / ve;
-            dv           = -ve * Math.Log(1 - bt / tau);
-            OptimizeTime = false;
+            this.KSPStage = kspStage;
+            this.m0       = m0;
+            this.thrust   = thrust;
+            this.isp      = isp;
+            this.mf       = mf;
+            this.bt       = bt;
+            ve            = isp * G0;
+            a0            = thrust / m0;
+            tau           = thrust == 0 ? double.PositiveInfinity : ve / a0;
+            mdot          = ve == 0 ? 0 : thrust / ve;
+            dv            = thrust == 0 ? 0 : -ve * Math.Log(1 - bt / tau);
+            OptimizeTime  = false;
         }
 
         public void Rescale(Scale scale)
@@ -71,28 +73,33 @@ namespace MechJebLib.PVG
         {
             Integrator.Integrate(y0, yf, this, t0, tf);
         }
-        
+
         public void Integrate(DD y0, DD yf, double t0, double tf, Solution solution)
         {
             Integrator.Integrate(y0, yf, this, t0, tf, solution);
         }
 
-        public static Phase NewStageUsingBurnTime(double m0, double thrust, double isp, double bt, bool optimizeTime = false)
+        public static Phase NewStageUsingBurnTime(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
         {
             double mdot = thrust / (isp * G0);
             double mf = m0 - mdot * bt;
-            var phase = new Phase(m0, thrust, isp, mf, bt) { OptimizeTime = optimizeTime };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime, Unguided = unguided };
 
             return phase;
         }
 
-        public static Phase NewStageUsingFinalMass(double m0, double thrust, double isp, double mf, bool optimizeTime = false)
+        public static Phase NewStageUsingFinalMass(double m0, double thrust, double isp, double mf, int kspStage, bool optimizeTime = false)
         {
             double mdot = thrust / (isp * G0);
             double bt = (m0 - mf) / mdot;
 
-            var phase = new Phase(m0, thrust, isp, mf, bt) { OptimizeTime = optimizeTime };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime };
             return phase;
+        }
+
+        public static Phase NewCoast(double m0, double ct, int kspStage)
+        {
+            return new Phase(m0, 0, 0, m0, ct, kspStage);
         }
     }
 }

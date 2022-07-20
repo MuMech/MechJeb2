@@ -61,11 +61,8 @@ namespace MechJebLib.PVG
             // handle coasts
             if (_phases[p].Coast)
             {
-                // coasts that happen after a mass jettison, or an initial coast
-                if (_phases[p].CoastAfterJettison || _phases[p].First) return yfp.H0;
-
                 // coasts within a stage
-                return yfp.PV.magnitude - y0p.PV.magnitude;
+                //return yfp.PV.magnitude - y0p.PV.magnitude;
             }
 
             if (_phases[p].OptimizeTime)
@@ -201,7 +198,6 @@ namespace MechJebLib.PVG
             {
                 _phases[p].First              = false;
                 _phases[p].LastFreeBurn       = false;
-                _phases[p].CoastAfterJettison = IsCoastAfterJettison(p);
                 if (_phases[p].OptimizeTime && !_phases[p].Coast)
                     lastFreeBurnPhase = p;
             }
@@ -294,6 +290,8 @@ namespace MechJebLib.PVG
 
                 double tf = t0 + bt;
 
+                phase.u0 = GetIntertialHeading(p, y0.PV);
+
                 if (solution != null)
                 {
                     phase.Integrate(integArray, _terminal[p], t0, tf, solution);
@@ -305,7 +303,7 @@ namespace MechJebLib.PVG
 
                 lastDv = yf.DV;
 
-                t0 += tf;
+                t0 += bt;
             }
         }
 
@@ -339,28 +337,52 @@ namespace MechJebLib.PVG
                 {
                     y0.R  = _problem.r0_bar;
                     y0.V  = _problem.v0_bar;
-                    y0.M  = _problem.m0_bar;
+                    y0.M  = phase.m0_bar;
                     y0.PV = pv0;
                     y0.PR = pr0;
+                    y0.Bt = phase.bt_bar;
                     y0.CopyTo(integArray);
                 }
                 else
                 {
-                    _terminal[p - 1].CopyTo(integArray);
                     _terminal[p - 1].CopyTo(_initial[p]);
+                    y0.Bt = phase.bt_bar;
+                    y0.M  = phase.m0_bar;
+                    _initial[p].CopyTo(integArray);
                 }
-
-                y0.Bt = phase.bt_bar;
-
+                
                 double tf = t0 + y0.Bt;
                 
                 integ.DV = lastDv;
+                
+                phase.u0 = GetIntertialHeading(p, y0.PV);
 
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
                 lastDv =  yf.DV;
                 
                 t0     += tf;
+            }
+            
+            Debug.Log("bootstrap1 initial: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_initial[p]));
+            }
+            
+            Debug.Log("bootstrap1 terminal: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_terminal[p]));
+            }
+            
+            Debug.Log("bootstrap1 residuals: ");
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(DoubleArrayString(_residual[p]));
             }
 
             return this;
@@ -394,6 +416,16 @@ namespace MechJebLib.PVG
                     y0.R  = _problem.r0_bar;
                     y0.V  = _problem.v0_bar;
                     y0.M  = _problem.m0_bar;
+                    if (!phase.OptimizeTime)
+                    {
+                        y0.Bt = phase.bt_bar;
+                    } 
+                    else
+                    {
+                        // FIXME: this needs to be smarter to deal with crazy rearrangement
+                        // - e.g. if we're looking for a coast, we should probably go searching for the one coast
+                        y0.Bt = solution.Bt(p + segmentOffset, _problem.t0) / _problem.Scale.timeScale;
+                    }
                     y0.PV = solution.Pv(_problem.t0);
                     y0.PR = solution.Pr(_problem.t0);
                     y0.CopyTo(integArray);
@@ -401,25 +433,27 @@ namespace MechJebLib.PVG
                 }
                 else
                 {
-                    _terminal[p - 1].CopyTo(integArray);
                     _terminal[p - 1].CopyTo(_initial[p]);
+                    if (!phase.OptimizeTime)
+                    {
+                        y0.Bt = phase.bt_bar;
+                    } 
+                    else
+                    {
+                        // FIXME: this needs to be smarter to deal with crazy rearrangement
+                        // - e.g. if we're looking for a coast, we should probably go searching for the one coast
+                        y0.Bt = solution.Bt(p + segmentOffset, _problem.t0) / _problem.Scale.timeScale;
+                    }
+                    y0.M  = phase.m0_bar;
+                    _initial[p].CopyTo(integArray);
                 }
                 
-                if (!phase.OptimizeTime)
-                {
-                    y0.Bt = phase.bt_bar;
-                } 
-                else
-                {
-                    // FIXME: this needs to be smarter to deal with crazy rearrangement
-                    // - e.g. if we're looking for a coast, we should probably go searching for the one coast
-                    y0.Bt = solution.Bt(p + segmentOffset, _problem.t0) / _problem.Scale.timeScale;
-                }
-
                 double tf = t0 + y0.Bt;
                 
                 integ.DV = lastDv;
 
+                phase.u0 = GetIntertialHeading(p, y0.PV);
+                
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
                 lastDv = yf.DV;
@@ -429,21 +463,21 @@ namespace MechJebLib.PVG
             
             CalculateResiduals();
 
-            Debug.Log("bootstrap initial: ");
+            Debug.Log("bootstrap2 initial: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
                 Debug.Log(DoubleArrayString(_initial[p]));
             }
             
-            Debug.Log("bootstrap terminal: ");
+            Debug.Log("bootstrap2 terminal: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
                 Debug.Log(DoubleArrayString(_terminal[p]));
             }
             
-            Debug.Log("bootstrap residuals: ");
+            Debug.Log("bootstrap2 residuals: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
@@ -451,6 +485,17 @@ namespace MechJebLib.PVG
             }
 
             return this;
+        }
+
+        private V3 GetIntertialHeading(int p, V3 pv0)
+        {
+            if (p == 0)
+                return _problem.u0;
+
+            if (_phases[p - 1].Unguided)
+                return _phases[p - 1].u0;
+
+            return pv0.normalized;
         }
 
         public bool Success()

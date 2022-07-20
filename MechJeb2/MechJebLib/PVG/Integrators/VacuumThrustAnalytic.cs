@@ -86,21 +86,23 @@ namespace MechJebLib.PVG.Integrators
         {
             var interpolant = Hn.Get(ArrayWrapper.ARRAY_WRAPPER_LEN);
             interpolant.Add(t0, y0in);
+            const int SEGMENTS = 20;
+            using var y0 = ArrayWrapper.Rent(y0in);
+
             for (int i = 1; i < 21; i++)
             {
-                double t2 = t0 + (tf - t0) * i / 20.0;
-                Integrate(y0in, yfout, phase, t0, t2);
+                double dt = (tf - t0) / SEGMENTS * i;
+                double t = t0 + dt;
+                Integrate(y0in, yfout, phase, t0, t);
                 
                 // mildly janky fixup of the dv burned
-                ArrayWrapper y0 = ArrayWrapper.Rent(y0in);
-                ArrayWrapper yf = ArrayWrapper.Rent(yfout);
-                double dt = t2 - t0;
+                using var yf = ArrayWrapper.Rent(yfout);
                 yf.DV = y0.DV + phase.ve_bar * Math.Log(phase.m0_bar / (phase.m0_bar - dt * phase.mdot_bar));
                 
-                interpolant.Add(t2, yfout);
+                interpolant.Add(t, yfout);
             }
 
-            solution.AddSegment(t0, tf, interpolant);
+            solution.AddSegment(t0, tf, interpolant, phase);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace MuMech
         {
         }
         
-        private MechJebModuleAscentMenu     _ascentMenu => core.GetComputerModule<MechJebModuleAscentMenu>();
+        private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
 
         public override void OnModuleEnabled()
         {
@@ -41,32 +41,32 @@ namespace MuMech
 
         private AscentMode _mode;
 
-        public override void timedLaunchHook()
+        protected override void TimedLaunchHook()
         {
             // timedLaunch kills the optimizer so re-enable it here
             core.guidance.enabled = true;
         }
 
-        public override bool DriveAscent2(FlightCtrlState s)
+        protected override bool DriveAscent2()
         {
             SetTarget();
             core.guidance.AssertStart();
             switch (_mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
-                    DriveVerticalAscent(s);
+                    DriveVerticalAscent();
                     break;
 
                 case AscentMode.PITCHPROGRAM:
-                    DrivePitchProgram(s);
+                    DrivePitchProgram();
                     break;
 
                 case AscentMode.ZEROLIFT:
-                    DriveZeroLift(s);
+                    DriveZeroLift();
                     break;
 
                 case AscentMode.GUIDANCE:
-                    DriveGuidance(s);
+                    DriveGuidance();
                     break;
             }
 
@@ -75,18 +75,18 @@ namespace MuMech
 
         private void SetTarget()
         {
-            double peR = mainBody.Radius + AscentSettings.desiredOrbitAltitude;
+            double peR = mainBody.Radius + AscentSettings.DesiredOrbitAltitude;
             double apR = mainBody.Radius + AscentSettings.DesiredApoapsis;
             double attR = mainBody.Radius + AscentSettings.DesiredAttachAlt;
 
-            bool lanflag = _ascentMenu.launchingToPlane || _ascentMenu.launchingToMatchLAN || _ascentMenu.launchingToLAN;
-            double lan = _ascentMenu.launchingToPlane || _ascentMenu.launchingToMatchLAN ? core.target.TargetOrbit.LAN : (double)AscentSettings.desiredLAN;
+            bool lanflag = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan || _ascentSettings.LaunchingToLan;
+            double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan ? core.target.TargetOrbit.LAN : (double)AscentSettings.DesiredLan;
 
-            double inclination = AscentSettings.desiredInclination;
+            double inclination = AscentSettings.DesiredInclination;
 
             // if we are launchingToPlane other code in MJ fixes the sign of the inclination to be correct
             // FIXME: can we just use autopilot.desiredInclination here and rely on the other code to update that value?
-            if (_ascentMenu.launchingToPlane)
+            if (_ascentSettings.LaunchingToPlane)
                 inclination = Math.Sign(inclination) * core.target.TargetOrbit.inclination;
 
             core.glueball.SetTarget(peR, apR, attR, inclination, lan, AscentSettings.AttachAltFlag, lanflag);
@@ -94,15 +94,15 @@ namespace MuMech
 
         private double _pitchStartTime;
 
-        private void DriveVerticalAscent(FlightCtrlState s)
+        private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
-            attitudeTo(90, core.guidance.Heading);
+            AttitudeTo(90, core.guidance.Heading);
 
             bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
 
             core.attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
-            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.rollAltitude);
+            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude);
 
             if (!liftedOff)
             {
@@ -122,14 +122,14 @@ namespace MuMech
             }
         }
 
-        private void DrivePitchProgram(FlightCtrlState s)
+        private void DrivePitchProgram()
         {
             double dt = MET - _pitchStartTime;
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
             
             // we need to initiate by at least 10 degrees, then transition to zerolift when srfvel catches up
-            if (vesselState.currentPitch > srfvelPitch() && vesselState.currentPitch < 80)
+            if (vesselState.currentPitch > SrfvelPitch() && vesselState.currentPitch < 80)
             {
                 _mode = AscentMode.ZEROLIFT;
                 return;
@@ -146,7 +146,7 @@ namespace MuMech
                 return;
             }
 
-            attitudeTo(pitch, core.guidance.Heading);
+            AttitudeTo(pitch, core.guidance.Heading);
         }
 
         private bool CheckForGuidanceTransition(double pitch)
@@ -170,9 +170,9 @@ namespace MuMech
             return false;
         }
 
-        private void DriveZeroLift(FlightCtrlState s)
+        private void DriveZeroLift()
         {
-            double pitch = srfvelPitch();
+            double pitch = SrfvelPitch();
 
             if (!AscentSettings.StagingTriggerFlag)
                 Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - core.guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
@@ -185,10 +185,10 @@ namespace MuMech
                 return;
             }
 
-            attitudeTo(pitch, core.guidance.Heading);
+            AttitudeTo(pitch, core.guidance.Heading);
         }
 
-        private void DriveGuidance(FlightCtrlState s)
+        private void DriveGuidance()
         {
             if (core.guidance.Status == PVGStatus.FINISHED)
             {
@@ -198,14 +198,14 @@ namespace MuMech
 
             if (!core.guidance.IsStable())
             {
-                double pitch = Math.Min(Math.Min(90, srfvelPitch()), vesselState.vesselPitch);
-                attitudeTo(pitch, srfvelHeading());
+                double pitch = Math.Min(Math.Min(90, SrfvelPitch()), vesselState.vesselPitch);
+                AttitudeTo(pitch, SrfvelHeading());
                 Status = Localizer.Format("#MechJeb_Ascent_status16"); //"WARNING: Unstable Guidance"
             }
             else
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status17"); //"Stable Guidance"
-                attitudeTo(core.guidance.Pitch, core.guidance.Heading);
+                AttitudeTo(core.guidance.Pitch, core.guidance.Heading);
             }
         }
     }

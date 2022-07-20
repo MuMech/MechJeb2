@@ -154,6 +154,7 @@
     <Compile Include="MechJebModuleAscentPVGAutopilot.cs" />
     <Compile Include="MechJebModuleAscentPVGStagingMenu.cs" />
     <Compile Include="MechJebModuleAscentSettings.cs" />
+    <Compile Include="MechJebModuleAscentSettingsMenu.cs" />
     <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
     <Compile Include="MechJebModuleAttitudeController.cs" />
     <Compile Include="MechJebModuleCustomInfoWindow.cs" />
@@ -188,6 +189,7 @@
     <Compile Include="MechJebModuleSolarPanelController.cs" />
     <Compile Include="MechJebModuleSpaceplaneAutopilot.cs" />
     <Compile Include="MechJebModuleSpaceplaneGuidance.cs" />
+    <Compile Include="MechJebModuleSpinupController.cs" />
     <Compile Include="MechJebModuleStageStats.cs" />
     <Compile Include="MechJebModuleStagingController.cs" />
     <Compile Include="MechJebModuleTargetController.cs" />

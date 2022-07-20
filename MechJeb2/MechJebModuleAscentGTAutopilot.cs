@@ -21,7 +21,7 @@ namespace MuMech
 
         private bool IsVerticalAscent(double altitude, double velocity)
         {
-            if (altitude < AscentSettings.turnStartAltitude && velocity < AscentSettings.turnStartVelocity)
+            if (altitude < AscentSettings.TurnStartAltitude && velocity < AscentSettings.TurnStartVelocity)
             {
                 return true;
             }
@@ -33,7 +33,7 @@ namespace MuMech
 
         private AscentMode _mode;
 
-        public override bool DriveAscent2(FlightCtrlState s)
+        protected override bool DriveAscent2()
         {
             switch (_mode)
             {
@@ -70,14 +70,14 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) _mode            = AscentMode.INITIATE_TURN;
-            if (orbit.ApA > AscentSettings.intermediateAltitude) _mode = AscentMode.GRAVITY_TURN;
+            if (orbit.ApA > AscentSettings.IntermediateAltitude) _mode = AscentMode.GRAVITY_TURN;
 
             //during the vertical ascent we just thrust straight up at max throttle
-            attitudeTo(90);
+            AttitudeTo(90);
 
             bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
 
-            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.rollAltitude);
+            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude);
 
             core.thrust.targetThrottle = 1.0F;
 
@@ -88,19 +88,19 @@ namespace MuMech
         private void DriveInitiateTurn()
         {
             //stop the intermediate "burn" when our apoapsis reaches the desired altitude
-            if (orbit.ApA > AscentSettings.desiredOrbitAltitude)
+            if (orbit.ApA > AscentSettings.DesiredOrbitAltitude)
             {
                 _mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
             }
 
-            if (90 - AscentSettings.turnStartPitch >= srfvelPitch())
+            if (90 - AscentSettings.TurnStartPitch >= SrfvelPitch())
             {
                 _mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            if (orbit.ApA > AscentSettings.intermediateAltitude)
+            if (orbit.ApA > AscentSettings.IntermediateAltitude)
             {
                 _mode = AscentMode.GRAVITY_TURN;
                 return;
@@ -113,10 +113,10 @@ namespace MuMech
                 return;
             }
 
-            attitudeTo(90 - AscentSettings.turnStartPitch);
+            AttitudeTo(90 - AscentSettings.TurnStartPitch);
 
 
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.intermediateAltitude + mainBody.Radius);
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
                 if (core.thrust.targetThrottle < 1.0F)
                 {
                     Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
@@ -139,14 +139,14 @@ namespace MuMech
         private void DriveGravityTurn()
         {
             //stop the intermediate "burn" when our apoapsis reaches the desired altitude
-            if (orbit.ApA > AscentSettings.desiredOrbitAltitude)
+            if (orbit.ApA > AscentSettings.DesiredOrbitAltitude)
             {
                 _mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
             }
 
 
-            if (FixedTimeToAp() < AscentSettings.holdAPTime && _maxholdAPTime > AscentSettings.holdAPTime)
+            if (FixedTimeToAp() < AscentSettings.HoldAPTime && _maxholdAPTime > AscentSettings.HoldAPTime)
             {
                 _mode = AscentMode.HOLD_AP;
                 return;
@@ -155,12 +155,12 @@ namespace MuMech
             _maxholdAPTime = Math.Max(_maxholdAPTime, FixedTimeToAp());
 
             // fade pitch from AoA at 90% of intermediateAltitude to 0 at 95% of intermediateAltitude
-            double pitchfade = MuUtils.Clamp(-20 * vesselState.altitudeASL / AscentSettings.intermediateAltitude + 19, 0.0, 1.0);
+            double pitchfade = MuUtils.Clamp(-20 * vesselState.altitudeASL / AscentSettings.IntermediateAltitude + 19, 0.0, 1.0);
 
             // srfvelPitch == zero AoA
-            attitudeTo(srfvelPitch() * pitchfade);
+            AttitudeTo(SrfvelPitch() * pitchfade);
 
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.intermediateAltitude + mainBody.Radius);
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
                 if (core.thrust.targetThrottle < 1.0F)
                 {
                     Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
@@ -174,7 +174,7 @@ namespace MuMech
         private void DriveHoldAP()
         {
             //stop the intermediate "burn" when our apoapsis reaches the desired altitude
-            if (orbit.ApA > AscentSettings.desiredOrbitAltitude)
+            if (orbit.ApA > AscentSettings.DesiredOrbitAltitude)
             {
                 _mode = AscentMode.COAST_TO_APOAPSIS;
                 return;
@@ -182,15 +182,15 @@ namespace MuMech
 
             // generally this is in response to typing numbers into the intermediate altitude text box and
             // an accidental transition to later in the state machine
-            if (orbit.ApA < 0.98 * AscentSettings.intermediateAltitude)
+            if (orbit.ApA < 0.98 * AscentSettings.IntermediateAltitude)
             {
                 _mode = AscentMode.GRAVITY_TURN;
                 return;
             }
 
-            attitudeTo(0); /* FIXME: corrective steering */
+            AttitudeTo(0); /* FIXME: corrective steering */
 
-            core.thrust.targetThrottle = FixedTimeToAp() < AscentSettings.holdAPTime ? 1.0F : 0.1F;
+            core.thrust.targetThrottle = FixedTimeToAp() < AscentSettings.HoldAPTime ? 1.0F : 0.1F;
 
             Status = Localizer.Format("#MechJeb_Ascent_status24"); //"Holding AP"
         }
@@ -207,7 +207,7 @@ namespace MuMech
             }
 
             //if our apoapsis has fallen too far, resume the gravity turn
-            if (orbit.ApA < AscentSettings.desiredOrbitAltitude - 1000.0)
+            if (orbit.ApA < AscentSettings.DesiredOrbitAltitude - 1000.0)
             {
                 _mode = AscentMode.HOLD_AP;
                 core.warp.MinimumWarp();
@@ -217,12 +217,12 @@ namespace MuMech
             core.thrust.targetThrottle = 0;
 
             // follow surface velocity to reduce flipping
-            attitudeTo(srfvelPitch());
+            AttitudeTo(SrfvelPitch());
 
-            if (orbit.ApA < AscentSettings.desiredOrbitAltitude)
+            if (orbit.ApA < AscentSettings.DesiredOrbitAltitude)
             {
                 core.warp.WarpPhysicsAtRate(1);
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.desiredOrbitAltitude + mainBody.Radius);
+                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.DesiredOrbitAltitude + mainBody.Radius);
             }
             else
             {

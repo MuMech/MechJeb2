@@ -251,6 +251,8 @@ namespace MuMech
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
             if (hotStaging && InverseStageHasActiveEngines(vessel.currentStage) && InverseStageHasEngines(vessel.currentStage - 1) && !InverseStageFiresDecoupler(vessel.currentStage - 1) && !InverseStageReleasesClamps(vessel.currentStage - 1) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
+            
+            // FIXME: prevent staging if the next stage has engines with unstable ullage (and throttle is 100%?)
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
             if (HasStayingChutes(vessel.currentStage - 1))
@@ -352,6 +354,16 @@ namespace MuMech
             result = allModuleEngines.FirstOrDefault(me => me.part.inverseStage == inverseStage) != null;
             inverseStageHasEngines.Add(inverseStage, result);
             return result;
+        }
+        
+        // FIXME: need to be able to tell if an unignited, unactived ModuleEngines has unstable ullage
+        public bool InverseStageHasUnstableEngines(int inverseStage)
+        {
+            foreach (ModuleEngines engine in allModuleEngines)
+                if (engine.part.inverseStage == inverseStage)
+                    return true;
+            
+            return false;
         }
 
         public bool AnyFailedEngines(List<ModuleEngines> allEngines)

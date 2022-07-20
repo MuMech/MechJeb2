@@ -35,7 +35,6 @@ namespace MuMech
             ascentConfig = ConfigNode.CreateConfigFromObject(_ascentSettings);
             stagingConfig = ConfigNode.CreateConfigFromObject(core.staging);
             thrustConfig = ConfigNode.CreateConfigFromObject(core.thrust);
-            // FIXME: missing autowarp
         }
 
         public override void writeModuleConfiguration()
@@ -50,16 +49,16 @@ namespace MuMech
             base.preWindowGUI(windowID);
             base.WindowGUI(windowID);
 
-            switch (_ascentSettings.ascentType)
+            switch (_ascentSettings.AscentType)
             {
                 case ascentType.CLASSIC:
-                    GUILayout.Label("CLASSIC ASCENT to " + (_ascentSettings.desiredOrbitAltitude / 1000.0) + "km");
+                    GUILayout.Label("CLASSIC ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "km");
                     break;
                 case ascentType.GRAVITYTURN:
-                    GUILayout.Label("GravityTurn™ ASCENT to " + (_ascentSettings.desiredOrbitAltitude / 1000.0) + "km");
+                    GUILayout.Label("GravityTurn™ ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "km");
                     break;
                 case ascentType.PVG:
-                    GUILayout.Label("PVG ASCENT to " + (_ascentSettings.desiredOrbitAltitude / 1000.0) + "x" + (_ascentSettings.DesiredApoapsis / 1000.0) + "km");
+                    GUILayout.Label("PVG ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "x" + (_ascentSettings.DesiredApoapsis / 1000.0) + "km");
                     break;
             }
 

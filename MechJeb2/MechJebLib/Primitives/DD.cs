@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
@@ -16,9 +17,9 @@ namespace MechJebLib.Primitives
     {
         public int N;
 
-        private static readonly ObjectPool<DD> _pool = new ObjectPool<DD>(New);
+        private static readonly ObjectPool<DD> _pool = new ObjectPool<DD>(New, Clear);
 
-        protected DD()
+        private DD()
         {
         }
 
@@ -37,13 +38,17 @@ namespace MechJebLib.Primitives
         public static DD Rent(int n)
         {
             DD list = _pool.Get();
-            list.Clear();
             if (list.Capacity < n)
                 list.Capacity = n;
             while (list.Count < n)
                 list.Add(0);
             list.N = n;
             return list;
+        }
+
+        public static void Clear(DD obj)
+        {
+            obj.Clear();
         }
 
         public static void Return(DD obj)

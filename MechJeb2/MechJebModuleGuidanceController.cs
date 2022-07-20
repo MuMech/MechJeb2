@@ -1,4 +1,10 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
+using System.Collections.Generic;
 using UnityEngine;
 using MechJebLib.PVG;
 using static MechJebLib.Utils.Statics;
@@ -12,25 +18,42 @@ namespace MuMech
     /// <summary>
     /// TODO:
     /// - relay stage information of the Solution back to the UI
-    /// - draw trajectory on the map view
-    /// - draw terminal orbit on the map view
+    /// - relay terminal orbit information of the Solution back to the UI
+    /// - need to initiate coasts at the proper time even if we're burning off residuals (commanded shutdown+stage)
+    /// - draw trajectory on the map view (DONE)
+    /// - draw terminal orbit on the map view (DONE)
+    /// - allow disabling the trajectory on the map view
     /// - color coasts + burns different on the map view
+    /// - handle coasts properly again
+    /// - expose how long we've been coasting
     /// </summary>
     public class MechJebModuleGuidanceController : ComputerModule
     {
         public MechJebModuleGuidanceController(MechJebCore core) : base(core) { }
 
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble UllageLeadTime = 20;
+
         // these variables will persist even if Reset() completely blows away the solution, so that pitch+heading will still be stable
         // until a new solution is found.
-        public double   Pitch;
-        public double   Heading;
-        public double   Tgo;
-        public double   VGO;
+        public double Pitch;
+        public double Heading;
+        public double Tgo;
+        public double VGO;
+        public double StartCoast;
 
         public Solution? Solution;
 
         public PVGStatus Status = PVGStatus.ENABLED;
-
+        
+        public override void OnStart(PartModule.StartState state)
+        {
+            if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
+            {
+                core.AddToPostDrawQueue(DrawTrajetory);
+            }
+        }
+        
         public override void OnModuleEnabled()
         {
             Status = PVGStatus.ENABLED;
@@ -46,6 +69,7 @@ namespace MuMech
             if (!core.rssMode)
                 core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
+            core.staging.users.Remove(this);
             Status = PVGStatus.FINISHED;
         }
 
@@ -156,7 +180,7 @@ namespace MuMech
             return Status == PVGStatus.INITIALIZED || Status == PVGStatus.BURNING || Status == PVGStatus.COASTING;
         }
 
-        private bool IsCoasting()
+        public bool IsCoasting()
         {
             return Status == PVGStatus.COASTING;
         }
@@ -176,13 +200,6 @@ namespace MuMech
         {
             return Status == PVGStatus.ENABLED || Status == PVGStatus.INITIALIZED;
         }
-        
-
-        
-        private bool ShouldCoast(Solution solution)
-        {
-            return vessel.currentStage == solution.CoastingKSPStage && solution.Thrust(vesselState.time) == 0;
-        }
 
         private void handle_throttle()
         {
@@ -198,22 +215,34 @@ namespace MuMech
                 return;
             }
 
-            if ( ShouldCoast(Solution) )
+            // FIXME: we might run out of residuals before the scheduled time and stage early and get a tick
+            // into the next stage which is non-zero thrust which may use up an ignition before the coast.
+            //
+            if ( Solution.Coast(vesselState.time) )
             {
-                // force RCS on at the state transition
+                
                 if ( !IsCoasting() )
                 {
+                    StartCoast = vesselState.time;
+                    // force RCS on at the state transition
                     if (!vessel.ActionGroups[KSPActionGroup.RCS])
                         vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 }
 
                 if ( !IsTerminalGuidance() )
-                {
                     Status = PVGStatus.COASTING;
+
+                if (vessel.currentStage > Solution.Stage(vesselState.time))
+                {
+                    Debug.Log("RESIDUALS SHUT OFF EARLY!");
+                    core.staging.AutostageOnce(this);
                 }
+                
+                if (Solution.StageTimeLeft(vesselState.time) < UllageLeadTime)
+                    RCSOn();
 
                 // this turns off autostaging during the coast (which currently affects fairing separation)
-                core.staging.autostageLimitInternal = vessel.currentStage;
+                core.staging.autostageLimitInternal = Solution.Stage(vesselState.time);
                 ThrustOff();
             }
             else
@@ -222,9 +251,7 @@ namespace MuMech
                     ThrustOn();
 
                 if ( !IsTerminalGuidance() )
-                {
                     Status = PVGStatus.BURNING;
-                }
                 
                 core.staging.autostageLimitInternal = 0;
             }
@@ -251,23 +278,39 @@ namespace MuMech
             /* else leave pitch and heading at the last values, also stop updating vgo/tgo */
         }
 
-        private List<Vector3d> _trajectory = new List<Vector3d>();
+        private readonly List<Vector3d> _trajectory = new List<Vector3d>();
+        private readonly Orbit          _finalOrbit = new Orbit();
 
         private void DrawTrajetory()
         {
             if (Solution == null)
                 return;
-            
+
+            if (!this.enabled)
+                return;
+
+            if (!MapView.MapIsEnabled)
+                return;
+
+            const int SEGMENTS = 50;
+
             _trajectory.Clear();
-            double dt = Solution.Tf - Solution.T0;
+            double dt = (Solution.Tf - Solution.T0) / SEGMENTS;
             
-            for (int i = 0; i <= 20; i++)
+            for (int i = 0; i <= SEGMENTS; i++)
             {
-                double t = Solution.T0 + dt * i / 20.0;
+                double t = Solution.T0 + dt * i;
 
                 _trajectory.Add(Solution.R(t).V3ToWorld() + mainBody.position);
             }
             GLUtils.DrawPath(mainBody, _trajectory, Color.red, MapView.MapIsEnabled);
+
+            Vector3d rf = Planetarium.fetch.rotation * Solution.R(Solution.Tf).ToVector3d().xzy;
+            Vector3d vf = Planetarium.fetch.rotation * Solution.V(Solution.Tf).ToVector3d().xzy;
+                
+            _finalOrbit.UpdateFromStateVectors(rf.xzy, vf.xzy, mainBody, Solution.Tf);
+            
+            GLUtils.DrawOrbit(_finalOrbit, Color.yellow);
         }
 
         private void ThrustOn()
@@ -292,12 +335,6 @@ namespace MuMech
             ThrustOff();
             Status = PVGStatus.FINISHED;
             enabled = false;
-        }
-
-        public void Reset()
-        {
-            Status   = PVGStatus.ENABLED;
-            if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp();
         }
 
         public void SetSolution(Solution solution)

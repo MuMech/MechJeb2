@@ -63,10 +63,10 @@ namespace MuMech
                     flowMultiplier = atmDensity * 40 / 49;
             }
 
-            double ratio = 1.0f;  // FIXME: should be sum of propellant.totalAmount / sum of propellant.totalCapacity?
-                                  // (but the FuelFlowSimulation that uses this takes very large timesteps anyway)
+            // we take the middle of the thrust curve and hope it looks something like the average
+            // (the ends are often very far from the average)
             if (e.useThrustCurve)
-                flowMultiplier *= e.thrustCurve.Evaluate((float)ratio);
+                flowMultiplier *= e.thrustCurve.Evaluate(0.5f);
 
             if (e.useVelCurve)
                 flowMultiplier *= e.velCurve.Evaluate((float)machNumber);
@@ -100,8 +100,8 @@ namespace MuMech
 
         public static bool IsDecoupler(this Part p)
         {
-            return p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null || 
-                                 p.FindModuleImplementing<ModuleDockingNode>() != null || 
+            return p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null ||
+                                 p.FindModuleImplementing<ModuleDockingNode>() != null ||
                                  p.Modules.Contains("ProceduralFairingDecoupler"));
         }
 
@@ -175,7 +175,7 @@ namespace MuMech
                 && p.isControlSource == Vessel.ControlLevel.NONE;
         }
 
-        public static bool IsEngine(this Part p) => p.FindModuleImplementing<ModuleEngines>() != null; 
+        public static bool IsEngine(this Part p) => p.FindModuleImplementing<ModuleEngines>() != null;
 
         public static bool IsThrottleLockedEngine(this Part p)
         {
@@ -186,7 +186,7 @@ namespace MuMech
         public static bool IsParachute(this Part p) => p.FindModuleImplementing<ModuleParachute>() != null;
 
         public static bool IsLaunchClamp(this Part p) => p.FindModuleImplementing<LaunchClamp>() != null;
-        
+
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
             Part decoupledPart;

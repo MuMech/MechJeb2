@@ -1,4 +1,5 @@
 ﻿using System;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -35,160 +36,220 @@ namespace MuMech
         public bool StagingTriggerFlag = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnStartAltitude = new EditableDoubleMult(500, 1000);
+        public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnStartVelocity = new EditableDoubleMult(50);
+        public readonly EditableDoubleMult TurnStartVelocity = new EditableDoubleMult(50);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnStartPitch = new EditableDoubleMult(25);
+        public readonly EditableDoubleMult TurnStartPitch = new EditableDoubleMult(25);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult intermediateAltitude = new EditableDoubleMult(45000, 1000);
+        public readonly EditableDoubleMult IntermediateAltitude = new EditableDoubleMult(45000, 1000);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult holdAPTime = new EditableDoubleMult(1);
+        public readonly EditableDoubleMult HoldAPTime = new EditableDoubleMult(1);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public int ascentTypeInteger;
+        private int _ascentTypeInteger;
         
-        public ascentType ascentType
+        public ascentType AscentType
         {
-            get => (ascentType)ascentTypeInteger;
+            get => (ascentType)_ascentTypeInteger;
             set
             {
-                ascentTypeInteger = (int)value;
+                _ascentTypeInteger = (int)value;
                 DisableAscentModules();
             }
         }
 
-        public MechJebModuleAscentBaseAutopilot AscentAutopilot => GetAscentModule(ascentType);
+        public MechJebModuleAscentBaseAutopilot AscentAutopilot => GetAscentModule(AscentType);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult desiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
+        public readonly EditableDoubleMult DesiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble desiredInclination = new EditableDouble(0.0);
+        public readonly EditableDouble DesiredInclination = new EditableDouble(0.0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble desiredLAN = new EditableDouble(0.0);
+        public readonly EditableDouble DesiredLan = new EditableDouble(0.0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool correctiveSteering = false;
+        public bool CorrectiveSteering = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble correctiveSteeringGain = 0.6; //control gain
+        public readonly EditableDouble CorrectiveSteeringGain = 0.6; //control gain
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool forceRoll = true;
+        public bool ForceRoll = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble verticalRoll = new EditableDouble(90);
+        public readonly EditableDouble VerticalRoll = new EditableDouble(0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble turnRoll = new EditableDouble(90);
+        public readonly EditableDouble TurnRoll = new EditableDouble(0);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool autodeploySolarPanels = true;
+        public bool AutodeploySolarPanels = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool autoDeployAntennas = true;
+        public bool AutoDeployAntennas = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool skipCircularization = false;
+        public bool SkipCircularization = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble rollAltitude = new EditableDouble(50);
+        public readonly EditableDouble RollAltitude = new EditableDouble(50);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool _autostage = true;
+        private bool _autostage = true;
 
-        public bool autostage
+        public bool Autostage
         {
             get => _autostage;
             set
             {
                 bool changed = value != _autostage;
                 _autostage = value;
-                if (changed)
+                if (!changed) return;
+                if (_autostage && enabled)
                 {
-                    if (_autostage && enabled) core.staging.users.Add(this);
-                    if (!_autostage) core.staging.users.Remove(this);
+                    core.staging.users.Add(this);
+                }
+                else if (!_autostage)
+                {
+                    core.staging.users.Remove(this);
                 }
             }
         }
 
         /* classic AoA limter */
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool limitAoA = true;
+        public bool LimitAoA = true;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble maxAoA = 5;
+        public readonly EditableDouble MaxAoA = 5;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult aoALimitFadeoutPressure = new EditableDoubleMult(2500);
+        public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
 
-        public bool limitingAoA = false;
-
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble limitQa = new EditableDouble(2000);
-
-        public bool limitQaEnabled = false;
+        [Persistent(pass = (int)(Pass.Type))]
+        public bool LimitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble launchPhaseAngle = 0;
+        public readonly EditableDouble LimitQa = new EditableDouble(2000);
 
-        public EditableDouble launchLANDifference = 0;
+        [Persistent(pass = (int)(Pass.Type))]
+        public bool LimitQaEnabled = false;
 
-        [Persistent(pass = (int)Pass.Global)] public EditableInt warpCountDown = 11;
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble LaunchPhaseAngle = 0;
+
+        [Persistent(pass = (int)(Pass.Type))]
+        public readonly EditableDouble LaunchLANDifference = 0;
+
+        [Persistent(pass = (int)Pass.Global)] 
+        public readonly EditableInt WarpCountDown = 11;
 
         /*
          * "Classic" ascent path settings
          */
         
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnEndAltitude = new EditableDoubleMult(60000, 1000);
+        public readonly EditableDoubleMult TurnEndAltitude = new EditableDoubleMult(60000, 1000);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDouble turnEndAngle = 0;
+        public readonly EditableDouble TurnEndAngle = 0;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public EditableDoubleMult turnShapeExponent = new EditableDoubleMult(0.4, 0.01);
+        public readonly EditableDoubleMult TurnShapeExponent = new EditableDoubleMult(0.4, 0.01);
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool autoPath = true;
+        public bool AutoPath = true;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public float autoTurnPerc = 0.05f;
+        public float AutoTurnPerc = 0.05f;
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public float autoTurnSpdFactor = 18.5f;
+        public float AutoTurnSpdFactor = 18.5f;
         
-        public double autoTurnStartAltitude
+        public double AutoTurnStartAltitude
         {
             get
             {
-                return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() * autoTurnPerc : vessel.terrainAltitude + 25);
+                return (vessel.mainBody.atmosphere ? vessel.mainBody.RealMaxAtmosphereAltitude() * AutoTurnPerc : vessel.terrainAltitude + 25);
             }
         }
 
-        public double autoTurnStartVelocity
+        public double AutoTurnStartVelocity
         {
             get
             {
-                return vessel.mainBody.atmosphere ? autoTurnSpdFactor * autoTurnSpdFactor * autoTurnSpdFactor * 0.015625f : double.PositiveInfinity;
+                return vessel.mainBody.atmosphere ? AutoTurnSpdFactor * AutoTurnSpdFactor * AutoTurnSpdFactor * 0.015625f : double.PositiveInfinity;
             }
         }
 
-        public double autoTurnEndAltitude
+        public double AutoTurnEndAltitude
         {
             get
             {
-                if (vessel.mainBody.atmosphere)
-                {
-                    return Math.Min(vessel.mainBody.RealMaxAtmosphereAltitude() * 0.85, desiredOrbitAltitude);
-                }
-                else
-                {
-                    return Math.Min(30000, desiredOrbitAltitude * 0.85);
-                }
+                return vessel.mainBody.atmosphere ? 
+                    Math.Min(vessel.mainBody.RealMaxAtmosphereAltitude() * 0.85, DesiredOrbitAltitude) : 
+                    Math.Min(30000, DesiredOrbitAltitude * 0.85);
             }
         }
+        
+        /*
+         * PVG Staging values
+         */
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble MinDeltaV = 40;
+
+        [Persistent(pass = (int)Pass.Type)] public bool ExtendIfRequired = true;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble MaxCoast = 450;
+
+        [Persistent(pass = (int)Pass.Type)] public bool FixedCoast = false;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble FixedCoastLength = 450;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble PreStageTime = 10;
+        
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble OptimizerPauseTime = 5;
+
+        [Persistent(pass = (int)(Pass.Type))]
+        public bool FixedBurntime = false;
+
+        [Persistent(pass = (int)(Pass.Type))]
+        public readonly EditableInt LastStage = 0;
+        
+        [Persistent(pass = (int)(Pass.Type))]
+        public readonly EditableInt CoastStage = -1;
+        
+        [Persistent(pass = (int)(Pass.Type))]
+        public readonly EditableInt OptimizeStage = 0;
+        
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public bool CoastDuring = false;
+        
+        [Persistent(pass = (int)(Pass.Type))]
+        public readonly EditableInt SpinupStage = -1;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(0.5, TAU);
+
+        /*
+         * some non-persisted values
+         */
+
+        public bool LaunchingToPlane;
+        public bool LaunchingToRendezvous;
+        public bool LaunchingToMatchLan;
+        public bool LaunchingToLan;
+        
+        /*
+         * Helpers for dealing with switching between modules
+         */
         
         private readonly ascentType[] _values = (ascentType[])Enum.GetValues(typeof(ascentType));
 
@@ -210,7 +271,7 @@ namespace MuMech
         private void DisableAscentModules()
         {
             foreach (ascentType type in _values)
-                if (type != ascentType)
+                if (type != AscentType)
                     GetAscentModule(type).enabled = false;
         }
 

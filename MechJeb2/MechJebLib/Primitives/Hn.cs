@@ -15,7 +15,7 @@ namespace MechJebLib.Primitives
     {
         public int N;
 
-        private static readonly ObjectPool<Hn> _pool = new ObjectPool<Hn>(New);
+        private static readonly ObjectPool<Hn> _pool = new ObjectPool<Hn>(New, Clear);
 
         private static Hn New()
         {
@@ -26,6 +26,7 @@ namespace MechJebLib.Primitives
         {
             Hn h = _pool.Get();
             h.N = n;
+            h.Clear();
             return h;
         }
 
@@ -86,10 +87,17 @@ namespace MechJebLib.Primitives
             DD.Return(frame.OutTangent);
         }
 
+        private static void Clear(Hn h)
+        {
+            h.Clear();
+        }
+
         public override void Clear()
         {
             for (int i = 0; i < _list.Count; i++)
+            {
                 DisposeKeyframe(_list.Values[i]);
+            }
             _list.Clear();
         }
     }

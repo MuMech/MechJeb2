@@ -9,7 +9,7 @@ namespace MechJebLib.PVG
 {
     public class ResidualWrapper : IDisposable
     {
-        private static readonly ObjectPool<ResidualWrapper> _pool = new ObjectPool<ResidualWrapper>(New);
+        private static readonly ObjectPool<ResidualWrapper> _pool = new ObjectPool<ResidualWrapper>(New, Clear);
 
         private IList<double> _list;
 
@@ -150,6 +150,11 @@ namespace MechJebLib.PVG
         public void Dispose()
         {
             _pool.Return(this);
+        }
+        
+        public static void Clear(ResidualWrapper obj)
+        {
+            
         }
     }
 }

@@ -15,20 +15,24 @@ namespace MechJebLib.PVG
                 _ascent._phases.Clear();
             }
             
-            public AscentBuilder AddStageUsingBurnTime(double m0, double thrust, double isp, double bt, bool optimizeTime = false)
+            public AscentBuilder AddStageUsingBurnTime(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
             {
-               //Debug.Log($"AddStageUsingBurnTime: {m0} {thrust} {isp} {bt}");
-                _ascent._phases.Add(Phase.NewStageUsingBurnTime(m0, thrust, isp, bt, optimizeTime));
+                _ascent._phases.Add(Phase.NewStageUsingBurnTime(m0, thrust, isp, bt, kspStage, optimizeTime, unguided));
                 return this;
             }
             
-            public AscentBuilder Initial(V3 r0, V3 v0, double t0, double mu)
+            public void AddCoast(double m0, double ct, int kspStage)
             {
-               //Debug.Log($"Initial: {r0} {v0} {t0} {mu}");
-                _ascent._r0  = r0;
-                _ascent._v0  = v0;
-                _ascent._t0  = t0;
-                _ascent._mu  = mu;
+                _ascent._phases.Add(Phase.NewCoast(m0, ct, kspStage));
+            }
+            
+            public AscentBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu)
+            {
+                _ascent._r0 = r0;
+                _ascent._v0 = v0;
+                _ascent._u0 = u0.normalized;
+                _ascent._t0 = t0;
+                _ascent._mu = mu;
                 return this;
             }
 
@@ -54,6 +58,11 @@ namespace MechJebLib.PVG
             public void OldSolution(Solution solution)
             {
                 _ascent._solution = solution;
+            }
+
+            public void FixedBurnTime(bool fixedBurnTime)
+            {
+                _ascent._fixedBurnTime = fixedBurnTime;
             }
         }
     }

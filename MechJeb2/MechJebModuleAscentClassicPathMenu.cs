@@ -32,74 +32,67 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (_path == null)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_nopath")); //"Path is null!!!1!!1!1!1111!11eleven"
-                base.WindowGUI(windowID);
-                return;
-            }
-
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (_lastMaxAtmosphereAltitude != mainBody.RealMaxAtmosphereAltitude())
             {
                 _lastMaxAtmosphereAltitude = mainBody.RealMaxAtmosphereAltitude();
                 UpdateAtmoTexture(_pathTexture, mainBody,
-                    _ascentSettings.autoPath ? _ascentSettings.autoTurnEndAltitude : _ascentSettings.turnEndAltitude);
+                    _ascentSettings.AutoPath ? _ascentSettings.AutoTurnEndAltitude : _ascentSettings.TurnEndAltitude);
             }
 
             GUILayout.BeginVertical();
 
-            double oldTurnShapeExponent = _ascentSettings.turnShapeExponent;
+            double oldTurnShapeExponent = _ascentSettings.TurnShapeExponent;
 
-            _ascentSettings.autoPath = GUILayout.Toggle(_ascentSettings.autoPath, Localizer.Format("#MechJeb_AscentPathEd_auto"),
+            _ascentSettings.AutoPath = GUILayout.Toggle(_ascentSettings.AutoPath, Localizer.Format("#MechJeb_AscentPathEd_auto"),
                 GUILayout.ExpandWidth(false)); //"Automatic Altitude Turn"
-            if (_ascentSettings.autoPath)
+            if (_ascentSettings.AutoPath)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label1"), GUILayout.Width(60)); //"Altitude: "
                 // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
-                _ascentSettings.autoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(_ascentSettings.autoTurnPerc * 200f, 1f, 210.5f)) / 200f;
+                _ascentSettings.AutoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(_ascentSettings.AutoTurnPerc * 200f, 1f, 210.5f)) / 200f;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label2"), GUILayout.Width(60)); //"Velocity: "
-                _ascentSettings.autoTurnSpdFactor = Mathf.Floor(GUILayout.HorizontalSlider(_ascentSettings.autoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
+                _ascentSettings.AutoTurnSpdFactor = Mathf.Floor(GUILayout.HorizontalSlider(_ascentSettings.AutoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
                 GUILayout.EndHorizontal();
             }
 
-            if (_ascentSettings.autoPath)
+            if (_ascentSettings.AutoPath)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label3"), GUILayout.ExpandWidth(false)); //"Turn start when Altitude is "
-                GUILayout.Label(MuUtils.ToSI(_ascentSettings.autoTurnStartAltitude, -1, 2) + "m ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.ToSI(_ascentSettings.AutoTurnStartAltitude, -1, 2) + "m ", GUILayout.ExpandWidth(false));
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GUILayout.ExpandWidth(false)); //"or Velocity reach "
-                GUILayout.Label(MuUtils.ToSI(_ascentSettings.autoTurnStartVelocity, -1, 3) + "m/s", GUILayout.ExpandWidth(false)); //
+                GUILayout.Label(MuUtils.ToSI(_ascentSettings.AutoTurnStartVelocity, -1, 3) + "m/s", GUILayout.ExpandWidth(false)); //
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label5")); //"Turn end altitude: "
-                GUILayout.Label(MuUtils.ToSI(_ascentSettings.autoTurnEndAltitude, -1, 2) + "m", GuiUtils.middleRightLabel,
+                GUILayout.Label(MuUtils.ToSI(_ascentSettings.AutoTurnEndAltitude, -1, 2) + "m", GuiUtils.middleRightLabel,
                     GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
             else
             {
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label6"), _ascentSettings.turnStartAltitude,
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label6"), _ascentSettings.TurnStartAltitude,
                     "km"); //"Turn start altitude:"
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label7"), _ascentSettings.turnStartVelocity,
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label7"), _ascentSettings.TurnStartVelocity,
                     "m/s"); //"Turn start velocity:"
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label8"), _ascentSettings.turnEndAltitude,
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label8"), _ascentSettings.TurnEndAltitude,
                     "km"); //"Turn end altitude:"
             }
 
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label9"), _ascentSettings.turnEndAngle, "°"); //"Final flight path angle:"
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label10"), _ascentSettings.turnShapeExponent, "%"); //"Turn shape:"
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label9"), _ascentSettings.TurnEndAngle, "°"); //"Final flight path angle:"
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AscentPathEd_label10"), _ascentSettings.TurnShapeExponent, "%"); //"Turn shape:"
 
             // Round the slider's value (0..1) to sliderPrecision decimal places.
             const int SLIDER_PRECISION = 3;
 
-            double sliderTurnShapeExponent = GUILayout.HorizontalSlider((float)_ascentSettings.turnShapeExponent, 0.0F, 1.0F);
+            double sliderTurnShapeExponent = GUILayout.HorizontalSlider((float)_ascentSettings.TurnShapeExponent, 0.0F, 1.0F);
             if (Math.Round(Math.Abs(sliderTurnShapeExponent - oldTurnShapeExponent), SLIDER_PRECISION) > 0)
             {
-                _ascentSettings.turnShapeExponent = new EditableDoubleMult(Math.Round(sliderTurnShapeExponent, SLIDER_PRECISION), 0.01);
+                _ascentSettings.TurnShapeExponent.val = Math.Round(sliderTurnShapeExponent, SLIDER_PRECISION);
             }
 
             GUILayout.Box(_pathTexture);
@@ -113,7 +106,7 @@ namespace MuMech
                 r.xMax -= GUI.skin.box.margin.right;
                 r.yMax -= GUI.skin.box.margin.bottom;
 
-                float scale = (float)((_ascentSettings.autoPath ? _ascentSettings.autoTurnEndAltitude : _ascentSettings.turnEndAltitude) / r.height);
+                float scale = (float)((_ascentSettings.AutoPath ? _ascentSettings.AutoTurnEndAltitude : _ascentSettings.TurnEndAltitude) / r.height);
 
                 DrawnPath(r, scale, scale, _path, Color.red);
                 DrawnTrajectory(r, _recorder);
@@ -167,7 +160,7 @@ namespace MuMech
             var p1 = new Vector2(r.xMin, r.yMax);
             var p2 = new Vector2();
 
-            while (alt < (_ascentSettings.autoPath ? _ascentSettings.autoTurnEndAltitude : _ascentSettings.turnEndAltitude) &&
+            while (alt < (_ascentSettings.AutoPath ? _ascentSettings.AutoTurnEndAltitude : _ascentSettings.TurnEndAltitude) &&
                    downrange < r.width * scaleX)
             {
                 float desiredAngle = (float)(alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
@@ -192,7 +185,7 @@ namespace MuMech
             if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
                 return;
 
-            float scale = (float)((_ascentSettings.autoPath ? _ascentSettings.autoTurnEndAltitude : _ascentSettings.turnEndAltitude) /
+            float scale = (float)((_ascentSettings.AutoPath ? _ascentSettings.AutoTurnEndAltitude : _ascentSettings.TurnEndAltitude) /
                                   r.height); //meters per pixel
 
             int t = 1;

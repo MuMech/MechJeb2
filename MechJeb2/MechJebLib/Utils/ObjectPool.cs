@@ -16,11 +16,13 @@ namespace MechJebLib.Utils
     {
         private readonly ConcurrentBag<T> _objects;
         private readonly Func<T>          _newfun;
+        private readonly Action<T>       _clearfun;
 
-        public ObjectPool(Func<T> newfun)
+        public ObjectPool(Func<T> newfun, Action<T> clearfun)
         {
-            _objects = new ConcurrentBag<T>();
-            _newfun  = newfun;
+            _objects  = new ConcurrentBag<T>();
+            _clearfun = clearfun;
+            _newfun   = newfun;
         }
 
         public T Get()
@@ -30,6 +32,7 @@ namespace MechJebLib.Utils
 
         public void Return(T item)
         {
+            _clearfun(item);
             _objects.Add(item);
         }
     }

@@ -15,7 +15,7 @@ namespace MechJebLib.PVG
         private readonly List<double> _tmin         = new List<double>();
         private readonly List<double> _tmax         = new List<double>();
         private readonly List<Hn>     _interpolants = new List<Hn>();
-        public           int          CoastingKSPStage;
+        private readonly List<Phase>  _phases       = new List<Phase>();
 
         public int    Segments      => _interpolants.Count;
         private double _timeScale     => _scale.timeScale;
@@ -33,10 +33,11 @@ namespace MechJebLib.PVG
             T0 = problem.t0;
         }
 
-        public void AddSegment(double t0, double tf, Hn interpolant)
+        public void AddSegment(double t0, double tf, Hn interpolant, Phase phase)
         {
             _tmin.Add(t0);
             _tmax.Add(tf);
+            _phases.Add(phase); // FIXME: probably need to dup() the phase, and will need to return the phase after pooling is implemented
             _interpolants.Add(interpolant);
         }
 
@@ -146,17 +147,62 @@ namespace MechJebLib.PVG
             return DV(Tf) - DV(t);
         }
         
-        public double Thrust(double t)
+        public bool Coast(double t)
         {
-            return 1.0;
+            double tbar = (t - T0) / _timeScale;
+            return _phases[PhaseForTbar(tbar)].Coast;
+        }
+
+        public bool Unguided(double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+            return _phases[PhaseForTbar(tbar)].Unguided;
+        }
+        
+        public V3 U0(double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+            return _phases[PhaseForTbar(tbar)].u0;
+        }
+        
+        public int Stage(double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+            return _phases[PhaseForTbar(tbar)].KSPStage;
+        }
+        
+        public double StageTimeLeft(double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+            int phase = PhaseForTbar(tbar);
+            return (_tmax[phase] - tbar ) * _timeScale;
         }
 
         public (double pitch, double heading) PitchAndHeading(double t)
         {
             double tbar = (t - T0) / _timeScale;
+            V3 u;
+            
             using DD xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
-            (double pitch, double heading) = Functions.ECIToPitchHeading(x.R, x.PV);
+
+            int phase = PhaseForTbar(tbar);
+            
+            // FIXME: this logic should be pushed upwards into the guidance controller
+            if (_phases[phase].Unguided)
+            {
+                u = _phases[phase].u0;
+            }
+            else if (_phases[phase].Coast && phase < Segments-1)
+            {
+                u = _phases[phase + 1].u0;
+            }
+            else
+            {
+                u = x.PV.normalized;
+            }
+
+            (double pitch, double heading) = Functions.ECIToPitchHeading(x.R, u);
             return (pitch, heading);
         }
 
@@ -167,13 +213,17 @@ namespace MechJebLib.PVG
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
 
-        private DD Interpolate(double tbar)
+        private int PhaseForTbar(double tbar)
         {
             for (int i = 0; i < _tmax.Count; i++)
                 if (tbar < _tmax[i])
-                    return _interpolants[i].Evaluate(tbar);
+                    return i;
+            return _tmax.Count - 1;
+        }
 
-            return _interpolants[_tmax.Count - 1].Evaluate(tbar);
+        private DD Interpolate(double tbar)
+        {
+            return _interpolants[PhaseForTbar(tbar)].Evaluate(tbar);
         }
 
         // this is for terminal guidance.
@@ -189,5 +239,6 @@ namespace MechJebLib.PVG
         {
             // FIXME: need to dispose properly
         }
+
     }
 }

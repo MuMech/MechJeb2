@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -205,29 +204,32 @@ namespace MuMech
             GL.End();
             GL.PopMatrix();
         }
-
+        
+        private static readonly List<Vector3d> _points = new List<Vector3d>();
+        
         public static void DrawOrbit(Orbit o, Color c)
         {
-            List<Vector3d> points = new List<Vector3d>();
+            _points.Clear();
+            
             if (o.eccentricity < 1)
             {
                 //elliptical orbits:
                 for (int trueAnomaly = 0; trueAnomaly < 360; trueAnomaly += 1)
                 {
-                    points.Add(o.SwappedAbsolutePositionAtUT(o.TimeOfTrueAnomaly(trueAnomaly, 0)));
+                    _points.Add(o.SwappedAbsolutePositionAtUT(o.TimeOfTrueAnomaly(Deg2Rad(trueAnomaly), 0)));
                 }
-                points.Add(points[0]); //close the loop
+                _points.Add(_points[0]); //close the loop
             }
             else
             {
                 //hyperbolic orbits:
                 for (int meanAnomaly = -1000; meanAnomaly <= 1000; meanAnomaly += 5)
                 {
-                    points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * UtilMath.Deg2Rad, 0)));
+                    _points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * UtilMath.Deg2Rad, 0)));
                 }
             }
 
-            DrawPath(o.referenceBody, points, c, true, false);
+            DrawPath(o.referenceBody, _points, c, true, false);
         }
     }
 }

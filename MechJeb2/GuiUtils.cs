@@ -529,7 +529,7 @@ namespace MuMech
                 GUILayout.Label(leftLabel,leftLabelStyle);
             }
             SimpleTextField(ed, width, expandWidth: true);
-            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel, ExpandWidth(false));
+            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
             if (horizontalFraming) GUILayout.EndHorizontal();
             Profiler.EndSample();
         }
@@ -540,7 +540,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             toggle = toggleStyle != null ? GUILayout.Toggle(toggle,toggleText,toggleStyle) : GUILayout.Toggle(toggle,toggleText);
             GuiUtils.SimpleTextField(ed, width);
-            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel,ExpandWidth(false));
+            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
             GUILayout.EndHorizontal();
             Profiler.EndSample();
         }
@@ -551,7 +551,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             bool pressed = buttonStyle != null ? GUILayout.Button(buttonText,buttonStyle) : GUILayout.Button(buttonText);
             GuiUtils.SimpleTextField(ed,width);
-            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel,ExpandWidth(false));
+            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
             GUILayout.EndHorizontal();
             Profiler.EndSample();
             return pressed;

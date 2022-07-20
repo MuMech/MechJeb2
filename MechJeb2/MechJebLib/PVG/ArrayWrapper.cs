@@ -7,9 +7,10 @@ using MechJebLib.Utils;
 
 namespace MechJebLib.PVG
 {
+    // FIXME: rename this and bust it up into inputwrapper/outputwrapper and a base class
     public class ArrayWrapper : IDisposable
     {
-        private static readonly ObjectPool<ArrayWrapper> _pool = new ObjectPool<ArrayWrapper>(New);
+        private static readonly ObjectPool<ArrayWrapper> _pool = new ObjectPool<ArrayWrapper>(New, Clear);
 
         private IList<double> _list;
 
@@ -202,6 +203,11 @@ namespace MechJebLib.PVG
         public void Dispose()
         {
             _pool.Return(this);
+        }
+
+        public static void Clear(ArrayWrapper obj)
+        {
+            
         }
     }
 }

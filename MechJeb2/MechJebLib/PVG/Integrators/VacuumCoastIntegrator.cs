@@ -35,7 +35,7 @@ namespace MechJebLib.PVG.Integrators
                 interpolant.Add(t2, yfout);
             }
 
-            solution.AddSegment(t0, tf, interpolant);
+            solution.AddSegment(t0, tf, interpolant, phase);
         }
     }
 }

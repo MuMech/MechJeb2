@@ -49,7 +49,8 @@ namespace MuMech
         public MechJebModuleAirplaneAutopilot           airplane;
         public MechJebModuleStageStats                  stageStats;
         public MechJebModuleAscentSettings              ascentSettings;
-        public MechJebModuleAscentBaseAutopilot                  ascent => ascentSettings.AscentAutopilot;
+        public MechJebModuleSpinupController            spinup;
+        public MechJebModuleAscentBaseAutopilot         ascent => ascentSettings.AscentAutopilot;
 
         public VesselState vesselState = new VesselState();
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]//DisabledEnabled
@@ -794,6 +795,7 @@ namespace MuMech
             glueball       = GetComputerModule<MechJebModulePVGGlueBall>();
             stageStats     = GetComputerModule<MechJebModuleStageStats>();
             ascentSettings = GetComputerModule<MechJebModuleAscentSettings>();
+            spinup         = GetComputerModule<MechJebModuleSpinupController>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

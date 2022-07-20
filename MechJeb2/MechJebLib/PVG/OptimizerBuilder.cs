@@ -10,7 +10,8 @@ namespace MechJebLib.PVG
     public enum TerminalType
     {
         FPA4_REDUCED, FPA4_PROPELLANT, FPA5_REDUCED,
-        KEPLER3_REDUCED, KEPLER4_REDUCED, KEPLER5_REDUCED
+        KEPLER3_REDUCED, KEPLER4_REDUCED, KEPLER5_REDUCED,
+        FPA3_ENERGY, FPA4_ENERGY,
     }
 
     public partial class Optimizer
@@ -20,6 +21,7 @@ namespace MechJebLib.PVG
             private readonly List<Phase>  _phases = new List<Phase>();
             private          V3           _r0;
             private          V3           _v0;
+            private          V3           _u0;
             private          double       _t0;
             private          double       _mu;
             private          TerminalType _terminalType;
@@ -35,7 +37,7 @@ namespace MechJebLib.PVG
             public Optimizer Build()
             {
                 double m0 = _phases[0].m0;
-                var problem = new Problem(_r0, _v0, m0, _t0, _mu);
+                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu);
                 foreach (Phase phase in _phases)
                 {
                     phase.Rescale(problem.Scale);
@@ -47,10 +49,11 @@ namespace MechJebLib.PVG
                 return solver;
             }
 
-            public OptimizerBuilder Initial(V3 r0, V3 v0, double t0, double mu)
+            public OptimizerBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu)
             {
                 _r0 = r0;
                 _v0 = v0;
+                _u0 = u0.normalized;
                 _t0 = t0;
                 _mu = mu;
                 return this;
@@ -72,6 +75,10 @@ namespace MechJebLib.PVG
                         return new Kepler4Reduced(_smaT/scale.lengthScale, _eccT, _incT, _lanT);
                     case TerminalType.KEPLER5_REDUCED:
                         return new Kepler5Reduced(_smaT/scale.lengthScale, _eccT, _incT, _lanT, _argpT);
+                    case TerminalType.FPA3_ENERGY:
+                        return new FlightPathAngle3Energy(0, _rT / scale.lengthScale, _incT);
+                    case TerminalType.FPA4_ENERGY:
+                        return new FlightPathAngle4Energy(_rT / scale.lengthScale, _incT, _lanT);
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -132,6 +139,27 @@ namespace MechJebLib.PVG
                 _incT         = incT;
                 _lanT         = lanT;
                 _argpT        = argpT;
+                _terminalType = terminalType;
+
+                return this;
+            }
+
+            public OptimizerBuilder TerminalEnergy3(double rT, double incT, TerminalType terminalType = TerminalType.FPA3_ENERGY)
+            {
+                _gammaT       = 0;
+                _rT           = rT;
+                _incT         = incT;
+                _terminalType = terminalType;
+
+                return this;
+            }
+
+            public OptimizerBuilder TerminalEnergy4(double rT, double incT, double lanT, TerminalType terminalType = TerminalType.FPA4_ENERGY)
+            {
+                _gammaT       = 0;
+                _rT           = rT;
+                _incT         = incT;
+                _lanT         = lanT;
                 _terminalType = terminalType;
 
                 return this;

@@ -22,6 +22,7 @@ namespace MechJebLib.PVG
         private readonly List<Phase> _phases = new List<Phase>();
         private          V3          _r0;
         private          V3          _v0;
+        private          V3          _u0;
         private          double      _t0;
         private          double      _mu;
         private          double      _peR;
@@ -35,7 +36,7 @@ namespace MechJebLib.PVG
         private          double      _eccT;
         private          bool        _attachAltFlag;
         private          bool        _lanflag;
-        private          double      _coastLen;
+        private          bool        _fixedBurnTime;
         private          Solution?   _solution;
         private          Phase       _lastPhase => _phases[_phases.Count - 1];
 
@@ -43,36 +44,41 @@ namespace MechJebLib.PVG
         {
             foreach (Phase phase in _phases)
             {
-                phase.Integrator = new VacuumThrustAnalytic();
+                phase.Integrator = phase.Unguided ? (IPVGIntegrator) new VacuumThrustIntegrator() : new VacuumThrustAnalytic();
             }
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
-                .Initial(_r0, _v0, _t0, _mu)
+                .Initial(_r0, _v0, _u0, _t0, _mu)
                 .Phases(_phases);
-
-            _lastPhase.OptimizeTime = true;
-
-            return _solution == null ? InitialBootstrapping(builder) : ConvergedOptimization(builder);
+            
+            return _solution == null ? InitialBootstrapping(builder) : ConvergedOptimization(builder, _solution);
         }
 
-        private Optimizer ConvergedOptimization(Optimizer.OptimizerBuilder builder)
+        private Optimizer ConvergedOptimization(Optimizer.OptimizerBuilder builder, Solution solution)
         {
-            (_smaT, _eccT) = Functions.SmaEccFromApsides(_peR, _apR);
-
-            if (_attachAltFlag || _eccT < 1e-4)
+            if (_fixedBurnTime)
             {
-                if (!_attachAltFlag)
-                    _attR = _peR;
-
-                ApplyFPA(builder);
+                ApplyEnergy(builder);
             }
             else
             {
-                ApplyKepler(builder);
+                (_smaT, _eccT) = Functions.SmaEccFromApsides(_peR, _apR);
+
+                if (_attachAltFlag || _eccT < 1e-4)
+                {
+                    if (!_attachAltFlag)
+                        _attR = _peR;
+
+                    ApplyFPA(builder);
+                }
+                else
+                {
+                    ApplyKepler(builder);
+                }
             }
 
             Optimizer pvg = builder.Build();
-            pvg.Bootstrap(_solution!);
+            pvg.Bootstrap(solution);
             pvg.Run();
 
             return pvg;
@@ -105,13 +111,32 @@ namespace MechJebLib.PVG
             }
         }
 
+        private void ApplyEnergy(Optimizer.OptimizerBuilder builder)
+        {
+            if (_lanflag)
+            {
+                builder.TerminalEnergy4(_peR, _incT, _lanT);
+            }
+            else
+            {
+                builder.TerminalEnergy3(_peR, _incT);
+            }
+        }
+
         private Optimizer InitialBootstrapping(Optimizer.OptimizerBuilder builder)
         {
             // if we're not doing fixed attachment we still bootstrap with periapasis attachment first
             if (!_attachAltFlag)
                 _attR = _peR;
 
-            ApplyFPA(builder);
+            if (_fixedBurnTime)
+            {
+                ApplyEnergy(builder);
+            }
+            else
+            {
+                ApplyFPA(builder);
+            }
 
             Optimizer pvg = builder.Build();
 
@@ -120,27 +145,32 @@ namespace MechJebLib.PVG
             enu.z = 1.0; // add 45 degrees up
             V3 pvGuess = Functions.ENUToECI(_r0, enu).normalized;
 
-            // converge with infinite ISP
-            _lastPhase.infinite = true;
+            if (!_fixedBurnTime)
+            {
+                _lastPhase.Infinite = true;
+            }
+            
             pvg.Bootstrap(pvGuess, _r0.normalized);
 
             // FIXME: add the coast
 
-            // reconverge
-            _lastPhase.infinite = false;
-            using Solution solution = pvg.GetSolution();
-            pvg.Bootstrap(solution);
-
-            // redo it with Kepler
-            if (!_attachAltFlag)
+            if (!_fixedBurnTime)
             {
-                using Solution solution2 = pvg.GetSolution();
-                pvg.Dispose();
+                _lastPhase.Infinite = false;
+                using Solution solution = pvg.GetSolution();
+                pvg.Bootstrap(solution);
 
-                ApplyKepler(builder);
+                // we have a periapsis attachment solution, redo with free attachment
+                if (!_attachAltFlag)
+                {
+                    using Solution solution2 = pvg.GetSolution();
+                    pvg.Dispose();
 
-                pvg = builder.Build();
-                pvg.Bootstrap(solution2);
+                    ApplyKepler(builder);
+
+                    pvg = builder.Build();
+                    pvg.Bootstrap(solution2);
+                }
             }
 
             return pvg;
