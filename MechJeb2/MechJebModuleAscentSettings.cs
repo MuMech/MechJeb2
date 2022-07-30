@@ -236,7 +236,7 @@ namespace MuMech
         public readonly EditableInt SpinupStage = -1;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(0.5, TAU);
+        public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(0.5, TAU/60.0);
 
         /*
          * some non-persisted values

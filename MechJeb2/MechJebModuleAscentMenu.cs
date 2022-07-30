@@ -1,6 +1,7 @@
 ﻿using System;
 using KSP.Localization;
 using MechJebLib.Maths;
+using MechJebLib.PVG;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -129,12 +130,9 @@ namespace MuMech
             {
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label5, _ascentSettings.DesiredOrbitAltitude, "km"); //Orbit altitude
             }
-
-            GUIStyle si = Math.Abs(_ascentSettings.DesiredInclination) < Math.Abs(vesselState.latitude) - 2.001
-                ? GuiUtils.orangeLabel
-                : GuiUtils.skin.label;
+            
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label6, _ascentSettings.DesiredInclination, "º", 75, si,
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.skin.label,
                 false);                                                                                          //Orbit inc.
             if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button13, GuiUtils.ExpandWidth(false))) //Current
                 _ascentSettings.DesiredInclination.val = Math.Round(vesselState.latitude, 2);
@@ -142,7 +140,7 @@ namespace MuMech
 
             double delta = Math.Abs(vesselState.latitude) - Math.Abs(_ascentSettings.DesiredInclination);
             if (2.001 < delta)
-                GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", delta), si); //inc {0:F1}º below current latitude
+                GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", delta), GuiUtils.redLabel); //inc {0:F1}º below current latitude
 
             GUILayout.EndVertical();
             Profiler.EndSample();
@@ -198,12 +196,8 @@ namespace MuMech
                             GuiUtils.yellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
                 }
                 GUILayout.EndVertical();
-
-
-
             }
-
-
+            
             _ascentSettings.LimitQaEnabled = _ascentSettings.AscentType == ascentType.PVG; // this is mandatory for PVG
 
             Profiler.EndSample();
@@ -217,11 +211,13 @@ namespace MuMech
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
-                //if (core.guidance.Solution != null)
-                //{
-                //    for (int i = core.guidance.Solution.num_segments; i > 0; i--)
-                //        GUILayout.Label($"{i}: {core.guidance.Solution.ArcString(vesselState.time, i - 1)}");
-                //}
+                if (core.guidance.Solution != null)
+                {
+                    Solution solution = core.guidance.Solution;
+                    for (int i = solution.Segments; i > 0; i--)
+                        GUILayout.Label($"{i}: {solution.PhaseString(vesselState.time, i - 1)}");
+                    GUILayout.Label(solution.TerminalString());
+                }
 
                 Profiler.BeginSample("MJ.GUIWindow.ShowStatus.Labels");
                 GUILayout.BeginHorizontal();

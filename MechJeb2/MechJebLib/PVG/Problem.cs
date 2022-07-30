@@ -1,3 +1,9 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 #nullable enable
 
 using MechJebLib.Primitives;
@@ -9,27 +15,31 @@ namespace MechJebLib.PVG
     {
         public readonly Scale        Scale;
         public          IPVGTerminal Terminal;
-        public readonly V3           r0;
-        public readonly V3           r0_bar;
-        public readonly double       m0;
-        public readonly double       m0_bar;
-        public readonly V3           v0;
-        public readonly V3           v0_bar;
-        public readonly double       t0;
-        public readonly V3           u0;
+        public readonly V3           R0;
+        public readonly V3           R0Bar;
+        public readonly double       M0;
+        public readonly double       M0Bar;
+        public readonly V3           V0;
+        public readonly V3           V0Bar;
+        public readonly double       T0;
+        public readonly V3           U0;
+        public readonly double       Mu;
+        public readonly double       Rbody;
 
-        public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu)
+        public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody)
         {
-            Scale   = new Scale(r0, m0, mu);
-            this.r0 = r0;
-            r0_bar  = r0 / Scale.lengthScale;
-            this.v0 = v0;
-            v0_bar  = v0 / Scale.velocityScale;
-            this.m0 = m0;
-            m0_bar  = m0 / Scale.massScale;
-            this.u0 = u0;
+            Scale = new Scale(r0, m0, mu);
+            Mu    = mu;
+            R0    = r0;
+            R0Bar = r0 / Scale.lengthScale;
+            V0    = v0;
+            V0Bar = v0 / Scale.velocityScale;
+            M0    = m0;
+            M0Bar = m0 / Scale.massScale;
+            U0    = u0;
+            Rbody = rbody;
 
-            this.t0 = t0;
+            T0 = t0;
         }
     }
 }

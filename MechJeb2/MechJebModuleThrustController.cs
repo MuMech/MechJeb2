@@ -208,7 +208,7 @@ namespace MuMech
 
         public PIDController pid;
 
-        float lastThrottle = 0;
+        public float LastThrottle = 0;
         bool userCommandingRotation { get { return userCommandingRotationSmoothed > 0; } }
         int userCommandingRotationSmoothed = 0;
         bool lastDisableThrusters = false;
@@ -543,7 +543,7 @@ namespace MuMech
 
             if (s.Z == 0 && core.rcs.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
-            lastThrottle = s.mainThrottle;
+            LastThrottle = s.mainThrottle;
 
             if (!core.attitude.enabled)
             {
@@ -606,8 +606,8 @@ namespace MuMech
         float SmoothThrottle(float mainThrottle)
         {
             return Mathf.Clamp(mainThrottle,
-                               (float)(lastThrottle - vesselState.deltaT / throttleSmoothingTime),
-                               (float)(lastThrottle + vesselState.deltaT / throttleSmoothingTime));
+                               (float)(LastThrottle - vesselState.deltaT / throttleSmoothingTime),
+                               (float)(LastThrottle + vesselState.deltaT / throttleSmoothingTime));
         }
 
         float FlameoutSafetyThrottle()

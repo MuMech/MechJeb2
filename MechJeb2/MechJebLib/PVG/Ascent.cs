@@ -1,3 +1,9 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 #nullable enable
 
 using System.Collections.Generic;
@@ -16,6 +22,8 @@ namespace MechJebLib.PVG
     ///     - handle coasting
     ///     - handle re-guessing if FPA4 got the northgoing/southgoing sense wrong (and/or pin the LAN first then remove the LAN constraint)
     ///     - bootstrap with periapsis attachment first then do kepler4/kepler5 for free attachment (DONE)
+    ///     - report failures back in the UI
+    ///     - retry on failures
     /// </summary>
     public partial class Ascent
     {
@@ -25,6 +33,7 @@ namespace MechJebLib.PVG
         private          V3          _u0;
         private          double      _t0;
         private          double      _mu;
+        private          double      _rbody;
         private          double      _peR;
         private          double      _apR;
         private          double      _attR;
@@ -39,8 +48,9 @@ namespace MechJebLib.PVG
         private          bool        _fixedBurnTime;
         private          Solution?   _solution;
         private          Phase       _lastPhase => _phases[_phases.Count - 1];
+        private          Optimizer?  _optimizer;
 
-        public Optimizer Run()
+        public void Run()
         {
             foreach (Phase phase in _phases)
             {
@@ -48,10 +58,15 @@ namespace MechJebLib.PVG
             }
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
-                .Initial(_r0, _v0, _u0, _t0, _mu)
+                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
                 .Phases(_phases);
             
-            return _solution == null ? InitialBootstrapping(builder) : ConvergedOptimization(builder, _solution);
+            _optimizer = _solution == null ? InitialBootstrapping(builder) : ConvergedOptimization(builder, _solution);
+        }
+
+        public Optimizer? GetOptimizer()
+        {
+            return _optimizer;
         }
 
         private Optimizer ConvergedOptimization(Optimizer.OptimizerBuilder builder, Solution solution)

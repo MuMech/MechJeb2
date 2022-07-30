@@ -251,8 +251,13 @@ namespace MuMech
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
             if (hotStaging && InverseStageHasActiveEngines(vessel.currentStage) && InverseStageHasEngines(vessel.currentStage - 1) && !InverseStageFiresDecoupler(vessel.currentStage - 1) && !InverseStageReleasesClamps(vessel.currentStage - 1) && LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
-            
-            // FIXME: prevent staging if the next stage has engines with unstable ullage (and throttle is 100%?)
+
+            if (InverseStageHasUnstableEngines(vessel.currentStage - 1) && core.thrust.autoRCSUllaging && vessel.hasEnabledRCSModules() && core.thrust.LastThrottle > 0)
+            {
+                if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                return;
+            }
 
             //Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
             if (HasStayingChutes(vessel.currentStage - 1))
@@ -325,7 +330,9 @@ namespace MuMech
         public bool InverseStageDecouplesActiveOrIdleEngineOrTank(int inverseStage, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             foreach (PartModule pm in allDecouplers)
-                if (pm.part.inverseStage == inverseStage && pm.IsUnfiredDecoupler(out Part decoupledPart) && HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
+                if (pm.part.inverseStage == inverseStage &&
+                    pm.IsUnfiredDecoupler(out Part decoupledPart) &&
+                    HasActiveOrIdleEngineOrTankDescendant(decoupledPart, tankResources, activeModuleEngines))
                     return true;
             return false;
         }
@@ -356,11 +363,11 @@ namespace MuMech
             return result;
         }
         
-        // FIXME: need to be able to tell if an unignited, unactived ModuleEngines has unstable ullage
         public bool InverseStageHasUnstableEngines(int inverseStage)
         {
+            // don't just blindly add caching here because this value is volatile and changes with ullage status
             foreach (ModuleEngines engine in allModuleEngines)
-                if (engine.part.inverseStage == inverseStage)
+                if (engine.part.inverseStage == inverseStage && engine.part.UnstableUllage())
                     return true;
             
             return false;
@@ -412,8 +419,9 @@ namespace MuMech
 
             if (!p.IsSepratron() && !isBurnedOutSRBDecoupledInNextStage(p))
             {
-                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel())
+                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel() && !p.UnrestartableDeadEngine())
                 {
+                    Debug.Log("foo3");
                     return true; // TODO: properly check if ModuleEngines is active
                 }
                 for (int i = 0; i < p.Resources.Count; i++)
@@ -424,7 +432,10 @@ namespace MuMech
                         foreach (ModuleEngines engine in activeModuleEngines)
                         {
                             if (engine.part.crossfeedPartSet.ContainsPart(p))
+                            {
+                                Debug.Log("foo4");
                                 return true;
+                            }
                         }
                     }
                 }

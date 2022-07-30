@@ -1,11 +1,19 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace MuMech
 {
     public static class PartExtensions
     {
-        public static bool HasModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>() != null;
-        public static T GetModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>();
+        public static bool HasModule<T>(this Part part) where T : PartModule
+        {
+            return part.FindModuleImplementing<T>() != null;
+        }
+
+        public static T GetModule<T>(this Part part) where T : PartModule
+        {
+            return part.FindModuleImplementing<T>();
+        }
 
         // An allocation free version of GetModuleMass
         public static float GetModuleMassNoAlloc(this Part p, float defaultMass, ModifierStagingSituation sit)
@@ -14,21 +22,85 @@ namespace MuMech
 
             for (int i = 0; i < p.Modules.Count; i++)
             {
-                IPartMassModifier m = p.Modules[i] as IPartMassModifier;
+                var m = p.Modules[i] as IPartMassModifier;
                 if (m != null)
                 {
                     mass += m.GetModuleMass(defaultMass, sit);
                 }
             }
+
             return mass;
         }
 
-        public static bool EngineHasFuel(this ModuleEngines me) => !me.getFlameoutState && !me.engineShutdown;
+        public static bool EngineHasFuel(this ModuleEngines me)
+        {
+            return !me.getFlameoutState && !me.engineShutdown;
+        }
 
         public static bool EngineHasFuel(this Part p)
         {
             ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
             return eng != null && eng.EngineHasFuel();
+        }
+
+        public static bool UnstableUllage(this Part p)
+        {
+            if (!VesselState.isLoadedRealFuels) // stock doesn't have this concept
+                return false;
+            
+            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+
+            if (eng is null) // this case probably doesn't make any sense
+                return false;
+            
+            if (eng.finalThrust > 0 || eng.requestedThrottle > 0 || eng.getFlameoutState || eng.EngineIgnited)
+                return false;
+
+            try
+            {
+                if (VesselState.RFignitedField.GetValue(eng) is bool ignited && ignited)
+                    return false;
+                if (VesselState.RFignitionsField.GetValue(eng) is int ignitions && ignitions == 0)
+                    return false;
+                if (VesselState.RFullageField.GetValue(eng) is bool ullage && !ullage)
+                    return false;
+                if (VesselState.RFullageSetField.GetValue(eng) is object ullageSet)
+                    if (VesselState.RFGetUllageStabilityMethod.Invoke(ullageSet, Array.Empty<object>()) is double propellantStability)
+                        if (propellantStability < VesselState.RFveryStableValue)
+                            return true;
+            }
+            catch(ArgumentException)
+            {
+            }
+            
+            return false;
+        }
+
+        public static bool UnrestartableDeadEngine(this Part p)
+        {
+            if (!VesselState.isLoadedRealFuels) // stock doesn't have this concept
+                return false;
+
+            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
+
+            if (eng is null) // this case probably doesn't make any sense
+                return false;
+
+            if (eng.finalThrust > 0)
+                return false;
+
+            try
+            {
+                if (VesselState.RFignitedField.GetValue(eng) is bool ignited && ignited)
+                    return false;
+                if (VesselState.RFignitionsField.GetValue(eng) is int ignitions)
+                    return ignitions == 0;
+            }
+            catch (ArgumentException)
+            {
+            }
+
+            return false;
         }
 
         public static double FlowRateAtConditions(this ModuleEngines e, double throttle, double flowMultiplier)
@@ -114,6 +186,7 @@ namespace MuMech
                     decoupledPart = decoupler.part;
                 return true;
             }
+
             decoupledPart = null;
             return false;
         }
@@ -127,6 +200,7 @@ namespace MuMech
                     decoupledPart = mDockingNode.part;
                 return true;
             }
+
             decoupledPart = null;
             return false;
         }
@@ -142,6 +216,7 @@ namespace MuMech
                     return true;
                 }
             }
+
             decoupledPart = null;
             return false;
         }
@@ -150,7 +225,8 @@ namespace MuMech
         {
             if (m is ModuleDecouplerBase && IsUnfiredDecoupler(m as ModuleDecouplerBase, out decoupledPart)) return true;
             if (m is ModuleDockingNode && IsUnfiredDecoupler(m as ModuleDockingNode, out decoupledPart)) return true;
-            if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" && m.IsUnfiredProceduralFairingDecoupler(out decoupledPart)) return true;
+            if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" &&
+                m.IsUnfiredProceduralFairingDecoupler(out decoupledPart)) return true;
             decoupledPart = null;
             return false;
         }
@@ -164,28 +240,36 @@ namespace MuMech
             return false;
         }
 
-
         //Any engine that is decoupled in the same stage in
         //which it activates we call a sepratron.
         public static bool IsSepratron(this Part p)
         {
             return p.ActivatesEvenIfDisconnected
-                && p.IsThrottleLockedEngine()
-                && p.IsDecoupledInStage(p.inverseStage)
-                && p.isControlSource == Vessel.ControlLevel.NONE;
+                   && p.IsThrottleLockedEngine()
+                   && p.IsDecoupledInStage(p.inverseStage)
+                   && p.isControlSource == Vessel.ControlLevel.NONE;
         }
 
-        public static bool IsEngine(this Part p) => p.FindModuleImplementing<ModuleEngines>() != null;
+        public static bool IsEngine(this Part p)
+        {
+            return p.FindModuleImplementing<ModuleEngines>() != null;
+        }
 
         public static bool IsThrottleLockedEngine(this Part p)
         {
             ModuleEngines me = p.FindModuleImplementing<ModuleEngines>();
-            return (me != null && me.throttleLocked);
+            return me != null && me.throttleLocked;
         }
 
-        public static bool IsParachute(this Part p) => p.FindModuleImplementing<ModuleParachute>() != null;
+        public static bool IsParachute(this Part p)
+        {
+            return p.FindModuleImplementing<ModuleParachute>() != null;
+        }
 
-        public static bool IsLaunchClamp(this Part p) => p.FindModuleImplementing<LaunchClamp>() != null;
+        public static bool IsLaunchClamp(this Part p)
+        {
+            return p.FindModuleImplementing<LaunchClamp>() != null;
+        }
 
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
@@ -198,7 +282,7 @@ namespace MuMech
 
         public static bool IsPhysicallySignificant(this Part p)
         {
-            bool physicallySignificant = (p.physicalSignificance != Part.PhysicalSignificance.NONE);
+            bool physicallySignificant = p.physicalSignificance != Part.PhysicalSignificance.NONE;
 
             // part.PhysicsSignificance is not initialized in the Editor for all part. but physicallySignificant is useful there.
             if (HighLogic.LoadedSceneIsEditor)
@@ -215,15 +299,15 @@ namespace MuMech
 
             public Vector3Pair(Vector3 point1, Vector3 point2)
             {
-                this.p1 = point1;
-                this.p2 = point2;
+                p1 = point1;
+                p2 = point2;
             }
         }
 
         public static Vector3Pair GetBoundingBox(this Part part)
         {
-            Vector3 minBounds = new Vector3();
-            Vector3 maxBounds = new Vector3();
+            var minBounds = new Vector3();
+            var maxBounds = new Vector3();
 
             foreach (Transform t in part.FindModelComponents<Transform>())
             {
@@ -235,7 +319,7 @@ namespace MuMech
                 if (m == null)
                     continue;
 
-                var matrix = part.vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
+                Matrix4x4 matrix = part.vessel.transform.worldToLocalMatrix * t.localToWorldMatrix;
 
                 foreach (Vector3 vertex in m.vertices)
                 {
@@ -251,8 +335,5 @@ namespace MuMech
 
             return new Vector3Pair(maxBounds, minBounds);
         }
-
-
-
     }
 }

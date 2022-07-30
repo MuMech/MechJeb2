@@ -48,6 +48,18 @@ namespace MechJebLib.Utils
         {
             return x < min ? min : x > max ? max : x;
         }
+        
+        /// <summary>
+        ///     Clamp first value between min and max by truncating.
+        /// </summary>
+        /// <param name="x">Value to clamp</param>
+        /// <param name="min">Min value</param>
+        /// <param name="max">Max value</param>
+        /// <returns>Clamped value</returns>
+        public static int Clamp(int x, int min, int max)
+        {
+            return x < min ? min : x > max ? max : x;
+        }
 
         /// <summary>
         ///     Clamps the value between 0 and 1.
@@ -207,7 +219,7 @@ namespace MechJebLib.Utils
         {
             return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
         }
-        
+
         /// <summary>
         ///     Debugging helper for printing double arrays to logs
         /// </summary>
@@ -231,6 +243,31 @@ namespace MechJebLib.Utils
 
 
             return sb.ToString();
+        }
+
+        private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+        private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y" };
+
+        public static string ToSI(this double d, int maxPrecision = -99, int sigFigs = 4)
+        {
+            if (!IsFinite(d)) return d.ToString();
+
+            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d)));
+
+            int index = d != 0 ? (int)Math.Abs(Math.Floor(exponent / 3.0)) : 0; // index of the SI prefix
+            if (index > 8) index = 8;                                           // there's only 8 SI prefixes
+
+            int siExponent = Math.Sign(exponent) * index * 3; // the SI prefix exponent
+
+            string unit = exponent < 0 ? _negPrefix[index] : _posPrefix[index];
+
+            d /= Math.Pow(10, siExponent); // scale d by the SI prefix exponent
+
+            int wholeDigits = d != 0 ? (int)Math.Floor(Math.Log10(Math.Abs(d))) + 1 : 1;
+
+            int decimalDigits = Clamp(sigFigs - wholeDigits, 0, siExponent - maxPrecision);
+
+            return $"{d.ToString("F" + decimalDigits)} {unit}";
         }
     }
 }

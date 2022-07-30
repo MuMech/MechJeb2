@@ -1,3 +1,9 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 #nullable enable
 
 using System;
@@ -24,6 +30,7 @@ namespace MechJebLib.PVG
             private          V3           _u0;
             private          double       _t0;
             private          double       _mu;
+            private          double       _rbody;
             private          TerminalType _terminalType;
             private          double       _gammaT;
             private          double       _rT;
@@ -37,7 +44,7 @@ namespace MechJebLib.PVG
             public Optimizer Build()
             {
                 double m0 = _phases[0].m0;
-                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu);
+                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody);
                 foreach (Phase phase in _phases)
                 {
                     phase.Rescale(problem.Scale);
@@ -49,13 +56,14 @@ namespace MechJebLib.PVG
                 return solver;
             }
 
-            public OptimizerBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu)
+            public OptimizerBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody)
             {
-                _r0 = r0;
-                _v0 = v0;
-                _u0 = u0.normalized;
-                _t0 = t0;
-                _mu = mu;
+                _r0    = r0;
+                _v0    = v0;
+                _u0    = u0.normalized;
+                _t0    = t0;
+                _mu    = mu;
+                _rbody = rbody;
                 return this;
             }
 

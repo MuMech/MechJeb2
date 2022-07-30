@@ -1,4 +1,12 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 using MechJebLib.Primitives;
+
+#nullable enable
 
 namespace MechJebLib.PVG
 {
@@ -26,13 +34,14 @@ namespace MechJebLib.PVG
                 _ascent._phases.Add(Phase.NewCoast(m0, ct, kspStage));
             }
             
-            public AscentBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu)
+            public AscentBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody)
             {
-                _ascent._r0 = r0;
-                _ascent._v0 = v0;
-                _ascent._u0 = u0.normalized;
-                _ascent._t0 = t0;
-                _ascent._mu = mu;
+                _ascent._r0    = r0;
+                _ascent._v0    = v0;
+                _ascent._u0    = u0.normalized;
+                _ascent._t0    = t0;
+                _ascent._mu    = mu;
+                _ascent._rbody = rbody;
                 return this;
             }
 

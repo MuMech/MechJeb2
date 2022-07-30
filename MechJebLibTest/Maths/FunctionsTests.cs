@@ -1,4 +1,10 @@
-﻿using AssertExtensions;
+﻿/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
+using AssertExtensions;
 using Xunit;
 using MechJebLib.Maths;
 using MechJebLib.Primitives;
@@ -455,7 +461,7 @@ namespace MechJebLibTest.Maths
                 -2.308551508912105e+02
             );
 
-            (double sma, double ecc, double inc, double argp, double lan, double tanom) = Functions.KeplerianFromStateVectors(mu, r, v);
+            (double sma, double ecc, double inc, double lan, double argp, double tanom) = Functions.KeplerianFromStateVectors(mu, r, v);
             sma.ShouldEqual(smaEx, 1e-15);
             ecc.ShouldEqual(eccEx, 1e-14);
             inc.ShouldEqual(incEx, 1e-15);

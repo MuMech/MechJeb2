@@ -7,10 +7,11 @@ namespace MuMech
     {
         public MechJebModuleAscentPVGStagingMenu(MechJebCore core) : base(core)
         {
+            hidden = true;
         }
         
         private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
-        
+
         public override void OnModuleEnabled()
         {
             base.OnModuleEnabled();
@@ -114,14 +115,16 @@ namespace MuMech
             if (coastEnd && _coastSetting != 1)
                 _coastSetting = 1;
             GUILayout.EndHorizontal();
-            GuiUtils.SimpleTextBox("Max Coast: ", _ascentSettings.MaxCoast, "s");
+            GuiUtils.SimpleTextBox("Max Coast: ", _ascentSettings.MaxCoast, "s", width: 60);
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedCoast, "Fixed Coast Length:", _ascentSettings.FixedCoastLength, "s", width: 40);
-            GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s");
+            GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", width: 30);
             GuiUtils.SimpleTextBox("Pre-stage time: ", _ascentSettings.PreStageTime, "s");
-            GuiUtils.SimpleTextBox("Spinup stage: ", _ascentSettings.SpinupStage);
-            GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime);
-
-            // CoastDuring
+            GUILayout.BeginHorizontal();
+            GuiUtils.SimpleTextBox("Spinup stage: ", _ascentSettings.SpinupStage, width: 30);
+            GuiUtils.SimpleTextBox("ω: ", _ascentSettings.SpinupAngularVelocity, "rpm", width: 30);
+            GUILayout.EndHorizontal();
+            GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime, "s", width: 60);
+            core.guidance.ShouldDrawTrajectory = GUILayout.Toggle(core.guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");
             
             GUILayout.EndVertical();
 
@@ -147,7 +150,7 @@ namespace MuMech
 
         public override string IconName()
         {
-            return "PVG Staging Editor";
+            return "PVGStagingEditor";
         }
     }
 }

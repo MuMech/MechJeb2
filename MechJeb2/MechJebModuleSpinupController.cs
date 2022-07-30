@@ -46,7 +46,7 @@ namespace MuMech
             if (vessel.currentStage > ActivationStage)
             {
                 // wait for at least a second after stabilizing to ensure that if we get kicked by
-                // aerodynamics that we don't think we're stable due to the very first tick.
+                // aerodynamics on staging that we don't think we're stable due to the very first tick.
                 _startTime = vesselState.time + 1.0;
                 return;
             }

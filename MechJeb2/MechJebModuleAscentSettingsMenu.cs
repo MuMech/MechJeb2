@@ -7,6 +7,7 @@ namespace MuMech
     {
         public MechJebModuleAscentSettingsMenu(MechJebCore core) : base(core)
         {
+            hidden = true;
         }
         
         private MechJebModuleAscentSettings      _ascentSettings => core.ascentSettings;
@@ -14,7 +15,7 @@ namespace MuMech
         
         private readonly string _climbString = $"{CachedLocalizer.Instance.MechJeb_Ascent_label22}: ";
         private readonly string _turnString  = $"{CachedLocalizer.Instance.MechJeb_Ascent_label23}: ";
-        
+
         private void ShowAscentSettingsGUIElements()
         {
             Profiler.BeginSample("MJ.GUIWindow.AscentItems");

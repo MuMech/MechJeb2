@@ -1,9 +1,14 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using AssertExtensions;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 using MuMech.MathJ;
 using Xunit;
 using static MechJebLib.Utils.Statics;

@@ -1,4 +1,11 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 using System;
+using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Integrators;
 using static MechJebLib.Utils.Statics;
@@ -33,7 +40,6 @@ namespace MechJebLib.PVG
         public bool           Infinite = false;
         public bool           Unguided;
         public bool           MassContinuity = false;
-        public bool           First          = false;
         public bool           LastFreeBurn   = false;
         public int            KSPStage;
         public IPVGIntegrator Integrator;
@@ -100,6 +106,19 @@ namespace MechJebLib.PVG
         public static Phase NewCoast(double m0, double ct, int kspStage)
         {
             return new Phase(m0, 0, 0, m0, ct, kspStage);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append($"stage: {KSPStage} m0: {m0} bt: {bt}");
+            if (OptimizeTime)
+                sb.Append(" (optimized)");
+            if (Infinite)
+                sb.Append(" (infinite)");
+            if (Unguided)
+                sb.Append(" (unguided)");
+            return sb.ToString();
         }
     }
 }

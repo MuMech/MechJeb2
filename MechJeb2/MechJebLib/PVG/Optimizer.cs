@@ -1,7 +1,14 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 #nullable enable
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using MechJebLib.Primitives;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -10,13 +17,14 @@ namespace MechJebLib.PVG
 {
     public partial class Optimizer : IDisposable
     {
-        public           double                   ZnormTerminationLevel = 1e-9;
-        public           double                   Znorm;
-        public           int                      MaxIter    { get; set; } = 20000; // this could maybe be pushed down
-        public           double                   lmEpsx     { get; set; } = 1e-10; // we terminate manually at 1e-9 so could lower this?
-        public           double                   lmDiffStep { get; set; } = 1e-9;
-        public           int                      LmStatus;
-        public           int                      LmIterations;
+        public double ZnormTerminationLevel = 1e-9;
+        public double Znorm;
+        public int    MaxIter          { get; set; } = 20000; // this could maybe be pushed down
+        public double LmEpsx           { get; set; } = 1e-10; // we terminate manually at 1e-9 so could lower this?
+        public double LmDiffStep       { get; set; } = 1e-9;
+        public int    OptimizerTimeout { get; set; } = 5000; // milliseconds
+        public int    LmStatus;
+        public int    LmIterations;
         
         private readonly Problem                  _problem;
         private readonly List<Phase>              _phases;
@@ -24,8 +32,8 @@ namespace MechJebLib.PVG
         private readonly List<DD>                 _terminal = new List<DD>();
         private readonly List<DD>                 _residual = new List<DD>();
         private          int                      lastPhase => _phases.Count - 1;
-        private readonly alglib.minlmreport       rep = new alglib.minlmreport();
-        private readonly alglib.ndimensional_fvec ResidualHandle;
+        private readonly alglib.minlmreport       _rep = new alglib.minlmreport();
+        private readonly alglib.ndimensional_fvec _residualHandle;
         private          alglib.minlmstate        _state = new alglib.minlmstate();
         
 
@@ -33,7 +41,7 @@ namespace MechJebLib.PVG
         {
             _phases        = new List<Phase>(phases);
             _problem       = problem;
-            ResidualHandle = ResidualFunction;
+            _residualHandle = ResidualFunction;
         }
 
         private void ExpandArrays()
@@ -104,9 +112,9 @@ namespace MechJebLib.PVG
             using var yf = ArrayWrapper.Rent(_terminal[lastPhase]);
             using var z = ResidualWrapper.Rent(_residual[0]);
 
-            z.R        = y0.R - _problem.r0_bar;
-            z.V        = y0.V - _problem.v0_bar;
-            z.M        = y0.M - _problem.m0_bar;
+            z.R        = y0.R - _problem.R0Bar;
+            z.V        = y0.V - _problem.V0Bar;
+            z.M        = y0.M - _problem.M0Bar;
             z.Terminal = _problem.Terminal.TerminalConstraints(yf);
             z.Bt       = CalcBTConstraint(0);
             //z.Pm_transversality = yf_scratch[phases.Count - 1].Pm - 1;
@@ -161,13 +169,15 @@ namespace MechJebLib.PVG
             Znorm = Math.Sqrt(Znorm);
         }
 
-        private bool terminating = false;
+        private bool _terminating = false;
 
 
         internal void ResidualFunction(double[] yin, double[] zout, object? o)
         {
-            if (terminating)
+            if (_terminating)
                 return;
+            
+            _timeoutToken.ThrowIfCancellationRequested();
             
             CopyToInitial(yin);
             Shooting();
@@ -179,15 +189,8 @@ namespace MechJebLib.PVG
             if (Znorm < ZnormTerminationLevel)
             {
                 alglib.minlmrequesttermination(_state);
-                terminating = true;
+                _terminating = true;
             }
-        }
-
-        private bool IsCoastAfterJettison(int p)
-        {
-            if (p == 0 || p == lastPhase) return false;
-            //FIXME: make this a little less brittle
-            return _phases[p].Coast && _phases[p - 1].m0_bar != _phases[p + 1].m0_bar;
         }
 
         private void AnalyzePhases()
@@ -196,7 +199,6 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                _phases[p].First              = false;
                 _phases[p].LastFreeBurn       = false;
                 if (_phases[p].OptimizeTime && !_phases[p].Coast)
                     lastFreeBurnPhase = p;
@@ -204,13 +206,13 @@ namespace MechJebLib.PVG
 
             if (lastFreeBurnPhase >= 0)
                 _phases[lastFreeBurnPhase].LastFreeBurn = true;
-
-            _phases[0].First = true;
         }
+        
+        private CancellationToken _timeoutToken;
 
-        public Optimizer Run()
+        private void UnSafeRun()
         {
-            terminating = false;
+            _terminating = false;
             
             AnalyzePhases();
             ExpandArrays();
@@ -222,16 +224,36 @@ namespace MechJebLib.PVG
             for (int i = 0; i < yGuess.Length; i++)
                 yGuess[i] = _initial[i / ArrayWrapper.ARRAY_WRAPPER_LEN][i % ArrayWrapper.ARRAY_WRAPPER_LEN];
             
-            alglib.minlmcreatev(ArrayWrapper.ARRAY_WRAPPER_LEN * _phases.Count, yGuess, lmDiffStep, out _state);
-            alglib.minlmsetcond(_state, lmEpsx, MaxIter);
-            alglib.minlmoptimize(_state, ResidualHandle, null, null);
-            alglib.minlmresultsbuf(_state, ref yNew, rep);
-
-            LmStatus     = rep.terminationtype;
-            LmIterations = rep.iterationscount;
+            alglib.minlmcreatev(ArrayWrapper.ARRAY_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
+            alglib.minlmsetcond(_state, LmEpsx, MaxIter);
+            alglib.minlmoptimize(_state, _residualHandle, null, null);
+            alglib.minlmresultsbuf(_state, ref yNew, _rep);
             
-            if (rep.terminationtype != 8)
+            LmStatus     = _rep.terminationtype;
+            LmIterations = _rep.iterationscount;
+            
+            if (_rep.terminationtype != 8)
                 ResidualFunction(yNew, z, null);
+        }
+        
+        public Optimizer Run()
+        {
+            try
+            {
+                var  tokenSource = new CancellationTokenSource(); // FIXME: bit of garbage here
+                tokenSource.CancelAfter(OptimizerTimeout);
+                _timeoutToken = tokenSource.Token;
+                UnSafeRun();
+            }
+            catch (OperationCanceledException)
+            {
+                
+            }
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(_phases[p]);
+            }
             
             Debug.Log("solved initial: ");
             
@@ -274,9 +296,9 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R = _problem.r0_bar;
-                    y0.V = _problem.v0_bar;
-                    y0.M = _problem.m0_bar;
+                    y0.R = _problem.R0Bar;
+                    y0.V = _problem.V0Bar;
+                    y0.M = _problem.M0Bar;
                     y0.CopyTo(integArray);
                 }
                 else
@@ -335,8 +357,8 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R  = _problem.r0_bar;
-                    y0.V  = _problem.v0_bar;
+                    y0.R  = _problem.R0Bar;
+                    y0.V  = _problem.V0Bar;
                     y0.M  = phase.m0_bar;
                     y0.PV = pv0;
                     y0.PR = pr0;
@@ -362,6 +384,11 @@ namespace MechJebLib.PVG
                 lastDv =  yf.DV;
                 
                 t0     += tf;
+            }
+            
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(_phases[p]);
             }
             
             Debug.Log("bootstrap1 initial: ");
@@ -413,9 +440,9 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R  = _problem.r0_bar;
-                    y0.V  = _problem.v0_bar;
-                    y0.M  = _problem.m0_bar;
+                    y0.R  = _problem.R0Bar;
+                    y0.V  = _problem.V0Bar;
+                    y0.M  = _problem.M0Bar;
                     if (!phase.OptimizeTime)
                     {
                         y0.Bt = phase.bt_bar;
@@ -424,10 +451,10 @@ namespace MechJebLib.PVG
                     {
                         // FIXME: this needs to be smarter to deal with crazy rearrangement
                         // - e.g. if we're looking for a coast, we should probably go searching for the one coast
-                        y0.Bt = solution.Bt(p + segmentOffset, _problem.t0) / _problem.Scale.timeScale;
+                        y0.Bt = solution.Bt(p + segmentOffset, _problem.T0) / _problem.Scale.timeScale;
                     }
-                    y0.PV = solution.Pv(_problem.t0);
-                    y0.PR = solution.Pr(_problem.t0);
+                    y0.PV = solution.Pv(_problem.T0);
+                    y0.PR = solution.Pr(_problem.T0);
                     y0.CopyTo(integArray);
                     integ.DV = 0;
                 }
@@ -442,7 +469,7 @@ namespace MechJebLib.PVG
                     {
                         // FIXME: this needs to be smarter to deal with crazy rearrangement
                         // - e.g. if we're looking for a coast, we should probably go searching for the one coast
-                        y0.Bt = solution.Bt(p + segmentOffset, _problem.t0) / _problem.Scale.timeScale;
+                        y0.Bt = solution.Bt(p + segmentOffset, _problem.T0) / _problem.Scale.timeScale;
                     }
                     y0.M  = phase.m0_bar;
                     _initial[p].CopyTo(integArray);
@@ -463,6 +490,11 @@ namespace MechJebLib.PVG
             
             CalculateResiduals();
 
+            for(int p = 0; p <= lastPhase; p++)
+            {
+                Debug.Log(_phases[p]);
+            }
+            
             Debug.Log("bootstrap2 initial: ");
             
             for(int p = 0; p <= lastPhase; p++)
@@ -490,7 +522,7 @@ namespace MechJebLib.PVG
         private V3 GetIntertialHeading(int p, V3 pv0)
         {
             if (p == 0)
-                return _problem.u0;
+                return _problem.U0;
 
             if (_phases[p - 1].Unguided)
                 return _phases[p - 1].u0;

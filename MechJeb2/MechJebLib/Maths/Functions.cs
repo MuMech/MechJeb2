@@ -112,7 +112,9 @@ namespace MechJebLib.Maths
         public static double ApoapsisFromKeplerian(double sma, double ecc, bool hyperbolic = true)
         {
             double apo = sma * (1 + ecc);
-            return apo < 0 ? double.MaxValue : apo;
+            if (apo >= 0)
+                return apo;
+            return hyperbolic ? apo : double.MaxValue;
         }
 
         public static double PeriapsisFromStateVectors(double mu, V3 r, V3 v)
@@ -617,7 +619,7 @@ namespace MechJebLib.Maths
             double argp = Clamp2Pi(ecc > EPS ? Math.Atan2(h, xk) - lan : 0.0);
             double tanom = Clamp2Pi(xlambdot - lan - argp);
 
-            return (sma, ecc, inc, argp, lan, tanom);
+            return (sma, ecc, inc, lan, argp, tanom);
         }
 
         // Danby's method

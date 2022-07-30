@@ -1,3 +1,9 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
 using AssertExtensions;
 using MechJebLib.Maths;
 using MechJebLib.Primitives;
@@ -18,13 +24,14 @@ namespace PVG
             double t0 = 0;
             double PeR = 6.371e+6 + 185e+3;
             double ApR = 6.371e+6 + 4306022;
+            double rbody = 6.371e+6;
             double incT = Deg2Rad(28.608);
             double mu = 3.986004418e+14;
 
             Optimizer pvg = Ascent.Builder()
                 .AddStageUsingBurnTime(153180, 2194400, 296, 156, 4)
                 .AddStageUsingBurnTime(31980, 443700, 315, 180, 3, true)
-                .Initial(r0, v0, r0.normalized, t0, mu)
+                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                 .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), false, false)
                 .Build()
                 .Run();
@@ -33,7 +40,7 @@ namespace PVG
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double argpf, double lanf, double tanof) =
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
                 Functions.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(0).ShouldEqual(r0, EPS);
@@ -66,13 +73,14 @@ namespace PVG
             double t0 = 0;
             double PeR = 6.371e+6 + 185e+3;
             double ApR = 6.371e+6;
+            double rbody = 6.371e+6;
             double incT = Deg2Rad(28.608);
             double mu = 3.986004418e+14;
 
             Optimizer pvg = Ascent.Builder()
                 .AddStageUsingBurnTime(157355.487476332, 2340000 ,301.817977905273, 148.102380138703, 4)
                 .AddStageUsingBurnTime(32758.6353093992, 456100.006103516, 315.000112652779 ,178.63040653022, 3, true)
-                .Initial(r0, v0, r0.normalized, t0, mu)
+                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                 .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), false, false)
                 .Build()
                 .Run();
@@ -81,7 +89,7 @@ namespace PVG
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double argpf, double lanf, double tanof) =
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
                 Functions.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(0).ShouldEqual(r0, EPS);
