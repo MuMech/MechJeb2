@@ -160,7 +160,10 @@ namespace MuMech
                 }
                 //aim along the node
                 ManeuverNode node = hasNodes ? vessel.patchedConicSolver.maneuverNodes[0] : null;
-                if (hasNodes)
+                double timeToNode = hasNodes ? node.UT - vesselState.time : -1;
+                // Principia removes the node after it times out, even if we have not finished burning.
+                // We have to guard against accidentally aiming along a subsequent node.
+                if (hasNodes && (!burnTriggered || (burnTriggered && timeToNode < 0)))
                 {
                     core.attitude.attitudeTo(Vector3d.forward,AttitudeReference.MANEUVER_NODE_COT,this);
                 }
@@ -176,7 +179,6 @@ namespace MuMech
                 double halfBurnTime, spool;
                 BurnTime(remainingDeltaV,out halfBurnTime,out spool);
 
-                double timeToNode = hasNodes ? node.UT - vesselState.time : -1;
                 //print("$$$$$$$ Executor: Node in " + timeToNode + ", spool " + spool.ToString("F3"));
                 if ((halfBurnTime > 0 && timeToNode <= spool) || timeToNode < 0)
                 {
@@ -328,7 +330,7 @@ namespace MuMech
             }
         }
 
-        
+
 
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
         {
