@@ -163,7 +163,7 @@ namespace MuMech
                 double timeToNode = hasNodes ? node.UT - vesselState.time : -1;
                 // Principia removes the node after it times out, even if we have not finished burning.
                 // We have to guard against accidentally aiming along a subsequent node.
-                if (hasNodes && (!burnTriggered || (burnTriggered && timeToNode < 0)))
+                if (hasNodes && (!burnTriggered || timeToNode < 0))
                 {
                     core.attitude.attitudeTo(Vector3d.forward,AttitudeReference.MANEUVER_NODE_COT,this);
                 }
