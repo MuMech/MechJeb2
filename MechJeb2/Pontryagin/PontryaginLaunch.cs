@@ -28,7 +28,7 @@ namespace MuMech {
             this.rTm = rTm / r_scale;
             this.vTm = vTm / v_scale;
             this.gammaT = gammaT;
-            this.incT = incT;
+            this.incT = Math.Abs(incT);
             this.LANT = LANT;
             bcfun = flightangle5constraint;
             bctype = BCType.FLIGHTANGLE5;
@@ -72,7 +72,7 @@ namespace MuMech {
             this.rTm = rTm / r_scale;
             this.vTm = vTm / v_scale;
             this.gammaT = gammaT;
-            this.incT = incT;
+            this.incT = Math.Abs(incT);
             bcfun = flightangle4constraint;
             bctype = BCType.FLIGHTANGLE4;
         }
@@ -112,7 +112,7 @@ namespace MuMech {
         {
             this.smaT = sma / r_scale;
             this.eccT = ecc;
-            this.incT = inc;
+            this.incT = Math.Abs(inc);
             bcfun = keplerian3constraint;
             bctype = BCType.KEPLER3;
         }
@@ -234,7 +234,7 @@ namespace MuMech {
         {
             this.smaT = sma / r_scale;
             this.eccT = ecc;
-            this.incT = inc;
+            this.incT = Math.Abs(inc);
             this.LANT = LAN;
             bcfun = keplerian4constraintArgPfree;
             bctype = BCType.KEPLER4;
@@ -277,7 +277,7 @@ namespace MuMech {
         {
             this.smaT = sma / r_scale;
             this.eccT = ecc;
-            this.incT = inc;
+            this.incT = Math.Abs(inc);
             this.LANT = LAN;
             this.ArgPT = ArgP;
             bcfun = keplerian5constraint;
@@ -340,7 +340,7 @@ namespace MuMech {
             this.rTm = rTm / r_scale;
             this.gammaT = gammaT;
             this.numStages = numStages;
-            this.incT = incT;
+            this.incT = Math.Abs(incT);
             bcfun = flightangle3constraintMAXE;
         }
 
@@ -375,7 +375,7 @@ namespace MuMech {
         {
             this.rTm = rTm / r_scale;
             this.gammaT = gammaT;
-            this.incT = incT;
+            this.incT = Math.Abs(incT);
             this.LANT = LANT;
             this.numStages = numStages;
             bcfun = flightangle4constraintMAXE;
@@ -431,7 +431,7 @@ namespace MuMech {
 
             // update initial position and guess for first arc (uses effective thrust to deal with ullage motors)
             double ve = g0 * stages[0].Isp;
-            tgo = ve * stages[0].StartMass / stages[0].EffectiveThrust * ( 1 - Math.Exp(-dV/ve) );
+            tgo = ve * stages[0].StartMass / stages[0].MaxThrust * ( 1 - Math.Exp(-dV/ve) );
             tgo_bar = tgo / t_scale;
 
             // initialize overall burn time

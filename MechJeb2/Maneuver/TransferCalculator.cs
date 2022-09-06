@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using MechJebLib.Maths;
 using UnityEngine;
 
 namespace MuMech
@@ -114,14 +115,17 @@ namespace MuMech
             Vector3d r2 = _destination.getRelativePositionAtUT(t1);
             Vector3d v2_1 = _destination.getOrbitalVelocityAtUT(t1);
 
-            Vector3d v1 = v1_0;
-            Vector3d v2 = v2_1;
+            Vector3d v1;
+            Vector3d v2;
             try
             {
-                GoodingSolver.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, v2_1, dt, 0, out v1, out v2);
+
+                Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, dt, 0, out v1, out v2);
             }
             catch
             {
+                v1 = v1_0;
+                v2 = v2_1;
                 // ignored
             }
 
@@ -267,7 +271,7 @@ namespace MuMech
         private void FindSOI(ManeuverParameters maneuver, ref double utArrival)
         {
             const int VARS = 5;
-            const double DIFFSTEP = 1e-6;
+            const double DIFFSTEP = 1e-10;
             const double EPSX = 1e-4;
             const int MAXITS = 1000;
             const int EQUALITYCONSTRAINTS = 3;
@@ -334,13 +338,30 @@ namespace MuMech
         private void AdjustPeriapsis(ManeuverParameters maneuver, ref double utArrival)
         {
             const int VARS = 3;
-            const double DIFFSTEP = 1e-8;
-            const double EPSX = 1e-7;
+            const double DIFFSTEP = 1e-10;
+            const double EPSX = 1e-4;
             const int MAXITS = 1000;
             const int EQUALITYCONSTRAINTS = 1;
             const int INEQUALITYCONSTRAINTS = 0;
 
             double[] x = new double[VARS];
+
+            Debug.Log("epoch: " + Planetarium.GetUniversalTime());
+            Debug.Log("initial orbit around source: "+ _initialOrbit.MuString());
+            Debug.Log("source: " + _initialOrbit.referenceBody.orbit.MuString());
+            Debug.Log("target: " + _targetBody.orbit.MuString());
+            Debug.Log("source mu: " + _initialOrbit.referenceBody.gravParameter);
+            Debug.Log("target mu: " + _targetBody.gravParameter);
+            Debug.Log("sun mu: " + _initialOrbit.referenceBody.referenceBody.gravParameter);
+            Debug.Log("maneuver guess dV: " + maneuver.dV);
+            Debug.Log("maneuver guess UT: " + maneuver.UT);
+            Debug.Log("arrival guess UT: " + utArrival);
+            _initialOrbit.GetOrbitalStateVectorsAtUT(maneuver.UT,out Vector3d r1,out Vector3d v1);
+            Debug.Log($"initial orbit at {maneuver.UT} x = {r1}; v = {v1}");
+            _initialOrbit.referenceBody.orbit.GetOrbitalStateVectorsAtUT(maneuver.UT,out Vector3d r2,out Vector3d v2);
+            Debug.Log($"source at {maneuver.UT} x = {r2}; v = {v2}");
+            _targetBody.orbit.GetOrbitalStateVectorsAtUT(utArrival,out Vector3d r3,out Vector3d v3);
+            Debug.Log($"source at {utArrival} x = {r3}; v = {v3}");
 
             _impulseScale = maneuver.dV.magnitude;
             _timeScale    = _initialOrbit.period;

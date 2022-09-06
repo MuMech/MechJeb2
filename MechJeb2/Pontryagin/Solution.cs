@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MuMech.MathJ;
+using MechJebLib.Structs;
 
 namespace MuMech
 {
@@ -269,7 +269,7 @@ namespace MuMech
 
         public class Segment
         {
-            private readonly CN     _interpolant;
+            private readonly Hn     _interpolant;
             public readonly  double Tmin;
             public readonly  double Tmax;
 
@@ -278,7 +278,7 @@ namespace MuMech
                 return _interpolant.Evaluate(tbar)[i];
             }
 
-            public Segment(CN interpolant)
+            public Segment(Hn interpolant)
             {
                 _interpolant = interpolant;
 
@@ -287,7 +287,7 @@ namespace MuMech
             }
         }
 
-        public void AddSegment(CN interpolant, Arc a)
+        public void AddSegment(Hn interpolant, Arc a)
         {
             segments.Add(new Segment(interpolant));
             arcs.Add(a);

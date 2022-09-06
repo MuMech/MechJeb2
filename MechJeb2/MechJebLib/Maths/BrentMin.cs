@@ -1,69 +1,58 @@
-#nullable enable
-using System;
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
 
-namespace MuMech
+using System;
+using System.Diagnostics.CodeAnalysis;
+using static MechJebLib.Utils.Statics;
+
+#nullable enable
+
+namespace MechJebLib.Maths
 {
     public static class BrentMin
     {
-        // BrentRoot's 1-dimensional derivative-free local minimization method
+        // Brent's 1-dimensional derivative-free local minimization method
         //
         // Uses golden section search and successive parabolic interpolation.
         //
-        // f - 1-dimensional BrentFun function to find the minimum of
-        // a - lower endpoint of the interval
-        // b - upper endpoint of the interval
+        // f - 1-dimensional BrentFun function
+        // xmin - lower endpoint of the interval
+        // xmax - upper endpoint of the interval
         // rtol - tolerance to solve to (1e-4 or something like that)
-        // x - output of solved value
-        // y - output of the function at the solved value
         // o - object to be passed to BrentFun for extra data (may be null)
         // maxiter - cap on iterations (will throw TimeoutException if exceeded)
+        // fx - output of solved value
+        // y - output of the function at the solved value
         //
-        public static void Minimize(Func<double, object?, double> f, double a, double b, double tol, out double x, out double y, object o,
+        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
+        public static (double x, double fx) Solve(Func<double, object?, double> f, double xmin, double xmax, object? o = null, double rtol = 1e-9,
             int maxiter = 50)
         {
-            double c;
+            double c = 0.5 * (3.0 - Math.Sqrt(5.0)); //  C is the square of the inverse of the golden ratio.
             double d = 0;
-            double e;
-            double eps;
-            double fu;
-            double fv;
-            double fw;
-            double fx;
-            double m;
-            double p;
-            double q;
-            double r;
-            double sa;
-            double sb;
-            double t2;
-            double t;
-            double u;
-            double v;
-            double w;
+            double e = 0.0;
+            double eps = Math.Sqrt(EPS);
+            double sa = xmin;
+            double sb = xmax;
+
+            double x = sa + c * (xmax - xmin);
+
+            double w = x;
+            double v = w;
+            double fx = f(x, o);
+            double fw = fx;
+            double fv = fw;
+
             int i = 0;
-
-            //
-            //  C is the square of the inverse of the golden ratio.
-            //
-            c = 0.5 * (3.0 - Math.Sqrt(5.0));
-
-            eps = Math.Sqrt(MuUtils.DBL_EPSILON);
-
-            sa = a;
-            sb = b;
-            x  = sa + c * (b - a);
-            w  = x;
-            v  = w;
-            e  = 0.0;
-            fx = f(x, o);
-            fw = fx;
-            fv = fw;
 
             while (true)
             {
-                m  = 0.5 * (sa + sb);
-                t  = eps * Math.Abs(x) + tol;
-                t2 = 2.0 * t;
+                double m = 0.5 * (sa + sb);
+                double t = eps * Math.Abs(x) + rtol;
+                double t2 = 2.0 * t;
                 //
                 //  Check the stopping criterion.
                 //
@@ -71,9 +60,9 @@ namespace MuMech
                 //
                 //  Fit a parabola.
                 //
-                r = 0.0;
-                q = r;
-                p = q;
+                double r = 0.0;
+                double q = r;
+                double p = q;
 
                 if (t < Math.Abs(e))
                 {
@@ -86,6 +75,8 @@ namespace MuMech
                     r = e;
                     e = d;
                 }
+
+                double u;
 
                 if (Math.Abs(p) < Math.Abs(0.5 * q * r) &&
                     q * (sa - x) < p &&
@@ -129,7 +120,7 @@ namespace MuMech
                 else
                     u = x - t;
 
-                fu = f(u, o);
+                double fu = f(u, o);
                 //
                 //  Update A, B, V, W, and X.
                 //
@@ -160,6 +151,7 @@ namespace MuMech
                         w  = u;
                         fw = fu;
                     }
+
                     else if (fu <= fv || v == x || v == w)
                     {
                         v  = u;
@@ -168,10 +160,10 @@ namespace MuMech
                 }
 
                 if (i++ >= maxiter)
-                    throw new TimeoutException("BrentRoot's minimization method: maximum iterations exceeded");
+                    throw new TimeoutException("Brent's minimization method: maximum iterations exceeded");
             }
 
-            y = fx;
+            return (x, fx);
         }
     }
 }

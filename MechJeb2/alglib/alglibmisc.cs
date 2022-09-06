@@ -1,5 +1,5 @@
-﻿/*************************************************************************
-ALGLIB 3.18.0 (source code generated 2021-10-25)
+/*************************************************************************
+ALGLIB 3.19.0 (source code generated 2022-06-07)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -56,7 +56,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private readonly hqrnd.hqrndstate _innerobj;
+        private hqrnd.hqrndstate _innerobj;
         public hqrnd.hqrndstate innerobj { get { return _innerobj; } }
         public hqrndstate(hqrnd.hqrndstate obj)
         {
@@ -374,7 +374,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private readonly xdebug.xdebugrecord1 _innerobj;
+        private xdebug.xdebugrecord1 _innerobj;
         public xdebug.xdebugrecord1 innerobj { get { return _innerobj; } }
         public xdebugrecord1(xdebug.xdebugrecord1 obj)
         {
@@ -1159,7 +1159,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private readonly nearestneighbor.kdtreerequestbuffer _innerobj;
+        private nearestneighbor.kdtreerequestbuffer _innerobj;
         public nearestneighbor.kdtreerequestbuffer innerobj { get { return _innerobj; } }
         public kdtreerequestbuffer(nearestneighbor.kdtreerequestbuffer obj)
         {
@@ -1191,7 +1191,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private readonly nearestneighbor.kdtree _innerobj;
+        private nearestneighbor.kdtree _innerobj;
         public nearestneighbor.kdtree innerobj { get { return _innerobj; } }
         public kdtree(nearestneighbor.kdtree obj)
         {

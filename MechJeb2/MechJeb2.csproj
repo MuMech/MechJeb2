@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Net.Compilers.Toolset.4.0.1\build\Microsoft.Net.Compilers.Toolset.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.Toolset.4.0.1\build\Microsoft.Net.Compilers.Toolset.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -64,7 +63,6 @@
     <Compile Include="FuelStats.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="GLUtils.cs" />
-    <Compile Include="GoodingSolver.cs" />
     <Compile Include="GuiUtils.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="LandingAutopilot\CoastToDeceleration.cs" />
@@ -99,21 +97,26 @@
     <Compile Include="Maneuver\TimeSelector.cs" />
     <Compile Include="Maneuver\TransferCalculator.cs" />
     <Compile Include="MathExtensions.cs" />
-    <Compile Include="MathJ\AVL.cs" />
-    <Compile Include="MathJ\BrentMin.cs" />
-    <Compile Include="MathJ\BrentRoot.cs" />
-    <Compile Include="MathJ\CN.cs" />
-    <Compile Include="MathJ\Curve.cs" />
     <Compile Include="MathJ\Event.cs" />
     <Compile Include="MathJ\DormandPrince.cs" />
-    <Compile Include="MathJ\Functions.cs" />
-    <Compile Include="MathJ\ObjectPool.cs" />
     <Compile Include="MathJ\ODE.cs" />
     <Compile Include="MathJ\ODESolver.cs" />
-    <Compile Include="MathJ\Utils.cs" />
     <Compile Include="Matrix3x3d.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
+    <Compile Include="MechJebLib\Maths\BrentMin.cs" />
+    <Compile Include="MechJebLib\Maths\BrentRoot.cs" />
+    <Compile Include="MechJebLib\Maths\Functions.cs" />
+    <Compile Include="MechJebLib\Maths\Gooding.cs" />
+    <Compile Include="MechJebLib\Maths\Shepperd.cs" />
+    <Compile Include="MechJebLib\Structs\H1.cs" />
+    <Compile Include="MechJebLib\Structs\H3.cs" />
+    <Compile Include="MechJebLib\Structs\HBase.cs" />
+    <Compile Include="MechJebLib\Structs\Hn.cs" />
+    <Compile Include="MechJebLib\Utils\Check.cs" />
+    <Compile Include="MechJebLib\Utils\ObjectPool.cs" />
+    <Compile Include="MechJebLib\Utils\Statics.cs" />
+    <Compile Include="MechJebLib\Utils\DDArray.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
     <Compile Include="MechJebModuleAirplaneGuidance.cs" />
     <Compile Include="MechJebModuleAscentAutopilot.cs" />
@@ -226,7 +229,6 @@
     <Compile Include="ScriptsModule\MechJebModuleScriptActionWhile.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionsList.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptCondition.cs" />
-    <Compile Include="Shepperd.cs" />
     <Compile Include="SpaceMath.cs" />
     <Compile Include="ToolbarWrapper.cs" />
     <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
@@ -254,7 +256,6 @@
   <ItemGroup>
     <None Include="copy_build.bat" />
     <None Include="copy_build.sh" />
-    <None Include="packages.config" />
     <None Include="Properties\shader" />
     <None Include="Properties\shader2" />
     <None Include="Properties\shader3" />
@@ -273,10 +274,6 @@
     <Reference Include="mscorlib">
     </Reference>
     <Reference Include="System">
-    </Reference>
-    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
-      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System.Core">
     </Reference>
@@ -325,18 +322,32 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="IDisposableAnalyzers">
+      <Version>4.0.2</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset">
+      <Version>4.2.0</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="SonarAnalyzer.CSharp">
+      <Version>8.41.0.50478</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.Buffers">
+      <Version>4.5.1</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">
     <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;" />
   </Target>
   <Target Name="AfterBuild" Condition=" '$(OS)' == '' ">
     <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)'" />
-  </Target>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.Toolset.4.0.1\build\Microsoft.Net.Compilers.Toolset.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.Toolset.4.0.1\build\Microsoft.Net.Compilers.Toolset.props'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

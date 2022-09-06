@@ -25,6 +25,11 @@ namespace MuMech
             return new Vector3d(Math.Sqrt(vector.x), Math.Sqrt(vector.y), Math.Sqrt(vector.z));
         }
 
+        public static double MaxMagnitude(this Vector3d vector)
+        {
+            return Math.Max(Math.Max(Math.Abs(vector.x),Math.Abs(vector.y)),Math.Abs(vector.z));
+        }
+
         public static Vector3d Reorder(this Vector3d vector, int order)
         {
             switch (order)

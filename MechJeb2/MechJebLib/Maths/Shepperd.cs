@@ -1,9 +1,16 @@
-using System;
-using UnityEngine;
-using System.Collections.Generic;
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
 
-namespace MuMech {
-    public class Shepperd {
+using System;
+using MuMech;
+
+#nullable enable
+
+namespace MechJebLib.Maths {
+    public static class Shepperd {
         public static void Solve(double mu, double tau, Vector3d ri, Vector3d vi, out Vector3d rf, out Vector3d vf)
         {
             double tolerance = 1.0e-12;

@@ -33,8 +33,8 @@ MechJeb2 is a mod for the game Kerbal Space Program. To learn how to use it, [vi
 
 #### Download
 
-Download from Curse:
-    <https://www.curseforge.com/kerbal/ksp-mods/mechjeb/download>
+Download from Jenkins:
+    <https://ksp.sarbian.com/jenkins/job/MechJeb2-Release/>
 
 #### Unpack
 
@@ -146,3 +146,6 @@ make install
 ## License
 
 Licensed under the [GNU General Public License, Version 3](LICENSE.md).
+
+Portions Dual-Licensed under the [GNU General Public License, Version2](GPLv2-LICENSE.md) and [MIT License](MIT-LICENSE.md), where it is documented in the affected source code headers.
+

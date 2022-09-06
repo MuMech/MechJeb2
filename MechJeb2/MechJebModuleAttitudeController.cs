@@ -312,6 +312,14 @@ namespace MuMech
                 : 0;
         }
 
+        public Vector3d targetAttitude()
+        {
+            if (enabled)
+                return attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward;
+
+            return Vector3d.zero;
+        }
+
         public override void OnFixedUpdate()
         {
             steeringError.value = attitudeError = attitudeAngleFromTarget();

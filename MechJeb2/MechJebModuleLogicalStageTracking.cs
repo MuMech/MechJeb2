@@ -132,7 +132,7 @@ namespace MuMech
             public double DeltaV;
 
             // burntime left in the stage in secs
-            public double DeltaTime;
+            //public double DeltaTime;
 
             // effective isp of the stage (this is derived from the total mass loss and the total ∆v)
             public double Isp;
@@ -140,14 +140,8 @@ namespace MuMech
             // effective exhaust velocity of the stage
             public double Ve => Isp * 9.80665;
 
-            // starting thrust of the stage
-            public double StartThrust;
-
-            // ending thrust (this should be the same, except for burned out ullage motors)
-            public double EndThrust;
-
             // effective thrust (the "average thrust" derived from the total mdot and the v_e)
-            public double EffectiveThrust => Ve * (StartMass - EndMass) / DeltaTime;
+            //public double EffectiveThrust => Ve * (StartMass - EndMass) / DeltaTime;
 
             // starting mass of the stage
             public double StartMass;
@@ -155,8 +149,13 @@ namespace MuMech
             // ending mass of the stage
             public double EndMass;
 
+            // max thrust of the stage
+            public double MaxThrust;
+
+            public double DeltaTime => Ve * (StartMass - EndMass) / MaxThrust;
+
             // starting acceleration of the stage (use EndThrust to avoid counting ullage motors)
-            private double A0 => EndThrust / StartMass;
+            private double A0 => MaxThrust / StartMass;
 
             // ideal time to consume the rocket completely
             public double Tau => Ve / A0;
@@ -165,7 +164,6 @@ namespace MuMech
             public int RocketStage;
 
             // the last parts list
-            private readonly List<Part> _parts = new List<Part>();
 
             private FuelFlowSimulation.FuelStats _vacFuelStats;
 
@@ -176,20 +174,16 @@ namespace MuMech
 
                 _vacFuelStats = _parent.core.stageStats.vacStats[KspStage];
                 DeltaV        = _vacFuelStats.DeltaV;
-                DeltaTime     = _vacFuelStats.DeltaTime;
-                Isp           = _vacFuelStats.Isp;
-                StartThrust   = _vacFuelStats.StartThrust * 1000;
-                EndThrust     = _vacFuelStats.EndThrust * 1000;
-                StartMass     = _vacFuelStats.StartMass * 1000;
-                EndMass       = _vacFuelStats.EndMass * 1000;
-
-                _parts.Clear();
-                for (int i = 0; i < _vacFuelStats.Parts.Count; i++) _parts.Add(_vacFuelStats.Parts[i]);
+                //DeltaTime     = _vacFuelStats.DeltaTime;
+                Isp       = _vacFuelStats.Isp;
+                MaxThrust = _vacFuelStats.MaxThrust * 1000;
+                StartMass = _vacFuelStats.StartMass * 1000;
+                EndMass   = _vacFuelStats.EndMass * 1000;
             }
 
             public override string ToString()
             {
-                return "ksp_stage: " + KspStage + " rocket_stage: " + RocketStage + " isp:" + Isp + " thrust:" + StartThrust + " m0: " + StartMass +
+                return "ksp_stage: " + KspStage + " rocket_stage: " + RocketStage + " isp:" + Isp + " thrust:" + MaxThrust + " m0: " + StartMass +
                        " maxt:" + DeltaTime;
             }
 

@@ -1,6 +1,10 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using MechJebLib.Maths;
+using MechJebLib.Structs;
+using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech.MathJ
 {
@@ -9,7 +13,7 @@ namespace MuMech.MathJ
         /// <summary>
         ///     Minimum h step (may be violated on the last step or before an event).
         /// </summary>
-        public double Hmin { get; set; } = Utils.EPS;
+        public double Hmin { get; set; } = EPS;
 
         /// <summary>
         ///     Maximum h step.
@@ -111,37 +115,35 @@ namespace MuMech.MathJ
             _evtDelegate = EvtWrapper;
         }
 
-        private int                                _n;
-        private int                                _m;
-        private Action<double[], double, double[]> _dydt = null!;
-        private double[]                           _k1   = null!;
-        private double[]                           _k2   = null!;
-        private double[]                           _k3   = null!;
-        private double[]                           _k4   = null!;
-        private double[]                           _k5   = null!;
-        private double[]                           _k6   = null!;
-        private double[]                           _k7   = null!;
-        private double[]                           _a    = null!;
-        private double[]                           _err  = null!;
-        private double[]                           _y    = null!;
-        private double[]                           _newy = null!;
+        private int                                          _n;
+        private Action<IList<double>, double, IList<double>> _dydt = null!;
+        private DDArray                                 _k1   = null!;
+        private DDArray                                 _k2   = null!;
+        private DDArray                                 _k3   = null!;
+        private DDArray                                 _k4   = null!;
+        private DDArray                                 _k5   = null!;
+        private DDArray                                 _k6   = null!;
+        private DDArray                                 _k7   = null!;
+        private DDArray                                 _a    = null!;
+        private DDArray                                 _err  = null!;
+        private DDArray                                 _y    = null!;
+        private DDArray                                 _newy = null!;
 
-        public override void Initialize(Action<double[], double, double[]> dydt, int n, int m)
+        public override void Initialize(Action<IList<double>, double, IList<double>> dydt, int n)
         {
             _n    = n;
-            _m    = m;
             _dydt = dydt;
-            _k1   = Utils.DoublePool.Rent(n + m);
-            _k2   = Utils.DoublePool.Rent(n);
-            _k3   = Utils.DoublePool.Rent(n);
-            _k4   = Utils.DoublePool.Rent(n);
-            _k5   = Utils.DoublePool.Rent(n);
-            _k6   = Utils.DoublePool.Rent(n);
-            _k7   = Utils.DoublePool.Rent(n + m);
-            _a    = Utils.DoublePool.Rent(n + m);
-            _err  = Utils.DoublePool.Rent(n);
-            _y    = Utils.DoublePool.Rent(n + m);
-            _newy = Utils.DoublePool.Rent(n + m);
+            _k1   = DDArray.Rent(n);
+            _k2   = DDArray.Rent(n);
+            _k3   = DDArray.Rent(n);
+            _k4   = DDArray.Rent(n);
+            _k5   = DDArray.Rent(n);
+            _k6   = DDArray.Rent(n);
+            _k7   = DDArray.Rent(n);
+            _a    = DDArray.Rent(n);
+            _err  = DDArray.Rent(n);
+            _y    = DDArray.Rent(n);
+            _newy = DDArray.Rent(n);
         }
 
         // Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)
@@ -153,7 +155,7 @@ namespace MuMech.MathJ
         //
         // ref: https://github.com/scipy/scipy/blob/master/scipy/integrate/dop/dopri5.f
         //
-        public override void Integrate(double[] y0, double[] yf, double t0, double tf, CN? interpolant = null)
+        public override void Integrate(IList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null)
         {
             double h = Hstart;
             double t = t0;
@@ -298,7 +300,7 @@ namespace MuMech.MathJ
                         Functions.CubicHermiteInterpolant(_brentargs.X1, _brentargs.Y1, _brentargs.Yp1, _brentargs.X2, _brentargs.Y2, _brentargs.Yp2,
                             _brentargs.X1 + h, _brentargs.N, _newy);
 
-                        _newy.CopyTo(_a, 0);
+                        _newy.CopyTo(_a.ToArray(), 0);
                         _dydt(_a, t + h, _k7);
                     }
 
@@ -310,7 +312,7 @@ namespace MuMech.MathJ
                  */
 
                 fsal = true; // advancing so use k7 for k1 next time
-                for (int i = 0; i < _n + _m; i++)
+                for (int i = 0; i < _n; i++)
                     _y[i] = _a[i]; // FSAL
                 t += h;
 
@@ -318,7 +320,7 @@ namespace MuMech.MathJ
 
                 // add this point to the interpolant
                 if (interpolant != null &&
-                    (Math.Abs(interpLeft) <= 2*Utils.EPS && Utils.NearlyEqual(t - lastInterpolant, interpDt, 1e-2) || terminate))
+                    (Math.Abs(interpLeft) <= EPS2 && NearlyEqual(t - lastInterpolant, interpDt, 1e-2) || terminate))
                 {
                     interpolant.Add(t, _y, _k7);
                     interpLeft      = interpDt;
@@ -366,7 +368,7 @@ namespace MuMech.MathJ
 
         private double EvtWrapper(double newh, object? o)
         {
-            var args = (BrentArgs) o!;
+            var args = (BrentArgs)o!;
 
             Functions.CubicHermiteInterpolant(args.X1, args.Y1!, args.Yp1!, args.X2, args.Y2!, args.Yp2!,
                 args.X1 + newh, args.N, _newy);
@@ -375,14 +377,14 @@ namespace MuMech.MathJ
 
         private class BrentArgs
         {
-            public Event?    Evt;
-            public int       N;
-            public double    X1;
-            public double    X2;
-            public double[]? Y1;
-            public double[]? Y2;
-            public double[]? Yp1;
-            public double[]? Yp2;
+            public Event?         Evt;
+            public int            N;
+            public double         X1;
+            public double         X2;
+            public IList<double>? Y1;
+            public IList<double>? Y2;
+            public IList<double>? Yp1;
+            public IList<double>? Yp2;
         }
     }
 }

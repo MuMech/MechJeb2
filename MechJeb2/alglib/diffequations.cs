@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.18.0 (source code generated 2021-10-25)
+ALGLIB 3.19.0 (source code generated 2022-06-07)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -53,7 +53,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private readonly odesolver.odesolverstate _innerobj;
+        private odesolver.odesolverstate _innerobj;
         public odesolver.odesolverstate innerobj { get { return _innerobj; } }
         public odesolverstate(odesolver.odesolverstate obj)
         {
@@ -87,7 +87,7 @@ public partial class alglib
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private readonly odesolver.odesolverreport _innerobj;
+        private odesolver.odesolverreport _innerobj;
         public odesolver.odesolverreport innerobj { get { return _innerobj; } }
         public odesolverreport(odesolver.odesolverreport obj)
         {

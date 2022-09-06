@@ -123,12 +123,7 @@ namespace MuMech
             fuelStats.MaxAccel     = fuelStats.EndMass > 0 ? fuelStats.EndThrust / fuelStats.EndMass : 0;
             fuelStats.DeltaTime    = 0;
             fuelStats.DeltaV       = 0;
-
-            // track active engines to "fingerprint" this stage
-            // (could improve by adding fuel tanks being drained and thereby support drop-tanks)
-            fuelStats.Parts = new List<Part>();
-            List<FuelNode> engines = FindActiveEngines().value;
-            for (int i = 0; i < engines.Count; i++) fuelStats.Parts.Add(_partLookup[engines[i]]);
+            fuelStats.MaxThrust    = MaxThrust();
 
             const int MAX_STEPS = 100;
 
@@ -173,6 +168,7 @@ namespace MuMech
             double thrust = VesselThrustAndSpoolup(out spoolup);
             fuelStats.StartThrust = fuelStats.EndThrust = thrust;
             fuelStats.SpoolUpTime = spoolup;
+            fuelStats.MaxThrust   = MaxThrust();
 
             using (Disposable<List<FuelNode>> engines = FindActiveEngines())
             {
@@ -321,6 +317,22 @@ namespace MuMech
             for (int i = 0; i < _nodes.Count; i++) sum += _nodes[i].Mass(stage);
 
             return sum;
+        }
+
+        private double MaxThrust()
+        {
+            double maxThrust = 0;
+
+            using Disposable<List<FuelNode>> activeEngines = FindActiveEngines();
+
+            for (int i = 0; i < activeEngines.value.Count; i++)
+            {
+                double mt = activeEngines.value[i].maxThrust;
+                if (mt.IsFinite())
+                    maxThrust += mt;
+            }
+
+            return maxThrust;
         }
 
         private double VesselThrustAndSpoolup(out double sumSpoolup)
