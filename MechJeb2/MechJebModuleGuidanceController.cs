@@ -135,9 +135,13 @@ namespace MuMech
             if (IsGrounded())
                 return;
 
+            // FIXME: we should maybe do something better here so that we can do commanded early shutdown of liquid engines
+            // that have been launched with a fixed burn-all-the-rocket burntime sometime earlier than 10 seconds to go, but
+            // not having any kind of restriction will produce crazy results on the launchpad and with atmospheric coasts.
+            // OTOH this may work sufficiently well for any reasonable craft and target and may not be a problem.
             if (Tgo > 10)
                 return;
-            
+
             // ensure that we're burning in a roughly forward direction -- no idea why, but we can get a few ticks of backwards "thrust" due to staging during terminal guidance
             double costhrustangle = Vector3d.Dot(vesselState.forward, (vessel.acceleration_immediate - vessel.graviticAcceleration).normalized);
 
@@ -146,10 +150,11 @@ namespace MuMech
 
             if (Status == PVGStatus.TERMINAL_RCS && !vessel.ActionGroups[KSPActionGroup.RCS]) // if someone manually disables RCS
             {
+                Debug.Log("[MechJebModuleGuidanceController] terminating guidance due to manual deactivation of RCS.");
                 Done();
                 return;
             }
-            
+
             // stopping one tick short is more accurate for rockets without RCS, but sometimes we overshoot with only one tick
             int ticks = WillDoRCSButNotYet() ? 2 : 1;
 
@@ -161,19 +166,18 @@ namespace MuMech
             Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
             Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 0.5 * a0 * dt * dt;
 
-            double current = Solution.TerminalGuidanceMetric(vesselState.orbitalPosition.WorldToV3(), vesselState.orbitalVelocity.WorldToV3());
-            double future = Solution.TerminalGuidanceMetric(x1.WorldToV3(), v1.WorldToV3());
-
-            if (future > current)
+            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3(), v1.WorldToV3()))
             {
                 if (WillDoRCSButNotYet())
                 {
+                    Debug.Log("[MechJebModuleGuidanceController] transition to RCS terminal guidance.");
                     Status = PVGStatus.TERMINAL_RCS;
                     if (!vessel.ActionGroups[KSPActionGroup.RCS])
                         vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 }
                 else
                 {
+                    Debug.Log("[MechJebModuleGuidanceController] terminal guidance completed.");
                     Done();
                 }
             }
@@ -232,9 +236,6 @@ namespace MuMech
                 return;
             }
 
-            // FIXME: we might run out of residuals before the scheduled time and stage early and get a tick
-            // into the next stage which is non-zero thrust which may use up an ignition before the coast.
-            //
             if (Solution.Coast(vesselState.time))
             {
                 if (!IsCoasting())

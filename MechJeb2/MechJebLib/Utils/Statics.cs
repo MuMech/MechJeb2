@@ -269,5 +269,10 @@ namespace MechJebLib.Utils
 
             return $"{d.ToString("F" + decimalDigits)} {unit}";
         }
+
+        public static void Log(string message)
+        {
+            Logger.Log(message);
+        }
     }
 }

@@ -11,6 +11,8 @@ using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
 using KSP.Localization;
+using ILogger = MechJebLib.Utils.ILogger;
+using Logger = MechJebLib.Utils.Logger;
 
 namespace MuMech
 {
@@ -515,6 +517,18 @@ namespace MuMech
                 vessel.OnFlyByWire += OnFlyByWire;
                 controlledVessel = vessel;
             }
+            
+            Logger.Register(new UnityLogger());
+        }
+
+        // Dep-injection: this keeps the dependency on UnityEngine here and out of MechJebLib entirely
+        // (allowing unit testing in MechJebLib with code that logs but without blowing up on the UnityEngine dep)
+        private class UnityLogger : ILogger
+        {
+            public void Log(string message)
+            {
+                Debug.Log(message);
+            }
         }
 
         public override void OnActive()
@@ -631,6 +645,8 @@ namespace MuMech
                 Profiler.EndSample();
             }
             Profiler.EndSample();
+
+            Logger.Drain();
         }
 
 
@@ -1071,6 +1087,8 @@ namespace MuMech
 
             // Update current throttle for control deactivation
             currentThrottle = s.mainThrottle;
+            
+            Logger.Drain();
         }
 
         private void Drive(FlightCtrlState s)

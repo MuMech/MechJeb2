@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Terminal;
 
@@ -40,6 +41,7 @@ namespace MechJebLib.PVG
             private          double       _smaT;
             private          double       _eccT;
             private          double       _argpT;
+            private          double       _hT;
 
             public Optimizer Build()
             {
@@ -51,6 +53,8 @@ namespace MechJebLib.PVG
                 }
 
                 problem.Terminal = BuildTerminal(problem.Scale);
+
+                problem.TerminalConditions = new TerminalConditions(_hT, true);
 
                 var solver = new Optimizer(problem, _phases);
                 return solver;
@@ -170,6 +174,13 @@ namespace MechJebLib.PVG
                 _lanT         = lanT;
                 _terminalType = terminalType;
 
+                return this;
+            }
+
+            public OptimizerBuilder TerminalConditions(double hT)
+            {
+                _hT = hT;
+                
                 return this;
             }
 

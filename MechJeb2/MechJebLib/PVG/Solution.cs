@@ -17,15 +17,16 @@ namespace MechJebLib.PVG
 {
     public class Solution : IDisposable
     {
-        public           double       T0;
-        public           double       Tf => T0 + tmax * _timeScale;
-        private readonly Scale        _scale;
-        private readonly List<double> _tmin         = new List<double>();
-        private readonly List<double> _tmax         = new List<double>();
-        private readonly List<Hn>     _interpolants = new List<Hn>();
-        private readonly List<Phase>  _phases       = new List<Phase>();
-        private readonly double       _mu;
-        private          double       _rbody;
+        public           double              T0;
+        public           double              Tf => T0 + tmax * _timeScale;
+        private readonly Scale               _scale;
+        private readonly List<double>        _tmin         = new List<double>();
+        private readonly List<double>        _tmax         = new List<double>();
+        private readonly List<Hn>            _interpolants = new List<Hn>();
+        private readonly List<Phase>         _phases       = new List<Phase>();
+        private readonly double              _mu;
+        private          double              _rbody;
+        private readonly TerminalConditions? _terminalConditions;
 
         public  int    Segments       => _interpolants.Count;
         private double _timeScale     => _scale.timeScale;
@@ -38,9 +39,10 @@ namespace MechJebLib.PVG
 
         public Solution(Problem problem)
         {
-            _scale = problem.Scale;
-            _mu    = problem.Mu;
-            _rbody = problem.Rbody;
+            _scale               = problem.Scale;
+            _mu                  = problem.Mu;
+            _rbody               = problem.Rbody;
+            _terminalConditions  = problem.TerminalConditions;
             // t0 is a public API that can be updated while we're landed waiting for takeoff.
             T0 = problem.T0;
         }
@@ -306,12 +308,12 @@ namespace MechJebLib.PVG
         }
 
         // this is for terminal guidance.
-        public double TerminalGuidanceMetric(V3 pos, V3 vel)
+        public bool TerminalGuidanceSatisfied(V3 pos, V3 vel)
         {
-            var h = V3.Cross(pos, vel);
-            var hf = V3.Cross(R(Tf), V(Tf));
-
-            return (hf - h).magnitude;
+            if (_terminalConditions is null)
+                throw new Exception("PVG internal error: terminal conditions set to null on the Solution");
+            
+            return _terminalConditions.Check(pos, vel);
         }
 
         public void Dispose()

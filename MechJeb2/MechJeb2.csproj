@@ -124,6 +124,7 @@
     <Compile Include="MechJebLib\PVG\Scale.cs" />
     <Compile Include="MechJebLib\PVG\Solution.cs" />
     <Compile Include="MechJebLib\PVG\Optimizer.cs" />
+    <Compile Include="MechJebLib\PVG\TerminalConditions.cs" />
     <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle3Energy.cs" />
     <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Energy.cs" />
     <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Reduced.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="MechJebLib\PVG\Terminal\Kepler4Reduced.cs" />
     <Compile Include="MechJebLib\PVG\Terminal\Kepler5Reduced.cs" />
     <Compile Include="MechJebLib\Utils\Check.cs" />
+    <Compile Include="MechJebLib\Utils\Logger.cs" />
     <Compile Include="MechJebLib\Utils\ObjectPool.cs" />
     <Compile Include="MechJebLib\Utils\Statics.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />

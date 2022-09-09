@@ -13,18 +13,19 @@ namespace MechJebLib.PVG
 {
     public class Problem
     {
-        public readonly Scale        Scale;
-        public          IPVGTerminal Terminal;
-        public readonly V3           R0;
-        public readonly V3           R0Bar;
-        public readonly double       M0;
-        public readonly double       M0Bar;
-        public readonly V3           V0;
-        public readonly V3           V0Bar;
-        public readonly double       T0;
-        public readonly V3           U0;
-        public readonly double       Mu;
-        public readonly double       Rbody;
+        public readonly Scale               Scale;
+        public          IPVGTerminal?       Terminal;
+        public readonly V3                  R0;
+        public readonly V3                  R0Bar;
+        public readonly double              M0;
+        public readonly double              M0Bar;
+        public readonly V3                  V0;
+        public readonly V3                  V0Bar;
+        public readonly double              T0;
+        public readonly V3                  U0;
+        public readonly double              Mu;
+        public readonly double              Rbody;
+        public          TerminalConditions? TerminalConditions;
 
         public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody)
         {
@@ -38,8 +39,8 @@ namespace MechJebLib.PVG
             M0Bar = m0 / Scale.massScale;
             U0    = u0;
             Rbody = rbody;
-
-            T0 = t0;
+            
+            T0    = t0;
         }
     }
 }

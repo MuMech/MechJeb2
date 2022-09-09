@@ -27,6 +27,13 @@ namespace MechJebLib.Maths
             return Math.Sqrt(mu * sma * (1 - ecc * ecc));
         }
 
+        // FIXME: busted with hyperbolic and NANs.
+        public static double HmagFromApsides(double mu, double peR, double apR)
+        {
+            (double sma, double ecc) = SmaEccFromApsides(peR, apR);
+            return HmagFromKeplerian(mu, sma, ecc);
+        }
+
         public static V3 HunitFromKeplerian(double inc, double lan)
         {
             return new V3(Math.Sin(lan) * Math.Sin(inc), -Math.Cos(lan) * Math.Sin(inc), Math.Cos(inc));

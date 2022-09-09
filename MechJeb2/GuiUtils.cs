@@ -76,6 +76,7 @@ namespace MuMech
             return new EditableDouble(x);
         }
     }
+    
 
     public class EditableTime : EditableDouble
     {
@@ -213,6 +214,38 @@ namespace MuMech
             return new EditableInt(x);
         }
     }
+
+    public class EditableIntList : IEditable
+    {
+        public readonly List<int> val = new List<int>();
+
+        [Persistent]
+        private string _text = "";
+        
+        public string text
+        {
+            get { return _text; }
+            set
+            {
+                _text = value;
+                _text = Regex.Replace(_text, @"[^\d-,]", ""); //throw away junk characters
+                val.Clear();
+                
+                // supports "1,2,3" and "1-3"
+                foreach (string x in _text.Split(','))
+                {
+                    string[] y = x.Split('-');
+
+                    if (!int.TryParse(y[0].Trim(), out int start)) continue;
+                    if (!int.TryParse(y[y.Length - 1].Trim(), out int end)) continue;
+
+                    for (int n = start; n <= end; n++)
+                        val.Add(n);
+                }
+            }
+        }
+    }
+
 
     public class ZombieGUILoader : MonoBehaviour
     {
@@ -513,7 +546,8 @@ namespace MuMech
         {
             Profiler.BeginSample("SimpleTextField");
             string res = !expandWidth ? GUILayout.TextField(ed.text,LayoutWidth(width),ExpandWidth(expandWidth)) : GUILayout.TextField(ed.text,LayoutWidth(width));
-            if (!res.Equals(ed.text)) ed.text = res;
+            if (res != null && !res.Equals(ed.text))
+                ed.text = res;
             Profiler.EndSample();
         }
 

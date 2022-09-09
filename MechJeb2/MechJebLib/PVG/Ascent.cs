@@ -6,10 +6,12 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Integrators;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PVG
 {
@@ -19,11 +21,16 @@ namespace MechJebLib.PVG
     ///     - infinite ISP upper stage bootstrap (THIS here is what Reset Guidance should do) (DONE)
     ///     - handle LAN and FPA5 (DONE)
     ///     - handle attachaltflag (DONE)
-    ///     - handle coasting
-    ///     - handle re-guessing if FPA4 got the northgoing/southgoing sense wrong (and/or pin the LAN first then remove the LAN constraint)
+    ///     - handle fixed coasts (DONE)
+    ///     - handle optimized coasts
+    ///     - handle re-guessing if FPA4 got the northgoing/southgoing sense wrong (and/or pin the LAN first then remove the
+    ///     LAN constraint)
     ///     - bootstrap with periapsis attachment first then do kepler4/kepler5 for free attachment (DONE)
     ///     - report failures back in the UI
     ///     - retry on failures
+    ///     - remove hardcoding of upper stage optimization / infinite bootstrap
+    ///     - consider some kind of optimized time / infinite bootstrap initially for fixed burntime
+    ///     - support ExtendIfNeeded
     /// </summary>
     public partial class Ascent
     {
@@ -43,24 +50,37 @@ namespace MechJebLib.PVG
         private          double      _lanT;
         private          double      _smaT;
         private          double      _eccT;
+        private          double      _hT; // terminal condition
         private          bool        _attachAltFlag;
         private          bool        _lanflag;
         private          bool        _fixedBurnTime;
-        private          Solution?   _solution;
-        private          Phase       _lastPhase => _phases[_phases.Count - 1];
+        public          Solution?   _solution;
+        private          int         _lastPhase => _phases.Count - 1;
+        private          int         _optimizedPhase;
         private          Optimizer?  _optimizer;
 
         public void Run()
         {
+            (_smaT, _eccT) = Functions.SmaEccFromApsides(_peR, _apR);
+            
+            if (!_attachAltFlag)
+                _attR = _peR;
+            
             foreach (Phase phase in _phases)
             {
-                phase.Integrator = phase.Unguided ? (IPVGIntegrator) new VacuumThrustIntegrator() : new VacuumThrustAnalytic();
+                // FIXME: the analytic coast integrator is definitely buggy so the Shepperd solver must be buggy
+                /*if (phase.Coast)
+                    phase.Integrator = new VacuumCoastIntegrator();
+                else*/
+                    phase.Integrator = phase.Unguided ? (IPVGIntegrator)new VacuumThrustIntegrator() : new VacuumThrustAnalytic();
+                    phase.Integrator = new VacuumThrustIntegrator();
             }
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
                 .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
-                .Phases(_phases);
-            
+                .Phases(_phases)
+                .TerminalConditions(_hT);
+
             _optimizer = _solution == null ? InitialBootstrapping(builder) : ConvergedOptimization(builder, _solution);
         }
 
@@ -77,13 +97,8 @@ namespace MechJebLib.PVG
             }
             else
             {
-                (_smaT, _eccT) = Functions.SmaEccFromApsides(_peR, _apR);
-
                 if (_attachAltFlag || _eccT < 1e-4)
                 {
-                    if (!_attachAltFlag)
-                        _attR = _peR;
-
                     ApplyFPA(builder);
                 }
                 else
@@ -140,10 +155,6 @@ namespace MechJebLib.PVG
 
         private Optimizer InitialBootstrapping(Optimizer.OptimizerBuilder builder)
         {
-            // if we're not doing fixed attachment we still bootstrap with periapasis attachment first
-            if (!_attachAltFlag)
-                _attR = _peR;
-
             if (_fixedBurnTime)
             {
                 ApplyEnergy(builder);
@@ -153,46 +164,69 @@ namespace MechJebLib.PVG
                 ApplyFPA(builder);
             }
 
-            Optimizer pvg = builder.Build();
+            using Optimizer pvg = builder.Build();
 
             // guess the initial launch direction
             V3 enu = Functions.ENUHeadingForInclination(_incT, _r0);
             enu.z = 1.0; // add 45 degrees up
             V3 pvGuess = Functions.ENUToECI(_r0, enu).normalized;
-
-            if (!_fixedBurnTime)
-            {
-                _lastPhase.Infinite = true;
-            }
             
+            int infinitePhase = _fixedBurnTime ? _lastPhase : _optimizedPhase;
+
+            bool savedUnguided = _phases[infinitePhase].Unguided;
+
+            _phases[infinitePhase].Infinite = true;
+            _phases[infinitePhase].Unguided = false;
+
             pvg.Bootstrap(pvGuess, _r0.normalized);
+            pvg.Run();
 
             // FIXME: add the coast
+            
+            _phases[infinitePhase].Infinite = false;
+            _phases[infinitePhase].Unguided = savedUnguided;
+           
+            if (!pvg.Success())
+                throw new Exception("FIXME: need to handle this error better");
+            
+            using Solution solution = pvg.GetSolution();
 
-            if (!_fixedBurnTime)
-            {
-                _lastPhase.Infinite = false;
-                using Solution solution = pvg.GetSolution();
-                pvg.Bootstrap(solution);
+            using Optimizer pvg2 = builder.Build();
+            pvg2.Bootstrap(solution);
+            pvg2.Run();
+            
+            if (!pvg2.Success())
+                throw new Exception("FIXME: need to handle this error better");
 
-                // we have a periapsis attachment solution, redo with free attachment
-                if (!_attachAltFlag)
-                {
-                    using Solution solution2 = pvg.GetSolution();
-                    pvg.Dispose();
+            // we have a periapsis attachment solution, redo with free attachment
+            if (_attachAltFlag || _fixedBurnTime)
+                return pvg2;
+            
+            using Solution solution2 = pvg.GetSolution();
 
-                    ApplyKepler(builder);
+            ApplyKepler(builder);
 
-                    pvg = builder.Build();
-                    pvg.Bootstrap(solution2);
-                }
-            }
+            using Optimizer pvg3 = builder.Build();
+            pvg3.Bootstrap(solution2);
+            pvg3.Run();
+            
+            if (!pvg3.Success())
+                throw new Exception("FIXME: need to handle this error better");
+            
+            using Solution solution3 = pvg.GetSolution();
+            
+            (V3 rf, V3 vf) = solution3.TerminalStateVectors();
 
-            return pvg;
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
+                Functions.KeplerianFromStateVectors(_mu, rf, vf);
+            
+            return Math.Abs(ClampPi(tanof)) > PI/2.0 ? pvg2 : pvg3;
+
         }
 
         public static AscentBuilder Builder()
         {
+            // FIXME: this is very wrong the Ascent object shouldn't be insteantiated until Build() is called.
             return new AscentBuilder(new Ascent());
         }
     }

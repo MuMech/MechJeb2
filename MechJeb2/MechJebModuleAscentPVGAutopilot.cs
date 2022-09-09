@@ -77,6 +77,8 @@ namespace MuMech
         {
             double peR = mainBody.Radius + AscentSettings.DesiredOrbitAltitude;
             double apR = mainBody.Radius + AscentSettings.DesiredApoapsis;
+            if (_ascentSettings.DesiredApoapsis < 0)
+                apR = _ascentSettings.DesiredApoapsis;
             double attR = mainBody.Radius + AscentSettings.DesiredAttachAlt;
 
             bool lanflag = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan || _ascentSettings.LaunchingToLan;

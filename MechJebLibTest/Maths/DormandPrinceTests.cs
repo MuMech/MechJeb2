@@ -23,13 +23,17 @@ namespace MechJebLibTest.Maths
         {
             double t0 = 0.0;
 
-            SimpleOscillator<DormandPrince> ode = new SimpleOscillator<DormandPrince>(k, m);
-
-            ode.Integrator.Hmax           = 0;
-            ode.Integrator.Hmin           = EPS;
-            ode.Integrator.Accuracy       = 1e-9;
-            ode.Integrator.Hstart         = 0;
-            ode.Integrator.ThrowOnMaxIter = true;
+            var ode = new SimpleOscillator<DormandPrince>(k, m)
+            {
+                Integrator =
+                {
+                    Hmax           = 0,
+                    Hmin           = EPS,
+                    Accuracy       = 1e-9,
+                    Hstart         = 0,
+                    ThrowOnMaxIter = true
+                }
+            };
 
             var y0 = DD.Rent(2);
             y0[0] = x0;
@@ -44,7 +48,7 @@ namespace MechJebLibTest.Maths
 
             ode.Integrate(y0, yf, t0, tf);
 
-            Assert.Equal(0,GC.GetAllocatedBytesForCurrentThread() - start );
+            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
         }
 
         private class SimpleOscillator<T> : ODE<T> where T : ODESolver, new()
@@ -76,7 +80,7 @@ namespace MechJebLibTest.Maths
                 for (double x0 = -1; x0 < 1.0; x0 += 0.5)
                 for (double v0 = -1; v0 < 1.0; v0 += 0.5)
                 for (double tf = -1; tf < 4.0; tf += 0.5)
-                    yield return new object[] {k, m, x0, v0, tf};
+                    yield return new object[] { k, m, x0, v0, tf };
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -92,9 +96,7 @@ namespace MechJebLibTest.Maths
             double m = 1;
             double x0 = 0;
             double v0 = 1;
-            SimpleOscillator<DormandPrince> ode = new SimpleOscillator<DormandPrince>(k, m);
-            ode.Integrator.Interpnum = 20;
-
+            var ode = new SimpleOscillator<DormandPrince>(k, m) { Integrator = { Interpnum = 20 } };
             var y0 = DD.Rent(2);
             y0[0] = x0;
             y0[1] = v0;
@@ -126,7 +128,7 @@ namespace MechJebLibTest.Maths
                     y[0].ShouldEqual(expected, 1e-9);
                 }
 
-                Assert.Equal(0,GC.GetAllocatedBytesForCurrentThread() - start );
+                Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
             }
         }
     }

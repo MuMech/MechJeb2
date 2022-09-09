@@ -4,11 +4,11 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-using System;
 using System.Threading.Tasks;
+using MechJebLib.Maths;
 using MechJebLib.PVG;
-using static MechJebLib.Utils.Statics;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
@@ -34,6 +34,7 @@ namespace MuMech
     ///     - handle failures by rebootstrapping with infinite upper stage, current Pv and zero Pr
     ///     - relay statistics back to the UI (DONE)
     ///     - fix staeleness in the UI
+    ///     - remove inertial stage hardcoding
     /// </summary>
     public class MechJebModulePVGGlueBall : ComputerModule
     {
@@ -86,44 +87,38 @@ namespace MuMech
                    vessel.situation != Vessel.Situations.SPLASHED;
         }
 
-        private bool IsUnguided(int s) // MEGA-FIXME: hardcoded
+        private bool IsUnguided(int s)
         {
-            return s <= 2;
+            return _ascentSettings.UnguidedStages.val.Contains(s);
         }
 
+        // FIXME: maybe this could be a callback to the Task?
         private void HandleDoneTask()
         {
-            if (_task == null)
-                Debug.Log("no task yet");
-            if (_task != null && !_task.IsCompleted)
-                Debug.Log("no completed task yet");
-            if (_ascent == null)
-                Debug.Log("no ascent object");
-            
             if (!(_task is { IsCompleted: true }) || _ascent == null)
                 return;
-            
+
             Optimizer? pvg = _ascent.GetOptimizer();
 
-            if (pvg == null)
-                throw new Exception("internal error: ascent task finmished with no optimizer object");
-
-            if (pvg.Success())
+            if (pvg != null)
             {
-                core.guidance.SetSolution(pvg.GetSolution());
-                SuccessfulConverges += 1;
-            }
-            else
-            {
-                Debug.Log("failed guidance, znorm: " + pvg.Znorm);
-            }
+                if (pvg.Success())
+                {
+                    core.guidance.SetSolution(pvg.GetSolution());
+                    SuccessfulConverges += 1;
+                }
+                else
+                {
+                    Debug.Log("failed guidance, znorm: " + pvg.Znorm);
+                }
 
-            LastLmStatus     = pvg.LmStatus;
-            LastLmIterations = pvg.LmIterations;
-            LastZnorm        = pvg.Znorm;
+                LastLmStatus     = pvg.LmStatus;
+                LastLmIterations = pvg.LmIterations;
+                LastZnorm        = pvg.Znorm;
 
-            if (LastLmIterations > MaxLmIterations)
-                MaxLmIterations = LastLmIterations;
+                if (LastLmIterations > MaxLmIterations)
+                    MaxLmIterations = LastLmIterations;
+            }
 
             _task = null;
         }
@@ -131,10 +126,10 @@ namespace MuMech
         public void SetTarget(double peR, double apR, double attR, double inclination, double lan, bool attachAltFlag, bool lanflag)
         {
             HandleDoneTask();
-            
+
             if (_task != null)
                 Debug.Log(_task.Status);
-            
+
             if (_ascentSettings.SpinupStage < 0)
                 core.spinup.users.Remove(this);
             else if (vessel.currentStage > _ascentSettings.SpinupStage)
@@ -145,10 +140,9 @@ namespace MuMech
 
             if (_task is { IsCompleted: false })
             {
-                Debug.Log("we have a non completed task we are working on");
                 return;
             }
-            
+
             // clamp the AttR
             if (attR < peR)
                 attR = peR;
@@ -208,7 +202,8 @@ namespace MuMech
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                 .Initial(vesselState.orbitalPosition.WorldToV3(), vesselState.orbitalVelocity.WorldToV3(), vesselState.forward.WorldToV3(),
                     vesselState.time, mainBody.gravParameter, mainBody.Radius)
-                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), attachAltFlag, lanflag);
+                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), attachAltFlag, lanflag)
+                .TerminalConditions(Functions.HmagFromApsides(mainBody.gravParameter, peR, apR));
 
             if (core.guidance.Solution != null)
                 ascentBuilder.OldSolution(core.guidance.Solution);
@@ -221,7 +216,7 @@ namespace MuMech
                 {
                     double ct = _ascentSettings.FixedCoastLength;
                     double mt = _ascentSettings.MaxCoast;
-                    
+
                     if (i == vessel.currentStage && core.guidance.IsCoasting())
                     {
                         ct -= vesselState.time - core.guidance.StartCoast;
@@ -230,7 +225,7 @@ namespace MuMech
 
                     ascentBuilder.AddCoast(fuelStats.StartMass * 1000, ct, i);
                 }
-                
+
                 // skip sep motors.  we already avoid running if the bottom stage has burned below this margin.
                 if (fuelStats.DeltaV < _ascentSettings.MinDeltaV)
                     continue;
@@ -240,8 +235,7 @@ namespace MuMech
                 bool unguided = IsUnguided(i);
 
                 ascentBuilder.AddStageUsingBurnTime(fuelStats.StartMass * 1000, fuelStats.MaxThrust * 1000, fuelStats.Isp, fuelStats.DeltaTime, i,
-                    optimizeTime,
-                    unguided);
+                    optimizeTime, unguided);
             }
 
             ascentBuilder.FixedBurnTime(_ascentSettings.FixedBurntime);
@@ -251,7 +245,7 @@ namespace MuMech
             Debug.Log("firing off new task");
             _task = new Task(_ascent.Run);
             _task.Start();
-            
+
             _blockOptimizerUntilTime = vesselState.time + 1;
         }
     }

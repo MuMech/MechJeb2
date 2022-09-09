@@ -26,6 +26,8 @@ namespace MechJebLib.PVG
             public AscentBuilder AddStageUsingBurnTime(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
             {
                 _ascent._phases.Add(Phase.NewStageUsingBurnTime(m0, thrust, isp, bt, kspStage, optimizeTime, unguided));
+                if (optimizeTime)
+                    _ascent._optimizedPhase = _ascent._phases.Count - 1;
                 return this;
             }
             
@@ -72,6 +74,13 @@ namespace MechJebLib.PVG
             public void FixedBurnTime(bool fixedBurnTime)
             {
                 _ascent._fixedBurnTime = fixedBurnTime;
+            }
+
+            public AscentBuilder TerminalConditions(double hT)
+            {
+                _ascent._hT = hT;
+
+                return this;
             }
         }
     }

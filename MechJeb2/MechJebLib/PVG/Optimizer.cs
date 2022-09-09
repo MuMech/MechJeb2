@@ -10,21 +10,21 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using MechJebLib.Primitives;
-using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PVG
 {
     public partial class Optimizer : IDisposable
     {
-        public double ZnormTerminationLevel = 1e-9;
-        public double Znorm;
-        public int    MaxIter          { get; set; } = 20000; // this could maybe be pushed down
-        public double LmEpsx           { get; set; } = 1e-10; // we terminate manually at 1e-9 so could lower this?
-        public double LmDiffStep       { get; set; } = 1e-9;
-        public int    OptimizerTimeout { get; set; } = 5000; // milliseconds
-        public int    LmStatus;
-        public int    LmIterations;
+        public double      ZnormTerminationLevel = 1e-9;
+        public double      Znorm;
+        public int         MaxIter          { get; set; } = 20000; // this could maybe be pushed down
+        public double      LmEpsx           { get; set; } = 1e-10; // we terminate manually at 1e-9 so could lower this?
+        public double      LmDiffStep       { get; set; } = 1e-9;
+        public int         OptimizerTimeout { get; set; } = 5000; // milliseconds
+        public int         LmStatus;
+        public int         LmIterations;
+        public OptimStatus Status;
         
         private readonly Problem                  _problem;
         private readonly List<Phase>              _phases;
@@ -36,12 +36,14 @@ namespace MechJebLib.PVG
         private readonly alglib.ndimensional_fvec _residualHandle;
         private          alglib.minlmstate        _state = new alglib.minlmstate();
         
+        public enum OptimStatus { CREATED, BOOTSTRAPPED, SUCCESS, FAILED }
 
         private Optimizer(Problem problem, IEnumerable<Phase> phases)
         {
-            _phases        = new List<Phase>(phases);
-            _problem       = problem;
+            _phases         = new List<Phase>(phases);
+            _problem        = problem;
             _residualHandle = ResidualFunction;
+            Status          = OptimStatus.CREATED;
         }
 
         private void ExpandArrays()
@@ -238,6 +240,9 @@ namespace MechJebLib.PVG
         
         public Optimizer Run()
         {
+            if (Status != OptimStatus.BOOTSTRAPPED)
+                throw new Exception("run should only be called on BOOTSTRAPPED optimizer");
+            
             try
             {
                 var  tokenSource = new CancellationTokenSource(); // FIXME: bit of garbage here
@@ -252,29 +257,31 @@ namespace MechJebLib.PVG
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(_phases[p]);
+                Log(_phases[p].ToString());
             }
             
-            Debug.Log("solved initial: ");
+            Log("solved initial: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_initial[p]));
+                Log(DoubleArrayString(_initial[p]));
             }
             
-            Debug.Log("solved terminal: ");
+            Log("solved terminal: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_terminal[p]));
+                Log(DoubleArrayString(_terminal[p]));
             }
             
-            Debug.Log("solved residuals: ");
+            Log("solved residuals: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_residual[p]));
+                Log(DoubleArrayString(_residual[p]));
             }
+
+            Status = Success() ? OptimStatus.SUCCESS : OptimStatus.FAILED;
 
             return this;
         }
@@ -331,6 +338,9 @@ namespace MechJebLib.PVG
 
         public Solution GetSolution()
         {
+            if (Status != OptimStatus.SUCCESS)
+                throw new Exception("getting solution from bad/failed optimizer state");
+            
             var solution = new Solution(_problem);
 
             Shooting(solution);
@@ -340,6 +350,9 @@ namespace MechJebLib.PVG
 
         public Optimizer Bootstrap(V3 pv0, V3 pr0)
         {
+            if (Status != OptimStatus.CREATED)
+                throw new Exception("bootstrap should only be called on CREATED optimizer");
+            
             ExpandArrays();
             
             using var integArray = DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
@@ -388,35 +401,40 @@ namespace MechJebLib.PVG
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(_phases[p]);
+                Log(_phases[p].ToString());
             }
             
-            Debug.Log("bootstrap1 initial: ");
+            Log("bootstrap1 initial: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_initial[p]));
+                Log(DoubleArrayString(_initial[p]));
             }
             
-            Debug.Log("bootstrap1 terminal: ");
+            Log("bootstrap1 terminal: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_terminal[p]));
+                Log(DoubleArrayString(_terminal[p]));
             }
             
-            Debug.Log("bootstrap1 residuals: ");
+            Log("bootstrap1 residuals: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_residual[p]));
+                Log(DoubleArrayString(_residual[p]));
             }
+
+            Status = OptimStatus.BOOTSTRAPPED;    
 
             return this;
         }
         
         public Optimizer Bootstrap(Solution solution)
         {
+            if (Status != OptimStatus.CREATED)
+                throw new Exception("bootstrap should only be called on CREATED optimizer");
+            
             ExpandArrays();
             
             using var integArray = DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
@@ -486,35 +504,38 @@ namespace MechJebLib.PVG
                 lastDv = yf.DV;
 
                 t0 += tf;
+                
             }
             
             CalculateResiduals();
 
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(_phases[p]);
+                Log(_phases[p].ToString());
             }
             
-            Debug.Log("bootstrap2 initial: ");
+            Log("bootstrap2 initial: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_initial[p]));
+                Log(DoubleArrayString(_initial[p]));
             }
             
-            Debug.Log("bootstrap2 terminal: ");
+            Log("bootstrap2 terminal: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_terminal[p]));
+                Log(DoubleArrayString(_terminal[p]));
             }
             
-            Debug.Log("bootstrap2 residuals: ");
+            Log("bootstrap2 residuals: ");
             
             for(int p = 0; p <= lastPhase; p++)
             {
-                Debug.Log(DoubleArrayString(_residual[p]));
+                Log(DoubleArrayString(_residual[p]));
             }
+            
+            Status = OptimStatus.BOOTSTRAPPED;
 
             return this;
         }

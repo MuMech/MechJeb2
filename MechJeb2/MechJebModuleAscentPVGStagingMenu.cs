@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MuMech
 {
@@ -12,14 +11,6 @@ namespace MuMech
         
         private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
 
-        public override void OnModuleEnabled()
-        {
-            base.OnModuleEnabled();
-            _optimizeStage = 0;
-            for (int i = 0; i < _inertial.Count; i++)
-                _inertial[i] = false;
-        }
-        
         private static GUIStyle _btNormal;
         private static GUIStyle _btActive;
 
@@ -47,62 +38,37 @@ namespace MuMech
             }
         }
 
-        private readonly List<bool> _optimizeToggle = new List<bool>();
-        private readonly List<bool> _inertial       = new List<bool>();
-        private          int        _optimizeStage;
-        private          int        _coastSetting;
-        private          int        _lastStage;
-
         protected override void WindowGUI(int windowID)
         {
             SetupButtonStyles();
-            ExpandStats();
             GUILayout.BeginVertical(GUI.skin.box);
 
-            for (int i = 0; i < core.stageStats.vacStats.Length; i++)
+            for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
             {
                 FuelFlowSimulation.FuelStats stats = core.stageStats.vacStats[i];
                 if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
-                {
-                    if (_optimizeStage == i)
-                        _optimizeStage++;
-                    if (_lastStage == i)
-                        _lastStage++;
-                    _inertial[i] = false;
                     continue;
-                }
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{i,3} {stats.DeltaV:##,###0} m/s");
-                _optimizeToggle[i] = GUILayout.Toggle(_optimizeToggle[i],
-                    i == _optimizeStage ? "Optim" : "Fixed",
-                    i == _optimizeStage ? _btActive : _btNormal);
-                _inertial[i] = GUILayout.Toggle(_inertial[i],
-                    _inertial[i] ? "Inertial" : "Guided",
-                    _inertial[i] ? _btActive : _btNormal);
-
-                if (_optimizeToggle[i])
-                    _optimizeStage = _optimizeStage == i ? -1 : i;
-
+                if (_ascentSettings.UnguidedStages.val.Contains(i))
+                    GUILayout.Label(" (unguided)");
+                if (_ascentSettings.OptimizeStage == i)
+                    GUILayout.Label(" (optimize)");
                 GUILayout.EndHorizontal();
             }
 
-            if (GUILayout.Button("Reconfigure", GuiUtils.ExpandWidth(false)))
-            {
-                _ascentSettings.OptimizeStage.val = _optimizeStage;
-                _ascentSettings.FixedBurntime     = _optimizeStage == -1;
-                _ascentSettings.LastStage.val     = _lastStage;
-            }
-            
             GUILayout.EndVertical();
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox("Optimize Stage: ", _ascentSettings.OptimizeStage);
+            GuiUtils.SimpleTextBox("Unguided Stages: ", _ascentSettings.UnguidedStages);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
             _ascentSettings.FixedBurntime = GUILayout.Toggle(_ascentSettings.FixedBurntime, "Fixed Burntime");
             GUILayout.EndVertical();
             GUILayout.BeginVertical(GUI.skin.box);
-            _ascentSettings.ExtendIfRequired = GUILayout.Toggle(_ascentSettings.ExtendIfRequired, "Extend if Required");
+            //_ascentSettings.ExtendIfRequired = GUILayout.Toggle(_ascentSettings.ExtendIfRequired, "Extend if Required");
             GuiUtils.SimpleTextBox("Coast Stage: ", _ascentSettings.CoastStage);
+            /*
             GUILayout.BeginHorizontal();
             GUILayout.Label("Coast Timing: ");
             bool coastStart  = GUILayout.Toggle(_coastSetting == -1, "Start");
@@ -115,7 +81,8 @@ namespace MuMech
             if (coastEnd && _coastSetting != 1)
                 _coastSetting = 1;
             GUILayout.EndHorizontal();
-            GuiUtils.SimpleTextBox("Max Coast: ", _ascentSettings.MaxCoast, "s", width: 60);
+            */
+            //GuiUtils.SimpleTextBox("Max Coast: ", _ascentSettings.MaxCoast, "s", width: 60);
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedCoast, "Fixed Coast Length:", _ascentSettings.FixedCoastLength, "s", width: 40);
             GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", width: 30);
             GuiUtils.SimpleTextBox("Pre-stage time: ", _ascentSettings.PreStageTime, "s");
@@ -129,18 +96,6 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
-        }
-
-        private void ExpandStats()
-        {
-            while (_optimizeToggle.Count < core.stageStats.vacStats.Length)
-                _optimizeToggle.Add(false);
-            while (_inertial.Count < core.stageStats.vacStats.Length)
-                _inertial.Add(false);
-            for (int i = 0; i < core.stageStats.vacStats.Length; i++)
-            {
-                _optimizeToggle[i] = false;
-            }
         }
 
         public override string GetName()
