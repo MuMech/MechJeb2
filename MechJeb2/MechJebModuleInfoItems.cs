@@ -842,7 +842,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Global)]
         public int StageDisplayState = 0;
         [Persistent(pass = (int)Pass.Global)]
-        public bool showEmpty = true;
+        public bool showEmpty = false;
         [Persistent(pass = (int)Pass.Global)]
         public bool timeSeconds = false;
         private MechJebStageStatsHelper stageStatsHelper = null;
