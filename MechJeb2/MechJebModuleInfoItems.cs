@@ -1098,7 +1098,7 @@ namespace MuMech
                 return vessel.displaylandedAt;
             if (mainBody.BiomeMap == null)
                 return "N/A";
-            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).displayname.LocalizeRemoveGender();
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).displayname;
             if (biome != "")
                 biome = "'s " + biome;
 
