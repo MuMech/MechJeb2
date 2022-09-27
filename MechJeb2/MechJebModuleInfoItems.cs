@@ -1087,7 +1087,7 @@ namespace MuMech
         public string CurrentRawBiome()
         {
             if (vessel.landedAt != string.Empty)
-                return vessel.displaylandedAt;  // [vessel.landedAt] -> [vessel.displaylandedAt] Just for Localization
+                return vessel.landedAt;
             return mainBody.GetExperimentBiomeSafe(vessel.latitude, vessel.longitude);
         }
 
@@ -1095,7 +1095,7 @@ namespace MuMech
         public string CurrentBiome()
         {
             if (vessel.landedAt != string.Empty)
-                return vessel.displaylandedAt;
+                return vessel.landedAt;
             if (mainBody.BiomeMap == null)
                 return "N/A";
             string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).displayname;
