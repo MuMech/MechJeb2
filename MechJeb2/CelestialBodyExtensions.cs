@@ -63,7 +63,7 @@ namespace MuMech
         {
             if (body.BiomeMap == null || body.BiomeMap.Attributes.Length == 0)
                 return string.Empty;
-            return ScienceUtil.GetExperimentBiome(body, lat, lon);
+            return ScienceUtil.GetExperimentBiomeLocalized(body, lat, lon);
         }
     }
 }

@@ -1098,7 +1098,7 @@ namespace MuMech
                 return vessel.landedAt;
             if (mainBody.BiomeMap == null)
                 return "N/A";
-            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).name;
+            string biome = mainBody.BiomeMap.GetAtt (vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).displayname;
             if (biome != "")
                 biome = "'s " + biome;
 
@@ -1107,24 +1107,24 @@ namespace MuMech
                 //ExperimentSituations.SrfLanded
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
-                    return mainBody.displayName + (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation5") : biome);//"'s surface"
+                    return mainBody.displayName.LocalizeRemoveGender() + (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation5") : biome);//"'s surface"
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
-                    return mainBody.displayName + (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation6") : biome);//"'s oceans"
+                    return mainBody.displayName.LocalizeRemoveGender() + (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation6") : biome);//"'s oceans"
                 case Vessel.Situations.FLYING:
                     if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
-                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation1", mainBody.displayName + biome);//"Flying over <<1>>"
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation1", mainBody.displayName.LocalizeRemoveGender() + biome);//"Flying over <<1>>"
                     else
                         //ExperimentSituations.FlyingHigh
-                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation2", mainBody.displayName + biome);//"Upper atmosphere of <<1>>"
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation2", mainBody.displayName.LocalizeRemoveGender() + biome);//"Upper atmosphere of <<1>>"
                 default:
                     if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
                         //ExperimentSituations.InSpaceLow
-                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation3", mainBody.displayName + biome);//"Space just above <<1>>"
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation3", mainBody.displayName.LocalizeRemoveGender() + biome);//"Space just above <<1>>"
                     else
                         // ExperimentSituations.InSpaceHigh
-                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation4", mainBody.displayName + biome);//"Space high over <<1>>"
+                        return Localizer.Format("#MechJeb_InfoItems_VesselSituation4", mainBody.displayName.LocalizeRemoveGender() + biome);//"Space high over <<1>>"
             }
         }
 
