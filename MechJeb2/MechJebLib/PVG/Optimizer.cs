@@ -69,21 +69,22 @@ namespace MechJebLib.PVG
             using var yf = ArrayWrapper.Rent(_terminal[lastPhase]);
 
             // handle coasts
-            if (_phases[p].Coast)
+            if (_phases[p].Coast && _phases[p].OptimizeTime)
             {
-                // coasts within a stage
-                //return yfp.PV.magnitude - y0p.PV.magnitude;
+                return yfp.H0; // coast after jettison or an initial first coast
             }
 
             if (_phases[p].OptimizeTime)
             {
+                if (_phases[p].Coast)
+                {
+                    if (p == 0)
+                        return yfp.H0; // initial first coast
+                    return yfp.H0; // coast after jettison
+                    // FIXME: coasts during stages
+                }
+
                 // handle the optimized burntime that gives rise to the free final time constraint
-                // NOTE: This is supposed to work only if the target is a constant of the Keplerian motion
-                //       and should not work for e.g. the FlightPathAngle terminal conditions when gammaT != 0.
-                //       See discussion (section IV):
-                //       https://www.researchgate.net/publication/245433631_Rapid_Optimal_Multi-Burn_Ascent_Planning_and_Guidance
-                //       I tried using equation 40 instead but this failed to converge.
-                //
                 if (_phases[p].LastFreeBurn)
                 {
                     //if (_phases[p].FinalMassProblem) return H(yf[phases.Count - 1], phases.Count - 1);
@@ -485,9 +486,13 @@ namespace MechJebLib.PVG
                     } 
                     else
                     {
+                        // FIXME: testing hack
+                        if (phase.Coast && phase.OptimizeTime)
+                            y0.Bt = 0.1;
                         // FIXME: this needs to be smarter to deal with crazy rearrangement
                         // - e.g. if we're looking for a coast, we should probably go searching for the one coast
-                        y0.Bt = solution.Bt(p + segmentOffset, _problem.T0) / _problem.Scale.timeScale;
+                        else
+                            y0.Bt = solution.Bt(p + segmentOffset, _problem.T0) / _problem.Scale.timeScale;
                     }
                     y0.M  = phase.m0_bar;
                     _initial[p].CopyTo(integArray);

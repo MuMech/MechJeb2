@@ -10,6 +10,7 @@ namespace MuMech
             return body.TerrainAltitude(body.GetLatitude(worldPosition), body.GetLongitude(worldPosition));
         }
         
+        
         //The KSP drag law is dv/dt = -b * v^2 where b is proportional to the air density and
         //the ship's drag coefficient. In this equation b has units of inverse length. So 1/b
         //is a characteristic length: a ship that travels this distance through air will lose a significant

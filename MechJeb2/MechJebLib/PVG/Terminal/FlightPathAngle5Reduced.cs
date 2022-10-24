@@ -14,25 +14,35 @@ using static MechJebLib.Utils.Statics;
 namespace MechJebLib.PVG.Terminal
 {
     /// <summary>
-    /// 5 Constraint terminal conditions with fixed attachment for the minimum propellant / maximum mass problem with
-    /// reduced transversality conditions.
-    ///
-    /// Pan, Binfeng, Zheng Chen, Ping Lu, and Bo Gao. “Reduced Transversality Conditions in Optimal Space Trajectories.”
-    /// Journal of Guidance, Control, and Dynamics 36, no. 5 (September 2013): 1289–1300. https://doi.org/10.2514/1.60181.
+    ///     5 Constraint terminal conditions with fixed attachment for the minimum propellant / maximum mass problem with
+    ///     reduced transversality conditions.
+    ///     Pan, Binfeng, Zheng Chen, Ping Lu, and Bo Gao. “Reduced Transversality Conditions in Optimal Space Trajectories.”
+    ///     Journal of Guidance, Control, and Dynamics 36, no. 5 (September 2013): 1289–1300. https://doi.org/10.2514/1.60181.
     /// </summary>
     public readonly struct FlightPathAngle5Reduced : IPVGTerminal
     {
         private readonly double _gammaT;
-        private readonly V3     _hT;
         private readonly double _rT;
+        private readonly double _vT;
+        private readonly double _incT;
+        private readonly double _lanT;
+
+        private readonly V3 _hT;
 
         public FlightPathAngle5Reduced(double gammaT, double rT, double vT, double incT, double lanT)
         {
-            this._gammaT = gammaT;
-            this._rT     = rT;
-            lanT        = Clamp2Pi(lanT);
-            incT        = Math.Abs(ClampPi(incT));
-            _hT          = Functions.HvecFromFlightPathAngle(rT, vT, gammaT, incT, lanT);
+            _gammaT = gammaT;
+            _rT     = rT;
+            _vT     = vT;
+            _lanT   = Clamp2Pi(lanT);
+            _incT   = Math.Abs(ClampPi(incT));
+
+            _hT = Functions.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
+        }
+
+        public IPVGTerminal Rescale(Scale scale)
+        {
+            return new FlightPathAngle5Reduced(_gammaT, _rT / scale.lengthScale, _vT / scale.velocityScale, _incT, _lanT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)

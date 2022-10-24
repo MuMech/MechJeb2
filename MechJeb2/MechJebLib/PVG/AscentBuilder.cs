@@ -31,9 +31,15 @@ namespace MechJebLib.PVG
                 return this;
             }
             
-            public void AddCoast(double m0, double ct, int kspStage)
+            public void AddFixedCoast(double m0, double ct, int kspStage)
             {
-                _ascent._phases.Add(Phase.NewCoast(m0, ct, kspStage));
+                _ascent._phases.Add(Phase.NewFixedCoast(m0, ct, kspStage));
+            }
+            
+            public void AddOptimizedCoast(double m0, double mint, double maxt, int kspStage)
+            {
+                _ascent._phases.Add(Phase.NewOptimizedCoast(m0, mint, maxt, kspStage));
+                _ascent._optimizedCoastPhase = _ascent._phases.Count - 1;
             }
             
             public AscentBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody)

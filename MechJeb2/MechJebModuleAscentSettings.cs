@@ -192,11 +192,11 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDouble MinDeltaV = 40;
 
-        [Persistent(pass = (int)Pass.Type)] 
-        public bool ExtendIfRequired = true;
-
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDouble MaxCoast = 450;
+        
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble MinCoast = 0;
 
         [Persistent(pass = (int)Pass.Type)] 
         public bool FixedCoast = false;
@@ -211,9 +211,6 @@ namespace MuMech
         public readonly EditableDouble OptimizerPauseTime = 5;
 
         [Persistent(pass = (int)Pass.Type)] 
-        public bool FixedBurntime = false;
-
-        [Persistent(pass = (int)Pass.Type)] 
         public readonly EditableInt LastStage = 0;
 
         [Persistent(pass = (int)Pass.Type)] 
@@ -222,11 +219,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Type)] 
         public readonly EditableInt OptimizeStage = 0;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool CoastDuring = false;
-
         [Persistent(pass = (int)Pass.Type)] 
         public readonly EditableInt SpinupStage = -1;
+
+        [Persistent(pass = (int)Pass.Type)]
+        public readonly EditableDouble SpinupLeadTime = 50;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(0.5, TAU / 60.0);

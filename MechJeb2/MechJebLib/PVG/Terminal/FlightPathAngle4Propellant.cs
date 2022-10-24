@@ -14,11 +14,10 @@ using static MechJebLib.Utils.Statics;
 namespace MechJebLib.PVG.Terminal
 {
     /// <summary>
-    /// 4 Constraint terminal conditions with fixed attachment for the minimum propellant / maximum mass problem.
-    ///
-    /// Lu, Ping, Stephen Forbes, and Morgan Baldwin. “A Versatile Powered Guidance Algorithm.”
-    /// In AIAA Guidance, Navigation, and Control Conference. Minneapolis, Minnesota: American Institute of Aeronautics
-    /// and Astronautics, 2012. https://doi.org/10.2514/6.2012-4843.
+    ///     4 Constraint terminal conditions with fixed attachment for the minimum propellant / maximum mass problem.
+    ///     Lu, Ping, Stephen Forbes, and Morgan Baldwin. “A Versatile Powered Guidance Algorithm.”
+    ///     In AIAA Guidance, Navigation, and Control Conference. Minneapolis, Minnesota: American Institute of Aeronautics
+    ///     and Astronautics, 2012. https://doi.org/10.2514/6.2012-4843.
     /// </summary>
     public readonly struct FlightPathAngle4Propellant : IPVGTerminal
     {
@@ -33,11 +32,16 @@ namespace MechJebLib.PVG.Terminal
             Check.PositiveFinite(rT);
             Check.PositiveFinite(vT);
             Check.Finite(incT);
-            
-            this._gammaT = gammaT;
-            this._rT     = rT;
-            this._vT     = vT;
-            this._incT   = Math.Abs(ClampPi(incT));
+
+            _gammaT = gammaT;
+            _rT     = rT;
+            _vT     = vT;
+            _incT   = Math.Abs(ClampPi(incT));
+        }
+
+        public IPVGTerminal Rescale(Scale scale)
+        {
+            return new FlightPathAngle4Propellant(_gammaT, _rT, _vT, _incT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)

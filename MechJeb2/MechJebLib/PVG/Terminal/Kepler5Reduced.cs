@@ -23,6 +23,11 @@ namespace MechJebLib.PVG.Terminal
     /// </summary>
     public readonly struct Kepler5Reduced : IPVGTerminal
     {
+        private readonly double _smaT;
+        private readonly double _eccT;
+        private readonly double _incT;
+        private readonly double _lanT;
+        private readonly double _argpT;
         private readonly V3     _hT;
         private readonly V3     _ehat1;
         private readonly V3     _ehat2;
@@ -31,9 +36,13 @@ namespace MechJebLib.PVG.Terminal
 
         public Kepler5Reduced(double smaT, double eccT, double incT, double lanT, double argpT)
         {
-            incT = Math.Abs(ClampPi(incT));
-            
-            _hT   = Functions.HvecFromKeplerian(1.0, smaT, eccT, incT, lanT);
+            _smaT  = smaT;
+            _eccT  = eccT;
+            _incT  = Math.Abs(ClampPi(incT));
+            _lanT  = lanT;
+            _argpT = argpT;
+
+            _hT = Functions.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
 
             // r guaranteed not to be colinear with hT
             V3 r = V3.zero;
@@ -44,9 +53,14 @@ namespace MechJebLib.PVG.Terminal
             _ehat2 = V3.Cross(_hT, _ehat1).normalized;
 
             // projection of eT onto ehat1/ehat2
-            V3 eT = Functions.EvecFromKeplerian(eccT, incT, lanT, argpT);
+            V3 eT = Functions.EvecFromKeplerian(_eccT, _incT, _lanT, _argpT);
             _e1 = V3.Dot(eT, _ehat1);
             _e2 = V3.Dot(eT, _ehat2);
+        }
+
+        public IPVGTerminal Rescale(Scale scale)
+        {
+            return new Kepler5Reduced(_smaT / scale.lengthScale, _eccT, _incT, _lanT, _argpT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)

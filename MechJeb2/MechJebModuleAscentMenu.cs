@@ -50,13 +50,13 @@ namespace MuMech
         private MechJebModuleAscentBaseAutopilot   _autopilot      => core.ascent;
         private MechJebModuleAscentSettings        _ascentSettings => core.ascentSettings;
         private MechJebModuleAscentClassicPathMenu _classicPathMenu;
-        private MechJebModuleAscentPVGStagingMenu  _pvgStagingMenu;
+        private MechJebModuleAscentPVGSettingsMenu  _pvgSettingsMenu;
         private MechJebModuleAscentSettingsMenu  _settingsMenu;
 
 
         public override void OnStart(PartModule.StartState state)
         {
-            _pvgStagingMenu  = core.GetComputerModule<MechJebModuleAscentPVGStagingMenu>();
+            _pvgSettingsMenu  = core.GetComputerModule<MechJebModuleAscentPVGSettingsMenu>();
             _settingsMenu  = core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
             _classicPathMenu = core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
         }
@@ -419,7 +419,7 @@ namespace MuMech
             if (_ascentSettings.AscentType == ascentType.PVG)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
-                _pvgStagingMenu.enabled = GUILayout.Toggle(_pvgStagingMenu.enabled, "Edit Rocket Staging");
+                _pvgSettingsMenu.enabled = GUILayout.Toggle(_pvgSettingsMenu.enabled, "Edit Rocket Staging");
                 GUILayout.EndVertical();
             }
             

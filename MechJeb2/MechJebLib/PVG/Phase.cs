@@ -21,6 +21,8 @@ namespace MechJebLib.PVG
         public double         isp;
         public double         mf;
         public double         bt;
+        public double         maxt;
+        public double         mint;
         public double         ve;
         public double         a0;
         public double         tau;
@@ -30,12 +32,14 @@ namespace MechJebLib.PVG
         public double         mdot_bar;
         public double         thrust_bar;
         public double         bt_bar;
+        public double         maxt_bar;
+        public double         mint_bar;
         public double         m0_bar;
         public double         mf_bar;
         public double         ve_bar;
         public double         tau_bar;
-        public double         DropMass = 0.0;
-        public double         DropMassBar;
+        public double         DropMass = 0.0; // FIXME: unused
+        public double         DropMassBar; // FIXME: unused
         public bool           OptimizeTime;
         public bool           Infinite = false;
         public bool           Unguided;
@@ -70,6 +74,8 @@ namespace MechJebLib.PVG
             mdot_bar    = mdot / scale.mdotScale;
             thrust_bar  = thrust / scale.forceScale;
             bt_bar      = bt / scale.timeScale;
+            mint_bar    = mint / scale.timeScale;
+            maxt_bar    = maxt / scale.timeScale;
             m0_bar      = m0 / scale.massScale;
             mf_bar      = mf / scale.massScale;
             DropMassBar = DropMass / scale.massScale;
@@ -103,15 +109,21 @@ namespace MechJebLib.PVG
             return phase;
         }
 
-        public static Phase NewCoast(double m0, double ct, int kspStage)
+        public static Phase NewFixedCoast(double m0, double ct, int kspStage)
         {
             return new Phase(m0, 0, 0, m0, ct, kspStage);
+        }
+        
+        public static Phase NewOptimizedCoast(double m0, double mint, double maxt, int kspStage)
+        {
+            var phase = new Phase(m0, 0, 0, m0, mint, kspStage) { OptimizeTime = true, mint = mint, maxt = maxt };
+            return phase;
         }
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append($"stage: {KSPStage} m0: {m0} bt: {bt}");
+            sb.Append($"stage: {KSPStage} m0: {m0} thrust: {thrust} bt: {bt}");
             if (OptimizeTime)
                 sb.Append(" (optimized)");
             if (Infinite)

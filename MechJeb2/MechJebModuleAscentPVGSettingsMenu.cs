@@ -2,9 +2,9 @@
 
 namespace MuMech
 {
-    public class MechJebModuleAscentPVGStagingMenu : DisplayModule
+    public class MechJebModuleAscentPVGSettingsMenu : DisplayModule
     {
-        public MechJebModuleAscentPVGStagingMenu(MechJebCore core) : base(core)
+        public MechJebModuleAscentPVGSettingsMenu(MechJebCore core) : base(core)
         {
             hidden = true;
         }
@@ -63,7 +63,6 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Optimize Stage: ", _ascentSettings.OptimizeStage);
             GuiUtils.SimpleTextBox("Unguided Stages: ", _ascentSettings.UnguidedStages);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
-            _ascentSettings.FixedBurntime = GUILayout.Toggle(_ascentSettings.FixedBurntime, "Fixed Burntime");
             GUILayout.EndVertical();
             GUILayout.BeginVertical(GUI.skin.box);
             //_ascentSettings.ExtendIfRequired = GUILayout.Toggle(_ascentSettings.ExtendIfRequired, "Extend if Required");
@@ -90,6 +89,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Spinup stage: ", _ascentSettings.SpinupStage, width: 30);
             GuiUtils.SimpleTextBox("ω: ", _ascentSettings.SpinupAngularVelocity, "rpm", width: 30);
             GUILayout.EndHorizontal();
+            GuiUtils.SimpleTextBox("Spinup lead time: ", _ascentSettings.SpinupLeadTime, "s", width: 60);
             GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime, "s", width: 60);
             core.guidance.ShouldDrawTrajectory = GUILayout.Toggle(core.guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");
             
@@ -100,7 +100,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "PVG Staging Editor";
+            return "PVG Settings Editor";
         }
 
         public override string IconName()

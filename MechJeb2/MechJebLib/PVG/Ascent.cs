@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Integrators;
+using ProceduralFairings;
+using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PVG
@@ -54,9 +56,10 @@ namespace MechJebLib.PVG
         private          bool        _attachAltFlag;
         private          bool        _lanflag;
         private          bool        _fixedBurnTime;
-        public          Solution?   _solution;
+        public           Solution?   _solution;
         private          int         _lastPhase => _phases.Count - 1;
         private          int         _optimizedPhase;
+        private          int         _optimizedCoastPhase = -1;
         private          Optimizer?  _optimizer;
 
         public void Run()
@@ -178,26 +181,40 @@ namespace MechJebLib.PVG
             _phases[infinitePhase].Infinite = true;
             _phases[infinitePhase].Unguided = false;
 
+            if (_optimizedCoastPhase > -1)
+                _phases[_optimizedCoastPhase].OptimizeTime = false;
+
             pvg.Bootstrap(pvGuess, _r0.normalized);
             pvg.Run();
-
-            // FIXME: add the coast
             
+            Log("finished a pvg run");
+
             _phases[infinitePhase].Infinite = false;
             _phases[infinitePhase].Unguided = savedUnguided;
+
+            if (_optimizedCoastPhase > -1)
+                _phases[_optimizedCoastPhase].OptimizeTime = true;
            
             if (!pvg.Success())
                 throw new Exception("FIXME: need to handle this error better");
             
             using Solution solution = pvg.GetSolution();
 
+            Log("starting a pvg2 run");
+            
             using Optimizer pvg2 = builder.Build();
             pvg2.Bootstrap(solution);
             pvg2.Run();
+
+            Log("finished a pvg2 run");
             
             if (!pvg2.Success())
+            {
+                Log("failure from pvg2 why no exception?");
                 throw new Exception("FIXME: need to handle this error better");
+            }
 
+            Log("starting a pvg3 run");
             // we have a periapsis attachment solution, redo with free attachment
             if (_attachAltFlag || _fixedBurnTime)
                 return pvg2;
@@ -210,8 +227,10 @@ namespace MechJebLib.PVG
             pvg3.Bootstrap(solution2);
             pvg3.Run();
             
+            Log("finished a pvg3 run");
+
             if (!pvg3.Success())
-                throw new Exception("FIXME: need to handle this error better");
+                return pvg2;
             
             using Solution solution3 = pvg.GetSolution();
             
@@ -220,6 +239,7 @@ namespace MechJebLib.PVG
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
                 Functions.KeplerianFromStateVectors(_mu, rf, vf);
             
+            // FIXME: we need to somehow pass this into ConvergedOptimization
             return Math.Abs(ClampPi(tanof)) > PI/2.0 ? pvg2 : pvg3;
 
         }

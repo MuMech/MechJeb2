@@ -36,6 +36,8 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool ShouldDrawTrajectory = true;
+        
+        private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
 
         // these variables will persist even if Reset() completely blows away the solution, so that pitch+heading will still be stable
         // until a new solution is found.
@@ -109,6 +111,8 @@ namespace MuMech
 
             HandleTerminal();
 
+            HandleSpinup();
+
             HandleThrottle();
 
             DrawTrajetory();
@@ -181,6 +185,16 @@ namespace MuMech
                     Done();
                 }
             }
+        }
+
+        private void HandleSpinup()
+        {
+            if (_ascentSettings.SpinupStage < 0 || vessel.currentStage != _ascentSettings.SpinupStage)
+                core.spinup.users.Remove(this);
+            else
+                core.spinup.users.Add(this);
+
+            core.spinup.RollAngularVelocity = _ascentSettings.SpinupAngularVelocity;
         }
 
         /* is guidance usable? */

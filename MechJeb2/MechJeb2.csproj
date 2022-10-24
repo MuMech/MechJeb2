@@ -154,7 +154,7 @@
     <Compile Include="MechJebModuleAscentGTAutopilot.cs" />
     <Compile Include="MechJebModuleAscentMenu.cs" />
     <Compile Include="MechJebModuleAscentPVGAutopilot.cs" />
-    <Compile Include="MechJebModuleAscentPVGStagingMenu.cs" />
+    <Compile Include="MechJebModuleAscentPVGSettingsMenu.cs" />
     <Compile Include="MechJebModuleAscentSettings.cs" />
     <Compile Include="MechJebModuleAscentSettingsMenu.cs" />
     <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
@@ -373,8 +373,8 @@
   <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">
     <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;" />
   </Target>
-  <Target Name="AfterBuild" Condition=" '$(OS)' == '' ">
-    <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)'" />
+  <Target Name="AfterBuild" Condition=" '$(OS)' != 'Windows_NT' ">
+    <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)' '$(ReferencePath)'" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

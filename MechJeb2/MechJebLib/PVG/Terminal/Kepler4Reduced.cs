@@ -16,20 +16,33 @@ namespace MechJebLib.PVG.Terminal
     /// <summary>
     ///     4 Constraint terminal conditions with free attachment for the minimum propellant / maximum mass problem with
     ///     reduced transversality conditions.
-    /// 
     ///     Pan, Binfeng, Zheng Chen, Ping Lu, and Bo Gao. “Reduced Transversality Conditions in Optimal Space Trajectories.”
     ///     Journal of Guidance, Control, and Dynamics 36, no. 5 (September 2013): 1289–1300. https://doi.org/10.2514/1.60181.
     /// </summary>
     public readonly struct Kepler4Reduced : IPVGTerminal
     {
+        private readonly double _smaT;
+        private readonly double _eccT;
+        private readonly double _incT;
+        private readonly double _lanT;
+
         private readonly V3     _hT;
         private readonly double _peRT;
 
         public Kepler4Reduced(double smaT, double eccT, double incT, double lanT)
         {
-            incT = Math.Abs(ClampPi(incT));
-            _hT   = Functions.HvecFromKeplerian(1.0, smaT, eccT, incT, lanT);
-            _peRT = Functions.PeriapsisFromKeplerian(smaT, eccT);
+            _smaT = smaT;
+            _eccT = eccT;
+            _incT = Math.Abs(ClampPi(incT));
+            _lanT = lanT;
+
+            _hT   = Functions.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
+            _peRT = Functions.PeriapsisFromKeplerian(_smaT, _eccT);
+        }
+
+        public IPVGTerminal Rescale(Scale scale)
+        {
+            return new Kepler4Reduced(_smaT / scale.lengthScale, _eccT, _incT, _lanT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)

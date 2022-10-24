@@ -4,6 +4,7 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+using System;
 using System.Threading.Tasks;
 using MechJebLib.Maths;
 using MechJebLib.PVG;
@@ -34,7 +35,7 @@ namespace MuMech
     ///     - handle failures by rebootstrapping with infinite upper stage, current Pv and zero Pr
     ///     - relay statistics back to the UI (DONE)
     ///     - fix staeleness in the UI
-    ///     - remove inertial stage hardcoding
+    ///     - remove inertial stage hardcoding (DONE)
     /// </summary>
     public class MechJebModulePVGGlueBall : ComputerModule
     {
@@ -126,18 +127,7 @@ namespace MuMech
         public void SetTarget(double peR, double apR, double attR, double inclination, double lan, bool attachAltFlag, bool lanflag)
         {
             HandleDoneTask();
-
-            if (_task != null)
-                Debug.Log(_task.Status);
-
-            if (_ascentSettings.SpinupStage < 0)
-                core.spinup.users.Remove(this);
-            else if (vessel.currentStage > _ascentSettings.SpinupStage)
-                core.spinup.users.Add(this);
-
-            core.spinup.ActivationStage     = _ascentSettings.SpinupStage;
-            core.spinup.RollAngularVelocity = _ascentSettings.SpinupAngularVelocity;
-
+            
             if (_task is { IsCompleted: false })
             {
                 return;
@@ -208,6 +198,8 @@ namespace MuMech
             if (core.guidance.Solution != null)
                 ascentBuilder.OldSolution(core.guidance.Solution);
 
+            bool optimizedStageFound = false;
+
             for (int i = core.stageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
             {
                 FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
@@ -215,22 +207,34 @@ namespace MuMech
                 if (i == _ascentSettings.CoastStage)
                 {
                     double ct = _ascentSettings.FixedCoastLength;
-                    double mt = _ascentSettings.MaxCoast;
+                    double maxt = _ascentSettings.MaxCoast;
+                    double mint = _ascentSettings.MinCoast;
 
                     if (i == vessel.currentStage && core.guidance.IsCoasting())
                     {
-                        ct -= vesselState.time - core.guidance.StartCoast;
-                        mt -= vesselState.time - core.guidance.StartCoast;
+                        ct   = Math.Max(ct - vesselState.time - core.guidance.StartCoast, 0);
+                        maxt = Math.Max(maxt - vesselState.time - core.guidance.StartCoast, 0);
+                        mint = Math.Max(mint - vesselState.time - core.guidance.StartCoast, 0);
                     }
 
-                    ascentBuilder.AddCoast(fuelStats.StartMass * 1000, ct, i);
+                    if (_ascentSettings.FixedCoast)
+                    {
+                        ascentBuilder.AddFixedCoast(fuelStats.StartMass * 1000, ct, i);
+                    }
+                    else
+                    {
+                        ascentBuilder.AddOptimizedCoast(fuelStats.StartMass * 1000, mint, maxt, i);
+                    }
                 }
 
                 // skip sep motors.  we already avoid running if the bottom stage has burned below this margin.
                 if (fuelStats.DeltaV < _ascentSettings.MinDeltaV)
                     continue;
 
-                bool optimizeTime = _ascentSettings.OptimizeStage == i && !_ascentSettings.FixedBurntime;
+                bool optimizeTime = _ascentSettings.OptimizeStage == i;
+
+                if (optimizeTime)
+                    optimizedStageFound = true;
 
                 bool unguided = IsUnguided(i);
 
@@ -238,7 +242,7 @@ namespace MuMech
                     optimizeTime, unguided);
             }
 
-            ascentBuilder.FixedBurnTime(_ascentSettings.FixedBurntime);
+            ascentBuilder.FixedBurnTime(!optimizedStageFound); // FIXME: can ascentbuilder just figure this out?
 
             _ascent = ascentBuilder.Build();
 
