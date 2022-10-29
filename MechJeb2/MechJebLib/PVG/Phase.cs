@@ -5,9 +5,12 @@
  */
 
 using System;
+using System.Diagnostics.SymbolStore;
 using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Integrators;
+using MechJebLib.Utils;
+using UnityEngine.Assertions;
 using static MechJebLib.Utils.Statics;
 
 #nullable enable
@@ -91,21 +94,39 @@ namespace MechJebLib.PVG
             Integrator.Integrate(y0, yf, this, t0, tf, solution);
         }
 
-        public static Phase NewStageUsingBurnTime(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
+        public static Phase NewStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
         {
-            double mdot = thrust / (isp * G0);
-            double mf = m0 - mdot * bt;
+            Check.PositiveFinite(m0);
+            Check.PositiveFinite(mf);
+            Check.PositiveFinite(isp);
+            Check.PositiveFinite(bt);
+            
+            double mdot = (m0 - mf) / bt;
+            double thrust = mdot * (isp * G0);
+            
+            Check.PositiveFinite(mdot);
+            Check.PositiveFinite(thrust);
+            
             var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime, Unguided = unguided };
 
             return phase;
         }
-
-        public static Phase NewStageUsingFinalMass(double m0, double thrust, double isp, double mf, int kspStage, bool optimizeTime = false)
+        
+        public static Phase NewStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
         {
+            Check.PositiveFinite(m0);
+            Check.PositiveFinite(thrust);
+            Check.PositiveFinite(isp);
+            Check.PositiveFinite(bt);
+            
             double mdot = thrust / (isp * G0);
-            double bt = (m0 - mf) / mdot;
+            double mf = m0 - mdot * bt;
+            
+            Check.PositiveFinite(mdot);
+            Check.PositiveFinite(mf);
+            
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime, Unguided = unguided };
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime };
             return phase;
         }
 
@@ -123,7 +144,7 @@ namespace MechJebLib.PVG
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append($"stage: {KSPStage} m0: {m0} thrust: {thrust} bt: {bt}");
+            sb.Append($"stage: {KSPStage} m0: {m0} mf: {mf} thrust: {thrust} bt: {bt} isp: {isp} mdot: {mdot}");
             if (OptimizeTime)
                 sb.Append(" (optimized)");
             if (Infinite)

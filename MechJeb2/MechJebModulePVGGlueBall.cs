@@ -158,36 +158,29 @@ namespace MuMech
                 // if we have only inertially guided stages we can't run the optimizer
                 if (!hasGuided)
                     return;
-
-                for (int i = core.stageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
-                {
-                    double dv = core.stageStats.vacStats[i].DeltaV;
-                    double dt = core.stageStats.vacStats[i].DeltaTime;
-
-                    // skip the zero length stages
-                    if (dv == 0)
-                        continue;
-
-                    if (dv > _ascentSettings.MinDeltaV && dt > _ascentSettings.PreStageTime)
-                        break;
-
-                    // or else we need to pause guidance
-                    _blockOptimizerUntilTime = vesselState.time + _ascentSettings.OptimizerPauseTime;
-                    break;
-                }
             }
 
             if (_blockOptimizerUntilTime > vesselState.time)
                 return;
 
+            // check for readiness (not terminal guidance and not finished)
             if (!core.guidance.IsReady())
+                return;
+            
+            if (core.guidance.Solution != null)
             {
-                return;
+                int solutionIndex = core.guidance.Solution.IndexForKSPStage(vessel.currentStage);
+                
+                if (solutionIndex >= 0)
+                {
+                    // check for prestaging as the current stage gets low
+                    if (core.guidance.Solution?.Tgo(vesselState.time, solutionIndex) < _ascentSettings.PreStageTime)
+                    {
+                        _blockOptimizerUntilTime = vesselState.time + _ascentSettings.OptimizerPauseTime;
+                        return;
+                    }
+                }
             }
-
-            // terminal guidance check
-            if (core.guidance.IsStable() && core.guidance.Tgo < 10)
-                return;
 
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                 .Initial(vesselState.orbitalPosition.WorldToV3(), vesselState.orbitalVelocity.WorldToV3(), vesselState.forward.WorldToV3(),
@@ -238,7 +231,7 @@ namespace MuMech
 
                 bool unguided = IsUnguided(i);
 
-                ascentBuilder.AddStageUsingBurnTime(fuelStats.StartMass * 1000, fuelStats.MaxThrust * 1000, fuelStats.Isp, fuelStats.DeltaTime, i,
+                ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime, i,
                     optimizeTime, unguided);
             }
 

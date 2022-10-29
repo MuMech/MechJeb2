@@ -40,9 +40,7 @@ namespace MechJebLib.PVG
                     throw new Exception("Optimizer.Build() called with no terminal conditions");
 
                 problem.Terminal = _terminal.Rescale(problem.Scale);
-
-                problem.TerminalConditions = new TerminalConditions(_hT, true);
-
+                
                 var solver = new Optimizer(problem, _phases);
                 return solver;
             }

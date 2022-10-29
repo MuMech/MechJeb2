@@ -23,9 +23,17 @@ namespace MechJebLib.PVG
                 _ascent._phases.Clear();
             }
             
-            public AscentBuilder AddStageUsingBurnTime(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
+            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
             {
-                _ascent._phases.Add(Phase.NewStageUsingBurnTime(m0, thrust, isp, bt, kspStage, optimizeTime, unguided));
+                _ascent._phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, optimizeTime, unguided));
+                if (optimizeTime)
+                    _ascent._optimizedPhase = _ascent._phases.Count - 1;
+                return this;
+            }
+            
+            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
+            {
+                _ascent._phases.Add(Phase.NewStageUsingThrust(m0, thrust, isp, bt, kspStage, optimizeTime, unguided));
                 if (optimizeTime)
                     _ascent._optimizedPhase = _ascent._phases.Count - 1;
                 return this;

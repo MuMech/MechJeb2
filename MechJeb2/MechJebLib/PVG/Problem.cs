@@ -25,7 +25,6 @@ namespace MechJebLib.PVG
         public readonly V3                  U0;
         public readonly double              Mu;
         public readonly double              Rbody;
-        public          TerminalConditions? TerminalConditions;
 
         public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody)
         {

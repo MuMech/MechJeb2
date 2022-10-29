@@ -17,16 +17,15 @@ namespace MechJebLib.PVG
 {
     public class Solution : IDisposable
     {
-        public           double              T0;
-        public           double              Tf => T0 + tmax * _timeScale;
-        private readonly Scale               _scale;
-        private readonly List<double>        _tmin         = new List<double>();
-        private readonly List<double>        _tmax         = new List<double>();
-        private readonly List<Hn>            _interpolants = new List<Hn>();
-        private readonly List<Phase>         _phases       = new List<Phase>();
-        private readonly double              _mu;
-        private          double              _rbody;
-        private readonly TerminalConditions? _terminalConditions;
+        public           double       T0;
+        public           double       Tf => T0 + tmax * _timeScale;
+        private readonly Scale        _scale;
+        private readonly List<double> _tmin         = new List<double>();
+        private readonly List<double> _tmax         = new List<double>();
+        private readonly List<Hn>     _interpolants = new List<Hn>();
+        private readonly List<Phase>  _phases       = new List<Phase>();
+        private readonly double       _mu;
+        private readonly double       _rbody;
 
         public  int    Segments       => _interpolants.Count;
         private double _timeScale     => _scale.timeScale;
@@ -42,7 +41,6 @@ namespace MechJebLib.PVG
             _scale               = problem.Scale;
             _mu                  = problem.Mu;
             _rbody               = problem.Rbody;
-            _terminalConditions  = problem.TerminalConditions;
             // t0 is a public API that can be updated while we're landed waiting for takeoff.
             T0 = problem.T0;
         }
@@ -189,31 +187,31 @@ namespace MechJebLib.PVG
         public bool Coast(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return _phases[PhaseForTbar(tbar)].Coast;
+            return _phases[IndexForTbar(tbar)].Coast;
         }
 
         public bool Unguided(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return _phases[PhaseForTbar(tbar)].Unguided;
+            return _phases[IndexForTbar(tbar)].Unguided;
         }
 
         public V3 U0(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return _phases[PhaseForTbar(tbar)].u0;
+            return _phases[IndexForTbar(tbar)].u0;
         }
 
         public int Stage(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return _phases[PhaseForTbar(tbar)].KSPStage;
+            return _phases[IndexForTbar(tbar)].KSPStage;
         }
 
         public double StageTimeLeft(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            int phase = PhaseForTbar(tbar);
+            int phase = IndexForTbar(tbar);
             return (_tmax[phase] - tbar) * _timeScale;
         }
 
@@ -225,7 +223,7 @@ namespace MechJebLib.PVG
             using DD xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
 
-            int phase = PhaseForTbar(tbar);
+            int phase = IndexForTbar(tbar);
 
             // FIXME: this logic should be pushed upwards into the guidance controller
             if (_phases[phase].Unguided)
@@ -247,11 +245,16 @@ namespace MechJebLib.PVG
 
         public (V3 r, V3 v) TerminalStateVectors()
         {
-            using DD xraw = Interpolate(tmax);
+            return StateVectors(tmax);
+        }
+
+        public (V3 r, V3 v) StateVectors(double tbar)
+        {
+            using DD xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
-
+        
         public string PhaseString(double t)
         {
             var sb = new StringBuilder();
@@ -294,26 +297,43 @@ namespace MechJebLib.PVG
             return sb.ToString();
         }
 
-        private int PhaseForTbar(double tbar)
+        private int IndexForTbar(double tbar)
         {
             for (int i = 0; i < _tmax.Count; i++)
                 if (tbar < _tmax[i])
                     return i;
             return _tmax.Count - 1;
         }
+        
+        public int IndexForKSPStage(int kspStage)
+        {
+            for (int i = 0; i < _phases.Count; i++)
+            {
+                if (_phases[i].KSPStage == kspStage)
+                    return i;
+            }
+
+            return -1;
+        }
 
         private DD Interpolate(double tbar)
         {
-            return _interpolants[PhaseForTbar(tbar)].Evaluate(tbar);
+            return _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
         }
 
         // this is for terminal guidance.
-        public bool TerminalGuidanceSatisfied(V3 pos, V3 vel)
+        public bool TerminalGuidanceSatisfied(V3 pos, V3 vel, int index)
         {
-            if (_terminalConditions is null)
-                throw new Exception("PVG internal error: terminal conditions set to null on the Solution");
+            var hf = V3.Cross(pos, vel);
+            double end = _tmax[index];
+
+            (V3 rT, V3 vT) = StateVectors(end);
+
+            var hT = V3.Cross(rT, vT);
             
-            return _terminalConditions.Check(pos, vel);
+            Log($"hf: {hf} hT: {hT}");
+
+            return hf.magnitude > hT.magnitude;
         }
 
         public void Dispose()

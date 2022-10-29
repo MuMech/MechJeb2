@@ -7,33 +7,37 @@
 #nullable enable
 
 using System;
+using UnityEngine;
 
 namespace MuMech
 {
     public class MechJebModuleSpinupController : ComputerModule
     {
+        private enum SpinupState { INITIALIZED, STARTING, STABILIZING, SPINUP, FINISHED  }
+
         public double RollAngularVelocity = 0;
 
         public MechJebModuleSpinupController(MechJebCore core) : base(core)
         {
         }
 
-        private bool   _stabilizing = true;
-        private double _startTime;
+        private SpinupState _state;
+        private double      _startTime;
 
         public override void OnModuleEnabled()
         {
-            _stabilizing = true;
-            _startTime   = Math.Max(vesselState.time, _startTime);
+            _state     = SpinupState.INITIALIZED;
+            _startTime = Math.Max(vesselState.time, _startTime);
             core.attitude.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
+            _state = SpinupState.FINISHED;
             core.attitude.SetOmegaTarget(roll: double.NaN);
             core.attitude.SetActuationControl(true, true);
             // FIXME: this might overwrite someone else, but the only other consumer so far is the GuidanceController
-            core.staging.autostageLimitInternal = -1;
+            core.staging.autostageLimitInternal = 0;
             core.attitude.users.Remove(this);
             base.OnModuleDisabled();
         }
@@ -52,27 +56,41 @@ namespace MuMech
         {
             // wait a second to enable after staging because aerodynamics may kick us,
             // but on the first tick we may think we are stable
-            if (!enabled || _stabilizing)
-                _startTime = vesselState.time + 1.0;
+            _startTime = vesselState.time + 1.0;
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            if (vesselState.time < _startTime)
+            if (_state == SpinupState.INITIALIZED)
                 return;
 
             core.staging.autostageLimitInternal = vessel.currentStage;
+            
+            if (vesselState.time < _startTime)
+                return;
+
+            if (_state == SpinupState.STARTING)
+                _state = SpinupState.STABILIZING;
+            
+            if (vessel.angularVelocityD.y / RollAngularVelocity >= 0.99)
+                enabled = false;
 
             if (!vessel.ActionGroups[KSPActionGroup.RCS])
                 vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
-            if (_stabilizing && (core.attitude.attitudeAngleFromTarget() > 1.0 || core.vessel.angularVelocity.magnitude > 0.001))
+            if (_state == SpinupState.STABILIZING && (core.attitude.attitudeAngleFromTarget() > 1.0 || core.vessel.angularVelocity.magnitude > 0.001))
                 return;
 
-            _stabilizing = false;
+            _state = SpinupState.SPINUP;
 
             core.attitude.SetOmegaTarget(roll: RollAngularVelocity);
             core.attitude.SetActuationControl(false, false);
+        }
+
+        public void AssertStart()
+        {
+            if (_state == SpinupState.INITIALIZED)
+                _state = SpinupState.STARTING;
         }
     }
 }
