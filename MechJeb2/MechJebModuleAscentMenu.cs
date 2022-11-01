@@ -61,11 +61,27 @@ namespace MuMech
             _classicPathMenu = core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
         }
 
+        [Persistent(pass = (int)Pass.Global)]
+        private bool _lastPVGSettingsEnabled  = false;
+        
+        [Persistent(pass = (int)Pass.Global)]
+        private bool _lastSettingsMenuEnabled = false;
+
+        public override void OnModuleEnabled()
+        {
+            _pvgSettingsMenu.enabled = _lastPVGSettingsEnabled;
+            _settingsMenu.enabled    = _lastSettingsMenuEnabled;
+        }
+
         public override void OnModuleDisabled()
         {
-            _launchingToPlane      = false;
-            _launchingToRendezvous = false;
-            _launchingToMatchLan   = false;
+            _launchingToPlane        = false;
+            _launchingToRendezvous   = false;
+            _launchingToMatchLan     = false;
+            _lastPVGSettingsEnabled  = _pvgSettingsMenu.enabled;
+            _lastSettingsMenuEnabled = _settingsMenu.enabled;
+            _pvgSettingsMenu.enabled = false;
+            _settingsMenu.enabled    = false;
         }
 
         private static GUIStyle _btNormal, _btActive;
@@ -135,7 +151,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.skin.label,
                 false);                                                                                          //Orbit inc.
             if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button13, GuiUtils.ExpandWidth(false))) //Current
-                _ascentSettings.DesiredInclination.val = Math.Round(vesselState.latitude, 2);
+                _ascentSettings.DesiredInclination.val = Math.Round(vesselState.latitude, 3);
             GUILayout.EndHorizontal();
 
             double delta = Math.Abs(vesselState.latitude) - Math.Abs(_ascentSettings.DesiredInclination);
@@ -163,38 +179,6 @@ namespace MuMech
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label11, _ascentSettings.IntermediateAltitude,
                     "km");                                                                                                //Intermediate altitude:
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label12, _ascentSettings.HoldAPTime, "s"); //Hold AP Time:
-                GUILayout.EndVertical();
-
-            }
-            else if (_ascentSettings.AscentType == ascentType.PVG)
-            {
-                GUILayout.BeginVertical(GUI.skin.box);
-
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label13, _ascentSettings.PitchStartVelocity, "m/s",
-                    40);                                                                                                       //Booster Pitch start:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:
-                GuiUtils.SimpleTextBox("Q Trigger:", _ascentSettings.DynamicPressureTrigger, "kPa", 40);
-                GuiUtils.ToggledTextBox(ref _ascentSettings.StagingTriggerFlag, "PVG After Stage:", _ascentSettings.StagingTrigger, width: 40);
-                //GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label15, core.guidance.pvgInterval, "s", 40); //Guidance Interval:
-                //if (core.guidance.pvgInterval < 1 || core.guidance.pvgInterval > 30)
-                //{
-                //    GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label16,
-                //        GuiUtils.yellowLabel); //Guidance intervals are limited to between 1s and 30s
-                //}
-
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label17, _ascentSettings.LimitQa, "Pa-rad"); //Qα limit
-                if (_ascentSettings.LimitQa < 100 || _ascentSettings.LimitQa > 4000)
-                {
-                    if (_ascentSettings.LimitQa < 100)
-                        GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label18,
-                            GuiUtils.yellowLabel); //Qα limit cannot be set to lower than 100 Pa-rad
-                    else if (_ascentSettings.LimitQa > 10000)
-                        GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label19,
-                            GuiUtils.yellowLabel); //Qα limit cannot be set to higher than 10000 Pa-rad
-                    else
-                        GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label20,
-                            GuiUtils.yellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
-                }
                 GUILayout.EndVertical();
             }
             
@@ -441,9 +425,17 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
+            if (_ascentSettings.AscentType == ascentType.PVG)
+            {
+                if (GUILayout.Button("Reset to PVG/RO Defaults"))
+                    _ascentSettings.ApplyRODefaults();
+            }
+            GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
             _ascentSettings.AscentType = (ascentType)GuiUtils.ComboBox.Box((int)_ascentSettings.AscentType, _ascentPathList, this);
             GUILayout.EndHorizontal();
-
+            
             if (_ascentSettings.AscentType == ascentType.CLASSIC)
                 _classicPathMenu.enabled =
                     GUILayout.Toggle(_classicPathMenu.enabled, CachedLocalizer.Instance.MechJeb_Ascent_checkbox10); //Edit ascent path

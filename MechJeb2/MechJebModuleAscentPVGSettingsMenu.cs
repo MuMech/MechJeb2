@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -8,7 +9,7 @@ namespace MuMech
         {
             hidden = true;
         }
-        
+
         private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
 
         private static GUIStyle _btNormal;
@@ -43,15 +44,22 @@ namespace MuMech
             SetupButtonStyles();
             GUILayout.BeginVertical(GUI.skin.box);
 
+            int topstage = -1;
+
+            _ascentSettings.LastStage.val = Math.Max(_ascentSettings.LastStage, core.stageStats.vacStats.Length - 1);
+            
             for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
             {
                 FuelFlowSimulation.FuelStats stats = core.stageStats.vacStats[i];
                 if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
                     continue;
 
+                if (topstage < 1)
+                    topstage = i;
+
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{i,3} {stats.DeltaV:##,###0} m/s");
-                if (_ascentSettings.UnguidedStages.val.Contains(i))
+                if (_ascentSettings.UnguidedStages.Contains(i))
                     GUILayout.Label(" (unguided)");
                 if (_ascentSettings.OptimizeStage == i)
                     GUILayout.Label(" (optimize)");
@@ -59,14 +67,20 @@ namespace MuMech
             }
 
             GUILayout.EndVertical();
+
+            if (_ascentSettings.OptimizeStageInternal < topstage)
+                _ascentSettings.OptimizeStageInternal.val = topstage;
+
             GUILayout.BeginVertical(GUI.skin.box);
-            GuiUtils.SimpleTextBox("Optimize Stage: ", _ascentSettings.OptimizeStage);
-            GuiUtils.SimpleTextBox("Unguided Stages: ", _ascentSettings.UnguidedStages);
+            GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", 30);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
+            GuiUtils.ToggledTextBox(ref _ascentSettings.OptimizeStageFlag, "Optimize Stage: ", _ascentSettings.OptimizeStageInternal);
+            GuiUtils.ToggledTextBox(ref _ascentSettings.UnguidedStagesFlag, "Unguided Stages: ", _ascentSettings.UnguidedStagesInternal);
             GUILayout.EndVertical();
+            
             GUILayout.BeginVertical(GUI.skin.box);
             //_ascentSettings.ExtendIfRequired = GUILayout.Toggle(_ascentSettings.ExtendIfRequired, "Extend if Required");
-            GuiUtils.SimpleTextBox("Coast Stage: ", _ascentSettings.CoastStage);
+            GuiUtils.ToggledTextBox(ref _ascentSettings.CoastStageFlag, "Coast Stage: ", _ascentSettings.CoastStageInternal);
             /*
             GUILayout.BeginHorizontal();
             GUILayout.Label("Coast Timing: ");
@@ -83,16 +97,36 @@ namespace MuMech
             */
             //GuiUtils.SimpleTextBox("Max Coast: ", _ascentSettings.MaxCoast, "s", width: 60);
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedCoast, "Fixed Coast Length:", _ascentSettings.FixedCoastLength, "s", width: 40);
-            GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", width: 30);
-            GuiUtils.SimpleTextBox("Pre-stage time: ", _ascentSettings.PreStageTime, "s");
-            GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Spinup stage: ", _ascentSettings.SpinupStage, width: 30);
-            GuiUtils.SimpleTextBox("ω: ", _ascentSettings.SpinupAngularVelocity, "rpm", width: 30);
-            GUILayout.EndHorizontal();
-            GuiUtils.SimpleTextBox("Spinup lead time: ", _ascentSettings.SpinupLeadTime, "s", width: 60);
-            GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime, "s", width: 60);
-            core.guidance.ShouldDrawTrajectory = GUILayout.Toggle(core.guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");
+            GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime, "s", 60);
+            GUILayout.EndVertical();
             
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginHorizontal();
+            GuiUtils.ToggledTextBox(ref _ascentSettings.SpinupStageFlag, "Spinup stage: ", _ascentSettings.SpinupStageInternal, width: 30);
+            GuiUtils.SimpleTextBox("ω: ", _ascentSettings.SpinupAngularVelocity, "rpm", 30);
+            GUILayout.EndHorizontal();
+            GuiUtils.SimpleTextBox("Spinup lead time: ", _ascentSettings.SpinupLeadTime, "s", 60);
+            GUILayout.EndVertical();
+            
+            GUILayout.BeginVertical(GUI.skin.box);
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label13, _ascentSettings.PitchStartVelocity, "m/s",
+                40);                                                                                                       //Booster Pitch start:
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            GuiUtils.SimpleTextBox("Q Trigger:", _ascentSettings.DynamicPressureTrigger, "kPa", 40);
+            GuiUtils.ToggledTextBox(ref _ascentSettings.StagingTriggerFlag, "PVG After Stage:", _ascentSettings.StagingTrigger, width: 40);
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label17, _ascentSettings.LimitQa, "Pa-rad"); //Qα limit
+            if (_ascentSettings.LimitQa < 1000 || _ascentSettings.LimitQa > 4000)
+            {
+                if (_ascentSettings.LimitQa < 0 || _ascentSettings.LimitQa > 10000)
+                    GUILayout.Label("Qα limit has been clamped to between 0 and 10000 Pa-rad", GuiUtils.redLabel);
+                else
+                    GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label20,
+                        GuiUtils.yellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
+            }
+            core.guidance.ShouldDrawTrajectory = GUILayout.Toggle(core.guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);

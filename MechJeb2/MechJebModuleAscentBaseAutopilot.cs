@@ -383,7 +383,7 @@ namespace MuMech
             /* AoA limiter for PVG */
             if (AscentSettings.LimitQaEnabled)
             {
-                double lim = MuUtils.Clamp(AscentSettings.LimitQa, 100, 10000);
+                double lim = MuUtils.Clamp(AscentSettings.LimitQa, 0, 10000);
                 AscentSettings.LimitingAoA =
                     vesselState.dynamicPressure * Vector3.Angle(vesselState.surfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
                 if (AscentSettings.LimitingAoA)

@@ -90,7 +90,7 @@ namespace MuMech
 
         private bool IsUnguided(int s)
         {
-            return _ascentSettings.UnguidedStages.val.Contains(s);
+            return _ascentSettings.UnguidedStages.Contains(s);
         }
 
         // FIXME: maybe this could be a callback to the Task?

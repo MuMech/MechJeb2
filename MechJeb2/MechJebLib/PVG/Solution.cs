@@ -289,10 +289,12 @@ namespace MechJebLib.PVG
             double peA = peR - _rbody;
             double apA = apR <= 0 ? apR : apR - _rbody;
             double fpa = Functions.FlightPathAngle(rf, vf);
+            double rT = rf.magnitude - _rbody;
+            double vT = vf.magnitude;
             
             var sb = new StringBuilder();
-            sb.AppendLine($"{peA.ToSI(0)}m x {apA.ToSI(0)}m FPA: {Rad2Deg(fpa):F1}");
-            sb.AppendLine($"sma: {sma.ToSI(0)}m ecc: {ecc:F3}");
+            sb.AppendLine($"{peA.ToSI(0)}m x {apA.ToSI(0)}m sma: {sma.ToSI(0)}m ecc: {ecc:F3}");
+            sb.AppendLine($"rT: {rT.ToSI(0)} vT: {vT.ToSI(0)} FPA: {Rad2Deg(fpa):F1}");
             sb.Append($"inc: {Rad2Deg(inc):F1} lan: {Rad2Deg(lan):F1} argp: {Rad2Deg(argp):F1} ta: {Rad2Deg(tanom):F1}");
             return sb.ToString();
         }

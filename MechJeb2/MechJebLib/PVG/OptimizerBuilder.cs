@@ -92,9 +92,9 @@ namespace MechJebLib.PVG
                 return this;
             }
 
-            public OptimizerBuilder TerminalEnergy3(double rT, double incT)
+            public OptimizerBuilder TerminalEnergy3(double rT, double gammaT, double incT)
             {
-                _terminal = new FlightPathAngle3Energy(0, rT, incT);
+                _terminal = new FlightPathAngle3Energy(gammaT, rT, incT);
 
                 return this;
             }

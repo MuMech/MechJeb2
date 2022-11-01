@@ -48,7 +48,7 @@ namespace MechJebLib.Utils
         {
             return x < min ? min : x > max ? max : x;
         }
-        
+
         /// <summary>
         ///     Clamp first value between min and max by truncating.
         /// </summary>
@@ -252,7 +252,12 @@ namespace MechJebLib.Utils
         {
             if (!IsFinite(d)) return d.ToString();
 
-            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d)));
+            // this is an offset to d to deal with rounding (e.g. 9.9995 gets rounded to 10.00 so gains a wholeDigit)
+            // (also 999.95 should be rounded to 1k, so bumps up an SI prefix)
+            // FIXME: probably needs to be fixed to work when maxPrecision kicks in
+            double offset = 5 * (d != 0 ? Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(d))) - sigFigs) : 0);
+
+            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d) + offset));
 
             int index = d != 0 ? (int)Math.Abs(Math.Floor(exponent / 3.0)) : 0; // index of the SI prefix
             if (index > 8) index = 8;                                           // there's only 8 SI prefixes
@@ -263,8 +268,7 @@ namespace MechJebLib.Utils
 
             d /= Math.Pow(10, siExponent); // scale d by the SI prefix exponent
 
-            int wholeDigits = d != 0 ? (int)Math.Floor(Math.Log10(Math.Abs(d))) + 1 : 1;
-
+            int wholeDigits = d != 0 ? exponent - siExponent + 1 : 1;
             int decimalDigits = Clamp(sigFigs - wholeDigits, 0, siExponent - maxPrecision);
 
             return $"{d.ToString("F" + decimalDigits)} {unit}";

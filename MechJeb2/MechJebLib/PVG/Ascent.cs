@@ -122,11 +122,11 @@ namespace MechJebLib.PVG
             (_vT, _gammaT) = Functions.ConvertApsidesTargetToFPA(_peR, _apR, _attR, _mu);
             if (_lanflag)
             {
-                builder.TerminalFPA5(_peR, _vT, _gammaT, _incT, _lanT);
+                builder.TerminalFPA5(_attR, _vT, _gammaT, _incT, _lanT);
             }
             else
             {
-                builder.TerminalFPA4(_peR, _vT, _gammaT, _incT);
+                builder.TerminalFPA4(_attR, _vT, _gammaT, _incT);
             }
         }
 
@@ -146,13 +146,15 @@ namespace MechJebLib.PVG
 
         private void ApplyEnergy(Optimizer.OptimizerBuilder builder)
         {
+            (_vT, _gammaT) = Functions.ConvertApsidesTargetToFPA(_peR, _apR, _attR, _mu);
+            
             if (_lanflag)
             {
-                builder.TerminalEnergy4(_peR, _incT, _lanT);
+                builder.TerminalEnergy4(_attR, _incT, _lanT);
             }
             else
             {
-                builder.TerminalEnergy3(_peR, _incT);
+                builder.TerminalEnergy3(_attR, _gammaT, _incT);
             }
         }
 

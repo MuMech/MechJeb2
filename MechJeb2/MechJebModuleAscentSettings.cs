@@ -13,29 +13,29 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble PitchStartVelocity = new EditableDouble(50);
+        public readonly EditableDouble PitchStartVelocity = new EditableDouble(PITCH_START_VELOCITY_DEFAULT);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble PitchRate = new EditableDouble(0.50);
+        public readonly EditableDouble PitchRate = new EditableDouble(PITCH_RATE_DEFAULT);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDoubleMult DesiredApoapsis = new EditableDoubleMult(0, 1000);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDoubleMult DesiredAttachAlt = new EditableDoubleMult(0, 1000);
+        public readonly EditableDoubleMult DesiredAttachAlt = new EditableDoubleMult(DESIRED_ATTACH_ALT_DEFAULT, 1000);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDoubleMult DynamicPressureTrigger = new EditableDoubleMult(10000, 1000);
-
+        public readonly EditableDoubleMult DynamicPressureTrigger = new EditableDoubleMult(DYNAMIC_PRESSURE_TRIGGER_DEFAULT, 1000);
+        
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableInt StagingTrigger = new EditableInt(1);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool AttachAltFlag = false;
-
+        public bool AttachAltFlag = ATTACH_ALT_FLAG_DEFAULT;
+        
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public bool StagingTriggerFlag = false;
-
+        public bool StagingTriggerFlag = STAGING_TRIGGER_FLAG_DEFAULT;
+        
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
 
@@ -137,16 +137,16 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Type)] public bool LimitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble LimitQa = new EditableDouble(2000);
+        public readonly EditableDouble LimitQa = new EditableDouble(LIMIT_QA_DEFAULT);
 
         [Persistent(pass = (int)Pass.Type)]
-        public bool LimitQaEnabled = false;
+        public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble LaunchPhaseAngle = 0;
+        public readonly EditableDouble LaunchPhaseAngle = LAUNCH_PHASE_ANGLE_DEFAULT;
 
         [Persistent(pass = (int)Pass.Type)]
-        public readonly EditableDouble LaunchLANDifference = 0;
+        public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
 
         [Persistent(pass = (int)Pass.Global)]
         public readonly EditableInt WarpCountDown = 11;
@@ -190,52 +190,77 @@ namespace MuMech
          */
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble MinDeltaV = 40;
+        public readonly EditableDouble MinDeltaV = MIN_DELTAV_DEFAULT;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble MaxCoast = 450;
+        public readonly EditableDouble MaxCoast = MAX_COAST_DEFAULT;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble MinCoast = MIN_COAST_DEFAULT;
+
+        [Persistent(pass = (int)Pass.Type)]
+        public bool FixedCoast = FIXED_COAST_DEFAULT;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDouble FixedCoastLength = FIXED_COAST_LENGTH_DEFAULT;
+
+        // deliberately not in the UI or in global, edit the ship file with an editor
+        [Persistent(pass = (int)(Pass.Type))]
+        public readonly EditableDouble PreStageTime = PRE_STAGE_TIME_DEFAULT;
         
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble MinCoast = 0;
+        // deliberately not in the UI or in global, edit the ship file with an editor
+        [Persistent(pass = (int)(Pass.Type))]
+        public readonly EditableDouble OptimizerPauseTime = OPTIMIZER_PAUSE_TIME_DEFAULT;
+        
+        [Persistent(pass = (int)Pass.Type)] 
+        public readonly EditableInt LastStage = -1;
 
         [Persistent(pass = (int)Pass.Type)] 
-        public bool FixedCoast = false;
+        public readonly EditableInt CoastStageInternal = -1;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble FixedCoastLength = 450;
+        [Persistent(pass = (int)Pass.Type)]
+        public bool CoastStageFlag = false;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble PreStageTime = 10;
+        public int CoastStage => CoastStageFlag ? CoastStageInternal.val : -1;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDouble OptimizerPauseTime = 5;
-
+        [Persistent(pass = (int)Pass.Type)]
+        public bool OptimizeStageFlag = true;
+        
         [Persistent(pass = (int)Pass.Type)] 
-        public readonly EditableInt LastStage = 0;
+        public readonly EditableInt OptimizeStageInternal = -1;
 
-        [Persistent(pass = (int)Pass.Type)] 
-        public readonly EditableInt CoastStage = -1;
+        public int OptimizeStage => OptimizeStageFlag ? OptimizeStageInternal.val : -1;
 
+        [Persistent(pass = (int)Pass.Type)]
+        public bool SpinupStageFlag = true;
+        
         [Persistent(pass = (int)Pass.Type)] 
-        public readonly EditableInt OptimizeStage = 0;
+        public readonly EditableInt SpinupStageInternal = -1;
 
-        [Persistent(pass = (int)Pass.Type)] 
-        public readonly EditableInt SpinupStage = -1;
+        public int SpinupStage => SpinupStageFlag ? SpinupStageInternal.val : -1;
 
         [Persistent(pass = (int)Pass.Type)]
         public readonly EditableDouble SpinupLeadTime = 50;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(0.5, TAU / 60.0);
+        public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(TAU/6.0, TAU / 60.0);
 
         [Persistent(pass = (int)Pass.Type)]
-        public readonly EditableIntList UnguidedStages = new EditableIntList();
+        public readonly EditableIntList UnguidedStagesInternal = new EditableIntList();
+
+        [Persistent(pass = (int)Pass.Type)]
+        public bool UnguidedStagesFlag = false;
+
+        private readonly List<int> _emptyList = new List<int>();
+
+        public List<int> UnguidedStages => UnguidedStagesFlag ? UnguidedStagesInternal.val : _emptyList;
+        
         
         /*
          * some non-persisted values
          */
+        
         public bool LaunchingToPlane;
-
         public bool LaunchingToRendezvous;
         public bool LaunchingToMatchLan;
         public bool LaunchingToLan;
@@ -272,5 +297,90 @@ namespace MuMech
         {
             DisableAscentModules();
         }
+
+        public void ApplyRODefaults()
+        {
+            PitchStartVelocity.val     = PITCH_START_VELOCITY_DEFAULT;
+            PitchRate.val              = PITCH_RATE_DEFAULT;
+            DesiredAttachAlt.val       = DESIRED_ATTACH_ALT_DEFAULT;
+            DynamicPressureTrigger.val = DYNAMIC_PRESSURE_TRIGGER_DEFAULT;
+            AttachAltFlag              = ATTACH_ALT_FLAG_DEFAULT;
+            StagingTriggerFlag         = STAGING_TRIGGER_FLAG_DEFAULT;
+            LimitQa.val                = LIMIT_QA_DEFAULT;
+            LimitQaEnabled             = LIMIT_QA_ENABLED_DEFAULT;
+            MinDeltaV.val              = MIN_DELTAV_DEFAULT;
+            MaxCoast.val               = MAX_COAST_DEFAULT;
+            MinCoast.val               = MIN_COAST_DEFAULT;
+            FixedCoast                 = FIXED_COAST_DEFAULT;
+            FixedCoastLength.val       = FIXED_COAST_LENGTH_DEFAULT;
+            LaunchPhaseAngle.val       = LAUNCH_PHASE_ANGLE_DEFAULT;
+            LaunchLANDifference.val    = LAUNCH_LAN_DIFFERENCE;
+            PreStageTime.val           = PRE_STAGE_TIME_DEFAULT;
+            OptimizerPauseTime.val     = OPTIMIZER_PAUSE_TIME_DEFAULT;
+
+            OptimizeStageInternal.val = -1;
+            OptimizeStageFlag         = true;
+            SpinupStageFlag           = false;
+            SpinupStageInternal.val   = -1;
+            CoastStageFlag            = false;
+            CoastStageInternal.val    = -1;
+            UnguidedStagesFlag        = false;
+
+            if (DesiredOrbitAltitude.val < 145000)
+                DesiredOrbitAltitude.val = 145000;
+            
+            if (Math.Abs(DesiredInclination.val) < Math.Abs(vesselState.latitude))
+                DesiredInclination.val = Math.Round(vesselState.latitude, 3);
+            
+            if (Math.Abs(DesiredInclination.val) > 180 - Math.Abs(vesselState.latitude))
+                DesiredInclination.val = 180 - Math.Round(vesselState.latitude, 3);
+
+            core.guidance.UllageLeadTime.val = 20;
+
+            core.settings.rssMode = true;
+
+            /* set the thrust controller to sane RO/RSS defaults */
+            core.thrust.limitToPreventUnstableIgnition = false;
+            core.thrust.autoRCSUllaging                = true;
+            core.thrust.minThrottle.val                = 0.05;
+            core.thrust.limiterMinThrottle             = true;
+            core.thrust.limitThrottle                  = false;
+            core.thrust.limitAcceleration              = false;
+            core.thrust.limitToPreventOverheats        = false;
+            core.thrust.limitDynamicPressure           = false;
+            core.thrust.maxDynamicPressure.val         = 20000;
+            
+            /* reset all of the staging controller, and turn on hotstaging and drop solids */
+            Autostage                                  = true;
+            core.staging.autostagePreDelay.val         = 0.0;
+            core.staging.autostagePostDelay.val        = 0.5;
+            core.staging.autostageLimit.val            = 0;
+            core.staging.fairingMaxDynamicPressure.val = 5000;
+            core.staging.fairingMinAltitude.val        = 50000;
+            core.staging.clampAutoStageThrustPct.val   = 0.99;
+            core.staging.fairingMaxAerothermalFlux.val = 1135;
+            core.staging.hotStaging                    = true;
+            core.staging.hotStagingLeadTime.val        = 1.0;
+            core.staging.dropSolids                    = true;
+            core.staging.dropSolidsLeadTime.val        = 1.0;
+        }
+
+        private const double LAUNCH_LAN_DIFFERENCE            = 0;
+        private const double LAUNCH_PHASE_ANGLE_DEFAULT       = 0;
+        private const double FIXED_COAST_LENGTH_DEFAULT       = 0;
+        private const bool   FIXED_COAST_DEFAULT              = true;
+        private const double MIN_COAST_DEFAULT                = 0;
+        private const double MAX_COAST_DEFAULT                = 450;
+        private const double MIN_DELTAV_DEFAULT               = 40;
+        private const double DESIRED_ATTACH_ALT_DEFAULT       = 110000;
+        private const double PITCH_START_VELOCITY_DEFAULT     = 50;
+        private const double PITCH_RATE_DEFAULT               = 0.50;
+        private const double DYNAMIC_PRESSURE_TRIGGER_DEFAULT = 10000;
+        private const bool   ATTACH_ALT_FLAG_DEFAULT          = false;
+        private const bool   STAGING_TRIGGER_FLAG_DEFAULT     = false;
+        private const double LIMIT_QA_DEFAULT                 = 2000;
+        private const bool   LIMIT_QA_ENABLED_DEFAULT         = true;
+        private const double PRE_STAGE_TIME_DEFAULT           = 10;
+        private const double OPTIMIZER_PAUSE_TIME_DEFAULT     = 5;
     }
 }
