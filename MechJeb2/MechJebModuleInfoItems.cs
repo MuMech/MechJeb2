@@ -700,6 +700,24 @@ namespace MuMech
             return core.target.TargetOrbit.LAN.ToString("F2") + "º";
         }
 
+        [ValueInfoItem("#MechJeb_TargetTimeToEquatorialAN", InfoItem.Category.Target)]//Target Time to equatorial AN
+        public string TargetTimeToEquatorialAscendingNode()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.TargetOrbit.AscendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("#MechJeb_TargetTimeToEquatorialDN", InfoItem.Category.Target)]//Target Time to equatorial DN
+        public string TargetTimeToEquatorialDescendingNode()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.TargetOrbit.DescendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
+        }
+
         [ValueInfoItem("#MechJeb_TargetAoP", InfoItem.Category.Target)]//Target AoP
         public string TargetAoP()
         {
@@ -719,6 +737,13 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
             return MuUtils.ToSI(core.target.TargetOrbit.semiMajorAxis, 2) + "m";
+        }
+
+        [ValueInfoItem("#MechJeb_TargetMeanAnomaly", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)]//Target Mean Anomaly
+        public double TargetMeanAnomaly()
+        {
+            if (!core.target.NormalTargetExists) return double.NegativeInfinity;
+            return core.target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Atmospheric drag
