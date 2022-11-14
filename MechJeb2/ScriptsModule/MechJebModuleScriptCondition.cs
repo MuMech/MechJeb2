@@ -52,6 +52,9 @@ namespace MuMech
 			conditionsList.Add("Target time to Ap");
 			conditionsList.Add("Target time to Pe");
 			conditionsList.Add("Target LAN");
+            conditionsList.Add("Target time to equatorial AN");
+            conditionsList.Add("Target time to equatorial DN");
+            conditionsList.Add("Target mean anomaly");
 			conditionsList.Add("Target AoP");
 			conditionsList.Add("Target eccentricity");
 			conditionsList.Add("Target SMA");
