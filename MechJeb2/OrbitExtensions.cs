@@ -321,7 +321,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool AscendingNodeExists(this Orbit a, Orbit b)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
         }
 
         //Returns whether a has a descending node with b. This can be false
@@ -329,7 +329,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool DescendingNodeExists(this Orbit a, Orbit b)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
         }
 
         //Returns whether o has an ascending node with the equator. This can be false
@@ -337,7 +337,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool AscendingNodeEquatorialExists(this Orbit o)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
         }
 
         //Returns whether o has a descending node with the equator. This can be false
@@ -345,7 +345,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool DescendingNodeEquatorialExists(this Orbit o)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
         }
 
         //Returns the vector from the primary to the orbiting body at periapsis
