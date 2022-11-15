@@ -746,6 +746,14 @@ namespace MuMech
             return core.target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
+        [ValueInfoItem("#MechJeb_TargetTrueLongitude", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)]//Target Mean Anomaly
+        public double TargetTrueLongitude()
+        {
+            if (!core.target.NormalTargetExists) return 0;
+            double longitudeOfPeriapsis = core.target.TargetOrbit.LAN + core.target.TargetOrbit.argumentOfPeriapsis;
+            return (core.target.TargetOrbit.trueAnomaly + longitudeOfPeriapsis) * UtilMath.Rad2Deg;
+        }
+
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Atmospheric drag
         public double AtmosphericDrag()
         {
