@@ -700,6 +700,51 @@ namespace MuMech
             return core.target.TargetOrbit.LAN.ToString("F2") + "º";
         }
 
+        [ValueInfoItem("#MechJeb_TargetLDN", InfoItem.Category.Target)]//Target LDN
+        public string TargetLDN()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return MuUtils.ClampDegrees360(core.target.TargetOrbit.LAN + 180).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("#MechJeb_TargetTimeToAN", InfoItem.Category.Target)]//Target Time to AN
+        public string TargetTimeToAscendingNode()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.TargetOrbit.AscendingNodeExists(orbit)) return "N/A";
+
+            double trueAnomalyAN = core.target.TargetOrbit.TrueAnomalyAtLongitude(core.target.TargetOrbit.LAN);
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfTrueAnomaly(trueAnomalyAN, vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("#MechJeb_TargetTimeToDN", InfoItem.Category.Target)]//Target Time to DN
+        public string TargetTimeTolDescendingNode()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.TargetOrbit.DescendingNodeExists(orbit)) return "N/A";
+
+            double trueAnomalyDN = core.target.TargetOrbit.TrueAnomalyAtLongitude(MuUtils.ClampDegrees360(core.target.TargetOrbit.LAN + 180));
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfTrueAnomaly(trueAnomalyDN, vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("#MechJeb_TargetEquatorialLAN", InfoItem.Category.Target)]//Target equatorial LAN
+        public string TargetEquatorialLAN()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            double longitudeOfPeriapsis = core.target.TargetOrbit.LAN + core.target.TargetOrbit.argumentOfPeriapsis;
+            double eqLAN = core.target.TargetOrbit.AscendingNodeEquatorialTrueAnomaly() * UtilMath.Rad2Deg + longitudeOfPeriapsis;
+            return MuUtils.ClampDegrees360(eqLAN).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("#MechJeb_TargetEquatorialLDN", InfoItem.Category.Target)]//Target equatorial LDN
+        public string TargetEquatorialLDN()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            double longitudeOfPeriapsis = core.target.TargetOrbit.LAN + core.target.TargetOrbit.argumentOfPeriapsis;
+            double eqLDN = core.target.TargetOrbit.DescendingNodeEquatorialTrueAnomaly() * UtilMath.Rad2Deg + longitudeOfPeriapsis;
+            return MuUtils.ClampDegrees360(eqLDN).ToString("F2") + "º";
+        }
+
         [ValueInfoItem("#MechJeb_TargetTimeToEquatorialAN", InfoItem.Category.Target)]//Target Time to equatorial AN
         public string TargetTimeToEquatorialAscendingNode()
         {
