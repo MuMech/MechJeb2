@@ -740,18 +740,18 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_TargetMeanAnomaly", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)]//Target Mean Anomaly
-        public double TargetMeanAnomaly()
+        public string TargetMeanAnomaly()
         {
-            if (!core.target.NormalTargetExists) return 0;
-            return core.target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg;
+            if (!core.target.NormalTargetExists) return "N/A";
+            return (core.target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
         }
 
-        [ValueInfoItem("#MechJeb_TargetTrueLongitude", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)]//Target Mean Anomaly
-        public double TargetTrueLongitude()
+        [ValueInfoItem("#MechJeb_TargetTrueLongitude", InfoItem.Category.Target)]//Target Mean Anomaly
+        public string TargetTrueLongitude()
         {
-            if (!core.target.NormalTargetExists) return 0;
+            if (!core.target.NormalTargetExists) return "N/A";
             double longitudeOfPeriapsis = core.target.TargetOrbit.LAN + core.target.TargetOrbit.argumentOfPeriapsis;
-            return (core.target.TargetOrbit.trueAnomaly + longitudeOfPeriapsis) * UtilMath.Rad2Deg;
+            return (MuUtils.ClampDegrees360(core.target.TargetOrbit.trueAnomaly + longitudeOfPeriapsis) * UtilMath.Rad2Deg).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Atmospheric drag
