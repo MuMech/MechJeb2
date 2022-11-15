@@ -276,36 +276,36 @@ namespace MuMech
 
         //Gives the true anomaly (in a's orbit) at which a crosses its ascending node
         //with b's orbit.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double AscendingNodeTrueAnomaly(this Orbit a, Orbit b)
         {
             Vector3d vectorToAN = Vector3d.Cross(a.SwappedOrbitNormal(), b.SwappedOrbitNormal());
-            return a.TrueAnomalyFromVector(vectorToAN) * UtilMath.Rad2Deg;
+            return a.TrueAnomalyFromVector(vectorToAN);
         }
 
         //Gives the true anomaly (in a's orbit) at which a crosses its descending node
         //with b's orbit.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double DescendingNodeTrueAnomaly(this Orbit a, Orbit b)
         {
-            return MuUtils.ClampDegrees360(a.AscendingNodeTrueAnomaly(b) + 180);
+            return MuUtils.ClampRadiansTwoPi(a.AscendingNodeTrueAnomaly(b) + Math.PI);
         }
 
         //Gives the true anomaly at which o crosses the equator going northwards, if o is east-moving,
         //or southwards, if o is west-moving.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double AscendingNodeEquatorialTrueAnomaly(this Orbit o)
         {
             Vector3d vectorToAN = Vector3d.Cross(o.referenceBody.transform.up, o.SwappedOrbitNormal());
-            return o.TrueAnomalyFromVector(vectorToAN) * UtilMath.Rad2Deg;
+            return o.TrueAnomalyFromVector(vectorToAN);
         }
 
         //Gives the true anomaly at which o crosses the equator going southwards, if o is east-moving,
         //or northwards, if o is west-moving.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double DescendingNodeEquatorialTrueAnomaly(this Orbit o)
         {
-            return MuUtils.ClampDegrees360(o.AscendingNodeEquatorialTrueAnomaly() + 180);
+            return MuUtils.ClampRadiansTwoPi(o.AscendingNodeEquatorialTrueAnomaly() + Math.PI);
         }
 
         //For hyperbolic orbits, the true anomaly only takes on values in the range
