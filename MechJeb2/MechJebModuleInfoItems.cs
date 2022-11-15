@@ -751,7 +751,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
             double longitudeOfPeriapsis = core.target.TargetOrbit.LAN + core.target.TargetOrbit.argumentOfPeriapsis;
-            return (MuUtils.ClampDegrees360(core.target.TargetOrbit.trueAnomaly + longitudeOfPeriapsis) * UtilMath.Rad2Deg).ToString("F2") + "º";
+            return (MuUtils.ClampDegrees360(core.target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis)).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Atmospheric drag
