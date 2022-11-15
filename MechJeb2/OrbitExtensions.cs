@@ -476,13 +476,6 @@ namespace MuMech
             return o.UTAtMeanAnomaly(o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly)), UT);
         }
 
-        //Returns the true anomaly of a true longitude
-        public static double TrueAnomalyAtLongitude(this Orbit o, double longitude)
-        {
-            double longitudeOfPeriapsis = o.LAN + o.argumentOfPeriapsis;
-            return UtilMath.ClampRadiansTwoPI((longitude - longitudeOfPeriapsis) * UtilMath.Deg2Rad);
-        }
-
         //Returns the next time at which a will cross its ascending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if
