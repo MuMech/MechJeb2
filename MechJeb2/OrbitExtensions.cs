@@ -280,7 +280,7 @@ namespace MuMech
         public static double AscendingNodeTrueAnomaly(this Orbit a, Orbit b)
         {
             Vector3d vectorToAN = Vector3d.Cross(a.SwappedOrbitNormal(), b.SwappedOrbitNormal());
-            return a.TrueAnomalyFromVector(vectorToAN);
+            return a.TrueAnomalyFromVector(vectorToAN) * UtilMath.Rad2Deg;
         }
 
         //Gives the true anomaly (in a's orbit) at which a crosses its descending node
@@ -297,7 +297,7 @@ namespace MuMech
         public static double AscendingNodeEquatorialTrueAnomaly(this Orbit o)
         {
             Vector3d vectorToAN = Vector3d.Cross(o.referenceBody.transform.up, o.SwappedOrbitNormal());
-            return o.TrueAnomalyFromVector(vectorToAN);
+            return o.TrueAnomalyFromVector(vectorToAN) * UtilMath.Rad2Deg;
         }
 
         //Gives the true anomaly at which o crosses the equator going southwards, if o is east-moving,
