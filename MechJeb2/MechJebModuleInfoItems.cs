@@ -742,7 +742,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TargetMeanAnomaly", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)]//Target Mean Anomaly
         public double TargetMeanAnomaly()
         {
-            if (!core.target.NormalTargetExists) return double.NegativeInfinity;
+            if (!core.target.NormalTargetExists) return 0;
             return core.target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
