@@ -700,6 +700,31 @@ namespace MuMech
             return core.target.TargetOrbit.LAN.ToString("F2") + "º";
         }
 
+        [ValueInfoItem("#MechJeb_TargetLDN", InfoItem.Category.Target)]//Target LDN
+        public string TargetLDN()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return MuUtils.ClampDegrees360(core.target.TargetOrbit.LAN + 180).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("#MechJeb_TargetTimeToAN", InfoItem.Category.Target)]//Target Time to AN
+        public string TargetTimeToAscendingNode()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.TargetOrbit.AscendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
+        }
+
+        [ValueInfoItem("#MechJeb_TargetTimeToDN", InfoItem.Category.Target)]//Target Time to DN
+        public string TargetTimeToDescendingNode()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.target.TargetOrbit.DescendingNodeEquatorialExists()) return "N/A";
+
+            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
+        }
+
         [ValueInfoItem("#MechJeb_TargetAoP", InfoItem.Category.Target)]//Target AoP
         public string TargetAoP()
         {
@@ -719,6 +744,21 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists) return "N/A";
             return MuUtils.ToSI(core.target.TargetOrbit.semiMajorAxis, 2) + "m";
+        }
+
+        [ValueInfoItem("#MechJeb_TargetMeanAnomaly", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)]//Target Mean Anomaly
+        public string TargetMeanAnomaly()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            return MuUtils.ClampDegrees360(core.target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
+        }
+
+        [ValueInfoItem("#MechJeb_TargetTrueLongitude", InfoItem.Category.Target)]//Target Mean Anomaly
+        public string TargetTrueLongitude()
+        {
+            if (!core.target.NormalTargetExists) return "N/A";
+            double longitudeOfPeriapsis = core.target.TargetOrbit.LAN + core.target.TargetOrbit.argumentOfPeriapsis;
+            return MuUtils.ClampDegrees360(core.target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")]//Atmospheric drag
