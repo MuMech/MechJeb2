@@ -46,7 +46,6 @@ namespace MuMech
             if (useOldSkin)
             {
                 skinId = 1;
-                useOldSkin = false;
             }
         }
 
