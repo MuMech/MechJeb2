@@ -91,7 +91,7 @@ namespace MechJebLib.PVG
                     return yf.CostateMagnitude - 1;
                 }
 
-                if (_phases[p].DropMassBar > 0 && p < lastPhase)
+                if (_phases[p].DropMass > 0 && p < lastPhase)
                 {
                     using var y0p1 = ArrayWrapper.Rent(_initial[p + 1]);
                     return H(yfp, p) - H(y0p1, p + 1);
@@ -101,12 +101,12 @@ namespace MechJebLib.PVG
                 return yfp.H0 - y0p.H0;
             }
 
-            return y0p.Bt - _phases[p].bt_bar;
+            return y0p.Bt - _phases[p].bt;
         }
 
         private double H(ArrayWrapper y, int p)
         {
-            return y.H0 + _phases[p].thrust_bar * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot_bar;
+            return y.H0 + _phases[p].thrust * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot;
         }
 
         private void BaseResiduals()
@@ -137,9 +137,9 @@ namespace MechJebLib.PVG
                 z.PrContinuity = yf.PR - y0.PR;
 
                 if (_phases[p].MassContinuity)
-                    z.M_continuity = yf.M - (_phases[p - 1].DropMassBar + y0.M);
+                    z.M_continuity = yf.M - (_phases[p - 1].DropMass + y0.M);
                 else
-                    z.M_continuity = _phases[p].m0_bar - y0.M;
+                    z.M_continuity = _phases[p].m0 - y0.M;
 
                 z.Bt = CalcBTConstraint(p);
 
@@ -316,7 +316,7 @@ namespace MechJebLib.PVG
 
                 integ.DV = lastDv;
 
-                double bt = phase.OptimizeTime ? y0.Bt : phase.bt_bar;
+                double bt = phase.OptimizeTime ? y0.Bt : phase.bt;
 
                 double tf = t0 + bt;
 
@@ -373,17 +373,17 @@ namespace MechJebLib.PVG
                 {
                     y0.R  = _problem.R0Bar;
                     y0.V  = _problem.V0Bar;
-                    y0.M  = phase.m0_bar;
+                    y0.M  = phase.m0;
                     y0.PV = pv0;
                     y0.PR = pr0;
-                    y0.Bt = phase.bt_bar;
+                    y0.Bt = phase.bt;
                     y0.CopyTo(integArray);
                 }
                 else
                 {
                     _terminal[p - 1].CopyTo(_initial[p]);
-                    y0.Bt = phase.bt_bar;
-                    y0.M  = phase.m0_bar;
+                    y0.Bt = phase.bt;
+                    y0.M  = phase.m0;
                     _initial[p].CopyTo(integArray);
                 }
                 
@@ -446,10 +446,6 @@ namespace MechJebLib.PVG
             double t0 = 0;
             double lastDv = 0;
 
-            int segmentOffset = solution.Segments - _phases.Count;
-            if (segmentOffset < 0)
-                segmentOffset = 0;
-            
             for (int p = 0; p <= lastPhase; p++)
             {
                 Phase phase = _phases[p];
@@ -462,16 +458,7 @@ namespace MechJebLib.PVG
                     y0.R  = _problem.R0Bar;
                     y0.V  = _problem.V0Bar;
                     y0.M  = _problem.M0Bar;
-                    if (!phase.OptimizeTime)
-                    {
-                        y0.Bt = phase.bt_bar;
-                    } 
-                    else
-                    {
-                        // FIXME: this needs to be smarter to deal with crazy rearrangement
-                        // - e.g. if we're looking for a coast, we should probably go searching for the one coast
-                        y0.Bt = solution.Bt(p + segmentOffset, _problem.T0) / _problem.Scale.timeScale;
-                    }
+                    y0.Bt = phase.bt;
                     y0.PV = solution.Pv(_problem.T0);
                     y0.PR = solution.Pr(_problem.T0);
                     y0.CopyTo(integArray);
@@ -480,21 +467,8 @@ namespace MechJebLib.PVG
                 else
                 {
                     _terminal[p - 1].CopyTo(_initial[p]);
-                    if (!phase.OptimizeTime)
-                    {
-                        y0.Bt = phase.bt_bar;
-                    } 
-                    else
-                    {
-                        // FIXME: testing hack
-                        if (phase.Coast && phase.OptimizeTime)
-                            y0.Bt = 0.1;
-                        // FIXME: this needs to be smarter to deal with crazy rearrangement
-                        // - e.g. if we're looking for a coast, we should probably go searching for the one coast
-                        else
-                            y0.Bt = solution.Bt(p + segmentOffset, _problem.T0) / _problem.Scale.timeScale;
-                    }
-                    y0.M  = phase.m0_bar;
+                    y0.Bt = phase.bt;
+                    y0.M  = phase.m0;
                     _initial[p].CopyTo(integArray);
                 }
                 

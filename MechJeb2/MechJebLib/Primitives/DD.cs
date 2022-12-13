@@ -8,7 +8,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using static MechJebLib.Utils.Statics;
 using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
@@ -34,15 +34,24 @@ namespace MechJebLib.Primitives
                 other[i] = this[i];
         }
 
-        // NOTE CAREFULLY: the Count/Capacity of the returned list may be > n
+        // QUESTION: does resize of a double array produce garbage?
         public static DD Rent(int n)
         {
             DD list = _pool.Get();
-            if (list.Capacity < n)
-                list.Capacity = n;
             while (list.Count < n)
                 list.Add(0);
+            if (list.Count > n)
+                list.RemoveRange(n, list.Count-n);
             list.N = n;
+            return list;
+        }
+
+        public static DD Rent(double[] other)
+        {
+            DD list = Rent(other.Length);
+            for (int i = 0; i < other.Length; i++)
+                list[i] = other[i];
+
             return list;
         }
 
@@ -59,6 +68,11 @@ namespace MechJebLib.Primitives
         public void Dispose()
         {
             _pool.Return(this);
+        }
+
+        public override string ToString()
+        {
+            return DoubleArrayString(this);
         }
     }
 }

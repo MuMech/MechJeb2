@@ -1,5 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -46,7 +46,7 @@ namespace MuMech
 
             int topstage = -1;
 
-            _ascentSettings.LastStage.val = Math.Max(_ascentSettings.LastStage, core.stageStats.vacStats.Length - 1);
+            _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, core.stageStats.vacStats.Length - 1);
             
             for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
             {
@@ -54,7 +54,7 @@ namespace MuMech
                 if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
                     continue;
 
-                if (topstage < 1)
+                if (topstage < 0)
                     topstage = i;
 
                 GUILayout.BeginHorizontal();
@@ -81,20 +81,10 @@ namespace MuMech
             GUILayout.BeginVertical(GUI.skin.box);
             //_ascentSettings.ExtendIfRequired = GUILayout.Toggle(_ascentSettings.ExtendIfRequired, "Extend if Required");
             GuiUtils.ToggledTextBox(ref _ascentSettings.CoastStageFlag, "Coast Stage: ", _ascentSettings.CoastStageInternal);
-            /*
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Coast Timing: ");
-            bool coastStart  = GUILayout.Toggle(_coastSetting == -1, "Start");
-            bool coastMiddle = GUILayout.Toggle(_coastSetting == 0, "Middle");
-            bool coastEnd    = GUILayout.Toggle(_coastSetting == 1, "End");
-            if (coastStart && _coastSetting != -1)
-                _coastSetting = -1;
-            if (coastMiddle && _coastSetting != 0)
-                _coastSetting = 0;
-            if (coastEnd && _coastSetting != 1)
-                _coastSetting = 1;
+            _ascentSettings.CoastBeforeFlag = GUILayout.Toggle(_ascentSettings.CoastBeforeFlag, "Coast Before");
+            _ascentSettings.CoastBeforeFlag = !GUILayout.Toggle(!_ascentSettings.CoastBeforeFlag, "Coast After");
             GUILayout.EndHorizontal();
-            */
             //GuiUtils.SimpleTextBox("Max Coast: ", _ascentSettings.MaxCoast, "s", width: 60);
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedCoast, "Fixed Coast Length:", _ascentSettings.FixedCoastLength, "s", width: 40);
             GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime, "s", 60);
@@ -134,12 +124,12 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "PVG Settings Editor";
+            return "PVG Settings";
         }
 
         public override string IconName()
         {
-            return "PVGStagingEditor";
+            return "PVGSettings";
         }
     }
 }

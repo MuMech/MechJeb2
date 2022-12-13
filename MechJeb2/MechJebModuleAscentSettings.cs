@@ -4,7 +4,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public enum ascentType { CLASSIC, GRAVITYTURN, PVG }
+    public enum AscentType { CLASSIC, GRAVITYTURN, PVG }
 
     public class MechJebModuleAscentSettings : ComputerModule
     {
@@ -25,17 +25,20 @@ namespace MuMech
         public readonly EditableDoubleMult DesiredAttachAlt = new EditableDoubleMult(DESIRED_ATTACH_ALT_DEFAULT, 1000);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDoubleMult DesiredFPA = new EditableDoubleMult(DESIRED_FPA_DEFAULT, PI / 180);
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDoubleMult DynamicPressureTrigger = new EditableDoubleMult(DYNAMIC_PRESSURE_TRIGGER_DEFAULT, 1000);
-        
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableInt StagingTrigger = new EditableInt(1);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool AttachAltFlag = ATTACH_ALT_FLAG_DEFAULT;
-        
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool StagingTriggerFlag = STAGING_TRIGGER_FLAG_DEFAULT;
-        
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
 
@@ -54,9 +57,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private int _ascentTypeInteger;
 
-        public ascentType AscentType
+        public AscentType AscentType
         {
-            get => (ascentType)_ascentTypeInteger;
+            get => (AscentType)_ascentTypeInteger;
             set
             {
                 _ascentTypeInteger = (int)value;
@@ -134,7 +137,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
 
-        [Persistent(pass = (int)Pass.Type)] public bool LimitingAoA = false;
+        [Persistent(pass = (int)Pass.Type)]
+        public bool LimitingAoA = false;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDouble LimitQa = new EditableDouble(LIMIT_QA_DEFAULT);
@@ -198,6 +202,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDouble MinCoast = MIN_COAST_DEFAULT;
 
+        [Persistent(pass = (int)(Pass.Type))]
+        public bool CoastBeforeFlag = false;
+        
         [Persistent(pass = (int)Pass.Type)]
         public bool FixedCoast = FIXED_COAST_DEFAULT;
 
@@ -205,36 +212,36 @@ namespace MuMech
         public readonly EditableDouble FixedCoastLength = FIXED_COAST_LENGTH_DEFAULT;
 
         // deliberately not in the UI or in global, edit the ship file with an editor
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)Pass.Type)]
         public readonly EditableDouble PreStageTime = PRE_STAGE_TIME_DEFAULT;
-        
+
         // deliberately not in the UI or in global, edit the ship file with an editor
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)Pass.Type)]
         public readonly EditableDouble OptimizerPauseTime = OPTIMIZER_PAUSE_TIME_DEFAULT;
-        
-        [Persistent(pass = (int)Pass.Type)] 
+
+        [Persistent(pass = (int)Pass.Type)]
         public readonly EditableInt LastStage = -1;
 
-        [Persistent(pass = (int)Pass.Type)] 
+        [Persistent(pass = (int)Pass.Type)]
         public readonly EditableInt CoastStageInternal = -1;
 
         [Persistent(pass = (int)Pass.Type)]
-        public bool CoastStageFlag = false;
+        public bool CoastStageFlag;
 
         public int CoastStage => CoastStageFlag ? CoastStageInternal.val : -1;
 
         [Persistent(pass = (int)Pass.Type)]
         public bool OptimizeStageFlag = true;
-        
-        [Persistent(pass = (int)Pass.Type)] 
+
+        [Persistent(pass = (int)Pass.Type)]
         public readonly EditableInt OptimizeStageInternal = -1;
 
         public int OptimizeStage => OptimizeStageFlag ? OptimizeStageInternal.val : -1;
 
         [Persistent(pass = (int)Pass.Type)]
         public bool SpinupStageFlag = true;
-        
-        [Persistent(pass = (int)Pass.Type)] 
+
+        [Persistent(pass = (int)Pass.Type)]
         public readonly EditableInt SpinupStageInternal = -1;
 
         public int SpinupStage => SpinupStageFlag ? SpinupStageInternal.val : -1;
@@ -243,23 +250,22 @@ namespace MuMech
         public readonly EditableDouble SpinupLeadTime = 50;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(TAU/6.0, TAU / 60.0);
+        public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(TAU / 6.0, TAU / 60.0);
 
         [Persistent(pass = (int)Pass.Type)]
         public readonly EditableIntList UnguidedStagesInternal = new EditableIntList();
 
         [Persistent(pass = (int)Pass.Type)]
-        public bool UnguidedStagesFlag = false;
+        public bool UnguidedStagesFlag;
 
         private readonly List<int> _emptyList = new List<int>();
 
         public List<int> UnguidedStages => UnguidedStagesFlag ? UnguidedStagesInternal.val : _emptyList;
-        
-        
+
         /*
          * some non-persisted values
          */
-        
+
         public bool LaunchingToPlane;
         public bool LaunchingToRendezvous;
         public bool LaunchingToMatchLan;
@@ -269,17 +275,17 @@ namespace MuMech
          * Helpers for dealing with switching between modules
          */
 
-        private readonly ascentType[] _values = (ascentType[])Enum.GetValues(typeof(ascentType));
+        private readonly AscentType[] _values = (AscentType[])Enum.GetValues(typeof(AscentType));
 
-        private MechJebModuleAscentBaseAutopilot GetAscentModule(ascentType type)
+        private MechJebModuleAscentBaseAutopilot GetAscentModule(AscentType type)
         {
             switch (type)
             {
-                case ascentType.CLASSIC:
+                case AscentType.CLASSIC:
                     return core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
-                case ascentType.GRAVITYTURN:
+                case AscentType.GRAVITYTURN:
                     return core.GetComputerModule<MechJebModuleAscentGTAutopilot>();
-                case ascentType.PVG:
+                case AscentType.PVG:
                     return core.GetComputerModule<MechJebModuleAscentPVGAutopilot>();
                 default:
                     return core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
@@ -288,7 +294,7 @@ namespace MuMech
 
         private void DisableAscentModules()
         {
-            foreach (ascentType type in _values)
+            foreach (AscentType type in _values)
                 if (type != AscentType)
                     GetAscentModule(type).enabled = false;
         }
@@ -303,6 +309,7 @@ namespace MuMech
             PitchStartVelocity.val     = PITCH_START_VELOCITY_DEFAULT;
             PitchRate.val              = PITCH_RATE_DEFAULT;
             DesiredAttachAlt.val       = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredFPA.val             = DESIRED_FPA_DEFAULT;
             DynamicPressureTrigger.val = DYNAMIC_PRESSURE_TRIGGER_DEFAULT;
             AttachAltFlag              = ATTACH_ALT_FLAG_DEFAULT;
             StagingTriggerFlag         = STAGING_TRIGGER_FLAG_DEFAULT;
@@ -328,10 +335,10 @@ namespace MuMech
 
             if (DesiredOrbitAltitude.val < 145000)
                 DesiredOrbitAltitude.val = 145000;
-            
+
             if (Math.Abs(DesiredInclination.val) < Math.Abs(vesselState.latitude))
                 DesiredInclination.val = Math.Round(vesselState.latitude, 3);
-            
+
             if (Math.Abs(DesiredInclination.val) > 180 - Math.Abs(vesselState.latitude))
                 DesiredInclination.val = 180 - Math.Round(vesselState.latitude, 3);
 
@@ -349,7 +356,7 @@ namespace MuMech
             core.thrust.limitToPreventOverheats        = false;
             core.thrust.limitDynamicPressure           = false;
             core.thrust.maxDynamicPressure.val         = 20000;
-            
+
             /* reset all of the staging controller, and turn on hotstaging and drop solids */
             Autostage                                  = true;
             core.staging.autostagePreDelay.val         = 0.0;
@@ -377,6 +384,7 @@ namespace MuMech
         private const double PITCH_RATE_DEFAULT               = 0.50;
         private const double DYNAMIC_PRESSURE_TRIGGER_DEFAULT = 10000;
         private const bool   ATTACH_ALT_FLAG_DEFAULT          = false;
+        private const double DESIRED_FPA_DEFAULT              = 0;
         private const bool   STAGING_TRIGGER_FLAG_DEFAULT     = false;
         private const double LIMIT_QA_DEFAULT                 = 2000;
         private const bool   LIMIT_QA_ENABLED_DEFAULT         = true;

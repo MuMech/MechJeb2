@@ -18,35 +18,20 @@ namespace MuMech
     /// <summary>
     ///     This class isolates a bunch of glue between MJ and the PVG optimizer that I don't
     ///     yet understand how to write correctly.
-    ///     TODO:
-    ///     - Gather old solution, desired target and physical stages (DONE)
-    ///     - Build and feed to Ascent optimizer (DONE)
-    ///     - Shove new solution back to the guidance controller (DONE)
-    ///     - Throttle new requests for a second (DONE)
-    ///     - Don't run when the controller is in terminal guidance (DONE)
-    ///     - Don't run immediately after staging (DONE)
-    ///     - Needs to be properly enabled by the PVG ascent state machine (DONE)
-    ///     - Should it control the guidance module?
-    ///     FUTURE:
-    ///     - optimizer watchdog timeout (DONE)
-    ///     - threading (DONE)
-    ///     - coasts and other options
-    ///     - report failures in the UI
-    ///     - handle failures by rebootstrapping with infinite upper stage, current Pv and zero Pr
-    ///     - relay statistics back to the UI (DONE)
-    ///     - fix staeleness in the UI
-    ///     - remove inertial stage hardcoding (DONE)
     /// </summary>
     public class MechJebModulePVGGlueBall : ComputerModule
     {
         private double _blockOptimizerUntilTime;
 
-        public int    SuccessfulConverges;
-        public int    LastLmStatus;
-        public int    MaxLmIterations;
-        public int    LastLmIterations;
-        public double Staleness;
-        public double LastZnorm;
+        public int SuccessfulConverges;
+        public int LastLmStatus;
+        public int MaxLmIterations;
+        public int LastLmIterations;
+
+        public  Exception? Exception;
+        public  double     Staleness;
+        public  double     LastZnorm;
+        private double     _lastTime;
 
         public MechJebModulePVGGlueBall(MechJebCore core) : base(core) { }
 
@@ -60,7 +45,7 @@ namespace MuMech
         {
             SuccessfulConverges = LastLmStatus     = MaxLmIterations = 0;
             LastLmStatus        = LastLmIterations = 0;
-            Staleness           = LastZnorm        = 0;
+            Staleness           = LastZnorm        = _lastTime = 0;
         }
 
         public override void OnModuleDisabled()
@@ -107,6 +92,8 @@ namespace MuMech
                 {
                     core.guidance.SetSolution(pvg.GetSolution());
                     SuccessfulConverges += 1;
+                    _lastTime           =  vesselState.time;
+                    Staleness           =  0;
                 }
                 else
                 {
@@ -124,10 +111,28 @@ namespace MuMech
             _task = null;
         }
 
-        public void SetTarget(double peR, double apR, double attR, double inclination, double lan, bool attachAltFlag, bool lanflag)
+        private void GatherException()
         {
-            HandleDoneTask();
+            if (!(_task is { IsCompleted: true }))
+                return;
+
+            Exception = _task.Exception?.InnerException;
+
+            Debug.Log(Exception);
+        }
+
+        public void SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag, bool lanflag)
+        {
+            // initialize the first time we hit SetTarget to avoid initial large staleness values
+            if (_lastTime == 0)
+                _lastTime = vesselState.time;
             
+            Staleness = vesselState.time - _lastTime;
+
+            GatherException();
+            
+            HandleDoneTask();
+
             if (_task is { IsCompleted: false })
             {
                 return;
@@ -166,11 +171,11 @@ namespace MuMech
             // check for readiness (not terminal guidance and not finished)
             if (!core.guidance.IsReady())
                 return;
-            
+
             if (core.guidance.Solution != null)
             {
                 int solutionIndex = core.guidance.Solution.IndexForKSPStage(vessel.currentStage);
-                
+
                 if (solutionIndex >= 0)
                 {
                     // check for prestaging as the current stage gets low
@@ -185,7 +190,7 @@ namespace MuMech
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                 .Initial(vesselState.orbitalPosition.WorldToV3(), vesselState.orbitalVelocity.WorldToV3(), vesselState.forward.WorldToV3(),
                     vesselState.time, mainBody.gravParameter, mainBody.Radius)
-                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), attachAltFlag, lanflag)
+                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), fpa, attachAltFlag, lanflag)
                 .TerminalConditions(Functions.HmagFromApsides(mainBody.gravParameter, peR, apR));
 
             if (core.guidance.Solution != null)
@@ -197,7 +202,7 @@ namespace MuMech
             {
                 FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
 
-                if (i == _ascentSettings.CoastStage)
+                if ((i == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) || (i == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
                 {
                     double ct = _ascentSettings.FixedCoastLength;
                     double maxt = _ascentSettings.MaxCoast;
@@ -212,11 +217,11 @@ namespace MuMech
 
                     if (_ascentSettings.FixedCoast)
                     {
-                        ascentBuilder.AddFixedCoast(fuelStats.StartMass * 1000, ct, i);
+                        ascentBuilder.AddFixedCoast(fuelStats.StartMass * 1000, ct, _ascentSettings.CoastStage);
                     }
                     else
                     {
-                        ascentBuilder.AddOptimizedCoast(fuelStats.StartMass * 1000, mint, maxt, i);
+                        ascentBuilder.AddOptimizedCoast(fuelStats.StartMass * 1000, mint, maxt, _ascentSettings.CoastStage);
                     }
                 }
 
@@ -239,7 +244,6 @@ namespace MuMech
 
             _ascent = ascentBuilder.Build();
 
-            Debug.Log("firing off new task");
             _task = new Task(_ascent.Run);
             _task.Start();
 

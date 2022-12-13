@@ -16,16 +16,7 @@ namespace MuMech
     public enum PVGStatus { ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, TERMINAL_RCS, TERMINAL_STAGING, FINISHED }
 
     /// <summary>
-    ///     TODO:
-    ///     - relay stage information of the Solution back to the UI (DONE)
-    ///     - relay terminal orbit information of the Solution back to the UI (DONE)
-    ///     - need to initiate coasts at the proper time even if we're burning off residuals (commanded shutdown+stage) (DONE)
-    ///     - draw trajectory on the map view (DONE)
-    ///     - draw terminal orbit on the map view (DONE)
-    ///     - allow disabling the trajectory on the map view (DONE)
-    ///     - color coasts + burns different on the map view
-    ///     - handle terminal guidance for optimized stages that aren't the top stage
-    ///     - expose how long we've been coasting (DONE)
+    ///     The guidance controller for PVG (responsible for taking a Solution from PVG and flying it)
     /// </summary>
     public class MechJebModuleGuidanceController : ComputerModule
     {
@@ -38,9 +29,7 @@ namespace MuMech
         public bool ShouldDrawTrajectory = true;
 
         private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
-
-        // these variables will persist even if Reset() completely blows away the solution, so that pitch+heading will still be stable
-        // until a new solution is found.
+        
         public double Pitch;
         public double Heading;
         public double Tgo;
@@ -77,7 +66,8 @@ namespace MuMech
             core.thrust.users.Remove(this);
             core.staging.users.Remove(this);
             core.spinup.users.Remove(this);
-            Status = PVGStatus.FINISHED;
+            Solution = null;
+            Status   = PVGStatus.FINISHED;
         }
 
         private bool _allowExecution;
@@ -129,19 +119,20 @@ namespace MuMech
         private void HandleTerminal()
         {
             if (Solution == null)
-            {
                 return;
-            }
 
             if (!IsThrustOn())
-            {
                 return;
-            }
 
             if (IsGrounded())
-            {
                 return;
-            }
+
+            if (vessel.currentStage < _ascentSettings.LastStage)
+                Done();
+
+            if (_ascentSettings.OptimizeStage < 0 && vessel.currentStage == _ascentSettings.LastStage && Solution.Tgo(vesselState.time) <= 0 &&
+                vesselState.thrustAvailable == 0)
+                Done();
 
             if (vessel.currentStage != _ascentSettings.OptimizeStage && Solution.Tgo(vesselState.time) > 10)
             {
@@ -151,18 +142,14 @@ namespace MuMech
             }
 
             if (Status == PVGStatus.TERMINAL_STAGING)
-            {
                 return;
-            }
 
             int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage);
             if (solutionIndex < 0)
                 return;
-            
+
             if (Solution.Tgo(vesselState.time, solutionIndex) > 10)
-            {
                 return;
-            }
 
             if (Status != PVGStatus.TERMINAL_RCS)
                 Status = PVGStatus.TERMINAL;
@@ -283,6 +270,15 @@ namespace MuMech
                 return;
             }
 
+            int coastStage = Solution.CoastStage();
+            
+            Debug.Log($"coast stage: {coastStage} current stage: {vessel.currentStage} will coast: {Solution.WillCoast(vesselState.time)}");
+
+            if (coastStage >= 0 && vessel.currentStage == coastStage && Solution.WillCoast(vesselState.time))
+                core.staging.autostageLimitInternal = coastStage;
+            else
+                core.staging.autostageLimitInternal = 0;
+
             if (Solution.Coast(vesselState.time))
             {
                 if (!IsCoasting())
@@ -297,9 +293,7 @@ namespace MuMech
 
                 if (Solution.StageTimeLeft(vesselState.time) < UllageLeadTime)
                     RCSOn();
-
-                // this turns off autostaging during the coast (which currently affects fairing separation)
-                core.staging.autostageLimitInternal = Solution.Stage(vesselState.time);
+                
                 ThrustOff();
                 return;
             }
@@ -307,8 +301,6 @@ namespace MuMech
             ThrottleOn();
 
             Status = PVGStatus.BURNING;
-
-            core.staging.autostageLimitInternal = 0;
         }
 
         private bool IsGrounded()
@@ -318,7 +310,6 @@ namespace MuMech
                    vessel.situation == Vessel.Situations.SPLASHED;
         }
 
-        /* extract pitch and heading off of iF to avoid continuously recomputing on every call */
         private void UpdatePitchAndHeading()
         {
             if (Solution == null)
@@ -396,15 +387,30 @@ namespace MuMech
 
         private void TerminalDone()
         {
-            if (Solution == null || Solution.Tgo(vesselState.time) <= 0)
+            if (Solution == null)
             {
                 Done();
+                return;
             }
-            else
+
+            // if we still have a coast to do in this stage, start the coast
+            if (vessel.currentStage == Solution.CoastStage() && Solution.WillCoast(vesselState.time))
+            {
+                ThrustOff();
+                Status = PVGStatus.COASTING;
+                return;
+            }
+            
+            // if we have more un-optimized upper stages to burn, stage and use the TERMINAL_STAGING state
+            if (Solution.TerminalStage() != vessel.currentStage)
             {
                 core.staging.Stage();
                 Status = PVGStatus.TERMINAL_STAGING;
+                return;
             }
+  
+            // otherwise we just have normal termination
+            Done();
         }
 
         private void Done()

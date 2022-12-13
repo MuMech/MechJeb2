@@ -6,9 +6,14 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private static readonly Vector3d _vector3dnan = new Vector3d(double.NaN, double.NaN, double.NaN);
-        private                 Vessel   Vessel => ac.vessel;
+        private static readonly Vector3d      _vector3dnan = new Vector3d(double.NaN, double.NaN, double.NaN);
+        private                 Vessel        Vessel => ac.vessel;
 
+        /* FIXME SOMETIME: need to run through the Matlab tuning of this again in order to include the inner Ki term */
+        /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */ 
+        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        private readonly EditableDouble PosKi = new EditableDouble(0.004);
+        
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private readonly EditableDouble VelKp = new EditableDouble(9.18299345180006);
 
@@ -128,6 +133,9 @@ namespace MuMech.AttitudeControllers
         /* error in pitch, roll, yaw */
         private Vector3d _error0 = Vector3d.zero;
         private Vector3d _error1 = _vector3dnan;
+        
+        /* inner integrator */
+        private Vector3d _integ = Vector3d.zero;
 
         /* max angular acceleration */
         private Vector3d _maxAlpha = Vector3d.zero;
@@ -242,11 +250,16 @@ namespace MuMech.AttitudeControllers
                     double posKp = Math.Sqrt(_maxAlpha[i] / (2 * effLD));
 
                     if (Math.Abs(error) <= 2 * effLD)
+                    {
+                        _integ[i] += error;
                         // linear ramp down of acceleration
-                        _targetOmega[i] = -posKp * error;
+                        _targetOmega[i] = -posKp * error - PosKi * posKp * _integ[i];
+                    }
                     else
+                    {
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
                         _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
+                    }
 
                     if (useStoppingTime)
                     {
@@ -277,6 +290,9 @@ namespace MuMech.AttitudeControllers
                 if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
                     _actuation[i] = 0;
 
+                if (Math.Abs(_actuation[i]) >= 1)
+                    _integ[i] = 0;
+
                 _targetTorque[i] = _actuation[i] / ac.torque[i];
 
                 if (ac.ActuationControl[i] == 0)
@@ -297,6 +313,7 @@ namespace MuMech.AttitudeControllers
         {
             _pid[i].Reset();
             _omega0[i] = _error0[i] = _error1[i] = double.NaN;
+            _integ[i]  = 0.0;
         }
 
         public override void GUI()
@@ -328,6 +345,11 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
             PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos Ki", GUILayout.ExpandWidth(false));
+            PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

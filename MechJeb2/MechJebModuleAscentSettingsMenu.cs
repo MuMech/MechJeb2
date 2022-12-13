@@ -24,13 +24,12 @@ namespace MuMech
             core.thrust.LimitToPreventOverheatsInfoItem();
             core.thrust.LimitToMaxDynamicPressureInfoItem();
             core.thrust.LimitAccelerationInfoItem();
-            if (_ascentSettings.AscentType != ascentType.PVG) core.thrust.LimitThrottleInfoItem();
+            if (_ascentSettings.AscentType != AscentType.PVG) core.thrust.LimitThrottleInfoItem();
             core.thrust.LimiterMinThrottleInfoItem();
-            if (_ascentSettings.AscentType != ascentType.PVG) core.thrust.LimitElectricInfoItem();
+            if (_ascentSettings.AscentType != AscentType.PVG) core.thrust.LimitElectricInfoItem();
 
-            if (_ascentSettings.AscentType == ascentType.PVG)
+            if (_ascentSettings.AscentType == AscentType.PVG)
             {
-                // GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label21")) ;//FIXME: g-limiter is down for maintenance
                 core.thrust.limitThrottle           = false;
                 core.thrust.limitToTerminalVelocity = false;
                 core.thrust.electricThrottle        = false;
@@ -47,7 +46,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            if (_ascentSettings.AscentType != ascentType.PVG)
+            if (_ascentSettings.AscentType != AscentType.PVG)
             {
                 GUIStyle s = _ascentSettings.LimitingAoA ? GuiUtils.greenToggle : null;
                 string sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
@@ -69,7 +68,7 @@ namespace MuMech
                 _ascentSettings.LimitQaEnabled = false; // this is only for PVG
             }
 
-            if (_ascentSettings.AscentType == ascentType.CLASSIC)
+            if (_ascentSettings.AscentType == AscentType.CLASSIC)
             {
                 // corrective steering only applies to Classic
                 GUILayout.BeginHorizontal();
@@ -91,7 +90,7 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             core.node.autowarp = GUILayout.Toggle(core.node.autowarp, CachedLocalizer.Instance.MechJeb_Ascent_checkbox8); //Auto-warp
-            if (_ascentSettings.AscentType != ascentType.PVG)
+            if (_ascentSettings.AscentType != AscentType.PVG)
             {
                 _ascentSettings.SkipCircularization =
                     GUILayout.Toggle(_ascentSettings.SkipCircularization, CachedLocalizer.Instance.MechJeb_Ascent_checkbox9); //Skip Circularization
@@ -104,7 +103,7 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
             
-            if (_ascentSettings.AscentType == ascentType.PVG)
+            if (_ascentSettings.AscentType == AscentType.PVG)
                 core.settings.rssMode = GUILayout.Toggle(core.settings.rssMode, "Module disabling does not kill throttle");
 
             GUILayout.EndVertical();

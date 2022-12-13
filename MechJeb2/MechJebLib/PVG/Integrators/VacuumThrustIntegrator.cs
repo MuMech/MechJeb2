@@ -8,6 +8,7 @@
 
 using System;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using MuMech.MathJ;
 
 namespace MechJebLib.PVG.Integrators
@@ -24,10 +25,12 @@ namespace MechJebLib.PVG.Integrators
 
             protected override void dydt(DD yin, double x, DD dyout)
             {
+                Check.True(Phase.Normalized);
+                
                 using var y = ArrayWrapper.Rent(yin);
                 using var dy = ArrayWrapper.Rent(dyout);
 
-                double at = Phase.thrust_bar / y.M;
+                double at = Phase.thrust / y.M;
                 if (Phase.Infinite) at *= 2;
 
                 double r2 = y.R.sqrMagnitude;
@@ -41,7 +44,7 @@ namespace MechJebLib.PVG.Integrators
                 dy.V  = -y.R / r3 + at * u;
                 dy.PV = -y.PR;
                 dy.PR = y.PV / r3 - 3 / r5 * V3.Dot(y.R, y.PV) * y.R;
-                dy.M  = Phase.thrust_bar == 0 || Phase.Infinite ? 0 : -Phase.mdot_bar;
+                dy.M  = Phase.thrust == 0 || Phase.Infinite ? 0 : -Phase.mdot;
                 dy.Pm = 0;
                 /*dy.Pm = _phase.FinalMassProblem && !_phase.Infinite
                     ? _phase.ThrustBar * V3.Dot(y.PV, u) / (y.M * y.M)

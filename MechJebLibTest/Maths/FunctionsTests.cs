@@ -21,15 +21,6 @@ namespace MechJebLibTest.Maths
         private const double ACC2 = 1e-7; // due west launches have some mathematical irregularities
 
         [Fact]
-        void TestThis()
-        {
-            double mu = 3.986004418e+14;
-            double peR =  6.371e+6 + 350.8e+3;
-            (Math.Cos(Deg2Rad(13.71666)) / Math.Cos(Deg2Rad(28.608)) * 407.86).ShouldEqual(0.0, 1e-7);
-            Functions.CircularVelocity(mu, peR).ShouldEqual(0.0, 1e-7);
-        }
-        
-        [Fact]
         void Test90()
         {
             for (int i = 0; i < 8; i++)

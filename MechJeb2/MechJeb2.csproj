@@ -113,7 +113,7 @@
     <Compile Include="MechJebLib\PVG\ArrayWrapper.cs" />
     <Compile Include="MechJebLib\PVG\AscentBuilder.cs" />
     <Compile Include="MechJebLib\PVG\Integrators\IPVGIntegrator.cs" />
-    <Compile Include="MechJebLib\PVG\Integrators\VacuumCoastIntegrator.cs" />
+    <Compile Include="MechJebLib\PVG\Integrators\VacuumCoastAnalytic.cs" />
     <Compile Include="MechJebLib\PVG\Integrators\VacuumThrustAnalytic.cs" />
     <Compile Include="MechJebLib\PVG\Integrators\VacuumThrustIntegrator.cs" />
     <Compile Include="MechJebLib\PVG\Ascent.cs" />

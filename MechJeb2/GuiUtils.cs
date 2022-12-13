@@ -20,7 +20,8 @@ namespace MuMech
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
     public class EditableDoubleMult : IEditable
     {
-        [Persistent] protected double _val;
+        [Persistent]
+        protected double _val;
 
         public virtual double val
         {
@@ -34,8 +35,10 @@ namespace MuMech
 
         public readonly double multiplier;
 
-        public                 bool   parsed;
-        [Persistent] protected string _text;
+        public bool parsed;
+
+        [Persistent]
+        protected string _text;
 
         public virtual string text
         {
@@ -126,10 +129,17 @@ namespace MuMech
 
     public class EditableAngle
     {
-        [Persistent] public EditableDouble degrees = 0;
-        [Persistent] public EditableDouble minutes = 0;
-        [Persistent] public EditableDouble seconds = 0;
-        [Persistent] public bool           negative;
+        [Persistent]
+        public EditableDouble degrees = 0;
+
+        [Persistent]
+        public EditableDouble minutes = 0;
+
+        [Persistent]
+        public EditableDouble seconds = 0;
+
+        [Persistent]
+        public bool negative;
 
         public EditableAngle(double angle)
         {
@@ -173,25 +183,35 @@ namespace MuMech
 
     public class EditableInt : IEditable
     {
-        [Persistent] public int val;
+        [Persistent]
+        private int _val;
 
-        public              bool   parsed;
-        [Persistent] public string _text;
+        public int val
+        {
+            get => _val;
+            set
+            {
+                _val  = value;
+                _text = value.ToString();
+            }
+        }
+
+        private bool _parsed;
+
+        [Persistent]
+        private string _text;
 
         public virtual string text
         {
             get => _text;
             set
             {
-                _text = value;
-                _text = Regex.Replace(_text, @"[^\d+-]", ""); //throw away junk characters
-                int parsedValue;
-                parsed = int.TryParse(_text, out parsedValue);
-                if (parsed) val = parsedValue;
+                _text   = value;
+                _text   = Regex.Replace(_text, @"[^\d+-]", ""); //throw away junk characters
+                _parsed = int.TryParse(_text, out int parsedValue);
+                if (_parsed) val = parsedValue;
             }
         }
-
-        public EditableInt() : this(0) { }
 
         public EditableInt(int val)
         {
@@ -212,9 +232,11 @@ namespace MuMech
 
     public class EditableIntList : IEditable
     {
-        [Persistent] public readonly List<int> val = new List<int>();
+        [Persistent]
+        public readonly List<int> val = new List<int>();
 
-        [Persistent] private string _text = "";
+        [Persistent]
+        private string _text = "";
 
         public string text
         {

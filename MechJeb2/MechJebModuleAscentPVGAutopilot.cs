@@ -91,7 +91,8 @@ namespace MuMech
             if (_ascentSettings.LaunchingToPlane)
                 inclination = Math.Sign(inclination) * core.target.TargetOrbit.inclination;
 
-            core.glueball.SetTarget(peR, apR, attR, inclination, lan, AscentSettings.AttachAltFlag, lanflag);
+            // FIXME: kinda need to break this up it is getting very magical with all the non-obvious ignored combinations of options
+            core.glueball.SetTarget(peR, apR, attR, inclination, lan, AscentSettings.DesiredFPA, AscentSettings.AttachAltFlag, lanflag);
         }
 
         private double _pitchStartTime;

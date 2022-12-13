@@ -31,9 +31,12 @@ namespace MechJebLib.PVG
             {
                 double m0 = _phases[0].m0;
                 var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody);
+
+                var normalizedPhases = new List<Phase>();
+                
                 foreach (Phase phase in _phases)
                 {
-                    phase.Rescale(problem.Scale);
+                    normalizedPhases.Add(phase.Rescale(problem.Scale));
                 }
 
                 if (_terminal == null)
@@ -41,7 +44,7 @@ namespace MechJebLib.PVG
 
                 problem.Terminal = _terminal.Rescale(problem.Scale);
                 
-                var solver = new Optimizer(problem, _phases);
+                var solver = new Optimizer(problem, normalizedPhases);
                 return solver;
             }
 

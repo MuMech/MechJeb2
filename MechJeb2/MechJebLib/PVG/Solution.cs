@@ -23,11 +23,11 @@ namespace MechJebLib.PVG
         private readonly List<double> _tmin         = new List<double>();
         private readonly List<double> _tmax         = new List<double>();
         private readonly List<Hn>     _interpolants = new List<Hn>();
-        private readonly List<Phase>  _phases       = new List<Phase>();
+        private readonly List<Phase>  Phases        = new List<Phase>();
         private readonly double       _mu;
         private readonly double       _rbody;
 
-        public  int    Segments       => _interpolants.Count;
+        public  int    Segments       => Phases.Count;
         private double _timeScale     => _scale.timeScale;
         private double _lengthScale   => _scale.lengthScale;
         private double _velocityScale => _scale.velocityScale;
@@ -49,7 +49,7 @@ namespace MechJebLib.PVG
         {
             _tmin.Add(t0);
             _tmax.Add(tf);
-            _phases.Add(phase); // FIXME: probably need to dup() the phase, and will need to return the phase after pooling is implemented
+            Phases.Add(phase); // FIXME: probably need to dup() the phase, and will need to return the phase after pooling is implemented
             _interpolants.Add(interpolant);
         }
 
@@ -153,9 +153,9 @@ namespace MechJebLib.PVG
             double tbar = (t - T0) / _timeScale;
             double min = tbar > _tmin[n] ? tbar : _tmin[n];
             double max = _tmax[n];
-            using DD ddmin = Interpolate(min);
+            using DD ddmin = Interpolate(n, min);
             using var xmin = ArrayWrapper.Rent(ddmin);
-            using DD ddmax = Interpolate(max);
+            using DD ddmax = Interpolate(n, max);
             using var xmax = ArrayWrapper.Rent(ddmax);
             return Math.Max(xmax.DV - xmin.DV, 0) * _velocityScale;
         }
@@ -187,25 +187,62 @@ namespace MechJebLib.PVG
         public bool Coast(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return _phases[IndexForTbar(tbar)].Coast;
+            return Phases[IndexForTbar(tbar)].Coast;
+        }
+
+        // Specialized API to determine if we still have the coast in our future or not
+        public bool WillCoast(double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+
+            for (int i = IndexForTbar(tbar); i < Phases.Count; i++)
+            {
+                if ( Phases[i].Coast ) return true;
+            }
+
+            return false;
+        }
+
+        public int CoastStage()
+        {
+            for (int i = 0; i < Phases.Count; i++)
+            {
+                if (Phases[i].Coast) return Phases[i].KSPStage;
+            }
+
+            return -1;
+        }
+
+        public int TerminalStage()
+        {
+            return Phases[Phases.Count - 1].KSPStage;
         }
 
         public bool Unguided(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return _phases[IndexForTbar(tbar)].Unguided;
+            return Phases[IndexForTbar(tbar)].Unguided;
+        }
+
+        public bool CoastPhase(int phase)
+        {
+            return Phases[phase].Coast;
+        }
+
+        public bool OptimizeTime(int phase)
+        {
+            return Phases[phase].OptimizeTime;
         }
 
         public V3 U0(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return _phases[IndexForTbar(tbar)].u0;
+            return Phases[IndexForTbar(tbar)].u0;
         }
 
-        public int Stage(double t)
+        public int KSPStage(int phase)
         {
-            double tbar = (t - T0) / _timeScale;
-            return _phases[IndexForTbar(tbar)].KSPStage;
+            return Phases[phase].KSPStage;
         }
 
         public double StageTimeLeft(double t)
@@ -226,13 +263,13 @@ namespace MechJebLib.PVG
             int phase = IndexForTbar(tbar);
 
             // FIXME: this logic should be pushed upwards into the guidance controller
-            if (_phases[phase].Unguided)
+            if (Phases[phase].Unguided)
             {
-                u = _phases[phase].u0;
+                u = Phases[phase].u0;
             }
-            else if (_phases[phase].Coast && phase < Segments - 1)
+            else if (Phases[phase].Coast && phase < Segments - 1)
             {
-                u = _phases[phase + 1].u0;
+                u = Phases[phase + 1].u0;
             }
             else
             {
@@ -254,27 +291,7 @@ namespace MechJebLib.PVG
             using var x = ArrayWrapper.Rent(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
-        
-        public string PhaseString(double t)
-        {
-            var sb = new StringBuilder();
-            for (int i = 0; i < _phases.Count; i++)
-            {
-                sb.AppendLine(PhaseString(t, i));
-            }
-            return sb.ToString();
-        }
 
-        // FIXME: this ia also probably specific display logic
-        public string PhaseString(double t, int n)
-        {
-            Phase phase = _phases[n];
-
-            if (phase.Coast)
-                return $"coast: {Tgo(t, n):F1}s";
-
-            return $"burn: {phase.KSPStage} {Tgo(t, n):F1}s {DV(t, n):F1}m/s ()";
-        }
 
         // FIXME: this is really specific display logic
         public string TerminalString()
@@ -293,9 +310,10 @@ namespace MechJebLib.PVG
             double vT = vf.magnitude;
             
             var sb = new StringBuilder();
-            sb.AppendLine($"{peA.ToSI(0)}m x {apA.ToSI(0)}m sma: {sma.ToSI(0)}m ecc: {ecc:F3}");
-            sb.AppendLine($"rT: {rT.ToSI(0)} vT: {vT.ToSI(0)} FPA: {Rad2Deg(fpa):F1}");
-            sb.Append($"inc: {Rad2Deg(inc):F1} lan: {Rad2Deg(lan):F1} argp: {Rad2Deg(argp):F1} ta: {Rad2Deg(tanom):F1}");
+            sb.AppendLine($"Orbit: {peA.ToSI(0)}m x {apA.ToSI(0)}m");
+            sb.AppendLine($"rT: {rT.ToSI(0)}m vT: {vT.ToSI(0)}m FPA: {Rad2Deg(fpa):F1}°");
+            sb.AppendLine($"sma: {sma.ToSI(0)}m ecc: {ecc:F3} inc: {Rad2Deg(inc):F1}°");
+            sb.Append($"lan: {Rad2Deg(lan):F1}° argp: {Rad2Deg(argp):F1}° ta: °{Rad2Deg(tanom):F1}°");
             return sb.ToString();
         }
 
@@ -309,9 +327,9 @@ namespace MechJebLib.PVG
         
         public int IndexForKSPStage(int kspStage)
         {
-            for (int i = 0; i < _phases.Count; i++)
+            for (int i = 0; i < Phases.Count; i++)
             {
-                if (_phases[i].KSPStage == kspStage)
+                if (Phases[i].KSPStage == kspStage)
                     return i;
             }
 
@@ -321,6 +339,11 @@ namespace MechJebLib.PVG
         private DD Interpolate(double tbar)
         {
             return _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
+        }
+        
+        private DD Interpolate(int segment, double tbar)
+        {
+            return _interpolants[segment].Evaluate(tbar);
         }
 
         // this is for terminal guidance.

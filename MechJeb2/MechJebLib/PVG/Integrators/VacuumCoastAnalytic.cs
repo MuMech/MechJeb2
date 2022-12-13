@@ -11,7 +11,7 @@ using MechJebLib.Primitives;
 
 namespace MechJebLib.PVG.Integrators
 {
-    public class VacuumCoastIntegrator : IPVGIntegrator
+    public class VacuumCoastAnalytic : IPVGIntegrator
     {
         public void Integrate(DD yin, DD yfout, Phase phase, double t0, double tf)
         {
@@ -28,6 +28,8 @@ namespace MechJebLib.PVG.Integrators
             yf.PR = stm10 * yf.PV + stm11 * yf.PR;
 
             yf.Pm = y0.Pm;
+
+            yf.DV = y0.DV;
         }
 
         public void Integrate(DD yin, DD yfout, Phase phase, double t0, double tf, Solution solution)

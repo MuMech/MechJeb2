@@ -51,13 +51,13 @@ namespace MuMech
 
             switch (_ascentSettings.AscentType)
             {
-                case ascentType.CLASSIC:
+                case AscentType.CLASSIC:
                     GUILayout.Label("CLASSIC ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "km");
                     break;
-                case ascentType.GRAVITYTURN:
+                case AscentType.GRAVITYTURN:
                     GUILayout.Label("GravityTurn™ ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "km");
                     break;
-                case ascentType.PVG:
+                case AscentType.PVG:
                     GUILayout.Label("PVG ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "x" + (_ascentSettings.DesiredApoapsis / 1000.0) + "km");
                     break;
             }

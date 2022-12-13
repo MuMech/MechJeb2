@@ -16,7 +16,7 @@ namespace MechJebLib.Utils
     {
         private readonly ConcurrentBag<T> _objects;
         private readonly Func<T>          _newfun;
-        private readonly Action<T>       _clearfun;
+        private readonly Action<T>        _clearfun;
 
         public ObjectPool(Func<T> newfun, Action<T> clearfun)
         {
