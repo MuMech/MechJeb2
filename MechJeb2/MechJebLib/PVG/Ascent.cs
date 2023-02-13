@@ -8,7 +8,6 @@
 
 using System;
 using System.Collections.Generic;
-using KSP.UI;
 using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Integrators;
@@ -106,8 +105,25 @@ namespace MechJebLib.PVG
             Optimizer pvg = builder.Build();
             pvg.Bootstrap(solution);
             pvg.Run();
+            
+            using Solution solution2 = pvg.GetSolution();
+            
+            (V3 rf, V3 vf) = solution2.TerminalStateVectors();
 
-            return pvg;
+            (double _, double _, double _, double _, double _, double tanof) =
+                Functions.KeplerianFromStateVectors(_mu, rf, vf);
+
+            if ( _attachAltFlag || Math.Abs(ClampPi(tanof)) < PI/2.0 )
+                return pvg;
+            
+            ApplyFPA(builder);
+            ApplyOldBurnTimesToPhases(solution2);
+            
+            using Optimizer pvg2 = builder.Build();
+            pvg2.Bootstrap(solution2);
+            pvg2.Run();
+            
+            return pvg2.Success() ? pvg2 : pvg;
         }
 
         private void ApplyFPA(Optimizer.OptimizerBuilder builder)
@@ -225,7 +241,6 @@ namespace MechJebLib.PVG
             (double _, double _, double _, double _, double _, double tanof) =
                 Functions.KeplerianFromStateVectors(_mu, rf, vf);
             
-            // FIXME: we need to somehow pass this into ConvergedOptimization
             return Math.Abs(ClampPi(tanof)) > PI/2.0 ? pvg2 : pvg3;
         }
 

@@ -356,7 +356,7 @@ namespace MechJebLib.PVG
 
             var hT = V3.Cross(rT, vT);
             
-            Log($"hf: {hf} hT: {hT}");
+            Log($"hf: {hf.magnitude} hT: {hT.magnitude} check: {hf.magnitude > hT.magnitude}");
 
             return hf.magnitude > hT.magnitude;
         }

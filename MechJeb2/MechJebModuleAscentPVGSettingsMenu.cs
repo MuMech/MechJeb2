@@ -51,6 +51,7 @@ namespace MuMech
             for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
             {
                 FuelFlowSimulation.FuelStats stats = core.stageStats.vacStats[i];
+                Debug.Log($"{i}: {stats.DeltaV}");
                 if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
                     continue;
 

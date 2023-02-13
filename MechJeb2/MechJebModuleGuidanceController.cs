@@ -127,27 +127,45 @@ namespace MuMech
             if (IsGrounded())
                 return;
 
+            // if we've gone past the last stage we need to just stop
             if (vessel.currentStage < _ascentSettings.LastStage)
-                Done();
-
-            if (_ascentSettings.OptimizeStage < 0 && vessel.currentStage == _ascentSettings.LastStage && Solution.Tgo(vesselState.time) <= 0 &&
-                vesselState.thrustAvailable == 0)
-                Done();
-
-            if (vessel.currentStage != _ascentSettings.OptimizeStage && Solution.Tgo(vesselState.time) > 10)
             {
-                if (Status == PVGStatus.TERMINAL_STAGING)
-                    Status = PVGStatus.BURNING;
+                Done();
                 return;
             }
 
-            if (Status == PVGStatus.TERMINAL_STAGING)
+            // this handles termination of thrust for final stages of "fixed" burntime rockets (due to residuals Tgo may go less than zero so we
+            // wait for natural termination of thrust).   no support for RCS terminal trim.
+            if (_ascentSettings.OptimizeStage < 0 && vessel.currentStage <= _ascentSettings.LastStage && Solution.Tgo(vesselState.time) <= 0 &&
+                vesselState.thrustAvailable == 0)
+            {
+                Done();
                 return;
+            }
 
+            // TERMINAL_STAGING is set on a non-upper stage optimized stage, once we are no longer in the optimized stage
+            // then we have staged, so we need to reset that condition.  Otherwise we need to wait for staging.
+            if (Status == PVGStatus.TERMINAL_STAGING)
+            {
+                if (vessel.currentStage == _ascentSettings.OptimizeStage)
+                    return;
+                
+                Status = PVGStatus.BURNING;
+            }
+            
+            // We should either be in an non-upper stage optimized stage, or we should be within 10 seconds of the whole
+            // burntime in order to enter terminal guidance.
+            if (vessel.currentStage != _ascentSettings.OptimizeStage && Solution.Tgo(vesselState.time) > 10)
+                return;
+            
             int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage);
             if (solutionIndex < 0)
+            {
+                Done();
                 return;
+            }
 
+            // Only enter terminal guidance within 10 seconds of the current stage
             if (Solution.Tgo(vesselState.time, solutionIndex) > 10)
                 return;
 
@@ -155,12 +173,6 @@ namespace MuMech
                 Status = PVGStatus.TERMINAL;
 
             core.warp.MinimumWarp();
-
-            // ensure that we're burning in a roughly forward direction -- no idea why, but we can get a few ticks of backwards "thrust" due to staging during terminal guidance
-            double costhrustangle = Vector3d.Dot(vesselState.forward, (vessel.acceleration_immediate - vessel.graviticAcceleration).normalized);
-
-            if (costhrustangle < 0.5)
-                return;
 
             if (Status == PVGStatus.TERMINAL_RCS && !vessel.ActionGroups[KSPActionGroup.RCS]) // if someone manually disables RCS
             {

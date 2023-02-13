@@ -257,10 +257,24 @@ namespace MuMech
 
             // if autostage enabled, and if we've already staged at least once, and if there are stages left,
             // and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (waitingForFirstStaging || vessel.currentStage <= 0 || vessel.currentStage <= autostageLimitInternal
-                || vesselState.time - lastStageTime < autostagePostDelay)
+            if (waitingForFirstStaging || vessel.currentStage <= 0 || vesselState.time - lastStageTime < autostagePostDelay)
                 return;
-
+            
+            // this is for PVG preventing staging doing coasts, possibly it should be more specific of an API
+            // (e.g. bool PVGIsCoasting) since it is getting tightly coupled.
+            if (vessel.currentStage <= autostageLimitInternal)
+            {
+                // force staging once if fairing conditions are met in the next stage
+                if (HasFairing(vessel.currentStage - 1) && !WaitingForFairing())
+                {
+                    Stage();
+                }
+                else
+                {
+                    return;
+                }
+            }
+            
             UpdateActiveModuleEngines(allModuleEngines);
             UpdateBurnedResources();
             
