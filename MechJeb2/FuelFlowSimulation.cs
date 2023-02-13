@@ -50,7 +50,7 @@ namespace MuMech
             // Determine when each part will be decoupled
             _nodeLookup[negOnePart].AssignDecoupledInStage(negOnePart, null, _nodeLookup, -1);
 
-            _simStage = StageManager.LastStage;
+            _simStage = StageManager.CurrentStage;
 
             // Set up the fuel flow graph
             for (int i = 0; i < parts.Count; i++)
@@ -61,12 +61,6 @@ namespace MuMech
                 if (node.decoupledInStage >= _simStage) _simStage = node.decoupledInStage + 1;
             }
 
-            // Add a fake stage if we are beyond the first one
-            // Mostly useful for the Node Executor who use the last stage info
-            // and fail to get proper info when the ship was never staged and
-            // some engine were activated manually
-            if (StageManager.CurrentStage > StageManager.LastStage)
-                _simStage++;
             //print("Init End");
         }
 
