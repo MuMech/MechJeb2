@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Smooth.Pools;
 using UnityEngine;
 using System.Reflection;
@@ -272,7 +271,7 @@ namespace MuMech
 
 
         // Total torque
-        public Vector3d torqueAvailable;
+        public Vector6 torqueAvailable;
 
         public Vector3d torqueReactionSpeed;
 
@@ -922,7 +921,7 @@ namespace MuMech
         private const double _dVelocitySqrMinThreshold = 1;
         private const double _dAltitudeThreshold = 300;
         private const float _fAoAThreshold = 2;
-        private void CalculateVesselAeroForcesWithCache(Vessel v, out Vector3 farForce, out Vector3 farTorque, Vector3d surfaceVelocity, double altitudeASL) 
+        private void CalculateVesselAeroForcesWithCache(Vessel v, out Vector3 farForce, out Vector3 farTorque, Vector3d surfaceVelocity, double altitudeASL)
         {
             float AoA = Vector3.Angle(v.rootPart.transform.TransformDirection(Vector3.up), surfaceVelocity);
             if ((lastSurfaceVelocity - surfaceVelocity).sqrMagnitude > _dVelocitySqrThreshold
@@ -948,7 +947,7 @@ namespace MuMech
             parachutes.Clear();
             parachuteDeployed = false;
 
-            torqueAvailable = Vector3d.zero;
+            torqueAvailable = new Vector6();
 
             Vector6 torqueReactionSpeed6 = new Vector6();
 
@@ -1035,8 +1034,8 @@ namespace MuMech
                         rw.GetPotentialTorque(out pos, out neg);
 
                         // GetPotentialTorque reports the same value for pos & neg on ModuleReactionWheel
-                        torqueReactionWheel.Add(pos);
-                        torqueReactionWheel.Add(-neg);
+                        torqueReactionWheel.Add(pos.Abs());
+                        torqueReactionWheel.Add(-neg.Abs());
                     }
                     else if (pm is ModuleEngines)
                     {
@@ -1072,8 +1071,8 @@ namespace MuMech
 
                         cs.GetPotentialTorque(out ctrlTorquePos, out ctrlTorqueNeg);
 
-                        torqueControlSurface.Add(ctrlTorquePos);
-                        torqueControlSurface.Add(ctrlTorqueNeg);
+                        torqueControlSurface.Add(ctrlTorquePos.Abs());
+                        torqueControlSurface.Add(-ctrlTorqueNeg.Abs());
 
                         torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed * Vector3d.Max(ctrlTorquePos.Abs(), ctrlTorqueNeg.Abs()));
                     }
@@ -1099,8 +1098,8 @@ namespace MuMech
 
                         // GetPotentialTorque reports the same value for pos & neg on ModuleGimbal
 
-                        torqueGimbal.Add(pos);
-                        torqueGimbal.Add(-neg);
+                        torqueGimbal.Add(pos.Abs());
+                        torqueGimbal.Add(-neg.Abs());
 
                         if (g.useGimbalResponseSpeed)
                             torqueReactionSpeed6.Add((Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed) * Vector3d.Max(pos.Abs(), neg.Abs()));
@@ -1117,8 +1116,8 @@ namespace MuMech
                         Vector3 neg;
                         tp.GetPotentialTorque(out pos, out neg);
 
-                        torqueOthers.Add(pos);
-                        torqueOthers.Add(neg);
+                        torqueOthers.Add(pos.Abs());
+                        torqueOthers.Add(-neg.Abs());
                     }
 
                     for (int index = 0; index < vesselStatePartModuleExtensions.Count; index++)
@@ -1154,25 +1153,25 @@ namespace MuMech
                 }
             }
 
-            torqueAvailable += Vector3d.Max(torqueReactionWheel.positive, torqueReactionWheel.negative);
+            torqueAvailable += torqueReactionWheel;
 
             //torqueAvailable += Vector3d.Max(torqueRcs.positive, torqueRcs.negative);
 
-            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            torqueAvailable += rcsTorqueAvailable;
 
-            torqueAvailable += Vector3d.Max(torqueControlSurface.positive, torqueControlSurface.negative);
+            torqueAvailable += torqueControlSurface;
 
-            torqueAvailable += Vector3d.Max(torqueGimbal.positive, torqueGimbal.negative);
+            torqueAvailable += torqueGimbal;
 
-            torqueAvailable += Vector3d.Max(torqueOthers.positive, torqueOthers.negative); // Mostly FAR
+            torqueAvailable += torqueOthers;
 
             torqueDiffThrottle = Vector3d.Max(einfo.torqueDiffThrottle.positive, einfo.torqueDiffThrottle.negative);
             torqueDiffThrottle.y = 0;
 
-            if (torqueAvailable.sqrMagnitude > 0)
+            if (torqueAvailable.ToVector3d().sqrMagnitude > 0)
             {
                 torqueReactionSpeed = Vector3d.Max(torqueReactionSpeed6.positive, torqueReactionSpeed6.negative);
-                torqueReactionSpeed.Scale(torqueAvailable.InvertNoNaN());
+                torqueReactionSpeed.Scale(torqueAvailable.ToVector3d().InvertNoNaN());
             }
             else
             {

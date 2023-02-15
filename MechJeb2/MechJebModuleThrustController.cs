@@ -392,11 +392,11 @@ namespace MuMech
                 }
                 else
                 {
-                    bool useGimbal = (vesselState.torqueGimbal.positive.x > vesselState.torqueAvailable.x * 10) ||
-                                     (vesselState.torqueGimbal.positive.z > vesselState.torqueAvailable.z * 10);
+                    bool useGimbal = (vesselState.torqueGimbal.positive.x > vesselState.torqueAvailable.positive.x * 10) ||
+                                     (vesselState.torqueGimbal.positive.z > vesselState.torqueAvailable.positive.z * 10);
 
-                    bool useDiffThrottle = (vesselState.torqueDiffThrottle.x > vesselState.torqueAvailable.x * 10) ||
-                                           (vesselState.torqueDiffThrottle.z > vesselState.torqueAvailable.z * 10);
+                    bool useDiffThrottle = (vesselState.torqueDiffThrottle.x > vesselState.torqueAvailable.positive.x * 10) ||
+                                           (vesselState.torqueDiffThrottle.z > vesselState.torqueAvailable.positive.z * 10);
 
                     if ((core.attitude.attitudeError >= 2) && (useGimbal || (useDiffThrottle && core.thrust.differentialThrottle)))
                     {

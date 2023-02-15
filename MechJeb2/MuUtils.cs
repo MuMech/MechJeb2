@@ -65,6 +65,12 @@ namespace MuMech
             return "[" + PadPositive(vector.x, format) + ", " + PadPositive(vector.y, format) + ", " + PadPositive(vector.z, format) + " ]";
         }
 
+        public static string PrettyPrint(Vector6 vector, string format = "F3")
+        {
+            return "[" + PadPositive(vector.positive.x,format) + ", " + PadPositive(vector.positive.y,format) + ", " + PadPositive(vector.positive.z,format) +
+                   " ], [" + PadPositive(-vector.negative.x,format) + ", " + PadPositive(-vector.negative.y,format) + ", " + PadPositive(-vector.negative.z,format) + " ]";
+        }
+
         public static string PrettyPrint(Quaternion quaternion, string format = "F3")
         {
             return "[" + PadPositive(quaternion.x, format) + ", " + PadPositive(quaternion.y, format) + ", " + PadPositive(quaternion.z, format) + ", " + PadPositive(quaternion.w ,format) + "]";
@@ -171,7 +177,7 @@ namespace MuMech
         {
             return (TimeWarp.WarpMode == TimeWarp.Modes.LOW) || (TimeWarp.CurrentRateIndex == 0);
         }
-        
+
         public static string SystemClipboard
         {
             get => GUIUtility.systemCopyBuffer;

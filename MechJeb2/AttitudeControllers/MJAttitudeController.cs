@@ -190,7 +190,7 @@ namespace MuMech.AttitudeControllers
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
 
             // ( MoI / available torque ) factor:
-            Vector3d NormFactor = Vector3d.Scale(ac.vesselState.MoI, ac.torque.InvertNoNaN());
+            Vector3d NormFactor = Vector3d.Scale(ac.vesselState.MoI, ac.torque.ToVector3d().InvertNoNaN());
 
             err.Scale(NormFactor);
 
@@ -202,7 +202,7 @@ namespace MuMech.AttitudeControllers
             omega.Scale(NormFactor);
 
             if (Tf_autoTune)
-                tuneTf(ac.torque);
+                tuneTf(ac.torque.ToVector3d());
             setPIDParameters();
 
             // angular velocity limit:

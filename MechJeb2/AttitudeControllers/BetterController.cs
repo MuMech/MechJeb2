@@ -214,7 +214,7 @@ namespace MuMech.AttitudeControllers
             // lowpass filter on the error input
             _error0 = _error1.IsFinite() ? _error1 + PosSmoothIn * (_error0 - _error1) : _error0;
 
-            Vector3d controlTorque = ac.torque;
+            Vector3d controlTorque = ac.torque.SelectAxis(_error0);
 
             // needed to stop wiggling at higher phys warp
             double warpFactor = Math.Pow(ac.vesselState.deltaT / 0.02, 0.90); // the power law here comes ultimately from the simulink PID tuning app
@@ -277,7 +277,7 @@ namespace MuMech.AttitudeControllers
                 if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
                     _actuation[i] = 0;
 
-                _targetTorque[i] = _actuation[i] / ac.torque[i];
+                _targetTorque[i] = _actuation[i] / controlTorque[i];
 
                 if (ac.ActuationControl[i] == 0)
                     Reset(i);

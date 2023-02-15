@@ -60,7 +60,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label2"), GUILayout.ExpandWidth(true));//Torque
-                GUILayout.Label("|" + core.attitude.torque.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.torque),
+                GUILayout.Label("|" + core.attitude.torque.ToVector3d().magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.torque),
                     GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
@@ -71,7 +71,7 @@ namespace MuMech
                     GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
-                Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.InvertNoNaN());
+                Vector3d ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.ToVector3d().InvertNoNaN());
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label4"), GUILayout.ExpandWidth(true));//MOI / torque

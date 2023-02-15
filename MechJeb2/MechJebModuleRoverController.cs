@@ -336,7 +336,7 @@ namespace MuMech
 				Vector3.OrthoNormalize(ref norm, ref fwd);
 				Quaternion quat = Quaternion.LookRotation(fwd, norm);
 
-				if (vesselState.torqueAvailable.sqrMagnitude > 0)
+				if (vesselState.torqueAvailable.ToVector3d().sqrMagnitude > 0)
 					core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
 			}
 
