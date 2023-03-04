@@ -41,7 +41,7 @@ namespace MuMech
             }
             else if (newPeA < -o.referenceBody.Radius)
             {
-                throw new OperationException(Localizer.Format("#MechJeb_both_Exception3",o.referenceBody.displayName) + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//"new periapsis cannot be lower than minus the radius of <<1>>"
+                throw new OperationException(Localizer.Format("#MechJeb_both_Exception3",o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//"new periapsis cannot be lower than minus the radius of <<1>>"
             }
 
             List<ManeuverParameters> NodeList = new List<ManeuverParameters>();

@@ -30,7 +30,7 @@ namespace MuMech
 
             if (o.referenceBody.referenceBody == null)
             {
-                throw new OperationException(Localizer.Format("#MechJeb_return_Exception",o.referenceBody.displayName));//<<1>> is not orbiting another body you could return to.
+                throw new OperationException(Localizer.Format("#MechJeb_return_Exception",o.referenceBody.displayName.LocalizeRemoveGender()));//<<1>> is not orbiting another body you could return to.
             }
 
             double UT;

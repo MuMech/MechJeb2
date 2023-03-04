@@ -213,7 +213,7 @@ namespace MuMech
                 autopilot.AccKd.text = GUILayout.TextField (autopilot.AccKd.text, GUILayout.Width (40));
                 GUILayout.EndHorizontal ();
                 if (autopilot.SpeedHoldEnabled)
-                    GUILayout.Label (Localizer.Format("#MecgJeb_Aircraftauto_error1", autopilot.a_err.ToString ("F2"),autopilot.RealAccelerationTarget.ToString ("F2"),autopilot.cur_acc.ToString ("F2")),GUILayout.ExpandWidth (false));//"error:"<<1>>" Target:"<<2>> " Cur:"<<3>>
+                    GUILayout.Label (Localizer.Format("#MecgJeb_Aircraftauto_error1", autopilot.AErr.ToString ("F2"),autopilot.RealAccelerationTarget.ToString ("F2"),autopilot.CurAcc.ToString ("F2")),GUILayout.ExpandWidth (false));//"error:"<<1>>" Target:"<<2>> " Cur:"<<3>>
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_Pitch"), GUILayout.ExpandWidth(true));//"VertSpeed"
@@ -225,7 +225,7 @@ namespace MuMech
                 autopilot.PitKd.text = GUILayout.TextField(autopilot.PitKd.text, GUILayout.Width(40));
                 GUILayout.EndHorizontal();
                 if (autopilot.VertSpeedHoldEnabled)
-                   GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.pitch_err.ToString("F2"), autopilot.RealPitchTarget.ToString("F2"), vesselState.currentPitch.ToString("F2"), autopilot.pitch_act.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
+                   GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.PitchErr.ToString("F2"), autopilot.RealPitchTarget.ToString("F2"), vesselState.currentPitch.ToString("F2"), autopilot.PitchAct.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal ();
                 GUILayout.Label (Localizer.Format("#MechJeb_Aircraftauto_Label10"), GUILayout.ExpandWidth (true));//Roll
@@ -237,7 +237,7 @@ namespace MuMech
                 autopilot.RolKd.text = GUILayout.TextField (autopilot.RolKd.text, GUILayout.Width (40));
                 GUILayout.EndHorizontal ();
                 if (autopilot.RollHoldEnabled)
-                    GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.roll_err.ToString("F2"), autopilot.RealRollTarget.ToString("F2"), (-vesselState.currentRoll).ToString("F2"), autopilot.roll_act.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
+                    GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.RollErr.ToString("F2"), autopilot.RealRollTarget.ToString("F2"), (-vesselState.currentRoll).ToString("F2"), autopilot.RollAct.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal ();
                 GUILayout.Label ("Yaw", GUILayout.ExpandWidth (true));
@@ -249,7 +249,7 @@ namespace MuMech
                 autopilot.YawKd.text = GUILayout.TextField (autopilot.YawKd.text, GUILayout.Width (40));
                 GUILayout.EndHorizontal ();
                 if (autopilot.HeadingHoldEnabled)
-                    GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.yaw_err.ToString("F2"), autopilot.RealYawTarget.ToString("F2"), autopilot.curr_yaw.ToString("F2"), autopilot.yaw_act.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
+                    GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.YawErr.ToString("F2"), autopilot.RealYawTarget.ToString("F2"), autopilot.CurrYaw.ToString("F2"), autopilot.YawAct.ToString("F5"), GUILayout.ExpandWidth(false)));//error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label (Localizer.Format("#MechJeb_Aircraftauto_Limits"), GUILayout.ExpandWidth (false));//Yaw Control Limit

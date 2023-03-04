@@ -276,7 +276,7 @@ namespace MuMech
 
         //Gives the true anomaly (in a's orbit) at which a crosses its ascending node
         //with b's orbit.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double AscendingNodeTrueAnomaly(this Orbit a, Orbit b)
         {
             Vector3d vectorToAN = Vector3d.Cross(a.SwappedOrbitNormal(), b.SwappedOrbitNormal());
@@ -285,15 +285,15 @@ namespace MuMech
 
         //Gives the true anomaly (in a's orbit) at which a crosses its descending node
         //with b's orbit.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double DescendingNodeTrueAnomaly(this Orbit a, Orbit b)
         {
-            return MuUtils.ClampDegrees360(a.AscendingNodeTrueAnomaly(b) + 180);
+            return MuUtils.ClampRadiansTwoPi(a.AscendingNodeTrueAnomaly(b) + Math.PI);
         }
 
         //Gives the true anomaly at which o crosses the equator going northwards, if o is east-moving,
         //or southwards, if o is west-moving.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double AscendingNodeEquatorialTrueAnomaly(this Orbit o)
         {
             Vector3d vectorToAN = Vector3d.Cross(o.referenceBody.transform.up, o.SwappedOrbitNormal());
@@ -302,10 +302,10 @@ namespace MuMech
 
         //Gives the true anomaly at which o crosses the equator going southwards, if o is east-moving,
         //or northwards, if o is west-moving.
-        //The returned value is always between 0 and 360.
+        //The returned value is always between 0 and 2 * PI.
         public static double DescendingNodeEquatorialTrueAnomaly(this Orbit o)
         {
-            return MuUtils.ClampDegrees360(o.AscendingNodeEquatorialTrueAnomaly() + 180);
+            return MuUtils.ClampRadiansTwoPi(o.AscendingNodeEquatorialTrueAnomaly() + Math.PI);
         }
 
         //For hyperbolic orbits, the true anomaly only takes on values in the range
@@ -321,7 +321,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool AscendingNodeExists(this Orbit a, Orbit b)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
         }
 
         //Returns whether a has a descending node with b. This can be false
@@ -329,7 +329,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool DescendingNodeExists(this Orbit a, Orbit b)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
         }
 
         //Returns whether o has an ascending node with the equator. This can be false
@@ -337,7 +337,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool AscendingNodeEquatorialExists(this Orbit o)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
         }
 
         //Returns whether o has a descending node with the equator. This can be false
@@ -345,7 +345,7 @@ namespace MuMech
         //angle of the hyperbola.
         public static bool DescendingNodeEquatorialExists(this Orbit o)
         {
-            return Math.Abs(MuUtils.ClampDegrees180(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
+            return Math.Abs(MuUtils.ClampRadiansPi(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
         }
 
         //Returns the vector from the primary to the orbiting body at periapsis

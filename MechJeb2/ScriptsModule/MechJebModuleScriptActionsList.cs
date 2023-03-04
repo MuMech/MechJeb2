@@ -206,16 +206,16 @@ namespace MuMech
 			else
 			{
 				selectedActionIndex = GuiUtils.ComboBox.Box(selectedActionIndex, actionNames[selectedGroupIndex], actionNames);
-				if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0 || actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Landing") == 0)
+				if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_2")) == 0 || actionNames[selectedGroupIndex][selectedActionIndex].CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_4")) == 0) // "MODULE Ascent Autopilot"||"MODULE Landing"
 				{
 					if (GUILayout.Button(GameDatabase.Instance.GetTexture("MechJeb2/Icons/view", true), GUILayout.ExpandWidth(false)))
 					{
-						if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Ascent Autopilot") == 0)
+						if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_2")) == 0) // "MODULE Ascent Autopilot"
 						{
 							//Open the ascent module GUI
 							core.GetComputerModule<MechJebModuleAscentGuidance>().enabled = true;
 						}
-						if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo("MODULE Landing") == 0)
+						if (actionNames[selectedGroupIndex][selectedActionIndex].CompareTo(Localizer.Format("#MechJeb_ScriptMod_actions9_4")) == 0)  // "MODULE Landing"
 						{
 							//Open the DockingGuidance module GUI
 							core.GetComputerModule<MechJebModuleLandingGuidance>().enabled = true;

@@ -82,7 +82,7 @@ namespace MuMech
         {
             pickingPositionTarget = true;
             MapView.EnterMapView();
-            string message = Localizer.Format("#MechJeb_pickingPositionMsg",mainBody.displayName);//"Click to select a target on " +  + "'s surface.\n(Leave map view to cancel.)"
+            string message = Localizer.Format("#MechJeb_pickingPositionMsg",mainBody.displayName.LocalizeRemoveGender()); // "Click to select a target on " +  + "'s surface.\n(Leave map view to cancel.)"
             ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
         }
 
