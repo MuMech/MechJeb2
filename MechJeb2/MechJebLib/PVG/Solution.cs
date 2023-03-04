@@ -311,9 +311,9 @@ namespace MechJebLib.PVG
             
             var sb = new StringBuilder();
             sb.AppendLine($"Orbit: {peA.ToSI(0)}m x {apA.ToSI(0)}m");
-            sb.AppendLine($"rT: {rT.ToSI(0)}m vT: {vT.ToSI(0)}m FPA: {Rad2Deg(fpa):F1}°");
+            sb.AppendLine($"rT: {rT.ToSI(0)}m vT: {vT.ToSI(0)}m/s FPA: {Rad2Deg(fpa):F1}°");
             sb.AppendLine($"sma: {sma.ToSI(0)}m ecc: {ecc:F3} inc: {Rad2Deg(inc):F1}°");
-            sb.Append($"lan: {Rad2Deg(lan):F1}° argp: {Rad2Deg(argp):F1}° ta: °{Rad2Deg(tanom):F1}°");
+            sb.Append($"lan: {Rad2Deg(lan):F1}° argp: {Rad2Deg(argp):F1}° ta: {Rad2Deg(tanom):F1}°");
             return sb.ToString();
         }
 

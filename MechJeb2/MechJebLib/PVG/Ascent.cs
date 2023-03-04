@@ -174,11 +174,13 @@ namespace MechJebLib.PVG
             bool savedUnguided = _phases[_phases.Count - 1].Unguided;
             
             if (!_fixedBurnTime)
-                _phases[_optimizedPhase].OptimizeTime = false;
+            {
+                _phases[_optimizedPhase].OptimizeTime   = false;
+                _phases[_phases.Count - 1].OptimizeTime = true;
+            }
             
             _phases[_phases.Count - 1].Infinite     = true;
             _phases[_phases.Count - 1].Unguided     = false;
-            _phases[_phases.Count - 1].OptimizeTime = true;
 
             if (_optimizedCoastPhase > -1)
                 _phases[_optimizedCoastPhase].OptimizeTime = false;
@@ -187,18 +189,18 @@ namespace MechJebLib.PVG
             pvg.Bootstrap(pvGuess, _r0.normalized);
             pvg.Run();
             
+            if (!pvg.Success())
+                throw new Exception("Target unreachable (bootstrapping)");
+            
+            using Solution solution = pvg.GetSolution();
+            ApplyOldBurnTimesToPhases(solution);
+            
             _phases[_phases.Count - 1].Infinite     = false;
             _phases[_phases.Count - 1].Unguided     = savedUnguided;
             _phases[_phases.Count - 1].OptimizeTime = false;
 
             if (!_fixedBurnTime)
                 _phases[_optimizedPhase].OptimizeTime = true;
-            
-            if (!pvg.Success())
-                throw new Exception("Target unreachable (bootstrapping)");
-            
-            using Solution solution = pvg.GetSolution();
-            ApplyOldBurnTimesToPhases(solution);
             
             if (_optimizedCoastPhase > -1)
             {

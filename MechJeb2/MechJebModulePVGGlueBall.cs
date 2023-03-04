@@ -138,11 +138,14 @@ namespace MuMech
                 return;
             }
 
-            // clamp the AttR
-            if (attR < peR)
-                attR = peR;
-            if (attR > apR && apR > peR)
-                attR = apR;
+            if (_ascentSettings.OptimizeStageFlag)
+            {
+                // clamp the AttR between peR and apR but not if we're using AttR for a fixed time rocket
+                if (attR < peR)
+                    attR = peR;
+                if (attR > apR && apR > peR)
+                    attR = apR;
+            }
 
             if (VesselOffGround())
             {

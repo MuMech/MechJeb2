@@ -53,15 +53,15 @@ namespace PVG
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.tmax).ShouldBeZero(1e-7);
-            solution.Vgo(0).ShouldEqual(9369.7098973030625, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.25565104209238126, 0.23733387212263146, 0.13943178322206456), 1e-7);
+            solution.Vgo(0).ShouldEqual(9327.0948576056289, 1e-7);
+            solution.Pv(0).ShouldEqual(new V3(0.24913591286181805, 0.23909088173239779, 0.13587844086293846), 1e-7);
 
             pvg.Znorm.ShouldBeZero(1e-9);
             smaf.ShouldEqual(8616511.1913318466, 1e-7);
             eccf.ShouldEqual(0.23913520746130185, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.7643342516077158, 1e-7);
+            argpf.ShouldEqual(1.7637313812499942, 1e-7);
             ClampPi(tanof).ShouldBeZero(1e-7);
         }
 
@@ -103,18 +103,20 @@ namespace PVG
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.tmax).ShouldBeZero(1e-7);
-            solution.Vgo(0).ShouldEqual(9334.0379097120367, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.26012594101471387, 0.24809652975146315, 0.14187238785760978), 1e-7);
+            solution.Vgo(0).ShouldEqual(9291.2315891261242, 1e-7);
+            solution.Pv(0).ShouldEqual(new V3(0.25236763236272763, 0.24870860524790397, 0.13764101483910374), 1e-7);
 
             pvg.Znorm.ShouldBeZero(1e-9);
             smaf.ShouldEqual(8616511.1913318466, 1e-7);
             eccf.ShouldEqual(0.23913520746130185, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.6625138563905422, 1e-7);
-            ClampPi(tanof).ShouldEqual(0.095809704319954392, 1e-7);
+            argpf.ShouldEqual(1.6667949762852059, 1e-7);
+            ClampPi(tanof).ShouldEqual(0.090826664012324976, 1e-7);
         }
 
+        // target a 185x186 without getting apopasis attachment.  unfortuantely, i don't have a use case that
+        // exercizes the logic to re-pin to the periapsis because it grabs the apopasis incorrectly.
         [Fact]
         public void Kepler3NoApoapsisAttachment()
         {
@@ -122,7 +124,7 @@ namespace PVG
             var v0 = new V3(0, 407.862893197274, 0);
             double t0 = 0;
             double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 210e+3;
+            double ApR = 6.371e+6 + 186e+3;
             double rbody = 6.371e+6;
             double incT = Deg2Rad(28.608);
             double mu = 3.986004418e+14;
@@ -151,16 +153,16 @@ namespace PVG
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.tmax).ShouldBeZero(1e-7);
-            //solution.Vgo(0).ShouldEqual(9334.0379097120367, 1e-7);
-            //solution.Pv(0).ShouldEqual(new V3(0.26012594101471387, 0.24809652975146315, 0.14187238785760978), 1e-7);
+            solution.Vgo(0).ShouldEqual(8498.9352440057573, 1e-7);
+            solution.Pv(0).ShouldEqual(new V3(0.24009395607850137, 0.21526467329187604, 0.13094696426599889), 1e-7);
 
             pvg.Znorm.ShouldBeZero(1e-9);
-            //smaf.ShouldEqual(8616511.1913318466, 1e-7);
-            //eccf.ShouldEqual(0.23913520746130185, 1e-7);
-            //incf.ShouldEqual(incT, 1e-7);
-            //lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            //argpf.ShouldEqual(1.6625138563905422, 1e-7);
-            ClampPi(tanof).ShouldBeZero(1e-7);
+            smaf.ShouldEqual(6556500.0000104867, 1e-7);
+            eccf.ShouldEqual(7.6259820388658756E-05, 1e-7);
+            incf.ShouldEqual(incT, 1e-7);
+            lanf.ShouldEqual(Deg2Rad(270), 1e-7);
+            argpf.ShouldEqual(1.6494150858682159, 1e-7);
+            tanof.ShouldEqual(0.09094016908398217, 1e-7);
         }
     }
 }

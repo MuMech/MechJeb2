@@ -61,6 +61,7 @@
         <Compile Include="Maths\FunctionsTests.cs" />
         <Compile Include="Maths\BrentRootTests.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="PVG\AscentTests\BuggyTests.cs" />
         <Compile Include="PVG\AscentTests\TheStandardTests.cs" />
         <Compile Include="PVG\AscentTests\Titan2Tests.cs" />
         <Compile Include="PVG\Integrators\VacuumThrustIntegratorTests.cs" />

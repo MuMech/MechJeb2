@@ -50,15 +50,15 @@ namespace PVG
             solution.R(t0).ShouldEqual(r0, EPS);
             solution.V(t0).ShouldEqual(v0, EPS);
             solution.M(t0).ShouldEqual(49119.7842689869, EPS);
-            solution.Vgo(t0).ShouldEqual(9369.7098973030625, 1e-7);
-            solution.Pv(t0).ShouldEqual(new V3(0.25565104209238126, 0.23733387212263146, 0.13943178322206456), 1e-7);
+            solution.Vgo(t0).ShouldEqual(9442.4337137415314, 1e-7);
+            solution.Pv(t0).ShouldEqual(new V3(0.72074690601916824, -0.37044777147539532, 0.16448719154490499), 1e-7);
 
-            smaf.ShouldEqual(8616511.1913318466, 1e-7);
-            eccf.ShouldEqual(0.23913520746130185, 1e-7);
+            smaf.ShouldEqual(11463499.98898875, 1e-7);
+            eccf.ShouldEqual(0.4280978753095433, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
-            lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.7643342516077158, 1e-7);
-            ClampPi(tanof).ShouldBeZero(1e-7);
+            lanf.ShouldEqual(3.0481860980923936, 1e-7);
+            argpf.ShouldEqual(2.3459256350705218, 1e-7);
+            tanof.ShouldEqual(0.086322895047150183, 1e-7);
         }
     }
 }

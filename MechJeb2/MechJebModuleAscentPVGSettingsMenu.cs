@@ -51,7 +51,6 @@ namespace MuMech
             for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
             {
                 FuelFlowSimulation.FuelStats stats = core.stageStats.vacStats[i];
-                Debug.Log($"{i}: {stats.DeltaV}");
                 if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
                     continue;
 
@@ -69,9 +68,11 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            if (_ascentSettings.OptimizeStageInternal < topstage)
+            // this should only run once -- maybe it should run in some hook like scene loading or something?
+            // we need DV info though.
+            if (_ascentSettings.OptimizeStageInternal < 0)
                 _ascentSettings.OptimizeStageInternal.val = topstage;
-
+      
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", 30);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
