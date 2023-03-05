@@ -137,7 +137,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
-        public bool limiterMinThrottle = false;
+        public bool limiterMinThrottle = true;
 
         [Persistent(pass = (int) (Pass.Local | Pass.Type | Pass.Global))]
         public EditableDoubleMult minThrottle = new EditableDoubleMult(0.05, 0.01);
@@ -208,7 +208,7 @@ namespace MuMech
 
         public PIDController pid;
 
-        float lastThrottle = 0;
+        public float LastThrottle = 0;
         bool userCommandingRotation { get { return userCommandingRotationSmoothed > 0; } }
         int userCommandingRotationSmoothed = 0;
         bool lastDisableThrusters = false;
@@ -330,7 +330,7 @@ namespace MuMech
                 userCommandingRotationSmoothed--;
             }
 
-            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden) { return; }
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentMenu>().hidden) { return; }
 
             if ((tmode != TMode.OFF) && (vesselState.thrustAvailable > 0))
             {
@@ -543,7 +543,7 @@ namespace MuMech
 
             if (s.Z == 0 && core.rcs.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
-            lastThrottle = s.mainThrottle;
+            LastThrottle = s.mainThrottle;
 
             if (!core.attitude.enabled)
             {
@@ -606,8 +606,8 @@ namespace MuMech
         float SmoothThrottle(float mainThrottle)
         {
             return Mathf.Clamp(mainThrottle,
-                               (float)(lastThrottle - vesselState.deltaT / throttleSmoothingTime),
-                               (float)(lastThrottle + vesselState.deltaT / throttleSmoothingTime));
+                               (float)(LastThrottle - vesselState.deltaT / throttleSmoothingTime),
+                               (float)(LastThrottle + vesselState.deltaT / throttleSmoothingTime));
         }
 
         float FlameoutSafetyThrottle()
@@ -789,7 +789,7 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentGuidance>().hidden)
+            if (core.GetComputerModule<MechJebModuleThrustWindow>().hidden && core.GetComputerModule<MechJebModuleAscentMenu>().hidden)
             {
                 return;
             }

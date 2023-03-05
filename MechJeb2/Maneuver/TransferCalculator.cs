@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using MechJebLib.Maths;
+using MechJebLib.Primitives;
 using UnityEngine;
 
 namespace MuMech
@@ -109,35 +110,34 @@ namespace MuMech
             double t1 = t0 + dt;
             CelestialBody originPlanet = _origin.referenceBody;
 
-            Vector3d v1_0 = originPlanet.orbit.getOrbitalVelocityAtUT(t0);
-            Vector3d r1 = originPlanet.orbit.getRelativePositionAtUT(t0);
+            var v10 = originPlanet.orbit.getOrbitalVelocityAtUT(t0).ToV3();
+            var r1 = originPlanet.orbit.getRelativePositionAtUT(t0).ToV3();
 
-            Vector3d r2 = _destination.getRelativePositionAtUT(t1);
-            Vector3d v2_1 = _destination.getOrbitalVelocityAtUT(t1);
+            var r2 = _destination.getRelativePositionAtUT(t1).ToV3();
+            var v21 = _destination.getOrbitalVelocityAtUT(t1).ToV3();
 
-            Vector3d v1;
-            Vector3d v2;
+            V3 v1;
+            V3 v2;
             try
             {
-
-                Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, v1_0, r2, dt, 0, out v1, out v2);
+                Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, v10, r2, dt, 0, out v1, out v2);
             }
             catch
             {
-                v1 = v1_0;
-                v2 = v2_1;
+                v1 = v10;
+                v2 = v21;
                 // ignored
             }
 
-            exitDV    = v1 - v1_0;
-            captureDV = v2_1 - v2;
+            exitDV    = (v1 - v10).ToVector3d();
+            captureDV = (v21 - v2).ToVector3d();
         }
 
         private void ComputeDeltaV(object args)
         {
             for (int dateIndex = TakeDateIndex();
-                dateIndex >= 0;
-                dateIndex = TakeDateIndex())
+                 dateIndex >= 0;
+                 dateIndex = TakeDateIndex())
             {
                 double t0 = DateFromIndex(dateIndex);
 
@@ -347,7 +347,7 @@ namespace MuMech
             double[] x = new double[VARS];
 
             Debug.Log("epoch: " + Planetarium.GetUniversalTime());
-            Debug.Log("initial orbit around source: "+ _initialOrbit.MuString());
+            Debug.Log("initial orbit around source: " + _initialOrbit.MuString());
             Debug.Log("source: " + _initialOrbit.referenceBody.orbit.MuString());
             Debug.Log("target: " + _targetBody.orbit.MuString());
             Debug.Log("source mu: " + _initialOrbit.referenceBody.gravParameter);
@@ -356,11 +356,11 @@ namespace MuMech
             Debug.Log("maneuver guess dV: " + maneuver.dV);
             Debug.Log("maneuver guess UT: " + maneuver.UT);
             Debug.Log("arrival guess UT: " + utArrival);
-            _initialOrbit.GetOrbitalStateVectorsAtUT(maneuver.UT,out Vector3d r1,out Vector3d v1);
+            _initialOrbit.GetOrbitalStateVectorsAtUT(maneuver.UT, out Vector3d r1, out Vector3d v1);
             Debug.Log($"initial orbit at {maneuver.UT} x = {r1}; v = {v1}");
-            _initialOrbit.referenceBody.orbit.GetOrbitalStateVectorsAtUT(maneuver.UT,out Vector3d r2,out Vector3d v2);
+            _initialOrbit.referenceBody.orbit.GetOrbitalStateVectorsAtUT(maneuver.UT, out Vector3d r2, out Vector3d v2);
             Debug.Log($"source at {maneuver.UT} x = {r2}; v = {v2}");
-            _targetBody.orbit.GetOrbitalStateVectorsAtUT(utArrival,out Vector3d r3,out Vector3d v3);
+            _targetBody.orbit.GetOrbitalStateVectorsAtUT(utArrival, out Vector3d r3, out Vector3d v3);
             Debug.Log($"source at {utArrival} x = {r3}; v = {v3}");
 
             _impulseScale = maneuver.dV.magnitude;

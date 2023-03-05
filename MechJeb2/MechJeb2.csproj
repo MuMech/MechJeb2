@@ -101,31 +101,61 @@
     <Compile Include="MathJ\DormandPrince.cs" />
     <Compile Include="MathJ\ODE.cs" />
     <Compile Include="MathJ\ODESolver.cs" />
-    <Compile Include="Matrix3x3d.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
     <Compile Include="MechJebLib\Maths\BrentMin.cs" />
     <Compile Include="MechJebLib\Maths\BrentRoot.cs" />
+    <Compile Include="MechJebLib\Maths\FunctionImpls\RealDeltaVToChangeApoapsisPrograde.cs" />
     <Compile Include="MechJebLib\Maths\Functions.cs" />
     <Compile Include="MechJebLib\Maths\Gooding.cs" />
     <Compile Include="MechJebLib\Maths\Shepperd.cs" />
-    <Compile Include="MechJebLib\Structs\H1.cs" />
-    <Compile Include="MechJebLib\Structs\H3.cs" />
-    <Compile Include="MechJebLib\Structs\HBase.cs" />
-    <Compile Include="MechJebLib\Structs\Hn.cs" />
+    <Compile Include="MechJebLib\Primitives\DD.cs" />
+    <Compile Include="MechJebLib\PVG\ArrayWrapper.cs" />
+    <Compile Include="MechJebLib\PVG\AscentBuilder.cs" />
+    <Compile Include="MechJebLib\PVG\Integrators\IPVGIntegrator.cs" />
+    <Compile Include="MechJebLib\PVG\Integrators\VacuumCoastAnalytic.cs" />
+    <Compile Include="MechJebLib\PVG\Integrators\VacuumThrustAnalytic.cs" />
+    <Compile Include="MechJebLib\PVG\Integrators\VacuumThrustIntegrator.cs" />
+    <Compile Include="MechJebLib\PVG\Ascent.cs" />
+    <Compile Include="MechJebLib\PVG\Phase.cs" />
+    <Compile Include="MechJebLib\PVG\Problem.cs" />
+    <Compile Include="MechJebLib\PVG\OptimizerBuilder.cs" />
+    <Compile Include="MechJebLib\PVG\ResidualWrapper.cs" />
+    <Compile Include="MechJebLib\PVG\Scale.cs" />
+    <Compile Include="MechJebLib\PVG\Solution.cs" />
+    <Compile Include="MechJebLib\PVG\Optimizer.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle3Energy.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Energy.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Reduced.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Propellant.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle5Reduced.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\Intercept6Cartesian.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\IPVGTerminal.cs" />
+    <Compile Include="MechJebLib\Primitives\H1.cs" />
+    <Compile Include="MechJebLib\Primitives\H3.cs" />
+    <Compile Include="MechJebLib\Primitives\HBase.cs" />
+    <Compile Include="MechJebLib\Primitives\Hn.cs" />
+    <Compile Include="MechJebLib\Primitives\M3.cs" />
+    <Compile Include="MechJebLib\Primitives\Q3.cs" />
+    <Compile Include="MechJebLib\Primitives\V3.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\Kepler3Reduced.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\Kepler4Reduced.cs" />
+    <Compile Include="MechJebLib\PVG\Terminal\Kepler5Reduced.cs" />
     <Compile Include="MechJebLib\Utils\Check.cs" />
+    <Compile Include="MechJebLib\Utils\Logger.cs" />
     <Compile Include="MechJebLib\Utils\ObjectPool.cs" />
     <Compile Include="MechJebLib\Utils\Statics.cs" />
-    <Compile Include="MechJebLib\Utils\DDArray.cs" />
     <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
     <Compile Include="MechJebModuleAirplaneGuidance.cs" />
-    <Compile Include="MechJebModuleAscentAutopilot.cs" />
-    <Compile Include="MechJebModuleAscentClassic.cs" />
-    <Compile Include="MechJebModuleAscentClassicMenu.cs" />
-    <Compile Include="MechJebModuleAscentGT.cs" />
-    <Compile Include="MechJebModuleAscentGuidance.cs" />
-    <Compile Include="MechJebModuleAscentNavBall.cs" />
-    <Compile Include="MechJebModuleAscentPVG.cs" />
+    <Compile Include="MechJebModuleAscentBaseAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentClassicAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentClassicPathMenu.cs" />
+    <Compile Include="MechJebModuleAscentGTAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentMenu.cs" />
+    <Compile Include="MechJebModuleAscentPVGAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentPVGSettingsMenu.cs" />
+    <Compile Include="MechJebModuleAscentSettings.cs" />
+    <Compile Include="MechJebModuleAscentSettingsMenu.cs" />
     <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
     <Compile Include="MechJebModuleAttitudeController.cs" />
     <Compile Include="MechJebModuleCustomInfoWindow.cs" />
@@ -140,7 +170,6 @@
     <Compile Include="MechJebModuleLandingAutopilot.cs" />
     <Compile Include="MechJebModuleLandingGuidance.cs" />
     <Compile Include="MechJebModuleLandingPredictions.cs" />
-    <Compile Include="MechJebModuleLogicalStageTracking.cs" />
     <Compile Include="MechJebModuleManeuverPlanner.cs" />
     <Compile Include="MechJebModuleMenu.cs" />
     <Compile Include="MechJebModuleNodeEditor.cs" />
@@ -161,6 +190,7 @@
     <Compile Include="MechJebModuleSolarPanelController.cs" />
     <Compile Include="MechJebModuleSpaceplaneAutopilot.cs" />
     <Compile Include="MechJebModuleSpaceplaneGuidance.cs" />
+    <Compile Include="MechJebModuleSpinupController.cs" />
     <Compile Include="MechJebModuleStageStats.cs" />
     <Compile Include="MechJebModuleStagingController.cs" />
     <Compile Include="MechJebModuleTargetController.cs" />
@@ -179,13 +209,9 @@
     <Compile Include="OrbitalManeuverCalculator.cs" />
     <Compile Include="PIDController.cs" />
     <Compile Include="PartExtensions.cs" />
-    <Compile Include="Pontryagin\Arc.cs" />
-    <Compile Include="Pontryagin\PontryaginBase.cs" />
-    <Compile Include="Pontryagin\PontryaginLaunch.cs" />
-    <Compile Include="Pontryagin\PontryaginNode.cs" />
-    <Compile Include="Pontryagin\Solution.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs" />
+    <Compile Include="MechJebModulePVGGlueBall.cs" />
     <Compile Include="RCSSolver.cs" />
     <Compile Include="ReentrySimulation.cs" />
     <Compile Include="ReflectionUtils.cs" />
@@ -322,32 +348,12 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="IDisposableAnalyzers">
-      <Version>4.0.2</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Net.Compilers.Toolset">
-      <Version>4.2.0</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="SonarAnalyzer.CSharp">
-      <Version>8.41.0.50478</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="System.Buffers">
-      <Version>4.5.1</Version>
-    </PackageReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">
     <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;" />
   </Target>
-  <Target Name="AfterBuild" Condition=" '$(OS)' == '' ">
-    <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)'" />
+  <Target Name="AfterBuild" Condition=" '$(OS)' != 'Windows_NT' ">
+    <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)' '$(ReferencePath)'" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

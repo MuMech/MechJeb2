@@ -159,7 +159,7 @@ namespace MechJebLib.Maths
                     }
                 }
 
-                if (i++ >= maxiter)
+                if (i++ >= maxiter && maxiter > 0)
                     throw new TimeoutException("Brent's minimization method: maximum iterations exceeded");
             }
 

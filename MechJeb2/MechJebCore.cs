@@ -11,6 +11,8 @@ using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
 using KSP.Localization;
+using ILogger = MechJebLib.Utils.ILogger;
+using Logger = MechJebLib.Utils.Logger;
 
 namespace MuMech
 {
@@ -31,23 +33,26 @@ namespace MuMech
 
         private bool ready = false;
 
-        public MechJebModuleGuidanceController guidance;
-        public MechJebModuleAttitudeController attitude;
-        public MechJebModuleStagingController staging;
-        public MechJebModuleThrustController thrust;
-        public MechJebModuleTargetController target;
-        public MechJebModuleWarpController warp;
-        public MechJebModuleRCSController rcs;
-        public MechJebModuleRCSBalancer rcsbal;
-        public MechJebModuleRoverController rover;
-        public MechJebModuleNodeExecutor node;
-        public MechJebModuleSolarPanelController solarpanel;
+        public MechJebModuleGuidanceController          guidance;
+        public MechJebModulePVGGlueBall                 glueball;
+        public MechJebModuleAttitudeController          attitude;
+        public MechJebModuleStagingController           staging;
+        public MechJebModuleThrustController            thrust;
+        public MechJebModuleTargetController            target;
+        public MechJebModuleWarpController              warp;
+        public MechJebModuleRCSController               rcs;
+        public MechJebModuleRCSBalancer                 rcsbal;
+        public MechJebModuleRoverController             rover;
+        public MechJebModuleNodeExecutor                node;
+        public MechJebModuleSolarPanelController        solarpanel;
         public MechJebModuleDeployableAntennaController antennaControl;
-        public MechJebModuleLandingAutopilot landing;
-        public MechJebModuleSettings settings;
-        public MechJebModuleAirplaneAutopilot airplane;
-        public MechJebModuleStageStats stageStats;
-        public MechJebModuleLogicalStageTracking stageTracking;
+        public MechJebModuleLandingAutopilot            landing;
+        public MechJebModuleSettings                    settings;
+        public MechJebModuleAirplaneAutopilot           airplane;
+        public MechJebModuleStageStats                  stageStats;
+        public MechJebModuleAscentSettings              ascentSettings;
+        public MechJebModuleSpinupController            spinup;
+        public MechJebModuleAscentBaseAutopilot         ascent => ascentSettings.AscentAutopilot;
 
         public VesselState vesselState = new VesselState();
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]//DisabledEnabled
@@ -279,29 +284,7 @@ namespace MuMech
                 Debug.LogError("MechJeb couldn't find the master MechJeb module for the current vessel.");
             }
         }
-
-        [KSPAction("#MechJeb_AscentAPtoggle")]//Ascent AP toggle
-        public void OnAscentAPToggleAction(KSPActionParam param)
-        {
-
-            MechJebModuleAscentAutopilot autopilot = GetComputerModule<MechJebModuleAscentAutopilot>();
-            MechJebModuleAscentGuidance ascentGuidance = GetComputerModule<MechJebModuleAscentGuidance>();
-
-
-            if (autopilot == null || ascentGuidance == null)
-                return;
-
-            if (autopilot.enabled)
-            {
-                    autopilot.users.Remove(ascentGuidance);
-            }
-            else
-            {
-                    autopilot.users.Add(ascentGuidance);
-            }
-        }
-
-
+        
         private void EngageTranslatronControl(MechJebModuleThrustController.TMode mode)
         {
             MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
@@ -534,6 +517,18 @@ namespace MuMech
                 vessel.OnFlyByWire += OnFlyByWire;
                 controlledVessel = vessel;
             }
+            
+            Logger.Register(new UnityLogger());
+        }
+
+        // Dep-injection: this keeps the dependency on UnityEngine here and out of MechJebLib entirely
+        // (allowing unit testing in MechJebLib with code that logs but without blowing up on the UnityEngine dep)
+        private class UnityLogger : ILogger
+        {
+            public void Log(string message)
+            {
+                Debug.Log(message);
+            }
         }
 
         public override void OnActive()
@@ -650,6 +645,8 @@ namespace MuMech
                 Profiler.EndSample();
             }
             Profiler.EndSample();
+
+            Logger.Drain();
         }
 
 
@@ -782,7 +779,7 @@ namespace MuMech
                 foreach (Type t in moduleRegistry)
                 {
                     if ((t != typeof(ComputerModule)) && (t != typeof(DisplayModule) && (t != typeof(MechJebModuleCustomInfoWindow)))
-                        && (t != typeof(AutopilotModule))
+                        && (t != typeof(AutopilotModule) && (t != typeof(MechJebModuleAscentBaseAutopilot)))
                         && !blacklist.Contains(t.Name) && (GetComputerModule(t.Name) == null))
                     {
                         ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
@@ -796,23 +793,25 @@ namespace MuMech
                 Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
             }
 
-            attitude = GetComputerModule<MechJebModuleAttitudeController>();
-            staging = GetComputerModule<MechJebModuleStagingController>();
-            thrust = GetComputerModule<MechJebModuleThrustController>();
-            target = GetComputerModule<MechJebModuleTargetController>();
-            warp = GetComputerModule<MechJebModuleWarpController>();
-            rcs = GetComputerModule<MechJebModuleRCSController>();
-            rcsbal = GetComputerModule<MechJebModuleRCSBalancer>();
-            rover = GetComputerModule<MechJebModuleRoverController>();
-            node = GetComputerModule<MechJebModuleNodeExecutor>();
-            solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
+            attitude       = GetComputerModule<MechJebModuleAttitudeController>();
+            staging        = GetComputerModule<MechJebModuleStagingController>();
+            thrust         = GetComputerModule<MechJebModuleThrustController>();
+            target         = GetComputerModule<MechJebModuleTargetController>();
+            warp           = GetComputerModule<MechJebModuleWarpController>();
+            rcs            = GetComputerModule<MechJebModuleRCSController>();
+            rcsbal         = GetComputerModule<MechJebModuleRCSBalancer>();
+            rover          = GetComputerModule<MechJebModuleRoverController>();
+            node           = GetComputerModule<MechJebModuleNodeExecutor>();
+            solarpanel     = GetComputerModule<MechJebModuleSolarPanelController>();
             antennaControl = GetComputerModule<MechJebModuleDeployableAntennaController>();
-            landing = GetComputerModule<MechJebModuleLandingAutopilot>();
-            settings = GetComputerModule<MechJebModuleSettings>();
-            airplane = GetComputerModule<MechJebModuleAirplaneAutopilot>();
-            guidance = GetComputerModule<MechJebModuleGuidanceController>();
-            stageStats = GetComputerModule<MechJebModuleStageStats>();
-            stageTracking = GetComputerModule<MechJebModuleLogicalStageTracking>();
+            landing        = GetComputerModule<MechJebModuleLandingAutopilot>();
+            settings       = GetComputerModule<MechJebModuleSettings>();
+            airplane       = GetComputerModule<MechJebModuleAirplaneAutopilot>();
+            guidance       = GetComputerModule<MechJebModuleGuidanceController>();
+            glueball       = GetComputerModule<MechJebModulePVGGlueBall>();
+            stageStats     = GetComputerModule<MechJebModuleStageStats>();
+            ascentSettings = GetComputerModule<MechJebModuleAscentSettings>();
+            spinup         = GetComputerModule<MechJebModuleSpinupController>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
@@ -1088,6 +1087,8 @@ namespace MuMech
 
             // Update current throttle for control deactivation
             currentThrottle = s.mainThrottle;
+            
+            Logger.Drain();
         }
 
         private void Drive(FlightCtrlState s)

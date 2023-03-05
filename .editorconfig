@@ -101,7 +101,7 @@ dotnet_naming_rule.private_static_fields_should_be_camel_case.severity = suggest
 dotnet_naming_rule.private_static_fields_should_be_camel_case.symbols = private_static_fields
 dotnet_naming_rule.private_static_fields_should_be_camel_case.style = private_static_field_style
 
-dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field, property
 dotnet_naming_symbols.private_static_fields.required_modifiers = static
 dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private
 
@@ -113,7 +113,7 @@ dotnet_naming_rule.private_instance_fields_should_be_camel_case.severity = sugge
 dotnet_naming_rule.private_instance_fields_should_be_camel_case.symbols = private_instance_fields
 dotnet_naming_rule.private_instance_fields_should_be_camel_case.style = private_instance_field_style
 
-dotnet_naming_symbols.private_instance_fields.applicable_kinds = field
+dotnet_naming_symbols.private_instance_fields.applicable_kinds = field, property
 dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private
 
 dotnet_naming_style.private_instance_field_style.capitalization = camel_case
@@ -124,7 +124,7 @@ dotnet_naming_rule.non_private_static_fields_should_be_camel_case.severity = sug
 dotnet_naming_rule.non_private_static_fields_should_be_camel_case.symbols = non_private_static_fields
 dotnet_naming_rule.non_private_static_fields_should_be_camel_case.style = non_private_static_field_style
 
-dotnet_naming_symbols.non_private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.non_private_static_fields.applicable_kinds = field, property
 dotnet_naming_symbols.non_private_static_fields.required_modifiers = static
 dotnet_naming_symbols.non_private_static_fields.applicable_accessibilities = public, protected, internal, protected_internal, private_protected
 
@@ -135,7 +135,7 @@ dotnet_naming_rule.non_private_fields_should_be_camel_case.severity = suggestion
 dotnet_naming_rule.non_private_fields_should_be_camel_case.symbols = non_private_fields
 dotnet_naming_rule.non_private_fields_should_be_camel_case.style = non_private_field_style
 
-dotnet_naming_symbols.non_private_fields.applicable_kinds = field
+dotnet_naming_symbols.non_private_fields.applicable_kinds = field, property
 dotnet_naming_symbols.non_private_fields.applicable_accessibilities = public, protected, internal, protected_internal, private_protected
 
 dotnet_naming_style.non_private_field_style.capitalization = pascal_case

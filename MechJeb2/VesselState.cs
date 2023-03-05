@@ -15,15 +15,17 @@ namespace MuMech
         public static bool isLoadedProceduralFairing = false;
         public static bool isLoadedRealFuels = false;
         // RealFuels.ModuleEngineRF ullageSet field to call via reflection
-        private static FieldInfo RFullageSetField;
+        public static FieldInfo RFullageSetField;
         // RealFuels.ModuleEngineRF ignitions field to call via reflection
-        private static FieldInfo RFignitionsField;
+        public static FieldInfo RFignitionsField;
+        // RealFuels.ModuleEngineRF ignited field to call via reflection
+        public static FieldInfo RFignitedField;
         // RealFuels.ModuleEngineRF ullage field to call via reflection
-        private static FieldInfo RFullageField;
+        public static FieldInfo RFullageField;
         // RealFuels.Ullage.UllageSet GetUllageStability method to call via reflection
-        private static MethodInfo RFGetUllageStabilityMethod;
+        public static MethodInfo RFGetUllageStabilityMethod;
         // RealFuels.Ullage.UllageSimulator fields to determine ullage status
-        private static double RFveryStableValue;
+        public static double RFveryStableValue;
         private static double RFstableValue;
         private static double RFriskyValue;
         private static double RFveryRiskyValue;
@@ -346,6 +348,12 @@ namespace MuMech
                 if (RFignitionsField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
+                    isLoadedRealFuels = false;
+                }
+                RFignitedField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignited", BindingFlags.NonPublic|BindingFlags.Instance);
+                if (RFignitedField == null)
+                {
+                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignited field, disabling RF");
                     isLoadedRealFuels = false;
                 }
                 RFullageField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
@@ -1516,7 +1524,7 @@ namespace MuMech
 
                 try
                 {
-                    var ullageSet = RFullageSetField.GetValue(e);
+                    object ullageSet = RFullageSetField.GetValue(e);
                     if (ullageSet == null)
                     {
                         Debug.Log("MechJeb BUG: getting propellantStatus from RealFuels casted to null, ullage status likely broken");
@@ -1524,7 +1532,7 @@ namespace MuMech
                     }
                     try
                     {
-                        propellantStability = (double) RFGetUllageStabilityMethod.Invoke(ullageSet, new object[0]);
+                        propellantStability = (double) RFGetUllageStabilityMethod.Invoke(ullageSet, Array.Empty<object>());
                     }
                     catch (Exception e4)
                     {

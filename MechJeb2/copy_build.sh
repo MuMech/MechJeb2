@@ -3,6 +3,7 @@ TARGET_PATH=$1
 TARGET_DIR=$2
 TARGET_NAME=$3
 PROJECT_DIR=$4
+REFERENCE_PATH=$5
 
 if [ -z "${TARGET_PATH}" ] ; then
   echo 'Expected $TARGET_PATH to be defined but it is not' >&2
@@ -30,8 +31,17 @@ if [ -z "${PROJECT_DIR}" ] ; then
   exit 1
 fi
 
+if [ -z "${REFERENCE_PATH}" ] ; then
+  echo 'Expected REFERENCE_PATH to be defined but it is not' >&2
+  exit 1
+fi
+
 if [ -z "${PDB2MDB}" ] ; then
   PDB2MDB=`which pdb2mdb`
+fi
+
+if [[ $(uname -s) = Darwin ]]; then
+  KSPDIR="$(dirname "$(dirname "$(dirname "$(dirname "$(dirname "$REFERENCE_PATH")")")")")"
 fi
 
 # Pretty sure Unity handles Portable PDB files now?

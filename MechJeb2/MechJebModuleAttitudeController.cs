@@ -152,14 +152,14 @@ namespace MuMech
             AxisControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0);
         }
 
-        public void SetActuationControl(bool pitch, bool yaw, bool roll)
+        public void SetActuationControl(bool pitch = true, bool yaw = true, bool roll = true)
         {
             ActuationControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0);
         }
 
         public void SetOmegaTarget(double pitch = double.NaN, double yaw = double.NaN, double roll = double.NaN)
         {
-            OmegaTarget = new Vector3d(pitch, yaw, roll);
+            OmegaTarget = new Vector3d(pitch, roll, yaw);
         }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)

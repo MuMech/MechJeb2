@@ -1,5 +1,6 @@
 ﻿using System;
 using MechJebLib.Maths;
+using MechJebLib.Primitives;
 using UnityEngine;
 using Smooth.Pools;
 
@@ -375,27 +376,25 @@ namespace MuMech
         // offsetDistance: this is used by the Rendezvous Autopilot and is only going to be valid over very short distances
         // shortway: the shortway parameter to feed into the Lambert solver
         //
-        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double initialUT, Orbit target, double DT, out Vector3d secondDV, double offsetDistance = 0, bool shortway = true)
+        private static Vector3d DeltaVToInterceptAtTime(Orbit o, double initialUT, Orbit target, double dt, out Vector3d secondDV, double offsetDistance = 0, bool shortway = true)
         {
-            Vector3d initialRelPos = o.SwappedRelativePositionAtUT(initialUT);
-            Vector3d finalRelPos = target.SwappedRelativePositionAtUT(initialUT + DT);
+            var initialRelPos = o.SwappedRelativePositionAtUT(initialUT).ToV3();
+            var finalRelPos = target.SwappedRelativePositionAtUT(initialUT + dt).ToV3();
 
-            Vector3d initialVelocity = o.SwappedOrbitalVelocityAtUT(initialUT);
-            Vector3d finalVelocity = target.SwappedOrbitalVelocityAtUT(initialUT + DT);
+            var initialVelocity = o.SwappedOrbitalVelocityAtUT(initialUT).ToV3();
+            var finalVelocity = target.SwappedOrbitalVelocityAtUT(initialUT + dt).ToV3();
 
-            Vector3d transferVi, transferVf;
-
-            Gooding.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos, shortway ? DT : -DT, 0, out transferVi, out transferVf);
+            Gooding.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos, shortway ? dt : -dt, 0, out V3 transferVi, out V3 transferVf);
 
             if (offsetDistance != 0)
             {
-                finalRelPos += offsetDistance * Vector3d.Cross(finalVelocity, finalRelPos).normalized;
-                Gooding.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos, shortway ? DT : -DT, 0, out transferVi, out transferVf);
+                finalRelPos -= offsetDistance * V3.Cross(finalVelocity, finalRelPos).normalized;
+                Gooding.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos, shortway ? dt : -dt, 0, out transferVi, out transferVf);
             }
 
-            secondDV = finalVelocity - transferVf;
+            secondDV = (finalVelocity - transferVf).ToVector3d();
 
-            return transferVi - initialVelocity;
+            return (transferVi - initialVelocity).ToVector3d();
         }
 
         // Lambert Solver Driver function.
@@ -414,24 +413,19 @@ namespace MuMech
         // secondDV - the second burn dV
         // returns  - the first burn dV
         //
-        public static Vector3d DeltaVToInterceptAtTime(double GM, Vector3d pos, Vector3d vel, Vector3d tpos, Vector3d tvel, double DT, double TT, out Vector3d secondDV, bool posigrade = true)
+        private static Vector3d DeltaVToInterceptAtTime(double GM, Vector3d pos, Vector3d vel, Vector3d tpos, Vector3d tvel, double dt, double tt, out Vector3d secondDV, bool posigrade = true)
         {
-            Vector3d transferVi, transferVf;
-
-            Vector3d pos1, vel1;
-            Vector3d pos2, vel2;
-
             // advance the source orbit to ref + DT
-            Shepperd.Solve(GM, DT, pos, vel, out pos1, out vel1);
+            Shepperd.Solve(GM, dt, pos.ToV3(), vel.ToV3(), out V3 pos1, out V3 vel1);
 
             // advance the target orbit to ref + DT + TT
-            Shepperd.Solve(GM, DT + TT, tpos, tvel, out pos2, out vel2);
+            Shepperd.Solve(GM, dt + tt, tpos.ToV3(), tvel.ToV3(), out V3 pos2, out V3 vel2);
 
-            Gooding.Solve(GM, pos1, vel1, pos2, posigrade ? TT : -TT, 0, out transferVi, out transferVf);
+            Gooding.Solve(GM, pos1, vel1, pos2, posigrade ? tt : -tt, 0, out V3 transferVi, out V3 transferVf);
 
-            secondDV = vel2 - transferVf;
+            secondDV = (vel2 - transferVf).ToVector3d();
 
-            return transferVi - vel1;
+            return (transferVi - vel1).ToVector3d();
         }
 
         // This does a line-search to find the burnUT for the cheapest course correction that will intercept exactly
@@ -478,11 +472,9 @@ namespace MuMech
             Vector3d displacementDir = Vector3d.Cross(collisionRelVel, o.SwappedOrbitNormal()).normalized;
             Vector3d interceptTarget = collisionPosition + desiredImpactParameter * displacementDir;
 
-            Vector3d velAfterBurn;
-            Vector3d arrivalVel;
-            Gooding.Solve(o.referenceBody.gravParameter, o.SwappedRelativePositionAtUT(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT), interceptTarget - o.referenceBody.position,  collisionUT - burnUT, 0, out velAfterBurn, out arrivalVel);
+            Gooding.Solve(o.referenceBody.gravParameter, o.SwappedRelativePositionAtUT(burnUT).ToV3(), o.SwappedOrbitalVelocityAtUT(burnUT).ToV3(), (interceptTarget - o.referenceBody.position).ToV3(),  collisionUT - burnUT, 0, out V3 velAfterBurn, out V3 _);
 
-            Vector3d deltaV = velAfterBurn - o.SwappedOrbitalVelocityAtUT(burnUT);
+            Vector3d deltaV = velAfterBurn.ToVector3d() - o.SwappedOrbitalVelocityAtUT(burnUT);
             return deltaV;
         }
 
@@ -492,19 +484,13 @@ namespace MuMech
             Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
             Orbit collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
             double collisionUT = collisionOrbit.NextClosestApproachTime(target, burnUT);
-            Vector3d collisionRelVel = collisionOrbit.SwappedOrbitalVelocityAtUT(collisionUT) - target.SwappedOrbitalVelocityAtUT(collisionUT);
-            Vector3d position = o.SwappedAbsolutePositionAtUT(collisionUT);
             Vector3d targetPos = target.SwappedAbsolutePositionAtUT(collisionUT);
-            Vector3d direction = targetPos - position;
 
             Vector3d interceptTarget = targetPos + target.NormalPlus(collisionUT) * caDistance;
 
-            Vector3d velAfterBurn;
-            Vector3d arrivalVel;
+            Gooding.Solve(o.referenceBody.gravParameter, o.SwappedRelativePositionAtUT(burnUT).ToV3(), o.SwappedOrbitalVelocityAtUT(burnUT).ToV3(), (interceptTarget - o.referenceBody.position).ToV3(), collisionUT - burnUT, 0, out V3 velAfterBurn, out V3 _);
 
-            Gooding.Solve(o.referenceBody.gravParameter, o.SwappedRelativePositionAtUT(burnUT), o.SwappedOrbitalVelocityAtUT(burnUT), interceptTarget - o.referenceBody.position, collisionUT - burnUT, 0, out velAfterBurn, out arrivalVel);
-
-            Vector3d deltaV = velAfterBurn - o.SwappedOrbitalVelocityAtUT(burnUT);
+            Vector3d deltaV = velAfterBurn.ToVector3d() - o.SwappedOrbitalVelocityAtUT(burnUT);
             return deltaV;
         }
 

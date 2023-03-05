@@ -4,10 +4,10 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+#nullable enable
+
 using System;
 using MechJebLib.Utils;
-
-#nullable enable
 
 namespace MechJebLib.Maths
 {
@@ -30,11 +30,11 @@ namespace MechJebLib.Maths
         /// <param name="sign">try to return x such that f(x0) has the same sign as this (0 is best match)</param>
         /// <returns>value for which the function evaluates to zero</returns>
         /// <exception cref="ArgumentException">guess does not brack the root</exception>
-        public static double Solve(Func<double,object?,double> f,double a,double b,object? o,int maxiter = 100,double rtol = EPS,
+        public static double Solve(Func<double, object?, double> f, double a, double b, object? o, int maxiter = 100, double rtol = EPS,
             int sign = 0)
         {
-            double fa = f(a,o);
-            double fb = f(b,o);
+            double fa = f(a, o);
+            double fb = f(b, o);
 
             Check.Finite(a);
             Check.Finite(fa);
@@ -52,11 +52,11 @@ namespace MechJebLib.Maths
 
             if (Math.Abs(fa) < Math.Abs(fb))
             {
-                (a,b)   = (b,a);
-                (fa,fb) = (fb,fa);
+                (a, b)   = (b, a);
+                (fa, fb) = (fb, fa);
             }
 
-            return InternalSolve(f,a,b,fa,fb,o,maxiter,rtol,sign);
+            return InternalSolve(f, a, b, fa, fb, o, maxiter, rtol, sign);
         }
 
         /// <summary>
@@ -69,11 +69,11 @@ namespace MechJebLib.Maths
         /// <param name="rtol">tolerance</param>
         /// <param name="sign">try to return x such that f(x0) has the same sign as this (0 is best match)</param>
         /// <returns>value for which the function evaluates to zero</returns>
-        public static double Solve(Func<double,object?,double> f,double x,object? o,int maxiter = 100,double rtol = EPS,int sign = 0)
+        public static double Solve(Func<double, object?, double> f, double x, object? o, int maxiter = 100, double rtol = EPS, int sign = 0)
         {
             double a = x;
             double b = x;
-            double fa = f(x,o);
+            double fa = f(x, o);
             double fb = fa;
 
             Check.Finite(x);
@@ -97,7 +97,7 @@ namespace MechJebLib.Maths
             {
                 dx *= sqrt2;
                 a  =  x - dx;
-                fa =  f(a,o);
+                fa =  f(a, o);
 
                 Check.Finite(a);
                 Check.Finite(fa);
@@ -109,7 +109,7 @@ namespace MechJebLib.Maths
                     break;
 
                 b  = x + dx;
-                fb = f(b,o);
+                fb = f(b, o);
 
                 Check.Finite(b);
                 Check.Finite(fb);
@@ -118,12 +118,12 @@ namespace MechJebLib.Maths
                     return b;
             }
 
-            return InternalSolve(f,a,b,fa,fb,o,maxiter,rtol,sign);
+            return InternalSolve(f, a, b, fa, fb, o, maxiter, rtol, sign);
         }
 
         // This is the actual algorithm
-        private static double InternalSolve(Func<double,object?,double> f,double a,double b,double fa,double fb,object? o,int maxiter,
-            double rtol,int sign)
+        private static double InternalSolve(Func<double, object?, double> f, double a, double b, double fa, double fb, object? o, int maxiter,
+            double rtol, int sign)
         {
             bool maybeOneMore = sign != 0;
 
@@ -157,7 +157,7 @@ namespace MechJebLib.Maths
                 }
 
                 double m = 0.5 * (c - b);
-                double toler = 2.0 * rtol * Math.Max(Math.Abs(b),1.0);
+                double toler = 2.0 * rtol * Math.Max(Math.Abs(b), 1.0);
                 if (Math.Abs(m) <= toler || fb == 0.0)
                 {
                     // try one more round to improve fc if fb does not match the sign
@@ -223,12 +223,12 @@ namespace MechJebLib.Maths
                 else
                     b += toler;
 
-                fb = f(b,o);
+                fb = f(b, o);
 
                 Check.Finite(a);
                 Check.Finite(fa);
 
-                if (i++ >= maxiter)
+                if (i++ >= maxiter && maxiter > 0)
                     throw new TimeoutException("Brent's rootfinding method: maximum iterations exceeded: " + Math.Abs(a - c));
             }
 

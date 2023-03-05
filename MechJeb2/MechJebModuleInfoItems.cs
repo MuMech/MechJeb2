@@ -11,6 +11,7 @@ namespace MuMech
 {
     //This class just exists to collect miscellaneous info item functions in one place.
     //If any of these functions are useful in another module, they should be moved there.
+    
     public class MechJebModuleInfoItems : ComputerModule
     {
         public MechJebModuleInfoItems(MechJebCore core) : base(core) { }
