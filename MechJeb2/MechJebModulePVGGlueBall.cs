@@ -205,26 +205,30 @@ namespace MuMech
             {
                 FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
 
-                if ((i == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) || (i == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
+                if (!core.guidance.HasGoodSolutionWithNoFutureCoast())
                 {
-                    double ct = _ascentSettings.FixedCoastLength;
-                    double maxt = _ascentSettings.MaxCoast;
-                    double mint = _ascentSettings.MinCoast;
+                    if ((i == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) ||
+                        (i == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
+                    {
+                        double ct = _ascentSettings.FixedCoastLength;
+                        double maxt = _ascentSettings.MaxCoast;
+                        double mint = _ascentSettings.MinCoast;
 
-                    if (i == vessel.currentStage && core.guidance.IsCoasting())
-                    {
-                        ct   = Math.Max(ct - vesselState.time - core.guidance.StartCoast, 0);
-                        maxt = Math.Max(maxt - vesselState.time - core.guidance.StartCoast, 0);
-                        mint = Math.Max(mint - vesselState.time - core.guidance.StartCoast, 0);
-                    }
+                        if (i == vessel.currentStage && core.guidance.IsCoasting())
+                        {
+                            ct   = Math.Max(ct - vesselState.time - core.guidance.StartCoast, 0);
+                            maxt = Math.Max(maxt - vesselState.time - core.guidance.StartCoast, 0);
+                            mint = Math.Max(mint - vesselState.time - core.guidance.StartCoast, 0);
+                        }
 
-                    if (_ascentSettings.FixedCoast)
-                    {
-                        ascentBuilder.AddFixedCoast(fuelStats.StartMass * 1000, ct, _ascentSettings.CoastStage);
-                    }
-                    else
-                    {
-                        ascentBuilder.AddOptimizedCoast(fuelStats.StartMass * 1000, mint, maxt, _ascentSettings.CoastStage);
+                        if (_ascentSettings.FixedCoast)
+                        {
+                            ascentBuilder.AddFixedCoast(fuelStats.StartMass * 1000, ct, _ascentSettings.CoastStage);
+                        }
+                        else
+                        {
+                            ascentBuilder.AddOptimizedCoast(fuelStats.StartMass * 1000, mint, maxt, _ascentSettings.CoastStage);
+                        }
                     }
                 }
 

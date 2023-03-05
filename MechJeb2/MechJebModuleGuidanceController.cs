@@ -440,5 +440,16 @@ namespace MuMech
             if (Status == PVGStatus.ENABLED)
                 Status = PVGStatus.INITIALIZED;
         }
+
+        // This API is necessary so that we know that there's no future coast on the trajectory so
+        // we entirely suppress adding the coast in the glueball.  If there is no solution, then we're
+        // bootstrapping so we want to add a coast if we need one, so we return false here.
+        public bool HasGoodSolutionWithNoFutureCoast()
+        {
+            if (Solution == null)
+                return false;
+
+            return !Solution.WillCoast(vesselState.time);
+        }
     }
 }
