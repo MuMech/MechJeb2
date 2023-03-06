@@ -17,18 +17,20 @@ namespace MechJebLib.PVG
     {
         public class OptimizerBuilder : IDisposable
         {
-            private          IPVGTerminal? _terminal;
-            private readonly List<Phase>   _phases = new List<Phase>();
-            private          V3            _r0;
-            private          V3            _v0;
-            private          V3            _u0;
-            private          double        _t0;
-            private          double        _mu;
-            private          double        _rbody;
-            private          double        _hT;
-
-            public Optimizer Build()
+            private IPVGTerminal? _terminal;
+            private List<Phase>   _phases = null!;
+            private V3            _r0;
+            private V3            _v0;
+            private V3            _u0;
+            private double        _t0;
+            private double        _mu;
+            private double        _rbody;
+            private double        _hT;
+            
+            public Optimizer Build(List<Phase> phases)
             {
+                _phases = phases;
+                
                 double m0 = _phases[0].m0;
                 var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody);
 
@@ -112,17 +114,6 @@ namespace MechJebLib.PVG
             public OptimizerBuilder TerminalConditions(double hT)
             {
                 _hT = hT;
-
-                return this;
-            }
-
-            public OptimizerBuilder Phases(IList<Phase> phases)
-            {
-                _phases.Clear();
-                for (int i = 0; i < phases.Count; i++)
-                {
-                    _phases.Add(phases[i]);
-                }
 
                 return this;
             }

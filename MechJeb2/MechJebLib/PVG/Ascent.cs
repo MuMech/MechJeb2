@@ -21,27 +21,27 @@ namespace MechJebLib.PVG
     public partial class Ascent
     {
         private readonly AscentBuilder _input;
-        
-        private List<Phase> _phases              => _input._phases;
-        private V3          _r0                  => _input._r0;
-        private V3          _v0                  => _input._v0;
-        private V3          _u0                  => _input._u0;
-        private double      _t0                  => _input._t0;
-        private double      _mu                  => _input._mu;
-        private double      _rbody               => _input._rbody;
-        private double      _peR                 => _input._peR;
-        private double      _apR                 => _input._apR;
-        private double      _attR                => _input._attR;
-        private double      _incT                => _input._incT;
-        private double      _lanT                => _input._lanT;
-        private double      _fpaT                => _input._fpaT;
-        private double      _hT                  => _input._hT;
-        private bool        _attachAltFlag       => _input._attachAltFlag;
-        private bool        _lanflag             => _input._lanflag;
-        private bool        _fixedBurnTime       => _input._fixedBurnTime;
-        private Solution?   _solution            => _input._solution;
-        private int         _optimizedPhase      => _input._optimizedPhase;
-        private int         _optimizedCoastPhase => _input._optimizedCoastPhase;
+
+        private          List<Phase> _phases              => _input._phases;
+        private          V3          _r0                  => _input._r0;
+        private          V3          _v0                  => _input._v0;
+        private          V3          _u0                  => _input._u0;
+        private          double      _t0                  => _input._t0;
+        private          double      _mu                  => _input._mu;
+        private          double      _rbody               => _input._rbody;
+        private          double      _peR                 => _input._peR;
+        private          double      _apR                 => _input._apR;
+        private          double      _attR                => _input._attR;
+        private          double      _incT                => _input._incT;
+        private          double      _lanT                => _input._lanT;
+        private          double      _fpaT                => _input._fpaT;
+        private          double      _hT                  => _input._hT;
+        private          bool        _attachAltFlag       => _input._attachAltFlag;
+        private          bool        _lanflag             => _input._lanflag;
+        private          bool        _fixedBurnTime       => _input._fixedBurnTime;
+        private          Solution?   _solution            => _input._solution;
+        private          int         _optimizedPhase      => _input._optimizedPhase;
+        private          int         _optimizedCoastPhase => _input._optimizedCoastPhase;
 
         private double     _vT;
         private double     _gammaT;
@@ -51,7 +51,7 @@ namespace MechJebLib.PVG
         
         private Ascent(AscentBuilder builder)
         {
-            _input = builder;
+            _input  = builder;
         }
 
         public void Run()
@@ -76,10 +76,16 @@ namespace MechJebLib.PVG
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
                 .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
-                .Phases(_phases)
                 .TerminalConditions(_hT);
 
-            _optimizer = _solution == null ? InitialBootstrapping(builder) : ConvergedOptimization(builder, _solution);
+            if (_solution == null)
+            {
+                _optimizer = _fixedBurnTime ? InitialBootstrappingFixed(builder) : InitialBootstrappingOptimized(builder);
+            }
+            else
+            {
+                _optimizer = ConvergedOptimization(builder, _solution);
+            }
         }
 
         public Optimizer? GetOptimizer()
@@ -102,7 +108,7 @@ namespace MechJebLib.PVG
             }
 
             ApplyOldBurnTimesToPhases(solution);            
-            Optimizer pvg = builder.Build();
+            Optimizer pvg = builder.Build(this._phases);
             pvg.Bootstrap(solution);
             pvg.Run();
             
@@ -119,7 +125,7 @@ namespace MechJebLib.PVG
             ApplyFPA(builder);
             ApplyOldBurnTimesToPhases(solution2);
             
-            using Optimizer pvg2 = builder.Build();
+            using Optimizer pvg2 = builder.Build(this._phases);
             pvg2.Bootstrap(solution2);
             pvg2.Run();
             
@@ -159,33 +165,83 @@ namespace MechJebLib.PVG
                 builder.TerminalEnergy3(_attR, _fpaT, _incT);
         }
 
-        private Optimizer InitialBootstrapping(Optimizer.OptimizerBuilder builder)
+        private Optimizer InitialBootstrappingFixed(Optimizer.OptimizerBuilder builder)
         {
-            if (_fixedBurnTime)
-                ApplyEnergy(builder);
-            else
-                ApplyFPA(builder);
+            ApplyEnergy(builder);
+            
+            // guess the initial launch direction
+            V3 enu = Functions.ENUHeadingForInclination(_incT, _r0);
+            enu.z = 1.0; // add 45 degrees up
+            V3 pvGuess = Functions.ENUToECI(_r0, enu).normalized;
+
+            List<Phase> bootphases = DupPhases(_phases);
+
+            // FIXME: we may want to convert this to an optimized burntime circular orbit problem with an infinite upper stage for bootstrapping
+            for (int p = 0; p < bootphases.Count; p++)
+            {
+                bootphases[p].Unguided     = false;
+                
+                if (p == _optimizedCoastPhase)
+                {
+                    bootphases[p].OptimizeTime = false;
+                    // FIXME: a problem here is that if we require a coast to hit the target then we'll never converge
+                    bootphases[p].bt           = 0;
+                }
+            }
+
+            using Optimizer pvg = builder.Build(bootphases);
+            pvg.Bootstrap(pvGuess, _r0.normalized);
+            pvg.Run();
+            
+            if (!pvg.Success())
+                throw new Exception("Target unreachable (fixed bootstrapping)");
+            
+            using Solution solution = pvg.GetSolution();
+            ApplyOldBurnTimesToPhases(solution);
+
+            List<Phase> bootphases2 = DupPhases(_phases);
+            
+            if (_optimizedCoastPhase > -1)
+            {
+                double total = 0.0;
+                
+                for (int i = 0; i < bootphases2.Count; i++)
+                    total += bootphases2[i].bt;
+                
+                bootphases2[_optimizedCoastPhase].bt           = total;
+            }
+
+            using Optimizer pvg2 = builder.Build(bootphases2);
+            pvg2.Bootstrap(solution);
+            pvg2.Run();
+            
+            if (!pvg2.Success())
+                throw new Exception("Target unreachable");
+            
+            return pvg2;
+        }
+
+        private Optimizer InitialBootstrappingOptimized(Optimizer.OptimizerBuilder builder)
+        {
+            ApplyFPA(builder);
             
             // guess the initial launch direction
             V3 enu = Functions.ENUHeadingForInclination(_incT, _r0);
             enu.z = 1.0; // add 45 degrees up
             V3 pvGuess = Functions.ENUToECI(_r0, enu).normalized;
             
-            bool savedUnguided = _phases[_phases.Count - 1].Unguided;
+            List<Phase> bootphases = DupPhases(_phases);
             
-            if (!_fixedBurnTime)
-            {
-                _phases[_optimizedPhase].OptimizeTime   = false;
-                _phases[_phases.Count - 1].OptimizeTime = true;
-            }
-            
-            _phases[_phases.Count - 1].Infinite     = true;
-            _phases[_phases.Count - 1].Unguided     = false;
+            bootphases[bootphases.Count - 1].Infinite = true;
+            bootphases[bootphases.Count - 1].Unguided = false;
 
             if (_optimizedCoastPhase > -1)
-                _phases[_optimizedCoastPhase].OptimizeTime = false;
-
-            using Optimizer pvg = builder.Build();
+            {
+                bootphases[_optimizedCoastPhase].OptimizeTime = false;
+                bootphases[_optimizedCoastPhase].bt           = 0;
+            }
+            
+            using Optimizer pvg = builder.Build(bootphases);
             pvg.Bootstrap(pvGuess, _r0.normalized);
             pvg.Run();
             
@@ -194,14 +250,7 @@ namespace MechJebLib.PVG
             
             using Solution solution = pvg.GetSolution();
             ApplyOldBurnTimesToPhases(solution);
-            
-            _phases[_phases.Count - 1].Infinite     = false;
-            _phases[_phases.Count - 1].Unguided     = savedUnguided;
-            _phases[_phases.Count - 1].OptimizeTime = false;
 
-            if (!_fixedBurnTime)
-                _phases[_optimizedPhase].OptimizeTime = true;
-            
             if (_optimizedCoastPhase > -1)
             {
                 double total = 0.0;
@@ -210,32 +259,33 @@ namespace MechJebLib.PVG
                     total += _phases[i].bt;
                 
                 _phases[_optimizedCoastPhase].OptimizeTime = true;
-                _phases[_optimizedCoastPhase].bt           = total / 2;
+                _phases[_optimizedCoastPhase].bt           = total;
             }
 
-            using Optimizer pvg2 = builder.Build();
+            using Optimizer pvg2 = builder.Build(this._phases);
             pvg2.Bootstrap(solution);
             pvg2.Run();
             
             if (!pvg2.Success())
                 throw new Exception("Target unreachable");
-
-            // we have a periapsis attachment solution, redo with free attachment
-            if (_attachAltFlag || _fixedBurnTime)
+            
+            if (_attachAltFlag)
                 return pvg2;
             
+            // we have a periapsis attachment solution, redo with free attachment
             using Solution solution2 = pvg2.GetSolution();
 
             ApplyKepler(builder);
             ApplyOldBurnTimesToPhases(solution2);
 
-            using Optimizer pvg3 = builder.Build();
+            using Optimizer pvg3 = builder.Build(this._phases);
             pvg3.Bootstrap(solution2);
             pvg3.Run();
             
             if (!pvg3.Success())
                 return pvg2;
             
+            // sanity check to force back near-apoapsis attatchment back to periapsis attachment
             using Solution solution3 = pvg3.GetSolution();
             
             (V3 rf, V3 vf) = solution3.TerminalStateVectors();
@@ -268,6 +318,17 @@ namespace MechJebLib.PVG
                     
                 }
             }
+        }
+
+        // FIXME: this obviously creates garbage and needs to return an IDisposable wrapping List<Phases> that has a pool
+        private List<Phase> DupPhases(List<Phase> oldphases)
+        {
+            var newphases = new List<Phase>();
+
+            foreach (Phase phase in oldphases)
+                newphases.Add(phase.DeepCopy());
+            
+            return newphases;
         }
 
         public static AscentBuilder Builder()
