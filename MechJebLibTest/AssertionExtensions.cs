@@ -7,6 +7,7 @@
 using System;
 using System.Globalization;
 using MechJebLib.Primitives;
+using MuMech;
 using Xunit.Sdk;
 using static MechJebLib.Utils.Statics;
 
@@ -78,6 +79,15 @@ namespace AssertExtensions
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", 0.0),
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
                 );
+        }
+
+        public static void ShouldBePositive(this double actual)
+        {
+            if (!actual.IsFinite())
+                throw new XunitException($"{actual} must be finite");
+
+            if (actual <= 0)
+                throw new XunitException($"{actual} must be positive");
         }
     }
 }

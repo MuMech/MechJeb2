@@ -41,6 +41,13 @@ namespace MechJebLib.PVG
         public bool           Coast => thrust == 0;
         public V3             u0;
 
+        public Phase DeepCopy()
+        {
+            var newphase = (Phase) this.MemberwiseClone();
+
+            return newphase;
+        }
+        
         private Phase(double m0, double thrust, double isp, double mf, double bt, int kspStage)
         {
             this.KSPStage = kspStage;
