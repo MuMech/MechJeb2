@@ -183,7 +183,7 @@ namespace MuMech
         public static double NextClosestApproachTime(this Orbit a, Orbit b, double UT)
         {
             double closestApproachTime = UT;
-            double closestApproachDistance = Double.MaxValue;
+            double closestApproachDistance = double.MaxValue;
             double minTime = UT;
             double interval = a.period;
             if (a.eccentricity > 1)
@@ -458,14 +458,7 @@ namespace MuMech
         {
             return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
         }
-        
-        //NOTE: this function can throw an ArgumentException, if o is a hyperbolic orbit with an eccentricity
-        //large enough that it never attains the given true anomaly
-        public static double TimeOfTrueAnomaly(this Orbit o, double trueAnomaly, double UT)
-        {
-            return o.UTAtMeanAnomaly(o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly)), UT);
-        }
-
+    
         //Returns the next time at which a will cross its ascending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if
