@@ -183,7 +183,7 @@ namespace MuMech
         public static double NextClosestApproachTime(this Orbit a, Orbit b, double UT)
         {
             double closestApproachTime = UT;
-            double closestApproachDistance = Double.MaxValue;
+            double closestApproachDistance = double.MaxValue;
             double minTime = UT;
             double interval = a.period;
             if (a.eccentricity > 1)
@@ -266,7 +266,7 @@ namespace MuMech
         {
             if (o.eccentricity < 1)
             {
-                return o.TimeOfTrueAnomaly(180, UT);
+                return o.TimeOfTrueAnomaly(Math.PI, UT);
             }
             else
             {
@@ -312,8 +312,8 @@ namespace MuMech
         // -M < true anomaly < +M for some M. This function computes M.
         public static double MaximumTrueAnomaly(this Orbit o)
         {
-            if (o.eccentricity < 1) return 180;
-            else return UtilMath.Rad2Deg * Math.Acos(-1 / o.eccentricity);
+            if (o.eccentricity < 1) return Math.PI;
+            return Math.Acos(-1 / o.eccentricity);
         }
 
         //Returns whether a has an ascending node with b. This can be false
@@ -374,9 +374,7 @@ namespace MuMech
             }
             return ret;
         }
-
-        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
-
+        
         //Converts a direction, specified by a Vector3d, into a true anomaly.
         //The vector is projected into the orbital plane and then the true anomaly is
         //computed as the angle this vector makes with the vector pointing to the periapsis.
@@ -393,19 +391,16 @@ namespace MuMech
             //orbit normal and vector to the periapsis. This gives a vector that points to center of the
             //outgoing side of the orbit. If vectorToAN is more than 90 degrees from this vector, it occurs
             //during the infalling part of the orbit.
-            if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(oNormal, vectorToPe))) < 90)
+            if (Math.Abs(Vector3d.Angle (projected, Vector3d.Cross(oNormal, vectorToPe))) < 90)
             {
-                return angleFromPe;
+                return angleFromPe * UtilMath.Deg2Rad;
             }
             else
             {
-                return 360 - angleFromPe;
+                return (360 - angleFromPe) * UtilMath.Deg2Rad;
             }
         }
-
-        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
-
-
+        
         //Originally by Zool, revised by The_Duck
         //Converts a true anomaly into an eccentric anomaly.
         //For elliptical orbits this returns a value between 0 and 2pi
@@ -415,8 +410,7 @@ namespace MuMech
         public static double GetEccentricAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
         {
             double e = o.eccentricity;
-            trueAnomaly = MuUtils.ClampDegrees360(trueAnomaly);
-            trueAnomaly = trueAnomaly * (UtilMath.Deg2Rad);
+            trueAnomaly = MuUtils.ClampRadiansTwoPi(trueAnomaly);
 
             if (e < 1) //elliptical orbits
             {
@@ -454,9 +448,7 @@ namespace MuMech
                 return (e * Math.Sinh(E)) - E;
             }
         }
-
-        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
-
+        
         //Converts a true anomaly into a mean anomaly (via the intermediate step of the eccentric anomaly)
         //For elliptical orbits, the output is between 0 and 2pi
         //For hyperbolic orbits, the output can be any number
@@ -466,16 +458,7 @@ namespace MuMech
         {
             return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
         }
-
-        //TODO 1.1 changed trueAnomaly to rad but MJ ext stil uses deg. Should change for consistency
-
-        //NOTE: this function can throw an ArgumentException, if o is a hyperbolic orbit with an eccentricity
-        //large enough that it never attains the given true anomaly
-        public static double TimeOfTrueAnomaly(this Orbit o, double trueAnomaly, double UT)
-        {
-            return o.UTAtMeanAnomaly(o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly)), UT);
-        }
-
+    
         //Returns the next time at which a will cross its ascending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if
@@ -534,7 +517,7 @@ namespace MuMech
         }
 
         //Computes the phase angle between two orbiting objects.
-        //This only makes sence if a.referenceBody == b.referenceBody.
+        //This only makes sense if a.referenceBody == b.referenceBody.
         public static double PhaseAngle(this Orbit a, Orbit b, double UT)
         {
             Vector3d normalA = a.SwappedOrbitNormal();
@@ -568,8 +551,8 @@ namespace MuMech
         {
             if (radius < o.PeR || (o.eccentricity < 1 && radius > o.ApR)) throw new ArgumentException("OrbitExtensions.NextTimeOfRadius: given radius of " + radius + " is never achieved: o.PeR = " + o.PeR + " and o.ApR = " + o.ApR);
 
-            double trueAnomaly1 = UtilMath.Rad2Deg * o.TrueAnomalyAtRadius(radius);
-            double trueAnomaly2 = 360 - trueAnomaly1;
+            double trueAnomaly1 = o.TrueAnomalyAtRadius(radius);
+            double trueAnomaly2 = 2 * Math.PI - trueAnomaly1;
             double time1 = o.TimeOfTrueAnomaly(trueAnomaly1, UT);
             double time2 = o.TimeOfTrueAnomaly(trueAnomaly2, UT);
             if (time2 < time1 && time2 > UT) return time2;
@@ -603,7 +586,7 @@ namespace MuMech
         public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
         {
             if (vesselState.mainBody == null) return 0;
-            if (orbit.PeA > 0) return Double.PositiveInfinity;
+            if (orbit.PeA > 0) return double.PositiveInfinity;
 
             double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
