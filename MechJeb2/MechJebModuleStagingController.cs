@@ -261,7 +261,7 @@ namespace MuMech
             {
                 return;
             }
-            
+
             // this is for PVG preventing staging doing coasts, possibly it should be more specific of an API
             // (e.g. bool PVGIsCoasting) since it is getting tightly coupled.
             if (vessel.currentStage <= autostageLimitInternal)
@@ -279,12 +279,12 @@ namespace MuMech
 
             UpdateActiveModuleEngines(allModuleEngines);
             UpdateBurnedResources();
-            
+
             // don't decouple active or idle engines or tanks
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(vessel.currentStage - 1, burnedResources, activeModuleEngines) &&
                 !InverseStageReleasesClamps(vessel.currentStage - 1))
                 return;
-            
+
             // prevent staging if we have unstable ullage and we have RCS
             if (InverseStageHasUnstableEngines(vessel.currentStage - 1) && core.thrust.autoRCSUllaging && vessel.hasEnabledRCSModules() &&
                 core.thrust.LastThrottle > 0)
@@ -293,11 +293,11 @@ namespace MuMech
                     vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 return;
             }
-            
+
             // always stage if we have no active engines
             if (!InverseStageHasActiveEngines(vessel.currentStage))
                 Stage();
-            
+
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
             if (hotStaging && InverseStageHasEngines(vessel.currentStage - 1) &&
                 !InverseStageFiresDecoupler(vessel.currentStage - 1) && !InverseStageReleasesClamps(vessel.currentStage - 1) &&
@@ -328,7 +328,7 @@ namespace MuMech
         {
             if (!HasFairing(vessel.currentStage - 1))
                 return false;
-            
+
             if (core.vesselState.dynamicPressure > fairingMaxDynamicPressure)
                 return true;
 
@@ -477,9 +477,9 @@ namespace MuMech
             return dropSolids && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < dropSolidsLeadTime &&
                    p.IsDecoupledInStage(vessel.currentStage - 1);
         }
-        
+
         //detect if a part is above an active or idle engine in the part tree
-        public bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
+        private bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)
         {
             if (p is null)
                 return false;
@@ -491,18 +491,30 @@ namespace MuMech
                     return true; // TODO: properly check if ModuleEngines is active
                 }
 
-                for (int i = 0; i < p.Resources.Count; i++)
+                foreach (ModuleEngines engine in activeModuleEngines)
                 {
-                    PartResource r = p.Resources[i];
-                    if (r.amount > p.resourceRequestRemainingThreshold && r.info.id != PartResourceLibrary.ElectricityHashcode &&
-                        tankResources.Contains(r.info.id))
+                    foreach (Propellant propellant in engine.propellants)
                     {
-                        foreach (ModuleEngines engine in activeModuleEngines)
+                        if (!p.Resources.Contains(propellant.id))
+                            continue;
+                        PartResource r = p.Resources.Get(propellant.id);
+
+                        if (r.amount > p.resourceRequestRemainingThreshold)
+                            continue;
+                        if (r.info.id == PartResourceLibrary.ElectricityHashcode)
+                            continue;
+                        if(!tankResources.Contains(r.info.id))
+                            continue;
+
+                        if (propellant.GetFlowMode() == ResourceFlowMode.NO_FLOW)
+                        {
+                            if (engine.part == p)
+                                return true;
+                        }
+                        else
                         {
                             if (engine.part.crossfeedPartSet.ContainsPart(p))
-                            {
                                 return true;
-                            }
                         }
                     }
                 }
@@ -555,7 +567,7 @@ namespace MuMech
         {
             if (p is null)
                 return false;
-            
+
             if (p.State == PartStates.DEACTIVATED && p.IsEngine() && !p.IsSepratron())
             {
                 return true; // TODO: yet more ModuleEngine lazy checks
@@ -575,7 +587,7 @@ namespace MuMech
             if (hadResources && !hasResources) return true;
 
             if (p.IsEngine() && !p.EngineHasFuel()) return true;
-            
+
             for (int i = 0; i < p.children.Count; i++)
             {
                 if (HasDeactivatedEngineOrTankDescendant(p.children[i]))
