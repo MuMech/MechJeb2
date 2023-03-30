@@ -518,27 +518,6 @@ namespace MuMech
                         }
                     }
                 }
-                /*
-                for (int i = 0; i < p.Resources.Count; i++)
-                {
-                    PartResource r = p.Resources[i];
-
-                    if (r.amount > p.resourceRequestRemainingThreshold)
-                        continue;
-                    if (r.info.id == PartResourceLibrary.ElectricityHashcode)
-                        continue;
-                    if(!tankResources.Contains(r.info.id))
-                        continue;
-
-                    foreach (ModuleEngines engine in activeModuleEngines)
-                    {
-                        if (engine.part.crossfeedPartSet.ContainsPart(p))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                */
             }
 
             for (int i = 0; i < p.children.Count; i++)
