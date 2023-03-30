@@ -263,15 +263,22 @@ namespace MuMech
                             return false;
                         }
 
-                        if (n.ContainsResources(burnedResources.value))
+                        foreach (int id in burnedResources.value)
                         {
-                            for (int j = 0; j < activeEnginesCount.value.Count; j++)
+                            if (!n.ContainsResource(id))
+                                continue;
+
+                            for (int j = 0; j < activeEngines.value.Count; j++)
                             {
                                 FuelNode engine = activeEngines.value[j];
-                                if (engine.CanDrawFrom(n))
-                                    //print("Not allowed to stage because " + n.partName + " contains resources (" + n.ContainsResources(burnedResources.value) + ") reachable by an active engine");
+
+                                if (engine.CanDrawResourceFrom(id, n))
+                                {
+                                    //print("Not allowed to stage because " + n.partName + " contains resources (" +
+                                    //      n.ContainsResources(burnedResources.value) + ") reachable by an active engine");
                                     //n.DebugResources();
                                     return false;
+                                }
                             }
                         }
                     }

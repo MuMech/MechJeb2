@@ -711,9 +711,30 @@ namespace MuMech
                 return true; //we didn't find ourselves lacking for any resource
             }
 
-            public bool CanDrawFrom(FuelNode node)
+            public bool CanDrawResourceFrom(int type, FuelNode node)
             {
-                return crossfeedSources.Contains(node);
+                ResourceFlowMode resourceFlowMode = propellantFlows[type];
+
+                switch (resourceFlowMode)
+                {
+                    case ResourceFlowMode.NO_FLOW:
+                            return node == this;
+
+                    case ResourceFlowMode.ALL_VESSEL:
+                    case ResourceFlowMode.ALL_VESSEL_BALANCE:
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
+                            return true;
+
+                    case ResourceFlowMode.STAGE_STACK_FLOW:
+                    case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
+                    case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                            return crossfeedSources.Contains(node);
+
+                    case ResourceFlowMode.NULL:
+                    default:
+                        return false;
+                }
             }
 
             public void AssignResourceDrainRates(List<FuelNode> vessel)
