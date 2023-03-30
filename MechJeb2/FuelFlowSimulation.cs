@@ -168,8 +168,10 @@ namespace MuMech
             {
                 if (engines.value.Count > 0)
                 {
-                    for (int i = 0; i < engines.value.Count; i++) engines.value[i].AssignResourceDrainRates(_nodes);
-                    //foreach (FuelNode n in nodes) n.DebugDrainRates();
+                    for (int i = 0; i < engines.value.Count; i++)
+                        engines.value[i].AssignResourceDrainRates(_nodes);
+
+                    //foreach (FuelNode n in _nodes) n.DebugDrainRates();
 
                     double maxDt = _nodes.Slinq().Select(n => n.MaxTimeStep()).Min();
                     dt = Math.Min(desiredDt, maxDt);
@@ -177,8 +179,10 @@ namespace MuMech
                     //print("Simulating time step of " + dt);
 
                     for (int i = 0; i < _nodes.Count; i++)
+                    {
                         _nodes[i].DrainResources(dt);
-                    //nodes[i].DebugResources();
+                        //_nodes[i].DebugResources();
+                    }
                 }
                 else
                 {
@@ -226,7 +230,6 @@ namespace MuMech
         //Whether we've used up the current stage
         private bool AllowedToStage()
         {
-            //print("Checking whether allowed to stage at t = " + t);
             //print("Checking whether allowed to stage");
 
             using (Disposable<List<FuelNode>> activeEngines = FindActiveEngines())
@@ -235,8 +238,10 @@ namespace MuMech
 
                 //if no engines are active, we can always stage
                 if (activeEngines.value.Count == 0)
+                {
                     //print("Allowed to stage because no active engines");
                     return true;
+                }
 
                 using (Disposable<List<int>> burnedResources = ListPool<int>.Instance.BorrowDisposable())
                 {
@@ -247,23 +252,32 @@ namespace MuMech
                     {
                         FuelNode n = _nodes[i];
                         //print(n.partName + " is sepratron? " + n.isSepratron);
-                        if (n.decoupledInStage == _simStage - 1 && !n.isSepratron)
-                        {
-                            if (activeEngines.value.Contains(n))
-                                //print("Not allowed to stage because " + n.partName + " is an active engine (" + activeEngines.value.Contains(n) +")");
-                                //n.DebugResources();
-                                return false;
 
-                            if (n.ContainsResources(burnedResources.value))
+                        // filter only the parts that are going to get dropped
+                        if (n.decoupledInStage != _simStage - 1 || n.isSepratron) continue;
+
+                        if (activeEngines.value.Contains(n))
+                        {
+                            //print("Not allowed to stage because " + n.partName + " is an active engine (" + activeEngines.value.Contains(n) +")");
+                            //n.DebugResources();
+                            return false;
+                        }
+
+                        foreach (int id in burnedResources.value)
+                        {
+                            if (!n.ContainsResource(id))
+                                continue;
+
+                            for (int j = 0; j < activeEngines.value.Count; j++)
                             {
-                                int activeEnginesCount = activeEngines.value.Count;
-                                for (int j = 0; j < activeEnginesCount; j++)
+                                FuelNode engine = activeEngines.value[j];
+
+                                if (engine.CanDrawResourceFrom(id, n))
                                 {
-                                    FuelNode engine = activeEngines.value[j];
-                                    if (engine.CanDrawFrom(n))
-                                        //print("Not allowed to stage because " + n.partName + " contains resources (" + n.ContainsResources(burnedResources.value) + ") reachable by an active engine");
-                                        //n.DebugResources();
-                                        return false;
+                                    //print("Not allowed to stage because " + n.partName + " contains resources (" +
+                                    //      n.ContainsResources(burnedResources.value) + ") reachable by an active engine");
+                                    //n.DebugResources();
+                                    return false;
                                 }
                             }
                         }
@@ -280,24 +294,32 @@ namespace MuMech
                         FuelNode n = _nodes[i];
                         if (activeEngines.value.Contains(n))
                             if (n.CanDrawNeededResources(_nodes))
+                            {
                                 //print("Part " + n.partName + " is an active engine that still has resources to draw on.");
                                 activeEnginesWorking = true;
+                            }
 
                         if (n.decoupledInStage == _simStage - 1)
+                        {
                             //print("Part " + n.partName + " is decoupled in the next stage.");
                             partDecoupledInNextStage = true;
+                        }
                     }
 
                     if (!partDecoupledInNextStage && activeEnginesWorking)
+                    {
                         //print("Not allowed to stage because nothing is decoupled in the next stage, and there are already other engines active.");
                         return false;
+                    }
                 }
             }
 
             //if this isn't the last stage, we're allowed to stage because doing so wouldn't drop anything important
             if (_simStage > 0)
+            {
                 //print("Allowed to stage because this isn't the last stage");
                 return true;
+            }
 
             //print("Not allowed to stage because there are active engines and this is the last stage");
 
