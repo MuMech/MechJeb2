@@ -345,8 +345,7 @@ namespace MuMech
                 {
                     PartModule m = p.Modules[i];
 
-                    var mDecouple = m as ModuleDecouple;
-                    if (mDecouple != null)
+                    if (m is ModuleDecouple mDecouple)
                         if (!mDecouple.isDecoupled && mDecouple.stagingEnabled && p.stagingOn)
                         {
                             if (mDecouple.isOmniDecoupler)
@@ -361,17 +360,14 @@ namespace MuMech
                                 AttachNode attach;
                                 if (HighLogic.LoadedSceneIsEditor)
                                 {
-                                    if (mDecouple.explosiveNodeID != "srf")
-                                        attach = p.FindAttachNode(mDecouple.explosiveNodeID);
-                                    else
-                                        attach = p.srfAttachNode;
+                                    attach = mDecouple.explosiveNodeID != "srf" ? p.FindAttachNode(mDecouple.explosiveNodeID) : p.srfAttachNode;
                                 }
                                 else
                                 {
                                     attach = mDecouple.ExplosiveNode;
                                 }
 
-                                if (attach != null && attach.attachedPart != null)
+                                if (attach is { attachedPart: { } })
                                 {
                                     if (attach.attachedPart == traversalParent && mDecouple.staged)
                                     {
@@ -394,17 +390,14 @@ namespace MuMech
                             break; // Hopefully no one made part with multiple decoupler modules ?
                         }
 
-                    var mAnchoredDecoupler = m as ModuleAnchoredDecoupler;
-                    if (mAnchoredDecoupler != null)
+                    if (m is ModuleAnchoredDecoupler mAnchoredDecoupler)
+                    {
                         if (!mAnchoredDecoupler.isDecoupled && mAnchoredDecoupler.stagingEnabled && p.stagingOn)
                         {
                             AttachNode attach;
                             if (HighLogic.LoadedSceneIsEditor)
                             {
-                                if (mAnchoredDecoupler.explosiveNodeID != "srf")
-                                    attach = p.FindAttachNode(mAnchoredDecoupler.explosiveNodeID);
-                                else
-                                    attach = p.srfAttachNode;
+                                attach = mAnchoredDecoupler.explosiveNodeID != "srf" ? p.FindAttachNode(mAnchoredDecoupler.explosiveNodeID) : p.srfAttachNode;
                             }
                             else
                             {
@@ -432,14 +425,14 @@ namespace MuMech
 
                             break;
                         }
+                    }
 
-                    var mDockingNode = m as ModuleDockingNode;
-                    if (mDockingNode != null)
+                    if (m is ModuleDockingNode mDockingNode)
                     {
                         if (mDockingNode.staged && mDockingNode.stagingEnabled && p.stagingOn)
                         {
                             Part attachedPart = mDockingNode.referenceNode.attachedPart;
-                            if (attachedPart != null)
+                            if (!(attachedPart is null))
                             {
                                 if (attachedPart == traversalParent)
                                 {
@@ -447,7 +440,6 @@ namespace MuMech
                                     isDecoupler      = true;
                                     decoupledInStage = p.inverseStage;
                                     AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
-                                    isDecoupler = true;
                                 }
                                 else
                                 {
@@ -470,7 +462,6 @@ namespace MuMech
                             isDecoupler      = true;
                             decoupledInStage = p.inverseStage;
                             AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
-                            isDecoupler = true;
                             break;
                         }
                 }
@@ -670,6 +661,11 @@ namespace MuMech
                 return false;
             }
 
+            public bool ContainsResource(int id)
+            {
+                return resources[id] > ResidualThreshold(id);
+            }
+
             public bool CanDrawNeededResources(List<FuelNode> vessel)
             {
                 // XXX: this fix is intended to fix SRBs which have burned out but which
@@ -733,6 +729,7 @@ namespace MuMech
                     switch (resourceFlowMode)
                     {
                         case ResourceFlowMode.NO_FLOW:
+                            //print("NO_FLOW for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name);
                             resourceResidual[type] =  maxEngineResiduals;
                             resourceDrains[type]   += amount;
                             break;
