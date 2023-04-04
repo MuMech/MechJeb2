@@ -9,7 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using AssertExtensions;
 using MechJebLib.Primitives;
-using MuMech.MathJ;
+using MuMech.MechJebLib.Maths.ODE;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 

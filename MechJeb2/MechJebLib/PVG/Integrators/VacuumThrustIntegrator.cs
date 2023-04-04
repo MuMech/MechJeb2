@@ -9,7 +9,7 @@
 using System;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using MuMech.MathJ;
+using MuMech.MechJebLib.Maths.ODE;
 
 namespace MechJebLib.PVG.Integrators
 {

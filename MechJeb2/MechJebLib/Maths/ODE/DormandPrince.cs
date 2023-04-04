@@ -6,7 +6,7 @@ using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
-namespace MuMech.MathJ
+namespace MuMech.MechJebLib.Maths.ODE
 {
     public class DormandPrince : ODESolver
     {

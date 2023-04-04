@@ -97,10 +97,6 @@
     <Compile Include="Maneuver\TimeSelector.cs" />
     <Compile Include="Maneuver\TransferCalculator.cs" />
     <Compile Include="MathExtensions.cs" />
-    <Compile Include="MathJ\Event.cs" />
-    <Compile Include="MathJ\DormandPrince.cs" />
-    <Compile Include="MathJ\ODE.cs" />
-    <Compile Include="MathJ\ODESolver.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
     <Compile Include="MechJebLib\Maths\BrentMin.cs" />
@@ -108,6 +104,10 @@
     <Compile Include="MechJebLib\Maths\FunctionImpls\RealDeltaVToChangeApoapsisPrograde.cs" />
     <Compile Include="MechJebLib\Maths\Functions.cs" />
     <Compile Include="MechJebLib\Maths\Gooding.cs" />
+    <Compile Include="MechJebLib\Maths\ODE\DormandPrince.cs" />
+    <Compile Include="MechJebLib\Maths\ODE\Event.cs" />
+    <Compile Include="MechJebLib\Maths\ODE\ODE.cs" />
+    <Compile Include="MechJebLib\Maths\ODE\ODESolver.cs" />
     <Compile Include="MechJebLib\Maths\Shepperd.cs" />
     <Compile Include="MechJebLib\Primitives\DD.cs" />
     <Compile Include="MechJebLib\PVG\ArrayWrapper.cs" />
