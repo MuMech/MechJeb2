@@ -1,116 +1,129 @@
-﻿using KSP.Localization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using KSP.Localization;
 
 namespace MuMech
 {
     [UsedImplicitly]
     public class OperationPlane : Operation
     {
-        public override string getName() { return Localizer.Format("#MechJeb_match_planes_title");}//match planes with target
+        public override string GetName() { return Localizer.Format("#MechJeb_match_planes_title"); } //match planes with target
 
-        private readonly TimeSelector timeSelector;
+        private readonly TimeSelector _timeSelector;
 
-        public OperationPlane ()
+        public OperationPlane()
         {
-            timeSelector = new TimeSelector(new TimeReference[]
-                    {
-                    TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD,
-                    TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
-                    });
+            _timeSelector = new TimeSelector(new[]
+            {
+                TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
+            });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            timeSelector.DoChooseTimeGUI();
+            _timeSelector.DoChooseTimeGUI();
         }
 
-        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             if (!target.NormalTargetExists)
             {
-                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception1"));//must select a target to match planes with.
-            }
-            else if (o.referenceBody != target.TargetOrbit.referenceBody)
-            {
-                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception2"));//can only match planes with an object in the same sphere of influence.
+                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception1")); //must select a target to match planes with.
             }
 
-            var anExists = o.AscendingNodeExists(target.TargetOrbit);
-            var dnExists = o.DescendingNodeExists(target.TargetOrbit);
+            if (o.referenceBody != target.TargetOrbit.referenceBody)
+            {
+                throw
+                    new OperationException(
+                        Localizer.Format("#MechJeb_match_planes_Exception2")); //can only match planes with an object in the same sphere of influence.
+            }
+
+            bool anExists = o.AscendingNodeExists(target.TargetOrbit);
+            bool dnExists = o.DescendingNodeExists(target.TargetOrbit);
             double anTime = 0;
             double dnTime = 0;
-            var anDeltaV = anExists ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, target.TargetOrbit, UT, out anTime) : Vector3d.zero;
-            var dnDeltaV = anExists ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, target.TargetOrbit, UT, out dnTime) : Vector3d.zero;
+            Vector3d anDeltaV = anExists
+                ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, target.TargetOrbit, ut, out anTime)
+                : Vector3d.zero;
+            Vector3d dnDeltaV = anExists
+                ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, target.TargetOrbit, ut, out dnTime)
+                : Vector3d.zero;
             Vector3d dV;
 
-            if(timeSelector.timeReference == TimeReference.REL_ASCENDING)
+            if (_timeSelector.TimeReference == TimeReference.REL_ASCENDING)
             {
-                if(!anExists)
+                if (!anExists)
                 {
-                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception3"));//ascending node with target doesn't exist.
+                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception3")); //ascending node with target doesn't exist.
                 }
-                UT = anTime;
+
+                ut = anTime;
                 dV = anDeltaV;
             }
-            else if(timeSelector.timeReference == TimeReference.REL_DESCENDING)
+            else if (_timeSelector.TimeReference == TimeReference.REL_DESCENDING)
             {
-                if(!dnExists)
+                if (!dnExists)
                 {
-                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception4"));//descending node with target doesn't exist.
+                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception4")); //descending node with target doesn't exist.
                 }
-                UT = dnTime;
+
+                ut = dnTime;
                 dV = dnDeltaV;
             }
-            else if(timeSelector.timeReference == TimeReference.REL_NEAREST_AD)
+            else if (_timeSelector.TimeReference == TimeReference.REL_NEAREST_AD)
             {
-                if(!anExists && !dnExists)
+                if (!anExists && !dnExists)
                 {
-                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception5"));//neither ascending nor descending node with target exists.
+                    throw new OperationException(
+                        Localizer.Format("#MechJeb_match_planes_Exception5")); //neither ascending nor descending node with target exists.
                 }
-                if(!dnExists || anTime <= dnTime)
+
+                if (!dnExists || anTime <= dnTime)
                 {
-                    UT = anTime;
+                    ut = anTime;
                     dV = anDeltaV;
                 }
                 else
                 {
-                    UT = dnTime;
+                    ut = dnTime;
                     dV = dnDeltaV;
                 }
             }
-            else if(timeSelector.timeReference == TimeReference.REL_HIGHEST_AD)
+            else if (_timeSelector.TimeReference == TimeReference.REL_HIGHEST_AD)
             {
-                if(!anExists && !dnExists)
+                if (!anExists && !dnExists)
                 {
-                    throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception5"));//neither ascending nor descending node with target exists.
+                    throw new OperationException(
+                        Localizer.Format("#MechJeb_match_planes_Exception5")); //neither ascending nor descending node with target exists.
                 }
-                if(!dnExists || anDeltaV.magnitude <= dnDeltaV.magnitude)
+
+                if (!dnExists || anDeltaV.magnitude <= dnDeltaV.magnitude)
                 {
-                    UT = anTime;
+                    ut = anTime;
                     dV = anDeltaV;
                 }
                 else
                 {
-                    UT = dnTime;
+                    ut = dnTime;
                     dV = dnDeltaV;
                 }
             }
             else
             {
-                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception6"));//wrong time reference.
+                throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception6")); //wrong time reference.
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
-            NodeList.Add(new ManeuverParameters(dV, UT));
-            return NodeList;
+            return new List<ManeuverParameters>
+            {
+                new ManeuverParameters(dV, ut)
+            };
         }
 
-        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
         {
-            return this.timeSelector;
+            return _timeSelector;
         }
     }
 }

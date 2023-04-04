@@ -1,38 +1,41 @@
-﻿using KSP.Localization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using KSP.Localization;
 
 namespace MuMech
 {
     [UsedImplicitly]
     public class OperationCircularize : Operation
     {
+        public override string GetName() { return Localizer.Format("#MechJeb_Maneu_circularize_title"); } //"circularize"
 
-        public override string getName() {return Localizer.Format("#MechJeb_Maneu_circularize_title");}//"circularize"
-
-        private readonly TimeSelector timeSelector;
+        private readonly TimeSelector _timeSelector;
 
         public OperationCircularize()
         {
-            timeSelector = new TimeSelector(new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE, TimeReference.X_FROM_NOW });
+            _timeSelector = new TimeSelector(new[]
+            {
+                TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.ALTITUDE, TimeReference.X_FROM_NOW
+            });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            timeSelector.DoChooseTimeGUI();
+            _timeSelector.DoChooseTimeGUI();
         }
 
-        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
-            NodeList.Add( new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, UT), UT) );
-            return NodeList;
+            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+            return new List<ManeuverParameters>
+            {
+                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, ut), ut)
+            };
         }
 
-        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
         {
-            return this.timeSelector;
+            return _timeSelector;
         }
     }
 }

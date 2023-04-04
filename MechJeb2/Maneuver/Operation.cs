@@ -1,94 +1,97 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
+
+#nullable enable
 
 namespace MuMech
 {
-
     public class ManeuverParameters
     {
+        // ReSharper disable once InconsistentNaming
         public Vector3d dV;
-        public double UT;
-        public ManeuverParameters(Vector3d dV, double UT)
+        public double   UT;
+
+        public ManeuverParameters(Vector3d dV, double ut)
         {
             this.dV = dV;
-            this.UT = UT;
+            this.UT = ut;
         }
-
     }
 
     public class OperationException : Exception
     {
-        public OperationException(string message) : base(message) {}
+        public OperationException(string message) : base(message) { }
     }
 
     public abstract class Operation
     {
-        protected string errorMessage = "";
-        public string getErrorMessage() { return errorMessage;}
+        protected string ErrorMessage = "";
+        public    string GetErrorMessage() { return ErrorMessage; }
 
         // Methods that need to be implemented for new operations:
 
         // Description that will be displayed on the GUI
-        public abstract string getName();
+        public abstract string GetName();
+
         // Draw the parameter part of the Operation (ask for time, altitudes etc)
         // Input parameters are orbit and time parameters after the last maneuver and current target
         public abstract void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target);
+
         // Function called when create node is pressed; input parameters are orbit and time parameters after the last maneuver and current target
         // ManeuverParameters contain a single time and dV describing the node that should be executed
         // In case of error you can throw an OperationException, the message will be displayed and no node will be created.
-        public abstract List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target);
+        protected abstract List<ManeuverParameters>? MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target);
 
-        public List<ManeuverParameters> MakeNodes(Orbit o, double universalTime, MechJebModuleTargetController target)
+        public List<ManeuverParameters>? MakeNodes(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            errorMessage = "";
+            ErrorMessage = "";
             try
             {
                 return MakeNodesImpl(o, universalTime, target);
             }
             catch (OperationException e)
             {
-                errorMessage = e.Message;
+                ErrorMessage = e.Message;
                 return null;
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
-                errorMessage = Localizer.Format("#MechJeb_Maneu_errorMessage");//An error occurred while creating the node.
+                ErrorMessage = Localizer.Format("#MechJeb_Maneu_errorMessage"); //An error occurred while creating the node.
                 return null;
             }
         }
 
-        private static readonly List<Type> operations = new List<Type>();
+        private static readonly List<Type> _operations = new List<Type>();
 
-        private static void addTypes(Type[] types)
+        private static void AddTypes(Type[] types)
         {
-            foreach(var t in types)
+            foreach (Type t in types)
             {
-                if (t != null &&
-                        !t.IsAbstract
-                        && typeof(Operation).IsAssignableFrom(t)
-                        && t.GetConstructor(Type.EmptyTypes) != null)
-                    operations.Add(t);
+                if (t is { IsAbstract: false } 
+                    && typeof(Operation).IsAssignableFrom(t) 
+                    && t.GetConstructor(Type.EmptyTypes) != null)
+                    _operations.Add(t);
             }
         }
 
-        public static Operation[] getAvailableOperations()
+        public static Operation[] GetAvailableOperations()
         {
             // Use reflection to discover all classes that inherit from Operation and have a defalt constructor
-            if (operations.Count == 0)
+            if (_operations.Count == 0)
             {
                 foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     try
                     {
-                        addTypes(assembly.GetTypes());
+                        AddTypes(assembly.GetTypes());
                     }
                     catch (ReflectionTypeLoadException e)
                     {
-                        addTypes(e.Types);
+                        AddTypes(e.Types);
                     }
                     catch (InvalidOperationException)
                     {
@@ -96,14 +99,15 @@ namespace MuMech
                         // can't load for reasons (missing deps most of the time)
                     }
                 }
-                Debug.Log("ManeuverPlanner initialization: found " + operations.Count + " maneuvers");
+
+                Debug.Log("ManeuverPlanner initialization: found " + _operations.Count + " maneuvers");
             }
 
-            var res = operations.ConvertAll(t => (Operation)t.GetConstructor(Type.EmptyTypes).Invoke(null));
-            res.Sort((x,y) => x.getName().CompareTo(y.getName()));
+            List<Operation> res = _operations.ConvertAll(t => (Operation)t.GetConstructor(Type.EmptyTypes)!.Invoke(null));
+            res.Sort((x, y) => string.Compare(x.GetName(), y.GetName(), StringComparison.Ordinal));
             return res.ToArray();
         }
 
-        public virtual bool draggable { get { return true;}}
+        public virtual bool Draggable => true;
     }
 }
