@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace MuMech.MathJ
+namespace MuMech.MechJebLib.Maths.ODE
 {
     public abstract class Event
     {

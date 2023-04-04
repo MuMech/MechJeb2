@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 
-namespace MuMech.MathJ
+namespace MuMech.MechJebLib.Maths.ODE
 {
     public abstract class ODESolver
     {

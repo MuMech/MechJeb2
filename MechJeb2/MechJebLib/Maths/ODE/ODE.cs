@@ -6,7 +6,7 @@ using MechJebLib.Utils;
 
 //using UnityEngine;
 
-namespace MuMech.MathJ
+namespace MuMech.MechJebLib.Maths.ODE
 {
     public abstract class ODE<T> where T : ODESolver, new()
     {
