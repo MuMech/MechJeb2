@@ -2,8 +2,9 @@
 using UnityEngine;
 using Object = UnityEngine.Object;
 using KSP.Localization;
-using System.Collections;
 using System.Collections.Generic;
+using static MechJebLib.Utils.Statics;
+
 namespace MuMech
 {
     public class OperationAdvancedTransfer : Operation
@@ -189,7 +190,7 @@ namespace MuMech
                 var p = worker.Computed[point[0], point[1]];
                 if (p > 0)
                 {
-                    dv = MuUtils.ToSI(p) + "m/s";
+                    dv = p.ToSI() + "m/s";
                     if (worker.DateFromIndex(point[0]) < Planetarium.GetUniversalTime())
                         departure = Localizer.Format("#MechJeb_adv_label1");//any time now
                     else

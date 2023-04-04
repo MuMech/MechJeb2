@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -705,7 +706,7 @@ namespace MuMech
             else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
             else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + (doubleValue > 0 ? " N" : " S");
             else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + (doubleValue > 0 ? " E" : " W");
-            else if (format == SI) return (MuUtils.ToSI(doubleValue, siMaxPrecision, siSigFigs) + units);
+            else if (format == SI) return (doubleValue.ToSI( siMaxPrecision, siSigFigs) + units);
             else return doubleValue.ToString(format) + " " + units;
         }
 

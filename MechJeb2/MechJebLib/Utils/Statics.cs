@@ -247,7 +247,7 @@ namespace MechJebLib.Utils
 
         private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y" };
         private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y" };
-
+        
         public static string ToSI(this double d, int maxPrecision = -99, int sigFigs = 4)
         {
             if (!IsFinite(d)) return d.ToString();
@@ -272,6 +272,11 @@ namespace MechJebLib.Utils
             int decimalDigits = Clamp(sigFigs - wholeDigits, 0, siExponent - maxPrecision);
 
             return $"{d.ToString("F" + decimalDigits)} {unit}";
+        }
+
+        public static string ToSI(this float f, int maxPrecision = -99, int sigFigs = 4)
+        {
+            return ((double)f).ToSI(maxPrecision, sigFigs);
         }
 
         public static void Log(string message)

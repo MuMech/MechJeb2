@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using KSP.Localization;
+using Smooth.Algebraics;
+using static MechJebLib.Utils.Statics;
+
 namespace MuMech
 {
 	public class MechJebWaypoint {
@@ -145,7 +148,7 @@ namespace MuMech
 					distance += Vector3.Distance(this[i - 1].Position, this[i].Position);
 				}
 			}
-			stats = string.Format("{0} waypoints over {1}m", Count, MuUtils.ToSI(distance, -1));
+			stats = string.Format("{0} waypoints over {1}m", Count, distance.ToSI(-1));
 		}
 
 		public MechJebWaypointRoute(string Name = "", CelestialBody Body = null, string Mode = "Rover") {
@@ -543,7 +546,7 @@ namespace MuMech
 						dist += Vector3.Distance((i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position), (Vector3)wp.Position);
 					}
 					string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1, wp.GetNameWithCoords(), wp.Radius,
-									minSpeed, maxSpeed, MuUtils.ToSI(dist, -1), GuiUtils.TimeToDHMS(eta));
+									minSpeed, maxSpeed, dist.ToSI(-1), GuiUtils.TimeToDHMS(eta));
 					GUI.backgroundColor = (i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white);
 					if (GUILayout.Button(str, (i == selIndex ? styleActive : (wp.Quicksave ? styleQuicksave : styleInactive))))
 					{
@@ -625,7 +628,7 @@ namespace MuMech
 						GUILayout.EndHorizontal();
 					}
 				}
-				titleAdd = "Distance: " + MuUtils.ToSI(dist, -1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
+				titleAdd = "Distance: " + dist.ToSI(-1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
 				GUILayout.EndVertical();
 			}
 			else

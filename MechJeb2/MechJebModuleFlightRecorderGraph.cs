@@ -3,6 +3,8 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using recordType = MuMech.MechJebModuleFlightRecorder.recordType;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
+
 
 namespace MuMech
 {
@@ -132,7 +134,7 @@ namespace MuMech
 
             GUILayout.Label(Localizer.Format("#MechJeb_Flightrecord_Label1", GuiUtils.TimeToDHMS(recorder.timeSinceMark)), GUILayout.ExpandWidth(false));//Time <<1>>
 
-            GUILayout.Label(Localizer.Format("#MechJeb_Flightrecord_Label2", MuUtils.ToSI(recorder.history[recorder.historyIdx].downRange, -2)) + "m", GUILayout.ExpandWidth(false));//Downrange <<1>>
+            GUILayout.Label(Localizer.Format("#MechJeb_Flightrecord_Label2", recorder.history[recorder.historyIdx].downRange.ToSI(-2)) + "m", GUILayout.ExpandWidth(false));//Downrange <<1>>
 
             //GUILayout.Label("", GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
@@ -171,7 +173,7 @@ namespace MuMech
 
             double scaleX = downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
 
-            GUILayout.Label((downrange ? MuUtils.ToSI(scaleX, -1, 2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, 1) + "/px"), GUILayout.ExpandWidth(false));
+            GUILayout.Label((downrange ? scaleX.ToSI(-1, 2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, 1) + "/px"), GUILayout.ExpandWidth(false));
 
             if (!autoScale && GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {

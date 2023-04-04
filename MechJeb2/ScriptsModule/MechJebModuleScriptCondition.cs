@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Smooth.Algebraics;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -188,115 +190,115 @@ namespace MuMech
 		{
 			if (selectedCondition == 0) //Altitude
 			{
-				return MuUtils.ToSI(core.vesselState.altitudeBottom, -1, 0);
+				return core.vesselState.altitudeBottom.ToSI(-1, 0);
 			}
-			else if (selectedCondition == 1) //Speed
+			if (selectedCondition == 1) //Speed
 			{
-				return MuUtils.ToSI(core.vesselState.speedSurface.value, -1, 0);
+				return core.vesselState.speedSurface.value.ToSI(-1, 0);
 			}
-			else if (selectedCondition == 2) //Distance to target
+			if (selectedCondition == 2) //Distance to target
 			{
 				return moduleInfoItems.TargetDistance();
 			}
-			else if (selectedCondition == 3) //Target Apoapsis
+			if (selectedCondition == 3) //Target Apoapsis
 			{
 				return moduleInfoItems.TargetApoapsis();
 			}
-			else if (selectedCondition == 4) //Target Periapsis
+			if (selectedCondition == 4) //Target Periapsis
 			{
 				return moduleInfoItems.TargetPeriapsis();
 			}
-			else if (selectedCondition == 5) //Time to closest approach
+			if (selectedCondition == 5) //Time to closest approach
 			{
 				return moduleInfoItems.TargetTimeToClosestApproach();
 			}
-			else if (selectedCondition == 6) //Distance to closest approach
+			if (selectedCondition == 6) //Distance to closest approach
 			{
 				return moduleInfoItems.TargetClosestApproachDistance();
 			}
-			else if (selectedCondition == 7) //Target Relative velocity
+			if (selectedCondition == 7) //Target Relative velocity
 			{
 				return moduleInfoItems.TargetRelativeVelocity();
 			}
-			else if (selectedCondition == 8) //Target inclination
+			if (selectedCondition == 8) //Target inclination
 			{
 				return moduleInfoItems.TargetInclination();
 			}
-			else if (selectedCondition == 9) //Target orbit period
+			if (selectedCondition == 9) //Target orbit period
 			{
 				return moduleInfoItems.TargetOrbitPeriod();
 			}
-			else if (selectedCondition == 10) //Target orbit speed
-			{
-				return moduleInfoItems.TargetOrbitSpeed();
-			}
-			else if (selectedCondition == 11) //Target time to Ap
-			{
-				return moduleInfoItems.TargetOrbitTimeToAp();
-			}
-			else if (selectedCondition == 12) //Target time to Pe
-			{
-				return moduleInfoItems.TargetOrbitTimeToPe();
-			}
-			else if (selectedCondition == 13) //Target LAN
-			{
-				return moduleInfoItems.TargetLAN();
-			}
-			else if (selectedCondition == 14) //Target AoP
-			{
-				return moduleInfoItems.TargetAoP();
-			}
-			else if (selectedCondition == 15) //Target eccentricity
-			{
-				return moduleInfoItems.TargetEccentricity();
-			}
-			else if (selectedCondition == 16) //Target SMA
-			{
-				return moduleInfoItems.TargetSMA();
-			}
-			else if (selectedCondition == 17) //Periapsis in SOI
-			{
-				return moduleInfoItems.PeriapsisInTargetSOI();
-			}
-			else if (selectedCondition == 18) //Phase angle to target
-			{
-				return moduleInfoItems.PhaseAngle();
-			}
-			else if (selectedCondition == 19) //Target planet phase angle
-			{
-				return moduleInfoItems.TargetPlanetPhaseAngle();
-			}
-			else if (selectedCondition == 20) //Relative inclination
-			{
-				return moduleInfoItems.RelativeInclinationToTarget();
-			}
-			else if (selectedCondition == 21) //Time to AN
-			{
-				return moduleInfoItems.TimeToAscendingNodeWithTarget();
-			}
-			else if (selectedCondition == 22) //Time to DN
-			{
-				return moduleInfoItems.TimeToDescendingNodeWithTarget();
-			}
-			else if (selectedCondition == 23) //Time to equatorial AN
-			{
-				return moduleInfoItems.TimeToEquatorialAscendingNode();
-			}
-			else if (selectedCondition == 24) //Time to equatorial DN
-			{
-				return moduleInfoItems.TimeToEquatorialDescendingNode();
-			}
-			else if (selectedCondition == 25) //Circular orbit speed
-			{
-				return MuUtils.ToSI(moduleInfoItems.CircularOrbitSpeed());
-			}
-            else if (selectedCondition == 26) //Apoapsis
+            if (selectedCondition == 10) //Target orbit speed
             {
-                return MuUtils.ToSI(core.vesselState.orbitApA);
+                return moduleInfoItems.TargetOrbitSpeed();
             }
-            else if (selectedCondition == 27) //Periapsis
+            if (selectedCondition == 11) //Target time to Ap
             {
-                return MuUtils.ToSI(core.vesselState.orbitPeA);
+                return moduleInfoItems.TargetOrbitTimeToAp();
+            }
+            if (selectedCondition == 12) //Target time to Pe
+            {
+                return moduleInfoItems.TargetOrbitTimeToPe();
+            }
+            if (selectedCondition == 13) //Target LAN
+            {
+                return moduleInfoItems.TargetLAN();
+            }
+            if (selectedCondition == 14) //Target AoP
+            {
+                return moduleInfoItems.TargetAoP();
+            }
+            if (selectedCondition == 15) //Target eccentricity
+            {
+                return moduleInfoItems.TargetEccentricity();
+            }
+            if (selectedCondition == 16) //Target SMA
+            {
+                return moduleInfoItems.TargetSMA();
+            }
+            if (selectedCondition == 17) //Periapsis in SOI
+            {
+                return moduleInfoItems.PeriapsisInTargetSOI();
+            }
+            if (selectedCondition == 18) //Phase angle to target
+            {
+                return moduleInfoItems.PhaseAngle();
+            }
+            if (selectedCondition == 19) //Target planet phase angle
+            {
+                return moduleInfoItems.TargetPlanetPhaseAngle();
+            }
+            if (selectedCondition == 20) //Relative inclination
+            {
+                return moduleInfoItems.RelativeInclinationToTarget();
+            }
+            if (selectedCondition == 21) //Time to AN
+            {
+                return moduleInfoItems.TimeToAscendingNodeWithTarget();
+            }
+            if (selectedCondition == 22) //Time to DN
+            {
+                return moduleInfoItems.TimeToDescendingNodeWithTarget();
+            }
+            if (selectedCondition == 23) //Time to equatorial AN
+            {
+                return moduleInfoItems.TimeToEquatorialAscendingNode();
+            }
+            if (selectedCondition == 24) //Time to equatorial DN
+            {
+                return moduleInfoItems.TimeToEquatorialDescendingNode();
+            }
+            if (selectedCondition == 25) //Circular orbit speed
+            {
+                return moduleInfoItems.CircularOrbitSpeed().ToSI();
+            }
+            if (selectedCondition == 26) //Apoapsis
+            {
+                return core.vesselState.orbitApA.value.ToSI();
+            }
+            if (selectedCondition == 27) //Periapsis
+            {
+                return core.vesselState.orbitPeA.value.ToSI();
             }
             return "N/A";
 		}

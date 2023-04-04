@@ -1,5 +1,6 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -30,18 +31,18 @@ namespace MuMech
         {
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
+            string burnAltitude = (o.Radius(UT) - o.referenceBody.Radius).ToSI() + "m";
             if (o.referenceBody.Radius + newPeA > o.Radius(UT))
             {
                 throw new OperationException(Localizer.Format("#MechJeb_both_Exception1",burnAltitude));//new periapsis cannot be higher than the altitude of the burn (<<1>>)
             }
-            else if (o.referenceBody.Radius + newApA < o.Radius(UT))
+            if (o.referenceBody.Radius + newApA < o.Radius(UT))
             {
                 throw new OperationException(Localizer.Format("#MechJeb_both_Exception2") + "(" + burnAltitude + ")");//new apoapsis cannot be lower than the altitude of the burn
-            }
-            else if (newPeA < -o.referenceBody.Radius)
+            } 
+            if (newPeA < -o.referenceBody.Radius)
             {
-                throw new OperationException(Localizer.Format("#MechJeb_both_Exception3",o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//"new periapsis cannot be lower than minus the radius of <<1>>"
+                throw new OperationException(Localizer.Format("#MechJeb_both_Exception3",o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" + o.referenceBody.Radius.ToSI(3) + "m)");//"new periapsis cannot be lower than minus the radius of <<1>>"
             }
 
             List<ManeuverParameters> NodeList = new List<ManeuverParameters>();

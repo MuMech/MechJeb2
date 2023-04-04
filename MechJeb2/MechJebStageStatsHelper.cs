@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using KSP.Localization;
 using UnityEngine;
 using UnityEngine.Profiling;
+using static MechJebLib.Utils.Statics;
+
 
 namespace MuMech
 {
@@ -198,7 +198,7 @@ namespace MuMech
                 altSLTScale = GUILayout.HorizontalSlider(altSLTScale,0,1,GUILayout.ExpandWidth(true));
                 infoItems.altSLTScale = altSLTScale;
                 stats.altSLT = Math.Pow(altSLTScale,2) * stats.editorBody.atmosphereDepth;
-                GUILayout.Label(MuUtils.ToSI(stats.altSLT,2) + "m",GUILayout.Width(80));
+                GUILayout.Label(stats.altSLT.ToSI(2) + "m",GUILayout.Width(80));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();

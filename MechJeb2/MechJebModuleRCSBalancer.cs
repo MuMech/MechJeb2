@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
+
 
 namespace MuMech
 {
@@ -55,9 +57,9 @@ namespace MuMech
             GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"),   solverThread.cacheHits);//"Cache hits"
             GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label5"), solverThread.cacheMisses);//"Cache misses"
 
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"),     MuUtils.ToSI(solverThread.comError) + "m");//"CoM shift"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"),    MuUtils.ToSI(solverThread.comErrorThreshold) + "m");//"CoM recalc"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), MuUtils.ToSI(solverThread.maxComError) + "m");//"Max CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), solverThread.comError.ToSI() + "m");//"CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"), solverThread.comErrorThreshold.ToSI() + "m");//"CoM recalc"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), solverThread.maxComError.ToSI() + "m");//"Max CoM shift"
 
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.statusString);//"Status"
 

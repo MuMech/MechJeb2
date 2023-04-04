@@ -1,5 +1,6 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -27,7 +28,7 @@ namespace MuMech
             double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
             if (o.referenceBody.Radius + newApA < o.Radius(UT))
             {
-                string burnAltitude = MuUtils.ToSI(o.Radius(UT) - o.referenceBody.Radius) + "m";
+                string burnAltitude = (o.Radius(UT) - o.referenceBody.Radius).ToSI() + "m";
                 throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",burnAltitude));//new apoapsis cannot be lower than the altitude of the burn (<<1>>)
             }
 

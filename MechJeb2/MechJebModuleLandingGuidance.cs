@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
+
 
 namespace MuMech
 {
@@ -76,7 +78,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("ASL: " + MuUtils.ToSI(ASL, -1, 4) + "m");
+                GUILayout.Label("ASL: " + ASL.ToSI(-1, 4) + "m");
                 GUILayout.Label(core.target.targetBody.GetExperimentBiomeSafe(core.target.targetLatitude, core.target.targetLongitude));
                 GUILayout.EndHorizontal();
             }
@@ -213,11 +215,11 @@ namespace MuMech
                 {
                     case ReentrySimulation.Outcome.LANDED:
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label9"));//Landing Predictions:
-                        GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude) + "\nASL:" + MuUtils.ToSI(result.endASL,-1, 4) + "m");
+                        GUILayout.Label(Coordinates.ToStringDMS(result.endPosition.latitude, result.endPosition.longitude) + "\nASL:" + result.endASL.ToSI(-1, 4) + "m");
                         GUILayout.Label(result.body.GetExperimentBiomeSafe(result.endPosition.latitude, result.endPosition.longitude));
                         double error = Vector3d.Distance(mainBody.GetWorldSurfacePosition(result.endPosition.latitude, result.endPosition.longitude, 0) - mainBody.position,
                                                          mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position);
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + MuUtils.ToSI(error, 0) + "m"
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + error.ToSI(0) + "m"
                                        + Localizer.Format("#MechJeb_LandingGuidance_Label11") + result.maxDragGees.ToString("F1") +"g"
                                        +Localizer.Format("#MechJeb_LandingGuidance_Label12") + result.deltaVExpended.ToString("F1") + "m/s"
                                        +Localizer.Format("#MechJeb_LandingGuidance_Label13") + (vessel.Landed ? "0.0s" : GuiUtils.TimeToDHMS(result.endUT - Planetarium.GetUniversalTime(), 1)));//Target difference = \nMax drag: \nDelta-v needed: \nTime to land: 
@@ -227,13 +229,13 @@ namespace MuMech
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label14"));//Predicted orbit after aerobraking:
                         Orbit o = result.AeroBrakeOrbit();
                         if (o.eccentricity > 1) GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") + o.eccentricity.ToString("F2"));//Hyperbolic, eccentricity = 
-                        else GUILayout.Label(MuUtils.ToSI(o.PeA, 3) + "m x " + MuUtils.ToSI(o.ApA, 3) + "m");
+                        else GUILayout.Label(o.PeA.ToSI(3) + "m x " + o.ApA.ToSI(3) + "m");
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label16", result.maxDragGees.ToString("F1"))+Localizer.Format("#MechJeb_LandingGuidance_Label17", GuiUtils.TimeToDHMS(result.aeroBrakeUT - Planetarium.GetUniversalTime(), 1)));//Max drag:<<1>>g  \nExit atmosphere in:
                         break;
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label18_1")
-                                      + MuUtils.ToSI(orbit.PeA, 3) + "m Pe > " + MuUtils.ToSI(mainBody.RealMaxAtmosphereAltitude(), 3) + (mainBody.atmosphere ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2") : Localizer.Format("#MechJeb_LandingGuidance_Label18_3")));//"Orbit does not reenter:\n""m atmosphere height""m ground"
+                                      + orbit.PeA.ToSI(3) + "m Pe > " + mainBody.RealMaxAtmosphereAltitude().ToSI(3) + (mainBody.atmosphere ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2") : Localizer.Format("#MechJeb_LandingGuidance_Label18_3")));//"Orbit does not reenter:\n""m atmosphere height""m ground"
                         break;
 
                     case ReentrySimulation.Outcome.TIMED_OUT:
