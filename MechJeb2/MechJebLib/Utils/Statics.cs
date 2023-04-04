@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 using MechJebLib.Primitives;
 
@@ -44,6 +45,7 @@ namespace MechJebLib.Utils
         /// <param name="min">Min value</param>
         /// <param name="max">Max value</param>
         /// <returns>Clamped value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Clamp(double x, double min, double max)
         {
             return x < min ? min : x > max ? max : x;
@@ -56,6 +58,7 @@ namespace MechJebLib.Utils
         /// <param name="min">Min value</param>
         /// <param name="max">Max value</param>
         /// <returns>Clamped value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Clamp(int x, int min, int max)
         {
             return x < min ? min : x > max ? max : x;
@@ -66,6 +69,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x">Value to clamp</param>
         /// <returns>Clamped value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Clamp01(double x)
         {
             return Clamp(x, 0, 1);
@@ -76,6 +80,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="deg">degrees</param>
         /// <returns>radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Deg2Rad(double deg)
         {
             return deg * UtilMath.Deg2Rad;
@@ -86,6 +91,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="rad">Radians</param>
         /// <returns>Degrees</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Rad2Deg(double rad)
         {
             return rad * UtilMath.Rad2Deg;
@@ -96,6 +102,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x">Cosine value</param>
         /// <returns>Radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double SafeAcos(double x)
         {
             return Math.Acos(Clamp(x, -1.0, 1.0));
@@ -106,6 +113,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x">Sine value</param>
         /// <returns>Radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double SafeAsin(double x)
         {
             return Math.Asin(Clamp(x, -1.0, 1.0));
@@ -116,6 +124,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x">Radians</param>
         /// <returns>Radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Clamp2Pi(double x)
         {
             x %= TAU;
@@ -127,6 +136,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x">Radians</param>
         /// <returns>Radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ClampPi(double x)
         {
             x = Clamp2Pi(x);
@@ -138,6 +148,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x">Value</param>
         /// <returns>True if the value is finite</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFinite(double x)
         {
             return !double.IsNaN(x) && !double.IsInfinity(x);
@@ -148,6 +159,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="v">Vector</param>
         /// <returns>True if all the components are finite</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFinite(V3 v)
         {
             return IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
@@ -158,6 +170,7 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="v">Vector</param>
         /// <returns>True if all the components are finite</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFinite(Vector3d v)
         {
             return IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
@@ -170,6 +183,7 @@ namespace MechJebLib.Utils
         /// <param name="about"></param>
         /// <param name="range"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Approx(double val, double about, double range)
         {
             return val > about - range && val < about + range;
@@ -274,11 +288,13 @@ namespace MechJebLib.Utils
             return $"{d.ToString("F" + decimalDigits)} {unit}";
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToSI(this float f, int maxPrecision = -99, int sigFigs = 4)
         {
             return ((double)f).ToSI(maxPrecision, sigFigs);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Log(string message)
         {
             Logger.Log(message);
