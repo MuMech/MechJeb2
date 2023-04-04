@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
 namespace MuMech
 {
+    [UsedImplicitly]
     class MechJebModuleAirplaneGuidance : DisplayModule
     {
 
