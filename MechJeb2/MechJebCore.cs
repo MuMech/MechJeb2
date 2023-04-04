@@ -4,15 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using KSP.IO;
 using System.Diagnostics;
 using UnityEngine.Profiling;
 using UnityToolbag;
 using Debug = UnityEngine.Debug;
 using File = KSP.IO.File;
 using KSP.Localization;
-using ILogger = MechJebLib.Utils.ILogger;
-using Logger = MechJebLib.Utils.Logger;
 
 namespace MuMech
 {
@@ -517,18 +514,8 @@ namespace MuMech
                 vessel.OnFlyByWire += OnFlyByWire;
                 controlledVessel = vessel;
             }
-            
-            Logger.Register(new UnityLogger());
-        }
 
-        // Dep-injection: this keeps the dependency on UnityEngine here and out of MechJebLib entirely
-        // (allowing unit testing in MechJebLib with code that logs but without blowing up on the UnityEngine dep)
-        private class UnityLogger : ILogger
-        {
-            public void Log(string message)
-            {
-                Debug.Log(message);
-            }
+            MechJebLib.Utils.Logger.Register(safe_print);
         }
 
         public override void OnActive()
@@ -645,8 +632,6 @@ namespace MuMech
                 Profiler.EndSample();
             }
             Profiler.EndSample();
-
-            Logger.Drain();
         }
 
 
@@ -1087,8 +1072,6 @@ namespace MuMech
 
             // Update current throttle for control deactivation
             currentThrottle = s.mainThrottle;
-            
-            Logger.Drain();
         }
 
         private void Drive(FlightCtrlState s)
@@ -1294,9 +1277,14 @@ namespace MuMech
             }
         }
 
-        public static new void print(object message)
-        {
+        public new static void print(object message)
+        { 
             MonoBehaviour.print("[MechJeb2] " + message);
+        }
+
+        public static void safe_print(object message)
+        {
+            Dispatcher.InvokeAsync(() => MonoBehaviour.print("[MechJeb2] " + message));
         }
     }
 }
