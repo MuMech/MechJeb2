@@ -1,5 +1,7 @@
 ﻿using System;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
+
 
 namespace MuMech
 {
@@ -185,7 +187,7 @@ namespace MuMech
                         vessel.PlaceManeuverNode(orbit, dV, UT);
                     }
 
-                    status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"),maxPhasingOrbits.text,MuUtils.ToSI(phasingOrbitRadius - mainBody.Radius, 0));//"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
+                    status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"),maxPhasingOrbits.text,(phasingOrbitRadius - mainBody.Radius).ToSI(0));//"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
                 }
             }
             else if (orbit.RelativeInclination(core.target.TargetOrbit) < 0.05)

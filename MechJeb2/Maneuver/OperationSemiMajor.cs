@@ -1,5 +1,6 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -33,7 +34,7 @@ namespace MuMech
 
             if(o.Radius(UT) > 2*newSMA)
             {
-                throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception",o.referenceBody.displayName.LocalizeRemoveGender()) +  "(" + MuUtils.ToSI(o.referenceBody.Radius, 3) + "m)");//cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
+                throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception",o.referenceBody.displayName.LocalizeRemoveGender()) +  "(" + o.referenceBody.Radius.ToSI(3) + "m)");//cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
             }
 
             List<ManeuverParameters> NodeList = new List<ManeuverParameters>();

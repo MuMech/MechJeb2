@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -116,7 +117,7 @@ namespace MuMech
 
             if (core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + MuMech.MuUtils.ToSI(core.thrust.trans_spd_act) + "m/s", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + core.thrust.trans_spd_act.ToSI() + "m/s", GUILayout.ExpandWidth(true));
             }
 
             GUILayout.FlexibleSpace();

@@ -1,6 +1,9 @@
 ﻿using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
+
 
 namespace MuMech
 {
@@ -33,13 +36,13 @@ namespace MuMech
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label3"), core.target.Name);//"Rendezvous target"
 
             const double leadTime = 30;
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label4"), MuUtils.ToSI(core.target.TargetOrbit.PeA, 3) + "m x " + MuUtils.ToSI(core.target.TargetOrbit.ApA, 3) + "m");//"Target orbit"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label5"), MuUtils.ToSI(orbit.PeA, 3) + "m x " + MuUtils.ToSI(orbit.ApA, 3) + "m");//"Current orbit"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label4"), core.target.TargetOrbit.PeA.ToSI(3) + "m x " + core.target.TargetOrbit.ApA.ToSI(3) + "m");//"Target orbit"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label5"), orbit.PeA.ToSI(3) + "m x " + orbit.ApA.ToSI(3) + "m");//"Current orbit"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label6"), orbit.RelativeInclination(core.target.TargetOrbit).ToString("F2") + "º");//"Relative inclination"
 
             double closestApproachTime = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label7"), GuiUtils.TimeToDHMS(closestApproachTime - vesselState.time));//"Time until closest approach"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label8"), MuUtils.ToSI(orbit.Separation(core.target.TargetOrbit, closestApproachTime), 0) + "m");//"Separation at closest approach"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label8"), orbit.Separation(core.target.TargetOrbit, closestApproachTime).ToSI(0) + "m");//"Separation at closest approach"
 
 
             //Maneuver planning buttons:
