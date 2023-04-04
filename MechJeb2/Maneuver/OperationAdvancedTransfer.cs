@@ -3,10 +3,12 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationAdvancedTransfer : Operation
     {
         enum Mode

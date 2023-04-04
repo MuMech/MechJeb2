@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationLongitude : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_la_title");}//change surface longitude of apsis

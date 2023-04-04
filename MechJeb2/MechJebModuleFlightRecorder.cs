@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
+using JetBrains.Annotations;
 using KSP.UI.Screens;
 
 namespace MuMech
 {
     //A class to record flight data, currently deltaV and time
     //TODO: make records persistent
+    [UsedImplicitly]
     public class MechJebModuleFlightRecorder : ComputerModule
     {
         // TODO : this is already nearly an array so use a list and allow to add any generic ValueInfoItem

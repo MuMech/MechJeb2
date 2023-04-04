@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.UI.Screens;
 using KSP.Localization;
@@ -7,6 +8,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleTranslatron : DisplayModule
     {
         protected static string[] trans_texts = { Localizer.Format("#MechJeb_Translatron_off"), Localizer.Format("#MechJeb_Translatron_KEEP_OBT"), Localizer.Format("#MechJeb_Translatron_KEEP_SURF"), Localizer.Format("#MechJeb_Translatron_KEEP_VERT") };

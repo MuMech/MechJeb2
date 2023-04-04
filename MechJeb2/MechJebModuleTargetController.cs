@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
 
@@ -16,6 +17,7 @@ namespace MuMech
     //back to the original vessel, your old target will be restored.
     //
     //Todo: Make target persistence work even when the original vessel gets unloaded and reloaded.
+    [UsedImplicitly]
     public class MechJebModuleTargetController : ComputerModule
     {
         public MechJebModuleTargetController(MechJebCore core) : base(core) { }

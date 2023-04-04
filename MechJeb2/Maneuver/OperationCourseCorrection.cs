@@ -1,8 +1,11 @@
 ﻿using UnityEngine;
 using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
+
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationCourseCorrection : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_approach_title");}//fine tune closest approach to target

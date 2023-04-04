@@ -1,9 +1,11 @@
 using System;
+using JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleAscentClassicAutopilot : MechJebModuleAscentBaseAutopilot
     {
         public MechJebModuleAscentClassicAutopilot(MechJebCore core) : base(core) { }

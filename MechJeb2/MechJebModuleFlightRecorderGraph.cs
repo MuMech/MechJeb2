@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using recordType = MuMech.MechJebModuleFlightRecorder.recordType;
@@ -8,6 +9,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleFlightRecorderGraph : DisplayModule
     {
         private const int ScaleTicks = 11;

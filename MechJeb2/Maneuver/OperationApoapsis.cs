@@ -1,9 +1,11 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationApoapsis : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_Ap_title");}//change apoapsis

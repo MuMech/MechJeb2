@@ -1,8 +1,10 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationPlane : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_match_planes_title");}//match planes with target

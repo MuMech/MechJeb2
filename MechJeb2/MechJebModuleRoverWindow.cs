@@ -1,9 +1,11 @@
 ﻿using System.Collections;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
 namespace MuMech
 {
-	public class MechJebModuleRoverWindow : DisplayModule
+	[UsedImplicitly]
+    public class MechJebModuleRoverWindow : DisplayModule
 	{
 		public MechJebModuleRoverController autopilot;
 

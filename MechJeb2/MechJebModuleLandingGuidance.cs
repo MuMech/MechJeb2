@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
 using static MechJebLib.Utils.Statics;
@@ -8,6 +9,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleLandingGuidance : DisplayModule
     {
         public MechJebModuleLandingPredictions predictor;

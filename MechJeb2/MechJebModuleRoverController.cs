@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace MuMech
 {
-	public class MechJebModuleRoverController : ComputerModule
+	[UsedImplicitly]
+    public class MechJebModuleRoverController : ComputerModule
 	{
 		public List<MechJebWaypoint> Waypoints = new List<MechJebWaypoint>();
 		public int WaypointIndex = -1;

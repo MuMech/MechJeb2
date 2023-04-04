@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.IO;
 using KSP.Localization;
 
 namespace MuMech
 {
-	public class MechJebModuleScript : DisplayModule, IMechJebModuleScriptActionsListParent
+	[UsedImplicitly]
+    public class MechJebModuleScript : DisplayModule, IMechJebModuleScriptActionsListParent
 	{
 		private bool started = false;
 		private readonly MechJebModuleScriptActionsList actionsList;

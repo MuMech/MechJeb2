@@ -1,7 +1,10 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
+
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationLambert : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_intercept_title");}//intercept target at chosen time

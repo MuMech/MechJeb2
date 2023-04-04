@@ -1,10 +1,12 @@
 ﻿using System;
+using JetBrains.Annotations;
 using KSP.Localization;
 using static MechJebLib.Utils.Statics;
 using UnityEngine;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleAscentClassicPathMenu : DisplayModule
     {
         public MechJebModuleAscentClassicPathMenu(MechJebCore core)

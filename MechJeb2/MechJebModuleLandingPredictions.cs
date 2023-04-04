@@ -2,12 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityToolbag;
 using Random = System.Random;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleLandingPredictions : ComputerModule
     {
 

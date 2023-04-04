@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
@@ -8,6 +9,7 @@ using Object = UnityEngine.Object;
 namespace MuMech
 {
 
+    [UsedImplicitly]
     class MechJebModuleDebugArrows : ComputerModule
     {
 
