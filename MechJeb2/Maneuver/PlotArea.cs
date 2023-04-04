@@ -7,134 +7,140 @@ namespace MuMech
     {
         public delegate void AreaChanged(double minx, double maxx, double miny, double maxy);
 
-        static readonly GUIStyle selectionStyle;
+        private static readonly GUIStyle _selectionStyle;
 
-        public bool draggable = true;
+        public bool Draggable = true;
 
-        public int[] hoveredPoint;
-        public int[] selectedPoint;
+        public int[] HoveredPoint;
+        public int[] SelectedPoint;
 
-        private bool mouseDown;
+        private bool _mouseDown;
 
-        private readonly double minx;
-        private readonly double maxx;
-        private readonly double miny;
-        private readonly double maxy;
+        private readonly double _minx;
+        private readonly double _maxx;
+        private readonly double _miny;
+        private readonly double _maxy;
 
-        private readonly Texture2D texture;
+        private readonly Texture2D _texture;
 
-        private readonly AreaChanged callback;
+        private readonly AreaChanged _callback;
 
-        public PlotArea (double minx, double maxx, double miny, double maxy, Texture2D texture, AreaChanged callback)
+        public PlotArea(double minx, double maxx, double miny, double maxy, Texture2D texture, AreaChanged callback)
         {
-            this.minx = minx;
-            this.maxx = maxx;
-            this.miny = miny;
-            this.maxy = maxy;
-            this.texture = texture;
-            this.callback = callback;
+            this._minx     = minx;
+            this._maxx     = maxx;
+            this._miny     = miny;
+            this._maxy     = maxy;
+            this._texture  = texture;
+            this._callback = callback;
         }
 
         static PlotArea()
         {
-            selectionStyle = new GUIStyle();
-            Texture2D background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-            background.SetPixel(0,0, new Color(0, 0, 1, 0.3f));
+            _selectionStyle = new GUIStyle();
+            var background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            background.SetPixel(0, 0, new Color(0, 0, 1, 0.3f));
             background.Apply();
-            selectionStyle.normal.background = background;
+            _selectionStyle.normal.background = background;
         }
 
-        public double x(int index)
+        private double X(int index)
         {
-            return minx + index * (maxx - minx) / texture.width;
-        }
-        public double y(int index)
-        {
-            return miny + index * (maxy - miny) / texture.height;
+            return _minx + index * (_maxx - _minx) / _texture.width;
         }
 
-        public int[] lastHoveredPoint = null;
-
-        private void zoomSelectionBox(int[] hoveredPoint)
+        private double Y(int index)
         {
-            mouseDown = false;
-            if (Math.Abs(selectedPoint[0] - hoveredPoint[0]) > 5 &&
-                    Math.Abs(selectedPoint[1] - hoveredPoint[1]) > 5)
+            return _miny + index * (_maxy - _miny) / _texture.height;
+        }
+
+        private int[] _lastHoveredPoint;
+
+        private void ZoomSelectionBox(int[] hoveredPoint)
+        {
+            _mouseDown = false;
+            if (Math.Abs(SelectedPoint[0] - hoveredPoint[0]) > 5 &&
+                Math.Abs(SelectedPoint[1] - hoveredPoint[1]) > 5)
             {
                 Debug.Log("[MechJeb] porkchop plotter, zooming plotarea");
-                callback(
-                        x(Math.Min(selectedPoint[0], hoveredPoint[0])),
-                        x(Math.Max(selectedPoint[0], hoveredPoint[0])),
-                        y(Math.Min(selectedPoint[1], hoveredPoint[1])),
-                        y(Math.Max(selectedPoint[1], hoveredPoint[1]))
-                        );
+                _callback(
+                    X(Math.Min(SelectedPoint[0], hoveredPoint[0])),
+                    X(Math.Max(SelectedPoint[0], hoveredPoint[0])),
+                    Y(Math.Min(SelectedPoint[1], hoveredPoint[1])),
+                    Y(Math.Max(SelectedPoint[1], hoveredPoint[1]))
+                );
             }
         }
 
         public void DoGUI()
         {
-            GUILayout.Box(texture, GUIStyle.none, new GUILayoutOption[] { GUILayout.Width(texture.width), GUILayout.Height(texture.height)});
+            GUILayout.Box(_texture, GUIStyle.none, GUILayout.Width(_texture.width), GUILayout.Height(_texture.height));
             if (Event.current.type == EventType.Repaint)
             {
-                hoveredPoint = null;
-                var rect = GUILayoutUtility.GetLastRect(); rect.x +=1; rect.y += 2;
+                HoveredPoint = null;
+                Rect rect = GUILayoutUtility.GetLastRect();
+                rect.x += 1;
+                rect.y += 2;
                 Vector2 mouse = Event.current.mousePosition;
                 if (rect.Contains(mouse))
                 {
-                    var pos = (mouse - rect.position);
-                    hoveredPoint = new int[]{(int) pos.x, (int)(rect.height - pos.y - 1)};
+                    Vector2 pos = mouse - rect.position;
+                    HoveredPoint = new[] { (int)pos.x, (int)(rect.height - pos.y - 1) };
                 }
                 else
                 {
-                    if (mouseDown && lastHoveredPoint != null)
+                    if (_mouseDown && _lastHoveredPoint != null)
                     {
                         // zoom the selection box if we leave the area when mouse is down
-                        zoomSelectionBox(lastHoveredPoint);
+                        ZoomSelectionBox(_lastHoveredPoint);
                     }
                 }
-                if (mouseDown)
+
+                if (_mouseDown)
                 {
-                    GUI.Box(new Rect(rect.x + Math.Min(selectedPoint[0], hoveredPoint[0]),
-                                rect.y + rect.height - Math.Max(selectedPoint[1], hoveredPoint[1]),
-                                Math.Abs(selectedPoint[0] - hoveredPoint[0]),
-                                Math.Abs(selectedPoint[1] - hoveredPoint[1])), "", selectionStyle);
+                    GUI.Box(new Rect(rect.x + Math.Min(SelectedPoint[0], HoveredPoint[0]),
+                        rect.y + rect.height - Math.Max(SelectedPoint[1], HoveredPoint[1]),
+                        Math.Abs(SelectedPoint[0] - HoveredPoint[0]),
+                        Math.Abs(SelectedPoint[1] - HoveredPoint[1])), "", _selectionStyle);
                 }
             }
 
-            draggable = hoveredPoint == null;
-            if (hoveredPoint != null)
+            Draggable = HoveredPoint == null;
+            if (HoveredPoint != null)
             {
                 switch (Event.current.type)
                 {
                     case EventType.MouseDown:
                         if (Event.current.button == 0)
                         {
-                            mouseDown = true;
-                            selectedPoint = hoveredPoint;
+                            _mouseDown     = true;
+                            SelectedPoint = HoveredPoint;
                         }
+
                         break;
                     case EventType.MouseUp:
-                        if (Event.current.button == 0 && mouseDown)
+                        if (Event.current.button == 0 && _mouseDown)
                         {
                             // zoom the selection box on mouseup
-                            zoomSelectionBox(hoveredPoint);
+                            ZoomSelectionBox(HoveredPoint);
                         }
+
                         break;
                     case EventType.ScrollWheel:
                         if (Event.current.delta.y == 0)
                             break;
-                        double lambda = Event.current.delta.y < 0 ? 0.7 : 1/0.7;
-                        double deltax = maxx - minx;
-                        double deltay = maxy - miny;
+                        double lambda = Event.current.delta.y < 0 ? 0.7 : 1 / 0.7;
+                        double deltax = _maxx - _minx;
+                        double deltay = _maxy - _miny;
 
-                        double newminx = x(hoveredPoint[0]) - hoveredPoint[0] * lambda * deltax / texture.width;
-                        double newminy = y(hoveredPoint[1]) - hoveredPoint[1] * lambda * deltay / texture.height;
-                        callback(
-                                newminx,
-                                newminx + lambda * deltax,
-                                newminy,
-                                newminy + lambda * deltay
-                                );
+                        double newminx = X(HoveredPoint[0]) - HoveredPoint[0] * lambda * deltax / _texture.width;
+                        double newminy = Y(HoveredPoint[1]) - HoveredPoint[1] * lambda * deltay / _texture.height;
+                        _callback(
+                            newminx,
+                            newminx + lambda * deltax,
+                            newminy,
+                            newminy + lambda * deltay
+                        );
 
                         break;
                     case EventType.KeyUp:
@@ -142,7 +148,8 @@ namespace MuMech
                         break;
                 }
             }
-            lastHoveredPoint = hoveredPoint;
+
+            _lastHoveredPoint = HoveredPoint;
         }
 
         private void ProcessKeys()
@@ -151,33 +158,33 @@ namespace MuMech
             int dirX = 0, dirY = 0;
 
             if (code == KeyCode.W || code == KeyCode.S ||
-                    code == KeyCode.UpArrow || code == KeyCode.DownArrow)
+                code == KeyCode.UpArrow || code == KeyCode.DownArrow)
             {
                 dirY = code == KeyCode.W || code == KeyCode.UpArrow ? 1 : -1;
             }
             else if (code == KeyCode.A || code == KeyCode.D ||
-                    code == KeyCode.LeftArrow || code == KeyCode.RightArrow)
+                     code == KeyCode.LeftArrow || code == KeyCode.RightArrow)
             {
                 dirX = code == KeyCode.D || code == KeyCode.RightArrow ? 1 : -1;
             }
 
             if (dirX != 0 || dirY != 0)
             {
-                double dx = maxx - minx;
-                double dy = maxy - miny;
+                double dx = _maxx - _minx;
+                double dy = _maxy - _miny;
 
                 double moveDx = dx * 0.25 * dirX;
                 double moveDy = dy * 0.25 * dirY;
 
-                double newMinX = minx + moveDx;
-                double newMinY = miny + moveDy;
+                double newMinX = _minx + moveDx;
+                double newMinY = _miny + moveDy;
 
-                callback(
-                        newMinX,
-                        newMinX + dx,
-                        newMinY,
-                        newMinY + dy
-                        );
+                _callback(
+                    newMinX,
+                    newMinX + dx,
+                    newMinY,
+                    newMinY + dy
+                );
             }
         }
     }

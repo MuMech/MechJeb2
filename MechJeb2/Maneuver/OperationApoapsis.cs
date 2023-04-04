@@ -1,6 +1,6 @@
-﻿using KSP.Localization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using KSP.Localization;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -8,41 +8,47 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationApoapsis : Operation
     {
-        public override string getName() { return Localizer.Format("#MechJeb_Ap_title");}//change apoapsis
+        public override string GetName() { return Localizer.Format("#MechJeb_Ap_title"); } //change apoapsis
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDoubleMult newApA = new EditableDoubleMult(200000, 1000);
-        private readonly TimeSelector timeSelector;
+        public readonly EditableDoubleMult NewApA = new EditableDoubleMult(200000, 1000);
 
-        public OperationApoapsis ()
+        private readonly TimeSelector _timeSelector;
+
+        public OperationApoapsis()
         {
-            timeSelector = new TimeSelector(new TimeReference[] {TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING});
+            _timeSelector = new TimeSelector(new[]
+            {
+                TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING
+            });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ap_label1"), newApA, "km");//New apoapsis:
-            timeSelector.DoChooseTimeGUI();
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Ap_label1"), NewApA, "km"); //New apoapsis:
+            _timeSelector.DoChooseTimeGUI();
         }
 
-        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-            if (o.referenceBody.Radius + newApA < o.Radius(UT))
+            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+            if (o.referenceBody.Radius + NewApA < o.Radius(ut))
             {
-                string burnAltitude = (o.Radius(UT) - o.referenceBody.Radius).ToSI() + "m";
-                throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",burnAltitude));//new apoapsis cannot be lower than the altitude of the burn (<<1>>)
+                string burnAltitude = (o.Radius(ut) - o.referenceBody.Radius).ToSI() + "m";
+                throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",
+                    burnAltitude)); //new apoapsis cannot be lower than the altitude of the burn (<<1>>)
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
-            NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, UT, newApA + o.referenceBody.Radius), UT));
-
-            return NodeList;
+            return new List<ManeuverParameters>
+            {
+                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, ut, NewApA + o.referenceBody.Radius), ut)
+            };
         }
 
-        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
         {
-            return this.timeSelector;
+            return _timeSelector;
         }
     }
 }

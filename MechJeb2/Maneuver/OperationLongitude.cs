@@ -1,44 +1,43 @@
-﻿using UnityEngine;
-using KSP.Localization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
     [UsedImplicitly]
     public class OperationLongitude : Operation
     {
-        public override string getName() { return Localizer.Format("#MechJeb_la_title");}//change surface longitude of apsis
+        public override string GetName() { return Localizer.Format("#MechJeb_la_title"); } //change surface longitude of apsis
 
-        [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble newLAN = 0;
-        private readonly TimeSelector timeSelector;
+        private readonly TimeSelector _timeSelector;
 
-        public OperationLongitude ()
+        public OperationLongitude()
         {
-            timeSelector = new TimeSelector(new TimeReference[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS });
+            _timeSelector = new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            timeSelector.DoChooseTimeGUI();
-            GUILayout.Label(Localizer.Format("#MechJeb_la_label"));//New Surface Longitude after one orbit:
+            _timeSelector.DoChooseTimeGUI();
+            GUILayout.Label(Localizer.Format("#MechJeb_la_label")); //New Surface Longitude after one orbit:
             target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
         }
 
-        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
-            var dV = OrbitalManeuverCalculator.DeltaVToShiftNodeLongitude(o, UT, target.targetLongitude);
+            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+            Vector3d dV = OrbitalManeuverCalculator.DeltaVToShiftNodeLongitude(o, ut, target.targetLongitude);
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
-            NodeList.Add( new ManeuverParameters(dV, UT) );
-            return NodeList;
+            return new List<ManeuverParameters>
+            {
+                new ManeuverParameters(dV, ut)
+            };
         }
 
-        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
         {
-            return this.timeSelector;
+            return _timeSelector;
         }
     }
 }

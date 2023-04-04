@@ -1,6 +1,6 @@
-﻿using KSP.Localization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using KSP.Localization;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -8,46 +8,52 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationPeriapsis : Operation
     {
-        public override string getName() { return Localizer.Format("#MechJeb_Pe_title");}//change periapsis
+        public override string GetName() { return Localizer.Format("#MechJeb_Pe_title"); } //change periapsis
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDoubleMult newPeA = new EditableDoubleMult(100000, 1000);
-        private readonly TimeSelector timeSelector;
+        public readonly EditableDoubleMult NewPeA = new EditableDoubleMult(100000, 1000);
 
-        public OperationPeriapsis ()
+        private readonly TimeSelector _timeSelector;
+
+        public OperationPeriapsis()
         {
-            timeSelector = new TimeSelector(new TimeReference[] {TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW});
+            _timeSelector = new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Pe_label"), newPeA, "km");//New periapsis:
-            timeSelector.DoChooseTimeGUI();
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Pe_label"), NewPeA, "km"); //New periapsis:
+            _timeSelector.DoChooseTimeGUI();
         }
 
-        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            if (o.referenceBody.Radius + newPeA > o.Radius(UT))
+            if (o.referenceBody.Radius + NewPeA > o.Radius(ut))
             {
-                string burnAltitude = (o.Radius(UT) - o.referenceBody.Radius).ToSI() + "m";
-                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception1") +" (" + burnAltitude + ")");//new periapsis cannot be higher than the altitude of the burn
-            }
-            else if (newPeA < -o.referenceBody.Radius)
-            {
-                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception2",o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" + o.referenceBody.Radius.ToSI(3) + "m)");//new periapsis cannot be lower than minus the radius of <<1>>
+                string burnAltitude = (o.Radius(ut) - o.referenceBody.Radius).ToSI() + "m";
+                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception1") + " (" + burnAltitude +
+                                             ")"); //new periapsis cannot be higher than the altitude of the burn
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
-            NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, UT, newPeA + o.referenceBody.Radius), UT));
+            if (NewPeA < -o.referenceBody.Radius)
+            {
+                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception2", o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" +
+                                             o.referenceBody.Radius.ToSI(3) + "m)"); //new periapsis cannot be lower than minus the radius of <<1>>
+            }
 
-            return NodeList;
+            return new List<ManeuverParameters>
+            {
+                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, ut, NewPeA + o.referenceBody.Radius), ut)
+            };
+            
         }
 
-        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
         {
-            return this.timeSelector;
+            return _timeSelector;
         }
     }
 }

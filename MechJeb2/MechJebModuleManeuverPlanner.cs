@@ -12,11 +12,11 @@ namespace MuMech
     {
         public MechJebModuleManeuverPlanner(MechJebCore core) : base(core)
         {
-            operationNames = new List<Operation>(operation).ConvertAll(x => x.getName()).ToArray();
+            operationNames = new List<Operation>(operation).ConvertAll(x => x.GetName()).ToArray();
         }
 
         // Keep all Operation objects so parameters are saved
-        readonly Operation[] operation = Operation.getAvailableOperations();
+        readonly Operation[] operation = Operation.GetAvailableOperations();
         readonly string[] operationNames;
 
         [Persistent(pass = (int)Pass.Global)]
@@ -112,9 +112,9 @@ namespace MuMech
                     core.node.ExecuteOneNode(this);
             }
 
-            if (operation[operationId].getErrorMessage().Length > 0)
+            if (operation[operationId].GetErrorMessage().Length > 0)
             {
-                GUILayout.Label(operation[operationId].getErrorMessage(),GuiUtils.yellowLabel);
+                GUILayout.Label(operation[operationId].GetErrorMessage(),GuiUtils.yellowLabel);
             }
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button3")))//Remove ALL nodes
@@ -198,7 +198,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.WindowGUI(windowID, operation[operationId].draggable);
+            base.WindowGUI(windowID, operation[operationId].Draggable);
         }
 
         public List<ManeuverNode> GetManeuverNodes()

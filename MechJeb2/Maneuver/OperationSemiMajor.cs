@@ -1,6 +1,6 @@
-﻿using KSP.Localization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using KSP.Localization;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -8,46 +8,51 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationSemiMajor : Operation
     {
-        public override string getName() { return Localizer.Format("#MechJeb_Sa_title");}//change semi-major axis
+        public override string GetName() { return Localizer.Format("#MechJeb_Sa_title"); } //change semi-major axis
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDoubleMult newSMA = new EditableDoubleMult(800000, 1000);
-        private readonly TimeSelector timeSelector;
+        public EditableDoubleMult NewSma = new EditableDoubleMult(800000, 1000);
 
-        public OperationSemiMajor ()
+        private readonly TimeSelector _timeSelector;
+
+        public OperationSemiMajor()
         {
-            timeSelector = new TimeSelector(new TimeReference[] {TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS});
+            _timeSelector = new TimeSelector(new[] { TimeReference.X_FROM_NOW, TimeReference.APOAPSIS, TimeReference.PERIAPSIS });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox (Localizer.Format("#MechJeb_Sa_label"), newSMA, "km");//New Semi-Major Axis:
-            timeSelector.DoChooseTimeGUI();
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Sa_label"), NewSma, "km"); //New Semi-Major Axis:
+            _timeSelector.DoChooseTimeGUI();
         }
 
-        public override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
+        protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double UT = timeSelector.ComputeManeuverTime(o, universalTime, target);
+            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            if (2*newSMA > o.Radius(UT) + o.referenceBody.sphereOfInfluence)
+            if (2 * NewSma > o.Radius(ut) + o.referenceBody.sphereOfInfluence)
             {
-                errorMessage = Localizer.Format("#MechJeb_Sa_errormsg");//Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit
+                ErrorMessage = Localizer.Format(
+                    "#MechJeb_Sa_errormsg"); //Warning: new Semi-Major Axis is very large, and may result in a hyberbolic orbit
             }
 
-            if(o.Radius(UT) > 2*newSMA)
+            if (o.Radius(ut) > 2 * NewSma)
             {
-                throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception",o.referenceBody.displayName.LocalizeRemoveGender()) +  "(" + o.referenceBody.Radius.ToSI(3) + "m)");//cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
+                throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception", o.referenceBody.displayName.LocalizeRemoveGender()) + "(" +
+                                             o.referenceBody.Radius.ToSI(3) +
+                                             "m)"); //cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
             }
 
-            List<ManeuverParameters> NodeList = new List<ManeuverParameters>();
-            NodeList.Add(new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis (o, UT, newSMA), UT));
-
-            return NodeList;
+            return new List<ManeuverParameters>
+            {
+                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(o, ut, NewSma), ut)
+            };
         }
 
-        public TimeSelector getTimeSelector() //Required for scripts to save configuration
+        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
         {
-            return this.timeSelector;
+            return _timeSelector;
         }
     }
 }
