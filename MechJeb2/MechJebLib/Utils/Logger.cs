@@ -6,25 +6,14 @@
 
 #nullable enable
 
-using System.Collections.Concurrent;
+using System;
 
 namespace MechJebLib.Utils
 {
-    public interface ILogger
-    {
-        void Log(string message);
-    }
-
-    public class NullLogger : ILogger
-    {
-        public void Log(string message) { }
-    }
-    
     /// <summary>
-    /// Simple, mostly threadsafe logging utility.  There needs to be initializtion code
-    /// that calls Register() and injects a concrete logger while also creating the singleton
-    /// (singleton creation is not threadsafe), then every tick the main thread (and only the
-    /// main threda) needs to call Drain().  Then just call Log() from whatever thread.
+    /// Singleton logger with some minimum viable dependency injection.  This is necesary
+    /// to keep Debug.Log from pulling Unity into MechJebLib.  The logger passed into
+    /// Register should probably be thread safe.
     /// </summary>
     public class Logger
     {
@@ -32,38 +21,21 @@ namespace MechJebLib.Utils
         
         private static Logger _instance { get; } = new Logger();
 
-        private readonly ConcurrentQueue<string> _messages = new ConcurrentQueue<string>();
-
-        private ILogger _logger = new NullLogger();
+        private Action<object> _logger = o => { };
 
         private void LogImpl(string message)
         {
-            _messages.Enqueue(message);
+            _logger(message);
         }
 
-        private void DrainImpl()
-        {
-            while (_messages.TryDequeue(out string message))
-            {
-                _logger.Log(message);
-            }
-        }
-        
-        public static void Register(ILogger logger)
+        public static void Register(Action<object> logger)
         {
             _instance._logger = logger;
         }
         
-        // Log is threadsafe and just adds to a queue to be drained later by the main thread
         public static void Log(string message)
         {
             _instance.LogImpl(message);
-        }
-
-        // Drain needs to be called only from the main Unity/KSP thread in MechJebCore, not from any threads
-        public static void Drain()
-        {
-            _instance.DrainImpl();
         }
     }
 }
