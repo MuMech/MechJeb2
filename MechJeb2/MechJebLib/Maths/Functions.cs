@@ -703,5 +703,11 @@ namespace MechJebLib.Maths
 
             return (eanom, tanom);
         }
+
+        public static void SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf,
+            out V3 vNeg, out V3 vPos, out V3 r, out double dt, bool debug = false)
+        {
+            RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, out vNeg, out vPos, out r, out dt, debug);
+        }
     }
 }

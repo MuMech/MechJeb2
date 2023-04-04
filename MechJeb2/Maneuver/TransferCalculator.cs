@@ -230,14 +230,14 @@ namespace MuMech
             Vector3d v0 = initialOrbit.getOrbitalVelocityAtUT(ut0);
 
             // analytic solution for paring orbit ejection to hyperbolic v-infinity
-            SpaceMath.singleImpulseHyperbolicBurn(initialOrbit.referenceBody.gravParameter, r0, v0, exitVelocity, out Vector3d vneg,
-                out Vector3d vpos, out Vector3d r, out double dt, debug);
-
+            Functions.SingleImpulseHyperbolicBurn(initialOrbit.referenceBody.gravParameter, r0.ToV3(), v0.ToV3(), 
+                exitVelocity.ToV3(), out V3 vneg, out V3 vpos, out V3 r, out double dt, debug);
+            
             if (!dt.IsFinite() || !r.magnitude.IsFinite() || !vpos.magnitude.IsFinite() || !vneg.magnitude.IsFinite())
                 Debug.Log("[MechJeb TransferCalculator] BUG mu = " + initialOrbit.referenceBody.gravParameter + " r0 = " + r0 + " v0 = " + v0 +
                           " vinf = " + exitVelocity);
 
-            return new ManeuverParameters((vpos - vneg).xzy, ut0 + dt);
+            return new ManeuverParameters((vpos - vneg).V3ToWorld(), ut0 + dt);
         }
 
         private double        _impulseScale;
