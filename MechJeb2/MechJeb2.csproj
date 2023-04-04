@@ -102,6 +102,7 @@
     <Compile Include="MechJebLib\Maths\BrentMin.cs" />
     <Compile Include="MechJebLib\Maths\BrentRoot.cs" />
     <Compile Include="MechJebLib\Maths\FunctionImpls\RealDeltaVToChangeApoapsisPrograde.cs" />
+    <Compile Include="MechJebLib\Maths\FunctionImpls\RealSingleImpulseHyperbolicBurn.cs" />
     <Compile Include="MechJebLib\Maths\Functions.cs" />
     <Compile Include="MechJebLib\Maths\Gooding.cs" />
     <Compile Include="MechJebLib\Maths\ODE\DormandPrince.cs" />
@@ -255,7 +256,6 @@
     <Compile Include="ScriptsModule\MechJebModuleScriptActionWhile.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptActionsList.cs" />
     <Compile Include="ScriptsModule\MechJebModuleScriptCondition.cs" />
-    <Compile Include="SpaceMath.cs" />
     <Compile Include="ToolbarWrapper.cs" />
     <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
     <Compile Include="UnityToolbag\Future\Future.cs" />
