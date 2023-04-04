@@ -1,8 +1,10 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationInclination : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_inclination_title");}//change inclination

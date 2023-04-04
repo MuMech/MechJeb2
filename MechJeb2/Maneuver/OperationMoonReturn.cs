@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationMoonReturn : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_return_title");}//return from a moon

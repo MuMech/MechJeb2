@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using JetBrains.Annotations;
+using UnityEngine;
 using KSP.Localization;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleRendezvousAutopilotWindow : DisplayModule
     {
         public MechJebModuleRendezvousAutopilotWindow(MechJebCore core) : base(core) { }

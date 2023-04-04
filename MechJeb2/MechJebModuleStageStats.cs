@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -10,6 +11,7 @@ namespace MuMech
     //This module will then run the stage stats computation in a separate thread, update
     //the publicly available atmoStats and vacStats. Then it will disable itself unless
     //it got another RequestUpdate in the meantime.
+    [UsedImplicitly]
     public class MechJebModuleStageStats : ComputerModule
     {
         public MechJebModuleStageStats(MechJebCore core) : base(core) { }

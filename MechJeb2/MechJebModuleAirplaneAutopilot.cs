@@ -1,11 +1,13 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using UnityEngine;
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace MuMech
 {
     [SuppressMessage("Minor Code Smell", "S1104:Fields should not have public accessibility")]
+    [UsedImplicitly]
     public class MechJebModuleAirplaneAutopilot : ComputerModule
     {
         [Persistent(pass = (int)Pass.Local)]

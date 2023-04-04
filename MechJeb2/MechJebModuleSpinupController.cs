@@ -7,10 +7,12 @@
 #nullable enable
 
 using System;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleSpinupController : ComputerModule
     {
         private enum SpinupState { INITIALIZED, STARTING, STABILIZING, SPINUP, FINISHED  }

@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using KSP.UI.Screens;
 using Smooth.Slinq;
 using UnityEngine;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleStagingController : ComputerModule
     {
         public MechJebModuleStagingController(MechJebCore core)

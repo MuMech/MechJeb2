@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationInterplanetaryTransfer : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_transfer_title");}//transfer to another planet

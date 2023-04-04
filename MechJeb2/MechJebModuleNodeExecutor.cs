@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleNodeExecutor : ComputerModule
     {
         //public interface:

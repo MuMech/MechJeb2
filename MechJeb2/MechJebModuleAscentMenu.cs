@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using KSP.Localization;
 using MechJebLib.Maths;
 using MechJebLib.PVG;
@@ -7,6 +8,7 @@ using UnityEngine.Profiling;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleAscentMenu : DisplayModule
     {
         private readonly string[] _ascentPathList =

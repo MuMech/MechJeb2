@@ -1,9 +1,11 @@
 ﻿using KSP.Localization;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class OperationEllipticize : Operation
     {
         public override string getName() { return Localizer.Format("#MechJeb_both_title");}//change both Pe and Ap

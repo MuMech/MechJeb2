@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using ModuleWheels;
 using UnityEngine;
 using KSP.Localization;
@@ -10,6 +11,7 @@ namespace MuMech
     // - Fix the auto wrap stop start dance
     // - Replace the openGL code with a LineRenderer
     // - 
+    [UsedImplicitly]
     public class MechJebModuleLandingAutopilot : AutopilotModule
     {
         bool deployedGears;

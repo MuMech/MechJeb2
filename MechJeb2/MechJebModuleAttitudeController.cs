@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using MuMech.AttitudeControllers;
 using UnityEngine;
 
@@ -23,6 +24,7 @@ namespace MuMech
         SURFACE_HORIZONTAL  //forward = surface velocity horizontal component, up = surface normal
     }
 
+    [UsedImplicitly]
     public class MechJebModuleAttitudeController : ComputerModule
     {
         private float timeCount;

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleWarpHelper : DisplayModule
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }

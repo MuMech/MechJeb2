@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
-using Smooth.Algebraics;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -170,7 +170,8 @@ namespace MuMech
 		}
 	}
 
-	public class MechJebModuleWaypointWindow : DisplayModule {
+	[UsedImplicitly]
+    public class MechJebModuleWaypointWindow : DisplayModule {
 		public enum WaypointMode {
 			Rover,
 			Plane

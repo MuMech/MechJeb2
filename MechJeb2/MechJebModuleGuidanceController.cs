@@ -5,6 +5,7 @@
  */
 
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using MechJebLib.PVG;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -18,6 +19,7 @@ namespace MuMech
     /// <summary>
     ///     The guidance controller for PVG (responsible for taking a Solution from PVG and flying it)
     /// </summary>
+    [UsedImplicitly]
     public class MechJebModuleGuidanceController : ComputerModule
     {
         public MechJebModuleGuidanceController(MechJebCore core) : base(core) { }

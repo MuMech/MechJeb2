@@ -1,8 +1,11 @@
-﻿namespace MuMech
+﻿using JetBrains.Annotations;
+
+namespace MuMech
 {
 
     // This file is to show how to use the callback in VesselState (and the other module who will have them soon)
 
+    [UsedImplicitly]
     public class ModExtensionDemo : ComputerModule
     {
         public ModExtensionDemo(MechJebCore core) : base(core) { }

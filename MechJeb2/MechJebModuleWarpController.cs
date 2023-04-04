@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleWarpController : ComputerModule
     {
         public MechJebModuleWarpController(MechJebCore core)

@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 using KSP.Localization;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleSolarPanelController : MechJebModuleDeployableController
     {
         public MechJebModuleSolarPanelController(MechJebCore core)

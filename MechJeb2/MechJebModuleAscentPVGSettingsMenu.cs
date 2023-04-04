@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using JetBrains.Annotations;
+using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
+    [UsedImplicitly]
     public class MechJebModuleAscentPVGSettingsMenu : DisplayModule
     {
         public MechJebModuleAscentPVGSettingsMenu(MechJebCore core) : base(core)
