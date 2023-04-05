@@ -1,5 +1,6 @@
 ﻿using System;
 using KSP.Localization;
+using MuMech.MechJebLib.Control;
 using UnityEngine;
 
 namespace MuMech.AttitudeControllers
@@ -10,10 +11,10 @@ namespace MuMech.AttitudeControllers
         private                 Vessel        Vessel => ac.vessel;
 
         /* FIXME SOMETIME: need to run through the Matlab tuning of this again in order to include the inner Ki term */
-        /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */ 
+        /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private readonly EditableDouble PosKi = new EditableDouble(0.004);
-        
+
         [Persistent(pass = (int) (Pass.Type | Pass.Global))]
         private readonly EditableDouble VelKp = new EditableDouble(9.18299345180006);
 
@@ -133,7 +134,7 @@ namespace MuMech.AttitudeControllers
         /* error in pitch, roll, yaw */
         private Vector3d _error0 = Vector3d.zero;
         private Vector3d _error1 = _vector3dnan;
-        
+
         /* inner integrator */
         private Vector3d _integ = Vector3d.zero;
 
@@ -346,7 +347,7 @@ namespace MuMech.AttitudeControllers
             GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
             PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos Ki", GUILayout.ExpandWidth(false));
             PosKi.text = GUILayout.TextField(PosKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));

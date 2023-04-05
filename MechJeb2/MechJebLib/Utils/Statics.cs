@@ -198,15 +198,14 @@ namespace MechJebLib.Utils
         /// <returns>true if the values are nearly the same</returns>
         public static bool NearlyEqual(double a, double b, double epsilon = EPS)
         {
-            const double MIN_NORMAL = 2.2250738585072014E-308d;
             double absA = Math.Abs(a);
             double absB = Math.Abs(b);
             double diff = Math.Abs(a - b);
 
             if (a.Equals(b))
                 return true;
-            if (a == 0 || b == 0 || absA + absB < MIN_NORMAL)
-                return diff < epsilon * MIN_NORMAL;
+            if (a == 0 || b == 0)
+                return diff < epsilon;
             return diff / (absA + absB) < epsilon;
         }
 
@@ -220,6 +219,26 @@ namespace MechJebLib.Utils
         public static bool NearlyEqual(V3 a, V3 b, double epsilon = EPS)
         {
             return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
+        }
+
+        /// <summary>
+        ///     Compares two M3 matricies with a relative tolerance.
+        /// </summary>
+        /// <param name="a">first vector</param>
+        /// <param name="b">second vector</param>
+        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <returns>true if the values are nearly the same</returns>
+        public static bool NearlyEqual(M3 a, M3 b, double epsilon = EPS)
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                if (!NearlyEqual(a[i], b[i], epsilon))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -261,7 +280,7 @@ namespace MechJebLib.Utils
 
         private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y" };
         private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y" };
-        
+
         public static string ToSI(this double d, int maxPrecision = -99, int sigFigs = 4)
         {
             if (!IsFinite(d)) return d.ToString();

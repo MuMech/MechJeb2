@@ -4,10 +4,11 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+using AssertExtensions;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
-namespace AssertExtensions.Utils
+namespace MechJebLibTest.Utils
 {
     public class StaticTests
     {

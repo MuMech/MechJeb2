@@ -6,7 +6,7 @@ using MechJebLib.PVG;
 using static MechJebLib.Utils.Statics;
 using Xunit;
 
-namespace PVG
+namespace MechJebLibTest.PVG
 {
     public class TheStandardTests
     {
@@ -20,7 +20,7 @@ namespace PVG
             double t0 = 661803.431918959;
             double mu = 3.986004418e+14;
             double rbody = 6.371e+6;
-            
+
             double PeR = 6.371e+6 + 185e+3;
             double ApR = 6.371e+6 + 10e+6;
             double incT = Deg2Rad(28.608);
@@ -39,19 +39,19 @@ namespace PVG
             Optimizer pvg = ascent.GetOptimizer() ?? throw new Exception("null optimzer");
 
             using Solution solution = pvg.GetSolution();
-            
+
             solution.Tgo(solution.T0,0).ShouldBePositive();
             solution.Tgo(solution.T0,1).ShouldBePositive();
             solution.Tgo(solution.T0,2).ShouldBePositive();
             solution.Tgo(solution.T0,3).ShouldBePositive();
-            
+
             pvg.Znorm.ShouldBeZero(1e-9);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
                 Functions.KeplerianFromStateVectors(mu, rf, vf);
-            
+
             solution.R(t0).ShouldEqual(r0, EPS);
             solution.V(t0).ShouldEqual(v0, EPS);
             solution.M(t0).ShouldEqual(49119.7842689869, EPS);
