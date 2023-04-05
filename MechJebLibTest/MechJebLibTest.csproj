@@ -57,6 +57,7 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="AssertionExtensions.cs" />
+        <Compile Include="Control\PIDLoopTests.cs" />
         <Compile Include="Maths\DormandPrinceTests.cs" />
         <Compile Include="Maths\FunctionsTests.cs" />
         <Compile Include="Maths\BrentRootTests.cs" />
@@ -66,6 +67,9 @@
         <Compile Include="PVG\AscentTests\Titan2Tests.cs" />
         <Compile Include="PVG\Integrators\VacuumThrustIntegratorTests.cs" />
         <Compile Include="Structs\HTests.cs" />
+        <Compile Include="Structs\M3Tests.cs" />
+        <Compile Include="Structs\Q3Tests.cs" />
+        <Compile Include="Structs\V3Tests.cs" />
         <Compile Include="Utils\StaticTests.cs" />
     </ItemGroup>
     <ItemGroup>

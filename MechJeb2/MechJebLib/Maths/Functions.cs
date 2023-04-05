@@ -622,6 +622,7 @@ namespace MechJebLib.Maths
 
             double ecc = Math.Sqrt(h * h + xk * xk);
             double inc = 2.0 * Math.Atan(Math.Sqrt(p * p + q * q));
+            double deleteme = Math.Atan2(p, q);
             double lan = Clamp2Pi(inc > EPS ? Math.Atan2(p, q) : 0.0);
             double argp = Clamp2Pi(ecc > EPS ? Math.Atan2(h, xk) - lan : 0.0);
             double tanom = Clamp2Pi(xlambdot - lan - argp);

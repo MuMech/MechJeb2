@@ -8,10 +8,13 @@
 
 using System;
 using System.Globalization;
-using UnityEngine;
 
+// ReSharper disable InconsistentNaming
 namespace MechJebLib.Primitives
 {
+    /// <summary>
+    /// 3x3 Matrix with right-handed APIs that integrates with V3 and Q3.
+    /// </summary>
     public struct M3 : IEquatable<M3>, IFormattable
     {
         // m00 m10 m20
@@ -33,6 +36,18 @@ namespace MechJebLib.Primitives
         public double m12;
         public double m22;
 
+        /// <summary>
+        ///     Row-wise construction of a vector from 9 scalar values.
+        /// </summary>
+        /// <param name="m00">0,0 value</param>
+        /// <param name="m01">0,1 value</param>
+        /// <param name="m02">0,2 value</param>
+        /// <param name="m10">1,0 value</param>
+        /// <param name="m11">1,1 value</param>
+        /// <param name="m12">1,2 value</param>
+        /// <param name="m20">2,0 value</param>
+        /// <param name="m21">2,1 value</param>
+        /// <param name="m22">2,2 value</param>
         public M3(double m00, double m01, double m02, double m10, double m11, double m12, double m20, double m21, double m22)
         {
             this.m00 = m00;
@@ -46,6 +61,12 @@ namespace MechJebLib.Primitives
             this.m22 = m22;
         }
 
+        /// <summary>
+        ///     Column-wise construction of a Matrix from 3 vectors.
+        /// </summary>
+        /// <param name="column0">first column</param>
+        /// <param name="column1">second column</param>
+        /// <param name="column2">third column</param>
         public M3(V3 column0, V3 column1, V3 column2)
         {
             m00 = column0.x;
@@ -59,7 +80,11 @@ namespace MechJebLib.Primitives
             m22 = column2.z;
         }
 
-        // Access element at [row, column].
+        /// <summary>
+        ///     Access elements at [row, column].
+        /// </summary>
+        /// <param name="row">row index [0..2]</param>
+        /// <param name="column">column index [0..2]</param>
         public double this[int row, int column]
         {
             get => this[row + column * 3];
@@ -67,7 +92,11 @@ namespace MechJebLib.Primitives
             set => this[row + column * 3] = value;
         }
 
-        // Access element at sequential index (0..8 inclusive).
+        /// <summary>
+        ///     Column-wise access of the matrix elements
+        /// </summary>
+        /// <param name="index">index from [0..8]</param>
+        /// <exception cref="IndexOutOfRangeException"></exception>
         public double this[int index]
         {
             get
@@ -126,20 +155,34 @@ namespace MechJebLib.Primitives
             }
         }
 
-        // used to allow Matrix4x4s to be used as keys in hash tables
+        /// <summary>
+        ///     Required for putting vlaues into Dictionaries/Hashes
+        /// </summary>
+        /// <returns>hash code</returns>
         public override int GetHashCode()
         {
-            return GetColumn(0).GetHashCode() ^ (GetColumn(1).GetHashCode() << 2) ^ (GetColumn(2).GetHashCode() >> 2); // FIXME?
+            return GetColumn(0).GetHashCode() ^ (GetColumn(1).GetHashCode() << 2) ^ (GetColumn(2).GetHashCode() >> 2);
         }
 
-        // also required for being able to use M3 as keys in hash tables
+        /// <summary>
+        ///     Required for putting values into Dictionaries/Hashes
+        /// </summary>
+        /// <param name="other">object to compare</param>
+        /// <returns>if the values are equal</returns>
         public override bool Equals(object other)
         {
-            if (!(other is M3)) return false;
+            if (!(other is M3 m))
+                return false;
 
-            return Equals((M3)other);
+            return Equals(m);
         }
 
+        /// <summary>
+        ///     This tests for strict equality between two matricies on all values.  This
+        ///     returns True in the presence of NaN values.
+        /// </summary>
+        /// <param name="other">Matrix to compare to</param>
+        /// <returns>if all the elements are strictly equal</returns>
         public bool Equals(M3 other)
         {
             return GetColumn(0).Equals(other.GetColumn(0))
@@ -147,7 +190,12 @@ namespace MechJebLib.Primitives
                    && GetColumn(2).Equals(other.GetColumn(2));
         }
 
-        // Multiplies two matrices.
+        /// <summary>
+        ///     Multiply a matrix by another matrix
+        /// </summary>
+        /// <param name="lhs">first matrix</param>
+        /// <param name="rhs">second matrix</param>
+        /// <returns>result of matrix multiplication</returns>
         public static M3 operator *(M3 lhs, M3 rhs)
         {
             M3 res;
@@ -166,7 +214,12 @@ namespace MechJebLib.Primitives
             return res;
         }
 
-        // Transforms a [[V3]] by a matrix.
+        /// <summary>
+        ///     Multiplies a vector by a matrix.
+        /// </summary>
+        /// <param name="lhs">the matrix</param>
+        /// <param name="vector">the vector</param>
+        /// <returns>result of multiplication</returns>
         public static V3 operator *(M3 lhs, V3 vector)
         {
             V3 res;
@@ -176,69 +229,96 @@ namespace MechJebLib.Primitives
             return res;
         }
 
-        // Multiplies a matrix by a number
+        /// <summary>
+        ///     Multiplies all elements of a matrix by a number.
+        /// </summary>
+        /// <param name="lhs">the matrix</param>
+        /// <param name="value">a number</param>
+        /// <returns>result of multiplication</returns>
         public static M3 operator *(M3 lhs, double value)
         {
             M3 res;
             res.m00 = lhs.m00 * value;
-            res.m01 = lhs.m00 * value;
-            res.m02 = lhs.m00 * value;
+            res.m01 = lhs.m01 * value;
+            res.m02 = lhs.m02 * value;
 
             res.m10 = lhs.m10 * value;
-            res.m11 = lhs.m10 * value;
-            res.m12 = lhs.m10 * value;
+            res.m11 = lhs.m11 * value;
+            res.m12 = lhs.m12 * value;
 
             res.m20 = lhs.m20 * value;
-            res.m21 = lhs.m20 * value;
-            res.m22 = lhs.m20 * value;
+            res.m21 = lhs.m21 * value;
+            res.m22 = lhs.m22 * value;
 
             return res;
         }
 
+        /// <summary>
+        ///     Multiplies all elements of a matrix by a number.
+        /// </summary>
+        /// <param name="value">the number</param>
+        /// <param name="rhs">the matrix</param>
+        /// <returns>result of multiplication</returns>
         public static M3 operator *(double value, M3 rhs)
         {
             return rhs * value;
         }
 
-        // Divides a matrix by a number
+        /// <summary>
+        ///     Divides all emeents of a matrix by a number.
+        /// </summary>
+        /// <param name="lhs">the matrix</param>
+        /// <param name="value">the number</param>
+        /// <returns>result of division</returns>
         public static M3 operator /(M3 lhs, double value)
         {
             M3 res;
             res.m00 = lhs.m00 / value;
-            res.m01 = lhs.m00 / value;
-            res.m02 = lhs.m00 / value;
+            res.m01 = lhs.m01 / value;
+            res.m02 = lhs.m02 / value;
 
             res.m10 = lhs.m10 / value;
-            res.m11 = lhs.m10 / value;
-            res.m12 = lhs.m10 / value;
+            res.m11 = lhs.m11 / value;
+            res.m12 = lhs.m12 / value;
 
             res.m20 = lhs.m20 / value;
-            res.m21 = lhs.m20 / value;
-            res.m22 = lhs.m20 / value;
+            res.m21 = lhs.m21 / value;
+            res.m22 = lhs.m22 / value;
 
             return res;
         }
 
-        public static M3 operator /(double value, M3 rhs)
-        {
-            return rhs / value;
-        }
-
+        /// <summary>
+        ///     This tests for strict equality between two matricies on all values.  Returns false in the presence of NaN values.
+        /// </summary>
+        /// <param name="lhs">matrix to compare</param>
+        /// <param name="rhs">matrix to compare to</param>
+        /// <returns>if they are equal</returns>
         public static bool operator ==(M3 lhs, M3 rhs)
         {
-            // Returns false in the presence of NaN values.
             return lhs.GetColumn(0) == rhs.GetColumn(0)
                    && lhs.GetColumn(1) == rhs.GetColumn(1)
                    && lhs.GetColumn(2) == rhs.GetColumn(2);
         }
 
+        /// <summary>
+        /// This tests for strict inequality between two matricies on all values.  Returns true in the presence of NaN values.
+        /// </summary>
+        /// <param name="lhs">matrix to compare</param>
+        /// <param name="rhs">matrix to compare to</param>
+        /// <returns>if they are equal</returns>
         public static bool operator !=(M3 lhs, M3 rhs)
         {
             // Returns true in the presence of NaN values.
             return !(lhs == rhs);
         }
 
-        // Get a column of the matrix.
+        /// <summary>
+        ///     Returns the column of a matrix as a vector.
+        /// </summary>
+        /// <param name="index">index of the column to get [0..2]</param>
+        /// <returns>vector of values</returns>
+        /// <exception cref="IndexOutOfRangeException"></exception>
         public V3 GetColumn(int index)
         {
             switch (index)
@@ -251,7 +331,12 @@ namespace MechJebLib.Primitives
             }
         }
 
-        // Returns a row of the matrix.
+        /// <summary>
+        ///     Returns the row of a matrix as a vector.
+        /// </summary>
+        /// <param name="index">index of the row to get [0..2]</param>
+        /// <returns>vector of values</returns>
+        /// <exception cref="IndexOutOfRangeException"></exception>
         public V3 GetRow(int index)
         {
             switch (index)
@@ -264,7 +349,11 @@ namespace MechJebLib.Primitives
             }
         }
 
-        // Sets a column of the matrix.
+        /// <summary>
+        ///     Sets the column of matrix with a vector.
+        /// </summary>
+        /// <param name="index">index of column to set [0..2]</param>
+        /// <param name="column">vector of values</param>
         public void SetColumn(int index, V3 column)
         {
             this[0, index] = column.x;
@@ -272,7 +361,11 @@ namespace MechJebLib.Primitives
             this[2, index] = column.z;
         }
 
-        // Sets a row of the matrix.
+        /// <summary>
+        ///     Sets the row of a matrix with a vector.
+        /// </summary>
+        /// <param name="index">index of a row to set [0..2]</param>
+        /// <param name="row">vector of values</param>
         public void SetRow(int index, V3 row)
         {
             this[index, 0] = row.x;
@@ -280,23 +373,24 @@ namespace MechJebLib.Primitives
             this[index, 2] = row.z;
         }
 
-        // Transforms a direction by this matrix.
-        public V3 MultiplyVector(V3 vector)
-        {
-            V3 res;
-            res.x = m00 * vector.x + m01 * vector.y + m02 * vector.z;
-            res.y = m10 * vector.x + m11 * vector.y + m12 * vector.z;
-            res.z = m20 * vector.x + m21 * vector.y + m22 * vector.z;
-            return res;
-        }
+        /// <summary>
+        /// Multiply vector by this matrix.
+        /// </summary>
+        /// <param name="vector">the vector</param>
+        /// <returns>vector result</returns>
+        public V3 MultiplyVector(V3 vector) => this * vector;
 
-        // Creates a rotation matrix. Note: Assumes unit quaternion
-        public static M3 Rotate(QuaternionD q)
+        /// <summary>
+        /// Create rotation matrix from unit Q3 quaternion (you must provide unit quaternion).
+        /// </summary>
+        /// <param name="q">the unit quaternion</param>
+        /// <returns>rotation matrix</returns>
+        public static M3 Rotate(Q3 q)
         {
             // Precalculate coordinate products
-            double x = q.x * 2.0F;
-            double y = q.y * 2.0F;
-            double z = q.z * 2.0F;
+            double x = q.x * 2.0;
+            double y = q.y * 2.0;
+            double z = q.z * 2.0;
             double xx = q.x * x;
             double yy = q.y * y;
             double zz = q.z * z;
@@ -309,24 +403,28 @@ namespace MechJebLib.Primitives
 
             // Calculate 3x3 matrix from orthonormal basis
             M3 m;
-            m.m00 = 1.0f - (yy + zz);
+            m.m00 = 1.0 - (yy + zz);
             m.m10 = xy + wz;
             m.m20 = xz - wy;
             m.m01 = xy - wz;
-            m.m11 = 1.0f - (xx + zz);
+            m.m11 = 1.0 - (xx + zz);
             m.m21 = yz + wx;
             m.m02 = xz + wy;
             m.m12 = yz - wx;
-            m.m22 = 1.0f - (xx + yy);
+            m.m22 = 1.0 - (xx + yy);
             return m;
         }
 
-        // Returns a matrix with all elements set to zero (RO).
+        /// <summary>
+        ///     Returns the zero matrix.
+        /// </summary>
         public static M3 zero { get; } = new M3(new V3(0, 0, 0),
             new V3(0, 0, 0),
             new V3(0, 0, 0));
 
-        // Returns the identity matrix (RO).
+        /// <summary>
+        ///     Returns the identity matrix.
+        /// </summary>
         public static M3 identity { get; } = new M3(new V3(1, 0, 0),
             new V3(0, 1, 0),
             new V3(0, 0, 1));
@@ -344,21 +442,24 @@ namespace MechJebLib.Primitives
         public string ToString(string? format, IFormatProvider formatProvider)
         {
             if (string.IsNullOrEmpty(format))
-                format = "G9";
-            return string.Format("{0}\t{1}\t{2}\n{3}\t{4}\t{5}\n{6}\t{7}\t{8}\n",
+                format = "G";
+            return string.Format("[{0}, {1}, {2}\n{3}, {4}, {5}\n{6}, {7}, {8}]\n",
                 m00.ToString(format, formatProvider), m01.ToString(format, formatProvider), m02.ToString(format, formatProvider),
                 m10.ToString(format, formatProvider), m11.ToString(format, formatProvider), m12.ToString(format, formatProvider),
                 m20.ToString(format, formatProvider), m21.ToString(format, formatProvider), m22.ToString(format, formatProvider));
         }
 
-        // private QuaternionD    GetRotation();
-
+        /// <summary>
+        ///     Returns if the matrix is the identity with strict comparison.
+        /// </summary>
+        /// <returns>if the matrix is the identity matrix</returns>
         private bool IsIdentity()
         {
-            // FIXME: epsilon/ULPs?
+            // ReSharper disable CompareOfFloatsByEqualityOperator
             return m00 == 1.0 && m10 == 0.0 && m20 == 0.0 &&
                    m01 == 0.0 && m11 == 1.0 && m21 == 0.0 &&
                    m02 == 0.0 && m12 == 0.0 && m22 == 1.0;
+            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
 
         private double GetDeterminant()
@@ -366,12 +467,28 @@ namespace MechJebLib.Primitives
             return m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m21 * m02) + m20 * (m01 * m12 - m11 * m02);
         }
 
-        // public QuaternionD rotation               { get { return GetRotation(); } }
-        public        bool   isIdentity        => IsIdentity();
-        public        double determinant       => GetDeterminant();
+        /// <summary>
+        ///     Returns if the matrix is the identity, with strict comparison.
+        /// </summary>
+        public bool isIdentity => IsIdentity();
+
+        /// <summary>
+        ///     Returns the determinant of the matrix.
+        /// </summary>
+        public double determinant => GetDeterminant();
+
+        /// <summary>
+        ///     Returns the determinant of the matrix.
+        /// </summary>
+        /// <param name="m">matrix</param>
+        /// <returns>the matrix determinant</returns>
         public static double Determinant(M3 m) { return m.determinant; }
 
-        // FIXME: really needs testing
+        /// <summary>
+        ///     Returns the inverse of the matrix.
+        /// </summary>
+        /// <param name="m">matrix</param>
+        /// <returns>the matrix inverse</returns>
         public static M3 Inverse(M3 m)
         {
             double a = m.m11 * m.m22 - m.m21 * m.m12;
@@ -382,35 +499,37 @@ namespace MechJebLib.Primitives
             double f = m.m10 * m.m02 - m.m00 * m.m12;
             double g = m.m10 * m.m21 - m.m20 * m.m11;
             double h = m.m20 * m.m01 - m.m00 * m.m21;
-            double i = m.m10 * m.m01 - m.m11 * m.m00;
-            return new M3(new V3(a, b, c),
-                new V3(d, e, f),
-                new V3(g, h, i)) * (1 / (m.m00 * a + m.m10 * b + m.m20 * c));
+            double i = m.m11 * m.m00 - m.m10 * m.m01;
+            return new M3(new V3(a, d, g),
+                new V3(b, e, h),
+                new V3(c, f, i)) * (1 / (m.m00 * a + m.m10 * b + m.m20 * c));
         }
 
+        /// <summary>
+        ///     Returns the inverase of the matrix.
+        /// </summary>
         public M3 inverse => Inverse(this);
 
+        /// <summary>
+        ///     Returns the transpose of the matrix.
+        /// </summary>
+        /// <param name="m">the matrix</param>
+        /// <returns>matrix transpose</returns>
         public static M3 Transpose(M3 m)
         {
-            return new M3(new V3(m.m00, m.m10, m.m20),
-                new V3(m.m01, m.m11, m.m12),
-                new V3(m.m02, m.m12, m.m22));
+            return new M3(new V3(m.m00, m.m01, m.m02),
+                new V3(m.m10, m.m11, m.m12),
+                new V3(m.m20, m.m21, m.m22));
         }
 
+        /// <summary>
+        ///     Returns the transpose of the matrix.
+        /// </summary>
         public M3 transpose => Transpose(this);
 
-        //        private V3       GetLossyScale();
-//        private FrustumPlanes DecomposeProjection();
-//        public V3 lossyScale                { get { return GetLossyScale(); } }
-//        public FrustumPlanes decomposeProjection { get { return DecomposeProjection(); } }
-//        public bool ValidTRS();
-//        public static M3 TRS(V3 pos, QuaternionD q, V3 s);
-//        public void SetTRS(V3 pos, QuaternionD q, V3 s) { this = M3.TRS(pos, q, s); }
-//        public static bool Inverse3DAffine(M3 input, ref M3 result);
-//        public static M3 Ortho(double left, double right, double bottom, double top, double zNear, double zFar);
-//        public static M3 Perspective(double fov, double aspect, double zNear, double zFar);
-//        public static M3 LookAt(V3 from, V3 to, V3 up);
-//        public static M3 Frustum(double left, double right, double bottom, double top, double zNear, double zFar);
-//        public static M3 Frustum(FrustumPlanes fp) { return Frustum(fp.left, fp.right, fp.bottom, fp.top, fp.zNear, fp.zFar); }
+        // TODO:
+        // private QuaternionD    GetRotation();
+        // public static M3 LookAt(V3 from, V3 to, V3 up);
+        // public QuaternionD rotation               { get { return GetRotation(); } }
     }
 }

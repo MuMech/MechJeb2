@@ -19,7 +19,7 @@ namespace AssertExtensions
     public static class AssertionExtensions
     {
         // A proper relative tolerance comparison comparsion between float values.
-        public static void ShouldEqual(this double actual, double expected, double epsilon)
+        public static void ShouldEqual(this double actual, double expected, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
@@ -31,7 +31,7 @@ namespace AssertExtensions
                 );
         }
 
-        public static void ShouldEqual(this Vector3d actual, Vector3d expected, double epsilon)
+        public static void ShouldEqual(this V3 actual, V3 expected, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
@@ -42,8 +42,8 @@ namespace AssertExtensions
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
                 );
         }
-        
-        public static void ShouldEqual(this V3 actual, V3 expected, double epsilon)
+
+        public static void ShouldEqual(this M3 actual, M3 expected, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
@@ -56,7 +56,7 @@ namespace AssertExtensions
         }
 
         // Comparison to zero within a tolerance
-        public static void ShouldBeZero(this double actual, double epsilon)
+        public static void ShouldBeZero(this double actual, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
@@ -67,9 +67,9 @@ namespace AssertExtensions
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
                 );
         }
-        
+
         // Comparison to zero within a tolerance
-        public static void ShouldBeZero(this V3 actual, double epsilon)
+        public static void ShouldBeZero(this V3 actual, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));

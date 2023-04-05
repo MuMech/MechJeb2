@@ -47,7 +47,6 @@
     <Compile Include="AttitudeControllers\KosAttitudeController.cs" />
     <Compile Include="AttitudeControllers\MJAttitudeController.cs" />
     <Compile Include="AttitudeControllers\KosPIDLoop.cs" />
-    <Compile Include="AttitudeControllers\PIDLoop.cs" />
     <Compile Include="AttitudeControllers\TorquePI.cs" />
     <Compile Include="AutopilotModule.cs" />
     <Compile Include="CachedLocalizer.cs" />
@@ -99,6 +98,7 @@
     <Compile Include="MathExtensions.cs" />
     <Compile Include="MechJebAR202.cs" />
     <Compile Include="MechJebCore.cs" />
+    <Compile Include="MechJebLib\Control\PIDLoop.cs" />
     <Compile Include="MechJebLib\Maths\BrentMin.cs" />
     <Compile Include="MechJebLib\Maths\BrentRoot.cs" />
     <Compile Include="MechJebLib\Maths\FunctionImpls\RealDeltaVToChangeApoapsisPrograde.cs" />

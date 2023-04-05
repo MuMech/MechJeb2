@@ -12,7 +12,7 @@ using MechJebLib.PVG;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
-namespace PVG
+namespace MechJebLibTest.PVG
 {
     public class Titan2Tests
     {
@@ -65,7 +65,7 @@ namespace PVG
             ClampPi(tanof).ShouldBeZero(1e-7);
         }
 
-        // this is FlightPathAngle4AllRocket but using free attachment. 
+        // this is FlightPathAngle4AllRocket but using free attachment.
         [Fact]
         public void Kepler3()
         {

@@ -1,4 +1,14 @@
-namespace MuMech.AttitudeControllers
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
+using static MechJebLib.Utils.Statics;
+
+#nullable enable
+
+namespace MuMech.MechJebLib.Control
 {
     public class PIDLoop
     {
@@ -46,7 +56,7 @@ namespace MuMech.AttitudeControllers
 
             // transposed direct form 2
             double u0 = b0 + _d1;
-            u0  = MuUtils.Clamp(u0, MinOutput, MaxOutput);
+            u0  = Clamp(u0, MinOutput, MaxOutput);
             _d1 = b1 - a1 * u0 + _d2;
             _d2 = b2 - a2 * u0;
 
