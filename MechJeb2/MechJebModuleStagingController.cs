@@ -182,7 +182,9 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_AutostagingSettings", InfoItem.Category.Misc)] //Autostaging settings
         public void AutostageSettingsInfoItem()
         {
-            GUILayout.BeginVertical();
+            GUILayout.BeginVertical(GUI.skin.box);
+
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label42, autostageLimit, width: 40); //"Stop at stage #"
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Delays: ");
@@ -199,7 +201,6 @@ namespace MuMech
             GuiUtils.SimpleTextBox(sFairingMinAltitude, fairingMinAltitude, "km", 50);                 //altitude
             GuiUtils.SimpleTextBox(sFairingMaxAerothermalFlux, fairingMaxAerothermalFlux, "W/m²", 50); //aerothermal flux
 
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label42, autostageLimit, width: 40); //"Stop at stage #"
 
             GUILayout.BeginHorizontal();
             hotStaging = GUILayout.Toggle(hotStaging, CachedLocalizer.Instance.MechJeb_Ascent_hotStaging); //"Support hotstaging"
