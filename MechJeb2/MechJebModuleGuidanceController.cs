@@ -286,7 +286,7 @@ namespace MuMech
 
             int coastStage = Solution.CoastStage();
             
-            Debug.Log($"coast stage: {coastStage} current stage: {vessel.currentStage} will coast: {Solution.WillCoast(vesselState.time)}");
+            //Debug.Log($"coast stage: {coastStage} current stage: {vessel.currentStage} will coast: {Solution.WillCoast(vesselState.time)}");
 
             if (coastStage >= 0 && vessel.currentStage == coastStage && Solution.WillCoast(vesselState.time))
                 core.staging.autostageLimitInternal = coastStage;
