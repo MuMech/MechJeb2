@@ -11,12 +11,20 @@ using AssertExtensions;
 using MechJebLib.Primitives;
 using MuMech.MechJebLib.Maths.ODE;
 using Xunit;
+using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.Maths
 {
     public class DormandPrinceTests
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public DormandPrinceTests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
+
         [Theory]
         [ClassData(typeof(SimpleOscillatorTestData))]
         public void SimpleOscillatorTest(double k, double m, double x0, double v0, double tf)
@@ -114,22 +122,21 @@ namespace MechJebLibTest.Maths
                 {
                     y[0].ShouldEqual(expected, 1e-9);
                 }
-
-                interpolant.Clear();
             }
+
+            long start = GC.GetAllocatedBytesForCurrentThread();
 
             using (Hn interpolant = ode.GetInterpolant())
             {
-                long start = GC.GetAllocatedBytesForCurrentThread();
-
                 ode.Integrate(y0, yf, 0, 4, interpolant);
+
                 using (y = interpolant.Evaluate(t))
                 {
                     y[0].ShouldEqual(expected, 1e-9);
                 }
-
-                Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
             }
+
+            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
         }
     }
 }

@@ -42,7 +42,7 @@ namespace MechJebLib.Primitives
         {
             if (_list.ContainsKey(time))
             {
-                HFrame<T> temp  = _list.Values[_list.IndexOfKey(time)];
+                HFrame<T> temp = _list.Values[_list.IndexOfKey(time)];
                 temp.Value      = Allocate(value);
                 temp.OutTangent = tangent;
                 _list[time]     = temp;
@@ -143,7 +143,7 @@ namespace MechJebLib.Primitives
 
             // fix right side
             if (i != _list.Count - 1)
-                FixTangent(i+1);
+                FixTangent(i + 1);
         }
 
         private void FixTangent(int i)
@@ -152,7 +152,7 @@ namespace MechJebLib.Primitives
 
             if (!current.AutoTangent)
                 return;
-            
+
             T slope1 = Allocate();
 
             if (i < _list.Count - 1)
@@ -165,18 +165,18 @@ namespace MechJebLib.Primitives
                 if (i == 0)
                 {
                     // there is no left
-                    current.InTangent = current.OutTangent = slope1;
+                    current.InTangent   = current.OutTangent = slope1;
                     _list[current.Time] = current;
                     return;
                 }
             }
-            
+
             T slope2 = Allocate();
 
             if (i > 0)
             {
                 // there is a left side
-                HFrame<T> left = _list.Values[i-1];
+                HFrame<T> left = _list.Values[i - 1];
 
                 Subtract(current.Value, left.Value, ref slope2);
                 Divide(slope2, current.Time - left.Time, ref slope2);
@@ -189,7 +189,7 @@ namespace MechJebLib.Primitives
                     return;
                 }
             }
-            
+
             // there is a left and a right, so average them
             Addition(slope1, slope2, ref slope1);
             Divide(slope1, 2.0, ref slope1);
@@ -204,11 +204,9 @@ namespace MechJebLib.Primitives
             if (_list.Count == 0)
                 return Allocate();
 
-            T ret = Allocate();
-            
             if (t < MinTime)
             {
-                
+                T ret = Allocate();
                 Multiply(_list.Values[0].InTangent, MinTime - t, ref ret);
                 Subtract(_list.Values[0].Value, ret, ref ret);
                 return ret;
@@ -216,6 +214,7 @@ namespace MechJebLib.Primitives
 
             if (t > MaxTime)
             {
+                T ret = Allocate();
                 Multiply(_list.Values[_list.Count - 1].OutTangent, t - MaxTime, ref ret);
                 Addition(_list.Values[_list.Count - 1].Value, ret, ref ret);
                 return ret;
@@ -254,7 +253,7 @@ namespace MechJebLib.Primitives
         public readonly double Time;
 
         // FIXME: we don't need to support InValue/OutValue
-        public  T    Value;
+        public          T    Value;
         public readonly bool AutoTangent;
 
         public HFrame(double time, T value, T inTangent, T outTangent, bool autoTangent = false)

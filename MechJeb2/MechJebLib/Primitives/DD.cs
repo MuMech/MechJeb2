@@ -8,8 +8,8 @@
 
 using System;
 using System.Collections.Generic;
-using static MechJebLib.Utils.Statics;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Primitives
 {
@@ -34,14 +34,13 @@ namespace MechJebLib.Primitives
                 other[i] = this[i];
         }
 
-        // QUESTION: does resize of a double array produce garbage?
         public static DD Rent(int n)
         {
             DD list = _pool.Get();
             while (list.Count < n)
                 list.Add(0);
             if (list.Count > n)
-                list.RemoveRange(n, list.Count-n);
+                list.RemoveRange(n, list.Count - n);
             list.N = n;
             return list;
         }
@@ -57,7 +56,8 @@ namespace MechJebLib.Primitives
 
         public static void Clear(DD obj)
         {
-            obj.Clear();
+            // do not resize the array to zero to avoid creating garbage
+            // we will return nonsense in the array values (not zeros) for performance
         }
 
         public static void Return(DD obj)
