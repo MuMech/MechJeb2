@@ -260,7 +260,7 @@ namespace MuMech
 
             // if autostage enabled, and if we've already staged at least once, and if there are stages left,
             // and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (waitingForFirstStaging || vessel.currentStage <= 0 || vesselState.time - lastStageTime < autostagePostDelay)
+            if (waitingForFirstStaging || vessel.currentStage <= 0 || vessel.currentStage <= autostageLimit || vesselState.time - lastStageTime < autostagePostDelay)
             {
                 return;
             }
