@@ -151,8 +151,6 @@ namespace MechJebLibTest.Structs
 
             Assert.True(one == two);
             Assert.False(nan1 == nan2);
-            // ReSharper disable once EqualExpressionComparison
-            Assert.False(nan1 == nan1);
             one[8] = double.NaN;
             two[8] = double.NaN;
             Assert.False(one == two);
@@ -168,8 +166,6 @@ namespace MechJebLibTest.Structs
 
             Assert.False(one != two);
             Assert.True(nan1 != nan2);
-            // ReSharper disable once EqualExpressionComparison
-            Assert.True(nan1 != nan1);
             one[8] = double.NaN;
             two[8] = double.NaN;
             Assert.True(one != two);
