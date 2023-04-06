@@ -31,7 +31,7 @@ namespace MuMech
         public bool ShouldDrawTrajectory = true;
 
         private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
-        
+
         public double Pitch;
         public double Heading;
         public double Tgo;
@@ -151,15 +151,15 @@ namespace MuMech
             {
                 if (vessel.currentStage == _ascentSettings.OptimizeStage)
                     return;
-                
+
                 Status = PVGStatus.BURNING;
             }
-            
+
             // We should either be in an non-upper stage optimized stage, or we should be within 10 seconds of the whole
             // burntime in order to enter terminal guidance.
             if (vessel.currentStage != _ascentSettings.OptimizeStage && Solution.Tgo(vesselState.time) > 10)
                 return;
-            
+
             int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage);
             if (solutionIndex < 0)
             {
@@ -285,13 +285,17 @@ namespace MuMech
             }
 
             int coastStage = Solution.CoastStage();
-            
+
             //Debug.Log($"coast stage: {coastStage} current stage: {vessel.currentStage} will coast: {Solution.WillCoast(vesselState.time)}");
 
+            // Stop autostaging if we need to do a coast.  Also, we need to affirmatively set the termination
+            // of autostaging to the top of the rocket.  If we don't, then when we cut the engines and do the
+            // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
+            // since the insertion stage may still have RCS which is necessary to complete the mission.
             if (coastStage >= 0 && vessel.currentStage == coastStage && Solution.WillCoast(vesselState.time))
                 core.staging.autostageLimitInternal = coastStage;
             else
-                core.staging.autostageLimitInternal = 0;
+                core.staging.autostageLimitInternal = Solution.TerminalStage();
 
             if (Solution.Coast(vesselState.time))
             {
@@ -307,7 +311,7 @@ namespace MuMech
 
                 if (Solution.StageTimeLeft(vesselState.time) < UllageLeadTime)
                     RCSOn();
-                
+
                 ThrustOff();
                 return;
             }
@@ -414,7 +418,7 @@ namespace MuMech
                 Status = PVGStatus.COASTING;
                 return;
             }
-            
+
             // if we have more un-optimized upper stages to burn, stage and use the TERMINAL_STAGING state
             if (Solution.TerminalStage() != vessel.currentStage)
             {
@@ -422,7 +426,7 @@ namespace MuMech
                 Status = PVGStatus.TERMINAL_STAGING;
                 return;
             }
-  
+
             // otherwise we just have normal termination
             Done();
         }
