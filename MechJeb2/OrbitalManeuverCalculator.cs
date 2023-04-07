@@ -385,40 +385,29 @@ namespace MuMech
             return burnDV;
         }
 
-        public static Vector3d DeltaVToInterceptAtTime(Orbit o, double UT, Orbit target, double DT, double offsetDistance = 0, bool shortway = true)
-        {
-            Vector3d finalVelocity;
-            return DeltaVToInterceptAtTime(o, UT, target, DT, out finalVelocity, offsetDistance, shortway);
-        }
-
         // Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
         // course to intercept a target at a specific interceptUT.
         //
         // offsetDistance: this is used by the Rendezvous Autopilot and is only going to be valid over very short distances
         // shortway: the shortway parameter to feed into the Lambert solver
         //
-        private static Vector3d DeltaVToInterceptAtTime(Orbit o, double initialUT, Orbit target, double dt, out Vector3d secondDV,
+        public static (Vector3d v1, Vector3d v2) DeltaVToInterceptAtTime(Orbit o, double t0, Orbit target, double dt,
             double offsetDistance = 0, bool shortway = true)
         {
-            var initialRelPos = o.WorldBCIPositionAtUT(initialUT).ToV3();
-            var finalRelPos = target.WorldBCIPositionAtUT(initialUT + dt).ToV3();
-
-            var initialVelocity = o.WorldOrbitalVelocityAtUT(initialUT).ToV3();
-            var finalVelocity = target.WorldOrbitalVelocityAtUT(initialUT + dt).ToV3();
+            (V3 ri, V3 vi) = o.RightHandedStateVectorsAtUT(t0);
+            (V3 rf, V3 vf) = target.RightHandedStateVectorsAtUT(t0 + dt);
 
             (V3 transferVi, V3 transferVf) =
-                Gooding.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos, shortway ? dt : -dt, 0);
+                Gooding.Solve(o.referenceBody.gravParameter, ri, vi, rf, shortway ? dt : -dt, 0);
 
             if (offsetDistance != 0)
             {
-                finalRelPos -= offsetDistance * V3.Cross(finalVelocity, finalRelPos).normalized;
-                (transferVi, transferVf) = Gooding.Solve(o.referenceBody.gravParameter, initialRelPos, initialVelocity, finalRelPos,
+                rf -= offsetDistance * V3.Cross(vf, rf).normalized;
+                (transferVi, transferVf) = Gooding.Solve(o.referenceBody.gravParameter, ri, vi, rf,
                     shortway ? dt : -dt, 0);
             }
 
-            secondDV = (finalVelocity - transferVf).ToVector3d();
-
-            return (transferVi - initialVelocity).ToVector3d();
+            return ((transferVi - vi).V3ToWorld(), (vf - transferVf).V3ToWorld());
         }
 
         // Lambert Solver Driver function.
@@ -458,15 +447,15 @@ namespace MuMech
         {
             double closestApproachTime = o.NextClosestApproachTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
 
-            burnUT = UT;
-            Vector3d dV = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime - burnUT);
+            burnUT           = UT;
+            (Vector3d dV, _) = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime - burnUT);
 
             // FIXME: replace with BrentRoot's 1-d minimization algorithm
             const int fineness = 20;
             for (double step = 0.5; step < fineness; step += 1.0)
             {
                 double testUT = UT + (closestApproachTime - UT) * step / fineness;
-                Vector3d testDV = DeltaVToInterceptAtTime(o, testUT, target, closestApproachTime - testUT);
+                (Vector3d testDV, _) = DeltaVToInterceptAtTime(o, testUT, target, closestApproachTime - testUT);
 
                 if (testDV.magnitude < dV.magnitude)
                 {
@@ -907,7 +896,7 @@ namespace MuMech
                 Debug.Log("i + " + i + ", trying for intercept at UT = " + interceptUT);
 
                 //Try both short and long way
-                Vector3d interceptBurn = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT - burnUT);
+                (Vector3d interceptBurn, _) = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT - burnUT);
                 double cost = (interceptBurn - subtractedProgradeDV).magnitude;
                 Debug.Log("short way dV = " + interceptBurn.magnitude + "; subtracted cost = " + cost);
                 if (cost < minCost)
@@ -916,8 +905,8 @@ namespace MuMech
                     minCost = cost;
                 }
 
-                interceptBurn = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT, 0, false);
-                cost          = (interceptBurn - subtractedProgradeDV).magnitude;
+                (interceptBurn, _) = DeltaVToInterceptAtTime(o, burnUT, target, interceptUT, 0, false);
+                cost               = (interceptBurn - subtractedProgradeDV).magnitude;
                 Debug.Log("long way dV = " + interceptBurn.magnitude + "; subtracted cost = " + cost);
                 if (cost < minCost)
                 {

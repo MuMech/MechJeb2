@@ -99,7 +99,7 @@ namespace MuMech
 			{
 				double UT = vesselState.time;
 				double interceptUT = UT + 100;
-				Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT, 10);
+				(Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, interceptUT, 10);
 				vessel.RemoveAllManeuverNodes();
 				vessel.PlaceManeuverNode(orbit, dV, UT);
 			}
@@ -128,4 +128,3 @@ namespace MuMech
 		}
 	}
 }
-

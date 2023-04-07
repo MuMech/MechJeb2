@@ -106,7 +106,7 @@ namespace MuMech
                     double closingTime = core.target.Distance / closingSpeed;
                     double UT = vesselState.time + 15;
 
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, closingTime);
+                    (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, closingTime);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
                     status = Localizer.Format("#MechJeb_RZauto_statu4");//"Close to target: plotting intercept"

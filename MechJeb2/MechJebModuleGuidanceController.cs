@@ -194,7 +194,7 @@ namespace MuMech
             Vector3d v1 = vesselState.orbitalVelocity + a0 * dt;
             Vector3d x1 = vesselState.orbitalPosition + vesselState.orbitalVelocity * dt + 0.5 * a0 * dt * dt;
 
-            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3(), v1.WorldToV3(), solutionIndex))
+            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), solutionIndex))
             {
                 if (WillDoRCSButNotYet())
                 {
@@ -374,7 +374,7 @@ namespace MuMech
             {
                 double t = Solution.T0 + dt * i;
 
-                _trajectory.Add(Solution.R(t).V3ToWorld() + mainBody.position);
+                _trajectory.Add(Solution.R(t).V3ToWorldRotated() + mainBody.position);
             }
 
             GLUtils.DrawPath(mainBody, _trajectory, Color.red, MapView.MapIsEnabled);
