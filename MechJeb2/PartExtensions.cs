@@ -47,12 +47,12 @@ namespace MuMech
         {
             if (!VesselState.isLoadedRealFuels) // stock doesn't have this concept
                 return false;
-            
+
             ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
 
             if (eng is null) // this case probably doesn't make any sense
                 return false;
-            
+
             if (eng.finalThrust > 0 || eng.requestedThrottle > 0 || eng.getFlameoutState || eng.EngineIgnited)
                 return false;
 
@@ -69,10 +69,10 @@ namespace MuMech
                         if (propellantStability < VesselState.RFveryStableValue)
                             return true;
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
             }
-            
+
             return false;
         }
 

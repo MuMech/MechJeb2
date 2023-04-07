@@ -13,18 +13,18 @@ namespace MuMech
             SLEEPING
         }
 
-        MechJebCore core = null;
-        Transform eye_base, eye_ball;
-        AerodynamicsFX afx;
-        float lastBlink = 0, lastAction = 0;
-        float[] lastFlaps;
-        public State state;
+        private MechJebCore    core;
+        private Transform      eye_base, eye_ball;
+        private AerodynamicsFX afx;
+        private float          lastBlink, lastAction;
+        private float[]        lastFlaps;
+        public  State          state;
 
         public override void OnStart(StartState state)
         {
-            core = part.Modules.OfType<MechJebCore>().FirstOrDefault();
-            eye_base = part.FindModelTransform("r4m0n_Control_point_socket"); //    Rotation: 0, 0, Z Azimuth
-            eye_ball = part.FindModelTransform("r4m0n_Control_point_Eye"); //       Rotation: X, 0, 0 Altitude
+            core      = part.Modules.OfType<MechJebCore>().FirstOrDefault();
+            eye_base  = part.FindModelTransform("r4m0n_Control_point_socket"); //    Rotation: 0, 0, Z Azimuth
+            eye_ball  = part.FindModelTransform("r4m0n_Control_point_Eye");    //       Rotation: X, 0, 0 Altitude
             lastFlaps = new float[] { 0, 0, 0, 0 };
         }
 
@@ -34,11 +34,12 @@ namespace MuMech
 
             AnimationState st = anim[clip];
             st.enabled = true;
-            st.weight = 1;
+            st.weight  = 1;
             if (last < 0)
             {
                 last = st.normalizedTime;
             }
+
             ret = st.normalizedTime = Mathf.MoveTowards(last, to, dt * st.length);
             anim.Sample();
             st.enabled = false;
@@ -50,21 +51,26 @@ namespace MuMech
         {
             if (afx == null)
             {
-                GameObject fx = GameObject.Find("FXLogic");
+                var fx = GameObject.Find("FXLogic");
                 if (fx != null)
                 {
                     afx = fx.GetComponent<AerodynamicsFX>();
                 }
             }
+
             Animation flapsAnim = part.FindModelAnimators("Flap_Top_Right")[0];
             if (vessel != null && vessel.mainBody.atmosphere && vessel.altitude < vessel.mainBody.RealMaxAtmosphereAltitude())
             {
-                float direction = ((vessel.GetSrfVelocity().magnitude > 25) && (Vector3.Angle(vessel.transform.up, vessel.GetSrfVelocity()) > 90)) ? -1 : 1;
+                float direction = vessel.GetSrfVelocity().magnitude > 25 && Vector3.Angle(vessel.transform.up, vessel.GetSrfVelocity()) > 90 ? -1 : 1;
 
-                lastFlaps[0] = AdvanceAnimationTo(flapsAnim, "Flap_Top_Right", Mathf.Clamp01(direction * (vessel.ctrlState.pitch - vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[0]);
-                lastFlaps[1] = AdvanceAnimationTo(flapsAnim, "Flap_Top_Left", Mathf.Clamp01(direction * (vessel.ctrlState.pitch + vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[1]);
-                lastFlaps[2] = AdvanceAnimationTo(flapsAnim, "Flap_Bottom_Right", Mathf.Clamp01(direction * (-vessel.ctrlState.pitch - vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[2]);
-                lastFlaps[3] = AdvanceAnimationTo(flapsAnim, "Flap_Bottom_Left", Mathf.Clamp01(direction * (-vessel.ctrlState.pitch + vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[3]);
+                lastFlaps[0] = AdvanceAnimationTo(flapsAnim, "Flap_Top_Right",
+                    Mathf.Clamp01(direction * (vessel.ctrlState.pitch - vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[0]);
+                lastFlaps[1] = AdvanceAnimationTo(flapsAnim, "Flap_Top_Left",
+                    Mathf.Clamp01(direction * (vessel.ctrlState.pitch + vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[1]);
+                lastFlaps[2] = AdvanceAnimationTo(flapsAnim, "Flap_Bottom_Right",
+                    Mathf.Clamp01(direction * (-vessel.ctrlState.pitch - vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[2]);
+                lastFlaps[3] = AdvanceAnimationTo(flapsAnim, "Flap_Bottom_Left",
+                    Mathf.Clamp01(direction * (-vessel.ctrlState.pitch + vessel.ctrlState.yaw) / 2), TimeWarp.deltaTime, lastFlaps[3]);
             }
             else
             {
@@ -73,46 +79,54 @@ namespace MuMech
                 lastFlaps[2] = AdvanceAnimationTo(flapsAnim, "Flap_Bottom_Right", 0, TimeWarp.deltaTime, lastFlaps[2]);
                 lastFlaps[3] = AdvanceAnimationTo(flapsAnim, "Flap_Bottom_Left", 0, TimeWarp.deltaTime, lastFlaps[3]);
             }
+
             switch (state)
             {
                 case State.OFF:
-                    if (HighLogic.LoadedSceneIsEditor || (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && vessel != null && core.attitude.enabled))
+                    if (HighLogic.LoadedSceneIsEditor ||
+                        (HighLogic.LoadedSceneIsFlight && FlightGlobals.ready && vessel != null && core.attitude.enabled))
                     {
                         state = State.AWAKENING;
                         part.FindModelAnimators("Waking")[0].Play("Waking");
                     }
+
                     break;
                 case State.AWAKENING:
                     if (!part.FindModelAnimators("Waking")[0].isPlaying)
                     {
                         AdvanceAnimationTo(part.FindModelAnimators("Waking")[0], "Waking", 1, 100);
 
-                        state = State.AWAKE;
+                        state     = State.AWAKE;
                         lastBlink = lastAction = Time.time;
                     }
+
                     break;
                 case State.AWAKE:
                     if (!part.FindModelAnimators("Blink")[0].isPlaying)
                     {
-                        if ((UnityEngine.Random.Range(0, 10.0F / (HighLogic.LoadedSceneIsEditor ? Time.deltaTime : TimeWarp.deltaTime)) < (Time.time - lastBlink)))
+                        if (Random.Range(0, 10.0F / (HighLogic.LoadedSceneIsEditor ? Time.deltaTime : TimeWarp.deltaTime)) < Time.time - lastBlink)
                         {
                             part.FindModelAnimators("Blink")[0].Play("Blink");
                             lastBlink = Time.time;
                         }
+
                         GameObject cam = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.editorCamera.gameObject : FlightCamera.fetch.gameObject;
                         Vector3 target = (cam.transform.position - part.transform.position).normalized;
                         if (core.attitude.enabled)
                         {
-                            target = core.attitude.attitudeGetReferenceRotation(core.attitude.attitudeReference) * core.attitude.attitudeTarget * Quaternion.Euler(90, 0, 0) * Vector3.up;
+                            target = core.attitude.attitudeGetReferenceRotation(core.attitude.attitudeReference) * core.attitude.attitudeTarget *
+                                     Quaternion.Euler(90, 0, 0) * Vector3.up;
                             lastAction = Time.time;
                         }
+
                         Vector3 localTarget = part.transform.InverseTransformDirection(target);
                         Vector2 polarTarget = CartesianToPolar(localTarget);
                         if (Mathfx.Approx(polarTarget.x, -90, 1) || Mathfx.Approx(polarTarget.x, 90, 1))
                         {
                             polarTarget.y = eye_base.localEulerAngles.z + 90;
                         }
-                        if ((!HighLogic.LoadedSceneIsEditor && (Time.time - lastAction > 30)))
+
+                        if (!HighLogic.LoadedSceneIsEditor && Time.time - lastAction > 30)
                         {
                             if (Mathfx.Approx(eye_base.localEulerAngles.z, 0, 1) && Mathfx.Approx(eye_ball.localEulerAngles.x, 0, 1))
                             {
@@ -124,13 +138,18 @@ namespace MuMech
                                 polarTarget = new Vector2(-90, 90);
                             }
                         }
+
                         if (afx != null && afx.FxScalar > 0)
                         {
                             polarTarget = new Vector2(90, 90);
                         }
-                        eye_base.localEulerAngles = new Vector3(0, 0, Mathf.MoveTowardsAngle(eye_base.localEulerAngles.z, polarTarget.y - 90, 360 * Time.deltaTime));
-                        eye_ball.localRotation = Quaternion.RotateTowards(eye_ball.localRotation, Quaternion.Euler(polarTarget.x + 90, 0, 0), 360 * Time.deltaTime);
+
+                        eye_base.localEulerAngles = new Vector3(0, 0,
+                            Mathf.MoveTowardsAngle(eye_base.localEulerAngles.z, polarTarget.y - 90, 360 * Time.deltaTime));
+                        eye_ball.localRotation = Quaternion.RotateTowards(eye_ball.localRotation, Quaternion.Euler(polarTarget.x + 90, 0, 0),
+                            360 * Time.deltaTime);
                     }
+
                     break;
                 case State.SLEEPING:
                     if (!part.FindModelAnimators("Sleeping")[0].isPlaying)
@@ -139,19 +158,18 @@ namespace MuMech
 
                         state = State.OFF;
                     }
-                    break;
-                default:
+
                     break;
             }
         }
 
-        Vector2 CartesianToPolar(Vector3 vector)
+        private Vector2 CartesianToPolar(Vector3 vector)
         {
             Vector2 polar;
             polar.y = Mathf.Atan2(vector.x, vector.z);
             float xzLen = new Vector2(vector.x, vector.z).magnitude;
-            polar.x = Mathf.Atan2(-vector.y, xzLen);
-            polar *= Mathf.Rad2Deg;
+            polar.x =  Mathf.Atan2(-vector.y, xzLen);
+            polar   *= Mathf.Rad2Deg;
             return polar;
         }
     }

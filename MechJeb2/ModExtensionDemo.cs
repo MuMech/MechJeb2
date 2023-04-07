@@ -2,7 +2,6 @@
 
 namespace MuMech
 {
-
     // This file is to show how to use the callback in VesselState (and the other module who will have them soon)
 
     [UsedImplicitly]
@@ -20,7 +19,7 @@ namespace MuMech
         {
             //vesselState.mass += 2;
         }
-        
+
         public override void OnStart(PartModule.StartState state)
         {
             //print("ModExtensionTest adding MJ2 callback");

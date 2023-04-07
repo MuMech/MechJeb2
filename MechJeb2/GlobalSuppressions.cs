@@ -2,8 +2,9 @@
 // attributes that are applied to this project.
 // Project-level suppressions either have no target or are given
 // a specific target and scoped to a namespace, type, member, etc.
+
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Style","IDE0055:Fix formatting",Justification = "<Pending>")]
-[assembly: SuppressMessage("Style","IDE1006:Naming Styles",Justification = "<Pending>")]
-[assembly: SuppressMessage("CodeQuality","IDE0079:Remove unnecessary suppression",Justification = "<Pending>")]
+[assembly: SuppressMessage("Style", "IDE0055:Fix formatting", Justification = "<Pending>")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>")]
+[assembly: SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "<Pending>")]
