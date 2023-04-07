@@ -5,12 +5,6 @@ namespace MuMech
 {
     public static class OrbitExtensions
     {
-        //can probably be replaced with Vector3d.xzy?
-        public static Vector3d SwapYZ(Vector3d v)
-        {
-            return v.Reorder(132);
-        }
-
         //
         // These "Swapped" functions translate preexisting Orbit class functions into world
         // space. For some reason, Orbit class functions seem to use a coordinate system
@@ -18,13 +12,13 @@ namespace MuMech
         //
         public static Vector3d SwappedOrbitalVelocityAtUT(this Orbit o, double UT)
         {
-            return SwapYZ(o.getOrbitalVelocityAtUT(UT));
+            return o.getOrbitalVelocityAtUT(UT).xzy;
         }
 
         //position relative to the primary
         public static Vector3d SwappedRelativePositionAtUT(this Orbit o, double UT)
         {
-            return SwapYZ(o.getRelativePositionAtUT(UT));
+            return o.getRelativePositionAtUT(UT).xzy;
         }
 
         //position in world space
@@ -37,7 +31,7 @@ namespace MuMech
         //convention: as you look down along the orbit normal, the satellite revolves counterclockwise
         public static Vector3d SwappedOrbitNormal(this Orbit o)
         {
-            return -SwapYZ(o.GetOrbitNormal()).normalized;
+            return -o.GetOrbitNormal().xzy.normalized;
         }
 
         //normalized vector along the orbital velocity
@@ -374,7 +368,7 @@ namespace MuMech
             }
             return ret;
         }
-        
+
         //Converts a direction, specified by a Vector3d, into a true anomaly.
         //The vector is projected into the orbital plane and then the true anomaly is
         //computed as the angle this vector makes with the vector pointing to the periapsis.
@@ -400,7 +394,7 @@ namespace MuMech
                 return (360 - angleFromPe) * UtilMath.Deg2Rad;
             }
         }
-        
+
         //Originally by Zool, revised by The_Duck
         //Converts a true anomaly into an eccentric anomaly.
         //For elliptical orbits this returns a value between 0 and 2pi
@@ -448,7 +442,7 @@ namespace MuMech
                 return (e * Math.Sinh(E)) - E;
             }
         }
-        
+
         //Converts a true anomaly into a mean anomaly (via the intermediate step of the eccentric anomaly)
         //For elliptical orbits, the output is between 0 and 2pi
         //For hyperbolic orbits, the output can be any number
@@ -458,7 +452,7 @@ namespace MuMech
         {
             return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
         }
-    
+
         //Returns the next time at which a will cross its ascending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if

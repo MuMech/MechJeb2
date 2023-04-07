@@ -32,26 +32,6 @@ namespace MuMech
             return Math.Max(Math.Max(Math.Abs(vector.x),Math.Abs(vector.y)),Math.Abs(vector.z));
         }
 
-        public static Vector3d Reorder(this Vector3d vector, int order)
-        {
-            switch (order)
-            {
-                case 123:
-                    return new Vector3d(vector.x, vector.y, vector.z);
-                case 132:
-                    return new Vector3d(vector.x, vector.z, vector.y);
-                case 213:
-                    return new Vector3d(vector.y, vector.x, vector.z);
-                case 231:
-                    return new Vector3d(vector.y, vector.z, vector.x);
-                case 312:
-                    return new Vector3d(vector.z, vector.x, vector.y);
-                case 321:
-                    return new Vector3d(vector.z, vector.y, vector.x);
-            }
-            throw new ArgumentException("Invalid order", "order");
-        }
-
         public static Vector3d Invert(this Vector3d vector)
         {
             return new Vector3d(1 / vector.x, 1 / vector.y, 1 / vector.z);
@@ -167,22 +147,22 @@ namespace MuMech
 
             return rand_normal;
         }
-        
+
         public static V3 WorldToV3(this Vector3d vector)
         {
             return (QuaternionD.Inverse(Planetarium.fetch.rotation) * vector).xzy.ToV3();
         }
-        
+
         public static V3 ToV3(this Vector3d vector)
         {
             return new V3(vector.x, vector.y, vector.z);
         }
-        
+
         public static Vector3d ToVector3d(this V3 vector)
         {
             return new Vector3d(vector.x, vector.y, vector.z);
         }
-        
+
         public static Vector3d V3ToWorld(this V3 vector)
         {
             return Planetarium.fetch.rotation * vector.ToVector3d().xzy;

@@ -117,11 +117,11 @@ namespace MuMech
         public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double UT)
         {
             Orbit ret = new Orbit();
-            ret.UpdateFromStateVectors(OrbitExtensions.SwapYZ(pos - body.position), OrbitExtensions.SwapYZ(vel), body, UT);
+            ret.UpdateFromStateVectors((pos - body.position).xzy, vel.xzy, body, UT);
             if (double.IsNaN(ret.argumentOfPeriapsis))
             {
                 Vector3d vectorToAN = Quaternion.AngleAxis(-(float)ret.LAN, Planetarium.up) * Planetarium.right;
-                Vector3d vectorToPe = OrbitExtensions.SwapYZ(ret.eccVec);
+                Vector3d vectorToPe = ret.eccVec.xzy;
                 double cosArgumentOfPeriapsis = Vector3d.Dot(vectorToAN, vectorToPe) / (vectorToAN.magnitude * vectorToPe.magnitude);
                 //Squad's UpdateFromStateVectors is missing these checks, which are needed due to finite precision arithmetic:
                 if(cosArgumentOfPeriapsis > 1) {

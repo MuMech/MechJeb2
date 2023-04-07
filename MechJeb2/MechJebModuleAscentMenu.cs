@@ -65,7 +65,7 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         private bool _lastPVGSettingsEnabled  = false;
-        
+
         [Persistent(pass = (int)Pass.Global)]
         private bool _lastSettingsMenuEnabled = false;
 
@@ -155,7 +155,7 @@ namespace MuMech
             {
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label5, _ascentSettings.DesiredOrbitAltitude, "km"); //Orbit altitude
             }
-            
+
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.skin.label,
                 false);                                                                                          //Orbit inc.
@@ -190,7 +190,7 @@ namespace MuMech
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label12, _ascentSettings.HoldAPTime, "s"); //Hold AP Time:
                 GUILayout.EndVertical();
             }
-            
+
             _ascentSettings.LimitQaEnabled = _ascentSettings.AscentType == AscentType.PVG; // this is mandatory for PVG
 
             Profiler.EndSample();
@@ -238,7 +238,7 @@ namespace MuMech
                 GUILayout.Label(n, GuiUtils.LayoutWidth(90));
                 GUILayout.Label(znorm);
                 GUILayout.EndHorizontal();
-                if (core.glueball.Exception != null) 
+                if (core.glueball.Exception != null)
                 {
                     GUILayout.Label(label30, GuiUtils.redLabel); //LAST FAILURE:
                 }
@@ -406,14 +406,14 @@ namespace MuMech
             VisibleSectionsGUIElements();
             ShowTargetingGUIElements();
             ShowGuidanceSettingsGUIElements();
-            
+
             if (_ascentSettings.AscentType == AscentType.PVG)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
                 _pvgSettingsMenu.enabled = GUILayout.Toggle(_pvgSettingsMenu.enabled, "Edit Rocket Staging");
                 GUILayout.EndVertical();
             }
-            
+
             GUILayout.BeginVertical(GUI.skin.box);
             _settingsMenu.enabled = GUILayout.Toggle(_settingsMenu.enabled, "Edit Ascent Settings");
             GUILayout.EndVertical();
@@ -438,11 +438,11 @@ namespace MuMech
                     _ascentSettings.ApplyRODefaults();
             }
             GUILayout.EndHorizontal();
-            
+
             GUILayout.BeginHorizontal();
             _ascentSettings.AscentType = (AscentType)GuiUtils.ComboBox.Box((int)_ascentSettings.AscentType, _ascentPathList, this);
             GUILayout.EndHorizontal();
-            
+
             if (_ascentSettings.AscentType == AscentType.CLASSIC)
                 _classicPathMenu.enabled =
                     GUILayout.Toggle(_classicPathMenu.enabled, CachedLocalizer.Instance.MechJeb_Ascent_checkbox10); //Edit ascent path
@@ -463,7 +463,7 @@ namespace MuMech
         {
             double launchpadAngularRate = 360 / launchBody.rotationPeriod;
             double targetAngularRate = 360.0 / target.period;
-            if (Vector3d.Dot(-target.GetOrbitNormal().Reorder(132).normalized, launchBody.angularVelocity) < 0)
+            if (Vector3d.Dot(-target.GetOrbitNormal().xzy.normalized, launchBody.angularVelocity) < 0)
                 targetAngularRate *= -1; //retrograde target
 
             Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
@@ -498,12 +498,12 @@ namespace MuMech
             double stageDeltaV = 0;
 
             int kspStage = solution.KSPStage(n);
-            
+
             if (kspStage < core.stageStats.vacStats.Length)
                  stageDeltaV = core.stageStats.vacStats[kspStage].DeltaV;
 
             double excessDV = stageDeltaV - solution.DV(t, n);
-            
+
             // eliminate some of the noise
             if (Math.Abs(excessDV) < 2.5) excessDV = 0;
 
