@@ -237,7 +237,7 @@ namespace MuMech
                 Debug.Log("[MechJeb TransferCalculator] BUG mu = " + initialOrbit.referenceBody.gravParameter + " r0 = " + r0 + " v0 = " + v0 +
                           " vinf = " + exitVelocity);
 
-            return new ManeuverParameters((vpos - vneg).V3ToWorldRotated(), ut0 + dt);
+            return new ManeuverParameters((vpos - vneg).V3ToWorld(), ut0 + dt);
         }
 
         private double        _impulseScale;
