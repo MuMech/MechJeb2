@@ -55,7 +55,7 @@ namespace MuMech
 
                 //Compute the angle between the location of the target at the end of freefall and the normal to our orbit:
                 Vector3d currentRadialVector = vesselState.CoM - mainBody.position;
-                double targetAngleToOrbitNormal = Vector3d.Angle(orbit.SwappedOrbitNormal(), freefallEndTargetRadialVector);
+                double targetAngleToOrbitNormal = Vector3d.Angle(orbit.OrbitNormal(), freefallEndTargetRadialVector);
                 targetAngleToOrbitNormal = Math.Min(targetAngleToOrbitNormal, 180 - targetAngleToOrbitNormal);
 
                 double targetAheadAngle = Vector3d.Angle(currentRadialVector, freefallEndTargetRadialVector); //How far ahead the target is, in degrees
