@@ -1,7 +1,4 @@
-﻿using System;
-using UnityEngine;
-
-namespace MuMech
+﻿namespace MuMech
 {
     public static class CelestialBodyExtensions
     {
@@ -9,17 +6,17 @@ namespace MuMech
         {
             return body.TerrainAltitude(body.GetLatitude(worldPosition), body.GetLongitude(worldPosition));
         }
-        
-        
+
         //The KSP drag law is dv/dt = -b * v^2 where b is proportional to the air density and
         //the ship's drag coefficient. In this equation b has units of inverse length. So 1/b
         //is a characteristic length: a ship that travels this distance through air will lose a significant
         //fraction of its initial velocity
         public static double DragLength(this CelestialBody body, Vector3d pos, double dragCoeff, double mass)
         {
-            double airDensity = FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(pos, body), FlightGlobals.getExternalTemperature(pos, body));
+            double airDensity =
+                FlightGlobals.getAtmDensity(FlightGlobals.getStaticPressure(pos, body), FlightGlobals.getExternalTemperature(pos, body));
 
-            if (airDensity <= 0) return Double.MaxValue;
+            if (airDensity <= 0) return double.MaxValue;
 
             //MechJebCore.print("DragLength " + airDensity.ToString("F5") + " " +  dragCoeff.ToString("F5"));
 
@@ -35,7 +32,6 @@ namespace MuMech
         {
             return !body.atmosphere ? 0 : body.atmosphereDepth;
         }
-
 
         public static double AltitudeForPressure(this CelestialBody body, double pressure)
         {
@@ -56,6 +52,7 @@ namespace MuMech
                     lowerAlt = testAlt;
                 }
             }
+
             return (upperAlt + lowerAlt) * 0.5;
         }
 

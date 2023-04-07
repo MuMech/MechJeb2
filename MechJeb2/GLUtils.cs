@@ -6,8 +6,9 @@ namespace MuMech
 {
     public static class GLUtils
     {
-        static Material _material;
-        static Material material
+        private static Material _material;
+
+        private static Material material
         {
             get
             {
@@ -16,19 +17,25 @@ namespace MuMech
             }
         }
 
-        public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c,  double rotation = 0, double radius = 0)
+        public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0,
+            double radius = 0)
         {
             DrawGroundMarker(body, latitude, longitude, c, true, rotation, radius);
         }
 
-        public static void DrawGroundMarker(CelestialBody body, double latitude, double longitude, Color c, bool map, double rotation = 0, double radius = 0)
+        public static void DrawGroundMarker(CelestialBody body, double latitude, double longitude, Color c, bool map, double rotation = 0,
+            double radius = 0)
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
-            var height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) * QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
+            double height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
+                                                                QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
             if (height < body.Radius) { height = body.Radius; }
+
             Vector3d center = body.position + height * up;
 
-            Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
+            Vector3d camPos = map
+                ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position)
+                : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
 
             if (IsOccluded(center, body, camPos)) return;
 
@@ -47,19 +54,19 @@ namespace MuMech
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation - 10, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation + 10, up) * north)
-            , c, map);
+                , c, map);
 
             GLTriangle(
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation + 110, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation + 130, up) * north)
-            , c, map);
+                , c, map);
 
             GLTriangle(
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation - 110, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation - 130, up) * north)
-            , c, map);
+                , c, map);
         }
 
         public static void GLTriangle(Vector3d worldVertices1, Vector3d worldVertices2, Vector3d worldVertices3, Color c, bool map)
@@ -78,7 +85,10 @@ namespace MuMech
 
         public static void GLVertex(Vector3d worldPosition, bool map = false)
         {
-            Vector3 screenPoint = map ? PlanetariumCamera.Camera.WorldToViewportPoint(ScaledSpace.LocalToScaledSpace(worldPosition)) : FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPosition);
+            Vector3 screenPoint =
+                map
+                    ? PlanetariumCamera.Camera.WorldToViewportPoint(ScaledSpace.LocalToScaledSpace(worldPosition))
+                    : FlightCamera.fetch.mainCamera.WorldToViewportPoint(worldPosition);
             GL.Vertex3(screenPoint.x, screenPoint.y, 0);
         }
 
@@ -103,10 +113,9 @@ namespace MuMech
             }
         }
 
-
         //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
         // https://cesiumjs.org/2013/04/25/Horizon-culling/
-        public static bool IsOccluded(Vector3d worldPosition,  CelestialBody byBody, Vector3d camPos)
+        public static bool IsOccluded(Vector3d worldPosition, CelestialBody byBody, Vector3d camPos)
         {
             Vector3d VC = (byBody.position - camPos) / (byBody.Radius - 100);
             Vector3d VT = (worldPosition - camPos) / (byBody.Radius - 100);
@@ -129,9 +138,11 @@ namespace MuMech
             GL.Begin(GL.LINES);
             GL.Color(c);
 
-            Vector3d camPos = map ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position) : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
+            Vector3d camPos = map
+                ? ScaledSpace.ScaledToLocalSpace(PlanetariumCamera.Camera.transform.position)
+                : (Vector3d)FlightCamera.fetch.mainCamera.transform.position;
 
-            int step = (dashed ? 2 : 1);
+            int step = dashed ? 2 : 1;
             for (int i = 0; i < points.Count - 1; i += step)
             {
                 if (!IsOccluded(points[i], mainBody, camPos) && !IsOccluded(points[i + 1], mainBody, camPos))
@@ -139,11 +150,12 @@ namespace MuMech
                     GLPixelLine(points[i], points[i + 1], map);
                 }
             }
+
             GL.End();
             GL.PopMatrix();
         }
 
-        public static void DrawBoundingBox(CelestialBody mainBody, Vessel vessel, MechJebModuleDockingAutopilot.Box3d box, Color c )
+        public static void DrawBoundingBox(CelestialBody mainBody, Vessel vessel, MechJebModuleDockingAutopilot.Box3d box, Color c)
         {
             //Vector3d origin = vessel.GetWorldPos3D() - vessel.GetTransform().rotation * box.center ;
             //Vector3d origin = vessel.GetTransform().TransformPoint(box.center);
@@ -204,13 +216,13 @@ namespace MuMech
             GL.End();
             GL.PopMatrix();
         }
-        
+
         private static readonly List<Vector3d> _points = new List<Vector3d>();
-        
+
         public static void DrawOrbit(Orbit o, Color c)
         {
             _points.Clear();
-            
+
             if (o.eccentricity < 1)
             {
                 //elliptical orbits:
@@ -218,6 +230,7 @@ namespace MuMech
                 {
                     _points.Add(o.SwappedAbsolutePositionAtUT(o.TimeOfTrueAnomaly(Deg2Rad(trueAnomaly), 0)));
                 }
+
                 _points.Add(_points[0]); //close the loop
             }
             else
@@ -229,7 +242,7 @@ namespace MuMech
                 }
             }
 
-            DrawPath(o.referenceBody, _points, c, true, false);
+            DrawPath(o.referenceBody, _points, c, true);
         }
     }
 }

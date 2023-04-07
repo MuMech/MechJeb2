@@ -5,14 +5,14 @@ namespace MuMech
     public class MechJebAR202 : PartModule
     {
         private MechJebCore core;
-        private Light greenLight;
-        private Renderer greenLightRenderer;
-        private Transform greenLightTransform;
-        private LightColor litLight = 0;
-        private Light redLight;
-        private Renderer redLightRenderer;
-        private Transform redLightTransform;
-        private int emissionId;
+        private Light       greenLight;
+        private Renderer    greenLightRenderer;
+        private Transform   greenLightTransform;
+        private LightColor  litLight = 0;
+        private Light       redLight;
+        private Renderer    redLightRenderer;
+        private Transform   redLightTransform;
+        private int         emissionId;
 
         public override void OnStart(StartState state)
         {
@@ -32,12 +32,12 @@ namespace MuMech
         private void InitializeLights()
         {
             greenLightTransform = null;
-            redLightTransform = null;
-            
+            redLightTransform   = null;
+
             foreach (Transform t in GetComponentsInChildren<Transform>())
             {
                 if (t.name.Equals("light_green")) greenLightTransform = t;
-                if (t.name.Equals("light_red")) redLightTransform = t;
+                if (t.name.Equals("light_red")) redLightTransform     = t;
             }
 
             emissionId = Shader.PropertyToID("_EmissiveColor");
@@ -46,15 +46,15 @@ namespace MuMech
             {
                 if (greenLightTransform.GetComponent<Light>() == null)
                 {
-                    greenLightRenderer = greenLightTransform.GetComponent<Renderer>();
-                    greenLight = greenLightTransform.gameObject.AddComponent<Light>();
+                    greenLightRenderer          = greenLightTransform.GetComponent<Renderer>();
+                    greenLight                  = greenLightTransform.gameObject.AddComponent<Light>();
                     greenLight.transform.parent = greenLightTransform;
-                    greenLight.type = LightType.Point;
-                    greenLight.renderMode = LightRenderMode.ForcePixel;
-                    greenLight.shadows = LightShadows.None;
-                    greenLight.enabled = false;
-                    greenLight.color = Color.green;
-                    greenLight.range = 1.5F;
+                    greenLight.type             = LightType.Point;
+                    greenLight.renderMode       = LightRenderMode.ForcePixel;
+                    greenLight.shadows          = LightShadows.None;
+                    greenLight.enabled          = false;
+                    greenLight.color            = Color.green;
+                    greenLight.range            = 1.5F;
                 }
                 else
                 {
@@ -66,15 +66,15 @@ namespace MuMech
             {
                 if (redLightTransform.GetComponent<Light>() == null)
                 {
-                    redLightRenderer = redLightTransform.GetComponent<Renderer>();
-                    redLight = redLightTransform.gameObject.AddComponent<Light>();
+                    redLightRenderer          = redLightTransform.GetComponent<Renderer>();
+                    redLight                  = redLightTransform.gameObject.AddComponent<Light>();
                     redLight.transform.parent = redLightTransform;
-                    redLight.type = LightType.Point;
-                    redLight.renderMode = LightRenderMode.ForcePixel;
-                    redLight.shadows = LightShadows.None;
-                    redLight.enabled = false;
-                    redLight.color = Color.red;
-                    redLight.range = 1.5F;
+                    redLight.type             = LightType.Point;
+                    redLight.renderMode       = LightRenderMode.ForcePixel;
+                    redLight.shadows          = LightShadows.None;
+                    redLight.enabled          = false;
+                    redLight.color            = Color.red;
+                    redLight.range            = 1.5F;
                 }
                 else
                 {
@@ -139,6 +139,7 @@ namespace MuMech
                         greenLightRenderer.material.SetColor(emissionId, Color.green);
                         greenLight.enabled = true;
                     }
+
                     break;
 
                 case LightColor.RED:
@@ -147,6 +148,7 @@ namespace MuMech
                         redLightRenderer.material.SetColor(emissionId, Color.red);
                         redLight.enabled = true;
                     }
+
                     break;
             }
         }
@@ -161,6 +163,7 @@ namespace MuMech
                         greenLightRenderer.material.SetColor(emissionId, Color.black);
                         greenLight.enabled = false;
                     }
+
                     break;
 
                 case LightColor.RED:
@@ -169,6 +172,7 @@ namespace MuMech
                         redLightRenderer.material.SetColor(emissionId, Color.black);
                         redLight.enabled = false;
                     }
+
                     break;
             }
         }

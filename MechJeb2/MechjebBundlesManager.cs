@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using TMPro;
+﻿using System.Collections;
 using UnityEngine;
 
 namespace MuMech
@@ -12,22 +7,22 @@ namespace MuMech
     public class MechJebBundlesManager : MonoBehaviour
     {
         private const string shaderBundle = "shaders.bundle";
-        private string shaderPath;
+        private       string shaderPath;
 
-        private const string diffuseAmbientName = "Assets/Shaders/MJ_DiffuseAmbiant.shader";
+        private const string diffuseAmbientName        = "Assets/Shaders/MJ_DiffuseAmbiant.shader";
         private const string diffuseAmbientIgnoreZName = "Assets/Shaders/MJ_DiffuseAmbiantIgnoreZ.shader";
 
-        public static Shader diffuseAmbient;
-        public static Shader diffuseAmbientIgnoreZ;
+        public static Shader    diffuseAmbient;
+        public static Shader    diffuseAmbientIgnoreZ;
         public static Texture2D comboBoxBackground;
 
-        void Awake()
+        private void Awake()
         {
             string gameDataPath = KSPUtil.ApplicationRootPath + "/GameData/MechJeb2/Bundles/";
             shaderPath = gameDataPath + shaderBundle;
         }
 
-        IEnumerator Start()
+        private IEnumerator Start()
         {
             // We do this in MainMenu because something is going on in that scene that kills anything loaded with a bundle
             if (diffuseAmbient)
@@ -57,13 +52,13 @@ namespace MuMech
             assetBundle.Unload(false);
             MechJebCore.print("Loaded Shaders Bundles");
 
-            comboBoxBackground = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+            comboBoxBackground          = new Texture2D(16, 16, TextureFormat.RGBA32, false);
             comboBoxBackground.wrapMode = TextureWrapMode.Clamp;
 
             for (int x = 0; x < comboBoxBackground.width; x++)
             for (int y = 0; y < comboBoxBackground.height; y++)
             {
-                if (x == 0 || x == comboBoxBackground.width-1 || y == 0 || y == comboBoxBackground.height-1)
+                if (x == 0 || x == comboBoxBackground.width - 1 || y == 0 || y == comboBoxBackground.height - 1)
                     comboBoxBackground.SetPixel(x, y, new Color(0, 0, 0, 1));
                 else
                     comboBoxBackground.SetPixel(x, y, new Color(0.05f, 0.05f, 0.05f, 0.95f));
@@ -73,5 +68,3 @@ namespace MuMech
         }
     }
 }
-
-

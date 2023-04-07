@@ -6,18 +6,47 @@ namespace MuMech
     {
         public Vector3d positive = Vector3d.zero, negative = Vector3d.zero;
 
-        public enum Direction { FORWARD=0, BACK=1, UP=2, DOWN=3, RIGHT=4, LEFT=5 };
+        public enum Direction { FORWARD = 0, BACK = 1, UP = 2, DOWN = 3, RIGHT = 4, LEFT = 5 }
 
         public static readonly Vector3d[] directions = { Vector3d.forward, Vector3d.back, Vector3d.up, Vector3d.down, Vector3d.right, Vector3d.left };
 
-        public static readonly Direction[] Values = (Direction[])Enum.GetValues(typeof (Direction));
+        public static readonly Direction[] Values = (Direction[])Enum.GetValues(typeof(Direction));
 
-        public double forward { get { return positive.z; } set { positive.z = value; } }
-        public double back { get { return negative.z; } set { negative.z = value; } }
-        public double up { get { return positive.y; } set { positive.y = value; } }
-        public double down { get { return negative.y; } set { negative.y = value; } }
-        public double right { get { return positive.x; } set { positive.x = value; } }
-        public double left { get { return negative.x; } set { negative.x = value; } }
+        public double forward
+        {
+            get => positive.z;
+            set => positive.z = value;
+        }
+
+        public double back
+        {
+            get => negative.z;
+            set => negative.z = value;
+        }
+
+        public double up
+        {
+            get => positive.y;
+            set => positive.y = value;
+        }
+
+        public double down
+        {
+            get => negative.y;
+            set => negative.y = value;
+        }
+
+        public double right
+        {
+            get => positive.x;
+            set => positive.x = value;
+        }
+
+        public double left
+        {
+            get => negative.x;
+            set => negative.x = value;
+        }
 
         public double this[Direction index]
         {
@@ -38,6 +67,7 @@ namespace MuMech
                     case Direction.LEFT:
                         return left;
                 }
+
                 return 0;
             }
             set
@@ -67,6 +97,7 @@ namespace MuMech
         }
 
         public Vector6() { }
+
         public Vector6(Vector3d positive, Vector3d negative)
         {
             this.positive = positive;
@@ -104,12 +135,13 @@ namespace MuMech
                     sqrMagnitude += Math.Pow(projection * this[d], 2);
                 }
             }
+
             return Math.Sqrt(sqrMagnitude);
         }
 
         public double MaxMagnitude()
         {
-            return Math.Max(positive.MaxMagnitude(),negative.MaxMagnitude());
+            return Math.Max(positive.MaxMagnitude(), negative.MaxMagnitude());
         }
 
         public void Load(ConfigNode node)
@@ -118,6 +150,7 @@ namespace MuMech
             {
                 positive = KSPUtil.ParseVector3d(node.GetValue("positive"));
             }
+
             if (node.HasValue("negative"))
             {
                 negative = KSPUtil.ParseVector3d(node.GetValue("negative"));
