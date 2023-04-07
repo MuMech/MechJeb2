@@ -163,7 +163,7 @@ namespace MuMech
             {
                 for (int iter = 0; iter < 10; iter++)
                 {
-                    Vector3d impactPosition = orbit.SwappedAbsolutePositionAtUT(impactTime);
+                    Vector3d impactPosition = orbit.WorldPositionAtUT(impactTime);
                     double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(impactPosition);
                     impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
                 }
@@ -596,7 +596,7 @@ namespace MuMech
                 }
 
                 double relVel =
-                    (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT))
+                    (orbit.WorldOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.WorldOrbitalVelocityAtUT(UT))
                         .magnitude;
                 return relVel.ToSI(-1) + "m/s";
             }

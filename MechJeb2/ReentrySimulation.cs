@@ -176,7 +176,7 @@ namespace MuMech
             referenceFrame.UpdateAtCurrentTime(_initialOrbit.referenceBody);
             orbitReenters = OrbitReenters(_initialOrbit);
 
-            startX = initialOrbit.SwappedRelativePositionAtUT(startUT);
+            startX = initialOrbit.WorldBCIPositionAtUT(startUT);
             // This calls some Unity function so it should be done outside the thread
             if (orbitReenters)
             {
@@ -316,8 +316,8 @@ namespace MuMech
         {
             t = FindFreefallEndTime(initialOrbit);
 
-            x = initialOrbit.SwappedRelativePositionAtUT(t);
-            v = initialOrbit.SwappedOrbitalVelocityAtUT(t);
+            x = initialOrbit.WorldBCIPositionAtUT(t);
+            v = initialOrbit.WorldOrbitalVelocityAtUT(t);
 
             if (double.IsNaN(v.magnitude))
             {
@@ -363,8 +363,8 @@ namespace MuMech
         //    - the descent speed policy says to start braking
         private bool FreefallEnded(Orbit initialOrbit, double UT)
         {
-            Vector3d pos = initialOrbit.SwappedRelativePositionAtUT(UT);
-            Vector3d surfaceVelocity = SurfaceVelocity(pos, initialOrbit.SwappedOrbitalVelocityAtUT(UT));
+            Vector3d pos = initialOrbit.WorldBCIPositionAtUT(UT);
+            Vector3d surfaceVelocity = SurfaceVelocity(pos, initialOrbit.WorldOrbitalVelocityAtUT(UT));
 
             if (pos.magnitude < aerobrakedRadius) return true;
             if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(UT)) > 0) return false;

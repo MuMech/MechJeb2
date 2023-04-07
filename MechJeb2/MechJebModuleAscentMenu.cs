@@ -467,7 +467,7 @@ namespace MuMech
                 targetAngularRate *= -1; //retrograde target
 
             Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
-            Vector3d currentTargetDirection = target.SwappedRelativePositionAtUT(Planetarium.GetUniversalTime());
+            Vector3d currentTargetDirection = target.WorldBCIPositionAtUT(Planetarium.GetUniversalTime());
             currentTargetDirection = Vector3d.Exclude(launchBody.angularVelocity, currentTargetDirection);
 
             double currentPhaseAngle = Math.Abs(Vector3d.Angle(currentLaunchpadDirection, currentTargetDirection));

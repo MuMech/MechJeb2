@@ -34,8 +34,8 @@ namespace MuMech
                     status = Localizer.Format("#MechJeb_LandingGuidance_Status4");//"Warping to start of braking burn."
 
                     //warp to deceleration start
-                    Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
-                    decelerationStartAttitude += mainBody.getRFrmVel(orbit.SwappedAbsolutePositionAtUT(decelerationStartTime));
+                    Vector3d decelerationStartAttitude = -orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
+                    decelerationStartAttitude += mainBody.getRFrmVel(orbit.WorldPositionAtUT(decelerationStartTime));
                     decelerationStartAttitude = decelerationStartAttitude.normalized;
                     core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, core.landing);
                     bool warpReady = core.attitude.attitudeAngleFromTarget() < 5;

@@ -84,7 +84,7 @@ namespace MuMech
 
                     //adjust burn time so as to come to rest at the desired distance from the target:
                     double approachDistance = orbit.Separation(core.target.TargetOrbit, UT);
-                    double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+                    double approachSpeed = (orbit.WorldOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.WorldOrbitalVelocityAtUT(UT)).magnitude;
                     if (approachDistance < desiredDistance)
                     {
                         UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
@@ -120,8 +120,8 @@ namespace MuMech
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
 
                 //adjust burn time so as to come to rest at the desired distance from the target:
-                double approachDistance = (orbit.SwappedAbsolutePositionAtUT(UT) - core.target.TargetOrbit.SwappedAbsolutePositionAtUT(UT)).magnitude;
-                double approachSpeed = (orbit.SwappedOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.SwappedOrbitalVelocityAtUT(UT)).magnitude;
+                double approachDistance = (orbit.WorldPositionAtUT(UT) - core.target.TargetOrbit.WorldPositionAtUT(UT)).magnitude;
+                double approachSpeed = (orbit.WorldOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.WorldOrbitalVelocityAtUT(UT)).magnitude;
                 if (approachDistance < desiredDistance)
                 {
                     UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;

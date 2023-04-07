@@ -97,8 +97,8 @@ namespace MuMech
                     if (vesselState.drag < 0.01)
                     {
                         double decelerationStartTime = (core.landing.Prediction.trajectory.Any() ? core.landing.Prediction.trajectory.First().UT : vesselState.time);
-                        Vector3d decelerationStartAttitude = -orbit.SwappedOrbitalVelocityAtUT(decelerationStartTime);
-                        decelerationStartAttitude += mainBody.getRFrmVel(orbit.SwappedAbsolutePositionAtUT(decelerationStartTime));
+                        Vector3d decelerationStartAttitude = -orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
+                        decelerationStartAttitude += mainBody.getRFrmVel(orbit.WorldPositionAtUT(decelerationStartTime));
                         decelerationStartAttitude = decelerationStartAttitude.normalized;
                         core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, core.landing);
                     }

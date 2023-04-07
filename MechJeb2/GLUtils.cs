@@ -228,7 +228,7 @@ namespace MuMech
                 //elliptical orbits:
                 for (int trueAnomaly = 0; trueAnomaly < 360; trueAnomaly += 1)
                 {
-                    _points.Add(o.SwappedAbsolutePositionAtUT(o.TimeOfTrueAnomaly(Deg2Rad(trueAnomaly), 0)));
+                    _points.Add(o.WorldPositionAtUT(o.TimeOfTrueAnomaly(Deg2Rad(trueAnomaly), 0)));
                 }
 
                 _points.Add(_points[0]); //close the loop
@@ -238,7 +238,7 @@ namespace MuMech
                 //hyperbolic orbits:
                 for (int meanAnomaly = -1000; meanAnomaly <= 1000; meanAnomaly += 5)
                 {
-                    _points.Add(o.SwappedAbsolutePositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * UtilMath.Deg2Rad, 0)));
+                    _points.Add(o.WorldPositionAtUT(o.UTAtMeanAnomaly(meanAnomaly * UtilMath.Deg2Rad, 0)));
                 }
             }
 

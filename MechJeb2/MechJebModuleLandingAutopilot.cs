@@ -239,9 +239,9 @@ namespace MuMech
 
             Vector3d orbitLandingPosition;
             if (orbit.PeR < endRadius)
-                orbitLandingPosition = orbit.SwappedRelativePositionAtUT(orbit.NextTimeOfRadius(vesselState.time, endRadius));
+                orbitLandingPosition = orbit.WorldBCIPositionAtUT(orbit.NextTimeOfRadius(vesselState.time, endRadius));
             else
-                orbitLandingPosition = orbit.SwappedRelativePositionAtUT(orbit.NextPeriapsisTime(vesselState.time));
+                orbitLandingPosition = orbit.WorldBCIPositionAtUT(orbit.NextPeriapsisTime(vesselState.time));
 
             // convertOrbitToActual is a rotation that rotates orbitLandingPosition on actualLandingPosition
             Quaternion convertOrbitToActual = Quaternion.FromToRotation(orbitLandingPosition, actualLandingPosition);
@@ -260,7 +260,7 @@ namespace MuMech
                 double perturbedLandingTime;
                 if (perturbedOrbit.PeR < endRadius) perturbedLandingTime = perturbedOrbit.NextTimeOfRadius(vesselState.time, endRadius);
                 else perturbedLandingTime = perturbedOrbit.NextPeriapsisTime(vesselState.time);
-                Vector3d perturbedLandingPosition = perturbedOrbit.SwappedRelativePositionAtUT(perturbedLandingTime); //find where it hits the planet
+                Vector3d perturbedLandingPosition = perturbedOrbit.WorldBCIPositionAtUT(perturbedLandingTime); //find where it hits the planet
                 Vector3d landingDelta = perturbedLandingPosition - orbitLandingPosition; //find the difference between that and the original orbit's intersection point
                 landingDelta = convertOrbitToActual * landingDelta; //rotate that difference vector so that we can now think of it as starting at the actual landing position
                 landingDelta = Vector3d.Exclude(actualLandingPosition, landingDelta); //project the difference vector onto the plane tangent to the actual landing position
@@ -534,7 +534,7 @@ namespace MuMech
         {
             if (mainBody.atmosphere) return false;
 
-            double periapsisSpeed = orbit.SwappedOrbitalVelocityAtUT(orbit.NextPeriapsisTime(vesselState.time)).magnitude;
+            double periapsisSpeed = orbit.WorldOrbitalVelocityAtUT(orbit.NextPeriapsisTime(vesselState.time)).magnitude;
             double stoppingDistance = Math.Pow(periapsisSpeed, 2) / (2 * vesselState.limitedMaxThrustAccel);
 
             return orbit.PeA < 2 * stoppingDistance + mainBody.Radius / 4;

@@ -5,45 +5,47 @@ namespace MuMech
 {
     public static class OrbitExtensions
     {
-        //
-        // These "Swapped" functions translate preexisting Orbit class functions into world
-        // space. For some reason, Orbit class functions seem to use a coordinate system
-        // in which the Y and Z coordinates are swapped.
-        //
-        public static Vector3d SwappedOrbitalVelocityAtUT(this Orbit o, double UT)
+        /// <summary>
+        /// Get the orbital velocity at a given time in left handed world coordinates.  This value will rotate
+        /// due to the inverse rotation tick-to-tick.
+        /// </summary>
+        /// <param name="o">Orbit</param>
+        /// <param name="UT">Universal Time</param>
+        /// <returns>World Velocity</returns>
+        public static Vector3d WorldOrbitalVelocityAtUT(this Orbit o, double UT)
         {
             return o.getOrbitalVelocityAtUT(UT).xzy;
         }
 
-        //position relative to the primary
-        public static Vector3d SwappedRelativePositionAtUT(this Orbit o, double UT)
+        /// <summary>
+        /// Get the body centered inertial position at a given time in left handed world coordinates.  This value
+        /// will rotate due to the inverse rotation tick-to-tick.
+        /// </summary>
+        /// <param name="o">Orbit</param>
+        /// <param name="UT">Universal Time</param>
+        /// <returns>BCI World Position</returns>
+        public static Vector3d WorldBCIPositionAtUT(this Orbit o, double UT)
         {
             return o.getRelativePositionAtUT(UT).xzy;
         }
 
-        //position in world space
-        public static Vector3d SwappedAbsolutePositionAtUT(this Orbit o, double UT)
+        /// <summary>
+        /// Get the world space position at a given time in left handed world coordinates.  This value
+        /// will rotate due to the inverse rotation tick-to-tick.
+        /// </summary>
+        /// <param name="o">Orbit</param>
+        /// <param name="UT">Universal Time</param>
+        /// <returns>World Position</returns>
+        public static Vector3d WorldPositionAtUT(this Orbit o, double UT)
         {
-            return o.referenceBody.position + o.SwappedRelativePositionAtUT(UT);
+            return o.referenceBody.position + o.WorldBCIPositionAtUT(UT);
         }
 
         //normalized vector perpendicular to the orbital plane
         //convention: as you look down along the orbit normal, the satellite revolves counterclockwise
-        public static Vector3d SwappedOrbitNormal(this Orbit o)
+        public static Vector3d OrbitNormal(this Orbit o)
         {
             return -o.GetOrbitNormal().xzy.normalized;
-        }
-
-        //normalized vector along the orbital velocity
-        public static Vector3d Prograde(this Orbit o, double UT)
-        {
-            return o.SwappedOrbitalVelocityAtUT(UT).normalized;
-        }
-
-        //normalized vector pointing radially outward from the planet
-        public static Vector3d Up(this Orbit o, double UT)
-        {
-            return o.SwappedRelativePositionAtUT(UT).normalized;
         }
 
         //normalized vector pointing radially outward and perpendicular to prograde
@@ -55,7 +57,7 @@ namespace MuMech
         //another name for the orbit normal; this form makes it look like the other directions
         public static Vector3d NormalPlus(this Orbit o, double UT)
         {
-            return o.SwappedOrbitNormal();
+            return o.OrbitNormal();
         }
 
         //normalized vector parallel to the planet's surface, and pointing in the same general direction as the orbital velocity
@@ -68,19 +70,19 @@ namespace MuMech
         //horizontal component of the velocity vector
         public static Vector3d HorizontalVelocity(this Orbit o, double UT)
         {
-            return Vector3d.Exclude(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT));
+            return Vector3d.Exclude(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT));
         }
 
         //vertical component of the velocity vector
         public static Vector3d VerticalVelocity(this Orbit o, double UT)
         {
-            return Vector3d.Dot(o.Up(UT), o.SwappedOrbitalVelocityAtUT(UT)) * o.Up(UT);
+            return Vector3d.Dot(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT)) * o.Up(UT);
         }
 
         //normalized vector parallel to the planet's surface and pointing in the northward direction
         public static Vector3d North(this Orbit o, double UT)
         {
-            return Vector3d.Exclude(o.Up(UT), o.referenceBody.transform.up * (float)o.referenceBody.Radius - o.SwappedRelativePositionAtUT(UT))
+            return Vector3d.Exclude(o.Up(UT), o.referenceBody.transform.up * (float)o.referenceBody.Radius - o.WorldBCIPositionAtUT(UT))
                 .normalized;
         }
 
@@ -93,13 +95,13 @@ namespace MuMech
         //distance from the center of the planet
         public static double Radius(this Orbit o, double UT)
         {
-            return o.SwappedRelativePositionAtUT(UT).magnitude;
+            return o.WorldBCIPositionAtUT(UT).magnitude;
         }
 
         //returns a new Orbit object that represents the result of applying a given dV to o at UT
         public static Orbit PerturbedOrbit(this Orbit o, double UT, Vector3d dV)
         {
-            return MuUtils.OrbitFromStateVectors(o.SwappedAbsolutePositionAtUT(UT), o.SwappedOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
+            return MuUtils.OrbitFromStateVectors(o.WorldPositionAtUT(UT), o.WorldOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
         }
 
         // returns a new orbit that is identical to the current one (although the epoch will change)
@@ -166,7 +168,7 @@ namespace MuMech
         //distance between two orbiting objects at a given time
         public static double Separation(this Orbit a, Orbit b, double UT)
         {
-            return (a.SwappedAbsolutePositionAtUT(UT) - b.SwappedAbsolutePositionAtUT(UT)).magnitude;
+            return (a.WorldPositionAtUT(UT) - b.WorldPositionAtUT(UT)).magnitude;
         }
 
         //Time during a's next orbit at which object a comes nearest to object b.
@@ -270,7 +272,7 @@ namespace MuMech
         //The returned value is always between 0 and 2 * PI.
         public static double AscendingNodeTrueAnomaly(this Orbit a, Orbit b)
         {
-            var vectorToAN = Vector3d.Cross(a.SwappedOrbitNormal(), b.SwappedOrbitNormal());
+            var vectorToAN = Vector3d.Cross(a.OrbitNormal(), b.OrbitNormal());
             return a.TrueAnomalyFromVector(vectorToAN);
         }
 
@@ -287,7 +289,7 @@ namespace MuMech
         //The returned value is always between 0 and 2 * PI.
         public static double AscendingNodeEquatorialTrueAnomaly(this Orbit o)
         {
-            var vectorToAN = Vector3d.Cross(o.referenceBody.transform.up, o.SwappedOrbitNormal());
+            var vectorToAN = Vector3d.Cross(o.referenceBody.transform.up, o.OrbitNormal());
             return o.TrueAnomalyFromVector(vectorToAN);
         }
 
@@ -341,27 +343,27 @@ namespace MuMech
 
         //Returns the vector from the primary to the orbiting body at periapsis
         //Better than using Orbit.eccVec because that is zero for circular orbits
-        public static Vector3d SwappedRelativePositionAtPeriapsis(this Orbit o)
+        public static Vector3d WorldBCIPositionAtPeriapsis(this Orbit o)
         {
             Vector3d vectorToAN = Quaternion.AngleAxis(-(float)o.LAN, Planetarium.up) * Planetarium.right;
-            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.SwappedOrbitNormal()) * vectorToAN;
+            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.OrbitNormal()) * vectorToAN;
             return o.PeR * vectorToPe;
         }
 
         //Returns the vector from the primary to the orbiting body at apoapsis
         //Better than using -Orbit.eccVec because that is zero for circular orbits
-        public static Vector3d SwappedRelativePositionAtApoapsis(this Orbit o)
+        public static Vector3d WorldBCIPositionAtApoapsis(this Orbit o)
         {
             Vector3d vectorToAN = Quaternion.AngleAxis(-(float)o.LAN, Planetarium.up) * Planetarium.right;
-            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.SwappedOrbitNormal()) * vectorToAN;
+            Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.OrbitNormal()) * vectorToAN;
             Vector3d ret = -o.ApR * vectorToPe;
             if (double.IsNaN(ret.x))
             {
-                Debug.LogError("OrbitExtensions.SwappedRelativePositionAtApoapsis got a NaN result!");
+                Debug.LogError("OrbitExtensions.WorldBCIPositionAtApoapsis got a NaN result!");
                 Debug.LogError("o.LAN = " + o.LAN);
                 Debug.LogError("o.inclination = " + o.inclination);
                 Debug.LogError("o.argumentOfPeriapsis = " + o.argumentOfPeriapsis);
-                Debug.LogError("o.SwappedOrbitNormal() = " + o.SwappedOrbitNormal());
+                Debug.LogError("o.OrbitNormal() = " + o.OrbitNormal());
             }
 
             return ret;
@@ -373,9 +375,9 @@ namespace MuMech
         //The returned value is always between 0 and 360.
         public static double TrueAnomalyFromVector(this Orbit o, Vector3d vec)
         {
-            Vector3d oNormal = o.SwappedOrbitNormal();
+            Vector3d oNormal = o.OrbitNormal();
             var projected = Vector3d.Exclude(oNormal, vec);
-            Vector3d vectorToPe = o.SwappedRelativePositionAtPeriapsis();
+            Vector3d vectorToPe = o.WorldBCIPositionAtPeriapsis();
             double angleFromPe = Vector3d.Angle(vectorToPe, projected);
 
             //If the vector points to the infalling part of the orbit then we need to do 360 minus the
@@ -502,7 +504,7 @@ namespace MuMech
         //not really periodic at all.
         public static double SynodicPeriod(this Orbit a, Orbit b)
         {
-            int sign = Vector3d.Dot(a.SwappedOrbitNormal(), b.SwappedOrbitNormal()) > 0 ? 1 : -1; //detect relative retrograde motion
+            int sign = Vector3d.Dot(a.OrbitNormal(), b.OrbitNormal()) > 0 ? 1 : -1; //detect relative retrograde motion
             return Math.Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period));                      //period after which the phase angle repeats
         }
 
@@ -510,9 +512,9 @@ namespace MuMech
         //This only makes sense if a.referenceBody == b.referenceBody.
         public static double PhaseAngle(this Orbit a, Orbit b, double UT)
         {
-            Vector3d normalA = a.SwappedOrbitNormal();
-            Vector3d posA = a.SwappedRelativePositionAtUT(UT);
-            var projectedB = Vector3d.Exclude(normalA, b.SwappedRelativePositionAtUT(UT));
+            Vector3d normalA = a.OrbitNormal();
+            Vector3d posA = a.WorldBCIPositionAtUT(UT);
+            var projectedB = Vector3d.Exclude(normalA, b.WorldBCIPositionAtUT(UT));
             double angle = Vector3d.Angle(posA, projectedB);
             if (Vector3d.Dot(Vector3d.Cross(normalA, posA), projectedB) < 0)
             {
@@ -527,7 +529,7 @@ namespace MuMech
         //opposite directions have a relative inclination of 180 degrees.
         public static double RelativeInclination(this Orbit a, Orbit b)
         {
-            return Math.Abs(Vector3d.Angle(a.SwappedOrbitNormal(), b.SwappedOrbitNormal()));
+            return Math.Abs(Vector3d.Angle(a.OrbitNormal(), b.OrbitNormal()));
         }
 
         //Finds the next time at which the orbiting object will achieve a given radius

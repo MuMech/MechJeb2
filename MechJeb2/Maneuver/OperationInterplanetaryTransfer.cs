@@ -59,7 +59,7 @@ namespace MuMech
             }
             else
             {
-                double relativeInclination = Vector3d.Angle(o.SwappedOrbitNormal(), o.referenceBody.orbit.SwappedOrbitNormal());
+                double relativeInclination = Vector3d.Angle(o.OrbitNormal(), o.referenceBody.orbit.OrbitNormal());
                 if (relativeInclination > 10)
                 {
                     ErrorMessage = Localizer.Format("#MechJeb_transfer_errormsg2", o.referenceBody.displayName.LocalizeRemoveGender(),
