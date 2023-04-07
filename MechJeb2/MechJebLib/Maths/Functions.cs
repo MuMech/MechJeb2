@@ -194,6 +194,23 @@ namespace MechJebLib.Maths
             return TrueAnomalyFromRadius(sma, ecc, radius);
         }
 
+        /// <summary>
+        ///     True Anomaly from the Eccentric Anomaly.
+        /// </summary>
+        /// <param name="mu">Gravitational parameter</param>
+        /// <param name="ecc">Eccentricity</param>
+        /// <param name="eanom">Eccentric Anomaly</param>
+        /// <returns>True Anomaly</returns>
+        public static double TrueAnomalyFromEccentricAnomaly(double ecc, double eanom)
+        {
+            if (ecc < 1)
+                return Clamp2Pi(2.0 * Math.Atan(Math.Sqrt((1 + ecc) / (1 - ecc)) * Math.Tan(eanom / 2.0)));
+            if (ecc > 1)
+                return Clamp2Pi(2.0 * Math.Atan(Math.Sqrt((ecc + 1) / (ecc - 1)) * Math.Tanh(eanom / 2.0)));
+
+            return Clamp2Pi(2 * Math.Atan(eanom));
+        }
+
         public static V3 RhatFromLatLng(double lat, double lng)
         {
             return new V3(Math.Cos(lat) * Math.Cos(lng), Math.Cos(lat) * Math.Sin(lng), Math.Sin(lat));
@@ -472,7 +489,7 @@ namespace MechJebLib.Maths
 
         public static double MeanMotion(double mu, double sma)
         {
-            return Math.Sqrt(mu / (sma * sma * sma));
+            return Math.Sqrt(Math.Abs(mu / (sma * sma * sma)));
         }
 
         // FIXME: hyperbolic and circular orbits
@@ -583,6 +600,24 @@ namespace MechJebLib.Maths
             return RealDeltaVToChangeApoapsisPrograde.Run(mu, r, v, newApR);
         }
 
+        /// <summary>
+        ///     Kepler's Equation for time since periapsis from the Eccentric Anomaly.
+        /// </summary>
+        /// <param name="mu">Gravitational parameter</param>
+        /// <param name="sma">Semimajor axis</param>
+        /// <param name="ecc">Eccentricity</param>
+        /// <param name="eanom">Eccentric Anomaly</param>
+        /// <returns>Time of flight</returns>
+        public static double TimeSincePeriapsisFromEccentricAnomaly(double mu, double sma, double ecc, double eanom)
+        {
+            double k = Math.Sqrt(Math.Abs(mu / (sma * sma * sma)));
+            if (ecc < 1)
+                return (eanom - ecc * Math.Sin(eanom)) / k;
+            if (ecc > 1)
+                return (ecc * Math.Sinh(eanom) - eanom) / k;
+            return Math.Sqrt(2) * (eanom + eanom * eanom * eanom / 3.0) / k;
+        }
+
         public static (double sma, double ecc, double inc, double lan, double argp, double tanom) KeplerianFromStateVectors(double mu,
             V3 r, V3 v)
         {
@@ -622,7 +657,6 @@ namespace MechJebLib.Maths
 
             double ecc = Math.Sqrt(h * h + xk * xk);
             double inc = 2.0 * Math.Atan(Math.Sqrt(p * p + q * q));
-            double deleteme = Math.Atan2(p, q);
             double lan = Clamp2Pi(inc > EPS ? Math.Atan2(p, q) : 0.0);
             double argp = Clamp2Pi(ecc > EPS ? Math.Atan2(h, xk) - lan : 0.0);
             double tanom = Clamp2Pi(xlambdot - lan - argp);
