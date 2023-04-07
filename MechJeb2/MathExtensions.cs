@@ -147,9 +147,14 @@ namespace MuMech
             return rand_normal;
         }
 
-        public static V3 WorldToV3(this Vector3d vector)
+        public static V3 WorldToV3Rotated(this Vector3d vector)
         {
             return (QuaternionD.Inverse(Planetarium.fetch.rotation) * vector).xzy.ToV3();
+        }
+
+        public static V3 WorldToV3(this Vector3d vector)
+        {
+            return vector.xzy.ToV3();
         }
 
         public static V3 ToV3(this Vector3d vector)
@@ -163,6 +168,11 @@ namespace MuMech
         }
 
         public static Vector3d V3ToWorld(this V3 vector)
+        {
+            return vector.ToVector3d().xzy;
+        }
+
+        public static Vector3d V3ToWorldRotated(this V3 vector)
         {
             return Planetarium.fetch.rotation * vector.ToVector3d().xzy;
         }

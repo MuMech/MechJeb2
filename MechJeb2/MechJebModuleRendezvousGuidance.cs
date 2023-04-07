@@ -121,7 +121,7 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button5")))//"Get closer"
             {
                 double UT = vesselState.time;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, 100, 10);
+                (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, 100, 10);
                 vessel.RemoveAllManeuverNodes();
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }

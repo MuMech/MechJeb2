@@ -35,7 +35,7 @@ namespace MuMech
 
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, ut, target.TargetOrbit, ut + InterceptInterval);
+            (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, ut, target.TargetOrbit, ut + InterceptInterval);
 
             return new List<ManeuverParameters>
             {
