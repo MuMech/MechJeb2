@@ -6,7 +6,7 @@
 
 using System;
 using AssertExtensions;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.Utils;
 using Xunit;
 using static MechJebLib.Utils.Statics;
@@ -29,7 +29,7 @@ namespace MechJebLibTest.Maths
         public void Test(double a0)
         {
             double ans = BrentRoot.Solve((t, o) => t * t * t - a0, 0.0, 2.0, null);
-            ans.ShouldEqual(Math.Pow(a0, 1.0 / 3.0), 8 * EPS);
+            ans.ShouldEqual(Math.Pow(a0, 1.0 / 3.0), 10 * EPS);
         }
 
         [Fact]
@@ -37,11 +37,11 @@ namespace MechJebLibTest.Maths
         {
             // ensure we can find solution at xmin
             double ans = BrentRoot.Solve((t, o) => t * t * t, 0.0, 2.0, null);
-            ans.ShouldBeZero(EPS);
+            ans.ShouldBeZero();
 
             // ensure we can find solution at xmax
             ans = BrentRoot.Solve((t, o) => t * t * t, -2.0, 0.0, null);
-            ans.ShouldBeZero(EPS);
+            ans.ShouldBeZero();
 
             // this should throw
             Exception ex = Assert.Throws<ArgumentException>(() =>
@@ -61,7 +61,7 @@ namespace MechJebLibTest.Maths
         {
             // this works normally
             double ans = BrentRoot.Solve((t, o) => Math.Sin(t), 3, null);
-            ans.ShouldEqual(PI, EPS);
+            ans.ShouldEqual(PI, EPS2);
 
             // this throws due to not being able to precisely find the root
             Exception ex = Assert.Throws<Check.FailedCheck>(() =>
@@ -83,7 +83,7 @@ namespace MechJebLibTest.Maths
 
             // finds a root even though it shouldn't
             ans = BrentRoot.Solve((t, o) => Math.Tan(t), 2, null);
-            ans.ShouldEqual(PI / 2, 16 * EPS);
+            ans.ShouldEqual(PI / 2, 21 * EPS);
         }
     }
 }

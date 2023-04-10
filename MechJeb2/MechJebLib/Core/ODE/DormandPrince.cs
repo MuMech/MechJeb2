@@ -7,7 +7,8 @@
 
 using System;
 using System.Collections.Generic;
-using MechJebLib.Maths;
+using MechJebLib.Core;
+using MechJebLib.Core.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -50,7 +51,7 @@ namespace MuMech.MechJebLib.Maths.ODE
         /// <summary>
         ///     Throw exception when MaxIter is hit (PVG optimizer works better with this set to false).
         /// </summary>
-        public bool ThrowOnMaxIter { get; set; }
+        public bool ThrowOnMaxIter { get; set; } = true;
 
         #region IntegrationConstants
 
@@ -122,19 +123,19 @@ namespace MuMech.MechJebLib.Maths.ODE
             _evtDelegate = EvtWrapper;
         }
 
-        private int                              _n;
+        private int                    _n;
         private Action<DD, double, DD> _dydt = null!;
-        private DD                          _k1   = null!;
-        private DD                          _k2   = null!;
-        private DD                          _k3   = null!;
-        private DD                          _k4   = null!;
-        private DD                          _k5   = null!;
-        private DD                          _k6   = null!;
-        private DD                          _k7   = null!;
-        private DD                          _a    = null!;
-        private DD                          _err  = null!;
-        private DD                          _y    = null!;
-        private DD                          _newy = null!;
+        private DD                     _k1   = null!;
+        private DD                     _k2   = null!;
+        private DD                     _k3   = null!;
+        private DD                     _k4   = null!;
+        private DD                     _k5   = null!;
+        private DD                     _k6   = null!;
+        private DD                     _k7   = null!;
+        private DD                     _a    = null!;
+        private DD                     _err  = null!;
+        private DD                     _y    = null!;
+        private DD                     _newy = null!;
 
         public override void Initialize(Action<DD, double, DD> dydt, int n)
         {
@@ -304,7 +305,8 @@ namespace MuMech.MechJebLib.Maths.ODE
 
                         h = BrentRoot.Solve(_evtDelegate, 0, h, _brentargs, sign: Math.Sign(e2));
 
-                        Functions.CubicHermiteInterpolant(_brentargs.X1, _brentargs.Y1, _brentargs.Yp1, _brentargs.X2, _brentargs.Y2, _brentargs.Yp2,
+                        Interpolants.CubicHermiteInterpolant(_brentargs.X1, _brentargs.Y1, _brentargs.Yp1, _brentargs.X2, _brentargs.Y2,
+                            _brentargs.Yp2,
                             _brentargs.X1 + h, _brentargs.N, _newy);
 
                         _newy.CopyTo(_a.ToArray(), 0);
@@ -327,7 +329,7 @@ namespace MuMech.MechJebLib.Maths.ODE
 
                 // add this point to the interpolant
                 if (interpolant != null &&
-                    (Math.Abs(interpLeft) <= EPS2 && NearlyEqual(t - lastInterpolant, interpDt, 1e-2) || terminate))
+                    ((Math.Abs(interpLeft) <= EPS2 && NearlyEqual(t - lastInterpolant, interpDt, 1e-2)) || terminate))
                 {
                     interpolant.Add(t, _y, _k7);
                     interpLeft      = interpDt;
@@ -377,7 +379,7 @@ namespace MuMech.MechJebLib.Maths.ODE
         {
             var args = (BrentArgs)o!;
 
-            Functions.CubicHermiteInterpolant(args.X1, args.Y1!, args.Yp1!, args.X2, args.Y2!, args.Yp2!,
+            Interpolants.CubicHermiteInterpolant(args.X1, args.Y1!, args.Yp1!, args.X2, args.Y2!, args.Yp2!,
                 args.X1 + newh, args.N, _newy);
             return args.Evt!.Evaluate(_newy, args.X1 + newh);
         }

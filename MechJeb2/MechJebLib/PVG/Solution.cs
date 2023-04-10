@@ -9,7 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -38,9 +38,9 @@ namespace MechJebLib.PVG
 
         public Solution(Problem problem)
         {
-            _scale               = problem.Scale;
-            _mu                  = problem.Mu;
-            _rbody               = problem.Rbody;
+            _scale = problem.Scale;
+            _mu    = problem.Mu;
+            _rbody = problem.Rbody;
             // t0 is a public API that can be updated while we're landed waiting for takeoff.
             T0 = problem.T0;
         }
@@ -147,7 +147,7 @@ namespace MechJebLib.PVG
             using var x = ArrayWrapper.Rent(xraw);
             return x.DV * _velocityScale;
         }
-        
+
         public double DV(double t, int n)
         {
             double tbar = (t - T0) / _timeScale;
@@ -165,7 +165,7 @@ namespace MechJebLib.PVG
             double tbar = (t - T0) / _timeScale;
             return (tmax - tbar) * _timeScale;
         }
-        
+
         public double Tgo(double t, int n)
         {
             double tbar = (t - T0) / _timeScale;
@@ -197,7 +197,7 @@ namespace MechJebLib.PVG
 
             for (int i = IndexForTbar(tbar); i < Phases.Count; i++)
             {
-                if ( Phases[i].Coast ) return true;
+                if (Phases[i].Coast) return true;
             }
 
             return false;
@@ -276,7 +276,7 @@ namespace MechJebLib.PVG
                 u = x.PV.normalized;
             }
 
-            (double pitch, double heading) = Functions.ECIToPitchHeading(x.R, u);
+            (double pitch, double heading) = Maths.ECIToPitchHeading(x.R, u);
             return (pitch, heading);
         }
 
@@ -292,23 +292,22 @@ namespace MechJebLib.PVG
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
 
-
         // FIXME: this is really specific display logic
         public string TerminalString()
         {
             (V3 rf, V3 vf) = TerminalStateVectors();
 
-            (double sma, double ecc, double inc, double lan, double argp, double tanom) = Functions.KeplerianFromStateVectors(_mu,
+            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) = Maths.KeplerianFromStateVectors(_mu,
                 rf, vf);
 
-            double peR = Functions.PeriapsisFromKeplerian(sma, ecc);
-            double apR = Functions.ApoapsisFromKeplerian(sma, ecc);
+            double peR = Maths.PeriapsisFromKeplerian(sma, ecc);
+            double apR = Maths.ApoapsisFromKeplerian(sma, ecc);
             double peA = peR - _rbody;
             double apA = apR <= 0 ? apR : apR - _rbody;
-            double fpa = Functions.FlightPathAngle(rf, vf);
+            double fpa = Maths.FlightPathAngle(rf, vf);
             double rT = rf.magnitude - _rbody;
             double vT = vf.magnitude;
-            
+
             var sb = new StringBuilder();
             sb.AppendLine($"Orbit: {peA.ToSI(0)}m x {apA.ToSI(0)}m");
             sb.AppendLine($"rT: {rT.ToSI(0)}m vT: {vT.ToSI(0)}m/s FPA: {Rad2Deg(fpa):F1}°");
@@ -324,7 +323,7 @@ namespace MechJebLib.PVG
                     return i;
             return _tmax.Count - 1;
         }
-        
+
         public int IndexForKSPStage(int kspStage)
         {
             for (int i = 0; i < Phases.Count; i++)
@@ -340,7 +339,7 @@ namespace MechJebLib.PVG
         {
             return _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
         }
-        
+
         private DD Interpolate(int segment, double tbar)
         {
             return _interpolants[segment].Evaluate(tbar);
@@ -355,7 +354,7 @@ namespace MechJebLib.PVG
             (V3 rT, V3 vT) = StateVectors(end);
 
             var hT = V3.Cross(rT, vT);
-            
+
             Log($"hf: {hf.magnitude} hT: {hT.magnitude} check: {hf.magnitude > hT.magnitude}");
 
             return hf.magnitude > hT.magnitude;

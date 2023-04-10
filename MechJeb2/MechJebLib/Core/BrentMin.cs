@@ -10,8 +10,9 @@ using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
-namespace MechJebLib.Maths
+namespace MechJebLib.Core
 {
+    [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     public static class BrentMin
     {
         // Brent's 1-dimensional derivative-free local minimization method
@@ -27,7 +28,6 @@ namespace MechJebLib.Maths
         // fx - output of solved value
         // y - output of the function at the solved value
         //
-        [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public static (double x, double fx) Solve(Func<double, object?, double> f, double xmin, double xmax, object? o = null, double rtol = 1e-9,
             int maxiter = 50)
         {

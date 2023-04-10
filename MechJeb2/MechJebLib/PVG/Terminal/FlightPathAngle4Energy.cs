@@ -5,7 +5,7 @@
  */
 
 using System;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -34,7 +34,7 @@ namespace MechJebLib.PVG.Terminal
             _rT   = rT;
             _incT = Math.Abs(ClampPi(incT));
             _lanT = lanT;
-            _iHT  = Functions.HunitFromKeplerian(_incT, _lanT);
+            _iHT  = Maths.HunitFromKeplerian(_incT, _lanT);
         }
 
         public IPVGTerminal Rescale(Scale scale)

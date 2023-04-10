@@ -5,17 +5,16 @@
  */
 
 using System;
-using System.Collections.Generic;
-using MechJebLib.Maths.FunctionImpls;
+using MechJebLib.Core.FunctionImpls;
+using MechJebLib.Core.Functions;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
-namespace MechJebLib.Maths
+namespace MechJebLib.Core
 {
-    public static class Functions
+    public static class Maths
     {
         public static double VmagFromVisViva(double mu, double sma, double r)
         {
@@ -142,13 +141,7 @@ namespace MechJebLib.Maths
         {
             var h = V3.Cross(r, v);
             double sma = SmaFromStateVectors(mu, r, v);
-            return (sma, Math.Sqrt(1 - V3.Dot(h, h) / (sma * mu)));
-        }
-
-        public static double EccFromStateVectors(double mu, V3 r, V3 v)
-        {
-            (double _, double ecc) = SmaEccFromStateVectors(mu, r, v);
-            return ecc;
+            return (sma, Math.Sqrt(Math.Max(1 - h.sqrMagnitude / (sma * mu), 0)));
         }
 
         public static double SmaFromStateVectors(double mu, V3 r, V3 v)
@@ -170,21 +163,22 @@ namespace MechJebLib.Maths
             return TAU * Math.Sqrt(sma * sma * sma / mu);
         }
 
-        public static double RadiusFromTrueAnomaly(double sma, double ecc, double tanom)
+        public static double RadiusFromTrueAnomaly(double sma, double ecc, double nu)
         {
-            return sma * (1 - ecc * ecc) / (1 + ecc * Math.Cos(tanom));
+            return sma * (1 - ecc * ecc) / (1 + ecc * Math.Cos(nu));
         }
 
-        public static double RadiusFromTrueAnomaly(double mu, V3 r, V3 v, double tanom)
+        public static double RadiusFromTrueAnomaly(double mu, V3 r, V3 v, double nu)
         {
             (double sma, double ecc) = SmaEccFromStateVectors(mu, r, v);
 
-            return RadiusFromTrueAnomaly(sma, ecc, tanom);
+            return RadiusFromTrueAnomaly(sma, ecc, nu);
         }
 
         public static double TrueAnomalyFromRadius(double sma, double ecc, double radius)
         {
-            return SafeAcos((sma * (1 - ecc * ecc) / radius - 1) / ecc);
+            double l = sma * (1 - ecc * ecc);
+            return SafeAcos((l / radius - 1) / ecc);
         }
 
         public static double TrueAnomalyFromRadius(double mu, V3 r, V3 v, double radius)
@@ -336,11 +330,6 @@ namespace MechJebLib.Maths
             return vf;
         }
 
-        public static V3 DeltaVToChangeInclination(V3 r, V3 v, double newInc)
-        {
-            return VelocityForInclination(r, v, newInc) - v;
-        }
-
         public static V3 VelocityForFPA(V3 r, V3 v, double newFPA)
         {
             V3 v0 = ECIToENU(r, v);
@@ -351,32 +340,9 @@ namespace MechJebLib.Maths
             return vf;
         }
 
-        public static V3 DeltaVToChangeFPA(V3 r, V3 v, double newFPA)
-        {
-            return VelocityForFPA(r, v, newFPA) - v;
-        }
-
         public static V3 CircularVelocityFromHvec(double mu, V3 r, V3 h)
         {
             return V3.Cross(h.normalized, r).normalized * CircularVelocity(mu, r.magnitude);
-        }
-
-        public static (double eanom, double manom) AnomaliesFromTrue(double tanom, double ecc)
-        {
-            double eanom = EccentricAnomalyFromTrue(tanom, ecc);
-            double manom = Clamp2Pi(eanom - ecc * Math.Sin(eanom));
-            return (eanom, manom);
-        }
-
-        public static double EccentricAnomalyFromTrue(double tanom, double ecc)
-        {
-            return Clamp2Pi(Math.Atan2(Math.Sqrt(1 - ecc * ecc) * Math.Sin(tanom), ecc + Math.Cos(tanom)));
-        }
-
-        public static double MeanAnomalyFromTrue(double tanom, double ecc)
-        {
-            (double _, double manom) = AnomaliesFromTrue(tanom, ecc);
-            return manom;
         }
 
         // r is the ECI reference point, v is the vector in ECI to be converted to pitch, heading angles
@@ -445,48 +411,6 @@ namespace MechJebLib.Maths
             return Clamp2Pi(lanDiff) / TAU * Math.Abs(rotationPeriod);
         }
 
-        public static void CubicHermiteInterpolant(double x1, IList<double> y1, IList<double> yp1, double x2, IList<double> y2,
-            IList<double> yp2, double x, int n, IList<double> y)
-        {
-            double t = (x - x1) / (x2 - x1);
-            double t2 = t * t;
-            double t3 = t2 * t;
-            double h00 = 2 * t3 - 3 * t2 + 1;
-            double h10 = t3 - 2 * t2 + t;
-            double h01 = -2 * t3 + 3 * t2;
-            double h11 = t3 - t2;
-            for (int i = 0; i < n; i++)
-                y[i] = h00 * y1[i] + h10 * (x2 - x1) * yp1[i] + h01 * y2[i] + h11 * (x2 - x1) * yp2[i];
-        }
-
-        public static double CubicHermiteInterpolant(double x1, double y1, double yp1, double x2, double y2,
-            double yp2, double x)
-        {
-            double t = (x - x1) / (x2 - x1);
-            double t2 = t * t;
-            double t3 = t2 * t;
-            double h00 = 2 * t3 - 3 * t2 + 1;
-            double h10 = t3 - 2 * t2 + t;
-            double h01 = -2 * t3 + 3 * t2;
-            double h11 = t3 - t2;
-
-            return h00 * y1 + h10 * (x2 - x1) * yp1 + h01 * y2 + h11 * (x2 - x1) * yp2;
-        }
-
-        public static V3 CubicHermiteInterpolant(double x1, V3 y1, V3 yp1, double x2, V3 y2,
-            V3 yp2, double x)
-        {
-            double t = (x - x1) / (x2 - x1);
-            double t2 = t * t;
-            double t3 = t2 * t;
-            double h00 = 2 * t3 - 3 * t2 + 1;
-            double h10 = t3 - 2 * t2 + t;
-            double h01 = -2 * t3 + 3 * t2;
-            double h11 = t3 - t2;
-
-            return h00 * y1 + h10 * (x2 - x1) * yp1 + h01 * y2 + h11 * (x2 - x1) * yp2;
-        }
-
         public static double MeanMotion(double mu, double sma)
         {
             return Math.Sqrt(Math.Abs(mu / (sma * sma * sma)));
@@ -495,109 +419,52 @@ namespace MechJebLib.Maths
         // FIXME: hyperbolic and circular orbits
         public static double TimeToNextApoapsis(double mu, V3 r, V3 v)
         {
-            (double sma, double ecc, double _, double _, double _, double tanom) = KeplerianFromStateVectors(mu, r, v);
+            (double sma, double ecc, _, _, _, double nu, _) = KeplerianFromStateVectors(mu, r, v);
 
             double meanMotion = MeanMotion(mu, sma);
 
-            double manom = MeanAnomalyFromTrue(tanom, ecc);
+            double manom = Angles.NuToM(nu, ecc);
 
             return Clamp2Pi(PI - manom) / meanMotion;
         }
 
-        // FIXME: hyperbolic and circular orbits
         public static double TimeToNextPeriapsis(double mu, V3 r, V3 v)
         {
-            (double sma, double ecc, double _, double _, double _, double tanom) = KeplerianFromStateVectors(mu, r, v);
+            (double sma, double ecc, _, _, _, double nu, _) = KeplerianFromStateVectors(mu, r, v);
 
             double meanMotion = MeanMotion(mu, sma);
 
-            double manom = MeanAnomalyFromTrue(tanom, ecc);
+            double manom = Angles.NuToM(nu, ecc);
 
             return Clamp2Pi(-manom) / meanMotion;
         }
 
-        public static double TimeToNextTrueAnomaly(double mu, V3 r, V3 v, double tanom2)
+        public static double TimeToNextTrueAnomaly(double mu, V3 r, V3 v, double nu2)
         {
-            (double sma, double ecc, double _, double _, double _, double tanom1) = KeplerianFromStateVectors(mu, r, v);
+            (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
 
             double meanMotion = MeanMotion(mu, sma);
 
-            double manom1 = MeanAnomalyFromTrue(tanom1, ecc);
-            double manom2 = MeanAnomalyFromTrue(tanom2, ecc);
+            double manom1 = Angles.NuToM(nu1, ecc);
+            double manom2 = Angles.NuToM(nu2, ecc);
 
-            return Clamp2Pi(manom2 - manom1) / meanMotion;
+            if (ecc < 1)
+                return Clamp2Pi(manom2 - manom1) / meanMotion;
+
+            return (manom2 - manom1) / meanMotion;
         }
 
         public static double TimeToNextRadius(double mu, V3 r, V3 v, double radius)
         {
-            double tanom1 = TrueAnomalyFromRadius(mu, r, v, radius);
-            double tanom2 = TAU - tanom1;
-            double time1 = TimeToNextTrueAnomaly(mu, r, v, tanom1);
-            double time2 = TimeToNextTrueAnomaly(mu, r, v, tanom2);
-            return time1 < time2 ? time1 : time2;
-        }
-
-        public static V3 DeltaVToCircularizeAfterTime(double mu, V3 r, V3 v, double dt)
-        {
-            Check.Finite(mu);
-            Check.Finite(r);
-            Check.Finite(v);
-            Check.Finite(dt);
-            Check.Positive(mu);
-            Check.NonZero(r);
-
-            Shepperd.Solve(mu, dt, r, v, out V3 r1, out V3 v1);
-            var h = V3.Cross(r1, v1);
-            return CircularVelocityFromHvec(mu, r, h) - v1;
-        }
-
-        public static V3 DeltaVToCircularizeAtPeriapsis(double mu, V3 r, V3 v)
-        {
-            Check.Finite(mu);
-            Check.Finite(r);
-            Check.Finite(v);
-            Check.Positive(mu);
-            Check.NonZero(r);
-
-            double dt = TimeToNextPeriapsis(mu, r, v);
-
-            Check.Finite(dt);
-
-            return DeltaVToCircularizeAfterTime(mu, r, v, dt);
-        }
-
-        public static V3 DeltaVToCircularizeAtApoapsis(double mu, V3 r, V3 v)
-        {
-            Check.Finite(mu);
-            Check.Finite(r);
-            Check.Finite(v);
-            Check.Positive(mu);
-            Check.NonZero(r);
-
-            double dt = TimeToNextApoapsis(mu, r, v);
-
-            Check.Finite(dt);
-
-            return DeltaVToCircularizeAfterTime(mu, r, v, dt);
-        }
-
-        /// <summary>
-        ///     Returns the vector delta V required to be applied in the prograde (or retrograde) direction
-        ///     to change the orbit Apoapsis to the desired value.
-        /// </summary>
-        /// <param name="mu">Gravitational parameter</param>
-        /// <param name="r">Current radius</param>
-        /// <param name="v">Current velocity</param>
-        /// <param name="newApR">Desired apoapsis</param>
-        /// <returns>Delta-V</returns>
-        public static V3 DeltaVToChangeApoapsisPrograde(double mu, V3 r, V3 v, double newApR)
-        {
-            Check.Finite(v);
-            Check.PositiveFinite(mu);
-            Check.NonZeroFinite(r);
-            Check.PositiveFinite(newApR);
-
-            return RealDeltaVToChangeApoapsisPrograde.Run(mu, r, v, newApR);
+            double nu1 = TrueAnomalyFromRadius(mu, r, v, radius);
+            double nu2 = -nu1;
+            double time1 = TimeToNextTrueAnomaly(mu, r, v, nu1);
+            double time2 = TimeToNextTrueAnomaly(mu, r, v, nu2);
+            if (time1 >= 0 && time2 >= 0)
+                return Math.Min(time1, time2);
+            if (time1 < 0 && time2 < 0)
+                return Math.Max(time1, time2);
+            return time1 >= 0 ? time1 : time2;
         }
 
         /// <summary>
@@ -618,7 +485,31 @@ namespace MechJebLib.Maths
             return Math.Sqrt(2) * (eanom + eanom * eanom * eanom / 3.0) / k;
         }
 
-        public static (double sma, double ecc, double inc, double lan, double argp, double tanom) KeplerianFromStateVectors(double mu,
+        public static Q3 PerifocalToECIMatrix(double inc, double argp, double lan)
+        {
+            return Q3.AngleAxis(lan, V3.zaxis) * Q3.AngleAxis(inc, V3.xaxis) * Q3.AngleAxis(argp, V3.zaxis);
+        }
+
+        public static (V3 p, V3 q) PerifocalFromElements(double mu, double p, double ecc, double nu)
+        {
+            double cnu = Math.Cos(nu);
+            double snu = Math.Sin(nu);
+
+            var one = new V3(cnu, snu, 0);
+            var two = new V3(-snu, ecc + cnu, 0);
+
+            return (one * p / (1 + ecc * cnu), two * Math.Sqrt(mu / p));
+        }
+
+        public static (V3 r, V3 v) StateVectorsFromKeplerian(double mu, double l, double ecc, double inc, double lan, double argp, double nu)
+        {
+            (V3 p, V3 q) = PerifocalFromElements(mu, l, ecc, nu);
+            Q3 rot = PerifocalToECIMatrix(inc, argp, lan);
+
+            return (rot * p, rot * q);
+        }
+
+        public static (double sma, double ecc, double inc, double lan, double argp, double nu, double l) KeplerianFromStateVectors(double mu,
             V3 r, V3 v)
         {
             double rmag = r.magnitude;
@@ -630,6 +521,7 @@ namespace MechJebLib.Maths
             V3 eccvec = V3.Cross(vtmp, hv) - rhat;
 
             double sma = 1.0 / (2.0 / rmag - vmag * vmag / mu);
+            double l = hv.sqrMagnitude / mu;
 
             double d = 1.0 + hhat[2];
             double p = d == 0 ? 0 : hhat[0] / d;
@@ -659,21 +551,21 @@ namespace MechJebLib.Maths
             double inc = 2.0 * Math.Atan(Math.Sqrt(p * p + q * q));
             double lan = Clamp2Pi(inc > EPS ? Math.Atan2(p, q) : 0.0);
             double argp = Clamp2Pi(ecc > EPS ? Math.Atan2(h, xk) - lan : 0.0);
-            double tanom = Clamp2Pi(xlambdot - lan - argp);
+            double nu = Clamp2Pi(xlambdot - lan - argp);
 
-            return (sma, ecc, inc, lan, argp, tanom);
+            return (sma, ecc, inc, lan, argp, nu, l);
         }
 
         // Danby's method
-        public static (double eanom, double tanom) AnomaliesFromMean(double manom, double ecc)
+        public static (double eanom, double nu) AnomaliesFromMean(double manom, double ecc)
         {
             double xma = manom - TAU * Math.Truncate(manom / TAU);
-            double eanom, tanom;
+            double eanom, nu;
 
             if (ecc == 0)
             {
-                eanom = tanom = xma;
-                return (eanom, tanom);
+                eanom = nu = xma;
+                return (eanom, nu);
             }
 
             if (ecc < 1) // elliptic initial guess
@@ -734,15 +626,14 @@ namespace MechJebLib.Maths
                 cta = ecc - Math.Cosh(eanom);
             }
 
-            tanom = Math.Atan2(sta, cta);
+            nu = Math.Atan2(sta, cta);
 
-            return (eanom, tanom);
+            return (eanom, nu);
         }
 
-        public static void SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf,
-            out V3 vNeg, out V3 vPos, out V3 r, out double dt, bool debug = false)
+        public static ( V3 vNeg,  V3 vPos,  V3 r,  double dt) SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false)
         {
-            RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, out vNeg, out vPos, out r, out dt, debug);
+            return RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, debug);
         }
     }
 }

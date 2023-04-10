@@ -1,5 +1,7 @@
 using System;
+using AssertExtensions;
 using MechJebLib.Primitives;
+using static MechJebLib.Utils.Statics;
 using Xunit;
 
 namespace MechJebLibTest.Structs
@@ -106,6 +108,34 @@ namespace MechJebLibTest.Structs
             Assert.Equal(0, V3.zero.magnitude);
             Assert.Equal(0, V3.zero.sqrMagnitude);
             Assert.Equal(V3.zero, V3.zero.normalized);
+        }
+
+        [Fact]
+        private void RandomSphericalConversions()
+        {
+            const int NTRIALS = 5000;
+
+            var random = new Random();
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var v = new V3(40 * random.NextDouble() - 20, 40 * random.NextDouble() - 20, 40 * random.NextDouble() - 20);
+
+                v.cart2sph.sph2cart.ShouldEqual(v,1e-14);
+            }
+        }
+
+        [Fact]
+        private void CartesianToSpherical()
+        {
+            new V3(1, 1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1/Math.Sqrt(3)), PI / 4));
+            new V3(1, 1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1/Math.Sqrt(3)), PI / 4));
+            new V3(1, -1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1/Math.Sqrt(3)),  7*PI / 4));
+            new V3(1, -1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1/Math.Sqrt(3)), 7*PI / 4));
+            new V3(-1, 1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1/Math.Sqrt(3)), 3*PI / 4));
+            new V3(-1, 1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1/Math.Sqrt(3)), 3*PI / 4));
+            new V3(-1, -1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1/Math.Sqrt(3)),  5*PI / 4));
+            new V3(-1, -1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1/Math.Sqrt(3)), 5*PI / 4));
         }
     }
 }

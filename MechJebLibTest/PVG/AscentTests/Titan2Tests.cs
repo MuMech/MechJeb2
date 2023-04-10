@@ -6,7 +6,7 @@
 
 using System;
 using AssertExtensions;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using Xunit;
@@ -33,7 +33,7 @@ namespace MechJebLibTest.PVG
                 .AddStageUsingThrust(153180, 2194400, 296, 156, 4)
                 .AddStageUsingThrust(31980, 443700, 315, 180, 3, true)
                 .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0,true, false)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, true, false)
                 .Build();
 
             ascent.Run();
@@ -44,12 +44,12 @@ namespace MechJebLibTest.PVG
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
-                Functions.KeplerianFromStateVectors(mu, rf, vf);
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(0).ShouldEqual(r0, EPS);
-            solution.V(0).ShouldEqual(v0, EPS);
-            solution.M(0).ShouldEqual(153180, EPS);
+            solution.R(0).ShouldEqual(r0);
+            solution.V(0).ShouldEqual(v0);
+            solution.M(0).ShouldEqual(153180);
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.tmax).ShouldBeZero(1e-7);
@@ -83,7 +83,7 @@ namespace MechJebLibTest.PVG
                 .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4)
                 .AddStageUsingThrust(32758.6353093992, 456100.006103516, 315.000112652779, 178.63040653022, 3, true)
                 .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0,false, false)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
                 .Build();
 
             ascent.Run();
@@ -94,12 +94,12 @@ namespace MechJebLibTest.PVG
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
-                Functions.KeplerianFromStateVectors(mu, rf, vf);
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(0).ShouldEqual(r0, EPS);
-            solution.V(0).ShouldEqual(v0, EPS);
-            solution.M(0).ShouldEqual(157355.487476332, EPS);
+            solution.R(0).ShouldEqual(r0);
+            solution.V(0).ShouldEqual(v0);
+            solution.M(0).ShouldEqual(157355.487476332);
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.tmax).ShouldBeZero(1e-7);
@@ -133,7 +133,7 @@ namespace MechJebLibTest.PVG
                 .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4)
                 .AddStageUsingThrust(32758.6353093992, 456100.006103516, 315.000112652779, 178.63040653022, 3, true)
                 .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0,false, false)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
                 .Build();
 
             ascent.Run();
@@ -144,12 +144,12 @@ namespace MechJebLibTest.PVG
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
-                Functions.KeplerianFromStateVectors(mu, rf, vf);
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(0).ShouldEqual(r0, EPS);
-            solution.V(0).ShouldEqual(v0, EPS);
-            solution.M(0).ShouldEqual(157355.487476332, EPS);
+            solution.R(0).ShouldEqual(r0);
+            solution.V(0).ShouldEqual(v0);
+            solution.M(0).ShouldEqual(157355.487476332);
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.tmax).ShouldBeZero(1e-7);

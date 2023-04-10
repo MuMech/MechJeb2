@@ -6,7 +6,7 @@
 
 #nullable enable
 
-using MechJebLib.Maths;
+using MechJebLib.Core.Functions;
 using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
@@ -76,7 +76,7 @@ namespace MechJebLib.Primitives
         protected override DD Interpolant(double x1, DD y1, DD yp1, double x2, DD y2, DD yp2, double x)
         {
             var ret = DD.Rent(N);
-            Functions.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x, N, ret);
+            Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x, N, ret);
             return ret;
         }
 
@@ -98,6 +98,7 @@ namespace MechJebLib.Primitives
             {
                 DisposeKeyframe(_list.Values[i]);
             }
+
             _list.Clear();
         }
     }

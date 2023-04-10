@@ -9,7 +9,7 @@
 using System;
 using MechJebLib.Utils;
 
-namespace MechJebLib.Maths
+namespace MechJebLib.Core
 {
     /// <summary>
     ///     Brent's rootfinding method.

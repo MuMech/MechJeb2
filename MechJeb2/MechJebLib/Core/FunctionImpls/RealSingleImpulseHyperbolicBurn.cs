@@ -11,7 +11,7 @@ using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
-namespace MechJebLib.Maths.FunctionImpls
+namespace MechJebLib.Core.FunctionImpls
 {
     // The purpose of this module is to collect pure-math functions with minimal coupling to MechJeb and/or KSP.  Chunks of the OrbitalManeuverCalculator
     // class should probably be moved here, where that class should be more tightly coupled to the maneuver node planner.
@@ -32,17 +32,16 @@ namespace MechJebLib.Maths.FunctionImpls
         /// <param name="vPos">Velocity on the hyperboliic ejection orbit after the burn.</param>
         /// <param name="r">Position of the burn.</param>
         /// <param name="dt">Coasting time on the parking orbit from the reference to the burn.</param>
-        public static void Run(double mu, V3 r0, V3 v0, V3 vInf,
-            out V3 vNeg, out V3 vPos, out V3 r, out double dt, bool debug = false)
+        public static ( V3 vNeg, V3 vPos, V3 r, double dt) Run(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false)
         {
             double Func(double testrot, object? ign)
             {
-                Run2(mu, r0, v0, vInf, out V3 vneg, out V3 vpos, out _, out _, (float)testrot, debug);
+                (V3 vneg, V3 vpos, _, _) = Run2(mu, r0, v0, vInf, (float)testrot, debug);
                 return (vpos - vneg).magnitude;
             }
 
             (double rot, _) = BrentMin.Solve(Func, -30, 30, null, 1e-6);
-            Run2(mu, r0, v0, vInf, out vNeg, out vPos, out r, out dt, (float)rot, debug);
+            return Run2(mu, r0, v0, vInf, (float)rot, debug);
         }
 
         /// <summary>
@@ -61,8 +60,7 @@ namespace MechJebLib.Maths.FunctionImpls
         /// <param name="dt">Coasting time on the parking orbit from the reference to the burn.</param>
         /// <param name="rot">Rotation of hf_hat around v_inf_hat. or r1_hat around h0_hat (degrees, right handed).</param>
         /// <param name="debug">Flag to debug log the parameters this function is called with</param>
-        public static void Run2(double mu, V3 r0, V3 v0, V3 vInf,
-            out V3 vNeg, out V3 vPos, out V3 r, out double dt, float rot, bool debug = false)
+        public static ( V3 vNeg, V3 vPos, V3 r, double dt) Run2(double mu, V3 r0, V3 v0, V3 vInf, float rot, bool debug = false)
         {
             if (debug)
             {
@@ -147,7 +145,7 @@ namespace MechJebLib.Maths.FunctionImpls
             double r1 = p0 / (1 + ecc0 * Math.Cos(nu10));
 
             // position of the burn
-            r = r1 * r1Hat;
+            V3 r = r1 * r1Hat;
 
             if (debug)
             {
@@ -190,8 +188,8 @@ namespace MechJebLib.Maths.FunctionImpls
             vpfHat /= vpfHat.magnitude;
 
             // compute the velocity on the hyperbola and the parking orbit
-            vPos = Math.Sqrt(mu / pf) * (-Math.Sin(nu1F) * rpfHat + (ef + Math.Cos(nu1F)) * vpfHat);
-            vNeg = Math.Sqrt(mu / p0) * (-Math.Sin(nu10) * rp0Hat + (ecc0 + Math.Cos(nu10)) * vp0Hat);
+            V3 vPos = Math.Sqrt(mu / pf) * (-Math.Sin(nu1F) * rpfHat + (ef + Math.Cos(nu1F)) * vpfHat);
+            V3 vNeg = Math.Sqrt(mu / p0) * (-Math.Sin(nu10) * rp0Hat + (ecc0 + Math.Cos(nu10)) * vp0Hat);
 
             // compute nu of the reference position on the parking orbit
             V3 r0Hat = r0 / r0.magnitude;
@@ -217,7 +215,7 @@ namespace MechJebLib.Maths.FunctionImpls
             }
 
             // coast time on the parking orbit
-            dt = (m1 - m0) / n;
+            double dt = (m1 - m0) / n;
             if (dt < 0)
             {
                 dt += 2 * Math.PI / n;
@@ -227,6 +225,8 @@ namespace MechJebLib.Maths.FunctionImpls
             {
                 Log("[MechJeb] singleImpulseHyperbolicBurn vNeg = " + vNeg + " vPos = " + vPos + " r = " + r + " dt = " + dt);
             }
+
+            return (vNeg, vPos, r, dt);
         }
     }
 }

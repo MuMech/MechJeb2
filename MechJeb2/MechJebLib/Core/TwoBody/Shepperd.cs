@@ -1,19 +1,11 @@
-/*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
- */
-
-#nullable enable
-
-using System;
+﻿using System;
 using MechJebLib.Primitives;
 
-namespace MechJebLib.Maths
+namespace MechJebLib.Core.TwoBody
 {
     public static class Shepperd
     {
-        public static void Solve(double mu, double tau, V3 ri, V3 vi, out V3 rf, out V3 vf)
+        public static (V3 rf, V3 vf) Solve(double mu, double tau, V3 ri, V3 vi)
         {
             double tolerance = 1.0e-12;
             double u = 0;
@@ -55,7 +47,7 @@ namespace MechJebLib.Maths
             {
                 q = beta * u * u;
 
-                q = q / (1.0 + q);
+                q /= 1.0 + q;
 
                 n   = 0;
                 r   = 1;
@@ -69,14 +61,14 @@ namespace MechJebLib.Maths
 
                 while (gcf != gold)
                 {
-                    k    = -k;
-                    l    = l + 2;
-                    d    = d + 4 * l;
-                    n    = n + (1 + k) * l;
-                    r    = d / (d - n * r * q);
-                    s    = (r - 1) * s;
-                    gold = gcf;
-                    gcf  = gold + s;
+                    k    =  -k;
+                    l    += 2;
+                    d    += 4 * l;
+                    n    += (1 + k) * l;
+                    r    =  d / (d - n * r * q);
+                    s    =  (r - 1) * s;
+                    gold =  gcf;
+                    gcf  =  gold + s;
                 }
 
                 h0 = 1 - 2 * q;
@@ -88,7 +80,7 @@ namespace MechJebLib.Maths
 
                 if (orbits != 0)
                 {
-                    u3 = u3 + 2 * Math.PI * orbits / (beta * Math.Sqrt(beta));
+                    u3 += 2 * Math.PI * orbits / (beta * Math.Sqrt(beta));
                 }
 
                 r1    = r0 * u0 + n0 * u1 + mu * u2;
@@ -113,8 +105,8 @@ namespace MechJebLib.Maths
 
                 if (ustep > 0)
                 {
-                    umin = u;
-                    u    = u + ustep;
+                    umin =  u;
+                    u    += ustep;
 
                     if (u > umax)
                     {
@@ -123,8 +115,8 @@ namespace MechJebLib.Maths
                 }
                 else
                 {
-                    umax = u;
-                    u    = u + ustep;
+                    umax =  u;
+                    u    += ustep;
 
                     if (u < umin)
                     {
@@ -143,14 +135,16 @@ namespace MechJebLib.Maths
             double g = r0 * u1 + n0 * u2;
             double ff = -mu * u1 / (r0 * r1);
 
-            rf = new V3();
-            vf = new V3();
+            var rf = new V3();
+            var vf = new V3();
 
             for (int i = 0; i < 3; i++)
             {
                 rf[i] = f * ri[i] + g * vi[i];
                 vf[i] = ff * ri[i] + gg * vi[i];
             }
+
+            return (rf, vf);
         }
 
         // The STM is a 6x6 matrix which we return decomposed into 4 3x3 matricies
@@ -160,7 +154,8 @@ namespace MechJebLib.Maths
         //
         // NOTE: is it not at all clear to me why this version differs in several ways from the prior version.
         //
-        public static void Solve2(double mu, double tau, V3 ri, V3 vi, out V3 rf, out V3 vf, out M3 stm00, out M3 stm01, out M3 stm10, out M3 stm11)
+        public static ( V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) Solve2(double mu, double tau, V3 ri, V3 vi)
+
         {
             double tol = 1.0e-12;
             double n0 = V3.Dot(ri, vi);
@@ -169,7 +164,10 @@ namespace MechJebLib.Maths
             double u = 0;
             double umax = double.MaxValue;
             double umin = double.MinValue;
-            stm00 = stm01 = stm10 = stm11 = M3.zero;
+            M3 stm00 = M3.zero;
+            M3 stm01 = M3.zero;
+            M3 stm10 = M3.zero;
+            M3 stm11 = M3.zero;
 
             if (beta != 0.0)
             {
@@ -207,8 +205,8 @@ namespace MechJebLib.Maths
             while (true)
             {
                 niter++;
-                q = beta * u * u;
-                q = q / (1.0 + q);
+                q =  beta * u * u;
+                q /= 1.0 + q;
 
                 u0 = 1.0 - 2 * q;
                 u1 = 2.0 * u * (1 - q);
@@ -227,13 +225,13 @@ namespace MechJebLib.Maths
                 {
                     gsav = gcf;
 
-                    k   = -k;
-                    l   = l + 2;
-                    d   = d + 4 * l;
-                    n   = n + (1 + k) * l;
-                    a   = d / (d - n * a * q);
-                    b   = (a - 1) * b;
-                    gcf = gcf + b;
+                    k   =  -k;
+                    l   += 2;
+                    d   += 4 * l;
+                    n   += (1 + k) * l;
+                    a   =  d / (d - n * a * q);
+                    b   =  (a - 1) * b;
+                    gcf += b;
 
                     if (Math.Abs(gcf - gsav) < tol)
                         break;
@@ -263,16 +261,16 @@ namespace MechJebLib.Maths
                 du = terr / dtdu;
                 if (du < 0.0)
                 {
-                    umax = u;
-                    u    = u + du;
+                    umax =  u;
+                    u    += du;
 
                     if (u < umin)
                         u = 0.5 * (umin + umax);
                 }
                 else
                 {
-                    umin = u;
-                    u    = u + du;
+                    umin =  u;
+                    u    += du;
 
                     if (u > umax)
                         u = 0.5 * (umin + umax);
@@ -300,8 +298,8 @@ namespace MechJebLib.Maths
             double gg = 1.0 + ggm;
 
             // compute final state vector
-            rf = f * ri + g * vi;
-            vf = ff * ri + gg * vi;
+            V3 rf = f * ri + g * vi;
+            V3 vf = ff * ri + gg * vi;
 
             uu = g * u2 + 3 * mu * uu;
             double a0 = mu / (r0 * r0 * r0);
@@ -321,10 +319,10 @@ namespace MechJebLib.Maths
             m[2, 1] = fm * u2;
             m[2, 2] = g * u2;
 
-            m[0, 0] = m[0, 0] - a0 * a1 * uu;
-            m[0, 2] = m[0, 2] - a1 * uu;
-            m[2, 0] = m[2, 0] - a0 * uu;
-            m[2, 2] = m[2, 2] - uu;
+            m[0, 0] -= a0 * a1 * uu;
+            m[0, 2] -= a1 * uu;
+            m[2, 0] -= a0 * uu;
+            m[2, 2] -= uu;
 
             for (int i = 0; i < 3; i++)
             {
@@ -351,32 +349,13 @@ namespace MechJebLib.Maths
 
             for (int i = 0; i < 3; i++)
             {
-                stm00[i, i] = stm00[i, i] + f;
-                stm01[i, i] = stm01[i, i] + g;
-                stm10[i, i] = stm10[i, i] + ff;
-                stm11[i, i] = stm11[i, i] + gg;
+                stm00[i, i] += f;
+                stm01[i, i] += g;
+                stm10[i, i] += ff;
+                stm11[i, i] += gg;
             }
-        }
 
-        /*
-        public static void Test()
-        {
-            V3 ri = new V3(1.31623307896919, 1.14467537127903, 2.29655036444701);
-            V3 vi = new V3(2.38559970341119, 0.560617813663136, 1.46929318736469);
-            V3 rf = V3.zero;
-            V3 vf = V3.zero;
-            M3 stm00 = M3.zero;
-            M3 stm01 = M3.zero;
-            M3 stm10 = M3.zero;
-            M3 stm11 = M3.zero;
-            Solve2(0.950222048838355, 0.0344460805029088, ri, vi, ref rf, ref vf, ref stm00, ref stm01, ref stm10, ref stm11);
-            Debug.Log("rf = " + rf);
-            Debug.Log("vf = " + vf);
-            Debug.Log("stm00 = " + stm00);
-            Debug.Log("stm01 = " + stm01);
-            Debug.Log("stm10 = " + stm10);
-            Debug.Log("stm11 = " + stm11);
+            return (rf, vf, stm00, stm01, stm10, stm11);
         }
-        */
     }
 }

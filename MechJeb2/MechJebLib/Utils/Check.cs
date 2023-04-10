@@ -18,7 +18,8 @@ namespace MechJebLib.Utils
     {
         private static void DoCheck(bool b)
         {
-            if (!b) throw new FailedCheck("check failed");
+            if (!b)
+                throw new FailedCheck("check failed");
         }
 
         public class FailedCheck : Exception
@@ -80,7 +81,7 @@ namespace MechJebLib.Utils
         {
             DoCheck(d > 0);
         }
-        
+
         [Conditional("DEBUG")]
         public static void PositiveFinite(double d)
         {
@@ -93,7 +94,7 @@ namespace MechJebLib.Utils
         {
             DoCheck(d < 0);
         }
-        
+
         [Conditional("DEBUG")]
         public static void NegativeFinite(double d)
         {
@@ -112,7 +113,7 @@ namespace MechJebLib.Utils
         {
             DoCheck(d != 0);
         }
-        
+
         [Conditional("DEBUG")]
         public static void NonZeroFinite(double d)
         {
@@ -141,7 +142,7 @@ namespace MechJebLib.Utils
         {
             DoCheck(v != V3.zero);
         }
-        
+
         [Conditional("DEBUG")]
         public static void NonZeroFinite(V3 v)
         {

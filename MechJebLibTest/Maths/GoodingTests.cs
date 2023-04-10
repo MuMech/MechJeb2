@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
@@ -39,9 +39,9 @@ namespace MechJebLibTest.Maths
                 {
                     double eanom = Deg2Rad(i);
 
-                    double time = Functions.TimeSincePeriapsisFromEccentricAnomaly(mu, sma, ecc, eanom);
+                    double time = MechJebLib.Core.Maths.TimeSincePeriapsisFromEccentricAnomaly(mu, sma, ecc, eanom);
 
-                    double tanom = Functions.TrueAnomalyFromEccentricAnomaly(ecc, eanom);
+                    double tanom = MechJebLib.Core.Maths.TrueAnomalyFromEccentricAnomaly(ecc, eanom);
 
                     double smp = ecc == 1 ? 2 * sma : sma * (1.0 - ecc * ecc);
 
@@ -82,7 +82,7 @@ namespace MechJebLibTest.Maths
 
                 _testOutputHelper.WriteLine($"{diffmax}");
 
-                diffmax.ShouldEqual(0, 1e-10);
+                diffmax.ShouldBeZero(1e-10);
             }
         }
     }

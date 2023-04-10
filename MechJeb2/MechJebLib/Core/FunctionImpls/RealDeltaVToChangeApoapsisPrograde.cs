@@ -10,7 +10,7 @@ using System;
 using System.Threading;
 using MechJebLib.Primitives;
 
-namespace MechJebLib.Maths.FunctionImpls
+namespace MechJebLib.Core.FunctionImpls
 {
     public static class RealDeltaVToChangeApoapsisPrograde
     {
@@ -38,7 +38,7 @@ namespace MechJebLib.Maths.FunctionImpls
         private static double F(double x, object? o)
         {
             var args = (Args)o!;
-            return Functions.ApoapsisFromStateVectors(args.Mu, args.R, args.V.normalized * x) - args.NewApR;
+            return Maths.ApoapsisFromStateVectors(args.Mu, args.R, args.V.normalized * x) - args.NewApR;
         }
 
         public static V3 Run(double mu, V3 r, V3 v, double newApR)
@@ -50,7 +50,7 @@ namespace MechJebLib.Maths.FunctionImpls
 
             args.Set(mu, r, v, newApR);
 
-            double vfm = BrentRoot.Solve(_f, 0, Functions.EscapeVelocity(mu, r.magnitude) - 1, args);
+            double vfm = BrentRoot.Solve(_f, 0, Maths.EscapeVelocity(mu, r.magnitude) - 1, args);
 
             return vfm * v.normalized - v;
         }

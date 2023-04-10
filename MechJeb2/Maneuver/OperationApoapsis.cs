@@ -33,12 +33,6 @@ namespace MuMech
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-            if (o.referenceBody.Radius + NewApA < o.Radius(ut))
-            {
-                string burnAltitude = (o.Radius(ut) - o.referenceBody.Radius).ToSI() + "m";
-                throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",
-                    burnAltitude)); //new apoapsis cannot be lower than the altitude of the burn (<<1>>)
-            }
 
             return new List<ManeuverParameters>
             {

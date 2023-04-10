@@ -1,10 +1,10 @@
 ﻿using System;
 using AssertExtensions;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
-using static MechJebLib.Utils.Statics;
 using Xunit;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PVG
 {
@@ -27,7 +27,7 @@ namespace MechJebLibTest.PVG
 
             Ascent ascent = Ascent.Builder()
                 .Initial(r0, v0, u0, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, 0, 0,false, false)
+                .SetTarget(PeR, ApR, PeR, incT, 0, 0, false, false)
                 .AddStageUsingFinalMass(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726, 3)
                 .AddStageUsingFinalMass(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409, 1, true)
                 .AddOptimizedCoast(678.290157913434, 0, 450, 1)
@@ -40,21 +40,21 @@ namespace MechJebLibTest.PVG
 
             using Solution solution = pvg.GetSolution();
 
-            solution.Tgo(solution.T0,0).ShouldBePositive();
-            solution.Tgo(solution.T0,1).ShouldBePositive();
-            solution.Tgo(solution.T0,2).ShouldBePositive();
-            solution.Tgo(solution.T0,3).ShouldBePositive();
+            solution.Tgo(solution.T0, 0).ShouldBePositive();
+            solution.Tgo(solution.T0, 1).ShouldBePositive();
+            solution.Tgo(solution.T0, 2).ShouldBePositive();
+            solution.Tgo(solution.T0, 3).ShouldBePositive();
 
             pvg.Znorm.ShouldBeZero(1e-9);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof) =
-                Functions.KeplerianFromStateVectors(mu, rf, vf);
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(t0).ShouldEqual(r0, EPS);
-            solution.V(t0).ShouldEqual(v0, EPS);
-            solution.M(t0).ShouldEqual(49119.7842689869, EPS);
+            solution.R(t0).ShouldEqual(r0);
+            solution.V(t0).ShouldEqual(v0);
+            solution.M(t0).ShouldEqual(49119.7842689869);
             solution.Vgo(t0).ShouldEqual(9595.3503336684062, 1e-7);
             solution.Pv(t0).ShouldEqual(new V3(0.4907116486773232, -0.35249571092720933, 0.16642316543642413), 1e-7);
 
