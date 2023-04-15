@@ -1,4 +1,10 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 
 namespace MechJebLib.Core.Functions

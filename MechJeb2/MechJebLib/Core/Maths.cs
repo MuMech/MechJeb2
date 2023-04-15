@@ -423,7 +423,7 @@ namespace MechJebLib.Core
 
             double meanMotion = MeanMotion(mu, sma);
 
-            double manom = Angles.NuToM(nu, ecc);
+            double manom = Angles.MFromNu(nu, ecc);
 
             return Clamp2Pi(PI - manom) / meanMotion;
         }
@@ -434,7 +434,7 @@ namespace MechJebLib.Core
 
             double meanMotion = MeanMotion(mu, sma);
 
-            double manom = Angles.NuToM(nu, ecc);
+            double manom = Angles.MFromNu(nu, ecc);
 
             return Clamp2Pi(-manom) / meanMotion;
         }
@@ -445,8 +445,8 @@ namespace MechJebLib.Core
 
             double meanMotion = MeanMotion(mu, sma);
 
-            double manom1 = Angles.NuToM(nu1, ecc);
-            double manom2 = Angles.NuToM(nu2, ecc);
+            double manom1 = Angles.MFromNu(nu1, ecc);
+            double manom2 = Angles.MFromNu(nu2, ecc);
 
             if (ecc < 1)
                 return Clamp2Pi(manom2 - manom1) / meanMotion;
