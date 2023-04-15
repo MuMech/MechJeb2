@@ -8,7 +8,6 @@ using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using MechJebLib.Utils;
-using Steamworks;
 using static MechJebLib.Utils.Statics;
 
 // ReSharper disable InconsistentNaming

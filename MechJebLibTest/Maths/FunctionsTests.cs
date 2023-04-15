@@ -833,14 +833,31 @@ namespace MechJebLibTest.Maths
             var v0 = new V3(-666.230112925872, 539.234048888927, 0.000277598267012666);
             double peR = 6471000; //6.3781e6 + 60000;
 
+            var random = new Random();
+            r0 = new V3(6616710 * random.NextDouble() - 3308350, 6616710 * random.NextDouble() - 3308350, 6616710 * random.NextDouble() - 3308350);
+            v0 = new V3(2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000);
+
+            r0 = new V3(1105140.06213014, -8431008.05414815, -4729658.84487529);
+            v0 = new V3(-293.374690393787, -1173.3597686151, -411.755491683683);
+
+            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
+                MechJebLib.Core.Maths.KeplerianFromStateVectors(moonMu, r0, v0);
+
+            _testOutputHelper.WriteLine($"sma = {sma}, ecc = {ecc} r0 = {r0} v0 = {v0}");
+
             (V3 dv, double dt, double newPeR) =
-                Maneuvers.NextManeuverToReturnFromMoon(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0);
+                Maneuvers.NextManeuverToReturnFromMoon(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, dtmin: 0);
 
             (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
 
             double tt1 = MechJebLib.Core.Maths.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
 
             (V3 r2, V3 v2) = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
+
+            (V3 rtest, V3 vtest) = Shepperd.Solve(moonMu, tt1*0.1, r1, v1 + dv);
+
+            _testOutputHelper.WriteLine($"rtest = {rtest}, vtest = {vtest}");
+            _testOutputHelper.WriteLine($"dv = {dv}, dt = {dt}, peR = {newPeR}");
 
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
 

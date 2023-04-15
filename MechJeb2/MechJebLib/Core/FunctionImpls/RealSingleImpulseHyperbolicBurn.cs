@@ -13,9 +13,6 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Core.FunctionImpls
 {
-    // The purpose of this module is to collect pure-math functions with minimal coupling to MechJeb and/or KSP.  Chunks of the OrbitalManeuverCalculator
-    // class should probably be moved here, where that class should be more tightly coupled to the maneuver node planner.
-    //
     public static class RealSingleImpulseHyperbolicBurn
     {
         /// <summary>
@@ -84,6 +81,9 @@ namespace MechJebLib.Core.FunctionImpls
 
             // eccentricity of the parking orbit.
             double ecc0 = ecc.magnitude;
+
+            if (ecc0 >= 1)
+                throw new Exception("SingleImpulseHyperbolicBurn does not work with a hyperbolic initial orbit");
 
             // semilatus rectum of parking orbit
             double p0 = a0 * (1 - ecc0 * ecc0);

@@ -377,6 +377,20 @@ namespace MechJebLib.Utils
             return sb.ToString();
         }
 
+        public static double DoubleArrayMagnitude(IList<double> array)
+        {
+            int last = array.Count - 1;
+
+            double sumsq = 0;
+
+            for (int i = 0; i <= last; i++)
+            {
+                sumsq += array[i] * array[i];
+            }
+
+            return Math.Sqrt(sumsq);
+        }
+
         private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y" };
         private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y" };
 

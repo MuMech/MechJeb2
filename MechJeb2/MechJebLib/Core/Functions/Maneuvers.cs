@@ -5,6 +5,7 @@
  */
 
 using System;
+using JetBrains.Annotations;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
@@ -220,8 +221,9 @@ namespace MechJebLib.Core.Functions
             fi[13] = V3.Dot(rf.normalized, vf.normalized);
         }
 
+        [UsedImplicitly]
         public static (V3 V, double dt) ManeuverToReturnFromMoon(double centralMu, double moonMu, V3 moonR0, V3 moonV0, double moonSOI,
-            V3 r0, V3 v0, double peR, double inc)
+            V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity)
         {
             Log(
                 $"ManeuverToReturnFromMoon({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
@@ -234,6 +236,18 @@ namespace MechJebLib.Core.Functions
             const int NINEQUALITYCONSTRAINTS = 0;
 
             double[] x = new double[NVARIABLES];
+            double[] fi = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1];
+            double[] bndl = new double[NVARIABLES];
+            double[] bndu = new double[NVARIABLES];
+
+            for (int i = 0; i < NVARIABLES; i++)
+            {
+                bndl[i] = double.NegativeInfinity;
+                bndu[i] = double.PositiveInfinity;
+            }
+
+            bndl[3] = dtmin;
+            bndu[3] = dtmax;
 
             double scaleDistanceMoon = Math.Sqrt(r0.magnitude * moonSOI);
             double scaleVelocityMoon = Math.Sqrt(moonMu / scaleDistanceMoon);
@@ -247,23 +261,39 @@ namespace MechJebLib.Core.Functions
             double scaleVMoonToPlanet = scaleVelocityPlanet / scaleVelocityMoon;
             double scaleTMoonToPlanet = scaleTimePlanet / scaleTimeMoon;
 
-            // do the planet first which is analogous to heliocentric in a transfer
-            V3 v1 = DeltaVToChangeApsis(centralMu, moonR0, moonV0, peR);
+            (double _, double ecc) = Maths.SmaEccFromStateVectors(moonMu, r0, v0);
 
-            // then do the source moon SOI
-            (V3 vneg, V3 vpos, V3 rburn, double dt) = Maths.SingleImpulseHyperbolicBurn(moonMu, r0, v0, v1);
-            V3 dv = vpos - vneg;
-            double tt1 = Maths.TimeToNextRadius(moonMu, rburn, vpos, moonSOI);
+            double dt, tt1;
+            V3 rf, vf, dv, r2, v2;
+
+            if (ecc < 1)
+            {
+                // do the planet first which is analogous to heliocentric in a transfer
+                V3 v1 = DeltaVToChangeApsis(centralMu, moonR0, moonV0, peR);
+
+                // then do the source moon SOI
+                V3 vneg, vpos, rburn;
+                (vneg, vpos, rburn, dt) = Maths.SingleImpulseHyperbolicBurn(moonMu, r0, v0, v1);
+                dv                      = vpos - vneg;
+                tt1                     = Maths.TimeToNextRadius(moonMu, rburn, vpos, moonSOI);
+                (r2, v2)                = Shepperd.Solve(moonMu, tt1, rburn, vpos);
+            }
+            else
+            {
+                dt       = 0;
+                dv       = V3.zero;
+                tt1      = Maths.TimeToNextRadius(moonMu, r0, v0, moonSOI);
+                (r2, v2) = Shepperd.Solve(moonMu, tt1, r0, v0);
+            }
 
             // construct mostly feasible solution
-            (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, rburn, vpos);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, tt1 + dt, moonR0, moonV0);
             V3 r2Sph = r2.cart2sph;
             V3 v2Sph = v2.cart2sph;
             V3 r2Planet = r2 + moonR2;
             V3 v2Planet = v2 + moonV2;
             double tt2 = Maths.TimeToNextPeriapsis(centralMu, r2Planet, v2Planet);
-            (V3 rf, V3 vf) = Shepperd.Solve(centralMu, tt2, r2Planet, v2Planet);
+            (rf, vf) = Shepperd.Solve(centralMu, tt2, r2Planet, v2Planet);
 
             dv       /= scaleVelocityMoon;
             dt       /= scaleTimeMoon;
@@ -308,6 +338,7 @@ namespace MechJebLib.Core.Functions
             };
 
             alglib.minnlccreatef(NVARIABLES, x, DIFFSTEP, out alglib.minnlcstate state);
+            alglib.minnlcsetbc(state, bndl, bndu);
             alglib.minnlcsetstpmax(state, 1e-3);
             alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, EPSX, MAXITS);
@@ -318,10 +349,13 @@ namespace MechJebLib.Core.Functions
                 throw new Exception(
                     $"DeltaVToChangeApsis(): SQP solver terminated abnormally: {rep.terminationtype}"
                 );
+            ReturnFromMoonFunction(x, fi, args);
+            if (DoubleArrayMagnitude(fi) > 1e-4)
+                throw new Exception("DeltaVToChangeApsis() no feasible solution found");
 
             args.OptimizeBurn = true;
 
-            for (int i = 1; i < 7; i+=2)
+            for (int i = 1; i < 7; i += 2)
             {
                 args.PerFactor = 5 * Powi(10, i);
                 alglib.minnlcrestartfrom(state, x);
@@ -331,26 +365,33 @@ namespace MechJebLib.Core.Functions
                     throw new Exception(
                         $"DeltaVToChangeApsis(): SQP solver terminated abnormally: {rep.terminationtype}"
                     );
+                ReturnFromMoonFunction(x, fi, args);
+                fi[0] = 0; // zero out the objective
+                if (DoubleArrayMagnitude(fi) > 1e-4)
+                    throw new Exception("DeltaVToChangeApsis() feasible solution was lost");
             }
-
-            double[] fi = new double[15];
 
             ReturnFromMoonFunction(x, fi, args);
 
             return (new V3(x[0], x[1], x[2]) * scaleVelocityMoon, x[3] * scaleTimeMoon);
         }
 
-        public static (V3 dv, double dt, double newPeR) NextManeuverToReturnFromMoon(double centralMu, double moonMu, V3 moonR0, V3 moonV0, double moonSOI,
-            V3 r0, V3 v0, double peR, double inc)
+        public static (V3 dv, double dt, double newPeR) NextManeuverToReturnFromMoon(double centralMu, double moonMu, V3 moonR0, V3 moonV0,
+            double moonSOI, V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity)
         {
             double dt;
             V3 dv;
+            int i = 0;
+
+            (double _, double ecc) = Maths.SmaEccFromStateVectors(moonMu, r0, v0);
 
             while (true)
             {
-                (dv, dt) = ManeuverToReturnFromMoon(centralMu, moonMu, moonR0, moonV0, moonSOI, r0, v0, peR, inc);
-                if (dt > 0)
+                (dv, dt) = ManeuverToReturnFromMoon(centralMu, moonMu, moonR0, moonV0, moonSOI, r0, v0, peR, inc, dtmin, dtmax);
+                if (dt > 0 || ecc >= 1)
                     break;
+                if (i++ >= 5)
+                    throw new Exception("Maximum iterations exceeded with no valid future solution");
                 (r0, v0) = Shepperd.Solve(moonMu, Maths.PeriodFromStateVectors(moonMu, r0, v0), r0, v0);
             }
 
