@@ -80,6 +80,7 @@ namespace MuMech
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
+
             V3 dv = Maneuvers.DeltaVToChangeApsis(o.referenceBody.gravParameter, r, v, newApR, false);
 
             return dv.V3ToWorld();
@@ -977,26 +978,14 @@ namespace MuMech
             double moonSOI = moon.sphereOfInfluence;
             (V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(ut);
 
+            double dtmin = (o.eccentricity >= 1) ? 0 : double.NegativeInfinity;
+
             (V3 dv, double dt, double newPeR) = Maneuvers.NextManeuverToReturnFromMoon(primary.gravParameter, moon.gravParameter, moonR0,
-                moonV0, moonSOI, r0, v0, targetPrimaryRadius, 0);
+                moonV0, moonSOI, r0, v0, targetPrimaryRadius, 0, dtmin: dtmin);
 
             Debug.Log($"Solved PeR from calcluator: {newPeR}");
 
             return (dv.V3ToWorld(), ut + dt);
-        }
-
-        public static Vector3d DeltaVAndTimeForMoonReturnEjectionOld(Orbit o, double UT, double targetPrimaryRadius, out double burnUT)
-        {
-            CelestialBody moon = o.referenceBody;
-            CelestialBody primary = moon.referenceBody;
-
-
-            //construct an orbit at the target radius around the primary, in the same plane as the moon. This is a fake target
-            var primaryOrbit = new Orbit(moon.orbit.inclination, moon.orbit.eccentricity, targetPrimaryRadius, moon.orbit.LAN,
-                moon.orbit.argumentOfPeriapsis, moon.orbit.meanAnomalyAtEpoch, moon.orbit.epoch, primary);
-
-
-            return DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, primaryOrbit, false, out burnUT);
         }
 
         //Computes the delta-V of the burn at a given time required to zero out the difference in orbital velocities

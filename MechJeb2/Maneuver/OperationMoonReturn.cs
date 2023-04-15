@@ -28,21 +28,12 @@ namespace MuMech
                     o.referenceBody.displayName.LocalizeRemoveGender())); //<<1>> is not orbiting another body you could return to.
             }
 
-            var now = Planetarium.GetUniversalTime();
-            var planetmu = o.referenceBody.referenceBody.gravParameter;
-            var moonmu = o.referenceBody.gravParameter;
-            var moonr0 = o.referenceBody.orbit.getRelativePositionAtUT(now);
-            var moonv0 = o.referenceBody.orbit.getOrbitalVelocityAtUT(now);
-            var moonsoi = o.referenceBody.sphereOfInfluence;
-            var r0 = o.getRelativePositionAtUT(now);
-            var v0 = o.getOrbitalVelocityAtUT(now);
+            // fixed 30 second delay for hyperbolic orbits (this doesn't work for elliptical and i don't want to deal
+            // with requests to "fix" it by surfacing it as a tweakable).
+            double t0 = o.eccentricity >= 1 ? universalTime + 30 : universalTime;
 
-            Debug.Log($"ManeuverToReturnFromMoon({planetmu}, {moonmu}, {moonr0}, {moonv0}, {moonsoi}, {r0}, {v0}, double peR, double inc)");
-
-            (Vector3d dV, double ut) = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, universalTime,
+            (Vector3d dV, double ut) = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, t0,
                 o.referenceBody.referenceBody.Radius + MoonReturnAltitude);
-
-            Debug.Log($"dv: {dV.xzy} ut: {ut} now: {now}");
 
             return new List<ManeuverParameters>
             {
