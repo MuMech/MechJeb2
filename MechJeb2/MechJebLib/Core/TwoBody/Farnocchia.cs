@@ -88,7 +88,7 @@ namespace MechJebLib.Core.TwoBody
 
         public static double MToDNearParabolic(double M, double ecc, double tol = 1.48e-08, int maxiter = 50)
         {
-            double D0 = Angles.MToD(M);
+            double D0 = Angles.DFromM(M);
 
             for (int i = 0; i < maxiter; i++)
             {
@@ -116,8 +116,8 @@ namespace MechJebLib.Core.TwoBody
 
             if (ecc < 1 - delta)
             {
-                double E = Angles.NuToE(nu, ecc);
-                double M = Angles.EToM(E, ecc);
+                double E = Angles.EFromNu(nu, ecc);
+                double M = Angles.MFromE(E, ecc);
                 double n = Math.Sqrt(mu * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
                 Check.Finite(M / n);
                 return M / n;
@@ -125,17 +125,17 @@ namespace MechJebLib.Core.TwoBody
 
             if (1 - delta <= ecc && ecc < 1)
             {
-                double E = Angles.NuToE(nu, ecc);
+                double E = Angles.EFromNu(nu, ecc);
                 if (delta <= 1 - ecc * Math.Cos(E))
                 {
-                    double M = Angles.EToM(E, ecc);
+                    double M = Angles.MFromE(E, ecc);
                     double n = Math.Sqrt(mu * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
                     Check.Finite(M / n);
                     return M / n;
                 }
                 else
                 {
-                    double D = Angles.NuToD(nu);
+                    double D = Angles.DFromNu(nu);
                     double M = DToMNearParabolic(D, ecc);
                     double n = Math.Sqrt(mu / (2 * Math.Pow(q, 3)));
                     Check.Finite(M / n);
@@ -145,8 +145,8 @@ namespace MechJebLib.Core.TwoBody
 
             if (ecc == 1)
             {
-                double D = Angles.NuToD(nu);
-                double M = Angles.DToM(D);
+                double D = Angles.DFromNu(nu);
+                double M = Angles.MFromD(D);
                 double n = Math.Sqrt(mu / (2 * Math.Pow(q, 3)));
                 Check.Finite(M / n);
                 return M / n;
@@ -157,17 +157,17 @@ namespace MechJebLib.Core.TwoBody
 
             if (1 < ecc && ecc <= 1 + delta)
             {
-                double F = Angles.NuToF(nu, ecc);
+                double F = Angles.FFromNu(nu, ecc);
                 if (delta <= ecc * Math.Cosh(F) - 1)
                 {
-                    double M = Angles.FToM(F, ecc);
+                    double M = Angles.MFromF(F, ecc);
                     double n = Math.Sqrt(mu * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
                     Check.Finite(M / n);
                     return M / n;
                 }
                 else
                 {
-                    double D = Angles.NuToD(nu);
+                    double D = Angles.DFromNu(nu);
                     double M = DToMNearParabolic(D, ecc);
                     double n = Math.Sqrt(mu / (2 * Math.Pow(q, 3)));
                     Check.Finite(M / n);
@@ -177,8 +177,8 @@ namespace MechJebLib.Core.TwoBody
 
             if (1 + delta < ecc)
             {
-                double F = Angles.NuToF(nu, ecc);
-                double M = Angles.FToM(F, ecc);
+                double F = Angles.FFromNu(nu, ecc);
+                double M = Angles.MFromF(F, ecc);
                 double n = Math.Sqrt(mu * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
                 Check.Finite(M / n);
                 return M / n;
@@ -202,58 +202,58 @@ namespace MechJebLib.Core.TwoBody
             {
                 n  = Math.Sqrt(k * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
                 M  = n * delta_t;
-                E  = Angles.MToE((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
-                nu = Angles.EToNu(E, ecc);
+                E  = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
+                nu = Angles.NuFromE(E, ecc);
             }
             else if (1 - delta <= ecc && ecc < 1)
             {
                 E_delta = Math.Acos((1 - delta) / ecc);
                 n       = Math.Sqrt(k * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
                 M       = n * delta_t;
-                if (Angles.EToM(E_delta, ecc) <= Math.Abs(M))
+                if (Angles.MFromE(E_delta, ecc) <= Math.Abs(M))
                 {
-                    E  = Angles.MToE((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
-                    nu = Angles.EToNu(E, ecc);
+                    E  = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
+                    nu = Angles.NuFromE(E, ecc);
                 }
                 else
                 {
                     n  = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
                     M  = n * delta_t;
                     D  = MToDNearParabolic(M, ecc);
-                    nu = Angles.DToNu(D);
+                    nu = Angles.NuFromD(D);
                 }
             }
             else if (ecc == 1)
             {
                 n  = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
                 M  = n * delta_t;
-                D  = Angles.MToD(M);
-                nu = Angles.DToNu(D);
+                D  = Angles.DFromM(M);
+                nu = Angles.NuFromD(D);
             }
             else if (1 < ecc && ecc <= 1 + delta)
             {
                 F_delta = Acosh((1 + delta) / ecc);
                 n       = Math.Sqrt(k * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
                 M       = n * delta_t;
-                if (Angles.FToM(F_delta, ecc) <= Math.Abs(M))
+                if (Angles.MFromF(F_delta, ecc) <= Math.Abs(M))
                 {
-                    F  = Angles.MToF(M, ecc);
-                    nu = Angles.FToNu(F, ecc);
+                    F  = Angles.FFromM(M, ecc);
+                    nu = Angles.NuFromF(F, ecc);
                 }
                 else
                 {
                     n  = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
                     M  = n * delta_t;
                     D  = MToDNearParabolic(M, ecc);
-                    nu = Angles.DToNu(D);
+                    nu = Angles.NuFromD(D);
                 }
             }
             else
             {
                 n  = Math.Sqrt(k * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
                 M  = n * delta_t;
-                F  = Angles.MToF(M, ecc);
-                nu = Angles.FToNu(F, ecc);
+                F  = Angles.FFromM(M, ecc);
+                nu = Angles.NuFromF(F, ecc);
             }
 
             return nu;
