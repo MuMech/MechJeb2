@@ -34,6 +34,18 @@ namespace MechJebLib.Primitives
                 other[i] = this[i];
         }
 
+        public void Set(int index, V3 v)
+        {
+            this[index]     = v.x;
+            this[index + 1] = v.y;
+            this[index + 2] = v.z;
+        }
+
+        public V3 Get(int index)
+        {
+            return new V3(this[index], this[index + 1], this[index + 2]);
+        }
+
         public static DD Rent(int n)
         {
             DD list = _pool.Get();

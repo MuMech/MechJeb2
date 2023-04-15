@@ -120,6 +120,82 @@ namespace MechJebLib.Utils
         }
 
         /// <summary>
+        ///     Inverse hyperbolic tangent funtion.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Atanh(double x)
+        {
+            if (Math.Abs(x) > 1)
+                throw new ArgumentException($"Argument to Atanh is out of range: {x}");
+
+            return 0.5 * Math.Log((1 + x) / (1 - x));
+        }
+
+        /// <summary>
+        ///     Inverse hyperbolic cosine function.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Acosh(double x)
+        {
+            if (x < 1)
+                throw new ArgumentException($"Argument to Acosh is out of range: {x}");
+
+            return Math.Log(x + Math.Sqrt(x * x - 1));
+        }
+
+        /// <summary>
+        ///     Inverse hyperbolic sine function.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Asinh(double x)
+        {
+            return Math.Log(x + Math.Sqrt(x * x + 1));
+        }
+
+        /// <summary>
+        ///     Raise floating point number to an integral power using exponentiation by squaring.
+        /// </summary>
+        /// <param name="x">base</param>
+        /// <param name="n">integral exponent</param>
+        /// <returns>x raised to n</returns>
+        public static double Powi(double x, int n)
+        {
+            if (n < 0)
+            {
+                x = 1 / x;
+                n = -n;
+            }
+
+            if (n == 0)
+                return 1;
+            double y = 1;
+            while (n > 1)
+            {
+                if (n % 2 == 0)
+                {
+                    x *= x;
+                    n /= 2;
+                }
+                else
+                {
+                    y *= x;
+                    x *= x;
+                    n =  (n - 1) / 2;
+                }
+            }
+
+            return x * y;
+        }
+
+        /// <summary>
         ///     Returns the equivalent value in radians between 0 and 2*pi.
         /// </summary>
         /// <param name="x">Radians</param>
@@ -198,15 +274,17 @@ namespace MechJebLib.Utils
         /// <returns>true if the values are nearly the same</returns>
         public static bool NearlyEqual(double a, double b, double epsilon = EPS)
         {
-            double absA = Math.Abs(a);
-            double absB = Math.Abs(b);
-            double diff = Math.Abs(a - b);
-
             if (a.Equals(b))
                 return true;
+
+            double diff = Math.Abs(a - b);
+
             if (a == 0 || b == 0)
                 return diff < epsilon;
-            return diff / (absA + absB) < epsilon;
+
+            epsilon = Math.Max(Math.Abs(a), Math.Abs(b)) * epsilon;
+
+            return diff < epsilon;
         }
 
         /// <summary>
@@ -218,7 +296,22 @@ namespace MechJebLib.Utils
         /// <returns>true if the values are nearly the same</returns>
         public static bool NearlyEqual(V3 a, V3 b, double epsilon = EPS)
         {
-            return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
+            if (a.Equals(b))
+                return true;
+
+            var diff = V3.Abs(a - b);
+
+            double epsilon2 = Math.Max(a.magnitude, b.magnitude) * epsilon;
+
+            for (int i = 0; i < 3; i++)
+            {
+                if ((a[i] == 0 || b[i] == 0) && diff[i] > epsilon)
+                    return false;
+                if (diff[i] > epsilon2)
+                    return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -230,12 +323,18 @@ namespace MechJebLib.Utils
         /// <returns>true if the values are nearly the same</returns>
         public static bool NearlyEqual(M3 a, M3 b, double epsilon = EPS)
         {
+            if (a.Equals(b))
+                return true;
+
+            double epsilon2 = Math.Max(a.max_magnitude, b.max_magnitude) * epsilon;
+
             for (int i = 0; i < 9; i++)
             {
-                if (!NearlyEqual(a[i], b[i], epsilon))
-                {
+                if ((a[i] == 0 || b[i] == 0) && Math.Abs(a[i] - b[i]) > epsilon)
                     return false;
-                }
+
+                if (Math.Abs(a[i] - b[i]) > epsilon2)
+                    return false;
             }
 
             return true;

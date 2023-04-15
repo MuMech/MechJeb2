@@ -6,7 +6,7 @@
 
 #nullable enable
 
-using MechJebLib.Maths;
+using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 
 namespace MechJebLib.PVG.Integrators
@@ -18,8 +18,7 @@ namespace MechJebLib.PVG.Integrators
             using var y0 = ArrayWrapper.Rent(yin);
             using var yf = ArrayWrapper.Rent(yfout);
 
-            Shepperd.Solve2(1.0, tf - t0, y0.R, yf.V, out V3 rf, out V3 vf, out M3 stm00, out M3 stm01, out M3 stm10,
-                out M3 stm11);
+            (V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) = Shepperd.Solve2(1.0, tf - t0, y0.R, yf.V);
 
             yf.R = rf;
             yf.V = vf;

@@ -26,7 +26,7 @@ namespace MechJebLib.PVG.Integrators
             protected override void dydt(DD yin, double x, DD dyout)
             {
                 Check.True(Phase.Normalized);
-                
+
                 using var y = ArrayWrapper.Rent(yin);
                 using var dy = ArrayWrapper.Rent(dyout);
 
@@ -37,7 +37,7 @@ namespace MechJebLib.PVG.Integrators
                 double r = Math.Sqrt(r2);
                 double r3 = r2 * r;
                 double r5 = r3 * r2;
-                
+
                 V3 u = Phase.Unguided ? Phase.u0.normalized : y.PV.normalized;
 
                 dy.R  = y.V;
@@ -55,13 +55,15 @@ namespace MechJebLib.PVG.Integrators
 
         public void Integrate(DD y0, DD yf, Phase phase, double t0, double tf)
         {
-            _ode.Phase = phase;
+            _ode.Integrator.ThrowOnMaxIter = true;
+            _ode.Phase                     = phase;
             _ode.Integrate(y0, yf, t0, tf);
         }
 
         public void Integrate(DD y0, DD yf, Phase phase, double t0, double tf, Solution solution)
         {
-            _ode.Phase = phase;
+            _ode.Integrator.ThrowOnMaxIter = true;
+            _ode.Phase                     = phase;
             Hn interpolant = _ode.GetInterpolant();
             _ode.Integrate(y0, yf, t0, tf, interpolant);
             solution.AddSegment(t0, tf, interpolant, phase);

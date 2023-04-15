@@ -31,13 +31,6 @@ namespace MuMech
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            if (o.referenceBody.Radius + NewPeA > o.Radius(ut))
-            {
-                string burnAltitude = (o.Radius(ut) - o.referenceBody.Radius).ToSI() + "m";
-                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception1") + " (" + burnAltitude +
-                                             ")"); //new periapsis cannot be higher than the altitude of the burn
-            }
-
             if (NewPeA < -o.referenceBody.Radius)
             {
                 throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception2", o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" +
@@ -48,7 +41,7 @@ namespace MuMech
             {
                 new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, ut, NewPeA + o.referenceBody.Radius), ut)
             };
-            
+
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

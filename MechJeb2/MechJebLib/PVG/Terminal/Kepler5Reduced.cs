@@ -5,7 +5,7 @@
  */
 
 using System;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -42,7 +42,7 @@ namespace MechJebLib.PVG.Terminal
             _lanT  = lanT;
             _argpT = argpT;
 
-            _hT = Functions.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
+            _hT = Maths.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
 
             // r guaranteed not to be colinear with hT
             V3 r = V3.zero;
@@ -53,7 +53,7 @@ namespace MechJebLib.PVG.Terminal
             _ehat2 = V3.Cross(_hT, _ehat1).normalized;
 
             // projection of eT onto ehat1/ehat2
-            V3 eT = Functions.EvecFromKeplerian(_eccT, _incT, _lanT, _argpT);
+            V3 eT = Maths.EvecFromKeplerian(_eccT, _incT, _lanT, _argpT);
             _e1 = V3.Dot(eT, _ehat1);
             _e2 = V3.Dot(eT, _ehat2);
         }

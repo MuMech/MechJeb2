@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using MechJebLib.Maths;
+using MechJebLib.Core;
+using MechJebLib.Core.Functions;
+using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using Smooth.Pools;
 using UnityEngine;
@@ -52,87 +54,35 @@ namespace MuMech
         }
 
         //Computes the delta-V of the burn required to attain a given periapsis, starting from
-        //a given orbit and burning at a given UT. Throws an ArgumentException if given an impossible periapsis.
-        //The computed burn is always horizontal, though this may not be strictly optimal.
-        public static Vector3d DeltaVToChangePeriapsis(Orbit o, double UT, double newPeR)
+        //a given orbit and burning at a given UT.
+        public static Vector3d DeltaVToChangePeriapsis(Orbit o, double ut, double newPeR)
         {
-            double radius = o.Radius(UT);
+            double radius = o.Radius(ut);
 
             //sanitize input
             newPeR = MuUtils.Clamp(newPeR, 0 + 1, radius - 1);
 
-            //are we raising or lowering the periapsis?
-            bool raising = newPeR > o.PeR;
-            Vector3d burnDirection = (raising ? 1 : -1) * o.Horizontal(UT);
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            double minDeltaV = 0;
-            double maxDeltaV;
-            if (raising)
-            {
-                //put an upper bound on the required deltaV:
-                maxDeltaV = 0.25;
-                while (o.PerturbedOrbit(UT, maxDeltaV * burnDirection).PeR < newPeR)
-                {
-                    minDeltaV =  maxDeltaV; //narrow the range
-                    maxDeltaV *= 2;
-                    if (maxDeltaV > 100000) break; //a safety precaution
-                }
-            }
-            else
-            {
-                //when lowering periapsis, we burn horizontally, and max possible deltaV is the deltaV required to kill all horizontal velocity
-                maxDeltaV = Math.Abs(Vector3d.Dot(o.WorldOrbitalVelocityAtUT(UT), burnDirection));
-            }
+            V3 dv = Maneuvers.DeltaVToChangeApsis(o.referenceBody.gravParameter, r, v, newPeR);
 
-            double dV = 0;
-            try
-            {
-                dV = BrentRoot.Solve(
-                    delegate(double testDeltaV, object ign) { return o.PerturbedOrbit(UT, testDeltaV * burnDirection).PeR - newPeR; }, minDeltaV,
-                    maxDeltaV, null);
-            }
-            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
-
-            return dV * burnDirection;
-        }
-
-        public static bool ApoapsisIsHigher(double ApR, double than)
-        {
-            if (than > 0 && ApR < 0) return true;
-            if (than < 0 && ApR > 0) return false;
-            return ApR > than;
+            return dv.V3ToWorld();
         }
 
         //Computes the delta-V of the burn at a given UT required to change an orbits apoapsis to a given value.
-        //The computed burn is always prograde or retrograde, though this may not be strictly optimal.
         //Note that you can pass in a negative apoapsis if the desired final orbit is hyperbolic
-        public static Vector3d DeltaVToChangeApoapsis(Orbit o, double UT, double newApR)
+        public static Vector3d DeltaVToChangeApoapsis(Orbit o, double ut, double newApR)
         {
-            double radius = o.Radius(UT);
+            double radius = o.Radius(ut);
 
             //sanitize input
             if (newApR > 0) newApR = Math.Max(newApR, radius + 1);
 
-            //are we raising or lowering the periapsis?
-            bool raising = ApoapsisIsHigher(newApR, o.ApR);
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
+            V3 dv = Maneuvers.DeltaVToChangeApsis(o.referenceBody.gravParameter, r, v, newApR, false);
 
-            double minDeltaV = 0;
-            // 10000 dV is a safety factor, max burn when lowering ApR would be to null out our current velocity
-            double maxDeltaV = raising ? 10000 : o.WorldOrbitalVelocityAtUT(UT).magnitude;
-
-            // solve for the reciprocal of the ApR which is a continuous function that avoids the parabolic singularity and
-            // change of sign for hyperbolic orbits.
-            Func<double, object, double> f = delegate(double testDeltaV, object ign)
-            {
-                return 1.0 / o.PerturbedOrbit(UT, testDeltaV * burnDirection).ApR - 1.0 / newApR;
-            };
-            double dV = 0;
-            try { dV = BrentRoot.Solve(f, minDeltaV, maxDeltaV, null); }
-            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
-
-            return dV * burnDirection;
+            return dv.V3ToWorld();
         }
 
         //Computes the heading of the ground track of an orbit with a given inclination at a given latitude.
@@ -430,10 +380,10 @@ namespace MuMech
             out Vector3d secondDV, bool posigrade = true)
         {
             // advance the source orbit to ref + DT
-            Shepperd.Solve(GM, dt, pos.ToV3(), vel.ToV3(), out V3 pos1, out V3 vel1);
+            (V3 pos1, V3 vel1) = Shepperd.Solve(GM, dt, pos.ToV3(), vel.ToV3());
 
             // advance the target orbit to ref + DT + TT
-            Shepperd.Solve(GM, dt + tt, tpos.ToV3(), tvel.ToV3(), out V3 pos2, out V3 vel2);
+            (V3 pos2, V3 vel2) = Shepperd.Solve(GM, dt + tt, tpos.ToV3(), tvel.ToV3());
 
             (V3 transferVi, V3 transferVf) = Gooding.Solve(GM, pos1, vel1, pos2, posigrade ? tt : -tt, 0);
 
@@ -1019,14 +969,32 @@ namespace MuMech
             return ejectionVelocity - preEjectionVelocity;
         }
 
-        public static Vector3d DeltaVAndTimeForMoonReturnEjection(Orbit o, double UT, double targetPrimaryRadius, out double burnUT)
+        public static (Vector3d dv, double dt) DeltaVAndTimeForMoonReturnEjection(Orbit o, double ut, double targetPrimaryRadius)
+        {
+            CelestialBody moon = o.referenceBody;
+            CelestialBody primary = moon.referenceBody;
+            (V3 moonR0, V3 moonV0) = moon.orbit.RightHandedStateVectorsAtUT(ut);
+            double moonSOI = moon.sphereOfInfluence;
+            (V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(ut);
+
+            (V3 dv, double dt, double newPeR) = Maneuvers.NextManeuverToReturnFromMoon(primary.gravParameter, moon.gravParameter, moonR0,
+                moonV0, moonSOI, r0, v0, targetPrimaryRadius, 0);
+
+            Debug.Log($"Solved PeR from calcluator: {newPeR}");
+
+            return (dv.V3ToWorld(), ut + dt);
+        }
+
+        public static Vector3d DeltaVAndTimeForMoonReturnEjectionOld(Orbit o, double UT, double targetPrimaryRadius, out double burnUT)
         {
             CelestialBody moon = o.referenceBody;
             CelestialBody primary = moon.referenceBody;
 
+
             //construct an orbit at the target radius around the primary, in the same plane as the moon. This is a fake target
             var primaryOrbit = new Orbit(moon.orbit.inclination, moon.orbit.eccentricity, targetPrimaryRadius, moon.orbit.LAN,
                 moon.orbit.argumentOfPeriapsis, moon.orbit.meanAnomalyAtEpoch, moon.orbit.epoch, primary);
+
 
             return DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, primaryOrbit, false, out burnUT);
         }

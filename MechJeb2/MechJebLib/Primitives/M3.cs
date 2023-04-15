@@ -13,7 +13,7 @@ using System.Globalization;
 namespace MechJebLib.Primitives
 {
     /// <summary>
-    /// 3x3 Matrix with right-handed APIs that integrates with V3 and Q3.
+    ///     3x3 Matrix with right-handed APIs that integrates with V3 and Q3.
     /// </summary>
     public struct M3 : IEquatable<M3>, IFormattable
     {
@@ -302,7 +302,7 @@ namespace MechJebLib.Primitives
         }
 
         /// <summary>
-        /// This tests for strict inequality between two matricies on all values.  Returns true in the presence of NaN values.
+        ///     This tests for strict inequality between two matricies on all values.  Returns true in the presence of NaN values.
         /// </summary>
         /// <param name="lhs">matrix to compare</param>
         /// <param name="rhs">matrix to compare to</param>
@@ -374,14 +374,17 @@ namespace MechJebLib.Primitives
         }
 
         /// <summary>
-        /// Multiply vector by this matrix.
+        ///     Multiply vector by this matrix.
         /// </summary>
         /// <param name="vector">the vector</param>
         /// <returns>vector result</returns>
-        public V3 MultiplyVector(V3 vector) => this * vector;
+        public V3 MultiplyVector(V3 vector)
+        {
+            return this * vector;
+        }
 
         /// <summary>
-        /// Create rotation matrix from unit Q3 quaternion (you must provide unit quaternion).
+        ///     Create rotation matrix from unit Q3 quaternion (you must provide unit quaternion).
         /// </summary>
         /// <param name="q">the unit quaternion</param>
         /// <returns>rotation matrix</returns>
@@ -526,6 +529,30 @@ namespace MechJebLib.Primitives
         ///     Returns the transpose of the matrix.
         /// </summary>
         public M3 transpose => Transpose(this);
+
+        public double max_magnitude
+        {
+            get
+            {
+                double max = 0.0;
+                for (int i = 0; i < 9; i++)
+                    if (this[i] > max)
+                        max = this[i];
+                return max;
+            }
+        }
+
+        public double min_magnitude
+        {
+            get
+            {
+                double min = double.PositiveInfinity;
+                for (int i = 0; i < 9; i++)
+                    if (this[i] < min)
+                        min = this[i];
+                return min;
+            }
+        }
 
         // TODO:
         // private QuaternionD    GetRotation();

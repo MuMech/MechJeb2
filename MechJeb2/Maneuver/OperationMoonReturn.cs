@@ -22,21 +22,27 @@ namespace MuMech
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            if (o.eccentricity > 0.2)
-            {
-                ErrorMessage = Localizer.Format("#MechJeb_return_errormsg",
-                    o.eccentricity.ToString(
-                        "F2")); //"Warning: Recommend starting moon returns from a near-circular orbit (eccentricity < 0.2). Planned return is starting from an orbit with eccentricity "" and so may not be accurate."
-            }
-
             if (o.referenceBody.referenceBody == null)
             {
                 throw new OperationException(Localizer.Format("#MechJeb_return_Exception",
                     o.referenceBody.displayName.LocalizeRemoveGender())); //<<1>> is not orbiting another body you could return to.
             }
 
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, universalTime,
-                o.referenceBody.referenceBody.Radius + MoonReturnAltitude, out double ut);
+            var now = Planetarium.GetUniversalTime();
+            var planetmu = o.referenceBody.referenceBody.gravParameter;
+            var moonmu = o.referenceBody.gravParameter;
+            var moonr0 = o.referenceBody.orbit.getRelativePositionAtUT(now);
+            var moonv0 = o.referenceBody.orbit.getOrbitalVelocityAtUT(now);
+            var moonsoi = o.referenceBody.sphereOfInfluence;
+            var r0 = o.getRelativePositionAtUT(now);
+            var v0 = o.getOrbitalVelocityAtUT(now);
+
+            Debug.Log($"ManeuverToReturnFromMoon({planetmu}, {moonmu}, {moonr0}, {moonv0}, {moonsoi}, {r0}, {v0}, double peR, double inc)");
+
+            (Vector3d dV, double ut) = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, universalTime,
+                o.referenceBody.referenceBody.Radius + MoonReturnAltitude);
+
+            Debug.Log($"dv: {dV.xzy} ut: {ut} now: {now}");
 
             return new List<ManeuverParameters>
             {

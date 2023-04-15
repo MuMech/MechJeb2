@@ -5,7 +5,7 @@
  */
 
 using System;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -36,8 +36,8 @@ namespace MechJebLib.PVG.Terminal
             _incT = Math.Abs(ClampPi(incT));
             _lanT = lanT;
 
-            _hT   = Functions.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
-            _peRT = Functions.PeriapsisFromKeplerian(_smaT, _eccT);
+            _hT   = Maths.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
+            _peRT = Maths.PeriapsisFromKeplerian(_smaT, _eccT);
         }
 
         public IPVGTerminal Rescale(Scale scale)
@@ -53,7 +53,7 @@ namespace MechJebLib.PVG.Terminal
             var hf = V3.Cross(yf.R, yf.V);
             V3 hmiss = hf - _hT;
 
-            double con1 = Functions.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
+            double con1 = Maths.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
             double con2 = hmiss[0];
             double con3 = hmiss[1];
             double con4 = hmiss[2];

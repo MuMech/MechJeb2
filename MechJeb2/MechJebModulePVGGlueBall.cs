@@ -6,7 +6,7 @@
 
 using System;
 using System.Threading.Tasks;
-using MechJebLib.Maths;
+using MechJebLib.Core;
 using MechJebLib.PVG;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -126,11 +126,11 @@ namespace MuMech
             // initialize the first time we hit SetTarget to avoid initial large staleness values
             if (_lastTime == 0)
                 _lastTime = vesselState.time;
-            
+
             Staleness = vesselState.time - _lastTime;
 
             GatherException();
-            
+
             HandleDoneTask();
 
             if (_task is { IsCompleted: false })
@@ -191,10 +191,11 @@ namespace MuMech
             }
 
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
-                .Initial(vesselState.orbitalPosition.WorldToV3Rotated(), vesselState.orbitalVelocity.WorldToV3Rotated(), vesselState.forward.WorldToV3Rotated(),
+                .Initial(vesselState.orbitalPosition.WorldToV3Rotated(), vesselState.orbitalVelocity.WorldToV3Rotated(),
+                    vesselState.forward.WorldToV3Rotated(),
                     vesselState.time, mainBody.gravParameter, mainBody.Radius)
                 .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), fpa, attachAltFlag, lanflag)
-                .TerminalConditions(Functions.HmagFromApsides(mainBody.gravParameter, peR, apR));
+                .TerminalConditions(Maths.HmagFromApsides(mainBody.gravParameter, peR, apR));
 
             if (core.guidance.Solution != null)
                 ascentBuilder.OldSolution(core.guidance.Solution);

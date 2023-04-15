@@ -15,7 +15,7 @@ using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
-namespace MechJebLib.Maths
+namespace MechJebLib.Core
 {
     public static class Gooding
     {
