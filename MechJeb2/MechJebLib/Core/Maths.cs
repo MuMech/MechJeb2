@@ -490,7 +490,16 @@ namespace MechJebLib.Core
             return Q3.AngleAxis(lan, V3.zaxis) * Q3.AngleAxis(inc, V3.xaxis) * Q3.AngleAxis(argp, V3.zaxis);
         }
 
-        public static (V3 p, V3 q) PerifocalFromElements(double mu, double p, double ecc, double nu)
+        public static (V3 p, V3 q, Q3 rot) PerifocalFromStateVectors(double mu, V3 r, V3 v)
+        {
+            (_, double ecc, double inc, double lan, double argp, double nu, double l) = KeplerianFromStateVectors(mu, r, v);
+            Q3 rot = PerifocalToECIMatrix(inc, argp, lan);
+            (V3 p, V3 q) = PerifocalFromElements(mu, l, ecc, nu);
+
+            return (p, q, rot);
+        }
+
+        public static (V3 p, V3 q) PerifocalFromElements(double mu, double l, double ecc, double nu)
         {
             double cnu = Math.Cos(nu);
             double snu = Math.Sin(nu);
@@ -498,7 +507,7 @@ namespace MechJebLib.Core
             var one = new V3(cnu, snu, 0);
             var two = new V3(-snu, ecc + cnu, 0);
 
-            return (one * p / (1 + ecc * cnu), two * Math.Sqrt(mu / p));
+            return (one * l / (1 + ecc * cnu), two * Math.Sqrt(mu / l));
         }
 
         public static (V3 r, V3 v) StateVectorsFromKeplerian(double mu, double l, double ecc, double inc, double lan, double argp, double nu)
@@ -631,7 +640,7 @@ namespace MechJebLib.Core
             return (eanom, nu);
         }
 
-        public static ( V3 vNeg,  V3 vPos,  V3 r,  double dt) SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false)
+        public static (V3 vNeg, V3 vPos, V3 r, double dt) SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false)
         {
             return RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, debug);
         }

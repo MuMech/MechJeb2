@@ -72,27 +72,27 @@ namespace MechJebLib.Core.Functions
 
         private struct ChangeApsisArgs
         {
-            public V3     R;
-            public V3     V;
+            public V3     P;
+            public V3     Q;
             public double NewR;
-            public bool   Periapsis;
+            public bool   PeriapsisFlag;
         }
 
         private static void ChangeApsisFunction(double[] x, double[] fi, object obj)
         {
-            var dv = new V3(x[0], x[1], x[2]);
+            var dv = new V3(x[0], x[1], 0);
 
             var args = (ChangeApsisArgs)obj;
-            V3 r = args.R;
-            V3 v = args.V;
+            V3 p = args.P;
+            V3 q = args.Q;
             double newR = args.NewR;
-            bool periapsis = args.Periapsis;
+            bool periapsisFlag = args.PeriapsisFlag;
 
             fi[0] = dv.sqrMagnitude;
-            if (periapsis)
-                fi[1] = Maths.PeriapsisFromStateVectors(1.0, r, v + dv) - newR;
+            if (periapsisFlag)
+                fi[1] = Maths.PeriapsisFromStateVectors(1.0, p, q + dv) - newR;
             else
-                fi[1] = 1.0 / Maths.ApoapsisFromStateVectors(1.0, r, v + dv) - 1.0 / newR;
+                fi[1] = 1.0 / Maths.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / newR;
         }
 
         public static V3 DeltaVToChangeApsis(double mu, V3 r, V3 v, double newR, bool periapsis = true)
@@ -112,7 +112,7 @@ namespace MechJebLib.Core.Functions
             const double EPSX = 1e-6;
             const int MAXITS = 1000;
 
-            const int NVARIABLES = 3;
+            const int NVARIABLES = 2;
             const int NEQUALITYCONSTRAINTS = 1;
             const int NINEQUALITYCONSTRAINTS = 0;
 
@@ -122,11 +122,18 @@ namespace MechJebLib.Core.Functions
             scaleDistance = Math.Min(scaleDistance, r.sqrMagnitude);
             double scaleVelocity = Math.Sqrt(mu / scaleDistance);
 
+            (V3 p, V3 q, Q3 rot) = Maths.PerifocalFromStateVectors( mu,  r,  v);
+
             x[0] = 0; // maneuver x
             x[1] = 0; // maneuver y
-            x[2] = 0; // maneuver z
 
-            var args = new ChangeApsisArgs { R = r / scaleDistance, V = v / scaleVelocity, NewR = newR / scaleDistance, Periapsis = periapsis };
+            var args = new ChangeApsisArgs
+            {
+                P = p / scaleDistance,
+                Q = q / scaleVelocity,
+                NewR = newR / scaleDistance,
+                PeriapsisFlag = periapsis
+            };
 
             alglib.minnlccreatef(NVARIABLES, x, DIFFSTEP, out alglib.minnlcstate state);
             alglib.minnlcsetstpmax(state, 1e-2);
@@ -142,7 +149,7 @@ namespace MechJebLib.Core.Functions
                     $"DeltaVToChangeApsis({mu}, {r}, {v}, {newR}, {periapsis}): SQP solver terminated abnormally: {rep.terminationtype}"
                 );
 
-            return new V3(x[0], x[1], x[2]) * scaleVelocity;
+            return rot * new V3(x[0], x[1], 0) * scaleVelocity;
         }
 
         public struct ReturnFromMoonArgs
