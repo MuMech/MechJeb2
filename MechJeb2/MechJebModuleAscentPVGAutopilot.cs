@@ -14,7 +14,7 @@ namespace MuMech
         public MechJebModuleAscentPVGAutopilot(MechJebCore core) : base(core)
         {
         }
-        
+
         private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
 
         public override void OnModuleEnabled()
@@ -132,9 +132,9 @@ namespace MuMech
             double dt = MET - _pitchStartTime;
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
-            
-            // we need to initiate by at least 10 degrees, then transition to zerolift when srfvel catches up
-            if (vesselState.currentPitch > SrfvelPitch() && vesselState.currentPitch < 80)
+
+            // we need to initiate by at least 3 degrees, then transition to zerolift when srfvel catches up
+            if (vesselState.currentPitch > SrfvelPitch() && vesselState.currentPitch < 87)
             {
                 _mode = AscentMode.ZEROLIFT;
                 return;
