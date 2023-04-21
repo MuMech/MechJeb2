@@ -7,67 +7,74 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private static readonly Vector3d      _vector3dnan = new Vector3d(double.NaN, double.NaN, double.NaN);
-        private                 Vessel        Vessel => ac.vessel;
+        private static readonly Vector3d _vector3dnan = new Vector3d(double.NaN, double.NaN, double.NaN);
+        private                 Vessel   Vessel => ac.vessel;
 
         /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble PosKp = new EditableDouble(1.98);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        private readonly EditableDouble PosDeadband = new EditableDouble(0.0001);
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelKp = new EditableDouble(9.18299345180006);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelKi = new EditableDouble(16.2833478287224);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelKd = new EditableDouble(-0.0921320503942923);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelN = new EditableDouble(99.672083845959);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelB = new EditableDouble(0.596313214751797);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelC = new EditableDouble(0.596313214751797);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelDeadband = new EditableDouble(0.001);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        private bool VelClegg;
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelSmoothIn = new EditableDouble(1);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelSmoothOut = new EditableDouble(1);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble PosSmoothIn = new EditableDouble(1);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble minFlipTime = new EditableDouble(120);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble rollControlRange = new EditableDouble(5);
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private bool useControlRange = true;
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private bool useFlipTime = true;
 
-        [Persistent(pass = (int) (Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private bool useStoppingTime = true;
 
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)Pass.Type)]
         private int _version = -1;
 
         private void Defaults()
         {
             PosKp.val            = 1.98;
+            PosDeadband.val      = 0.0001;
             VelKp.val            = 9.18299345180006;
             VelKi.val            = 16.2833478287224;
             VelKd.val            = -0.0921320503942923;
@@ -75,6 +82,7 @@ namespace MuMech.AttitudeControllers
             VelB.val             = 0.596313214751797;
             VelC.val             = 0.596313214751797;
             VelDeadband.val      = 0.001;
+            VelClegg             = false;
             VelSmoothIn.val      = 1.0;
             VelSmoothOut.val     = 1.0;
             PosSmoothIn.val      = 1.0;
@@ -84,12 +92,7 @@ namespace MuMech.AttitudeControllers
             _version             = 1;
         }
 
-        private readonly PIDLoop[] _pid =
-        {
-            new PIDLoop(),
-            new PIDLoop(),
-            new PIDLoop()
-        };
+        private readonly PIDLoop[] _pid = { new PIDLoop(), new PIDLoop(), new PIDLoop() };
 
         /* error in pitch, roll, yaw */
         private Vector3d _error0 = Vector3d.zero;
@@ -193,6 +196,11 @@ namespace MuMech.AttitudeControllers
             {
                 double error = _error0[i];
 
+                if (Math.Abs(error) < PosDeadband)
+                    error = 0;
+                else
+                    error -= Math.Sign(error) * PosDeadband;
+
                 _maxAlpha[i] = controlTorque[i] / Vessel.MOI[i];
 
                 if (_maxAlpha[i] == 0)
@@ -241,6 +249,7 @@ namespace MuMech.AttitudeControllers
                 _pid[i].MinOutput = -1;
                 _pid[i].MaxOutput = 1;
                 _pid[i].Deadband  = VelDeadband;
+                _pid[i].Clegg     = VelClegg;
 
                 // need the negative from the pid due to KSP's orientation of actuation
                 _actuation[i] = -_pid[i].Update(_targetOmega[i], _omega0[i]);
@@ -302,6 +311,11 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos Deadband", GUILayout.ExpandWidth(false));
+            PosDeadband.text = GUILayout.TextField(PosDeadband.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Kp", GUILayout.ExpandWidth(false));
             VelKp.text = GUILayout.TextField(VelKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
@@ -334,6 +348,10 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Deadband", GUILayout.ExpandWidth(false));
             VelDeadband.text = GUILayout.TextField(VelDeadband.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            VelClegg = GUILayout.Toggle(VelClegg, "Vel Clegg", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
