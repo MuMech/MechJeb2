@@ -620,7 +620,7 @@ namespace MuMech
             // the max throttles.
             foreach (var resource in vesselState.resources.Values)
             {
-                if (resource.Intakes.Count == 0)
+                if (resource.intakes.Count == 0)
                 {
                     // No intakes provide this resource; not our problem.
                     continue;
@@ -633,8 +633,8 @@ namespace MuMech
                 // jets.
 
                 double margin = (1 + 0.01 * flameoutSafetyPct);
-                double safeRequirement = margin * resource.RequiredAtMaxThrottle;
-                safeRequirement = Math.Max(safeRequirement, resource.Required);
+                double safeRequirement = margin * resource.requiredAtMaxThrottle;
+                safeRequirement = Math.Max(safeRequirement, resource.required);
 
                 // Open the right number of intakes.
                 if (manageIntakes)
@@ -642,8 +642,8 @@ namespace MuMech
                     OptimizeIntakes(resource, safeRequirement);
                 }
 
-                double provided = resource.IntakeProvided;
-                if (resource.Required >= provided)
+                double provided = resource.intakeProvided;
+                if (resource.required >= provided)
                 {
                     // We must cut throttle immediately, otherwise we are
                     // flaming out immediately.  Continue doing the rest of the
@@ -687,9 +687,9 @@ namespace MuMech
             var groups = new List<List<ModuleResourceIntake>>();
             var groupIds = new Dictionary<ModuleResourceIntake, int>();
             var data = new Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData>();
-            foreach (var intakeData in info.Intakes)
+            foreach (var intakeData in info.intakes)
             {
-                ModuleResourceIntake intake = intakeData.Intake;
+                ModuleResourceIntake intake = intakeData.intake;
                 data[intake] = intakeData;
                 if (groupIds.ContainsKey(intake)) { continue; }
 
@@ -734,7 +734,7 @@ namespace MuMech
                     for (int i = 0; i < grp.Count; i++)
                     {
                         var intake = grp[i];
-                        double airFlowThisIntake = data[intake].PredictedMassFlow;
+                        double airFlowThisIntake = data[intake].predictedMassFlow;
                         if (!intake.intakeEnabled)
                         {
                             intake.ToggleAction(param);
@@ -834,10 +834,10 @@ namespace MuMech
             for (int i = 0, j = 0; j < el.Count; j++)
             {
                 VesselState.EngineWrapper e = el[j];
-                if (!e.Engine.throttleLocked)
+                if (!e.engine.throttleLocked)
                 {
-                    func -= el[j].MaxVariableForce.y * x[i];
-                    grad[i] = -el[j].MaxVariableForce.y;
+                    func -= el[j].maxVariableForce.y * x[i];
+                    grad[i] = -el[j].maxVariableForce.y;
                     i++;
                 }
             }
@@ -862,8 +862,8 @@ namespace MuMech
                 return;
 
             // Continue ullaging until at least one engine has spooled up enough to produce >1% of it's rated thrust
-            if (isStable && vesselState.enginesWrappers.Where(e => e.Engine.requestedThrottle > 0.01)
-                                                       .All(e => e.Engine.currentThrottle < 0.01))
+            if (isStable && vesselState.enginesWrappers.Where(e => e.engine.requestedThrottle > 0.01)
+                                                       .All(e => e.engine.currentThrottle < 0.01))
             {
                 ullageUntil = vesselState.time + 0.15;
             }
@@ -910,14 +910,14 @@ namespace MuMech
 
             for (int i = 0; i < nb_engines; i++)
             {
-                torque -= vesselState.enginesWrappers[i].ConstantTorque;
-                torqueScale += vesselState.enginesWrappers[i].MaxVariableTorque.magnitude;
+                torque -= vesselState.enginesWrappers[i].constantTorque;
+                torqueScale += vesselState.enginesWrappers[i].maxVariableTorque.magnitude;
 
-                force += Vector3d.Dot(mainThrottle * vesselState.enginesWrappers[i].MaxVariableForce, Vector3d.up) * Vector3d.up;
-                forceScale += vesselState.enginesWrappers[i].MaxVariableForce.magnitude * 10;
+                force += Vector3d.Dot(mainThrottle * vesselState.enginesWrappers[i].maxVariableForce, Vector3d.up) * Vector3d.up;
+                forceScale += vesselState.enginesWrappers[i].maxVariableForce.magnitude * 10;
             }
 
-            var engines = vesselState.enginesWrappers.Where(eng => !eng.Engine.throttleLocked).ToList();
+            var engines = vesselState.enginesWrappers.Where(eng => !eng.engine.throttleLocked).ToList();
             var n = engines.Count;
 
             if (nb_engines == 0)
@@ -936,11 +936,11 @@ namespace MuMech
             {
                 for (int j = 0; j < n; j++)
                 {
-                    a[i, j] = Vector3d.Dot(engines[i].MaxVariableTorque, engines[j].MaxVariableTorque) / (torqueScale * torqueScale)
-                              + Vector3d.Dot(engines[i].MaxVariableForce, engines[j].MaxVariableForce) / (forceScale * forceScale);
+                    a[i, j] = Vector3d.Dot(engines[i].maxVariableTorque, engines[j].maxVariableTorque) / (torqueScale * torqueScale)
+                              + Vector3d.Dot(engines[i].maxVariableForce, engines[j].maxVariableForce) / (forceScale * forceScale);
                 }
-                b[i] = -Vector3d.Dot(engines[i].MaxVariableTorque, torque) / (torqueScale * torqueScale)
-                       - Vector3d.Dot(engines[i].MaxVariableForce, force) / (forceScale * forceScale);
+                b[i] = -Vector3d.Dot(engines[i].maxVariableTorque, torque) / (torqueScale * torqueScale)
+                       - Vector3d.Dot(engines[i].maxVariableForce, force) / (forceScale * forceScale);
 
                 boundL[i] = 0;
                 boundU[i] = mainThrottle;
@@ -965,7 +965,7 @@ namespace MuMech
 
             for (int i = 0; i < n; i++)
             {
-                engines[i].ThrustRatio = (float)(x[i] / mainThrottle);
+                engines[i].thrustRatio = (float)(x[i] / mainThrottle);
             }
 
             return DifferentialThrottleStatus.Success;
