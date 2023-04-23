@@ -41,7 +41,7 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale)
         {
-            return new FlightPathAngle4Reduced(_gammaT, _rT / scale.lengthScale, _vT / scale.velocityScale, _incT);
+            return new FlightPathAngle4Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)

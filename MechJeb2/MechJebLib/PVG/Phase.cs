@@ -70,16 +70,16 @@ namespace MechJebLib.PVG
 
             var phase = (Phase)this.MemberwiseClone();
             
-            phase.ve         = ve / scale.velocityScale;
-            phase.tau        = tau / scale.timeScale;
-            phase.mdot       = mdot / scale.mdotScale;
-            phase.thrust     = thrust / scale.forceScale;
-            phase.bt         = bt / scale.timeScale;
-            phase.mint       = mint / scale.timeScale;
-            phase.maxt       = maxt / scale.timeScale;
-            phase.m0         = m0 / scale.massScale;
-            phase.mf         = mf / scale.massScale;
-            phase.DropMass   = DropMass / scale.massScale;
+            phase.ve         = ve / scale.VelocityScale;
+            phase.tau        = tau / scale.TimeScale;
+            phase.mdot       = mdot / scale.MdotScale;
+            phase.thrust     = thrust / scale.ForceScale;
+            phase.bt         = bt / scale.TimeScale;
+            phase.mint       = mint / scale.TimeScale;
+            phase.maxt       = maxt / scale.TimeScale;
+            phase.m0         = m0 / scale.MassScale;
+            phase.mf         = mf / scale.MassScale;
+            phase.DropMass   = DropMass / scale.MassScale;
             phase.Normalized = true;
 
             return phase;

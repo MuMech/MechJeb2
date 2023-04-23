@@ -31,11 +31,11 @@ namespace MechJebLib.PVG
             Scale = new Scale(r0, m0, mu);
             Mu    = mu;
             R0    = r0;
-            R0Bar = r0 / Scale.lengthScale;
+            R0Bar = r0 / Scale.LengthScale;
             V0    = v0;
-            V0Bar = v0 / Scale.velocityScale;
+            V0Bar = v0 / Scale.VelocityScale;
             M0    = m0;
-            M0Bar = m0 / Scale.massScale;
+            M0Bar = m0 / Scale.MassScale;
             U0    = u0;
             Rbody = rbody;
             

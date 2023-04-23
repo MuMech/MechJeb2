@@ -28,7 +28,7 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale)
         {
-            return new Intercept6Cartesian(_rT / scale.lengthScale, _vT / scale.velocityScale);
+            return new Intercept6Cartesian(_rT / scale.LengthScale, _vT / scale.VelocityScale);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
