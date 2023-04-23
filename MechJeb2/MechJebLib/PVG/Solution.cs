@@ -28,10 +28,10 @@ namespace MechJebLib.PVG
         private readonly double       _rbody;
 
         public  int    Segments       => Phases.Count;
-        private double _timeScale     => _scale.timeScale;
-        private double _lengthScale   => _scale.lengthScale;
-        private double _velocityScale => _scale.velocityScale;
-        private double _massScale     => _scale.massScale;
+        private double _timeScale     => _scale.TimeScale;
+        private double _lengthScale   => _scale.LengthScale;
+        private double _velocityScale => _scale.VelocityScale;
+        private double _massScale     => _scale.MassScale;
 
         public  double tmax => _tmax[Segments - 1];
         private double tmin => _tmin[0];

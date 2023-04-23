@@ -60,7 +60,7 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale)
         {
-            return new Kepler5Reduced(_smaT / scale.lengthScale, _eccT, _incT, _lanT, _argpT);
+            return new Kepler5Reduced(_smaT / scale.LengthScale, _eccT, _incT, _lanT, _argpT);
         }
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
