@@ -114,6 +114,8 @@
         <Compile Include="MechJebLib\Core\ODE\ODESolver.cs" />
         <Compile Include="MechJebLib\Core\TwoBody\Shepperd.cs" />
         <Compile Include="MechJebLib\Core\TwoBody\Farnocchia.cs" />
+        <Compile Include="MechJebLib\Maneuvers\ChangeOrbitalElement.cs" />
+        <Compile Include="MechJebLib\Maneuvers\ReturnFromMoon.cs" />
         <Compile Include="MechJebLib\Primitives\DD.cs" />
         <Compile Include="MechJebLib\Primitives\Scale.cs" />
         <Compile Include="MechJebLib\PVG\ArrayWrapper.cs" />
