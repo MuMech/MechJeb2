@@ -6,6 +6,8 @@
 
 #nullable enable
 
+using MechJebLib.Primitives;
+
 namespace MechJebLib.PVG.Terminal
 {
     public interface IPVGTerminal

@@ -39,7 +39,7 @@ namespace MechJebLibTest.PVG
             using var yf = DD.Rent(initial.Length);
             using var wrapper = ArrayWrapper.Rent(y0);
 
-            var scale = new Scale(r0, m0, mu);
+            var scale = Scale.Create(mu, r0.magnitude, m0);
 
             var phase = Phase.NewStageUsingFinalMass(m0, 7114.2513992454, 288.000034332275, 170.308460385726, 3);
             Phase normalizedPhase = phase.Rescale(scale);
@@ -89,7 +89,7 @@ namespace MechJebLibTest.PVG
             using var yf = DD.Rent(initial.Length);
             using var wrapper = ArrayWrapper.Rent(y0);
 
-            var scale = new Scale(r0, m0, mu);
+            var scale = Scale.Create(mu, r0.magnitude, m0);
 
             // stage: 1 m0: 0.0579934523328269 mf: 0.0277629729088327 thrust: 0.0700729705895292 bt: 0.0507442481894487 isp: 270.15767003304 mdot: 0.209206166695606 (optimized)
             var phase = Phase.NewStageUsingFinalMass(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409, 1, true);
@@ -133,7 +133,7 @@ namespace MechJebLibTest.PVG
             using var yf = DD.Rent(initial.Length);
             using var wrapper = ArrayWrapper.Rent(y0);
 
-            var scale = new Scale(r0, m0, mu);
+            var scale = Scale.Create(mu, r0.magnitude, m0);
 
             // stage: 0 m0: 0.01380889936729 mf: 0.00361529691208077 thrust: 0.0441169291167964 bt: 0.0658996558651869 isp: 230.039271734103 mdot: 0.15468369783391 (unguided)
             var phase = Phase.NewStageUsingFinalMass(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005, 0, false, true);
