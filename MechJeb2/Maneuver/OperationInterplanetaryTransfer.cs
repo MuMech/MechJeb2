@@ -79,11 +79,8 @@ namespace MuMech
 
             Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForInterplanetaryTransferEjection(o, UT, target.TargetOrbit, WaitForPhaseAngle,
                 out UT);
-            
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, UT)
-            };
+
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, UT) };
         }
     }
 }

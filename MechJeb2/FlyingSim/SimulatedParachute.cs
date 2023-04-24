@@ -21,17 +21,14 @@ namespace MuMech
         //double fullDeployAGL = 0;
         //double targetASLAtSemiDeploy = 0;
         //double targetASLAtFullDeploy = 0;
-        private float deployLevel = 0;
-        public bool deploying = false;
+        private float deployLevel;
+        public  bool  deploying;
 
-        private bool willDeploy = false;
+        private bool willDeploy;
 
         private static readonly Pool<SimulatedParachute> pool = new Pool<SimulatedParachute>(Create, Reset);
 
-        public static new int PoolSize
-        {
-            get { return pool.Size; }
-        }
+        public new static int PoolSize => pool.Size;
 
         private static SimulatedParachute Create()
         {
@@ -44,6 +41,7 @@ namespace MuMech
             {
                 DragCubePool.Instance.Release(cube);
             }
+
             pool.Release(this);
         }
 
@@ -61,15 +59,15 @@ namespace MuMech
 
         private void Init(ModuleParachute mp, double startTime, int limitChutesStage)
         {
-            this.para = mp;
-            this.state = mp.deploymentState;
+            para  = mp;
+            state = mp.deploymentState;
 
             willDeploy = limitChutesStage != -1 && para.part.inverseStage >= limitChutesStage;
 
             // Work out when the chute was put into its current state based on the current drag as compared to the stowed, semi deployed and fully deployed drag
 
             double timeSinceDeployment = 0;
-            
+
             switch (mp.deploymentState)
             {
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
@@ -98,7 +96,7 @@ namespace MuMech
                     break;
             }
 
-            this.openningTime = startTime - timeSinceDeployment;
+            openningTime = startTime - timeSinceDeployment;
 
             //Debug.Log("Parachute " + para.name + " parachuteDrag:" + this.parachuteDrag + " stowedDrag:" + para.stowedDrag + " semiDeployedDrag:" + para.semiDeployedDrag + " fullyDeployedDrag:" + para.fullyDeployedDrag + " part.maximum_drag:" + para.part.maximum_drag + " part.minimum_drag:" + para.part.minimum_drag + " semiDeploymentSpeed:" + para.semiDeploymentSpeed + " deploymentSpeed:" + para.deploymentSpeed + " deploymentState:" + para.deploymentState + " timeSinceDeployment:" + timeSinceDeployment);
             // Keep that test code until they fix the bug in the new parachute module
@@ -106,19 +104,17 @@ namespace MuMech
             //    Debug.Log("Parachute " + para.name + " parachuteDrag:" + this.parachuteDrag.ToString("F3") + " RealDrag:" + realDrag.ToString("F3") + " MinDrag:" + para.part.minimum_drag.ToString("F3") + " MaxDrag:" + para.part.maximum_drag.ToString("F3"));
         }
 
-
         public override Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
         {
             if (state != ModuleParachute.deploymentStates.SEMIDEPLOYED && state != ModuleParachute.deploymentStates.DEPLOYED)
                 return base.Drag(vesselVelocity, dragFactor, mach);
 
             return Vector3d.zero;
-
         }
 
-
         // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
-        public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
+        public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
+            double semiDeployMultiplier)
         {
             if (!willDeploy)
                 return false;
@@ -131,25 +127,30 @@ namespace MuMech
                     {
                         stateChanged = true;
                     }
+
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
                     if (pressure >= para.minAirPressureToOpen)
                     {
                         stateChanged = true;
                     }
+
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     if (altATGL < para.deployAltitude)
                     {
                         stateChanged = true;
                     }
+
                     break;
             }
-            return (stateChanged);
+
+            return stateChanged;
         }
 
         // Consider activating, semi deploying or deploying a parachute. returns true if the state has changed
-        public override bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
+        public override bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
+            double semiDeployMultiplier)
         {
             if (!willDeploy)
                 return false;
@@ -164,18 +165,19 @@ namespace MuMech
                         // Immediately check to see if the parachute should be semi deployed, rather than waiting for another iteration.
                         if (pressure >= para.minAirPressureToOpen)
                         {
-                            state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                            state        = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                             openningTime = time;
                             //semiDeployAGL = altATGL;
                             //semiDeployASL = altASL;
                             //targetASLAtSemiDeploy = endASL;
                         }
                     }
+
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
                     if (pressure >= para.minAirPressureToOpen)
                     {
-                        state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                        state        = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                         openningTime = time;
                         //semiDeployAGL = altATGL;
                         //semiDeployASL = altASL;
@@ -186,12 +188,13 @@ namespace MuMech
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     if (altATGL < para.deployAltitude)
                     {
-                        state = ModuleParachute.deploymentStates.DEPLOYED;
+                        state        = ModuleParachute.deploymentStates.DEPLOYED;
                         openningTime = time;
                         //fullDeployAGL = altATGL;
                         //fullDeployASL = altASL;
                         //targetASLAtFullDeploy = endASL;
                     }
+
                     break;
             }
 
@@ -214,21 +217,23 @@ namespace MuMech
             // Are we deploying in any way? We know if we are deploying or not if normalized time is less than 1
             if (normalizedTime < 1)
             {
-                this.deploying = true;
+                deploying = true;
             }
             else
             {
-                this.deploying = false;
+                deploying = false;
             }
+
             // If we are deploying or semi deploying then use Lerp to replicate the way the game increases the drag as we deploy.
             if (deploying && (state == ModuleParachute.deploymentStates.SEMIDEPLOYED || state == ModuleParachute.deploymentStates.DEPLOYED))
             {
-                this.deployLevel = Mathf.Pow(normalizedTime, para.deploymentCurve);
+                deployLevel = Mathf.Pow(normalizedTime, para.deploymentCurve);
             }
             else
             {
-                this.deployLevel = 1;
+                deployLevel = 1;
             }
+
             switch (state)
             {
                 case ModuleParachute.deploymentStates.STOWED:
@@ -251,8 +256,8 @@ namespace MuMech
                     SetCubeWeight("DEPLOYED", deployLevel);
                     break;
             }
-            return deploying;
 
+            return deploying;
         }
     }
 }

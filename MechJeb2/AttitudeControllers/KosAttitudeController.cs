@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MuMech.AttitudeControllers
 {
-    class KosAttitudeController : BaseAttitudeController
+    internal class KosAttitudeController : BaseAttitudeController
     {
         [Persistent(pass = (int)Pass.Global)]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
@@ -16,27 +16,28 @@ namespace MuMech.AttitudeControllers
         //}
 
         public TorquePI pitchPI = new TorquePI();
-        public TorquePI yawPI = new TorquePI();
-        public TorquePI rollPI = new TorquePI();
+        public TorquePI yawPI   = new TorquePI();
+        public TorquePI rollPI  = new TorquePI();
 
         public KosPIDLoop pitchRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        public KosPIDLoop yawRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        public KosPIDLoop rollRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        
-        private Vector3d Actuation = Vector3d.zero;
+        public KosPIDLoop yawRatePI   = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
+        public KosPIDLoop rollRatePI  = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
+
+        private Vector3d Actuation    = Vector3d.zero;
         private Vector3d TargetTorque = Vector3d.zero;
-        private Vector3d Omega = Vector3d.zero;
+        private Vector3d Omega        = Vector3d.zero;
 
         /* error */
         private double phiTotal;
+
         /* error in pitch, roll, yaw */
-        private Vector3d phiVector = Vector3d.zero;
+        private Vector3d phiVector   = Vector3d.zero;
         private Vector3d TargetOmega = Vector3d.zero;
 
         /* max angular rotation */
         private Vector3d MaxOmega = Vector3d.zero;
 
-        private Vector3d ControlTorque { get { return ac.torque; } }
+        private Vector3d ControlTorque => ac.torque;
 
         public KosAttitudeController(MechJebModuleAttitudeController controller) : base(controller)
         {
@@ -50,34 +51,36 @@ namespace MuMech.AttitudeControllers
             UpdateControl();
 
             deltaEuler = phiVector * Mathf.Rad2Deg;
-            act = Actuation;
+            act        = Actuation;
         }
-        
+
         /* temporary state vectors */
         private Quaternion vesselRotation;
-        private Vector3d vesselForward;
-        private Vector3d vesselTop;
-        private Vector3d vesselStarboard;
-        private Vector3d targetForward;
-        private Vector3d targetTop;
-        
+        private Vector3d   vesselForward;
+        private Vector3d   vesselTop;
+        private Vector3d   vesselStarboard;
+        private Vector3d   targetForward;
+        private Vector3d   targetTop;
+
         /* private Vector3d targetStarboard; */
 
-        private void UpdateStateVectors() {
+        private void UpdateStateVectors()
+        {
             /* FIXME: may get called more than once per tick */
-            vesselRotation = ac.vessel.ReferenceTransform.rotation * Quaternion.Euler(-90, 0, 0);
-            vesselForward = vesselRotation * Vector3d.forward;
-            vesselTop = vesselRotation * Vector3d.up;
+            vesselRotation  = ac.vessel.ReferenceTransform.rotation * Quaternion.Euler(-90, 0, 0);
+            vesselForward   = vesselRotation * Vector3d.forward;
+            vesselTop       = vesselRotation * Vector3d.up;
             vesselStarboard = vesselRotation * Vector3d.right;
 
             targetForward = ac.RequestedAttitude * Vector3d.forward;
-            targetTop = ac.RequestedAttitude * Vector3d.up;
+            targetTop     = ac.RequestedAttitude * Vector3d.up;
             /* targetStarboard = target * Vector3d.right; */
 
             Omega = -ac.vessel.angularVelocity;
         }
 
-        public double PhiTotal() {
+        public double PhiTotal()
+        {
             UpdateStateVectors();
 
             double PhiTotal = Vector3d.Angle(vesselForward, targetForward) * Mathf.Deg2Rad;
@@ -87,7 +90,8 @@ namespace MuMech.AttitudeControllers
             return PhiTotal;
         }
 
-        public Vector3d PhiVector() {
+        public Vector3d PhiVector()
+        {
             Vector3d Phi = Vector3d.zero;
 
             Phi[0] = Vector3d.Angle(vesselForward, Vector3d.Exclude(vesselStarboard, targetForward)) * Mathf.Deg2Rad;
@@ -102,13 +106,15 @@ namespace MuMech.AttitudeControllers
 
             return Phi;
         }
-        
-        private void UpdatePredictionPI() {
+
+        private void UpdatePredictionPI()
+        {
             phiTotal = PhiTotal();
 
             phiVector = PhiVector();
-            
-            for(int i = 0; i < 3; i++) {
+
+            for (int i = 0; i < 3; i++)
+            {
                 MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
             }
 
@@ -116,7 +122,8 @@ namespace MuMech.AttitudeControllers
             TargetOmega[1] = rollRatePI.Update(-phiVector[1], 0, MaxOmega[1]);
             TargetOmega[2] = yawRatePI.Update(-phiVector[2], 0, MaxOmega[2]);
 
-            if (Math.Abs(phiTotal) > rollControlRange) {
+            if (Math.Abs(phiTotal) > rollControlRange)
+            {
                 TargetOmega[1] = 0;
                 rollRatePI.ResetI();
             }
@@ -135,12 +142,13 @@ namespace MuMech.AttitudeControllers
             yawRatePI.ResetI();
             rollRatePI.ResetI();
         }
-        
 
-        private void UpdateControl() {
+        private void UpdateControl()
+        {
             /* TODO: static engine torque and/or differential throttle */
 
-            for(int i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; i++)
+            {
                 double clamp = Math.Max(Math.Abs(Actuation[i]), 0.005) * 2;
                 Actuation[i] = TargetTorque[i] / ControlTorque[i];
                 if (Math.Abs(Actuation[i]) < EPSILON || double.IsNaN(Actuation[i]))
@@ -148,7 +156,6 @@ namespace MuMech.AttitudeControllers
                 Actuation[i] = Math.Max(Math.Min(Actuation[i], clamp), -clamp);
             }
         }
-
 
         public override void GUI()
         {

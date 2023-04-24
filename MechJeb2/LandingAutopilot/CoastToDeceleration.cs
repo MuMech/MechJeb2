@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -34,7 +34,7 @@ namespace MuMech
                 return this;
             }
 
-            bool warpReady;
+            private bool warpReady;
 
             public override AutopilotStep OnFixedUpdate()
             {
@@ -58,14 +58,16 @@ namespace MuMech
                     return new DecelerationBurn(core);
                 }
 
-                status = Localizer.Format("#MechJeb_LandingGuidance_Status1");//"Coasting toward deceleration burn"
+                status = Localizer.Format("#MechJeb_LandingGuidance_Status1"); //"Coasting toward deceleration burn"
 
                 if (core.landing.landAtTarget)
                 {
                     double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!vesselState.parachuteDeployed && vesselState.drag <= 0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
+                        if (!vesselState.parachuteDeployed &&
+                            vesselState.drag <=
+                            0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
                             core.warp.MinimumWarp();
                             if (core.landing.rcsAdjustment)
@@ -76,7 +78,8 @@ namespace MuMech
                     else
                     {
                         Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
-                        status += "\n" + Localizer.Format("#MechJeb_LandingGuidance_Status2",deltaV.magnitude.ToString("F3"));//"Course correction DV: " +  + " m/s"
+                        status += "\n" + Localizer.Format("#MechJeb_LandingGuidance_Status2",
+                            deltaV.magnitude.ToString("F3")); //"Course correction DV: " +  + " m/s"
                     }
                 }
 
@@ -90,16 +93,19 @@ namespace MuMech
                 }
 
                 if (core.attitude.attitudeAngleFromTarget() < 1) { warpReady = true; } // less warp start warp stop jumping
+
                 if (core.attitude.attitudeAngleFromTarget() > 5) { warpReady = false; } // hopefully
 
                 if (core.landing.PredictionReady)
                 {
                     if (vesselState.drag < 0.01)
                     {
-                        double decelerationStartTime = (core.landing.Prediction.trajectory.Any() ? core.landing.Prediction.trajectory.First().UT : vesselState.time);
+                        double decelerationStartTime = core.landing.Prediction.trajectory.Any()
+                            ? core.landing.Prediction.trajectory.First().UT
+                            : vesselState.time;
                         Vector3d decelerationStartAttitude = -orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
                         decelerationStartAttitude += mainBody.getRFrmVel(orbit.WorldPositionAtUT(decelerationStartTime));
-                        decelerationStartAttitude = decelerationStartAttitude.normalized;
+                        decelerationStartAttitude =  decelerationStartAttitude.normalized;
                         core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, core.landing);
                     }
                     else

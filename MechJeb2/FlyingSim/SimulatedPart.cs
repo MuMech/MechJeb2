@@ -8,10 +8,10 @@ namespace MuMech
     {
         protected DragCubeList cubes = new DragCubeList();
 
-        public double totalMass = 0;
-        public bool shieldedFromAirstream;
-        public bool noDrag;
-        public bool hasLiftModule;
+        public  double totalMass;
+        public  bool   shieldedFromAirstream;
+        public  bool   noDrag;
+        public  bool   hasLiftModule;
         private double bodyLiftMultiplier;
 
         private ReentrySimulation.SimCurves simCurves;
@@ -21,14 +21,11 @@ namespace MuMech
 
         private static readonly Pool<SimulatedPart> pool = new Pool<SimulatedPart>(Create, Reset);
 
-        public static int PoolSize
-        {
-            get { return pool.Size; }
-        }
+        public static int PoolSize => pool.Size;
 
         private static SimulatedPart Create()
         {
-            SimulatedPart part = new SimulatedPart();
+            var part = new SimulatedPart();
             part.cubes.BodyLiftCurve = new PhysicsGlobals.LiftingSurfaceCurve();
             part.cubes.SurfaceCurves = new PhysicsGlobals.SurfaceCurvesList();
             return part;
@@ -40,6 +37,7 @@ namespace MuMech
             {
                 DragCubePool.Instance.Release(cube);
             }
+
             pool.Release(this);
         }
 
@@ -66,11 +64,11 @@ namespace MuMech
         {
             Rigidbody rigidbody = p.rb;
 
-            totalMass = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
+            totalMass             = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
             shieldedFromAirstream = p.ShieldedFromAirstream;
 
-            noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
-            hasLiftModule = p.hasLiftModule;
+            noDrag             = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
+            hasLiftModule      = p.hasLiftModule;
             bodyLiftMultiplier = p.bodyLiftMultiplier * PhysicsGlobals.BodyLiftMultiplier;
 
             simCurves = _simCurves;
@@ -81,7 +79,8 @@ namespace MuMech
 
             // Rotation to convert the vessel space vesselVelocity to the part space vesselVelocity
             // QuaternionD.LookRotation is not working...
-            partToVessel = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward), p.vessel.GetTransform().InverseTransformDirection(p.transform.up));
+            partToVessel = Quaternion.LookRotation(p.vessel.GetTransform().InverseTransformDirection(p.transform.forward),
+                p.vessel.GetTransform().InverseTransformDirection(p.transform.up));
             vesselToPart = Quaternion.Inverse(partToVessel);
 
             //DragCubeMultiplier = PhysicsGlobals.DragCubeMultiplier;
@@ -92,7 +91,6 @@ namespace MuMech
             //    MechJebCore.print(p.name + " " + p.dragModel);
 
             //oPart = p;
-
         }
 
         public virtual Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
@@ -190,23 +188,22 @@ namespace MuMech
             return liftVector;
         }
 
-        public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
+        public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
+            double semiDeployMultiplier)
         {
             return false;
         }
 
-        public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
+        public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
+            double semiDeployMultiplier)
         {
             return false;
         }
 
         public static class DragCubePool
         {
-            private static readonly Pool<DragCube> _Instance = new Pool<DragCube>(
+            public static Pool<DragCube> Instance { get; } = new Pool<DragCube>(
                 () => new DragCube(), cube => { });
-
-
-            public static Pool<DragCube> Instance { get { return _Instance; } }
         }
 
         protected void CopyDragCubesList(DragCubeList source, DragCubeList dest)
@@ -229,42 +226,42 @@ namespace MuMech
 
             dest.SetDragWeights();
 
-            for (int i=0; i<6; i++)
+            for (int i = 0; i < 6; i++)
             {
-                dest.WeightedArea[i] = source.WeightedArea[i];
-                dest.WeightedDrag[i] = source.WeightedDrag[i];
-                dest.AreaOccluded[i] = source.AreaOccluded[i];
+                dest.WeightedArea[i]  = source.WeightedArea[i];
+                dest.WeightedDrag[i]  = source.WeightedDrag[i];
+                dest.AreaOccluded[i]  = source.AreaOccluded[i];
                 dest.WeightedDepth[i] = source.WeightedDepth[i];
             }
 
             dest.SetDragWeights();
 
-            dest.DragCurveCd = simCurves.DragCurveCd;
-            dest.DragCurveCdPower = simCurves.DragCurveCdPower;
+            dest.DragCurveCd         = simCurves.DragCurveCd;
+            dest.DragCurveCdPower    = simCurves.DragCurveCdPower;
             dest.DragCurveMultiplier = simCurves.DragCurveMultiplier;
 
-            dest.BodyLiftCurve.liftCurve = simCurves.LiftCurve;
-            dest.BodyLiftCurve.dragCurve = simCurves.DragCurve;
+            dest.BodyLiftCurve.liftCurve     = simCurves.LiftCurve;
+            dest.BodyLiftCurve.dragCurve     = simCurves.DragCurve;
             dest.BodyLiftCurve.dragMachCurve = simCurves.DragMachCurve;
             dest.BodyLiftCurve.liftMachCurve = simCurves.LiftMachCurve;
 
             dest.SurfaceCurves.dragCurveMultiplier = simCurves.DragCurveMultiplier;
-            dest.SurfaceCurves.dragCurveSurface = simCurves.DragCurveSurface;
-            dest.SurfaceCurves.dragCurveTail = simCurves.DragCurveTail;
-            dest.SurfaceCurves.dragCurveTip = simCurves.DragCurveTip;
+            dest.SurfaceCurves.dragCurveSurface    = simCurves.DragCurveSurface;
+            dest.SurfaceCurves.dragCurveTail       = simCurves.DragCurveTail;
+            dest.SurfaceCurves.dragCurveTip        = simCurves.DragCurveTip;
         }
 
         protected static void CopyDragCube(DragCube source, DragCube dest)
         {
-            dest.Name = source.Name;
+            dest.Name   = source.Name;
             dest.Weight = source.Weight;
             dest.Center = source.Center;
-            dest.Size = source.Size;
+            dest.Size   = source.Size;
             for (int i = 0; i < source.Drag.Length; i++)
             {
-                dest.Drag[i] = source.Drag[i];
-                dest.Area[i] = source.Area[i];
-                dest.Depth[i] = source.Depth[i];
+                dest.Drag[i]          = source.Drag[i];
+                dest.Area[i]          = source.Area[i];
+                dest.Depth[i]         = source.Depth[i];
                 dest.DragModifiers[i] = source.DragModifiers[i];
             }
         }
@@ -283,7 +280,7 @@ namespace MuMech
                 if (cubes.Cubes[i].Name == name && cubes.Cubes[i].Weight != newWeight)
                 {
                     cubes.Cubes[i].Weight = newWeight;
-                    noChange = false;
+                    noChange              = false;
                 }
             }
 

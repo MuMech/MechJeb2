@@ -34,10 +34,7 @@ namespace MuMech
 
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, ut, target.targetLongitude);
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

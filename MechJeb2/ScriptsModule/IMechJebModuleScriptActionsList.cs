@@ -1,9 +1,7 @@
-﻿using System;
-namespace MuMech
+﻿namespace MuMech
 {
-	public interface IMechJebModuleScriptActionsListParent
-	{
-		void notifyEndActionsList();
-	}
+    public interface IMechJebModuleScriptActionsListParent
+    {
+        void notifyEndActionsList();
+    }
 }
-

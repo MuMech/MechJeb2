@@ -29,10 +29,7 @@ namespace MuMech
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToShiftNodeLongitude(o, ut, target.targetLongitude);
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

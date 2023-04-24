@@ -1,88 +1,91 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MuMech
 {
-	public class MechJebModuleScriptActionRendezvousAP : MechJebModuleScriptAction
-	{
-		public static String NAME = "RendezvousAP";
-		[Persistent(pass = (int)Pass.Type)]
-		private readonly EditableDouble desiredDistance = 100;
-		[Persistent(pass = (int)Pass.Type)]
-		private readonly EditableDouble maxPhasingOrbits = 5;
-		[Persistent(pass = (int)Pass.Type)]
-		private bool autowarp;
-        readonly MechJebModuleRendezvousAutopilot autopilot;
-        readonly MechJebModuleRendezvousAutopilotWindow module;
+    public class MechJebModuleScriptActionRendezvousAP : MechJebModuleScriptAction
+    {
+        public static string NAME = "RendezvousAP";
 
-		public MechJebModuleScriptActionRendezvousAP (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
-		{
-			this.autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
-			this.module = core.GetComputerModule<MechJebModuleRendezvousAutopilotWindow>();
-			this.readModuleConfiguration();
-		}
+        [Persistent(pass = (int)Pass.Type)]
+        private readonly EditableDouble desiredDistance = 100;
 
-		public override void readModuleConfiguration()
-		{
-			autowarp = core.node.autowarp;
-		}
+        [Persistent(pass = (int)Pass.Type)]
+        private readonly EditableDouble maxPhasingOrbits = 5;
 
-		public override void writeModuleConfiguration()
-		{
-			core.node.autowarp = autowarp;
-		}
+        [Persistent(pass = (int)Pass.Type)]
+        private bool autowarp;
 
-		public override void activateAction()
-		{
-			base.activateAction();
+        private readonly MechJebModuleRendezvousAutopilot       autopilot;
+        private readonly MechJebModuleRendezvousAutopilotWindow module;
 
-			this.writeModuleConfiguration();
-			autopilot.users.Add(module);
-			autopilot.enabled = true;
+        public MechJebModuleScriptActionRendezvousAP(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) :
+            base(scriptModule, core, actionsList, NAME)
+        {
+            autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
+            module    = core.GetComputerModule<MechJebModuleRendezvousAutopilotWindow>();
+            readModuleConfiguration();
+        }
 
-			this.endAction();
-		}
+        public override void readModuleConfiguration()
+        {
+            autowarp = core.node.autowarp;
+        }
 
-		public override  void endAction()
-		{
-			base.endAction();
+        public override void writeModuleConfiguration()
+        {
+            core.node.autowarp = autowarp;
+        }
 
-			autopilot.users.Remove(module);
-		}
+        public override void activateAction()
+        {
+            base.activateAction();
 
-		public override void WindowGUI(int windowID)
-		{
-			base.preWindowGUI(windowID);
-			base.WindowGUI(windowID);
-			GUILayout.Label ("Rendezvous Autopilot");
-			if (autopilot != null)
-			{
-				if (!autopilot.enabled)
-				{
-					GuiUtils.SimpleTextBox("final distance:", autopilot.desiredDistance, "m");
-					GuiUtils.SimpleTextBox("Max # of phasing orb.:", autopilot.maxPhasingOrbits);
+            writeModuleConfiguration();
+            autopilot.users.Add(module);
+            autopilot.enabled = true;
 
-					if (autopilot.maxPhasingOrbits < 5)
-					{
-						GUILayout.Label("Max # of phasing orb. must be at least 5.",GuiUtils.yellowLabel);
-					}
-				}
-				else
-				{
-					GUILayout.Label("Status: " + autopilot.status);
-				}
-			}
-			base.postWindowGUI(windowID);
-		}
+            endAction();
+        }
 
-		public override void afterOnFixedUpdate()
-		{
-			if (this.isStarted() && !this.isExecuted() && autopilot.enabled == false)
-			{
-				this.endAction();
-			}
-		}
-	}
+        public override void endAction()
+        {
+            base.endAction();
+
+            autopilot.users.Remove(module);
+        }
+
+        public override void WindowGUI(int windowID)
+        {
+            preWindowGUI(windowID);
+            base.WindowGUI(windowID);
+            GUILayout.Label("Rendezvous Autopilot");
+            if (autopilot != null)
+            {
+                if (!autopilot.enabled)
+                {
+                    GuiUtils.SimpleTextBox("final distance:", autopilot.desiredDistance, "m");
+                    GuiUtils.SimpleTextBox("Max # of phasing orb.:", autopilot.maxPhasingOrbits);
+
+                    if (autopilot.maxPhasingOrbits < 5)
+                    {
+                        GUILayout.Label("Max # of phasing orb. must be at least 5.", GuiUtils.yellowLabel);
+                    }
+                }
+                else
+                {
+                    GUILayout.Label("Status: " + autopilot.status);
+                }
+            }
+
+            postWindowGUI(windowID);
+        }
+
+        public override void afterOnFixedUpdate()
+        {
+            if (isStarted() && !isExecuted() && autopilot.enabled == false)
+            {
+                endAction();
+            }
+        }
+    }
 }
-

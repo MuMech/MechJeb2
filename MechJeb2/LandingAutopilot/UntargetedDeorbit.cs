@@ -1,4 +1,5 @@
 using KSP.Localization;
+
 namespace MuMech
 {
     namespace Landing
@@ -23,7 +24,7 @@ namespace MuMech
                 else
                     core.thrust.targetThrottle = 0;
 
-                status = Localizer.Format("#MechJeb_LandingGuidance_Status16");//"Doing deorbit burn."
+                status = Localizer.Format("#MechJeb_LandingGuidance_Status16"); //"Doing deorbit burn."
 
                 return this;
             }

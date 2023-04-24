@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MuMech
 {
     public class MechJebModuleScriptActionWaitFor : MechJebModuleScriptAction
     {
-        public static String NAME = "WaitFor";
+        public static string NAME = "WaitFor";
 
         /*
         [Persistent(pass = (int)Pass.Type)]
@@ -14,7 +12,8 @@ namespace MuMech
         */
         private readonly MechJebModuleScriptCondition condition;
 
-        public MechJebModuleScriptActionWaitFor (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
+        public MechJebModuleScriptActionWaitFor(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) :
+            base(scriptModule, core, actionsList, NAME)
         {
             condition = new MechJebModuleScriptCondition(scriptModule, core, this);
         }
@@ -31,20 +30,20 @@ namespace MuMech
 
         public override void WindowGUI(int windowID)
         {
-            base.preWindowGUI(windowID);
+            preWindowGUI(windowID);
             base.WindowGUI(windowID);
-            GUILayout.Label ("Wait for");
+            GUILayout.Label("Wait for");
             condition.WindowGUI(windowID);
-            base.postWindowGUI(windowID);
+            postWindowGUI(windowID);
         }
 
         public override void afterOnFixedUpdate()
         {
-            if (this.isStarted() && !this.isExecuted())
+            if (isStarted() && !isExecuted())
             {
                 if (condition.checkCondition())
                 {
-                    this.endAction();
+                    endAction();
                 }
             }
         }
@@ -56,7 +55,7 @@ namespace MuMech
 
         public override void postSave(ConfigNode node)
         {
-            ConfigNode conditionNode = ConfigNode.CreateConfigFromObject(this.condition, (int)Pass.Type, null);
+            var conditionNode = ConfigNode.CreateConfigFromObject(condition, (int)Pass.Type, null);
             conditionNode.CopyTo(node.AddNode("Condition"));
         }
     }

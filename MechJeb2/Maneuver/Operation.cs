@@ -1,10 +1,10 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using KSP.Localization;
 using UnityEngine;
-
-#nullable enable
 
 namespace MuMech
 {
@@ -17,7 +17,7 @@ namespace MuMech
         public ManeuverParameters(Vector3d dV, double ut)
         {
             this.dV = dV;
-            this.UT = ut;
+            UT      = ut;
         }
     }
 
@@ -71,8 +71,8 @@ namespace MuMech
         {
             foreach (Type t in types)
             {
-                if (t is { IsAbstract: false } 
-                    && typeof(Operation).IsAssignableFrom(t) 
+                if (t is { IsAbstract: false }
+                    && typeof(Operation).IsAssignableFrom(t)
                     && t.GetConstructor(Type.EmptyTypes) != null)
                     _operations.Add(t);
             }

@@ -5,19 +5,15 @@ namespace MuMech
 {
     public class SimulatedVessel
     {
-
-        public List<SimulatedPart> parts = new List<SimulatedPart>();
-        private int count;
-        public double totalMass = 0;
+        public  List<SimulatedPart> parts = new List<SimulatedPart>();
+        private int                 count;
+        public  double              totalMass;
 
         private ReentrySimulation.SimCurves simCurves;
 
         private static readonly Pool<SimulatedVessel> pool = new Pool<SimulatedVessel>(Create, Reset);
 
-        public static int PoolSize
-        {
-            get { return pool.Size; }
-        }
+        public static int PoolSize => pool.Size;
 
         private static SimulatedVessel Create()
         {
@@ -46,7 +42,7 @@ namespace MuMech
         {
             totalMass = 0;
 
-            var oParts = v.Parts;
+            List<Part> oParts = v.Parts;
             count = oParts.Count;
 
             simCurves = _simCurves;
@@ -54,19 +50,20 @@ namespace MuMech
             if (parts.Capacity < count)
                 parts.Capacity = count;
 
-            for (int i=0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 SimulatedPart simulatedPart = null;
                 bool special = false;
                 for (int j = 0; j < oParts[i].Modules.Count; j++)
                 {
-                    ModuleParachute mp = oParts[i].Modules[j] as ModuleParachute;
+                    var mp = oParts[i].Modules[j] as ModuleParachute;
                     if (mp != null && v.mainBody.atmosphere)
                     {
-                        special = true;
+                        special       = true;
                         simulatedPart = SimulatedParachute.Borrow(mp, simCurves, startTime, limitChutesStage);
                     }
                 }
+
                 if (!special)
                 {
                     simulatedPart = SimulatedPart.Borrow(oParts[i], simCurves);
@@ -101,11 +98,12 @@ namespace MuMech
             {
                 lift += parts[i].Lift(localVelocity, liftFactor);
             }
+
             return lift;
         }
 
-
-        public bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double shockTemp, double t, double parachuteSemiDeployMultiplier)
+        public bool WillChutesDeploy(double altAGL, double altASL, double probableLandingSiteASL, double pressure, double shockTemp, double t,
+            double parachuteSemiDeployMultiplier)
         {
             for (int i = 0; i < count; i++)
             {
@@ -114,18 +112,20 @@ namespace MuMech
                     return true;
                 }
             }
+
             return false;
         }
 
-        public bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time, double semiDeployMultiplier)
+        public bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
+            double semiDeployMultiplier)
         {
             bool deploying = false;
             for (int i = 0; i < count; i++)
             {
                 deploying |= parts[i].Simulate(altATGL, altASL, endASL, pressure, shockTemp, time, semiDeployMultiplier);
             }
+
             return deploying;
         }
-
     }
 }

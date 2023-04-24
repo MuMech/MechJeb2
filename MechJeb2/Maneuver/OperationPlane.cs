@@ -115,10 +115,7 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_match_planes_Exception6")); //wrong time reference.
             }
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration
