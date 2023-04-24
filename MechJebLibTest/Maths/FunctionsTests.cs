@@ -9,6 +9,7 @@ using AssertExtensions;
 using MechJebLib.Core.Functions;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
+using MuMech.MechJebLib.Maneuvers;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
@@ -804,19 +805,19 @@ namespace MechJebLibTest.Maths
                 newR *= rscale;
                 double mu = rscale * vscale * vscale;
 
-                V3 dv = Maneuvers.DeltaVToChangeApsis(mu, r, v, newR);
+                V3 dv = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.PERIAPSIS);
                 MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newR, 1e-3);
 
                 // validate this API works left handed.
-                V3 dv2 = Maneuvers.DeltaVToChangeApsis(mu, r.xzy, v.xzy, newR);
+                V3 dv2 = ChangeOrbitalElement.DeltaV(mu, r.xzy, v.xzy, newR, ChangeOrbitalElement.Type.PERIAPSIS);
                 dv2.ShouldEqual(dv.xzy, 1e-3);
 
                 newR = random.NextDouble() * rscale * 1e9 + r.magnitude;
-                V3 dv3 = Maneuvers.DeltaVToChangeApsis(mu, r, v, newR, false);
+                V3 dv3 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.APOAPSIS);
                 MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-3);
 
                 newR = -(random.NextDouble() * 1e9 + 1e3) * rscale;
-                V3 dv4 = Maneuvers.DeltaVToChangeApsis(mu, r, v, newR, false);
+                V3 dv4 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.APOAPSIS);
                 MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-3);
             }
         }
@@ -846,7 +847,7 @@ namespace MechJebLibTest.Maths
             _testOutputHelper.WriteLine($"sma = {sma}, ecc = {ecc} r0 = {r0} v0 = {v0}");
 
             (V3 dv, double dt, double newPeR) =
-                Maneuvers.NextManeuverToReturnFromMoon(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, dtmin: 0);
+                ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, dtmin: 0);
 
             (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
 
