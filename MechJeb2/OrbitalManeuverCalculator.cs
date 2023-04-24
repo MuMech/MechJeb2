@@ -946,24 +946,13 @@ namespace MuMech
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
 
-        public static Vector3d DeltaVForSemiMajorAxis(Orbit o, double UT, double newSMA)
+        public static Vector3d DeltaVForSemiMajorAxis(Orbit o, double ut, double newSMA)
         {
-            bool raising = o.semiMajorAxis < newSMA;
-            Vector3d burnDirection = (raising ? 1 : -1) * o.Prograde(UT);
-            double minDeltaV = 0;
-            double maxDeltaV = raising ? 10000 : Math.Abs(Vector3d.Dot(o.WorldOrbitalVelocityAtUT(UT), burnDirection));
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            // solve for the reciprocal of the SMA which is a continuous function that avoids the parabolic singularity and
-            // change of sign for hyperbolic orbits.
-            Func<double, object, double> f = delegate(double testDeltaV, object ign)
-            {
-                return 1.0 / o.PerturbedOrbit(UT, testDeltaV * burnDirection).semiMajorAxis - 1.0 / newSMA;
-            };
-            double dV = 0;
-            try { dV = BrentRoot.Solve(f, minDeltaV, maxDeltaV, null); }
-            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
+            V3 dv = ChangeOrbitalElement.DeltaV(o.referenceBody.gravParameter, r, v, newSMA, ChangeOrbitalElement.Type.SMA);
 
-            return dV * burnDirection;
+            return dv.V3ToWorld();
         }
 
         public static Vector3d DeltaVToShiftNodeLongitude(Orbit o, double UT, double newNodeLong)

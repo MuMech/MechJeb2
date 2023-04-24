@@ -812,13 +812,20 @@ namespace MechJebLibTest.Maths
                 V3 dv2 = ChangeOrbitalElement.DeltaV(mu, r.xzy, v.xzy, newR, ChangeOrbitalElement.Type.PERIAPSIS);
                 dv2.ShouldEqual(dv.xzy, 1e-3);
 
+                // now test apoapsis changing to elliptical
                 newR = random.NextDouble() * rscale * 1e9 + r.magnitude;
                 V3 dv3 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.APOAPSIS);
                 MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-3);
 
+                // now test apoapsis changing to hyperbolic
                 newR = -(random.NextDouble() * 1e9 + 1e3) * rscale;
                 V3 dv4 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.APOAPSIS);
                 MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-3);
+
+                // now test changing the SMA.
+                newR = random.NextDouble() * 1e3 * rscale;
+                V3 dv5 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.SMA);
+                MechJebLib.Core.Maths.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-3);
             }
         }
 
