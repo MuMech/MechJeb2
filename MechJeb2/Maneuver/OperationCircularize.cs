@@ -27,10 +27,7 @@ namespace MuMech
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, ut), ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, ut), ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

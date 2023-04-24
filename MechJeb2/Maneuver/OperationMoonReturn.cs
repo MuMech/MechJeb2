@@ -35,10 +35,7 @@ namespace MuMech
             (Vector3d dV, double ut) = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, t0,
                 o.referenceBody.referenceBody.Radius + MoonReturnAltitude);
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }
     }
 }

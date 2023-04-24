@@ -4,43 +4,56 @@ namespace MuMech.AttitudeControllers
 {
     public class KosPIDLoop
     {
-        public double Kp { get; set; }
+        public  double Kp { get; set; }
         private double _Ki;
         private double _loopKi;
-        public double Ki { get { return _Ki; } set { _Ki = value; _loopKi = value; } }
-        public double Kd { get; set; }
-        public double Input { get; set; }
-        public double Setpoint { get; set; }
-        public double Error { get; set; }
-        public double Output { get; set; }
-        public double MinOutput { get; set; }
-        public double MaxOutput { get; set; }
-        public double ErrorSum { get; set; }
-        public double PTerm { get; set; }
-        public double ITerm { get; set; }
-        public double DTerm { get; set; }
-        public bool ExtraUnwind { get; set; }
-        public double ChangeRate { get; set; }
-        public bool unWinding { get; set; }
+
+        public double Ki
+        {
+            get => _Ki;
+            set
+            {
+                _Ki     = value;
+                _loopKi = value;
+            }
+        }
+
+        public double Kd          { get; set; }
+        public double Input       { get; set; }
+        public double Setpoint    { get; set; }
+        public double Error       { get; set; }
+        public double Output      { get; set; }
+        public double MinOutput   { get; set; }
+        public double MaxOutput   { get; set; }
+        public double ErrorSum    { get; set; }
+        public double PTerm       { get; set; }
+        public double ITerm       { get; set; }
+        public double DTerm       { get; set; }
+        public bool   ExtraUnwind { get; set; }
+        public double ChangeRate  { get; set; }
+        public bool   unWinding   { get; set; }
 
         public KosPIDLoop(double maxoutput = double.MaxValue, double minoutput = double.MinValue, bool extraUnwind = false)
-            : this(1.0, 0, 0, maxoutput, minoutput, extraUnwind) { }
-
-        public KosPIDLoop(double kp, double ki, double kd, double maxoutput = double.MaxValue, double minoutput = double.MinValue, bool extraUnwind = false)
+            : this(1.0, 0, 0, maxoutput, minoutput, extraUnwind)
         {
-            Kp = kp;
-            Ki = ki;
-            Kd = kd;
-            Input = 0;
-            Setpoint = 0;
-            Error = 0;
-            Output = 0;
-            MaxOutput = maxoutput;
-            MinOutput = minoutput;
-            ErrorSum = 0;
-            PTerm = 0;
-            ITerm = 0;
-            DTerm = 0;
+        }
+
+        public KosPIDLoop(double kp, double ki, double kd, double maxoutput = double.MaxValue, double minoutput = double.MinValue,
+            bool extraUnwind = false)
+        {
+            Kp          = kp;
+            Ki          = ki;
+            Kd          = kd;
+            Input       = 0;
+            Setpoint    = 0;
+            Error       = 0;
+            Output      = 0;
+            MaxOutput   = maxoutput;
+            MinOutput   = minoutput;
+            ErrorSum    = 0;
+            PTerm       = 0;
+            ITerm       = 0;
+            DTerm       = 0;
             ExtraUnwind = extraUnwind;
         }
 
@@ -48,7 +61,7 @@ namespace MuMech.AttitudeControllers
         {
             MaxOutput = maxOutput;
             MinOutput = minOutput;
-            Setpoint = setpoint;
+            Setpoint  = setpoint;
             return Update(input);
         }
 
@@ -72,23 +85,26 @@ namespace MuMech.AttitudeControllers
                     {
                         if (!unWinding)
                         {
-                            _loopKi *= 2;
-                            unWinding = true;
+                            _loopKi   *= 2;
+                            unWinding =  true;
                         }
                     }
                     else if (unWinding)
                     {
-                        _loopKi = _Ki;
+                        _loopKi   = _Ki;
                         unWinding = false;
                     }
                 }
+
                 iTerm = ITerm + error * dt * _loopKi;
             }
+
             ChangeRate = (input - Input) / dt;
             if (Kd != 0)
             {
                 dTerm = -ChangeRate * Kd;
             }
+
             Output = pTerm + iTerm + dTerm;
             if (Output > MaxOutput)
             {
@@ -98,6 +114,7 @@ namespace MuMech.AttitudeControllers
                     iTerm = Output - Math.Min(pTerm + dTerm, MaxOutput);
                 }
             }
+
             if (Output < MinOutput)
             {
                 Output = MinOutput;
@@ -106,6 +123,7 @@ namespace MuMech.AttitudeControllers
                     iTerm = Output - Math.Max(pTerm + dTerm, MinOutput);
                 }
             }
+
             Input = input;
             Error = error;
             PTerm = pTerm;
@@ -121,7 +139,7 @@ namespace MuMech.AttitudeControllers
         public void ResetI()
         {
             ErrorSum = 0;
-            ITerm = 0;
+            ITerm    = 0;
         }
     }
 }

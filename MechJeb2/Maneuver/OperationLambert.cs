@@ -37,10 +37,7 @@ namespace MuMech
 
             (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, ut, target.TargetOrbit, ut + InterceptInterval);
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

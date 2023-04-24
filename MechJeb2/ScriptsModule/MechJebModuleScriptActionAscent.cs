@@ -4,9 +4,9 @@ namespace MuMech
 {
     public class MechJebModuleScriptActionAscent : MechJebModuleScriptAction
     {
-        public static string                      NAME = "Ascent";
-        private       MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
-        private       MechJebModuleAscentBaseAutopilot    _autopilot      => core.ascent;
+        public static string                           NAME = "Ascent";
+        private       MechJebModuleAscentSettings      _ascentSettings => core.ascentSettings;
+        private       MechJebModuleAscentBaseAutopilot _autopilot      => core.ascent;
 
         private ConfigNode ascentConfig;
         private ConfigNode stagingConfig;
@@ -19,7 +19,8 @@ namespace MuMech
         //Module Parameters
         */
 
-        public MechJebModuleScriptActionAscent (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(scriptModule, core, actionsList, NAME)
+        public MechJebModuleScriptActionAscent(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(
+            scriptModule, core, actionsList, NAME)
         {
             /*
             mainBody = core.target.mainBody;
@@ -32,9 +33,9 @@ namespace MuMech
 
         public override void readModuleConfiguration()
         {
-            ascentConfig = ConfigNode.CreateConfigFromObject(_ascentSettings);
+            ascentConfig  = ConfigNode.CreateConfigFromObject(_ascentSettings);
             stagingConfig = ConfigNode.CreateConfigFromObject(core.staging);
-            thrustConfig = ConfigNode.CreateConfigFromObject(core.thrust);
+            thrustConfig  = ConfigNode.CreateConfigFromObject(core.thrust);
         }
 
         public override void writeModuleConfiguration()
@@ -46,19 +47,20 @@ namespace MuMech
 
         public override void WindowGUI(int windowID)
         {
-            base.preWindowGUI(windowID);
+            preWindowGUI(windowID);
             base.WindowGUI(windowID);
 
             switch (_ascentSettings.AscentType)
             {
                 case AscentType.CLASSIC:
-                    GUILayout.Label("CLASSIC ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "km");
+                    GUILayout.Label("CLASSIC ASCENT to " + _ascentSettings.DesiredOrbitAltitude / 1000.0 + "km");
                     break;
                 case AscentType.GRAVITYTURN:
-                    GUILayout.Label("GravityTurn™ ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "km");
+                    GUILayout.Label("GravityTurn™ ASCENT to " + _ascentSettings.DesiredOrbitAltitude / 1000.0 + "km");
                     break;
                 case AscentType.PVG:
-                    GUILayout.Label("PVG ASCENT to " + (_ascentSettings.DesiredOrbitAltitude / 1000.0) + "x" + (_ascentSettings.DesiredApoapsis / 1000.0) + "km");
+                    GUILayout.Label("PVG ASCENT to " + _ascentSettings.DesiredOrbitAltitude / 1000.0 + "x" +
+                                    _ascentSettings.DesiredApoapsis / 1000.0 + "km");
                     break;
             }
 
@@ -83,18 +85,19 @@ namespace MuMech
             {
                 if (isExecuted() && _autopilot.Status == "Off")
                 {
-                    GUILayout.Label ("Finished Ascent");
+                    GUILayout.Label("Finished Ascent");
                 }
                 else
                 {
-                    GUILayout.Label (_autopilot.Status);
+                    GUILayout.Label(_autopilot.Status);
                 }
             }
             else
             {
-                GUILayout.Label ("-- ERROR --",GuiUtils.yellowLabel);
+                GUILayout.Label("-- ERROR --", GuiUtils.yellowLabel);
             }
-            base.postWindowGUI(windowID);
+
+            postWindowGUI(windowID);
         }
 
         public override void afterOnFixedUpdate()
@@ -133,9 +136,9 @@ namespace MuMech
 
         public override void postLoad(ConfigNode node)
         {
-            ascentConfig = node.GetNode("ascentConfig");
+            ascentConfig  = node.GetNode("ascentConfig");
             stagingConfig = node.GetNode("stagingConfig");
-            thrustConfig = node.GetNode("thrustConfig");
+            thrustConfig  = node.GetNode("thrustConfig");
         }
 
         public override void postSave(ConfigNode node)

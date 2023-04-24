@@ -32,10 +32,7 @@ namespace MuMech
 
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, ut, target.TargetOrbit);
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

@@ -4,206 +4,226 @@ using UnityEngine;
 
 namespace MuMech
 {
-	public class MechJebModuleScriptActionWarp : MechJebModuleScriptAction
-	{
-		public static String NAME = "Warp";
+    public class MechJebModuleScriptActionWarp : MechJebModuleScriptAction
+    {
+        public static string NAME = "Warp";
 
-		public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
-		static readonly string[] warpTargetStrings = new string[] { "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry" };
-		[Persistent(pass = (int)Pass.Type)]
-		public WarpTarget warpTarget = WarpTarget.Periapsis;
-		[Persistent(pass = (int)Pass.Type)]
-        readonly EditableDouble phaseAngle = 0;
-		[Persistent(pass = (int)Pass.Type)]
-		public EditableTime leadTime = 0;
-		[Persistent(pass = (int)Pass.Type)]
-        readonly EditableTime timeOffset = 0;
-		double targetUT = 0;
-		private bool warping;
-		private int spendTime = 0;
-		private readonly int initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
-		private float startTime = 0f;
+        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
 
-		public MechJebModuleScriptActionWarp (MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList):base(scriptModule, core, actionsList, NAME)
-		{
-		}
+        private static readonly string[] warpTargetStrings =
+        {
+            "periapsis", "apoapsis", "maneuver node", "SoI transition", "Time", "Phase angle", "suicide burn", "atmospheric entry"
+        };
 
-		public override void activateAction()
-		{
-			base.activateAction();
-			warping = true;
-			Orbit orbit = this.scriptModule.orbit;
-			VesselState vesselState = this.scriptModule.vesselState;
-			Vessel vessel = FlightGlobals.ActiveVessel;
+        [Persistent(pass = (int)Pass.Type)]
+        public WarpTarget warpTarget = WarpTarget.Periapsis;
 
-			switch (warpTarget)
-			{
-				case WarpTarget.Periapsis:
-					targetUT = orbit.NextPeriapsisTime(vesselState.time);
-					break;
+        [Persistent(pass = (int)Pass.Type)]
+        private readonly EditableDouble phaseAngle = 0;
 
-				case WarpTarget.Apoapsis:
-					if (orbit.eccentricity < 1) targetUT = orbit.NextApoapsisTime(vesselState.time);
-					break;
+        [Persistent(pass = (int)Pass.Type)]
+        public EditableTime leadTime = 0;
 
-				case WarpTarget.SoI:
-					if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL) targetUT = orbit.EndUT;
-					break;
+        [Persistent(pass = (int)Pass.Type)]
+        private readonly EditableTime timeOffset = 0;
 
-				case WarpTarget.Node:
-					if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
-					break;
+        private          double targetUT;
+        private          bool   warping;
+        private          int    spendTime;
+        private readonly int    initTime = 5; //Add a 5s timer after the action to allow time for physics to update before next action
+        private          float  startTime;
 
-				case WarpTarget.Time:
-					targetUT = vesselState.time + timeOffset;
-					break;
+        public MechJebModuleScriptActionWarp(MechJebModuleScript scriptModule, MechJebCore core, MechJebModuleScriptActionsList actionsList) : base(
+            scriptModule, core, actionsList, NAME)
+        {
+        }
 
-				case WarpTarget.PhaseAngleT:
-					if (core.target.NormalTargetExists)
-					{
-						Orbit reference;
-						if (core.target.TargetOrbit.referenceBody == orbit.referenceBody)
-							reference = orbit; // we orbit arround the same body
-						else
-							reference = orbit.referenceBody.orbit;
-						// From Kerbal Alarm Clock
-						double angleChangePerSec = (360 / core.target.TargetOrbit.period) - (360 / reference.period);
-						double currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
-						double angleDigff = currentAngle - phaseAngle;
-						if (angleDigff > 0 && angleChangePerSec > 0)
-							angleDigff -= 360;
-						if (angleDigff < 0 && angleChangePerSec < 0)
-							angleDigff += 360;
-						double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
-						targetUT = vesselState.time + TimeToTarget;
-					}
-					break;
+        public override void activateAction()
+        {
+            base.activateAction();
+            warping = true;
+            Orbit orbit = scriptModule.orbit;
+            VesselState vesselState = scriptModule.vesselState;
+            Vessel vessel = FlightGlobals.ActiveVessel;
 
-				case WarpTarget.AtmosphericEntry:
-					try
-					{
-						targetUT = OrbitExtensions.NextTimeOfRadius(vessel.orbit, vesselState.time, vesselState.mainBody.Radius + vesselState.mainBody.RealMaxAtmosphereAltitude());
-					}
-					catch
-					{
-						warping = false;
-					}
-					break;
+            switch (warpTarget)
+            {
+                case WarpTarget.Periapsis:
+                    targetUT = orbit.NextPeriapsisTime(vesselState.time);
+                    break;
 
-				case WarpTarget.SuicideBurn:
-					try
-					{
-						targetUT = OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel) + vesselState.time;
-					}
-					catch
-					{
-						warping = false;
-					}
-					break;
+                case WarpTarget.Apoapsis:
+                    if (orbit.eccentricity < 1) targetUT = orbit.NextApoapsisTime(vesselState.time);
+                    break;
 
-				default:
-					targetUT = vesselState.time;
-					break;
-			}
-		}
+                case WarpTarget.SoI:
+                    if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL) targetUT = orbit.EndUT;
+                    break;
 
-		public override  void endAction()
-		{
-			base.endAction();
-		}
+                case WarpTarget.Node:
+                    if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
+                        targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
+                    break;
 
-		public override void WindowGUI(int windowID)
-		{
-			base.preWindowGUI(windowID);
-			base.WindowGUI(windowID);
+                case WarpTarget.Time:
+                    targetUT = vesselState.time + timeOffset;
+                    break;
 
-			GUILayout.Label("Warp to: ", GUILayout.ExpandWidth(false));
-			warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
+                case WarpTarget.PhaseAngleT:
+                    if (core.target.NormalTargetExists)
+                    {
+                        Orbit reference;
+                        if (core.target.TargetOrbit.referenceBody == orbit.referenceBody)
+                            reference = orbit; // we orbit arround the same body
+                        else
+                            reference = orbit.referenceBody.orbit;
+                        // From Kerbal Alarm Clock
+                        double angleChangePerSec = 360 / core.target.TargetOrbit.period - 360 / reference.period;
+                        double currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
+                        double angleDigff = currentAngle - phaseAngle;
+                        if (angleDigff > 0 && angleChangePerSec > 0)
+                            angleDigff -= 360;
+                        if (angleDigff < 0 && angleChangePerSec < 0)
+                            angleDigff += 360;
+                        double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
+                        targetUT = vesselState.time + TimeToTarget;
+                    }
 
-			if (warpTarget == WarpTarget.Time)
-			{
-				GUILayout.Label("Warp for: ", GUILayout.ExpandWidth(true));
-				timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
-			}
-			else if (warpTarget == WarpTarget.PhaseAngleT)
-			{
-				// I wonder if I should check for target that don't make sense
-				if (!core.target.NormalTargetExists)
-					GUILayout.Label("You need a target");
-				else
-					GuiUtils.SimpleTextBox("Phase Angle:", phaseAngle, "º", 60);
-			}
+                    break;
 
-			if (!warping)
-			{
-				GuiUtils.SimpleTextBox("Lead time: ", leadTime, "");
-			}
+                case WarpTarget.AtmosphericEntry:
+                    try
+                    {
+                        targetUT = vessel.orbit.NextTimeOfRadius(vesselState.time,
+                            vesselState.mainBody.Radius + vesselState.mainBody.RealMaxAtmosphereAltitude());
+                    }
+                    catch
+                    {
+                        warping = false;
+                    }
 
-			if (warping)
-			{
-				if (GUILayout.Button("Abort"))
-				{
-					this.onAbord();
-				}
-			}
+                    break;
 
-			if (warping) GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");
+                case WarpTarget.SuicideBurn:
+                    try
+                    {
+                        targetUT = OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel) + vesselState.time;
+                    }
+                    catch
+                    {
+                        warping = false;
+                    }
 
-			if (this.isStarted() && !this.isExecuted() && this.startTime > 0)
-			{
-				GUILayout.Label(" waiting " + this.spendTime + "s");
-			}
-			base.postWindowGUI(windowID);
-		}
+                    break;
 
-		public override void afterOnFixedUpdate()
-		{
-			//Check the end of the action
-			if (this.isStarted() && !this.isExecuted() && !warping && startTime == 0f)
-			{
-				startTime = Time.time;
-			}
-			if (this.isStarted() && !this.isExecuted() && startTime > 0)
-			{
-				this.spendTime = initTime - (int)(Math.Round(Time.time - startTime)); //Add the end action timer
-				if (this.spendTime <= 0)
-				{
-					this.endAction();
-				}
-			}
+                default:
+                    targetUT = vesselState.time;
+                    break;
+            }
+        }
 
-			if (!warping) return;
+        public override void endAction()
+        {
+            base.endAction();
+        }
 
-			if (warpTarget == WarpTarget.SuicideBurn)
-			{
-				try
-				{
-					targetUT = OrbitExtensions.SuicideBurnCountdown(this.scriptModule.orbit, this.scriptModule.vesselState, this.scriptModule.vessel) + this.scriptModule.vesselState.time;
-				}
-				catch
-				{
-					warping = false;
-				}
-			}
+        public override void WindowGUI(int windowID)
+        {
+            preWindowGUI(windowID);
+            base.WindowGUI(windowID);
 
-			double target = targetUT - leadTime;
+            GUILayout.Label("Warp to: ", GUILayout.ExpandWidth(false));
+            warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
 
-			if (target < this.scriptModule.vesselState.time + 1)
-			{
-				core.warp.MinimumWarp(true);
-				warping = false;
-			}
-			else
-			{
-				core.warp.WarpToUT(target);
-			}
-		}
+            if (warpTarget == WarpTarget.Time)
+            {
+                GUILayout.Label("Warp for: ", GUILayout.ExpandWidth(true));
+                timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
+            }
+            else if (warpTarget == WarpTarget.PhaseAngleT)
+            {
+                // I wonder if I should check for target that don't make sense
+                if (!core.target.NormalTargetExists)
+                    GUILayout.Label("You need a target");
+                else
+                    GuiUtils.SimpleTextBox("Phase Angle:", phaseAngle, "º", 60);
+            }
 
-		public override void onAbord()
-		{
-			warping = false;
-			core.warp.MinimumWarp(true);
-			base.onAbord();
-		}
-	}
+            if (!warping)
+            {
+                GuiUtils.SimpleTextBox("Lead time: ", leadTime, "");
+            }
+
+            if (warping)
+            {
+                if (GUILayout.Button("Abort"))
+                {
+                    onAbord();
+                }
+            }
+
+            if (warping)
+                GUILayout.Label("Warping to " + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") +
+                                warpTargetStrings[(int)warpTarget] + ".");
+
+            if (isStarted() && !isExecuted() && startTime > 0)
+            {
+                GUILayout.Label(" waiting " + spendTime + "s");
+            }
+
+            postWindowGUI(windowID);
+        }
+
+        public override void afterOnFixedUpdate()
+        {
+            //Check the end of the action
+            if (isStarted() && !isExecuted() && !warping && startTime == 0f)
+            {
+                startTime = Time.time;
+            }
+
+            if (isStarted() && !isExecuted() && startTime > 0)
+            {
+                spendTime = initTime - (int)Math.Round(Time.time - startTime); //Add the end action timer
+                if (spendTime <= 0)
+                {
+                    endAction();
+                }
+            }
+
+            if (!warping) return;
+
+            if (warpTarget == WarpTarget.SuicideBurn)
+            {
+                try
+                {
+                    targetUT = OrbitExtensions.SuicideBurnCountdown(scriptModule.orbit, scriptModule.vesselState, scriptModule.vessel) +
+                               scriptModule.vesselState.time;
+                }
+                catch
+                {
+                    warping = false;
+                }
+            }
+
+            double target = targetUT - leadTime;
+
+            if (target < scriptModule.vesselState.time + 1)
+            {
+                core.warp.MinimumWarp(true);
+                warping = false;
+            }
+            else
+            {
+                core.warp.WarpToUT(target);
+            }
+        }
+
+        public override void onAbord()
+        {
+            warping = false;
+            core.warp.MinimumWarp(true);
+            base.onAbord();
+        }
+    }
 }

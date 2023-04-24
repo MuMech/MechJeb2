@@ -1,11 +1,12 @@
 using KSP.Localization;
+
 namespace MuMech
 {
     namespace Landing
     {
         public class CourseCorrection : AutopilotStep
         {
-            bool courseCorrectionBurning = false;
+            private bool courseCorrectionBurning;
 
             public CourseCorrection(MechJebCore core) : base(core)
             {
@@ -57,7 +58,8 @@ namespace MuMech
 
                 Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
 
-                status = Localizer.Format("#MechJeb_LandingGuidance_Status3", deltaV.magnitude.ToString("F1"));//"Performing course correction of about " +  + " m/s"
+                status = Localizer.Format("#MechJeb_LandingGuidance_Status3",
+                    deltaV.magnitude.ToString("F1")); //"Performing course correction of about " +  + " m/s"
 
                 core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, core.landing);
 

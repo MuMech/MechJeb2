@@ -41,7 +41,6 @@ namespace MuMech
             {
                 new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, ut, NewPeA + o.referenceBody.Radius), ut)
             };
-
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

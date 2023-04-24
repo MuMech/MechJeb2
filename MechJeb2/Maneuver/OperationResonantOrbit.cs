@@ -44,7 +44,6 @@ namespace MuMech
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, ut, (double)ResonanceNumerator.val / ResonanceDenominator.val);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

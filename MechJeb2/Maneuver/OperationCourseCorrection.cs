@@ -17,7 +17,7 @@ namespace MuMech
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.Global)]
         public EditableDoubleMult InterceptDistance = new EditableDoubleMult(200);
-        
+
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (target.Target is CelestialBody)
@@ -64,10 +64,7 @@ namespace MuMech
                 : OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, ut, target.TargetOrbit, InterceptDistance, out ut);
 
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV, ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }
     }
 }

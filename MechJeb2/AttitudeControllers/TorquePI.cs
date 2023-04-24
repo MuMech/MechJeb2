@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MuMech.AttitudeControllers
+﻿namespace MuMech.AttitudeControllers
 {
     public class TorquePI
     {

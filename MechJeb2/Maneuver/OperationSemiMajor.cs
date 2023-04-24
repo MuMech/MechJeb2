@@ -44,10 +44,7 @@ namespace MuMech
                                              "m)"); //cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
             }
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(o, ut, NewSma), ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(o, ut, NewSma), ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration

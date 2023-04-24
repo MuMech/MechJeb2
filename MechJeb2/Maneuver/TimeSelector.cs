@@ -37,8 +37,8 @@ namespace MuMech
         public TimeSelector(TimeReference[] allowedTimeRef)
         {
             this.allowedTimeRef = allowedTimeRef;
-            _universalTime       = 0;
-            _timeRefNames        = new string[allowedTimeRef.Length];
+            _universalTime      = 0;
+            _timeRefNames       = new string[allowedTimeRef.Length];
             for (int i = 0; i < allowedTimeRef.Length; ++i)
             {
                 switch (allowedTimeRef[i])

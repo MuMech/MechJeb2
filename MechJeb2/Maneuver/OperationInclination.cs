@@ -34,10 +34,7 @@ namespace MuMech
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeInclination(o, ut, NewInc), ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeInclination(o, ut, NewInc), ut) };
         }
 
         public TimeSelector GetTimeSelector() //Required for scripts to save configuration
