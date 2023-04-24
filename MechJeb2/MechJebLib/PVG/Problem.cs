@@ -28,7 +28,7 @@ namespace MechJebLib.PVG
 
         public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody)
         {
-            Scale = new Scale(r0, m0, mu);
+            Scale = Scale.Create(mu, r0.magnitude, m0);
             Mu    = mu;
             R0    = r0;
             R0Bar = r0 / Scale.LengthScale;
@@ -38,7 +38,7 @@ namespace MechJebLib.PVG
             M0Bar = m0 / Scale.MassScale;
             U0    = u0;
             Rbody = rbody;
-            
+
             T0    = t0;
         }
     }

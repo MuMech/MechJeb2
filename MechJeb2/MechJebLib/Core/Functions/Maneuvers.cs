@@ -161,9 +161,7 @@ namespace MechJebLib.Core.Functions
             public V3     V0;
             public V3     MoonR0;
             public V3     MoonV0;
-            public double ScaleRMoonToPlanet;
-            public double ScaleVMoonToPlanet;
-            public double ScaleTMoonToPlanet;
+            public Scale  MoonToPlanetScale;
             public bool   OptimizeBurn;
             public double PerFactor;
         }
@@ -179,9 +177,7 @@ namespace MechJebLib.Core.Functions
             V3 v0 = args.V0;
             V3 moonR0 = args.MoonR0;
             V3 moonV0 = args.MoonV0;
-            double scaleRMoonToPlanet = args.ScaleRMoonToPlanet;
-            double scaleVMoonToPlanet = args.ScaleVMoonToPlanet;
-            double scaleTMoonToPlanet = args.ScaleTMoonToPlanet;
+            Scale moonToPlanetScale = args.MoonToPlanetScale;
             bool optimizeBurn = args.OptimizeBurn;
             double perFactor = args.PerFactor;
 
@@ -198,11 +194,11 @@ namespace MechJebLib.Core.Functions
             (V3 r1Minus, V3 v1Minus) = Shepperd.Solve(1.0, soiHalfTime, rburn, vburn + dv);
             (V3 r1Plus, V3 v1Plus)   = Shepperd.Solve(1.0, -soiHalfTime, rsoi, vsoi);
 
-            double t2 = (soiHalfTime * 2 + burnTime) / scaleTMoonToPlanet;
+            double t2 = (soiHalfTime * 2 + burnTime) / moonToPlanetScale.TimeScale;
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, t2, moonR0, moonV0);
 
-            V3 rsoiPlanet = rsoi / scaleRMoonToPlanet + moonR2;
-            V3 vsoiPlanet = vsoi / scaleVMoonToPlanet + moonV2;
+            V3 rsoiPlanet = rsoi / moonToPlanetScale.LengthScale + moonR2;
+            V3 vsoiPlanet = vsoi / moonToPlanetScale.VelocityScale + moonV2;
 
             (V3 r2Minus, V3 v2Minus) = Shepperd.Solve(1.0, planetHalfTime, rsoiPlanet, vsoiPlanet);
             (V3 r2Plus, V3 v2Plus)   = Shepperd.Solve(1.0, -planetHalfTime, rf, vf);
@@ -256,17 +252,10 @@ namespace MechJebLib.Core.Functions
             bndl[3] = dtmin;
             bndu[3] = dtmax;
 
-            double scaleDistanceMoon = Math.Sqrt(r0.magnitude * moonSOI);
-            double scaleVelocityMoon = Math.Sqrt(moonMu / scaleDistanceMoon);
-            double scaleTimeMoon = scaleDistanceMoon / scaleVelocityMoon;
+            Scale moonScale = Scale.Create(moonMu, Math.Sqrt(r0.magnitude * moonSOI));
+            Scale planetScale = Scale.Create(centralMu, Math.Sqrt(moonR0.magnitude * peR));
+            Scale moonToPlanetScale = moonScale.ConvertTo(planetScale);
 
-            double scaleDistancePlanet = Math.Sqrt(moonR0.magnitude * peR);
-            double scaleVelocityPlanet = Math.Sqrt(centralMu / scaleDistancePlanet);
-            double scaleTimePlanet = scaleDistancePlanet / scaleVelocityPlanet;
-
-            double scaleRMoonToPlanet = scaleDistancePlanet / scaleDistanceMoon;
-            double scaleVMoonToPlanet = scaleVelocityPlanet / scaleVelocityMoon;
-            double scaleTMoonToPlanet = scaleTimePlanet / scaleTimeMoon;
 
             (double _, double ecc) = Maths.SmaEccFromStateVectors(moonMu, r0, v0);
 
@@ -302,13 +291,13 @@ namespace MechJebLib.Core.Functions
             double tt2 = Maths.TimeToNextPeriapsis(centralMu, r2Planet, v2Planet);
             (rf, vf) = Shepperd.Solve(centralMu, tt2, r2Planet, v2Planet);
 
-            dv       /= scaleVelocityMoon;
-            dt       /= scaleTimeMoon;
-            tt1      /= scaleTimeMoon;
-            v2Sph[0] /= scaleVelocityMoon;
-            tt2      /= scaleTimePlanet;
-            rf       /= scaleDistancePlanet;
-            vf       /= scaleVelocityPlanet;
+            dv       /= moonScale.VelocityScale;
+            dt       /= moonScale.TimeScale;
+            tt1      /= moonScale.TimeScale;
+            v2Sph[0] /= moonScale.VelocityScale;
+            tt2      /= planetScale.TimeScale;
+            rf       /= planetScale.LengthScale;
+            vf       /= planetScale.VelocityScale;
 
             x[0]  = dv.x;     // maneuver x
             x[1]  = dv.y;     // maneuver y
@@ -330,18 +319,16 @@ namespace MechJebLib.Core.Functions
 
             var args = new ReturnFromMoonArgs
             {
-                MoonSOI            = moonSOI / scaleDistanceMoon,
-                PeR                = peR / scaleDistancePlanet,
-                Inc                = inc,
-                R0                 = r0 / scaleDistanceMoon,
-                V0                 = v0 / scaleVelocityMoon,
-                MoonR0             = moonR0 / scaleDistancePlanet,
-                MoonV0             = moonV0 / scaleVelocityPlanet,
-                ScaleRMoonToPlanet = scaleRMoonToPlanet,
-                ScaleVMoonToPlanet = scaleVMoonToPlanet,
-                ScaleTMoonToPlanet = scaleTMoonToPlanet,
-                OptimizeBurn       = false,
-                PerFactor          = 5
+                MoonSOI           = moonSOI / moonScale.LengthScale,
+                PeR               = peR / planetScale.LengthScale,
+                Inc               = inc,
+                R0                = r0 / moonScale.LengthScale,
+                V0                = v0 / moonScale.VelocityScale,
+                MoonR0            = moonR0 / planetScale.LengthScale,
+                MoonV0            = moonV0 / planetScale.VelocityScale,
+                MoonToPlanetScale = moonToPlanetScale,
+                OptimizeBurn      = false,
+                PerFactor         = 5
             };
 
             alglib.minnlccreatef(NVARIABLES, x, DIFFSTEP, out alglib.minnlcstate state);
@@ -380,7 +367,7 @@ namespace MechJebLib.Core.Functions
 
             ReturnFromMoonFunction(x, fi, args);
 
-            return (new V3(x[0], x[1], x[2]) * scaleVelocityMoon, x[3] * scaleTimeMoon);
+            return (new V3(x[0], x[1], x[2]) * moonScale.VelocityScale, x[3] * moonScale.TimeScale);
         }
 
         public static (V3 dv, double dt, double newPeR) NextManeuverToReturnFromMoon(double centralMu, double moonMu, V3 moonR0, V3 moonV0,

@@ -7,9 +7,8 @@
 #nullable enable
 
 using System;
-using MechJebLib.Primitives;
 
-namespace MechJebLib.PVG
+namespace MechJebLib.Primitives
 {
     public readonly struct Scale
     {
@@ -26,11 +25,28 @@ namespace MechJebLib.PVG
         public double DensityScale  => MassScale / VolumeScale;
         public double PressureScale => ForceScale / AreaScale;
 
-        public Scale(V3 r0, double m0, double mu)
+        public Scale(double lengthScale, double velocityScale, double massScale)
         {
-            MassScale     = m0;
-            LengthScale   = r0.magnitude;
-            VelocityScale = Math.Sqrt(mu / LengthScale);
+            LengthScale   = lengthScale;
+            MassScale     = massScale;
+            VelocityScale = velocityScale;
+        }
+
+        public static Scale Create(double mu, double r0, double m0=1.0)
+        {
+            double massScale     = m0;
+            double lengthScale   = r0;
+            double velocityScale = Math.Sqrt(mu / lengthScale);
+            return new Scale(lengthScale, velocityScale, massScale);
+        }
+
+        public Scale ConvertTo(Scale other)
+        {
+            return new Scale(
+                 other.LengthScale / LengthScale,
+                 other.VelocityScale / VelocityScale,
+                 other.MassScale / MassScale
+                );
         }
     }
 }

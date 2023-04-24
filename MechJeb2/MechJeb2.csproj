@@ -115,6 +115,7 @@
         <Compile Include="MechJebLib\Core\TwoBody\Shepperd.cs" />
         <Compile Include="MechJebLib\Core\TwoBody\Farnocchia.cs" />
         <Compile Include="MechJebLib\Primitives\DD.cs" />
+        <Compile Include="MechJebLib\Primitives\Scale.cs" />
         <Compile Include="MechJebLib\PVG\ArrayWrapper.cs" />
         <Compile Include="MechJebLib\PVG\AscentBuilder.cs" />
         <Compile Include="MechJebLib\PVG\Integrators\IPVGIntegrator.cs" />
@@ -126,7 +127,6 @@
         <Compile Include="MechJebLib\PVG\Problem.cs" />
         <Compile Include="MechJebLib\PVG\OptimizerBuilder.cs" />
         <Compile Include="MechJebLib\PVG\ResidualWrapper.cs" />
-        <Compile Include="MechJebLib\PVG\Scale.cs" />
         <Compile Include="MechJebLib\PVG\Solution.cs" />
         <Compile Include="MechJebLib\PVG\Optimizer.cs" />
         <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle3Energy.cs" />
