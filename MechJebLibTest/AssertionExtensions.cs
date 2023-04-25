@@ -7,7 +7,6 @@
 using System;
 using System.Globalization;
 using MechJebLib.Primitives;
-using MuMech;
 using Xunit.Sdk;
 using static MechJebLib.Utils.Statics;
 
