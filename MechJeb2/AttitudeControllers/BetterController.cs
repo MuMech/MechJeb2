@@ -36,7 +36,7 @@ namespace MuMech.AttitudeControllers
         private readonly EditableDouble VelC = new EditableDouble(0.596313214751797);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelDeadband = new EditableDouble(0.001);
+        private readonly EditableDouble VelDeadband = new EditableDouble(0.0001);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private bool VelClegg;
@@ -89,7 +89,7 @@ namespace MuMech.AttitudeControllers
             maxStoppingTime.val  = 2;
             minFlipTime.val      = 120;
             rollControlRange.val = 5;
-            _version             = 1;
+            _version             = 2;
         }
 
         private readonly PIDLoop[] _pid = { new PIDLoop(), new PIDLoop(), new PIDLoop() };
@@ -117,7 +117,7 @@ namespace MuMech.AttitudeControllers
 
         public override void OnModuleEnabled()
         {
-            if (_version < 1)
+            if (_version < 2)
                 Defaults();
             Reset();
         }
