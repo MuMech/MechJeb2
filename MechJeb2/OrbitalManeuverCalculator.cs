@@ -85,6 +85,18 @@ namespace MuMech
             return dv.V3ToWorld();
         }
 
+        public static Vector3d DeltaVToChangeEccentricity(Orbit o, double ut, double newEcc)
+        {
+            //sanitize input
+            if (newEcc < 0) newEcc = 0;
+
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
+
+            V3 dv = ChangeOrbitalElement.DeltaV(o.referenceBody.gravParameter, r, v, newEcc, ChangeOrbitalElement.Type.ECC);
+
+            return dv.V3ToWorld();
+        }
+
         //Computes the heading of the ground track of an orbit with a given inclination at a given latitude.
         //Both inputs are in degrees.
         //Convention: At equator, inclination    0 => heading 90 (east)

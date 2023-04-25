@@ -5,7 +5,7 @@ namespace MuMech.MechJebLib.Maneuvers
 {
     public static class ChangeOrbitalElement
     {
-        public enum Type { PERIAPSIS, APOAPSIS, SMA }
+        public enum Type { PERIAPSIS, APOAPSIS, SMA, ECC }
 
         private struct Args
         {
@@ -37,6 +37,10 @@ namespace MuMech.MechJebLib.Maneuvers
                 case Type.SMA:
                     fi[1] = 1.0 / global::MechJebLib.Core.Maths.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
+                case Type.ECC:
+                    double ecc = global::MechJebLib.Core.Maths.EccFromStateVectors(1.0, p, q + dv);
+                    fi[1] = ecc - value;
+                    break;
             }
         }
 
@@ -63,10 +67,14 @@ namespace MuMech.MechJebLib.Maneuvers
                     if (!value.IsFinite())
                         throw new ArgumentException($"Bad SMA in ChangeOrbitalElement = {value}");
                     break;
+                case Type.ECC:
+                    if (!value.IsFinite() || value < 0)
+                        throw new ArgumentException($"Bad Ecc in ChangeOrbitalElement = {value}");
+                    break;
             }
 
-            const double DIFFSTEP = 1e-10;
-            const double EPSX = 1e-6;
+            const double DIFFSTEP = 1e-8;
+            const double EPSX = 1e-10;
             const int MAXITS = 1000;
 
             const int NVARIABLES = 2;
@@ -75,17 +83,32 @@ namespace MuMech.MechJebLib.Maneuvers
 
             double[] x = new double[NVARIABLES];
 
-            Scale scale = Scale.Create(mu, r.magnitude);
+            var scale = Scale.Create(mu, r.magnitude);
 
             (V3 p, V3 q, Q3 rot) = global::MechJebLib.Core.Maths.PerifocalFromStateVectors(mu, r, v);
 
-            x[0] = 0; // maneuver x
-            x[1] = 0; // maneuver y
+            p /= scale.LengthScale;
+            q /= scale.VelocityScale;
 
-            var args = new Args { P = p / scale.LengthScale, Q = q / scale.VelocityScale, Value = value / scale.LengthScale, Type = type };
+            if (type == Type.ECC)
+            {
+                // changing the ECC is actually a global optimization problem due to basins around parabolic ecc == 1.0
+                double boost = Math.Sign(value - 1.0) * 0.1 + Math.Sqrt(2);
+
+                V3 dv = global::MechJebLib.Core.Functions.Maneuvers.DeltaVRelativeToCircularVelocity(1.0, p, q, boost);
+                x[0] = dv.x;
+                x[1] = dv.y;
+            }
+            else
+            {
+                x[0] = 0; // maneuver vy
+                x[1] = 0; // maneuver vy
+            }
+
+            var args = new Args { P = p, Q = q, Value = type == Type.ECC ? value : value / scale.LengthScale, Type = type };
 
             alglib.minnlccreatef(NVARIABLES, x, DIFFSTEP, out alglib.minnlcstate state);
-            alglib.minnlcsetstpmax(state, 1e-2);
+            //alglib.minnlcsetstpmax(state, 1e-2);
             alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, EPSX, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);

@@ -137,6 +137,12 @@ namespace MechJebLib.Core
             return ApoapsisFromKeplerian(sma, ecc, hyperbolic);
         }
 
+        public static double EccFromStateVectors(double mu, V3 r, V3 v)
+        {
+            V3 eccvec = V3.Cross(v / mu, V3.Cross(r, v)) - r.normalized;
+            return eccvec.magnitude;
+        }
+
         public static (double sma, double ecc) SmaEccFromStateVectors(double mu, V3 r, V3 v)
         {
             var h = V3.Cross(r, v);
@@ -342,7 +348,7 @@ namespace MechJebLib.Core
 
         public static V3 CircularVelocityFromHvec(double mu, V3 r, V3 h)
         {
-            return V3.Cross(h.normalized, r).normalized * CircularVelocity(mu, r.magnitude);
+            return V3.Cross(h, r).normalized * CircularVelocity(mu, r.magnitude);
         }
 
         // r is the ECI reference point, v is the vector in ECI to be converted to pitch, heading angles

@@ -12,6 +12,30 @@ namespace MechJebLib.Core.Functions
 {
     public class Maneuvers
     {
+        public static V3 DeltaVRelativeToCircularVelocity(double mu, V3 r, V3 v, double n = 1.0)
+        {
+            Check.Finite(mu);
+            Check.Finite(r);
+            Check.Finite(v);
+            Check.Positive(mu);
+            Check.NonZero(r);
+
+            var h = V3.Cross(r, v);
+            return n * Maths.CircularVelocityFromHvec(mu, r, h) - v;
+        }
+
+        public static V3 DeltaVToCircularize(double mu, V3 r, V3 v)
+        {
+            Check.Finite(mu);
+            Check.Finite(r);
+            Check.Finite(v);
+            Check.Positive(mu);
+            Check.NonZero(r);
+
+            var h = V3.Cross(r, v);
+            return Maths.CircularVelocityFromHvec(mu, r, h) - v;
+        }
+
         public static V3 DeltaVToCircularizeAfterTime(double mu, V3 r, V3 v, double dt)
         {
             Check.Finite(mu);
