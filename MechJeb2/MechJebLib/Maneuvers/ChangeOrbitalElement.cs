@@ -1,7 +1,8 @@
 using System;
 using MechJebLib.Primitives;
+using static MechJebLib.Utils.Statics;
 
-namespace MuMech.MechJebLib.Maneuvers
+namespace MechJebLib.Maneuvers
 {
     public static class ChangeOrbitalElement
     {
@@ -29,16 +30,16 @@ namespace MuMech.MechJebLib.Maneuvers
             switch (type)
             {
                 case Type.PERIAPSIS:
-                    fi[1] = global::MechJebLib.Core.Maths.PeriapsisFromStateVectors(1.0, p, q + dv) - value;
+                    fi[1] = Core.Maths.PeriapsisFromStateVectors(1.0, p, q + dv) - value;
                     break;
                 case Type.APOAPSIS:
-                    fi[1] = 1.0 / global::MechJebLib.Core.Maths.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / value;
+                    fi[1] = 1.0 / Core.Maths.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
                 case Type.SMA:
-                    fi[1] = 1.0 / global::MechJebLib.Core.Maths.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
+                    fi[1] = 1.0 / Core.Maths.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
                 case Type.ECC:
-                    double ecc = global::MechJebLib.Core.Maths.EccFromStateVectors(1.0, p, q + dv);
+                    double ecc = Core.Maths.EccFromStateVectors(1.0, p, q + dv);
                     fi[1] = ecc - value;
                     break;
             }
@@ -85,7 +86,7 @@ namespace MuMech.MechJebLib.Maneuvers
 
             var scale = Scale.Create(mu, r.magnitude);
 
-            (V3 p, V3 q, Q3 rot) = global::MechJebLib.Core.Maths.PerifocalFromStateVectors(mu, r, v);
+            (V3 p, V3 q, Q3 rot) = Core.Maths.PerifocalFromStateVectors(mu, r, v);
 
             p /= scale.LengthScale;
             q /= scale.VelocityScale;
@@ -95,7 +96,7 @@ namespace MuMech.MechJebLib.Maneuvers
                 // changing the ECC is actually a global optimization problem due to basins around parabolic ecc == 1.0
                 double boost = Math.Sign(value - 1.0) * 0.1 + Math.Sqrt(2);
 
-                V3 dv = global::MechJebLib.Core.Functions.Maneuvers.DeltaVRelativeToCircularVelocity(1.0, p, q, boost);
+                V3 dv = Core.Functions.Maneuvers.DeltaVRelativeToCircularVelocity(1.0, p, q, boost);
                 x[0] = dv.x;
                 x[1] = dv.y;
             }

@@ -5,11 +5,11 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-using System.Collections.Generic;
-
 #nullable enable
 
-namespace MuMech.MechJebLib.Maths.ODE
+using System.Collections.Generic;
+
+namespace MechJebLib.Maths.ODE
 {
     public abstract class Event
     {

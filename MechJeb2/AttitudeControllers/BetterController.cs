@@ -1,6 +1,6 @@
 ﻿using System;
 using KSP.Localization;
-using MuMech.MechJebLib.Control;
+using MechJebLib.Control;
 using UnityEngine;
 
 namespace MuMech.AttitudeControllers

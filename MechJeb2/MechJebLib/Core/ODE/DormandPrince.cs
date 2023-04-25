@@ -14,7 +14,7 @@ using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
-namespace MuMech.MechJebLib.Maths.ODE
+namespace MechJebLib.Maths.ODE
 {
     public class DormandPrince : ODESolver
     {

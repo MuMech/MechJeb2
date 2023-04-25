@@ -8,7 +8,6 @@
 
 using System;
 using System.Collections.Generic;
-using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Integrators;
 using static MechJebLib.Utils.Statics;
@@ -55,7 +54,7 @@ namespace MechJebLib.PVG
 
         public void Run()
         {
-            (_smaT, _eccT) = Maths.SmaEccFromApsides(_peR, _apR);
+            (_smaT, _eccT) = Core.Maths.SmaEccFromApsides(_peR, _apR);
 
             foreach (Phase phase in _phases)
             {
@@ -116,7 +115,7 @@ namespace MechJebLib.PVG
             (V3 rf, V3 vf) = solution2.TerminalStateVectors();
 
             (_, _, _, _, _, double tanof, _) =
-                Maths.KeplerianFromStateVectors(_mu, rf, vf);
+                Core.Maths.KeplerianFromStateVectors(_mu, rf, vf);
 
             if (_attachAltFlag || Math.Abs(ClampPi(tanof)) < PI / 2.0)
                 return pvg;
@@ -139,7 +138,7 @@ namespace MechJebLib.PVG
             // just "SetTarget" that fixes this correctly there.
             double attR = _attachAltFlag ? _attR : _peR;
 
-            (_vT, _gammaT) = Maths.ConvertApsidesTargetToFPA(_peR, _apR, attR, _mu);
+            (_vT, _gammaT) = Core.Maths.ConvertApsidesTargetToFPA(_peR, _apR, attR, _mu);
             if (_lanflag)
                 builder.TerminalFPA5(attR, _vT, _gammaT, _incT, _lanT);
             else
@@ -148,7 +147,7 @@ namespace MechJebLib.PVG
 
         private void ApplyKepler(Optimizer.OptimizerBuilder builder)
         {
-            (_smaT, _eccT) = Maths.SmaEccFromApsides(_peR, _apR);
+            (_smaT, _eccT) = Core.Maths.SmaEccFromApsides(_peR, _apR);
 
             if (_lanflag)
                 builder.TerminalKepler4(_smaT, _eccT, _incT, _lanT);
@@ -169,9 +168,9 @@ namespace MechJebLib.PVG
             ApplyEnergy(builder);
 
             // guess the initial launch direction
-            V3 enu = Maths.ENUHeadingForInclination(_incT, _r0);
+            V3 enu = Core.Maths.ENUHeadingForInclination(_incT, _r0);
             enu.z = 1.0; // add 45 degrees up
-            V3 pvGuess = Maths.ENUToECI(_r0, enu).normalized;
+            V3 pvGuess = Core.Maths.ENUToECI(_r0, enu).normalized;
 
             List<Phase> bootphases = DupPhases(_phases);
 
@@ -225,9 +224,9 @@ namespace MechJebLib.PVG
             ApplyFPA(builder);
 
             // guess the initial launch direction
-            V3 enu = Maths.ENUHeadingForInclination(_incT, _r0);
+            V3 enu = Core.Maths.ENUHeadingForInclination(_incT, _r0);
             enu.z = 1.0; // add 45 degrees up
-            V3 pvGuess = Maths.ENUToECI(_r0, enu).normalized;
+            V3 pvGuess = Core.Maths.ENUToECI(_r0, enu).normalized;
 
             List<Phase> bootphases = DupPhases(_phases);
 
@@ -290,7 +289,7 @@ namespace MechJebLib.PVG
             (V3 rf, V3 vf) = solution3.TerminalStateVectors();
 
             (_, _, _, _, _, double tanof, _) =
-                Maths.KeplerianFromStateVectors(_mu, rf, vf);
+                Core.Maths.KeplerianFromStateVectors(_mu, rf, vf);
 
             return Math.Abs(ClampPi(tanof)) > PI / 2.0 ? pvg2 : pvg3;
         }

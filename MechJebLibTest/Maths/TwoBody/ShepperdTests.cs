@@ -1,8 +1,8 @@
 ﻿using System;
 using AssertExtensions;
 using MechJebLib.Core.TwoBody;
+using MechJebLib.Maths.ODE;
 using MechJebLib.Primitives;
-using MuMech.MechJebLib.Maths.ODE;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;

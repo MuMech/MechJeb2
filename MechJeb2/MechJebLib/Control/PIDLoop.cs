@@ -9,7 +9,7 @@ using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
-namespace MuMech.MechJebLib.Control
+namespace MechJebLib.Control
 {
     public class PIDLoop
     {

@@ -225,7 +225,7 @@ namespace MechJebLib.Utils
         /// <param name="x">Value</param>
         /// <returns>True if the value is finite</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFinite(double x)
+        public static bool IsFinite(this double x)
         {
             return !double.IsNaN(x) && !double.IsInfinity(x);
         }
