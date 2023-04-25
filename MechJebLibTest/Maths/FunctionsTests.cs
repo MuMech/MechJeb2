@@ -826,6 +826,16 @@ namespace MechJebLibTest.Maths
                 newR = random.NextDouble() * 1e3 * rscale;
                 V3 dv5 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.SMA);
                 MechJebLib.Core.Maths.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-3);
+
+                // now test changing the Ecc
+                double newEcc = random.NextDouble() * 5 + 2.5;
+                //double newEcc = 0;
+                //mu = 12062820349435870;
+                //r  = new V3(-11127712.1572464, 6047010.46690323, -41335219.1091841);
+                //v  = new V3(8488.1806474245, 16267.5956749284, 43895.1739390544);
+                V3 dv6 = ChangeOrbitalElement.DeltaV(mu, r, v, newEcc, ChangeOrbitalElement.Type.ECC);
+                (_, double ecc) = MechJebLib.Core.Maths.SmaEccFromStateVectors(mu, r, v + dv6);
+                ecc.ShouldEqual(newEcc, 1e-3);
             }
         }
 
@@ -854,7 +864,7 @@ namespace MechJebLibTest.Maths
             _testOutputHelper.WriteLine($"sma = {sma}, ecc = {ecc} r0 = {r0} v0 = {v0}");
 
             (V3 dv, double dt, double newPeR) =
-                ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, dtmin: 0);
+                ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, 0);
 
             (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
 
@@ -862,7 +872,7 @@ namespace MechJebLibTest.Maths
 
             (V3 r2, V3 v2) = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
 
-            (V3 rtest, V3 vtest) = Shepperd.Solve(moonMu, tt1*0.1, r1, v1 + dv);
+            (V3 rtest, V3 vtest) = Shepperd.Solve(moonMu, tt1 * 0.1, r1, v1 + dv);
 
             _testOutputHelper.WriteLine($"rtest = {rtest}, vtest = {vtest}");
             _testOutputHelper.WriteLine($"dv = {dv}, dt = {dt}, peR = {newPeR}");
