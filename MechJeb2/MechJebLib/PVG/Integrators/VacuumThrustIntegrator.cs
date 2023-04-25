@@ -7,9 +7,9 @@
 #nullable enable
 
 using System;
+using MechJebLib.Maths.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using MuMech.MechJebLib.Maths.ODE;
 
 namespace MechJebLib.PVG.Integrators
 {

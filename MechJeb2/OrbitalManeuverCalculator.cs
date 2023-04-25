@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using MechJebLib.Core;
 using MechJebLib.Core.TwoBody;
+using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
-using MuMech.MechJebLib.Maneuvers;
 using Smooth.Pools;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
