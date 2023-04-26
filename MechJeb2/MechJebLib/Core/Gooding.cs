@@ -449,10 +449,10 @@ namespace MechJebLib.Core
                             double TOLD;
                             do
                             {
-                                TWOI1 = TWOI1 + 2.0;
-                                TERM  = TERM * FG1SQ;
-                                TOLD  = T;
-                                T     = T + TERM / TWOI1;
+                                TWOI1 += 2.0;
+                                TERM  *= FG1SQ;
+                                TOLD  =  T;
+                                T     += TERM / TWOI1;
                             } while (T != TOLD); /* "CONTINUE LOOPING FOR THE INVERSE TANH" -- Gooding */
                         }
                     }
