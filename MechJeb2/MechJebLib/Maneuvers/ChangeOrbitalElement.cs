@@ -74,8 +74,8 @@ namespace MechJebLib.Maneuvers
                     break;
             }
 
-            const double DIFFSTEP = 1e-8;
-            const double EPSX = 1e-10;
+            const double DIFFSTEP = 1e-7;
+            const double EPSX = 1e-15;
             const int MAXITS = 1000;
 
             const int NVARIABLES = 2;
@@ -109,7 +109,6 @@ namespace MechJebLib.Maneuvers
             var args = new Args { P = p, Q = q, Value = type == Type.ECC ? value : value / scale.LengthScale, Type = type };
 
             alglib.minnlccreatef(NVARIABLES, x, DIFFSTEP, out alglib.minnlcstate state);
-            //alglib.minnlcsetstpmax(state, 1e-2);
             alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, EPSX, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);

@@ -786,7 +786,7 @@ namespace MechJebLibTest.Maths
         }
 
         [Fact]
-        private void DeltaVToChangeApsisTest()
+        private void ChangeOrbitalElementTest()
         {
             const int NTRIALS = 50;
 
@@ -806,7 +806,7 @@ namespace MechJebLibTest.Maths
                 double mu = rscale * vscale * vscale;
 
                 V3 dv = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.PERIAPSIS);
-                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newR, 1e-3);
+                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newR, 1e-9);
 
                 // validate this API works left handed.
                 V3 dv2 = ChangeOrbitalElement.DeltaV(mu, r.xzy, v.xzy, newR, ChangeOrbitalElement.Type.PERIAPSIS);
@@ -815,27 +815,29 @@ namespace MechJebLibTest.Maths
                 // now test apoapsis changing to elliptical
                 newR = random.NextDouble() * rscale * 1e9 + r.magnitude;
                 V3 dv3 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.APOAPSIS);
-                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-3);
+                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-5);
 
                 // now test apoapsis changing to hyperbolic
                 newR = -(random.NextDouble() * 1e9 + 1e3) * rscale;
                 V3 dv4 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.APOAPSIS);
-                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-3);
+                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-5);
 
                 // now test changing the SMA.
                 newR = random.NextDouble() * 1e3 * rscale;
+                /*
+                mu   = 8657343022269006;
+                r    = new V3(-37559037.128101, -13154072.5832729, -86913972.3215555);
+                v    = new V3(23370.6359939819, 12558.3695536628, 17864.1347044172);
+                newR = 35354091.544774853;
+                */
                 V3 dv5 = ChangeOrbitalElement.DeltaV(mu, r, v, newR, ChangeOrbitalElement.Type.SMA);
-                MechJebLib.Core.Maths.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-3);
+                MechJebLib.Core.Maths.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-9);
 
                 // now test changing the Ecc
                 double newEcc = random.NextDouble() * 5 + 2.5;
-                //double newEcc = 0;
-                //mu = 12062820349435870;
-                //r  = new V3(-11127712.1572464, 6047010.46690323, -41335219.1091841);
-                //v  = new V3(8488.1806474245, 16267.5956749284, 43895.1739390544);
                 V3 dv6 = ChangeOrbitalElement.DeltaV(mu, r, v, newEcc, ChangeOrbitalElement.Type.ECC);
                 (_, double ecc) = MechJebLib.Core.Maths.SmaEccFromStateVectors(mu, r, v + dv6);
-                ecc.ShouldEqual(newEcc, 1e-3);
+                ecc.ShouldEqual(newEcc, 1e-9);
             }
         }
 
