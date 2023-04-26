@@ -17,7 +17,7 @@ namespace MuMech
         {
             _timeSelector = new TimeSelector(new[]
             {
-                TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING
+                TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
             });
         }
 

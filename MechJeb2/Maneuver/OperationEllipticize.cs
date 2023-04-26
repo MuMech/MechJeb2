@@ -22,7 +22,7 @@ namespace MuMech
 
         public OperationEllipticize()
         {
-            _timeSelector = new TimeSelector(new[] { TimeReference.X_FROM_NOW });
+            _timeSelector = new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
         }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
