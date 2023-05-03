@@ -85,12 +85,12 @@ namespace MechJebLib.PVG
             return phase;
         }
 
-        public void Integrate(DD y0, DD yf, double t0, double tf)
+        public void Integrate(Vn y0, Vn yf, double t0, double tf)
         {
             Integrator.Integrate(y0, yf, this, t0, tf);
         }
 
-        public void Integrate(DD y0, DD yf, double t0, double tf, Solution solution)
+        public void Integrate(Vn y0, Vn yf, double t0, double tf, Solution solution)
         {
             Integrator.Integrate(y0, yf, this, t0, tf, solution);
         }

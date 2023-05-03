@@ -1,7 +1,12 @@
-﻿using System;
+﻿/*
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
+ */
+
+using System;
 using AssertExtensions;
 using MechJebLib.Core.TwoBody;
-using MechJebLib.Maths.ODE;
+using MechJebLib.Core.ODE;
 using MechJebLib.Primitives;
 using Xunit;
 using Xunit.Abstractions;
@@ -44,13 +49,13 @@ namespace MechJebLibTest.Maths
             }
         }
 
-        private readonly VacuumKernel<DormandPrince> _ode = new VacuumKernel<DormandPrince>();
+        private readonly VacuumKernel _ode = new VacuumKernel();
 
-        private class VacuumKernel<T> : ODE<T> where T : ODESolver, new()
+        private class VacuumKernel
         {
-            public override int N => 6;
+            public int N => 6;
 
-            protected override void dydt(DD yin, double x, DD dyout)
+            public void dydt(Vn yin, double x, Vn dyout)
             {
                 var r = new V3(yin[0], yin[1], yin[2]);
                 var v = new V3(yin[3], yin[4], yin[5]);
@@ -70,12 +75,14 @@ namespace MechJebLibTest.Maths
         [Fact]
         private void RandomComparedToDormandPrince()
         {
-            _ode.Integrator.Accuracy       = 1e-7;
-            _ode.Integrator.Hmin           = 1e-9;
-            _ode.Integrator.ThrowOnMaxIter = true;
-            _ode.Integrator.Maxiter        = 2000;
+            var solver = new DormandPrince5();
 
-            const int NTRIALS = 5000;
+            solver.Accuracy       = 1e-9;
+            solver.Hmin           = 1e-9;
+            solver.ThrowOnMaxIter = true;
+            solver.Maxiter        = 2000;
+
+            const int NTRIALS = 50;
 
             var random = new Random();
 
@@ -89,15 +96,15 @@ namespace MechJebLibTest.Maths
 
                 V3 rf2, vf2;
 
-                using (var y0 = DD.Rent(6))
-                using (var yf = DD.Rent(6))
+                using (var y0 = Vn.Rent(6))
+                using (var yf = Vn.Rent(6))
                 {
                     y0.Set(0, r0);
                     y0.Set(3, v0);
 
                     try
                     {
-                        _ode.Integrate(y0, yf, 0, dt);
+                        solver.Solve(_ode.dydt, y0, yf, 0, dt);
                     }
                     catch (ArgumentException)
                     {

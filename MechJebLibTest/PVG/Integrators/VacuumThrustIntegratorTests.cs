@@ -35,8 +35,8 @@ namespace MechJebLibTest.PVG
             double mu = 3.986004418e+14;
             double m0 = 49119.7842689869;
 
-            using var y0 = DD.Rent(initial);
-            using var yf = DD.Rent(initial.Length);
+            using var y0 = Vn.Rent(initial);
+            using var yf = Vn.Rent(initial.Length);
             using var wrapper = ArrayWrapper.Rent(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
@@ -85,8 +85,8 @@ namespace MechJebLibTest.PVG
             double mu = 3.986004418e+14;
             double m0 = 49119.7842689869;
 
-            using var y0 = DD.Rent(initial);
-            using var yf = DD.Rent(initial.Length);
+            using var y0 = Vn.Rent(initial);
+            using var yf = Vn.Rent(initial.Length);
             using var wrapper = ArrayWrapper.Rent(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
@@ -129,8 +129,8 @@ namespace MechJebLibTest.PVG
             double mu = 3.986004418e+14;
             double m0 = 49119.7842689869;
 
-            using var y0 = DD.Rent(initial);
-            using var yf = DD.Rent(initial.Length);
+            using var y0 = Vn.Rent(initial);
+            using var yf = Vn.Rent(initial.Length);
             using var wrapper = ArrayWrapper.Rent(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);

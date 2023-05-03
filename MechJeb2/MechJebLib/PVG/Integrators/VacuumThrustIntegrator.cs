@@ -7,7 +7,7 @@
 #nullable enable
 
 using System;
-using MechJebLib.Maths.ODE;
+using MechJebLib.Core.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 
@@ -15,15 +15,13 @@ namespace MechJebLib.PVG.Integrators
 {
     public class VacuumThrustIntegrator : IPVGIntegrator
     {
-        private readonly VacuumThrustKernel<DormandPrince> _ode = new VacuumThrustKernel<DormandPrince>();
-
-        private class VacuumThrustKernel<T> : ODE<T> where T : ODESolver, new()
+        private class VacuumThrustKernel
         {
-            public override int N => ArrayWrapper.ARRAY_WRAPPER_LEN;
+            public static int N => ArrayWrapper.ARRAY_WRAPPER_LEN;
 
             public Phase Phase = null!;
 
-            protected override void dydt(DD yin, double x, DD dyout)
+            public void dydt(Vn yin, double x, Vn dyout)
             {
                 Check.True(Phase.Normalized);
 
@@ -53,19 +51,22 @@ namespace MechJebLib.PVG.Integrators
             }
         }
 
-        public void Integrate(DD y0, DD yf, Phase phase, double t0, double tf)
+        private readonly VacuumThrustKernel _ode    = new VacuumThrustKernel();
+        private readonly DormandPrince5      _solver = new DormandPrince5();
+
+        public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
         {
-            _ode.Integrator.ThrowOnMaxIter = true;
+            _solver.ThrowOnMaxIter = true;
             _ode.Phase                     = phase;
-            _ode.Integrate(y0, yf, t0, tf);
+            _solver.Solve(_ode.dydt, y0, yf, t0, tf);
         }
 
-        public void Integrate(DD y0, DD yf, Phase phase, double t0, double tf, Solution solution)
+        public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf, Solution solution)
         {
-            _ode.Integrator.ThrowOnMaxIter = true;
+            _solver.ThrowOnMaxIter = true;
             _ode.Phase                     = phase;
-            Hn interpolant = _ode.GetInterpolant();
-            _ode.Integrate(y0, yf, t0, tf, interpolant);
+            var interpolant = Hn.Get(VacuumThrustKernel.N);
+            _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant);
             solution.AddSegment(t0, tf, interpolant, phase);
         }
     }

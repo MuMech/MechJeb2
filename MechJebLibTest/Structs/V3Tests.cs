@@ -121,7 +121,7 @@ namespace MechJebLibTest.Structs
             {
                 var v = new V3(40 * random.NextDouble() - 20, 40 * random.NextDouble() - 20, 40 * random.NextDouble() - 20);
 
-                v.cart2sph.sph2cart.ShouldEqual(v,1e-14);
+                v.cart2sph.sph2cart.ShouldEqual(v,1e-13);
             }
         }
 

@@ -1,65 +1,19 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Maths.ODE;
+using MechJebLib.Core.ODE;
 using MechJebLib.Primitives;
 using Xunit;
-using Xunit.Abstractions;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.Maths
 {
     public class DormandPrinceTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public DormandPrinceTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
-        [Theory]
-        [ClassData(typeof(SimpleOscillatorTestData))]
-        public void SimpleOscillatorTest(double k, double m, double x0, double v0, double tf)
-        {
-            double t0 = 0.0;
-
-            var ode = new SimpleOscillator<DormandPrince>(k, m)
-            {
-                Integrator =
-                {
-                    Hmax           = 0,
-                    Hmin           = EPS,
-                    Accuracy       = 1e-9,
-                    Hstart         = 0,
-                    ThrowOnMaxIter = true
-                }
-            };
-
-            var y0 = DD.Rent(2);
-            y0[0] = x0;
-            y0[1] = v0;
-            var yf = DD.Rent(2);
-            ode.Integrate(y0, yf, t0, tf);
-            double omega = Math.Sqrt(k / m);
-            double u = x0 * Math.Cos(omega * (tf - t0)) + v0 * Math.Sin(omega * (tf - t0)) / omega;
-            Assert.Equal(u, yf[0], 9);
-
-            long start = GC.GetAllocatedBytesForCurrentThread();
-
-            ode.Integrate(y0, yf, t0, tf);
-
-            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
-        }
-
-        private class SimpleOscillator<T> : ODE<T> where T : ODESolver, new()
+        private class SimpleOscillator
         {
             private readonly double _k;
             private readonly double _m;
@@ -70,30 +24,12 @@ namespace MechJebLibTest.Maths
                 _m = m;
             }
 
-            public override int N => 2;
+            public int N => 2;
 
-            protected override void dydt(DD y, double x, DD dy)
+            public void dydt(Vn y, double x, Vn dy)
             {
                 dy[0] = y[1];
                 dy[1] = -_k / _m * y[0];
-            }
-        }
-
-        private class SimpleOscillatorTestData : IEnumerable<object[]>
-        {
-            public IEnumerator<object[]> GetEnumerator()
-            {
-                double k = 4.0;
-                double m = 1.5;
-                for (double x0 = -1; x0 < 1.0; x0 += 0.5)
-                for (double v0 = -1; v0 < 1.0; v0 += 0.5)
-                for (double tf = -1; tf < 4.0; tf += 0.5)
-                    yield return new object[] { k, m, x0, v0, tf };
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
             }
         }
 
@@ -104,35 +40,59 @@ namespace MechJebLibTest.Maths
             double m = 1;
             double x0 = 0;
             double v0 = 1;
-            var ode = new SimpleOscillator<DormandPrince>(k, m) { Integrator = { Interpnum = 20 } };
-            var y0 = DD.Rent(2);
+            double tf = 4;
+            var solver = new DormandPrince5 { Interpnum = 20, Accuracy = 1e-9 };
+            var ode = new SimpleOscillator(k, m);
+            var f = new Action<Vn, double, Vn>(ode.dydt);
+
+            using var y0 = Vn.Rent(2);
             y0[0] = x0;
             y0[1] = v0;
-            var yf = DD.Rent(2);
+            using var yf = Vn.Rent(2);
             double omega = Math.Sqrt(k / m);
-            int t = 3;
-            double expected = x0 * Math.Cos(omega * t) + v0 * Math.Sin(omega * t) / omega;
-            DD y;
 
-            using (Hn interpolant = ode.GetInterpolant())
+            const int COUNT = 20;
+
+            double[] expected = new double[COUNT + 1];
+
+            for (int i = 0; i <= COUNT; i++)
             {
-                ode.Integrate(y0, yf, 0, 4, interpolant);
+                double t = tf * i / COUNT;
+                expected[i] = x0 * Math.Cos(omega * t) + v0 * Math.Sin(omega * t) / omega;
+            }
 
-                using (y = interpolant.Evaluate(t))
+            for (int i = 0; i <= COUNT; i++)
+            {
+                double t = tf * i / COUNT;
+                solver.Solve(f, y0, yf, 0, t);
+                yf[0].ShouldEqual(expected[i], 1e-10);
+            }
+
+            using (var interpolant = Hn.Get(ode.N))
+            {
+                solver.Solve(f, y0, yf, 0, 4, interpolant);
+
+                for (int i = 0; i <= COUNT; i++)
                 {
-                    y[0].ShouldEqual(expected, 1e-9);
+                    double t = tf * i / COUNT;
+                    using Vn y = interpolant.Evaluate(t);
+
+                    y[0].ShouldEqual(expected[i], 1e-10);
                 }
             }
 
             long start = GC.GetAllocatedBytesForCurrentThread();
 
-            using (Hn interpolant = ode.GetInterpolant())
+            using (var interpolant = Hn.Get(ode.N))
             {
-                ode.Integrate(y0, yf, 0, 4, interpolant);
+                solver.Solve(f, y0, yf, 0, 4, interpolant);
 
-                using (y = interpolant.Evaluate(t))
+                for (int i = 0; i <= COUNT; i++)
                 {
-                    y[0].ShouldEqual(expected, 1e-9);
+                    double t = tf * i / COUNT;
+                    using Vn y = interpolant.Evaluate(t);
+
+                    y[0].ShouldEqual(expected[i], 1e-10);
                 }
             }
 

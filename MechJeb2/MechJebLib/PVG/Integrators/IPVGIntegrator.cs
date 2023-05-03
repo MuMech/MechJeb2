@@ -12,7 +12,7 @@ namespace MechJebLib.PVG.Integrators
 {
     public interface IPVGIntegrator
     {
-        void Integrate(DD y0, DD yf, Phase phase, double t0, double tf);
-        void Integrate(DD y0, DD yf, Phase phase, double t0, double tf, Solution solution);
+        void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf);
+        void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf, Solution solution);
     }
 }

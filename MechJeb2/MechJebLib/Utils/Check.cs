@@ -151,11 +151,13 @@ namespace MechJebLib.Utils
          * Vectors
          */
 
+        /*
         [Conditional("DEBUG")]
         public static void Finite(Vector3d v)
         {
             DoCheck(IsFinite(v));
         }
+        */
 
         [Conditional("DEBUG")]
         public static void Finite(V3 v)
