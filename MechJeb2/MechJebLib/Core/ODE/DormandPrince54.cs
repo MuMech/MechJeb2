@@ -59,89 +59,51 @@ namespace MechJebLib.Core.ODE
 
         #endregion
 
-        private class RKData : IDisposable
+
+        protected override void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err)
         {
-            private static readonly ObjectPool<RKData> _pool = new ObjectPool<RKData>(() => new RKData());
-
-            public Vn K1, K2, K3, K4, K5, K6, K7;
-            private RKData() => K1 = K2 = K3 = K4 = K5 = K6 = K7 = null!;
-
-            public void Dispose()
-            {
-                K1.Dispose();
-                K2.Dispose();
-                K3.Dispose();
-                K4.Dispose();
-                K5.Dispose();
-                K6.Dispose();
-                K7.Dispose();
-                _pool.Return(this);
-            }
-
-            public static RKData Rent(int n)
-            {
-                RKData data = _pool.Get();
-                data.K1 = Vn.Rent(n);
-                data.K2 = Vn.Rent(n);
-                data.K3 = Vn.Rent(n);
-                data.K4 = Vn.Rent(n);
-                data.K5 = Vn.Rent(n);
-                data.K6 = Vn.Rent(n);
-                data.K7 = Vn.Rent(n);
-                return data;
-            }
-        }
-
-        protected override void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err, object o)
-        {
-            var data = (RKData)o;
-
-            int n = y.Count;
             double h = habs * direction;
 
-            dy.CopyTo(data.K1);
+            dy.CopyTo(K[1]);
 
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < N; i++)
                 ynew[i] = y[i] + h * (A21 * dy[i]);
-            f(ynew, t + C2 * h, data.K2);
+            f(ynew, t + C2 * h, K[2]);
 
-            for (int i = 0; i < n; i++)
-                ynew[i] = y[i] + h * (A31 * data.K1[i] + A32 * data.K2[i]);
-            f(ynew, t + C3 * h, data.K3);
+            for (int i = 0; i < N; i++)
+                ynew[i] = y[i] + h * (A31 * K[1][i] + A32 * K[2][i]);
+            f(ynew, t + C3 * h, K[3]);
 
-            for (int i = 0; i < n; i++)
-                ynew[i] = y[i] + h * (A41 * data.K1[i] + A42 * data.K2[i] + A43 * data.K3[i]);
-            f(ynew, t + C4 * h, data.K4);
+            for (int i = 0; i < N; i++)
+                ynew[i] = y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
+            f(ynew, t + C4 * h, K[4]);
 
-            for (int i = 0; i < n; i++)
-                ynew[i] = y[i] + h * (A51 * data.K1[i] + A52 * data.K2[i] + A53 * data.K3[i] + A54 * data.K4[i]);
-            f(ynew, t + C5 * h, data.K5);
+            for (int i = 0; i < N; i++)
+                ynew[i] = y[i] + h * (A51 * K[1][i] + A52 * K[2][i] + A53 * K[3][i] + A54 * K[4][i]);
+            f(ynew, t + C5 * h, K[5]);
 
-            for (int i = 0; i < n; i++)
-                ynew[i] = y[i] + h * (A61 * data.K1[i] + A62 * data.K2[i] + A63 * data.K3[i] + A64 * data.K4[i] + A65 * data.K5[i]);
-            f(ynew, t + h, data.K6);
+            for (int i = 0; i < N; i++)
+                ynew[i] = y[i] + h * (A61 * K[1][i] + A62 * K[2][i] + A63 * K[3][i] + A64 * K[4][i] + A65 * K[5][i]);
+            f(ynew, t + h, K[6]);
 
-            for (int i = 0; i < n; i++)
-                ynew[i] = y[i] + h * (A71 * data.K1[i] + A73 * data.K3[i] + A74 * data.K4[i] + A75 * data.K5[i] + A76 * data.K6[i]);
+            for (int i = 0; i < N; i++)
+                ynew[i] = y[i] + h * (A71 * K[1][i] + A73 * K[3][i] + A74 * K[4][i] + A75 * K[5][i] + A76 * K[6][i]);
 
-            f(ynew, t + h, data.K7);
+            f(ynew, t + h, K[7]);
 
-            for (int i = 0; i < n; i++)
-                err[i] = data.K1[i] * E1 + data.K3[i] * E3 + data.K4[i] * E4 + data.K5[i] * E5 + data.K6[i] * E6 + data.K7[i] * E7;
+            for (int i = 0; i < N; i++)
+                err[i] = K[1][i] * E1 + K[3][i] * E3 + K[4][i] * E4 + K[5][i] * E5 + K[6][i] * E6 + K[7][i] * E7;
 
-            data.K7.CopyTo(dynew);
+            K[7].CopyTo(dynew);
         }
 
-        protected override void PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data)
+        protected override void PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
         {
             // intentionally left blank for now
         }
 
-        protected override void Interpolate(double x, double t, double h, Vn y, Vn yout, object o)
+        protected override void Interpolate(double x, double t, double h, Vn y, Vn yout)
         {
-            var data = (RKData)o;
-
-            int n = y.Count;
             double s = (x - t) / h;
             double s2 = s * s;
             double s3 = s * s2;
@@ -154,16 +116,11 @@ namespace MechJebLib.Core.ODE
             double bf6 = 11.0 / 2467955532.0 * s * (106151040.0 * s3 - 661884105.0 * s2 + 946554244.0 * s - 361440756.0);
             double bf7 = 1.0 / 29380423.0 * s * (1.0 - s) * (8293050.0 * s2 - 82437520.0 * s + 44764047.0);
 
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < N; i++)
             {
-                yout[i] = y[i] + h * s * (bf1 * data.K1[i] + bf3 * data.K3[i] + bf4 * data.K4[i] + bf5 * data.K5[i] + bf6 * data.K6[i] +
-                                          bf7 * data.K7[i]);
+                yout[i] = y[i] + h * s * (bf1 * K[1][i] + bf3 * K[3][i] + bf4 * K[4][i] + bf5 * K[5][i] + bf6 * K[6][i] +
+                                          bf7 * K[7][i]);
             }
-        }
-
-        protected override IDisposable SetupData(int n)
-        {
-            return RKData.Rent(n);
         }
     }
 }

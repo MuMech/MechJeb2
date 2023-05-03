@@ -46,70 +46,36 @@ namespace MechJebLib.Core.ODE
 
         #endregion
 
-        private class RKData : IDisposable
+        protected override void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err)
         {
-            private static readonly ObjectPool<RKData> _pool = new ObjectPool<RKData>(() => new RKData());
-
-            public Vn K1, K2, K3, K4;
-
-            private RKData()
-            {
-                K1 = K2 = K3 = K4 = null!;
-            }
-
-            public void Dispose()
-            {
-                K1.Dispose();
-                K2.Dispose();
-                K3.Dispose();
-                K4.Dispose();
-                _pool.Return(this);
-            }
-
-            public static RKData Rent(int n)
-            {
-                RKData data = _pool.Get();
-                data.K1 = Vn.Rent(n);
-                data.K2 = Vn.Rent(n);
-                data.K3 = Vn.Rent(n);
-                data.K4 = Vn.Rent(n);
-                return data;
-            }
-        }
-
-        protected override void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err, object o)
-        {
-            var data = (RKData)o;
-
-            int n = y.Count;
             double h = habs * direction;
 
-            dy.CopyTo(data.K1);
+            dy.CopyTo(K[1]);
 
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < N; i++)
                 ynew[i] = y[i] + h * (A21 * dy[i]);
-            f(ynew, t + C2 * h, data.K2);
+            f(ynew, t + C2 * h, K[2]);
 
-            for (int i = 0; i < n; i++)
-                ynew[i] = y[i] + h * (A32 * data.K2[i]);
-            f(ynew, t + C3 * h, data.K3);
+            for (int i = 0; i < N; i++)
+                ynew[i] = y[i] + h * (A32 * K[2][i]);
+            f(ynew, t + C3 * h, K[3]);
 
-            for (int i = 0; i < n; i++)
-                ynew[i] = y[i] + h * (A41 * data.K1[i] + A42 * data.K2[i] + A43 * data.K3[i]);
-            f(ynew, t + h, data.K4);
+            for (int i = 0; i < N; i++)
+                ynew[i] = y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
+            f(ynew, t + h, K[4]);
 
-            for (int i = 0; i < n; i++)
-                err[i] = data.K1[i] * E1 + data.K2[i] * E2 + data.K3[i] * E3 + data.K4[i] * E4;
+            for (int i = 0; i < N; i++)
+                err[i] = K[1][i] * E1 + K[2][i] * E2 + K[3][i] * E3 + K[4][i] * E4;
 
-            data.K4.CopyTo(dynew);
+            K[4].CopyTo(dynew);
         }
 
-        protected override void PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data)
+        protected override void PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
         {
             // intentionally left blank for now
         }
 
-        protected override void Interpolate(double x, double t, double h, Vn y, Vn yout, object o)
+        protected override void Interpolate(double x, double t, double h, Vn y, Vn yout)
         {
             /*
             var data = (RKData)o;
@@ -133,11 +99,6 @@ namespace MechJebLib.Core.ODE
                                           bf7 * data.K7[i]);
             }
             */
-        }
-
-        protected override IDisposable SetupData(int n)
-        {
-            return RKData.Rent(n);
         }
     }
 }

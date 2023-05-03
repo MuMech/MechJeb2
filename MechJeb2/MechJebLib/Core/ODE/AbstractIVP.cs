@@ -84,7 +84,6 @@ namespace MechJebLib.Core.ODE
             using var dynew = Vn.Rent(N);
             using var dy = Vn.Rent(N);
             using var y = Vn.Rent(N);
-            using IDisposable data = SetupData(N);
 
             int direction = t0 != tf ? Math.Sign(tf - t0) : 1;
             double habs = SelectInitialStep(t0, tf);
@@ -112,7 +111,7 @@ namespace MechJebLib.Core.ODE
                 h    = tnew - t;
                 habs = Math.Abs(h);
 
-                habs = Step(f, t, habs, direction, y, dy, ynew, dynew, data);
+                habs = Step(f, t, habs, direction, y, dy, ynew, dynew);
 
                 if (events != null)
                 {
@@ -131,8 +130,8 @@ namespace MechJebLib.Core.ODE
                         using var yinterp = Vn.Rent(N);
                         using var finterp = Vn.Rent(N);
 
-                        PrepareInterpolant(habs, direction, y, dy, ynew, dynew, data);
-                        Interpolate(tinterp, t, h, y, yinterp, data);
+                        PrepareInterpolant(habs, direction, y, dy, ynew, dynew);
+                        Interpolate(tinterp, t, h, y, yinterp);
                         f(yinterp, tinterp, finterp);
                         interpolant?.Add(tinterp, yinterp, finterp);
                         interpCount++;
@@ -157,13 +156,15 @@ namespace MechJebLib.Core.ODE
             interpolant?.Add(t, y, dy);
 
             y.CopyTo(yf);
+
+            Cleanup();
         }
 
-        protected abstract double      Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data);
+        protected abstract double      Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
         protected abstract double      SelectInitialStep(double t0, double tf);
-        protected abstract void        PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data);
-        protected abstract void        Interpolate(double x, double t, double h, Vn y, Vn yout, object data);
-        protected abstract IDisposable SetupData(int n);
+        protected abstract void        PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
+        protected abstract void        Interpolate(double x, double t, double h, Vn y, Vn yout);
         protected abstract void        Initialize();
+        protected abstract void        Cleanup();
     }
 }

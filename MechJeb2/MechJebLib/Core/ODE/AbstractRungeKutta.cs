@@ -6,6 +6,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -32,10 +33,12 @@ namespace MechJebLib.Core.ODE
             set => _beta = value * (ErrorEstimatorOrder + 1.0);
         }
 
-        private double _alpha => 1.0 / (ErrorEstimatorOrder + 1.0) - 0.75 * Beta;
-        private double _lastErrorNorm = 1e-4;
+        private            double   _alpha => 1.0 / (ErrorEstimatorOrder + 1.0) - 0.75 * Beta;
+        private            double   _lastErrorNorm = 1e-4;
 
-        protected override double Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data)
+        protected readonly List<Vn> K              = new List<Vn>();
+
+        protected override double Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
         {
             int n = y.Count;
             using var err = Vn.Rent(n);
@@ -44,7 +47,7 @@ namespace MechJebLib.Core.ODE
 
             while (true)
             {
-                RKStep(f, t, habs, direction, y, dy, ynew, dynew, err, data);
+                RKStep(f, t, habs, direction, y, dy, ynew, dynew, err);
 
                 double errorNorm = ScaledErrorNorm(y, ynew, err);
 
@@ -86,9 +89,21 @@ namespace MechJebLib.Core.ODE
         protected override void Initialize()
         {
             _lastErrorNorm = 1e-4;
+
+            K.Clear();
+            // we create an extra K[0] which we do not use
+            for (int i = 0; i <= Stages+1; i++)
+                K.Add(Vn.Rent(N));
         }
 
-        protected abstract void   RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err, object data);
+        protected override void Cleanup()
+        {
+            for (int i = 0; i <= Stages+1; i++)
+                K[i].Dispose();
+            K.Clear();
+        }
+
+        protected abstract void   RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err);
 
         private double ScaledErrorNorm(Vn y, Vn ynew, Vn err)
         {
