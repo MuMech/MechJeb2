@@ -61,6 +61,8 @@ namespace MechJebLib.Core.ODE
 
         public CancellationToken CancellationToken { get; set; }
 
+        protected int N;
+
         /// <summary>
         ///     Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)
         /// </summary>
@@ -75,13 +77,14 @@ namespace MechJebLib.Core.ODE
         public void Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null,
             List<IVPEvent>? events = null)
         {
-            int n = y0.Count;
+            N = y0.Count;
+            Initialize();
 
-            using var ynew = Vn.Rent(n);
-            using var dynew = Vn.Rent(n);
-            using var dy = Vn.Rent(n);
-            using var y = Vn.Rent(n);
-            using IDisposable data = SetupData(n);
+            using var ynew = Vn.Rent(N);
+            using var dynew = Vn.Rent(N);
+            using var dy = Vn.Rent(N);
+            using var y = Vn.Rent(N);
+            using IDisposable data = SetupData(N);
 
             int direction = t0 != tf ? Math.Sign(tf - t0) : 1;
             double habs = SelectInitialStep(t0, tf);
@@ -125,8 +128,8 @@ namespace MechJebLib.Core.ODE
                         if (!tinterp.IsWithin(t, tnew))
                             break;
 
-                        using var yinterp = Vn.Rent(n);
-                        using var finterp = Vn.Rent(n);
+                        using var yinterp = Vn.Rent(N);
+                        using var finterp = Vn.Rent(N);
 
                         PrepareInterpolant(habs, direction, y, dy, ynew, dynew, data);
                         Interpolate(tinterp, t, h, y, yinterp, data);
@@ -161,5 +164,6 @@ namespace MechJebLib.Core.ODE
         protected abstract void        PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data);
         protected abstract void        Interpolate(double x, double t, double h, Vn y, Vn yout, object data);
         protected abstract IDisposable SetupData(int n);
+        protected abstract void        Initialize();
     }
 }

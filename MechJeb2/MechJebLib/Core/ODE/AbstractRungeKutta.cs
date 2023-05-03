@@ -24,7 +24,16 @@ namespace MechJebLib.Core.ODE
         protected abstract int Stages              { get; }
         protected abstract int ErrorEstimatorOrder { get; }
 
-        private double _alpha => 1.0 / (ErrorEstimatorOrder + 1.0);
+        private double _beta = 0.2;
+
+        public double Beta
+        {
+            get => _beta / (ErrorEstimatorOrder + 1.0);
+            set => _beta = value * (ErrorEstimatorOrder + 1.0);
+        }
+
+        private double _alpha => 1.0 / (ErrorEstimatorOrder + 1.0) - 0.75 * Beta;
+        private double _lastErrorNorm = 1e-4;
 
         protected override double Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data)
         {
@@ -41,12 +50,18 @@ namespace MechJebLib.Core.ODE
 
                 if (errorNorm < 1)
                 {
-                    double factor = errorNorm == 0 ? MAX_FACTOR : Math.Min(MAX_FACTOR,SAFETY*Math.Pow(errorNorm, -_alpha));
+                    double factor;
+                    if (errorNorm == 0)
+                        factor = MAX_FACTOR;
+                    else
+                        factor = Math.Min(MAX_FACTOR,SAFETY*Math.Pow(errorNorm, -_alpha)*Math.Pow(_lastErrorNorm, Beta));
 
                     if (previouslyRejected)
                         factor = Math.Min(1.0, factor);
 
                     habs *= factor;
+
+                    _lastErrorNorm = Math.Max(errorNorm, 1e-4);
 
                     break;
                 }
@@ -66,6 +81,11 @@ namespace MechJebLib.Core.ODE
 
             double v = Math.Abs(tf - t0);
             return 0.001 * v;
+        }
+
+        protected override void Initialize()
+        {
+            _lastErrorNorm = 1e-4;
         }
 
         protected abstract void   RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err, object data);
