@@ -3,13 +3,11 @@
  * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
 
-using System;
-using System.Collections.Generic;
-using MechJebLib.Primitives;
-using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
-
 #nullable enable
+
+using System;
+using MechJebLib.Primitives;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Core.ODE
 {
@@ -18,35 +16,44 @@ namespace MechJebLib.Core.ODE
 
     public abstract class AbstractRungeKutta : AbstractIVP
     {
+        private const double MAX_FACTOR = 10;
+        private const double MIN_FACTOR = 0.2;
+        private const double SAFETY     = 0.9;
+
+        protected abstract int Order               { get; }
+        protected abstract int Stages              { get; }
+        protected abstract int ErrorEstimatorOrder { get; }
+
+        private double _alpha => 1.0 / (ErrorEstimatorOrder + 1.0);
+
         protected override double Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data)
         {
             int n = y.Count;
             using var err = Vn.Rent(n);
 
+            bool previouslyRejected = false;
+
             while (true)
             {
                 RKStep(f, t, habs, direction, y, dy, ynew, dynew, err, data);
 
-                double error = 0;
-                for (int i = 0; i < n; i++)
-                    // FIXME: look at dopri fortran code to see how they generate this
-                    error = Math.Max(error, Math.Abs(err[i]));
+                double errorNorm = ScaledErrorNorm(y, ynew, err);
 
-                double s = 0.84 * Math.Pow(Accuracy / error, 1.0 / 5.0);
+                if (errorNorm < 1)
+                {
+                    double factor = errorNorm == 0 ? MAX_FACTOR : Math.Min(MAX_FACTOR,SAFETY*Math.Pow(errorNorm, -_alpha));
 
-                if (s < 0.1)
-                    s = 0.1;
-                if (s > 4)
-                    s = 4;
-                habs *= s;
+                    if (previouslyRejected)
+                        factor = Math.Min(1.0, factor);
 
-                if (Hmin > 0 && habs < Hmin)
-                    habs = Hmin * habs;
-                if (Hmax > 0 && habs > Hmax)
-                    habs = Hmax * habs;
+                    habs *= factor;
 
-                if (error < Accuracy)
                     break;
+                }
+
+                habs *= Math.Max(MIN_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha));
+
+                previouslyRejected = true;
             }
 
             return habs;
@@ -61,6 +68,21 @@ namespace MechJebLib.Core.ODE
             return 0.001 * v;
         }
 
-        protected abstract void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err, object data);
+        protected abstract void   RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err, object data);
+
+        private double ScaledErrorNorm(Vn y, Vn ynew, Vn err)
+        {
+            int n = err.Count;
+
+            double error = 0.0;
+
+            for (int i = 0; i < n; i++)
+            {
+                double scale = Atol + Rtol * Math.Max(Math.Abs(y[i]), Math.Abs(ynew[i]));
+                error += Powi(err[i]/scale, 2);
+            }
+
+            return Math.Sqrt(error / n);
+        }
     }
 }

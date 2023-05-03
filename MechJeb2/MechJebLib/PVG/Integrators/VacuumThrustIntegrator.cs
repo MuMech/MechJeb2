@@ -52,7 +52,7 @@ namespace MechJebLib.PVG.Integrators
         }
 
         private readonly VacuumThrustKernel _ode    = new VacuumThrustKernel();
-        private readonly DormandPrince5      _solver = new DormandPrince5();
+        private readonly DormandPrince54      _solver = new DormandPrince54();
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
         {

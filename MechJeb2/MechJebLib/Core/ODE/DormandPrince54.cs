@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
 
-#nullable enable
-
 using System;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+
+#nullable enable
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.Core.ODE
@@ -15,8 +15,12 @@ namespace MechJebLib.Core.ODE
     using IVPFunc = Action<Vn, double, Vn>;
     using IVPEvent = Func<double, Vn, Vn, (double x, bool dir, bool stop)>;
 
-    public class DormandPrince5 : AbstractRungeKutta
+    public class DormandPrince54 : AbstractRungeKutta
     {
+        protected override int Order               => 5;
+        protected override int Stages              => 6;
+        protected override int ErrorEstimatorOrder => 4;
+
         #region IntegrationConstants
 
         // constants for DP5(4)7FM
@@ -60,7 +64,6 @@ namespace MechJebLib.Core.ODE
             private static readonly ObjectPool<RKData> _pool = new ObjectPool<RKData>(() => new RKData());
 
             public Vn K1, K2, K3, K4, K5, K6, K7;
-
             private RKData() => K1 = K2 = K3 = K4 = K5 = K6 = K7 = null!;
 
             public void Dispose()

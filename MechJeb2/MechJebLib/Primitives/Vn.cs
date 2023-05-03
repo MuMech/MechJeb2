@@ -31,6 +31,16 @@ namespace MechJebLib.Primitives
             return abs;
         }
 
+        public double AbsMax()
+        {
+            double absmax = double.NegativeInfinity;
+            for (int i = 0; i < _n; i++)
+                if (Math.Abs(this[i]) > absmax)
+                    absmax = this[i];
+
+            return absmax;
+        }
+
         public Vn Dup()
         {
             Vn dup = Rent(_n);

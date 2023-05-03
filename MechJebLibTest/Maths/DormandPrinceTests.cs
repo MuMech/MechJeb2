@@ -41,7 +41,7 @@ namespace MechJebLibTest.Maths
             double x0 = 0;
             double v0 = 1;
             double tf = 4;
-            var solver = new DormandPrince5 { Interpnum = 20, Accuracy = 1e-9 };
+            var solver = new DormandPrince54 { Interpnum = 20, Rtol = 1e-10, Atol = 1e-10 };
             var ode = new SimpleOscillator(k, m);
             var f = new Action<Vn, double, Vn>(ode.dydt);
 

@@ -35,9 +35,14 @@ namespace MechJebLib.Core.ODE
         public double Maxiter { get; set; } = 2000;
 
         /// <summary>
-        ///     Desired local accuracy.
+        ///     Desired relative tolerance.
         /// </summary>
-        public double Accuracy { get; set; } = 1e-9;
+        public double Rtol { get; set; } = 1e-9;
+
+        /// <summary>
+        ///     Desired absolute tolerance.
+        /// </summary>
+        public double Atol { get; set; } = 1e-9;
 
         /// <summary>
         ///     Starting step-size (can be zero for automatic guess).

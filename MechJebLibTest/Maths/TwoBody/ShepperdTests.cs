@@ -84,9 +84,9 @@ namespace MechJebLibTest.Maths
         [Fact]
         private void RandomComparedToDormandPrince()
         {
-            var solver = new DormandPrince5();
+            var solver = new DormandPrince54();
 
-            solver.Accuracy       = 1e-13;
+            solver.Rtol       = 1e-13;
             solver.Hmin           = EPS;
             solver.ThrowOnMaxIter = true;
             solver.Maxiter        = 2000;

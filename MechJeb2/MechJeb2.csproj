@@ -109,7 +109,8 @@
         <Compile Include="MechJebLib\Core\Maths.cs" />
         <Compile Include="MechJebLib\Core\Functions\Angles.cs" />
         <Compile Include="MechJebLib\Core\Gooding.cs" />
-        <Compile Include="MechJebLib\Core\ODE\DormandPrince5.cs" />
+        <Compile Include="MechJebLib\Core\ODE\BogackiShampine32.cs" />
+        <Compile Include="MechJebLib\Core\ODE\DormandPrince54.cs" />
         <Compile Include="MechJebLib\Core\ODE\AbstractIVP.cs" />
         <Compile Include="MechJebLib\Core\ODE\AbstractRungeKutta.cs" />
         <Compile Include="MechJebLib\Core\TwoBody\Shepperd.cs" />
