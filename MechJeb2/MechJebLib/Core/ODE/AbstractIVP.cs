@@ -77,9 +77,21 @@ namespace MechJebLib.Core.ODE
         public void Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null,
             List<IVPEvent>? events = null)
         {
-            N = y0.Count;
-            Initialize();
+            try
+            {
+                N = y0.Count;
+                Initialize();
+                _Solve(f, y0, yf, t0, tf, interpolant, events);
+            }
+            finally
+            {
+                Cleanup();
+            }
+        }
 
+        private void _Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant,
+            List<IVPEvent>? events)
+        {
             using var ynew = Vn.Rent(N);
             using var dynew = Vn.Rent(N);
             using var dy = Vn.Rent(N);
@@ -156,8 +168,6 @@ namespace MechJebLib.Core.ODE
             interpolant?.Add(t, y, dy);
 
             y.CopyTo(yf);
-
-            Cleanup();
         }
 
         protected abstract double      Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
