@@ -28,9 +28,9 @@ namespace MechJebLib.PVG
         
         private readonly Problem                  _problem;
         private readonly List<Phase>              _phases;
-        private readonly List<DD>                 _initial  = new List<DD>();
-        private readonly List<DD>                 _terminal = new List<DD>();
-        private readonly List<DD>                 _residual = new List<DD>();
+        private readonly List<Vn>                 _initial  = new List<Vn>();
+        private readonly List<Vn>                 _terminal = new List<Vn>();
+        private readonly List<Vn>                 _residual = new List<Vn>();
         private          int                      lastPhase => _phases.Count - 1;
         private readonly alglib.minlmreport       _rep = new alglib.minlmreport();
         private readonly alglib.ndimensional_fvec _residualHandle;
@@ -49,11 +49,11 @@ namespace MechJebLib.PVG
         private void ExpandArrays()
         {
             while (_initial.Count < _phases.Count)
-                _initial.Add(DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN));
+                _initial.Add(Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN));
             while (_terminal.Count < _phases.Count)
-                _terminal.Add(DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN));
+                _terminal.Add(Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN));
             while (_residual.Count < _phases.Count)
-                _residual.Add(DD.Rent(ResidualWrapper.RESIDUAL_WRAPPER_LEN));
+                _residual.Add(Vn.Rent(ResidualWrapper.RESIDUAL_WRAPPER_LEN));
         }
 
         private void CopyToInitial(double[] yin)
@@ -289,7 +289,7 @@ namespace MechJebLib.PVG
 
         private void Shooting(Solution? solution = null)
         {
-            using var integArray = DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
+            using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
             using var integ = ArrayWrapper.Rent(integArray);
 
             double t0 = 0;
@@ -356,7 +356,7 @@ namespace MechJebLib.PVG
             
             ExpandArrays();
             
-            using var integArray = DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
+            using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
             using var integ = ArrayWrapper.Rent(integArray);
 
             double t0 = 0;
@@ -438,7 +438,7 @@ namespace MechJebLib.PVG
             
             ExpandArrays();
             
-            using var integArray = DD.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
+            using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
             using var integ = ArrayWrapper.Rent(integArray);
 
             //double tbar = solution.Tbar(_problem.t0);

@@ -1,7 +1,6 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
 
 #nullable enable
@@ -11,7 +10,7 @@ using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
 {
-    public class Hn : HBase<DD>
+    public class Hn : HBase<Vn>
     {
         public int N;
 
@@ -36,55 +35,55 @@ namespace MechJebLib.Primitives
             _pool.Return(this);
         }
 
-        protected override DD Allocate()
+        protected override Vn Allocate()
         {
-            return DD.Rent(N);
+            return Vn.Rent(N);
         }
 
-        protected override DD Allocate(DD value)
+        protected override Vn Allocate(Vn value)
         {
-            var list = DD.Rent(N);
+            var list = Vn.Rent(N);
             for (int i = 0; i < N; i++)
                 list[i] = value[i];
             return list;
         }
 
-        protected override void Subtract(DD a, DD b, ref DD result)
+        protected override void Subtract(Vn a, Vn b, ref Vn result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] - b[i];
         }
 
-        protected override void Divide(DD a, double b, ref DD result)
+        protected override void Divide(Vn a, double b, ref Vn result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] / b;
         }
 
-        protected override void Multiply(DD a, double b, ref DD result)
+        protected override void Multiply(Vn a, double b, ref Vn result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] * b;
         }
 
-        protected override void Addition(DD a, DD b, ref DD result)
+        protected override void Addition(Vn a, Vn b, ref Vn result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] + b[i];
         }
 
-        protected override DD Interpolant(double x1, DD y1, DD yp1, double x2, DD y2, DD yp2, double x)
+        protected override Vn Interpolant(double x1, Vn y1, Vn yp1, double x2, Vn y2, Vn yp2, double x)
         {
-            var ret = DD.Rent(N);
+            var ret = Vn.Rent(N);
             Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x, N, ret);
             return ret;
         }
 
-        private void DisposeKeyframe(HFrame<DD> frame)
+        private void DisposeKeyframe(HFrame<Vn> frame)
         {
-            DD.Return(frame.Value);
-            DD.Return(frame.InTangent);
-            DD.Return(frame.OutTangent);
+            Vn.Return(frame.Value);
+            Vn.Return(frame.InTangent);
+            Vn.Return(frame.OutTangent);
         }
 
         private static void Clear(Hn h)

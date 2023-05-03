@@ -15,7 +15,7 @@ namespace MechJebLib.PVG.Integrators
     // from: https://www.researchgate.net/publication/245433631_Rapid_Optimal_Multi-Burn_Ascent_Planning_and_Guidance/link/54cbc8ea0cf29ca810f43929/download
     public class VacuumThrustAnalytic : IPVGIntegrator
     {
-        public void Integrate(DD yin, DD yfout, Phase phase, double t0, double tf)
+        public void Integrate(Vn yin, Vn yfout, Phase phase, double t0, double tf)
         {
             Check.True(phase.Normalized);
             
@@ -109,7 +109,7 @@ namespace MechJebLib.PVG.Integrators
             yf.Pm = y0.Pm;  // FIXME: this is certainly wrong
         }
 
-        public void Integrate(DD y0in, DD yfout, Phase phase, double t0, double tf, Solution solution)
+        public void Integrate(Vn y0in, Vn yfout, Phase phase, double t0, double tf, Solution solution)
         {
             // kinda janky way to compute interpolants with intermediate points
             var interpolant = Hn.Get(ArrayWrapper.ARRAY_WRAPPER_LEN);

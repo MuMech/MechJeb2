@@ -69,7 +69,7 @@ namespace MechJebLib.PVG
         public V3 R(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return x.R * _lengthScale;
         }
@@ -77,7 +77,7 @@ namespace MechJebLib.PVG
         // constant integral of the motion, zero for no yaw steering.
         public V3 Constant(double tbar)
         {
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return V3.Cross(x.PR, x.R) + V3.Cross(x.PV, x.V);
         }
@@ -85,7 +85,7 @@ namespace MechJebLib.PVG
         public V3 V(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return x.V * _velocityScale;
         }
@@ -98,7 +98,7 @@ namespace MechJebLib.PVG
 
         public V3 PvBar(double tbar)
         {
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return x.PV;
         }
@@ -111,7 +111,7 @@ namespace MechJebLib.PVG
 
         public V3 PrBar(double tbar)
         {
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return x.PR;
         }
@@ -119,7 +119,7 @@ namespace MechJebLib.PVG
         public double M(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return x.M * _massScale;
         }
@@ -143,7 +143,7 @@ namespace MechJebLib.PVG
         public double DV(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return x.DV * _velocityScale;
         }
@@ -153,9 +153,9 @@ namespace MechJebLib.PVG
             double tbar = (t - T0) / _timeScale;
             double min = tbar > _tmin[n] ? tbar : _tmin[n];
             double max = _tmax[n];
-            using DD ddmin = Interpolate(n, min);
+            using Vn ddmin = Interpolate(n, min);
             using var xmin = ArrayWrapper.Rent(ddmin);
-            using DD ddmax = Interpolate(n, max);
+            using Vn ddmax = Interpolate(n, max);
             using var xmax = ArrayWrapper.Rent(ddmax);
             return Math.Max(xmax.DV - xmin.DV, 0) * _velocityScale;
         }
@@ -257,7 +257,7 @@ namespace MechJebLib.PVG
             double tbar = (t - T0) / _timeScale;
             V3 u;
 
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
 
             int phase = IndexForTbar(tbar);
@@ -287,7 +287,7 @@ namespace MechJebLib.PVG
 
         public (V3 r, V3 v) StateVectors(double tbar)
         {
-            using DD xraw = Interpolate(tbar);
+            using Vn xraw = Interpolate(tbar);
             using var x = ArrayWrapper.Rent(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
@@ -335,12 +335,12 @@ namespace MechJebLib.PVG
             return -1;
         }
 
-        private DD Interpolate(double tbar)
+        private Vn Interpolate(double tbar)
         {
             return _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
         }
 
-        private DD Interpolate(int segment, double tbar)
+        private Vn Interpolate(int segment, double tbar)
         {
             return _interpolants[segment].Evaluate(tbar);
         }

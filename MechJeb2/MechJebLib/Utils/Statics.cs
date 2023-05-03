@@ -241,6 +241,7 @@ namespace MechJebLib.Utils
             return IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
         }
 
+        /*
         /// <summary>
         ///     Helper to check if a vector is finite in all its compoenents (not NaN or Ininity).
         /// </summary>
@@ -250,6 +251,24 @@ namespace MechJebLib.Utils
         public static bool IsFinite(Vector3d v)
         {
             return IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
+        }
+        */
+
+        /// <summary>
+        ///     Helper to check if a number is within a range.  The first bound does not need to
+        ///     be lower than the second bound.
+        /// </summary>
+        /// <param name="x">Number to check</param>
+        /// <param name="a">First Bound</param>
+        /// <param name="b">Second Bound</param>
+        /// <returns>True if the number is between the bounds</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsWithin(this double x, double a, double b)
+        {
+            if (a < b)
+                return a <= x && x <= b;
+
+            return b <= x && x <= a;
         }
 
         /// <summary>
@@ -340,6 +359,7 @@ namespace MechJebLib.Utils
             return true;
         }
 
+        /*
         /// <summary>
         ///     Compares two Vector3d values with a relative tolerance.
         /// </summary>
@@ -351,6 +371,7 @@ namespace MechJebLib.Utils
         {
             return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
         }
+        */
 
         /// <summary>
         ///     Debugging helper for printing double arrays to logs
