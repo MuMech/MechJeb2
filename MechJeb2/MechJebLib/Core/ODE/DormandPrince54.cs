@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
 
+#nullable enable
+
 using System;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
-
-#nullable enable
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.Core.ODE
@@ -15,6 +14,14 @@ namespace MechJebLib.Core.ODE
     using IVPFunc = Action<Vn, double, Vn>;
     using IVPEvent = Func<double, Vn, Vn, (double x, bool dir, bool stop)>;
 
+    /// <summary>
+    ///     https://doi.org/10.1016/0771-050X(80)90013-3
+    ///     https://github.com/PyNumAl/Python-Numerical-Analysis/blob/main/Initial-Value%20Problems/RK%20tableaus/DP54.txt
+    ///     https://github.com/blackstonep/Numerical-Recipes/blob/master/stepperdopr5.h
+    ///     https://github.com/SciML/OrdinaryDiffEq.jl/blob/master/src/tableaus/low_order_rk_tableaus.jl
+    ///     https://github.com/scipy/scipy/blob/main/scipy/integrate/_ivp/rk.py
+    ///     https://github.com/zachjweiner/scipy/blob/8ba609c313f09bf2a333849ca3ac2bd24d7655e7/scipy/integrate/_ivp/rk.py
+    /// </summary>
     public class DormandPrince54 : AbstractRungeKutta
     {
         protected override int Order               => 5;
@@ -57,8 +64,37 @@ namespace MechJebLib.Core.ODE
         private const double E6 = 22.0 / 525.0;
         private const double E7 = -1.0 / 40.0;
 
-        #endregion
+        private const double B10 = 11282082432.0 / 11282082432.0;
+        private const double B11 = -32272833064.0 / 11282082432.0;
+        private const double B12 = 34969693132.0 / 11282082432.0;
+        private const double B13 = -13107642775.0 / 11282082432.0;
+        private const double B14 = 157015080.0 / 11282082432.0;
 
+        private const double B31 = -100 * -1323431896.0 / 32700410799.0;
+        private const double B32 = -100 * 2074956840.0 / 32700410799.0;
+        private const double B33 = -100 * -914128567.0 / 32700410799.0;
+        private const double B34 = -100 * 15701508.0 / 32700410799.0;
+
+        private const double B41 = 25.0 * -889289856.0 / 5641041216.0;
+        private const double B42 = 25.0 * 2460397220.0 / 5641041216.0;
+        private const double B43 = 25.0 * -1518414297.0 / 5641041216.0;
+        private const double B44 = 25.0 * 94209048.0 / 5641041216.0;
+
+        private const double B51 = -2187.0 * -259006536.0 / 199316789632.0;
+        private const double B52 = -2187.0 * 687873124.0 / 199316789632.0;
+        private const double B53 = -2187.0 * -451824525.0 / 199316789632.0;
+        private const double B54 = -2187.0 * 52338360.0 / 199316789632.0;
+
+        private const double B61 = 11.0 * -361440756.0 / 2467955532.0;
+        private const double B62 = 11.0 * 946554244.0 / 2467955532.0;
+        private const double B63 = 11.0 * -661884105.0 / 2467955532.0;
+        private const double B64 = 11.0 * 106151040.0 / 2467955532.0;
+
+        private const double B71 = 44764047.0 / 29380423.0;
+        private const double B72 = -82437520.0 / 29380423.0;
+        private const double B73 = 8293050.0 / 29380423.0;
+
+        #endregion
 
         protected override void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err)
         {
@@ -99,9 +135,10 @@ namespace MechJebLib.Core.ODE
 
         protected override void InitInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
         {
-            // intentionally left blank for now
+            // intentionally left blank
         }
 
+        // https://doi.org/10.1016/0898-1221(86)90025-8
         protected override void Interpolate(double x, double t, double h, Vn y, Vn yout)
         {
             double s = (x - t) / h;
@@ -109,17 +146,16 @@ namespace MechJebLib.Core.ODE
             double s3 = s * s2;
             double s4 = s2 * s2;
 
-            double bf1 = 1.0 / 11282082432.0 * (157015080.0 * s4 - 13107642775.0 * s3 + 34969693132.0 * s2 - 32272833064.0 * s + 11282082432.0);
-            double bf3 = -100.0 / 32700410799.0 * s * (15701508.0 * s3 - 914128567.0 * s2 + 2074956840.0 * s - 1323431896.0);
-            double bf4 = 25.0 / 5641041216.0 * s * (94209048.0 * s3 - 1518414297.0 * s2 + 2460397220.0 * s - 889289856.0);
-            double bf5 = -2187.0 / 199316789632.0 * s * (52338360.0 * s3 - 451824525.0 * s2 + 687873124.0 * s - 259006536.0);
-            double bf6 = 11.0 / 2467955532.0 * s * (106151040.0 * s3 - 661884105.0 * s2 + 946554244.0 * s - 361440756.0);
-            double bf7 = 1.0 / 29380423.0 * s * (1.0 - s) * (8293050.0 * s2 - 82437520.0 * s + 44764047.0);
+            double bs1 = B10 + B11 * s + B12 * s2 + B13 * s3 + B14 * s4;
+            double bs3 = s * (B31 + B32 * s + B33 * s2 + B34 * s3);
+            double bs4 = s * (B41 + B42 * s + B43 * s2 + B44 * s3);
+            double bs5 = s * (B51 + B52 * s + B53 * s2 + B54 * s3);
+            double bs6 = s * (B61 + B62 * s + B63 * s2 + B64 * s3);
+            double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
 
             for (int i = 0; i < N; i++)
             {
-                yout[i] = y[i] + h * s * (bf1 * K[1][i] + bf3 * K[3][i] + bf4 * K[4][i] + bf5 * K[5][i] + bf6 * K[6][i] +
-                                          bf7 * K[7][i]);
+                yout[i] = y[i] + h * s * (bs1 * K[1][i] + bs3 * K[3][i] + bs4 * K[4][i] + bs5 * K[5][i] + bs6 * K[6][i] + bs7 * K[7][i]);
             }
         }
     }

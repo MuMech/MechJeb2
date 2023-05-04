@@ -7,21 +7,12 @@
 
 using System;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 
 namespace MechJebLib.Core.ODE
 {
     using IVPFunc = Action<Vn, double, Vn>;
     using IVPEvent = Func<double, Vn, Vn, (double x, bool dir, bool stop)>;
 
-    /// <summary>
-    ///     https://doi.org/10.1016/S0168-9274(96)00025-6
-    ///     https://github.com/PyNumAl/Python-Numerical-Analysis/blob/main/Initial-Value%20Problems/RK%20tableaus/DP54.txt
-    ///     https://github.com/blackstonep/Numerical-Recipes/blob/master/stepperdopr5.h
-    ///     https://github.com/SciML/OrdinaryDiffEq.jl/blob/master/src/tableaus/low_order_rk_tableaus.jl
-    ///     https://github.com/scipy/scipy/blob/main/scipy/integrate/_ivp/rk.py
-    ///     https://github.com/zachjweiner/scipy/blob/8ba609c313f09bf2a333849ca3ac2bd24d7655e7/scipy/integrate/_ivp/rk.py
-    /// </summary>
     public class BogackiShampine32 : AbstractRungeKutta
     {
         protected override int Order               => 3;
