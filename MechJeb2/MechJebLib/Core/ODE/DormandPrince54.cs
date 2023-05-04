@@ -96,52 +96,53 @@ namespace MechJebLib.Core.ODE
 
         #endregion
 
-        protected override void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err)
+        protected override void RKStep(IVPFunc f, Vn err)
         {
-            double h = habs * direction;
+            double h = Habs * Direction;
 
-            dy.CopyTo(K[1]);
-
-            for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A21 * dy[i]);
-            f(ynew, t + C2 * h, K[2]);
+            Dy.CopyTo(K[1]);
 
             for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A31 * K[1][i] + A32 * K[2][i]);
-            f(ynew, t + C3 * h, K[3]);
+                Ynew[i] = Y[i] + h * (A21 * Dy[i]);
+            f(Ynew, T + C2 * h, K[2]);
 
             for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
-            f(ynew, t + C4 * h, K[4]);
+                Ynew[i] = Y[i] + h * (A31 * K[1][i] + A32 * K[2][i]);
+            f(Ynew, T + C3 * h, K[3]);
 
             for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A51 * K[1][i] + A52 * K[2][i] + A53 * K[3][i] + A54 * K[4][i]);
-            f(ynew, t + C5 * h, K[5]);
+                Ynew[i] = Y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
+            f(Ynew, T + C4 * h, K[4]);
 
             for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A61 * K[1][i] + A62 * K[2][i] + A63 * K[3][i] + A64 * K[4][i] + A65 * K[5][i]);
-            f(ynew, t + h, K[6]);
+                Ynew[i] = Y[i] + h * (A51 * K[1][i] + A52 * K[2][i] + A53 * K[3][i] + A54 * K[4][i]);
+            f(Ynew, T + C5 * h, K[5]);
 
             for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A71 * K[1][i] + A73 * K[3][i] + A74 * K[4][i] + A75 * K[5][i] + A76 * K[6][i]);
+                Ynew[i] = Y[i] + h * (A61 * K[1][i] + A62 * K[2][i] + A63 * K[3][i] + A64 * K[4][i] + A65 * K[5][i]);
+            f(Ynew, T + h, K[6]);
 
-            f(ynew, t + h, K[7]);
+            for (int i = 0; i < N; i++)
+                Ynew[i] = Y[i] + h * (A71 * K[1][i] + A73 * K[3][i] + A74 * K[4][i] + A75 * K[5][i] + A76 * K[6][i]);
+
+            f(Ynew, T + h, K[7]);
 
             for (int i = 0; i < N; i++)
                 err[i] = K[1][i] * E1 + K[3][i] * E3 + K[4][i] * E4 + K[5][i] * E5 + K[6][i] * E6 + K[7][i] * E7;
 
-            K[7].CopyTo(dynew);
+            K[7].CopyTo(Dynew);
         }
 
-        protected override void InitInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
+        protected override void InitInterpolant()
         {
             // intentionally left blank
         }
 
         // https://doi.org/10.1016/0898-1221(86)90025-8
-        protected override void Interpolate(double x, double t, double h, Vn y, Vn yout)
+        protected override void Interpolate(double x, Vn yout)
         {
-            double s = (x - t) / h;
+            double h = Habs * Direction;
+            double s = (x - T) / h;
             double s2 = s * s;
             double s3 = s * s2;
             double s4 = s2 * s2;
@@ -155,7 +156,7 @@ namespace MechJebLib.Core.ODE
 
             for (int i = 0; i < N; i++)
             {
-                yout[i] = y[i] + h * s * (bs1 * K[1][i] + bs3 * K[3][i] + bs4 * K[4][i] + bs5 * K[5][i] + bs6 * K[6][i] + bs7 * K[7][i]);
+                yout[i] = Y[i] + h * s * (bs1 * K[1][i] + bs3 * K[3][i] + bs4 * K[4][i] + bs5 * K[5][i] + bs6 * K[6][i] + bs7 * K[7][i]);
             }
         }
     }

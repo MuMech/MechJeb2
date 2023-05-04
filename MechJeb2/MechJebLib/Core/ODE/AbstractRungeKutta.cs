@@ -39,26 +39,24 @@ namespace MechJebLib.Core.ODE
 
         protected readonly List<Vn> K = new List<Vn>();
 
-        protected override double Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
+        protected override (double, double) Step(IVPFunc f)
         {
-            int n = y.Count;
-            using var err = Vn.Rent(n);
-
-            double minStep = Hmin;
-            double maxStep = Hmax;
+            using var err = Vn.Rent(N);
 
             bool previouslyRejected = false;
 
             while (true)
             {
-                if (habs > maxStep)
-                    habs = minStep;
-                else if (habs < minStep)
-                    habs = minStep;
+                CancellationToken.ThrowIfCancellationRequested();
 
-                RKStep(f, t, habs, direction, y, dy, ynew, dynew, err);
+                if (Habs > MaxStep)
+                    Habs = MaxStep;
+                else if (Habs < MinStep)
+                    Habs = MinStep;
 
-                double errorNorm = ScaledErrorNorm(y, ynew, err);
+                RKStep(f, err);
+
+                double errorNorm = ScaledErrorNorm(err);
 
                 if (errorNorm < 1)
                 {
@@ -71,19 +69,17 @@ namespace MechJebLib.Core.ODE
                     if (previouslyRejected)
                         factor = Math.Min(1.0, factor);
 
-                    habs *= factor;
+                    Tnew = T + Habs * Direction;
 
                     _lastErrorNorm = Math.Max(errorNorm, 1e-4);
 
-                    break;
+                    return (Habs, Habs * factor);
                 }
 
-                habs *= Math.Max(MIN_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha));
+                Habs *= Math.Max(MIN_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha));
 
                 previouslyRejected = true;
             }
-
-            return habs;
         }
 
         protected override double SelectInitialStep(double t0, double tf)
@@ -112,10 +108,10 @@ namespace MechJebLib.Core.ODE
             K.Clear();
         }
 
-        protected abstract void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err);
+        protected abstract void RKStep(IVPFunc f, Vn err);
 
         [UsedImplicitly]
-        protected virtual double ScaledErrorNorm(Vn y, Vn ynew, Vn err)
+        protected virtual double ScaledErrorNorm(Vn err)
         {
             int n = err.Count;
 
@@ -123,7 +119,7 @@ namespace MechJebLib.Core.ODE
 
             for (int i = 0; i < n; i++)
             {
-                double scale = Atol + Rtol * Math.Max(Math.Abs(y[i]), Math.Abs(ynew[i]));
+                double scale = Atol + Rtol * Math.Max(Math.Abs(Y[i]), Math.Abs(Ynew[i]));
                 error += Powi(err[i] / scale, 2);
             }
 

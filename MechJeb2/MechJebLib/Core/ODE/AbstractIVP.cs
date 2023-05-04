@@ -59,7 +59,7 @@ namespace MechJebLib.Core.ODE
         /// </summary>
         public bool ThrowOnMaxIter { get; set; } = true;
 
-        public CancellationToken CancellationToken { get; set; }
+        public CancellationToken CancellationToken { get; }
 
         protected int N;
 
@@ -75,55 +75,73 @@ namespace MechJebLib.Core.ODE
         /// <param name="events"></param>
         /// <exception cref="ArgumentException"></exception>
         public void Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null,
-            List<IVPEvent>? events = null)
+            IReadOnlyCollection<IVPEvent>? events = null)
         {
             try
             {
-                N = y0.Count;
+                N     = y0.Count;
+                Ynew  = Vn.Rent(N);
+                Dynew = Vn.Rent(N);
+                Dy    = Vn.Rent(N);
+                Y     = Vn.Rent(N);
+
                 Init();
                 _Solve(f, y0, yf, t0, tf, interpolant, events);
             }
             finally
             {
+                Y.Dispose();
+                Dy.Dispose();
+                Ynew.Dispose();
+                Dynew.Dispose();
+                Y = Ynew = Dy = Dynew = null!;
+
                 Cleanup();
             }
         }
 
+        protected Vn     Y     = null!;
+        protected Vn     Ynew  = null!;
+        protected Vn     Dy    = null!;
+        protected Vn     Dynew = null!;
+        protected double Habs;
+        protected int    Direction;
+        protected double T, Tnew;
+        protected double MaxStep;
+        protected double MinStep;
+        private   double _habsNext;
+
         private void _Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant,
-            List<IVPEvent>? events)
+            IReadOnlyCollection<IVPEvent>? events)
         {
-            using var ynew = Vn.Rent(N);
-            using var dynew = Vn.Rent(N);
-            using var dy = Vn.Rent(N);
-            using var y = Vn.Rent(N);
+            Direction = t0 != tf ? Math.Sign(tf - t0) : 1;
+            Habs      = SelectInitialStep(t0, tf);
+            MaxStep   = Hmax;
+            MinStep   = Hmin;
 
-            int direction = t0 != tf ? Math.Sign(tf - t0) : 1;
-            double habs = SelectInitialStep(t0, tf);
-
-            double t = t0;
-            y.CopyFrom(y0);
+            T = t0;
+            Y.CopyFrom(y0);
             double niter = 0;
             int interpCount = 1;
 
-            f(y, t, dy);
+            f(Y, T, Dy);
 
-            interpolant?.Add(t, y, dy);
+            interpolant?.Add(T, Y, Dy);
 
-            while (t != tf)
+            while (T != tf)
             {
                 CancellationToken.ThrowIfCancellationRequested();
 
-                double h = habs * direction;
+                double tnext = T + Habs * Direction;
 
-                double tnew = t + h;
+                if (Direction * (tnext - tf) > 0)
+                    MaxStep = Habs = Math.Abs(tf - T);
+                else
+                    Habs = Math.Abs(tnext - T);
 
-                if (direction * (tnew - tf) > 0)
-                    tnew = tf;
+                (Habs, _habsNext) = Step(f);
 
-                h    = tnew - t;
-                habs = Math.Abs(h);
-
-                habs = Step(f, t, habs, direction, y, dy, ynew, dynew);
+                Tnew = T + Habs * Direction;
 
                 if (events != null)
                 {
@@ -136,14 +154,14 @@ namespace MechJebLib.Core.ODE
                     {
                         double tinterp = t0 + (tf - t0) * interpCount / Interpnum;
 
-                        if (!tinterp.IsWithin(t, tnew))
+                        if (!tinterp.IsWithin(T, Tnew))
                             break;
 
                         using var yinterp = Vn.Rent(N);
                         using var finterp = Vn.Rent(N);
 
-                        InitInterpolant(habs, direction, y, dy, ynew, dynew);
-                        Interpolate(tinterp, t, h, y, yinterp);
+                        InitInterpolant();
+                        Interpolate(tinterp, yinterp);
                         f(yinterp, tinterp, finterp);
                         interpolant?.Add(tinterp, yinterp, finterp);
                         interpCount++;
@@ -151,9 +169,10 @@ namespace MechJebLib.Core.ODE
                 }
 
                 // take a step
-                ynew.CopyTo(y);
-                dynew.CopyTo(dy);
-                t = tnew;
+                Y.CopyFrom(Ynew);
+                Dy.CopyFrom(Dynew);
+                T    = Tnew;
+                Habs = _habsNext;
 
                 // handle max iterations
                 if (Maxiter > 0 && niter++ > Maxiter)
@@ -165,16 +184,16 @@ namespace MechJebLib.Core.ODE
                 }
             }
 
-            interpolant?.Add(t, y, dy);
+            interpolant?.Add(T, Y, Dy);
 
-            y.CopyTo(yf);
+            Y.CopyTo(yf);
         }
 
-        protected abstract double      Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
-        protected abstract double      SelectInitialStep(double t0, double tf);
-        protected abstract void        InitInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
-        protected abstract void        Interpolate(double x, double t, double h, Vn y, Vn yout);
-        protected abstract void        Init();
-        protected abstract void        Cleanup();
+        protected abstract (double, double) Step(IVPFunc f);
+        protected abstract double           SelectInitialStep(double t0, double tf);
+        protected abstract void             InitInterpolant();
+        protected abstract void             Interpolate(double x, Vn yout);
+        protected abstract void             Init();
+        protected abstract void             Cleanup();
     }
 }

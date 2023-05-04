@@ -37,41 +37,38 @@ namespace MechJebLib.Core.ODE
 
         #endregion
 
-        protected override void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err)
+        protected override void RKStep(IVPFunc f, Vn err)
         {
-            double h = habs * direction;
+            double h = Habs * Direction;
 
-            dy.CopyTo(K[1]);
-
-            for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A21 * dy[i]);
-            f(ynew, t + C2 * h, K[2]);
+            Dy.CopyTo(K[1]);
 
             for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A32 * K[2][i]);
-            f(ynew, t + C3 * h, K[3]);
+                Ynew[i] = Y[i] + h * (A21 * Dy[i]);
+            f(Ynew, T + C2 * h, K[2]);
 
             for (int i = 0; i < N; i++)
-                ynew[i] = y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
-            f(ynew, t + h, K[4]);
+                Ynew[i] = Y[i] + h * (A32 * K[2][i]);
+            f(Ynew, T + C3 * h, K[3]);
+
+            for (int i = 0; i < N; i++)
+                Ynew[i] = Y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
+            f(Ynew, T + h, K[4]);
 
             for (int i = 0; i < N; i++)
                 err[i] = K[1][i] * E1 + K[2][i] * E2 + K[3][i] * E3 + K[4][i] * E4;
 
-            K[4].CopyTo(dynew);
+            K[4].CopyTo(Dynew);
         }
 
-        protected override void InitInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
+        protected override void InitInterpolant()
         {
-            // intentionally left blank for now
+            // intentionally left blank
         }
 
-        protected override void Interpolate(double x, double t, double h, Vn y, Vn yout)
+        protected override void Interpolate(double x, Vn yout)
         {
             /*
-            var data = (RKData)o;
-
-            int n = y.Count;
             double s = (x - t) / h;
             double s2 = s * s;
             double s3 = s * s2;
