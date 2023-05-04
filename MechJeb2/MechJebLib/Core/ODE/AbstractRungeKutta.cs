@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -33,20 +34,28 @@ namespace MechJebLib.Core.ODE
             set => _beta = value * (ErrorEstimatorOrder + 1.0);
         }
 
-        private            double   _alpha => 1.0 / (ErrorEstimatorOrder + 1.0) - 0.75 * Beta;
-        private            double   _lastErrorNorm = 1e-4;
+        private double _alpha => 1.0 / (ErrorEstimatorOrder + 1.0) - 0.75 * Beta;
+        private double _lastErrorNorm = 1e-4;
 
-        protected readonly List<Vn> K              = new List<Vn>();
+        protected readonly List<Vn> K = new List<Vn>();
 
         protected override double Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
         {
             int n = y.Count;
             using var err = Vn.Rent(n);
 
+            double minStep = Hmin;
+            double maxStep = Hmax;
+
             bool previouslyRejected = false;
 
             while (true)
             {
+                if (habs > maxStep)
+                    habs = minStep;
+                else if (habs < minStep)
+                    habs = minStep;
+
                 RKStep(f, t, habs, direction, y, dy, ynew, dynew, err);
 
                 double errorNorm = ScaledErrorNorm(y, ynew, err);
@@ -57,7 +66,7 @@ namespace MechJebLib.Core.ODE
                     if (errorNorm == 0)
                         factor = MAX_FACTOR;
                     else
-                        factor = Math.Min(MAX_FACTOR,SAFETY*Math.Pow(errorNorm, -_alpha)*Math.Pow(_lastErrorNorm, Beta));
+                        factor = Math.Min(MAX_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha) * Math.Pow(_lastErrorNorm, Beta));
 
                     if (previouslyRejected)
                         factor = Math.Min(1.0, factor);
@@ -86,26 +95,27 @@ namespace MechJebLib.Core.ODE
             return 0.001 * v;
         }
 
-        protected override void Initialize()
+        protected override void Init()
         {
             _lastErrorNorm = 1e-4;
 
             K.Clear();
-            // we create an extra K[0] which we do not use
-            for (int i = 0; i <= Stages+1; i++)
+            // we create an extra K[0] which we do not use, because the literature uses 1-indexed K's
+            for (int i = 0; i <= Stages + 1; i++)
                 K.Add(Vn.Rent(N));
         }
 
         protected override void Cleanup()
         {
-            for (int i = 0; i <= Stages+1; i++)
+            for (int i = 0; i <= Stages + 1; i++)
                 K[i].Dispose();
             K.Clear();
         }
 
-        protected abstract void   RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err);
+        protected abstract void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err);
 
-        private double ScaledErrorNorm(Vn y, Vn ynew, Vn err)
+        [UsedImplicitly]
+        protected virtual double ScaledErrorNorm(Vn y, Vn ynew, Vn err)
         {
             int n = err.Count;
 
@@ -114,7 +124,7 @@ namespace MechJebLib.Core.ODE
             for (int i = 0; i < n; i++)
             {
                 double scale = Atol + Rtol * Math.Max(Math.Abs(y[i]), Math.Abs(ynew[i]));
-                error += Powi(err[i]/scale, 2);
+                error += Powi(err[i] / scale, 2);
             }
 
             return Math.Sqrt(error / n);

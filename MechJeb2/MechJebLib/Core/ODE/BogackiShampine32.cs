@@ -70,7 +70,7 @@ namespace MechJebLib.Core.ODE
             K[4].CopyTo(dynew);
         }
 
-        protected override void PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
+        protected override void InitInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew)
         {
             // intentionally left blank for now
         }

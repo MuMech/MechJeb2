@@ -27,7 +27,7 @@ namespace MechJebLib.Core.ODE
         /// <summary>
         ///     Maximum h step.
         /// </summary>
-        public double Hmax { get; set; }
+        public double Hmax { get; set; } = double.PositiveInfinity;
 
         /// <summary>
         ///     Maximum number of steps.
@@ -80,7 +80,7 @@ namespace MechJebLib.Core.ODE
             try
             {
                 N = y0.Count;
-                Initialize();
+                Init();
                 _Solve(f, y0, yf, t0, tf, interpolant, events);
             }
             finally
@@ -142,7 +142,7 @@ namespace MechJebLib.Core.ODE
                         using var yinterp = Vn.Rent(N);
                         using var finterp = Vn.Rent(N);
 
-                        PrepareInterpolant(habs, direction, y, dy, ynew, dynew);
+                        InitInterpolant(habs, direction, y, dy, ynew, dynew);
                         Interpolate(tinterp, t, h, y, yinterp);
                         f(yinterp, tinterp, finterp);
                         interpolant?.Add(tinterp, yinterp, finterp);
@@ -172,9 +172,9 @@ namespace MechJebLib.Core.ODE
 
         protected abstract double      Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
         protected abstract double      SelectInitialStep(double t0, double tf);
-        protected abstract void        PrepareInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
+        protected abstract void        InitInterpolant(double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew);
         protected abstract void        Interpolate(double x, double t, double h, Vn y, Vn yout);
-        protected abstract void        Initialize();
+        protected abstract void        Init();
         protected abstract void        Cleanup();
     }
 }
