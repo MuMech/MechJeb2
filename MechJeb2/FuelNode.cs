@@ -210,6 +210,7 @@ namespace MuMech
                 node.partName = n.partName;
                 node.resourceRequestRemainingThreshold = n.resourceRequestRemainingThreshold;
                 node.resourcePriority = n.resourcePriority;
+                node.hasResources = n.hasResources;
 
                 node.resources.Clear();
                 node.resourcesFull.Clear();
