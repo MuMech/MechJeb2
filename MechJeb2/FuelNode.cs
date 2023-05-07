@@ -86,6 +86,15 @@ namespace MuMech
                     }
                     moduleSpoolupTime = temp2 ?? 0;
                 }
+
+                public EngineInfo(EngineInfo engineInfo)
+                {
+                    engineModule = engineInfo.engineModule;
+                    thrustVector = engineInfo.thrustVector;
+                    moduleResiduals = engineInfo.moduleResiduals;
+                    maxThrust = engineInfo.maxThrust;
+                    moduleSpoolupTime = engineInfo.moduleSpoolupTime;
+                }
             }
 
             private readonly DefaultableDictionary<int, double> resources = new DefaultableDictionary<int, double>(0); //the resources contained in the part
@@ -127,7 +136,7 @@ namespace MuMech
 
             public string partName; //for debugging
 
-            private Part     part;
+            public Part     part;
             private bool     dVLinearThrust;
             private Vector3d vesselOrientation;
 
@@ -177,6 +186,80 @@ namespace MuMech
             {
                 FuelNode node = pool.Borrow();
                 node.Init(part, dVLinearThrust);
+                return node;
+            }
+
+            public static FuelNode BorrowAndCopyFrom(FuelNode n)
+            {
+                FuelNode node = pool.Borrow();
+                node.part = n.part;
+                node.dVLinearThrust = n.dVLinearThrust;
+                node.isEngine = n.isEngine;
+                node.isthrottleLocked = n.isthrottleLocked;
+                node.activatesEvenIfDisconnected = n.activatesEvenIfDisconnected;
+                node.maxThrust = n.maxThrust;
+                node.isLaunchClamp = n.isLaunchClamp;
+                node.dryMass = n.dryMass;
+                node.crewMass = n.crewMass;
+                node.modulesStagedMass = n.modulesStagedMass;
+                node.decoupledInStage = n.decoupledInStage;
+                node.maxEngineResiduals = n.maxEngineResiduals;
+                node.vesselOrientation = n.vesselOrientation;
+                node.modulesUnstagedMass = n.modulesUnstagedMass;
+                node.inverseStage = n.inverseStage;
+                node.partName = n.partName;
+                node.resourceRequestRemainingThreshold = n.resourceRequestRemainingThreshold;
+                node.resourcePriority = n.resourcePriority;
+
+                node.resources.Clear();
+                node.resourcesFull.Clear();
+                node.resourceConsumptions.Clear();
+                node.resourceDrains.Clear();
+                node.freeResources.Clear();
+                node.resourceResidual.Clear();
+
+                node.crossfeedSources.Clear();
+
+                node.engineInfos.Clear();
+
+                node.resources.Clear();
+                foreach (var key in n.resources.KeysList)
+                {
+                    node.resources.Add(key, n.resources[key]);
+                }
+
+                foreach (var key in n.resourcesFull.KeysList)
+                {
+                    node.resourcesFull.Add(key, n.resourcesFull[key]);
+                }
+
+                foreach (var key in n.resourceConsumptions.KeysList)
+                {
+                    node.resourceConsumptions.Add(key, n.resourceConsumptions[key]);
+                }
+
+                foreach (var key in n.resourceDrains.KeysList)
+                {
+                    node.resourceDrains.Add(key, n.resourceDrains[key]);
+                }
+
+                foreach (var key in n.freeResources.KeysList)
+                {
+                    node.freeResources.Add(key, n.freeResources[key]);
+                }
+
+                foreach (var key in n.resourceResidual.KeysList)
+                {
+                    node.resourceResidual.Add(key, n.resourceResidual[key]);
+                }
+
+                foreach (var e in n.engineInfos)
+                {
+                    node.engineInfos.Add(new EngineInfo(e));
+                }
+
+                // Note: Can't copy crossfeedSources yet. This needs to be done in a separate iteration after all the FuelNodes have been collected.
+
                 return node;
             }
 

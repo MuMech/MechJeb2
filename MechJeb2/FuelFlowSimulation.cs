@@ -5,6 +5,7 @@ using Smooth.Dispose;
 using Smooth.Pools;
 using Smooth.Slinq;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityToolbag;
 
 namespace MuMech
@@ -17,6 +18,45 @@ namespace MuMech
         private readonly Dictionary<FuelNode, Part> _partLookup = new Dictionary<FuelNode, Part>();
 
         private double _kpaToAtmospheres;
+
+        //MJ uses 2 separate FuelFlowSimulation instances for vac and atmo calculations.
+        //This method is used for copying data from one instance to the other for optimization purposes.
+        public void CopyFrom(FuelFlowSimulation f)
+        {
+            Profiler.BeginSample("FuelFlowSimulation.CopyFrom");
+
+            _nodes.Clear();
+            _nodeLookup.Clear();
+            _partLookup.Clear();
+
+            _kpaToAtmospheres = f._kpaToAtmospheres;
+            _simStage = f._simStage;
+
+            Profiler.BeginSample("BorrowAndCopyFrom");
+            foreach (FuelNode n in f._nodes)
+            {
+                FuelNode n2 = FuelNode.BorrowAndCopyFrom(n);
+                _nodes.Add(n2);
+            }
+            Profiler.EndSample();
+
+            foreach (FuelNode node in _nodes)
+            {
+                Part part = node.part;
+                _nodeLookup[part] = node;
+                _partLookup[node] = part;
+            }
+
+            Profiler.BeginSample("AddCrossfeedSouces");
+            foreach (FuelNode node in _nodes)
+            {
+                Part p = node.part;
+                node.AddCrossfeedSouces(p.crossfeedPartSet.GetParts(), _nodeLookup);
+            }
+            Profiler.EndSample();
+
+            Profiler.EndSample();
+        }
 
         //Takes a list of parts so that the simulation can be run in the editor as well as the flight scene
         public void Init(List<Part> parts, bool dVLinearThrust)
