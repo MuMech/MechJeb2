@@ -57,7 +57,11 @@ namespace MuMech
             {
                 Part p = parts[i];
                 FuelNode node = _nodeLookup[p];
-                node.AddCrossfeedSouces(p.crossfeedPartSet.GetParts(), _nodeLookup);
+                if (node.isEngine)
+                {
+                    HashSet<Part> set = p.crossfeedPartSet.GetParts();
+                    node.AddCrossfeedSources(set, _nodeLookup);
+                }
                 if (node.decoupledInStage >= _simStage) _simStage = node.decoupledInStage + 1;
             }
 
