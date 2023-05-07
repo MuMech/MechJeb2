@@ -112,6 +112,7 @@ namespace MuMech
             public bool   isthrottleLocked;
             public bool   activatesEvenIfDisconnected;
             public bool   isDrawingResources = true; // Is the engine actually using any resources
+            public bool   hasResources;
             public double maxThrust;
 
             private double resourceRequestRemainingThreshold;
@@ -280,6 +281,7 @@ namespace MuMech
                         freeResources[r.info.id] = true;
                 }
 
+                hasResources = resources.Count > 0 || freeResources.Count > 0;
                 engineInfos.Clear();
 
                 // determine if we've got at least one useful ModuleEngine
@@ -572,14 +574,14 @@ namespace MuMech
                 }
             }
 
-            public void AddCrossfeedSouces(HashSet<Part> parts, Dictionary<Part, FuelNode> nodeLookup)
+            public void AddCrossfeedSources(HashSet<Part> parts, Dictionary<Part, FuelNode> nodeLookup)
             {
                 using (HashSet<Part>.Enumerator it = parts.GetEnumerator())
                 {
                     while (it.MoveNext())
                     {
                         FuelNode fuelnode;
-                        if (nodeLookup.TryGetValue(it.Current, out fuelnode))
+                        if (nodeLookup.TryGetValue(it.Current, out fuelnode) && fuelnode.hasResources)
                             crossfeedSources.Add(fuelnode);
                     }
                 }
