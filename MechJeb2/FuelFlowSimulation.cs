@@ -50,8 +50,9 @@ namespace MuMech
             Profiler.BeginSample("AddCrossfeedSouces");
             foreach (FuelNode node in _nodes)
             {
+                if (!node.isEngine) continue;
                 Part p = node.part;
-                node.AddCrossfeedSouces(p.crossfeedPartSet.GetParts(), _nodeLookup);
+                node.AddCrossfeedSources(p.crossfeedPartSet.GetParts(), _nodeLookup);
             }
             Profiler.EndSample();
 
