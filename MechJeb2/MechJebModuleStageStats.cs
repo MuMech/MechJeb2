@@ -4,6 +4,7 @@ using System.Threading;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Profiling;
+using UnityToolbag;
 
 namespace MuMech
 {
@@ -240,7 +241,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                print("Exception in MechJebModuleStageStats.RunSimulation(): " + e);
+                Dispatcher.InvokeAsync(() => print("Exception in MechJebModuleStageStats.RunSimulation(): " + e));
             }
 
             //see how long the simulation took
