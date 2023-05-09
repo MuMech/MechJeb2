@@ -8,6 +8,7 @@ using System.Threading;
 using MechJebLib.Core;
 using MechJebLib.Primitives;
 using UnityEngine;
+using UnityToolbag;
 
 namespace MuMech
 {
@@ -234,8 +235,12 @@ namespace MuMech
                 exitVelocity.ToV3(), debug);
 
             if (!dt.IsFinite() || !r.magnitude.IsFinite() || !vpos.magnitude.IsFinite() || !vneg.magnitude.IsFinite())
-                Debug.Log("[MechJeb TransferCalculator] BUG mu = " + initialOrbit.referenceBody.gravParameter + " r0 = " + r0 + " v0 = " + v0 +
-                          " vinf = " + exitVelocity);
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    Debug.Log($"[MechJeb TransferCalculator] BUG mu = {initialOrbit.referenceBody.gravParameter} r0 = {r0} v0 = {v0} vinf = {exitVelocity}");
+                });
+            }
 
             return new ManeuverParameters((vpos - vneg).V3ToWorld(), ut0 + dt);
         }
