@@ -452,5 +452,58 @@ namespace MechJebLib.Utils
         {
             Logger.Log(message);
         }
+
+        public static void CopyFrom(this double[] dest, double[] source)
+        {
+            for (int i = 0; i < source.Length && i < dest.Length; i++)
+                dest[i] = source[i];
+        }
+
+        public static void CopyTo(this double[] source, double[] dest)
+        {
+            for (int i = 0; i < source.Length && i < dest.Length; i++)
+                dest[i] = source[i];
+        }
+
+        public static void CopyFrom(this IList<double> dest, IReadOnlyList<double> source)
+        {
+            for (int i = 0; i < source.Count && i < dest.Count; i++)
+                dest[i] = source[i];
+        }
+
+        public static void CopyTo(this IReadOnlyList<double> source, IList<double> dest)
+        {
+            for (int i = 0; i < source.Count && i < dest.Count; i++)
+                dest[i] = source[i];
+        }
+
+        public static void Set(this IList<double> a, int index, V3 v)
+        {
+            a[index]     = v.x;
+            a[index + 1] = v.y;
+            a[index + 2] = v.z;
+        }
+
+        public static V3 Get(this IList<double> a, int index)
+        {
+            return new V3(a[index], a[index + 1], a[index + 2]);
+        }
+
+        public static void Set(this double[] a, int index, V3 v)
+        {
+            a[index]     = v.x;
+            a[index + 1] = v.y;
+            a[index + 2] = v.z;
+        }
+
+        public static V3 Get(this double[] a, int index)
+        {
+            return new V3(a[index], a[index + 1], a[index + 2]);
+        }
+
+        public static double[] Expand(this double[] a, int n)
+        {
+            return a.Length < n ? new double[n] : a;
+        }
     }
 }

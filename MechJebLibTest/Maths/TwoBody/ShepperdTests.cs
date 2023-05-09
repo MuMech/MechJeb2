@@ -4,9 +4,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Core.TwoBody;
 using MechJebLib.Core.ODE;
+using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using Xunit;
 using Xunit.Abstractions;
@@ -64,7 +65,7 @@ namespace MechJebLibTest.Maths
         {
             public int N => 6;
 
-            public void dydt(Vn yin, double x, Vn dyout)
+            public void dydt(IList<double> yin, double x, IList<double> dyout)
             {
                 var r = new V3(yin[0], yin[1], yin[2]);
                 var v = new V3(yin[3], yin[4], yin[5]);
@@ -84,9 +85,9 @@ namespace MechJebLibTest.Maths
         [Fact]
         private void RandomComparedToDormandPrince()
         {
-            var solver = new DormandPrince5();
+            var solver = new DP5();
 
-            solver.Accuracy       = 1e-13;
+            solver.Rtol           = 1e-13;
             solver.Hmin           = EPS;
             solver.ThrowOnMaxIter = true;
             solver.Maxiter        = 2000;
@@ -101,7 +102,8 @@ namespace MechJebLibTest.Maths
                 var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 10 * random.NextDouble() - 5;
 
-                (double _, double ecc, double _, double _, double _, double _, double _) = MechJebLib.Core.Maths.KeplerianFromStateVectors(1.0, r0, v0);
+                (double _, double ecc, double _, double _, double _, double _, double _) =
+                    MechJebLib.Core.Maths.KeplerianFromStateVectors(1.0, r0, v0);
 
                 // near-parabolic orbits are difficult for Shepperd, see the Farnocchia paper.
                 if (ecc < 1.01 && ecc > 0.99)
@@ -138,7 +140,8 @@ namespace MechJebLibTest.Maths
 
                 if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
                 {
-                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rf2 + " vf2:" +
+                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                                                rf2 + " vf2:" +
                                                 vf2 + "\n");
                 }
 

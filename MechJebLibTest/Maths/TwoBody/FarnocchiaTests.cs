@@ -4,9 +4,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Core.TwoBody;
 using MechJebLib.Core.ODE;
+using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using Xunit;
 using Xunit.Abstractions;
@@ -55,7 +56,7 @@ namespace MechJebLibTest.Maths
         {
             public int N => 6;
 
-            public void dydt(Vn yin, double x, Vn dyout)
+            public void dydt(IList<double> yin, double x, IList<double> dyout)
             {
                 var r = new V3(yin[0], yin[1], yin[2]);
                 var v = new V3(yin[3], yin[4], yin[5]);
@@ -75,9 +76,9 @@ namespace MechJebLibTest.Maths
         [Fact]
         private void RandomComparedToDormandPrince()
         {
-            var solver = new DormandPrince5();
+            var solver = new DP5();
 
-            solver.Accuracy       = 1e-9;
+            solver.Rtol           = 1e-9;
             solver.Hmin           = 1e-9;
             solver.ThrowOnMaxIter = true;
             solver.Maxiter        = 2000;

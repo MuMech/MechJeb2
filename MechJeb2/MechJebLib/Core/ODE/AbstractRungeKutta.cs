@@ -3,53 +3,82 @@
  * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
-
-#nullable enable
 
 namespace MechJebLib.Core.ODE
 {
-    using IVPFunc = Action<Vn, double, Vn>;
-    using IVPEvent = Func<double, Vn, Vn, (double x, bool dir, bool stop)>;
+    using IVPFunc = Action<IList<double>, double, IList<double>>;
 
     public abstract class AbstractRungeKutta : AbstractIVP
     {
-        protected override double Step(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, object data)
+        private const double MAX_FACTOR = 10;
+        private const double MIN_FACTOR = 0.2;
+        private const double SAFETY     = 0.9;
+
+        protected abstract int Order               { get; }
+        protected abstract int Stages              { get; }
+        protected abstract int ErrorEstimatorOrder { get; }
+
+        private double _beta = 0.2;
+
+        public double Beta
         {
-            int n = y.Count;
-            using var err = Vn.Rent(n);
+            get => _beta / (ErrorEstimatorOrder + 1.0);
+            set => _beta = value * (ErrorEstimatorOrder + 1.0);
+        }
+
+        private double _alpha => 1.0 / (ErrorEstimatorOrder + 1.0) - 0.75 * Beta;
+        private double _lastErrorNorm = 1e-4;
+
+        protected readonly List<Vn> K = new List<Vn>();
+
+        protected override (double, double) Step(IVPFunc f)
+        {
+            using var err = Vn.Rent(N);
+
+            bool previouslyRejected = false;
 
             while (true)
             {
-                RKStep(f, t, habs, direction, y, dy, ynew, dynew, err, data);
+                CancellationToken.ThrowIfCancellationRequested();
 
-                double error = 0;
-                for (int i = 0; i < n; i++)
-                    // FIXME: look at dopri fortran code to see how they generate this
-                    error = Math.Max(error, Math.Abs(err[i]));
+                if (Habs > MaxStep)
+                    Habs = MaxStep;
+                else if (Habs < MinStep)
+                    Habs = MinStep;
 
-                double s = 0.84 * Math.Pow(Accuracy / error, 1.0 / 5.0);
+                RKStep(f, err);
 
-                if (s < 0.1)
-                    s = 0.1;
-                if (s > 4)
-                    s = 4;
-                habs *= s;
+                double errorNorm = ScaledErrorNorm(err);
 
-                if (Hmin > 0 && habs < Hmin)
-                    habs = Hmin * habs;
-                if (Hmax > 0 && habs > Hmax)
-                    habs = Hmax * habs;
+                if (errorNorm < 1)
+                {
+                    double factor;
+                    if (errorNorm == 0)
+                        factor = MAX_FACTOR;
+                    else
+                        factor = Math.Min(MAX_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha) * Math.Pow(_lastErrorNorm, Beta));
 
-                if (error < Accuracy)
-                    break;
+                    if (previouslyRejected)
+                        factor = Math.Min(1.0, factor);
+
+                    Tnew = T + Habs * Direction;
+
+                    _lastErrorNorm = Math.Max(errorNorm, 1e-4);
+
+                    return (Habs, Habs * factor);
+                }
+
+                Habs *= Math.Max(MIN_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha));
+
+                previouslyRejected = true;
             }
-
-            return habs;
         }
 
         protected override double SelectInitialStep(double t0, double tf)
@@ -61,6 +90,39 @@ namespace MechJebLib.Core.ODE
             return 0.001 * v;
         }
 
-        protected abstract void RKStep(IVPFunc f, double t, double habs, int direction, Vn y, Vn dy, Vn ynew, Vn dynew, Vn err, object data);
+        protected override void Init()
+        {
+            _lastErrorNorm = 1e-4;
+
+            K.Clear();
+            // we create an extra K[0] which we do not use, because the literature uses 1-indexed K's
+            for (int i = 0; i <= Stages + 1; i++)
+                K.Add(Vn.Rent(N));
+        }
+
+        protected override void Cleanup()
+        {
+            for (int i = 0; i <= Stages + 1; i++)
+                K[i].Dispose();
+            K.Clear();
+        }
+
+        protected abstract void RKStep(IVPFunc f, Vn err);
+
+        [UsedImplicitly]
+        protected virtual double ScaledErrorNorm(Vn err)
+        {
+            int n = err.Count;
+
+            double error = 0.0;
+
+            for (int i = 0; i < n; i++)
+            {
+                double scale = Atol + Rtol * Math.Max(Math.Abs(Y[i]), Math.Abs(Ynew[i]));
+                error += Powi(err[i] / scale, 2);
+            }
+
+            return Math.Sqrt(error / n);
+        }
     }
 }

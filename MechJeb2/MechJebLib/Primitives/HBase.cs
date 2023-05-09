@@ -13,10 +13,10 @@ namespace MechJebLib.Primitives
 {
     public abstract class HBase<T> : IDisposable
     {
-        public double MinTime = double.MaxValue;
-        public double MaxTime = double.MinValue;
+        protected double MinTime = double.MaxValue;
+        protected double MaxTime = double.MinValue;
 
-        private int _lastLo = -1;
+        protected int LastLo = -1;
 
         protected readonly SortedList<double, HFrame<T>> _list = new SortedList<double, HFrame<T>>();
 
@@ -26,7 +26,7 @@ namespace MechJebLib.Primitives
             MinTime     = Math.Min(MinTime, time);
             MaxTime     = Math.Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
-            _lastLo = -1;
+            LastLo = -1;
         }
 
         public void Add(double time, T value, T inTangent, T outTangent)
@@ -35,7 +35,7 @@ namespace MechJebLib.Primitives
             MinTime     = Math.Min(MinTime, time);
             MaxTime     = Math.Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
-            _lastLo = -1;
+            LastLo = -1;
         }
 
         public void Add(double time, T value, T tangent)
@@ -44,7 +44,7 @@ namespace MechJebLib.Primitives
             {
                 HFrame<T> temp = _list.Values[_list.IndexOfKey(time)];
                 temp.Value      = Allocate(value);
-                temp.OutTangent = tangent;
+                temp.OutTangent = Allocate(tangent);
                 _list[time]     = temp;
             }
             else
@@ -56,32 +56,32 @@ namespace MechJebLib.Primitives
         // checks the most recent bracket first, then the next bracket, then does binary search
         private int FindIndex(double value)
         {
-            if (_list.Count == 0)
-                return -1;
+            if (_list.Count <= 1)
+                throw new ApplicationException("FindIndex called on interpolant with less than 2 values.");
 
             if (value <= MinTime)
-                return 0;
+                throw new ApplicationException("FindIndex called value below min value.");
 
             if (value >= MaxTime)
-                return _list.Count - 1;
+                throw new ApplicationException("FindIndex called value above max value.");
 
             // acceleration for sequential access
-            if (_lastLo > 0 && value > _list.Keys[_lastLo])
+            if (LastLo > 0 && value > _list.Keys[LastLo])
             {
-                if (value < _list.Keys[_lastLo + 1])
-                    return ~(_lastLo + 1); // return hi value for a range
+                if (value < _list.Keys[LastLo + 1])
+                    return ~(LastLo + 1); // return hi value for a range
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (value == _list.Keys[_lastLo + 1])
+                if (value == _list.Keys[LastLo + 1])
                 {
-                    _lastLo += 1;
-                    return _lastLo;
+                    LastLo += 1;
+                    return LastLo;
                 }
 
-                if (value > _list.Keys[_lastLo + 1] && value < _list.Keys[_lastLo + 2])
+                if (value > _list.Keys[LastLo + 1] && value < _list.Keys[LastLo + 2])
                 {
-                    _lastLo += 1;
-                    return ~(_lastLo + 1); // return hi value for a range
+                    LastLo += 1;
+                    return ~(LastLo + 1); // return hi value for a range
                 }
             }
 
@@ -96,7 +96,7 @@ namespace MechJebLib.Primitives
 
                 if (order == 0)
                 {
-                    _lastLo = i;
+                    LastLo = i;
                     return i;
                 }
 
@@ -106,7 +106,7 @@ namespace MechJebLib.Primitives
                     hi = i - 1;
             }
 
-            _lastLo = lo - 1; // Confusingly: this is the high value now
+            LastLo = lo - 1; // Confusingly: lo is the high value now
 
             return ~lo;
         }
@@ -119,7 +119,7 @@ namespace MechJebLib.Primitives
         protected abstract void Addition(T a, T b, ref T result);
 
         // FIXME: we need to average the tangents on either side
-        private void RecomputeTangents(int i)
+        protected void RecomputeTangents(int i)
         {
             // if there is only one
             if (_list.Count == 1)
@@ -204,7 +204,7 @@ namespace MechJebLib.Primitives
             if (_list.Count == 0)
                 return Allocate();
 
-            if (t < MinTime)
+            if (t <= MinTime)
             {
                 T ret = Allocate();
                 Multiply(_list.Values[0].InTangent, MinTime - t, ref ret);
@@ -212,7 +212,7 @@ namespace MechJebLib.Primitives
                 return ret;
             }
 
-            if (t > MaxTime)
+            if (t >= MaxTime)
             {
                 T ret = Allocate();
                 Multiply(_list.Values[_list.Count - 1].OutTangent, t - MaxTime, ref ret);
@@ -222,8 +222,11 @@ namespace MechJebLib.Primitives
 
             int hi = FindIndex(t);
 
+
             if (hi >= 0)
+            {
                 return Allocate(_list.Values[hi].Value);
+            }
 
             hi = ~hi;
 
@@ -237,6 +240,9 @@ namespace MechJebLib.Primitives
         public virtual void Clear()
         {
             _list.Clear();
+            MinTime = double.MaxValue;
+            MaxTime = double.MinValue;
+            LastLo  = -1;
         }
 
         public virtual void Dispose()

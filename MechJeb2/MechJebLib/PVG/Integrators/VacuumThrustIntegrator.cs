@@ -7,6 +7,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using MechJebLib.Core.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
@@ -21,7 +22,7 @@ namespace MechJebLib.PVG.Integrators
 
             public Phase Phase = null!;
 
-            public void dydt(Vn yin, double x, Vn dyout)
+            public void dydt(IList<double> yin, double x, IList<double> dyout)
             {
                 Check.True(Phase.Normalized);
 
@@ -52,19 +53,19 @@ namespace MechJebLib.PVG.Integrators
         }
 
         private readonly VacuumThrustKernel _ode    = new VacuumThrustKernel();
-        private readonly DormandPrince5      _solver = new DormandPrince5();
+        private readonly DP5                _solver = new DP5();
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
         {
             _solver.ThrowOnMaxIter = true;
-            _ode.Phase                     = phase;
+            _ode.Phase             = phase;
             _solver.Solve(_ode.dydt, y0, yf, t0, tf);
         }
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf, Solution solution)
         {
             _solver.ThrowOnMaxIter = true;
-            _ode.Phase                     = phase;
+            _ode.Phase             = phase;
             var interpolant = Hn.Get(VacuumThrustKernel.N);
             _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant);
             solution.AddSegment(t0, tf, interpolant, phase);

@@ -5,14 +5,13 @@
  */
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
+// ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.Core
 {
-    [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     public static class BrentMin
     {
         // Brent's 1-dimensional derivative-free local minimization method
