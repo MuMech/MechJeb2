@@ -13,8 +13,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Core.ODE
 {
-    using IVPFunc = Action<Vn, double, Vn>;
-    using IVPEvent = Func<double, Vn, Vn, (double x, bool dir, bool stop)>;
+    using IVPFunc = Action<IList<double>, double, IList<double>>;
 
     public abstract class AbstractRungeKutta : AbstractIVP
     {

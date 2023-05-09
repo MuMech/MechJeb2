@@ -1,14 +1,15 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
 
 #nullable enable
 
 using System;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
+// ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.Core
 {
     /// <summary>
@@ -16,8 +17,6 @@ namespace MechJebLib.Core
     /// </summary>
     public static class BrentRoot
     {
-        private const double EPS = 2.24e-15;
-
         /// <summary>
         ///     Brent's rootfinding method, bounded search.  Uses secant, inverse quadratic interpolation and bisection.
         /// </summary>
@@ -56,7 +55,7 @@ namespace MechJebLib.Core
                 (fa, fb) = (fb, fa);
             }
 
-            return InternalSolve(f, a, b, fa, fb, o, maxiter, rtol, sign);
+            return _Solve(f, a, b, fa, fb, o, maxiter, rtol, sign);
         }
 
         /// <summary>
@@ -118,11 +117,11 @@ namespace MechJebLib.Core
                     return b;
             }
 
-            return InternalSolve(f, a, b, fa, fb, o, maxiter, rtol, sign);
+            return _Solve(f, a, b, fa, fb, o, maxiter, rtol, sign);
         }
 
         // This is the actual algorithm
-        private static double InternalSolve(Func<double, object?, double> f, double a, double b, double fa, double fb, object? o, int maxiter,
+        private static double _Solve(Func<double, object?, double> f, double a, double b, double fa, double fb, object? o, int maxiter,
             double rtol, int sign)
         {
             bool maybeOneMore = sign != 0;

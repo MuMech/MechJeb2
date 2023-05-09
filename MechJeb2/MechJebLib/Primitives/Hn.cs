@@ -5,6 +5,8 @@
 
 #nullable enable
 
+using System;
+using System.Collections.Generic;
 using MechJebLib.Core.Functions;
 using MechJebLib.Utils;
 
@@ -19,6 +21,30 @@ namespace MechJebLib.Primitives
         private static Hn New()
         {
             return new Hn();
+        }
+
+        public void Add(double time, double[] value, double[] inTangent, double[] outTangent)
+        {
+            _list[time] = new HFrame<Vn>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
+            MinTime     = Math.Min(MinTime, time);
+            MaxTime     = Math.Max(MaxTime, time);
+            RecomputeTangents(_list.IndexOfKey(time));
+            LastLo = -1;
+        }
+
+        public void Add(double time, double[] value, double[] tangent)
+        {
+            if (_list.ContainsKey(time))
+            {
+                HFrame<Vn> temp = _list.Values[_list.IndexOfKey(time)];
+                temp.Value      = Allocate(value);
+                temp.OutTangent = Allocate(tangent);
+                _list[time]     = temp;
+            }
+            else
+            {
+                Add(time, value, tangent, tangent);
+            }
         }
 
         public static Hn Get(int n)
@@ -38,6 +64,14 @@ namespace MechJebLib.Primitives
         protected override Vn Allocate()
         {
             return Vn.Rent(N);
+        }
+
+        private Vn Allocate(IReadOnlyList<double> value)
+        {
+            var list = Vn.Rent(N);
+            for (int i = 0; i < N; i++)
+                list[i] = value[i];
+            return list;
         }
 
         protected override Vn Allocate(Vn value)
@@ -98,6 +132,9 @@ namespace MechJebLib.Primitives
                 DisposeKeyframe(_list.Values[i]);
             }
 
+            MinTime = double.MaxValue;
+            MaxTime = double.MinValue;
+            LastLo  = -1;
             _list.Clear();
         }
     }

@@ -6,14 +6,15 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
+using MechJebLib.Core.Functions;
 using MechJebLib.Primitives;
 
 namespace MechJebLib.Core.ODE
 {
-    using IVPFunc = Action<Vn, double, Vn>;
-    using IVPEvent = Func<double, Vn, Vn, (double x, bool dir, bool stop)>;
+    using IVPFunc = Action<IList<double>, double, IList<double>>;
 
-    public class BogackiShampine32 : AbstractRungeKutta
+    public class BS3 : AbstractRungeKutta
     {
         protected override int Order               => 3;
         protected override int Stages              => 3;
@@ -41,7 +42,7 @@ namespace MechJebLib.Core.ODE
         {
             double h = Habs * Direction;
 
-            Dy.CopyTo(K[1]);
+            K[1].CopyFrom(Dy);
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A21 * Dy[i]);
@@ -68,25 +69,7 @@ namespace MechJebLib.Core.ODE
 
         protected override void Interpolate(double x, Vn yout)
         {
-            /*
-            double s = (x - t) / h;
-            double s2 = s * s;
-            double s3 = s * s2;
-            double s4 = s2 * s2;
-
-            double bf1 = 1.0 / 11282082432.0 * (157015080.0 * s4 - 13107642775.0 * s3 + 34969693132.0 * s2 - 32272833064.0 * s + 11282082432.0);
-            double bf3 = -100.0 / 32700410799.0 * s * (15701508.0 * s3 - 914128567.0 * s2 + 2074956840.0 * s - 1323431896.0);
-            double bf4 = 25.0 / 5641041216.0 * s * (94209048.0 * s3 - 1518414297.0 * s2 + 2460397220.0 * s - 889289856.0);
-            double bf5 = -2187.0 / 199316789632.0 * s * (52338360.0 * s3 - 451824525.0 * s2 + 687873124.0 * s - 259006536.0);
-            double bf6 = 11.0 / 2467955532.0 * s * (106151040.0 * s3 - 661884105.0 * s2 + 946554244.0 * s - 361440756.0);
-            double bf7 = 1.0 / 29380423.0 * s * (1.0 - s) * (8293050.0 * s2 - 82437520.0 * s + 44764047.0);
-
-            for (int i = 0; i < n; i++)
-            {
-                yout[i] = y[i] + h * s * (bf1 * data.K1[i] + bf3 * data.K3[i] + bf4 * data.K4[i] + bf5 * data.K5[i] + bf6 * data.K6[i] +
-                                          bf7 * data.K7[i]);
-            }
-            */
+            Interpolants.CubicHermiteInterpolant(T, Y, Dy, Tnew, Ynew, Dynew, x, N, yout);
         }
     }
 }

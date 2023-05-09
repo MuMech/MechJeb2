@@ -6,13 +6,13 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.Core.ODE
 {
-    using IVPFunc = Action<Vn, double, Vn>;
-    using IVPEvent = Func<double, Vn, Vn, (double x, bool dir, bool stop)>;
+    using IVPFunc = Action<IList<double>, double, IList<double>>;
 
     /// <summary>
     ///     https://doi.org/10.1016/0771-050X(80)90013-3
@@ -22,7 +22,7 @@ namespace MechJebLib.Core.ODE
     ///     https://github.com/scipy/scipy/blob/main/scipy/integrate/_ivp/rk.py
     ///     https://github.com/zachjweiner/scipy/blob/8ba609c313f09bf2a333849ca3ac2bd24d7655e7/scipy/integrate/_ivp/rk.py
     /// </summary>
-    public class DormandPrince54 : AbstractRungeKutta
+    public class DP5 : AbstractRungeKutta
     {
         protected override int Order               => 5;
         protected override int Stages              => 6;
@@ -100,7 +100,7 @@ namespace MechJebLib.Core.ODE
         {
             double h = Habs * Direction;
 
-            Dy.CopyTo(K[1]);
+            K[1].CopyFrom(Dy);
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A21 * Dy[i]);
