@@ -167,7 +167,7 @@ namespace MechJebLib.Core.ODE
                 {
                     for (int i = 0; i < events.Count; i++)
                     {
-                        events[i].NewValue = events[i].F(T, Y, this);
+                        events[i].NewValue = events[i].F(Tnew, Ynew, this);
                         _activeEvents.Clear();
                         if (IsActiveEvent(events[i]))
                             _activeEvents.Add(events[i]);
@@ -191,6 +191,10 @@ namespace MechJebLib.Core.ODE
                             if (_activeEvents[i].Terminal)
                             {
                                 terminate = true;
+                                using var yinterp = Vn.Rent(N);
+                                Interpolate(_activeEvents[i].Time, yinterp);
+                                Tnew = _activeEvents[i].Time;
+                                Ynew.CopyFrom(yinterp);
                                 break;
                             }
                         }

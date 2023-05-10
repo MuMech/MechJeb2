@@ -13,7 +13,7 @@ namespace MechJebLib.Core
 {
     using RootFunc = Func<double, object?, double>;
 
-    public class Bisection
+    public static class Bisection
     {
         /// <summary>
         ///     Bisection search.

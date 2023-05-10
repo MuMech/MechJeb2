@@ -9,6 +9,7 @@ using AssertExtensions;
 using MechJebLib.Core.ODE;
 using MechJebLib.Primitives;
 using Xunit;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.Maths
 {
@@ -136,6 +137,56 @@ namespace MechJebLibTest.Maths
 
                 Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
             }
+        }
+
+        private class VacuumKernel
+        {
+            public int N => 6;
+
+            public void dydt(IList<double> yin, double x, IList<double> dyout)
+            {
+                var r = new V3(yin[0], yin[1], yin[2]);
+                var v = new V3(yin[3], yin[4], yin[5]);
+
+                double rm2 = r.sqrMagnitude;
+                double rm = Math.Sqrt(rm2);
+                double rm3 = rm2 * rm;
+
+                V3 dr = v;
+                V3 dv = -r / rm3;
+
+                dyout.Set(0, dr);
+                dyout.Set(3, dv);
+            }
+        }
+
+        private static double Func(double t, IList<double> y, AbstractIVP i)
+        {
+            var r = new V3(y[0], y[1], y[2]);
+
+            return r.magnitude - 1.5;
+        }
+
+        [Fact]
+        public void AltitudeEventTest()
+        {
+            var ode = new VacuumKernel();
+            var solver = new DP5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 2000 };
+
+            var r0 = new V3(1, 0, 0);
+            var v0 = new V3(0, 1.3, 0);
+
+            var e = new List<Event> { new Event(Func) };
+
+            double[] y0 = new double[6];
+            double[] yf = new double[6];
+
+            y0.Set(0, r0);
+            y0.Set(3, v0);
+
+            solver.Solve(ode.dydt, y0, yf, 0, 10, events: e);
+
+            e[0].Time.ShouldEqual(MechJebLib.Core.Maths.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-9);
         }
     }
 }
