@@ -412,6 +412,7 @@ namespace MuMech
 
             if (_ascentSettings.AscentType == AscentType.PVG)
             {
+                core.stageStats.RequestUpdate(this);
                 GUILayout.BeginVertical(GUI.skin.box);
                 _pvgSettingsMenu.enabled = GUILayout.Toggle(_pvgSettingsMenu.enabled, "Edit Rocket Staging");
                 GUILayout.EndVertical();

@@ -44,44 +44,49 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             SetupButtonStyles();
-            GUILayout.BeginVertical(GUI.skin.box);
 
             int topstage = -1;
 
-            _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, core.stageStats.vacStats.Length - 1);
-            
-            for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
+            if ( _ascentSettings.LastStage < core.stageStats.vacStats.Length && core.stageStats.vacStats.Length > 0)
             {
-                FuelFlowSimulation.FuelStats stats = core.stageStats.vacStats[i];
-                if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
-                    continue;
+                GUILayout.BeginVertical(GUI.skin.box);
 
-                if (topstage < 0)
-                    topstage = i;
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label($"{i,3} {stats.DeltaV:##,###0} m/s");
-                if (_ascentSettings.UnguidedStages.Contains(i))
-                    GUILayout.Label(" (unguided)");
-                if (_ascentSettings.OptimizeStage == i)
-                    GUILayout.Label(" (optimize)");
-                GUILayout.EndHorizontal();
+                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, core.stageStats.vacStats.Length - 1);
+
+                for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
+                {
+                    FuelFlowSimulation.FuelStats stats = core.stageStats.vacStats[i];
+                    if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
+                        continue;
+
+                    if (topstage < 0)
+                        topstage = i;
+
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label($"{i,3} {stats.DeltaV:##,###0} m/s");
+                    if (_ascentSettings.UnguidedStages.Contains(i))
+                        GUILayout.Label(" (unguided)");
+                    if (_ascentSettings.OptimizeStage == i)
+                        GUILayout.Label(" (optimize)");
+                    GUILayout.EndHorizontal();
+                }
+
+                GUILayout.EndVertical();
             }
-
-            GUILayout.EndVertical();
 
             // this should only run once -- maybe it should run in some hook like scene loading or something?
             // we need DV info though.
             if (_ascentSettings.OptimizeStageInternal < 0)
                 _ascentSettings.OptimizeStageInternal.val = topstage;
-      
+
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", 30);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
             GuiUtils.ToggledTextBox(ref _ascentSettings.OptimizeStageFlag, "Optimize Stage: ", _ascentSettings.OptimizeStageInternal);
             GuiUtils.ToggledTextBox(ref _ascentSettings.UnguidedStagesFlag, "Unguided Stages: ", _ascentSettings.UnguidedStagesInternal);
             GUILayout.EndVertical();
-            
+
             GUILayout.BeginVertical(GUI.skin.box);
             //_ascentSettings.ExtendIfRequired = GUILayout.Toggle(_ascentSettings.ExtendIfRequired, "Extend if Required");
             GuiUtils.ToggledTextBox(ref _ascentSettings.CoastStageFlag, "Coast Stage: ", _ascentSettings.CoastStageInternal);
@@ -93,7 +98,7 @@ namespace MuMech
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedCoast, "Fixed Coast Length:", _ascentSettings.FixedCoastLength, "s", width: 40);
             GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime, "s", 60);
             GUILayout.EndVertical();
-            
+
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.BeginHorizontal();
             GuiUtils.ToggledTextBox(ref _ascentSettings.SpinupStageFlag, "Spinup stage: ", _ascentSettings.SpinupStageInternal, width: 30);
@@ -101,7 +106,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
             GuiUtils.SimpleTextBox("Spinup lead time: ", _ascentSettings.SpinupLeadTime, "s", 60);
             GUILayout.EndVertical();
-            
+
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label13, _ascentSettings.PitchStartVelocity, "m/s",
                 40);                                                                                                       //Booster Pitch start:

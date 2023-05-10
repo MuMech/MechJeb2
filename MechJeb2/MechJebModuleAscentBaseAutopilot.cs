@@ -12,7 +12,7 @@ namespace MuMech
         public string Status = "";
 
         protected MechJebModuleAscentSettings AscentSettings => core.ascentSettings;
-        
+
         public  bool   TimedLaunch;
         private double _launchTime;
 
@@ -93,6 +93,9 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
+            if (AscentSettings.AscentType == AscentType.PVG)
+                core.stageStats.RequestUpdate(this);
+
             FixupLaunchStart();
             if (TimedLaunch)
             {
@@ -277,8 +280,8 @@ namespace MuMech
         {
             // triggered when timed launches start the actual launch
         }
-        
-        
+
+
         //data used by ThrottleToRaiseApoapsis
         private          float         _raiseApoapsisLastThrottle;
         private          double        _raiseApoapsisLastApR;
@@ -362,7 +365,7 @@ namespace MuMech
                                            + Math.Sin(desiredPitch * UtilMath.Deg2Rad) * vesselState.up;
 
             desiredThrustVector = desiredThrustVector.normalized;
-            
+
             /* old style AoA limiter */
             if (AscentSettings.LimitAoA && !AscentSettings.LimitQaEnabled)
             {
