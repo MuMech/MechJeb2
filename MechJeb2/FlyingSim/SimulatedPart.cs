@@ -236,19 +236,8 @@ namespace MuMech
 
             dest.SetDragWeights();
 
-            dest.DragCurveCd         = simCurves.DragCurveCd;
-            dest.DragCurveCdPower    = simCurves.DragCurveCdPower;
-            dest.DragCurveMultiplier = simCurves.DragCurveMultiplier;
+            simCurves.CopyTo(dest);
 
-            dest.BodyLiftCurve.liftCurve     = simCurves.LiftCurve;
-            dest.BodyLiftCurve.dragCurve     = simCurves.DragCurve;
-            dest.BodyLiftCurve.dragMachCurve = simCurves.DragMachCurve;
-            dest.BodyLiftCurve.liftMachCurve = simCurves.LiftMachCurve;
-
-            dest.SurfaceCurves.dragCurveMultiplier = simCurves.DragCurveMultiplier;
-            dest.SurfaceCurves.dragCurveSurface    = simCurves.DragCurveSurface;
-            dest.SurfaceCurves.dragCurveTail       = simCurves.DragCurveTail;
-            dest.SurfaceCurves.dragCurveTip        = simCurves.DragCurveTip;
         }
 
         protected static void CopyDragCube(DragCube source, DragCube dest)

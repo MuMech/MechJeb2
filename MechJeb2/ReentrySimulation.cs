@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class ReentrySimulation
+    public partial class ReentrySimulation
     {
         // Input values
         private Orbit _inputInitialOrbit;
@@ -40,16 +40,17 @@ namespace MuMech
         private double              _aerobrakedRadius;
         private double              _startUT;
 
-        private CelestialBody
-            _mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
+        // we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
+        // FIXME: that's a lie, its used all over the place.
+        private CelestialBody _mainBody;
 
-        private double _maxThrustAccel;
+        private double        _maxThrustAccel;
 
-        private double
-            _probableLandingSiteASL; // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
+        // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
+        private double _probableLandingSiteASL;
 
-        private double
-            _probableLandingSiteRadius; // This is the height of the ground from the centre of the body at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed, and when we have landed.
+        // This is the height of the ground from the centre of the body at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed, and when we have landed.
+        private double _probableLandingSiteRadius;
 
         private QuaternionD _attitude;
 
@@ -472,11 +473,11 @@ namespace MuMech
                     _maxDragGees = Math.Max(_maxDragGees, _lastRecordedDrag.magnitude / 9.81f);
                     bool parachutesDeploying = _vessel.Simulate(altAGL, altASL, _probableLandingSiteASL, pressure, shockTemp, _t,
                         _parachuteSemiDeployMultiplier);
-                    _x  += dx;
-                    _v  += dv;
-                    _t  += _dt;
+                    _x += dx;
+                    _v += dv;
+                    _t += _dt;
                     // If a parachute is opening we need to lower dt to make sure we capture the opening sequence properly
-                    _dt =  parachutesDeploying ? MinDT : nextDT;
+                    _dt = parachutesDeploying ? MinDT : nextDT;
                 }
             } while (repeatWithSmallerStep);
         }
@@ -633,29 +634,23 @@ namespace MuMech
         private double StaticPressure(double altitude)
         {
             if (!_mainBody.atmosphere)
-            {
                 return 0;
-            }
 
             if (altitude >= _mainBody.atmosphereDepth)
-            {
                 return 0;
-            }
 
-            if (!_mainBody.atmosphereUsePressureCurve)
+            if (_mainBody.atmosphereUsePressureCurve)
             {
-                return _mainBody.atmospherePressureSeaLevel *
-                       Math.Pow(1 - _mainBody.atmosphereTemperatureLapseRate * altitude / _mainBody.atmosphereTemperatureSeaLevel,
-                           _mainBody.atmosphereGasMassLapseRate);
-            }
+                if (_mainBody.atmospherePressureCurveIsNormalized)
+                    return Mathf.Lerp(0f, (float)_mainBody.atmospherePressureSeaLevel,
+                        _simCurves.AtmospherePressureCurve.Evaluate((float)(altitude / _mainBody.atmosphereDepth)));
 
-            if (!_mainBody.atmospherePressureCurveIsNormalized)
-            {
                 return _simCurves.AtmospherePressureCurve.Evaluate((float)altitude);
             }
 
-            return Mathf.Lerp(0f, (float)_mainBody.atmospherePressureSeaLevel,
-                _simCurves.AtmospherePressureCurve.Evaluate((float)(altitude / _mainBody.atmosphereDepth)));
+            return _mainBody.atmospherePressureSeaLevel *
+                   Math.Pow(1 - _mainBody.atmosphereTemperatureLapseRate * altitude / _mainBody.atmosphereTemperatureSeaLevel,
+                       _mainBody.atmosphereGasMassLapseRate);
         }
 
         // Lifted from the Trajectories mod.
@@ -758,113 +753,6 @@ namespace MuMech
             }
         }
 
-        // FloatCurve (Unity Animation curve) are not thread safe so we need a local copy of the curves for the thread
-        public class SimCurves
-        {
-            private static readonly Pool<SimCurves> _pool = new Pool<SimCurves>(Create, Reset);
-
-            private SimCurves()
-            {
-            }
-
-            private static SimCurves Create()
-            {
-                return new SimCurves();
-            }
-
-            public void Release()
-            {
-                _pool.Release(this);
-            }
-
-            private static void Reset(SimCurves obj)
-            {
-            }
-
-            public static SimCurves Borrow(CelestialBody newBody)
-            {
-                SimCurves curve = _pool.Borrow();
-                curve.Setup(newBody);
-                return curve;
-            }
-
-            private void Setup(CelestialBody newBody)
-            {
-                // No point in copying those again if we already have them loaded
-                if (!_loaded)
-                {
-                    DragCurveCd         = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
-                    DragCurveCdPower    = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
-                    DragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
-
-                    DragCurveSurface = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveSurface.Curve.keys);
-                    DragCurveTail    = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
-                    DragCurveTip     = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
-
-                    LiftCurve     = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
-                    LiftMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
-                    DragCurve     = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragCurve.Curve.keys);
-                    DragMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragMachCurve.Curve.keys);
-
-                    DragCurvePseudoReynolds = new FloatCurve(PhysicsGlobals.DragCurvePseudoReynolds.Curve.keys);
-
-                    SpaceTemperature = PhysicsGlobals.SpaceTemperature;
-                    _loaded           = true;
-                }
-
-                if (newBody != _body)
-                {
-                    _body                              = newBody;
-                    AtmospherePressureCurve           = new FloatCurve(newBody.atmospherePressureCurve.Curve.keys);
-                    AtmosphereTemperatureSunMultCurve = new FloatCurve(newBody.atmosphereTemperatureSunMultCurve.Curve.keys);
-                    LatitudeTemperatureBiasCurve      = new FloatCurve(newBody.latitudeTemperatureBiasCurve.Curve.keys);
-                    LatitudeTemperatureSunMultCurve   = new FloatCurve(newBody.latitudeTemperatureSunMultCurve.Curve.keys);
-                    AtmosphereTemperatureCurve        = new FloatCurve(newBody.atmosphereTemperatureCurve.Curve.keys);
-                    AxialTemperatureSunMultCurve      = new FloatCurve(newBody.axialTemperatureSunMultCurve.Curve.keys);
-                }
-            }
-
-            private bool _loaded;
-
-            private CelestialBody _body;
-
-            public FloatCurve LiftCurve { get; private set; }
-
-            public FloatCurve LiftMachCurve { get; private set; }
-
-            public FloatCurve DragCurve { get; private set; }
-
-            public FloatCurve DragMachCurve { get; private set; }
-
-            public FloatCurve DragCurveTail { get; private set; }
-
-            public FloatCurve DragCurveSurface { get; private set; }
-
-            public FloatCurve DragCurveTip { get; private set; }
-
-            public FloatCurve DragCurveCd { get; private set; }
-
-            public FloatCurve DragCurveCdPower { get; private set; }
-
-            public FloatCurve DragCurveMultiplier { get; private set; }
-
-            public FloatCurve AtmospherePressureCurve { get; private set; }
-
-            public FloatCurve AtmosphereTemperatureSunMultCurve { get; private set; }
-
-            public FloatCurve LatitudeTemperatureBiasCurve { get; private set; }
-
-            public FloatCurve LatitudeTemperatureSunMultCurve { get; private set; }
-
-            public FloatCurve AxialTemperatureSunMultCurve { get; private set; }
-
-            public FloatCurve AtmosphereTemperatureCurve { get; private set; }
-
-            public FloatCurve DragCurvePseudoReynolds { get; private set; }
-
-            public double SpaceTemperature { get; private set; }
-        }
-
         public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY, ERROR }
 
         public struct Prediction
@@ -916,14 +804,14 @@ namespace MuMech
             public double InputUT;
 
             //public double input_dragMassExcludingUsedParachutes;
-            public           List<SimulatedParachute> InputParachuteList;
-            public           IDescentSpeedPolicy      InputDescentSpeedPolicy;
-            public           double                   InputDecelEndAltitudeASL;
-            public           double                   InputMaxThrustAccel;
-            public           double                   InputParachuteSemiDeployMultiplier;
-            public           double                   InputProbableLandingSiteASL;
-            public           bool                     InputMultiplierHasError;
-            public           double                   InputDT;
+            public List<SimulatedParachute> InputParachuteList;
+            public IDescentSpeedPolicy      InputDescentSpeedPolicy;
+            public double                   InputDecelEndAltitudeASL;
+            public double                   InputMaxThrustAccel;
+            public double                   InputParachuteSemiDeployMultiplier;
+            public double                   InputProbableLandingSiteASL;
+            public bool                     InputMultiplierHasError;
+            public double                   InputDT;
 
             public string DebugLog;
 
