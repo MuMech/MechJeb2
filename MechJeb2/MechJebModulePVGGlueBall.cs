@@ -52,6 +52,11 @@ namespace MuMech
         {
         }
 
+        public override void OnFixedUpdate()
+        {
+            core.stageStats.RequestUpdate(this);
+        }
+
         public override void OnStart(PartModule.StartState state)
         {
             GameEvents.onStageActivate.Add(HandleStageEvent);
