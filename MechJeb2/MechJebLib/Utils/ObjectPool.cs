@@ -8,7 +8,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace MechJebLib.Utils
@@ -28,8 +27,10 @@ namespace MechJebLib.Utils
         private readonly Func<T>    _newfun;
         private readonly Action<T>? _clearfun;
 
-        private readonly        ConcurrentBag<T>     _globalPool = new ConcurrentBag<T>();
-        private static readonly ThreadLocal<Stack<T>> _localPool  = new ThreadLocal<Stack<T>>(() => new Stack<T>());
+        private readonly        ConcurrentBag<T>              _globalPool = new ConcurrentBag<T>();
+        private static readonly ThreadLocal<ConcurrentBag<T>> _localPool  = new ThreadLocal<ConcurrentBag<T>>(() => new ConcurrentBag<T>());
+
+        private ConcurrentBag<T> _pool => UseGlobal ? _globalPool : _localPool.Value;
 
         public ObjectPool(Func<T> newfun)
         {
@@ -45,20 +46,13 @@ namespace MechJebLib.Utils
 
         public T Get()
         {
-            if (UseGlobal)
-                return _globalPool.TryTake(out T item) ? item : _newfun();
-            else
-                return _localPool.Value.TryPop(out T item) ? item : _newfun();
+            return _pool.TryTake(out T item) ? item : _newfun();
         }
 
         public void Return(T item)
         {
             _clearfun?.Invoke(item);
-
-            if (UseGlobal)
-                _globalPool.Add(item);
-            else
-                _localPool.Value.Push(item);
+            _pool.Add(item);
         }
     }
 }
