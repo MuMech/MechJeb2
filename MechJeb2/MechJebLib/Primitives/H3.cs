@@ -27,14 +27,14 @@ namespace MechJebLib.Primitives
 
         public static H3 Get()
         {
-            H3 h = _pool.Get();
+            H3 h = _pool.Borrow();
             return h;
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            _pool.Return(this);
+            _pool.Release(this);
         }
 
         protected override V3 Allocate()

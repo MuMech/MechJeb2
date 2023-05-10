@@ -49,7 +49,7 @@ namespace MechJebLib.Primitives
 
         public static Hn Get(int n)
         {
-            Hn h = _pool.Get();
+            Hn h = _pool.Borrow();
             h.N = n;
             h.Clear();
             return h;
@@ -58,7 +58,7 @@ namespace MechJebLib.Primitives
         public override void Dispose()
         {
             base.Dispose();
-            _pool.Return(this);
+            _pool.Release(this);
         }
 
         protected override Vn Allocate()

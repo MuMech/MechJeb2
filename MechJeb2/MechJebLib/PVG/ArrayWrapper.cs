@@ -201,14 +201,14 @@ namespace MechJebLib.PVG
         {
             Check.True(list.Count >= ARRAY_WRAPPER_LEN);
 
-            ArrayWrapper wrapper = _pool.Get();
+            ArrayWrapper wrapper = _pool.Borrow();
             wrapper._list = list;
             return wrapper;
         }
 
         public void Dispose()
         {
-            _pool.Return(this);
+            _pool.Release(this);
         }
 
         public static void Clear(ArrayWrapper obj)

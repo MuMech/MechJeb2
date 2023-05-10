@@ -165,7 +165,7 @@ namespace MechJebLib.Primitives
 
         public static Vn Rent(int n)
         {
-            Vn list = _pool.Get();
+            Vn list = _pool.Borrow();
             while (list.Count < n)
                 list.Add(0);
             if (list.Count > n)
@@ -196,12 +196,12 @@ namespace MechJebLib.Primitives
 
         public static void Return(Vn obj)
         {
-            _pool.Return(obj);
+            _pool.Release(obj);
         }
 
         public void Dispose()
         {
-            _pool.Return(this);
+            _pool.Release(this);
         }
 
         public IEnumerator<double> GetEnumerator()
