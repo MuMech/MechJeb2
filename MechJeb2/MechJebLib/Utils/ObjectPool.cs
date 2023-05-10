@@ -24,34 +24,28 @@ namespace MechJebLib.Utils
     // TODO: min and max object levels
     public class ObjectPool<T> : ObjectPoolBase
     {
-        private readonly Func<T>    _newfun;
-        private readonly Action<T>? _clearfun;
+        private readonly Func<T>   _create;
+        private readonly Action<T> _reset;
 
         private readonly        ConcurrentBag<T>              _globalPool = new ConcurrentBag<T>();
         private static readonly ThreadLocal<ConcurrentBag<T>> _localPool  = new ThreadLocal<ConcurrentBag<T>>(() => new ConcurrentBag<T>());
 
         private ConcurrentBag<T> _pool => UseGlobal ? _globalPool : _localPool.Value;
 
-        public ObjectPool(Func<T> newfun)
+        public ObjectPool(Func<T> create, Action<T> reset)
         {
-            _clearfun = null;
-            _newfun   = newfun;
+            _reset  = reset;
+            _create = create;
         }
 
-        public ObjectPool(Func<T> newfun, Action<T> clearfun)
+        public T Borrow()
         {
-            _clearfun = clearfun;
-            _newfun   = newfun;
+            return _pool.TryTake(out T item) ? item : _create();
         }
 
-        public T Get()
+        public void Release(T item)
         {
-            return _pool.TryTake(out T item) ? item : _newfun();
-        }
-
-        public void Return(T item)
-        {
-            _clearfun?.Invoke(item);
+            _reset(item);
             _pool.Add(item);
         }
     }

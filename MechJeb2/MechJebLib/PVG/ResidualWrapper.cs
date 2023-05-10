@@ -148,14 +148,14 @@ namespace MechJebLib.PVG
         {
             Check.True(list.Count >= RESIDUAL_WRAPPER_LEN);
 
-            ResidualWrapper wrapper = _pool.Get();
+            ResidualWrapper wrapper = _pool.Borrow();
             wrapper._list = list;
             return wrapper;
         }
 
         public void Dispose()
         {
-            _pool.Return(this);
+            _pool.Release(this);
         }
         
         public static void Clear(ResidualWrapper obj)

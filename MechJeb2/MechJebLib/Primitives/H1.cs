@@ -27,14 +27,14 @@ namespace MechJebLib.Primitives
 
         public static H1 Get()
         {
-            H1 h = _pool.Get();
+            H1 h = _pool.Borrow();
             return h;
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            _pool.Return(this);
+            _pool.Release(this);
         }
 
         protected override double Allocate()
