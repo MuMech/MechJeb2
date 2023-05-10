@@ -51,7 +51,7 @@ namespace MuMech
                 {
                     return false;
                 }
-                else if (Prediction.outcome != ReentrySimulation.Outcome.LANDED)
+                else if (Prediction.Outcome != ReentrySimulation.Outcome.LANDED)
                 {
                     return false;
                 }
@@ -66,7 +66,7 @@ namespace MuMech
             get
             {
                 return (ErrorPrediction != null) &&
-                    (ErrorPrediction.outcome == ReentrySimulation.Outcome.LANDED);
+                    (ErrorPrediction.Outcome == ReentrySimulation.Outcome.LANDED);
             }
         }
         public double LandingAltitude // The altitude above sea level of the terrain at the landing site
@@ -85,16 +85,16 @@ namespace MuMech
                     // object are made. I suspect a bug or some sort - for now this hack improves
                     // the landing results.
                     {
-                        double checkASL = Prediction.body.TerrainAltitude(Prediction.endPosition.latitude, Prediction.endPosition.longitude);
-                        if (checkASL != Prediction.endASL)
+                        double checkASL = Prediction.Body.TerrainAltitude(Prediction.EndPosition.Latitude, Prediction.EndPosition.Longitude);
+                        if (checkASL != Prediction.EndASL)
                         {
                             // I know that this check is not required as we might as well always make
                             // the asignment. However this allows for some debug monitoring of how often this is occuring.
-                            Prediction.endASL = checkASL;
+                            Prediction.EndASL = checkASL;
                         }
                     }
 
-                    return Prediction.endASL;
+                    return Prediction.EndASL;
                 }
                 else
                 {
@@ -107,8 +107,8 @@ namespace MuMech
         {
             get
             {
-                return mainBody.GetWorldSurfacePosition(Prediction.endPosition.latitude,
-                    Prediction.endPosition.longitude, LandingAltitude) - mainBody.position;
+                return mainBody.GetWorldSurfacePosition(Prediction.EndPosition.Latitude,
+                    Prediction.EndPosition.Longitude, LandingAltitude) - mainBody.position;
             }
         }
 
@@ -274,7 +274,7 @@ namespace MuMech
             // into a position. We can't just get the current position of those coordinates, because the planet will
             // rotate during the descent, so we have to account for that.
             Vector3d desiredLandingPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
-            float bodyRotationAngleDuringDescent = (float)(360 * (Prediction.endUT - vesselState.time) / mainBody.rotationPeriod);
+            float bodyRotationAngleDuringDescent = (float)(360 * (Prediction.EndUT - vesselState.time) / mainBody.rotationPeriod);
             Quaternion bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;
 
@@ -344,13 +344,13 @@ namespace MuMech
             }
 
             // Is there an error prediction available? If so add that into the mix
-            if (ErrorPredictionReady && !double.IsNaN(ErrorPrediction.parachuteMultiplier))
+            if (ErrorPredictionReady && !double.IsNaN(ErrorPrediction.ParachuteMultiplier))
             {
                 parachutePlan.AddResult(ErrorPrediction);
             }
 
             // Has the Landing prediction been updated? If so then we can use the result to refine our parachute plan.
-            if (PredictionReady && !double.IsNaN(Prediction.parachuteMultiplier))
+            if (PredictionReady && !double.IsNaN(Prediction.ParachuteMultiplier))
             {
                 parachutePlan.AddResult(Prediction);
             }
@@ -718,11 +718,11 @@ namespace MuMech
         public void AddResult(ReentrySimulation.Result newResult)
         {
             // if this result is the same as the old result, then it is not new!
-            if (newResult.multiplierHasError)
+            if (newResult.MultiplierHasError)
             {
                 if (lastErrorResult != null)
                 {
-                    if (newResult.id == lastErrorResult.id) { return; }
+                    if (newResult.ID == lastErrorResult.ID) { return; }
                 }
                 lastErrorResult = newResult;
             }
@@ -730,7 +730,7 @@ namespace MuMech
             {
                 if (lastResult != null)
                 {
-                    if (newResult.id == lastResult.id) { return; }
+                    if (newResult.ID == lastResult.ID) { return; }
                 }
                 lastResult = newResult;
             }
@@ -741,7 +741,7 @@ namespace MuMech
             //Debug.Log("overshoot: " + overshoot.ToString("F2") + " multiplier: " + newResult.parachuteMultiplier.ToString("F4") + " hasError:" + newResult.multiplierHasError);
 
             // Add the new result to the linear regression
-            regression.Add(overshoot, newResult.parachuteMultiplier);
+            regression.Add(overshoot, newResult.ParachuteMultiplier);
 
             // What is the correlation coefficent of the data. If it is weak a correlation then we will dismiss the dataset and use it to change the current multiplier
             correlation = regression.CorrelationCoefficient;

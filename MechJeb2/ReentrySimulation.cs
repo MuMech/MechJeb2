@@ -9,97 +9,97 @@ namespace MuMech
     public class ReentrySimulation
     {
         // Input values
-        private Orbit input_initialOrbit;
+        private Orbit _inputInitialOrbit;
 
-        private double input_UT;
+        private double _inputUT;
 
         //double input_mass;
-        private IDescentSpeedPolicy input_descentSpeedPolicy;
-        private double              input_decelEndAltitudeASL;
-        private double              input_maxThrustAccel;
-        private double              input_parachuteSemiDeployMultiplier;
-        private double              input_probableLandingSiteASL;
-        private bool                input_multiplierHasError;
-        private double              input_dt;
+        private IDescentSpeedPolicy _inputDescentSpeedPolicy;
+        private double              _inputDecelEndAltitudeASL;
+        private double              _inputMaxThrustAccel;
+        private double              _inputParachuteSemiDeployMultiplier;
+        private double              _inputProbableLandingSiteASL;
+        private bool                _inputMultiplierHasError;
+        private double              _inputDT;
 
         //parameters of the problem:
-        private readonly Orbit initialOrbit = new Orbit();
+        private readonly Orbit _initialOrbit = new Orbit();
 
-        private bool bodyHasAtmosphere;
+        private bool _bodyHasAtmosphere;
 
         //double seaLevelAtmospheres;
         //double scaleHeight;
-        private double bodyRadius;
-        private double gravParameter;
+        private double _bodyRadius;
+        private double _gravParameter;
 
         //double mass;
-        private SimulatedVessel     vessel;
-        private Vector3d            bodyAngularVelocity;
-        private IDescentSpeedPolicy descentSpeedPolicy;
-        private double              decelRadius;
-        private double              aerobrakedRadius;
-        private double              startUT;
+        private SimulatedVessel     _vessel;
+        private Vector3d            _bodyAngularVelocity;
+        private IDescentSpeedPolicy _descentSpeedPolicy;
+        private double              _decelRadius;
+        private double              _aerobrakedRadius;
+        private double              _startUT;
 
         private CelestialBody
-            mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
+            _mainBody; //we're not actually allowed to call any functions on this from our separate thread, we just keep it as reference
 
-        private double maxThrustAccel;
-
-        private double
-            probableLandingSiteASL; // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
+        private double _maxThrustAccel;
 
         private double
-            probableLandingSiteRadius; // This is the height of the ground from the centre of the body at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed, and when we have landed.
+            _probableLandingSiteASL; // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
 
-        private QuaternionD attitude;
+        private double
+            _probableLandingSiteRadius; // This is the height of the ground from the centre of the body at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed, and when we have landed.
 
-        private          bool           orbitReenters;
-        private readonly ReferenceFrame referenceFrame = new ReferenceFrame();
+        private QuaternionD _attitude;
 
-        private double dt;
+        private          bool           _orbitReenters;
+        private readonly ReferenceFrame _referenceFrame = new ReferenceFrame();
 
-        private double max_dt;
+        private double _dt;
+
+        private double _maxDT;
 
         //private const double min_dt = 0.01; //in seconds
-        public double min_dt; //in seconds
+        public double MinDT; //in seconds
 
-        private double maxSimulatedTime; //in seconds
+        private double _maxSimulatedTime; //in seconds
 
         // Maximum numbers of orbits we want to predict
-        private double maxOrbits;
+        private double _maxOrbits;
 
-        private bool noSKiptoFreefall;
+        private bool _noSKiptoFreefall;
 
-        private double parachuteSemiDeployMultiplier;
-        private bool   multiplierHasError;
+        private double _parachuteSemiDeployMultiplier;
+        private bool   _multiplierHasError;
 
         //Dynamical variables
-        private Vector3d x;      //coordinate system used is centered on main body
-        private Vector3d startX; //start position
-        private Vector3d v;
-        private double   t;
+        private Vector3d _x;      //coordinate system used is centered on main body
+        private Vector3d _startX; //start position
+        private Vector3d _v;
+        private double   _t;
 
-        private Vector3 lastRecordedDrag;
+        private Vector3 _lastRecordedDrag;
 
         //Accumulated results
-        private double               maxDragGees;
-        private double               deltaVExpended;
-        private List<AbsoluteVector> trajectory;
+        private double               _maxDragGees;
+        private double               _deltaVExpended;
+        private List<AbsoluteVector> _trajectory;
 
-        private int steps;
+        private int _steps;
 
-        public static int    activeStep;
-        public static double activeDt;
+        public static int    ActiveStep;
+        public static double ActiveDt;
 
         // FloatCurve (Unity Animation curve) are not thread safe so we need a local copy of the curves for the thread
-        private SimCurves simCurves;
+        private SimCurves _simCurves;
 
         // debug
-        public static bool once = true;
+        private static bool _once = true;
 
-        private static readonly Pool<ReentrySimulation> pool = new Pool<ReentrySimulation>(Create, Reset);
+        private static readonly Pool<ReentrySimulation> _pool = new Pool<ReentrySimulation>(Create, Reset);
 
-        public static int PoolSize => pool.Size;
+        public static int PoolSize => _pool.Size;
 
         private static ReentrySimulation Create()
         {
@@ -108,147 +108,147 @@ namespace MuMech
 
         public void Release()
         {
-            pool.Release(this);
+            _pool.Release(this);
         }
 
         private static void Reset(ReentrySimulation obj)
         {
         }
 
-        public static ReentrySimulation Borrow(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves,
-            IDescentSpeedPolicy _descentSpeedPolicy, double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier,
-            double _probableLandingSiteASL, bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits, bool _noSKiptoFreefall)
+        public static ReentrySimulation Borrow(Orbit initialOrbit, double ut, SimulatedVessel vessel, SimCurves simcurves,
+            IDescentSpeedPolicy descentSpeedPolicy, double decelEndAltitudeASL, double maxThrustAccel, double parachuteSemiDeployMultiplier,
+            double probableLandingSiteASL, bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall)
         {
-            ReentrySimulation sim = pool.Borrow();
-            sim.Init(_initialOrbit, _UT, _vessel, _simcurves, _descentSpeedPolicy, _decelEndAltitudeASL, _maxThrustAccel,
-                _parachuteSemiDeployMultiplier, _probableLandingSiteASL, _multiplierHasError, _dt, _min_dt, _maxOrbits, _noSKiptoFreefall);
+            ReentrySimulation sim = _pool.Borrow();
+            sim.Init(initialOrbit, ut, vessel, simcurves, descentSpeedPolicy, decelEndAltitudeASL, maxThrustAccel,
+                parachuteSemiDeployMultiplier, probableLandingSiteASL, multiplierHasError, dt, minDT, maxOrbits, noSKiptoFreefall);
             return sim;
         }
 
-        public void Init(Orbit _initialOrbit, double _UT, SimulatedVessel _vessel, SimCurves _simcurves, IDescentSpeedPolicy _descentSpeedPolicy,
-            double _decelEndAltitudeASL, double _maxThrustAccel, double _parachuteSemiDeployMultiplier, double _probableLandingSiteASL,
-            bool _multiplierHasError, double _dt, double _min_dt, double _maxOrbits, bool _noSKiptoFreefall)
+        private void Init(Orbit initialOrbit, double ut, SimulatedVessel vessel, SimCurves simcurves, IDescentSpeedPolicy descentSpeedPolicy,
+            double decelEndAltitudeASL, double maxThrustAccel, double parachuteSemiDeployMultiplier, double probableLandingSiteASL,
+            bool multiplierHasError, double dt, double minDT, double maxOrbits, bool noSKiptoFreefall)
         {
             // Store all the input values as they were given
-            input_initialOrbit = _initialOrbit;
-            input_UT           = _UT;
+            _inputInitialOrbit = initialOrbit;
+            _inputUT           = ut;
 
-            vessel                              = _vessel;
-            input_descentSpeedPolicy            = _descentSpeedPolicy;
-            input_decelEndAltitudeASL           = _decelEndAltitudeASL;
-            input_maxThrustAccel                = _maxThrustAccel;
-            input_parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
-            input_probableLandingSiteASL        = _probableLandingSiteASL;
-            input_multiplierHasError            = _multiplierHasError;
-            input_dt                            = _dt;
+            _vessel                             = vessel;
+            _inputDescentSpeedPolicy            = descentSpeedPolicy;
+            _inputDecelEndAltitudeASL           = decelEndAltitudeASL;
+            _inputMaxThrustAccel                = maxThrustAccel;
+            _inputParachuteSemiDeployMultiplier = parachuteSemiDeployMultiplier;
+            _inputProbableLandingSiteASL        = probableLandingSiteASL;
+            _inputMultiplierHasError            = multiplierHasError;
+            _inputDT                            = dt;
             // the vessel attitude relative to the surface vel. Fixed for now
-            attitude = Quaternion.Euler(180, 0, 0);
+            _attitude = Quaternion.Euler(180, 0, 0);
 
-            min_dt = _min_dt;
-            max_dt = _dt;
-            dt     = max_dt;
-            steps  = 0;
+            MinDT  = minDT;
+            _maxDT = dt;
+            _dt    = _maxDT;
+            _steps = 0;
 
-            maxOrbits = _maxOrbits;
+            _maxOrbits = maxOrbits;
 
-            noSKiptoFreefall = _noSKiptoFreefall;
+            _noSKiptoFreefall = noSKiptoFreefall;
 
             // Get a copy of the original orbit, to be more thread safe
             //initialOrbit = new Orbit();
-            initialOrbit.UpdateFromOrbitAtUT(_initialOrbit, _UT, _initialOrbit.referenceBody);
+            _initialOrbit.UpdateFromOrbitAtUT(initialOrbit, ut, initialOrbit.referenceBody);
 
-            CelestialBody body = _initialOrbit.referenceBody;
-            bodyHasAtmosphere = body.atmosphere;
-            bodyRadius        = body.Radius;
-            gravParameter     = body.gravParameter;
+            CelestialBody body = initialOrbit.referenceBody;
+            _bodyHasAtmosphere = body.atmosphere;
+            _bodyRadius        = body.Radius;
+            _gravParameter     = body.gravParameter;
 
-            parachuteSemiDeployMultiplier = _parachuteSemiDeployMultiplier;
-            multiplierHasError            = _multiplierHasError;
+            _parachuteSemiDeployMultiplier = parachuteSemiDeployMultiplier;
+            _multiplierHasError            = multiplierHasError;
 
-            bodyAngularVelocity       = body.angularVelocity;
-            descentSpeedPolicy        = _descentSpeedPolicy;
-            decelRadius               = bodyRadius + _decelEndAltitudeASL;
-            aerobrakedRadius          = bodyRadius + body.RealMaxAtmosphereAltitude();
-            mainBody                  = body;
-            maxThrustAccel            = _maxThrustAccel;
-            probableLandingSiteASL    = _probableLandingSiteASL;
-            probableLandingSiteRadius = _probableLandingSiteASL + bodyRadius;
-            referenceFrame.UpdateAtCurrentTime(_initialOrbit.referenceBody);
-            orbitReenters = OrbitReenters(_initialOrbit);
+            _bodyAngularVelocity       = body.angularVelocity;
+            _descentSpeedPolicy        = descentSpeedPolicy;
+            _decelRadius               = _bodyRadius + decelEndAltitudeASL;
+            _aerobrakedRadius          = _bodyRadius + body.RealMaxAtmosphereAltitude();
+            _mainBody                  = body;
+            _maxThrustAccel            = maxThrustAccel;
+            _probableLandingSiteASL    = probableLandingSiteASL;
+            _probableLandingSiteRadius = probableLandingSiteASL + _bodyRadius;
+            _referenceFrame.UpdateAtCurrentTime(initialOrbit.referenceBody);
+            _orbitReenters = OrbitReenters(initialOrbit);
 
-            startX = initialOrbit.WorldBCIPositionAtUT(startUT);
+            _startX = _initialOrbit.WorldBCIPositionAtUT(_startUT);
             // This calls some Unity function so it should be done outside the thread
-            if (orbitReenters)
+            if (_orbitReenters)
             {
-                startUT = _UT;
-                t       = startUT;
-                AdvanceToFreefallEnd(initialOrbit);
+                _startUT = ut;
+                _t       = _startUT;
+                AdvanceToFreefallEnd(_initialOrbit);
             }
 
-            maxDragGees    = 0;
-            deltaVExpended = 0;
-            trajectory     = ListPool<AbsoluteVector>.Instance.Borrow();
+            _maxDragGees    = 0;
+            _deltaVExpended = 0;
+            _trajectory     = ListPool<AbsoluteVector>.Instance.Borrow();
 
-            simCurves = _simcurves;
+            _simCurves = simcurves;
 
-            once = true;
+            _once = true;
         }
 
-        private        Result result;
-        private static ulong  resultId;
+        private        Result _result;
+        private static ulong  _resultId;
 
         public Result RunSimulation()
         {
-            result = Result.Borrow();
+            _result = Result.Borrow();
             try
             {
                 // First put all the problem parameters into the result, to aid debugging.
-                result.input_initialOrbit                  = input_initialOrbit;
-                result.input_UT                            = input_UT;
-                result.input_descentSpeedPolicy            = input_descentSpeedPolicy;
-                result.input_decelEndAltitudeASL           = input_decelEndAltitudeASL;
-                result.input_maxThrustAccel                = input_maxThrustAccel;
-                result.input_parachuteSemiDeployMultiplier = input_parachuteSemiDeployMultiplier;
-                result.input_probableLandingSiteASL        = input_probableLandingSiteASL;
-                result.input_multiplierHasError            = input_multiplierHasError;
-                result.input_dt                            = input_dt;
+                _result.InputInitialOrbit                  = _inputInitialOrbit;
+                _result.InputUT                            = _inputUT;
+                _result.InputDescentSpeedPolicy            = _inputDescentSpeedPolicy;
+                _result.InputDecelEndAltitudeASL           = _inputDecelEndAltitudeASL;
+                _result.InputMaxThrustAccel                = _inputMaxThrustAccel;
+                _result.InputParachuteSemiDeployMultiplier = _inputParachuteSemiDeployMultiplier;
+                _result.InputProbableLandingSiteASL        = _inputProbableLandingSiteASL;
+                _result.InputMultiplierHasError            = _inputMultiplierHasError;
+                _result.InputDT                            = _inputDT;
 
                 //MechJebCore.print("Sim Start");
 
-                if (!orbitReenters)
+                if (!_orbitReenters)
                 {
-                    result.outcome = Outcome.NO_REENTRY;
-                    return result;
+                    _result.Outcome = Outcome.NO_REENTRY;
+                    return _result;
                 }
 
-                result.startPosition = referenceFrame.ToAbsolute(x, t);
+                _result.StartPosition = _referenceFrame.ToAbsolute(_x, _t);
 
                 // Simulate a maximum of maxOrbits periods of a circular orbit at the entry altitude
-                maxSimulatedTime = maxOrbits * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(x.magnitude), 3.0) / gravParameter);
+                _maxSimulatedTime = _maxOrbits * 2.0 * Math.PI * Math.Sqrt(Math.Pow(Math.Abs(_x.magnitude), 3.0) / _gravParameter);
 
                 RecordTrajectory();
 
-                double maxT = t + maxSimulatedTime;
+                double maxT = _t + _maxSimulatedTime;
                 while (true)
                 {
                     if (Landed())
                     {
-                        result.outcome = Outcome.LANDED;
+                        _result.Outcome = Outcome.LANDED;
                         break;
                     }
 
-                    if (!result.aeroBrake && Aerobraked())
+                    if (!_result.AeroBrake && Aerobraked())
                     {
-                        result.aeroBrake         = true;
-                        result.aeroBrakeUT       = t;
-                        result.aeroBrakePosition = referenceFrame.ToAbsolute(x, t);
-                        result.aeroBrakeVelocity = referenceFrame.ToAbsolute(v, t);
+                        _result.AeroBrake         = true;
+                        _result.AeroBrakeUT       = _t;
+                        _result.AeroBrakePosition = _referenceFrame.ToAbsolute(_x, _t);
+                        _result.AeroBrakeVelocity = _referenceFrame.ToAbsolute(_v, _t);
                         //break;
                     }
 
-                    if (t > maxT || Escaping() || steps > 50000)
+                    if (_t > maxT || Escaping() || _steps > 50000)
                     {
-                        result.outcome = result.aeroBrake ? Outcome.AEROBRAKED : Outcome.TIMED_OUT;
+                        _result.Outcome = _result.AeroBrake ? Outcome.AEROBRAKED : Outcome.TIMED_OUT;
                         break;
                     }
 
@@ -259,77 +259,77 @@ namespace MuMech
                 }
 
                 //MechJebCore.print("Sim ready " + result.outcome + " " + (t - startUT).ToString("F2"));
-                result.id                  = resultId++;
-                result.body                = mainBody;
-                result.referenceFrame      = referenceFrame;
-                result.endUT               = t;
-                result.timeToComplete      = t - input_UT;
-                result.maxDragGees         = maxDragGees;
-                result.deltaVExpended      = deltaVExpended;
-                result.endPosition         = referenceFrame.ToAbsolute(x, t);
-                result.endVelocity         = referenceFrame.ToAbsolute(v, t);
-                result.trajectory          = trajectory;
-                result.parachuteMultiplier = parachuteSemiDeployMultiplier;
-                result.multiplierHasError  = multiplierHasError;
-                result.maxdt               = max_dt;
-                result.steps               = steps;
+                _result.ID                  = _resultId++;
+                _result.Body                = _mainBody;
+                _result.ReferenceFrame      = _referenceFrame;
+                _result.EndUT               = _t;
+                _result.TimeToComplete      = _t - _inputUT;
+                _result.MaxDragGees         = _maxDragGees;
+                _result.DeltaVExpended      = _deltaVExpended;
+                _result.EndPosition         = _referenceFrame.ToAbsolute(_x, _t);
+                _result.EndVelocity         = _referenceFrame.ToAbsolute(_v, _t);
+                _result.Trajectory          = _trajectory;
+                _result.ParachuteMultiplier = _parachuteSemiDeployMultiplier;
+                _result.MultiplierHasError  = _multiplierHasError;
+                _result.Maxdt               = _maxDT;
+                _result.Steps               = _steps;
             }
             catch (Exception ex)
             {
                 //Debug.LogError("Exception thrown during Reentry Simulation : " + ex.GetType() + ":" + ex.Message + "\n"+ ex.StackTrace);
-                result.exception = ex;
-                result.outcome   = Outcome.ERROR;
+                _result.Exception = ex;
+                _result.Outcome   = Outcome.ERROR;
             }
             finally
             {
-                if (trajectory != result.trajectory)
-                    ListPool<AbsoluteVector>.Instance.Release(trajectory);
-                vessel.Release();
-                simCurves.Release();
+                if (_trajectory != _result.Trajectory)
+                    ListPool<AbsoluteVector>.Instance.Release(_trajectory);
+                _vessel.Release();
+                _simCurves.Release();
             }
 
-            return result;
+            return _result;
         }
 
         private bool OrbitReenters(Orbit initialOrbit)
         {
-            return initialOrbit.PeR < decelRadius || initialOrbit.PeR < aerobrakedRadius;
+            return initialOrbit.PeR < _decelRadius || initialOrbit.PeR < _aerobrakedRadius;
         }
 
         private bool Landed()
         {
-            return x.magnitude < probableLandingSiteRadius;
+            return _x.magnitude < _probableLandingSiteRadius;
         }
 
         private bool Aerobraked()
         {
-            return bodyHasAtmosphere && x.magnitude > aerobrakedRadius && Vector3d.Dot(x, v) > 0;
+            return _bodyHasAtmosphere && _x.magnitude > _aerobrakedRadius && Vector3d.Dot(_x, _v) > 0;
         }
 
         private bool Escaping()
         {
-            double escapeVel = Math.Sqrt(2 * gravParameter / x.magnitude);
-            return bodyHasAtmosphere && v.magnitude > escapeVel && Vector3d.Dot(x, v) > 0;
+            double escapeVel = Math.Sqrt(2 * _gravParameter / _x.magnitude);
+            return _bodyHasAtmosphere && _v.magnitude > escapeVel && Vector3d.Dot(_x, _v) > 0;
         }
 
         private void AdvanceToFreefallEnd(Orbit initialOrbit)
         {
-            t = FindFreefallEndTime(initialOrbit);
+            _t = FindFreefallEndTime(initialOrbit);
 
-            x = initialOrbit.WorldBCIPositionAtUT(t);
-            v = initialOrbit.WorldOrbitalVelocityAtUT(t);
+            _x = initialOrbit.WorldBCIPositionAtUT(_t);
+            _v = initialOrbit.WorldOrbitalVelocityAtUT(_t);
 
-            if (double.IsNaN(v.magnitude))
+            if (double.IsNaN(_v.magnitude))
             {
                 //For eccentricities close to 1, the Orbit class functions are unreliable and
                 //v may come out as NaN. If that happens we estimate v from conservation
                 //of energy and the assumption that v is vertical (since ecc. is approximately 1).
 
                 //0.5 * v^2 - GM / r = E   =>    v = sqrt(2 * (E + GM / r))
-                double GM = initialOrbit.referenceBody.gravParameter;
-                double E = -GM / (2 * initialOrbit.semiMajorAxis);
-                v = Math.Sqrt(Math.Abs(2 * (E + GM / x.magnitude))) * x.normalized;
-                if (initialOrbit.MeanAnomalyAtUT(t) > Math.PI) v *= -1;
+                double mu = initialOrbit.referenceBody.gravParameter;
+                double e = -mu / (2 * initialOrbit.semiMajorAxis);
+                _v = Math.Sqrt(Math.Abs(2 * (e + mu / _x.magnitude))) * _x.normalized;
+                if (initialOrbit.MeanAnomalyAtUT(_t) > Math.PI) _v *= -1;
             }
         }
 
@@ -337,13 +337,13 @@ namespace MuMech
         //in the interval (lowerUT, upperUT) for which condition(UT, relative position, orbital velocity) is true
         private double FindFreefallEndTime(Orbit initialOrbit)
         {
-            if (noSKiptoFreefall || FreefallEnded(initialOrbit, t))
+            if (_noSKiptoFreefall || FreefallEnded(initialOrbit, _t))
             {
-                return t;
+                return _t;
             }
 
-            double lowerUT = t;
-            double upperUT = initialOrbit.NextPeriapsisTime(t);
+            double lowerUT = _t;
+            double upperUT = initialOrbit.NextPeriapsisTime(_t);
 
             const double PRECISION = 1.0;
             while (upperUT - lowerUT > PRECISION)
@@ -361,221 +361,122 @@ namespace MuMech
         // - our vertical velocity is negative and either
         //    - we've landed or
         //    - the descent speed policy says to start braking
-        private bool FreefallEnded(Orbit initialOrbit, double UT)
+        private bool FreefallEnded(Orbit initialOrbit, double ut)
         {
-            Vector3d pos = initialOrbit.WorldBCIPositionAtUT(UT);
-            Vector3d surfaceVelocity = SurfaceVelocity(pos, initialOrbit.WorldOrbitalVelocityAtUT(UT));
+            Vector3d pos = initialOrbit.WorldBCIPositionAtUT(ut);
+            Vector3d surfaceVelocity = SurfaceVelocity(pos, initialOrbit.WorldOrbitalVelocityAtUT(ut));
 
-            if (pos.magnitude < aerobrakedRadius) return true;
-            if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(UT)) > 0) return false;
-            if (pos.magnitude < decelRadius) return true;
-            if (descentSpeedPolicy != null && surfaceVelocity.magnitude > descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
+            if (pos.magnitude < _aerobrakedRadius) return true;
+            if (Vector3d.Dot(surfaceVelocity, initialOrbit.Up(ut)) > 0) return false;
+            if (pos.magnitude < _decelRadius) return true;
+            if (_descentSpeedPolicy != null && surfaceVelocity.magnitude > _descentSpeedPolicy.MaxAllowedSpeed(pos, surfaceVelocity)) return true;
             return false;
-        }
-
-        // one time step of RK4: There is logic to reduce the dt and repeat if a larger dt results in very large accelerations.
-        // Also the parachute opening logic is called from in order to allow the dt to be reduced BEFORE deploying parachutes to
-        // give more precision over the point of deployment.
-        private void RK4Step()
-        {
-            bool repeatWithSmallerStep = false;
-            bool parachutesDeploying = false;
-
-            Vector3d dx;
-            Vector3d dv;
-
-            //Log(x, v);
-
-            do
-            {
-                steps++;
-                activeStep            = steps;
-                activeDt              = dt;
-                repeatWithSmallerStep = false;
-
-                // Perform the RK4 calculation
-                {
-                    Vector3d dv1 = dt * TotalAccel(x, v, true);
-                    Vector3d dx1 = dt * v;
-
-                    Vector3d dv2 = dt * TotalAccel(x + 0.5 * dx1, v + 0.5 * dv1);
-                    Vector3d dx2 = dt * (v + 0.5 * dv1);
-
-                    Vector3d dv3 = dt * TotalAccel(x + 0.5 * dx2, v + 0.5 * dv2);
-                    Vector3d dx3 = dt * (v + 0.5 * dv2);
-
-                    Vector3d dv4 = dt * TotalAccel(x + dx3, v + dv3);
-                    Vector3d dx4 = dt * (v + dv3);
-
-                    dx = (dx1 + 2 * dx2 + 2 * dx3 + dx4) / 6.0;
-                    dv = (dv1 + 2 * dv2 + 2 * dv3 + dv4) / 6.0;
-                }
-
-                // If the change in velocity is more than half the current velocity, then we need to try again with a smaller delta-t
-                // or if dt is already small enough then continue anyway.
-                if (v.magnitude < dv.magnitude * 2 && dt >= min_dt * 2)
-                {
-                    dt                    = dt / 2;
-                    repeatWithSmallerStep = true;
-                }
-                else
-                {
-                    // Consider opening the parachutes. If we do open them, and the dt is not as small as it could me, make it smaller and repeat,
-                    Vector3 xForChuteSim = x + dx;
-                    double vForChuteSim = (v + dv).magnitude;
-                    double altASL = xForChuteSim.magnitude - bodyRadius;
-                    double altAGL = altASL - probableLandingSiteASL;
-                    double pressure = Pressure(xForChuteSim);
-
-                    bool willChutesOpen = vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure, vForChuteSim, t,
-                        parachuteSemiDeployMultiplier);
-                    maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
-
-                    // If parachutes are about to open and we are running with a dt larger than the physics frame then drop dt to the physics frame rate and start again
-                    if (willChutesOpen && dt > min_dt)
-                    {
-                        dt                    = Math.Max(dt / 2, min_dt);
-                        repeatWithSmallerStep = true;
-                    }
-                    else
-                    {
-                        parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, vForChuteSim, t,
-                            parachuteSemiDeployMultiplier);
-                    }
-                }
-            } while (repeatWithSmallerStep);
-
-            x += dx;
-            v += dv;
-            t += dt;
-
-            // decide what the dt needs to be for the next iteration
-            // Is there a parachute in the process of opening? If so then we follow special rules - fix the dt at the physics frame rate. This is because the rate for deployment depends on the frame rate for stock parachutes.
-            // If parachutes are part way through deploying then we need to use the physics frame rate for the next step of the simulation
-            if (parachutesDeploying)
-            {
-                dt = min_dt; // TODO There is a potential problem here. If the physics frame rate is so large that is causes too large a change in velocity, then we could get stuck in an infinte loop.
-            }
-            // If dt has been reduced, try increasing it, but only by one step. (but not if there is a parachute being deployed)
-            else if (dt < max_dt)
-            {
-                dt = Math.Min(dt * 2, max_dt);
-            }
         }
 
         // Bogacki–Shampine method
         private void BS34Step()
         {
-            bool repeatWithSmallerStep = false;
-            bool parachutesDeploying = false;
-
-            Vector3d dx;
-            Vector3d dv;
+            bool repeatWithSmallerStep;
 
             //Log(x, v);
-            const double tol = 0.01;
-            const double d9 = 1d / 9d;
-            const double d24 = 1d / 24d;
+            const double TOL = 0.01;
+            const double D9 = 1d / 9d;
+            const double D24 = 1d / 24d;
 
             do
             {
-                steps++;
-                activeStep            = steps;
-                activeDt              = dt;
+                _steps++;
+                ActiveStep            = _steps;
+                ActiveDt              = _dt;
                 repeatWithSmallerStep = false;
                 Vector3d errorv;
                 // Perform the calculation
+                Vector3d dx;
+                Vector3d dv;
                 {
-                    Vector3d dv1 = dt * TotalAccel(x, v, true);
-                    Vector3d dx1 = dt * v;
+                    Vector3d dv1 = _dt * TotalAccel(_x, _v, true);
+                    Vector3d dx1 = _dt * _v;
 
-                    Vector3d dv2 = dt * TotalAccel(x + 0.5 * dx1, v + 0.5 * dv1);
-                    Vector3d dx2 = dt * (v + 0.5 * dv1);
+                    Vector3d dv2 = _dt * TotalAccel(_x + 0.5 * dx1, _v + 0.5 * dv1);
+                    Vector3d dx2 = _dt * (_v + 0.5 * dv1);
 
-                    Vector3d dv3 = dt * TotalAccel(x + 0.75 * dx2, v + 0.75 * dv2);
-                    Vector3d dx3 = dt * (v + 0.75 * dv2);
+                    Vector3d dv3 = _dt * TotalAccel(_x + 0.75 * dx2, _v + 0.75 * dv2);
+                    Vector3d dx3 = _dt * (_v + 0.75 * dv2);
 
-                    Vector3d dv4 = dt * TotalAccel(x + 2 * d9 * dx1 + 3 * d9 * dx2 + 4 * d9 * dx3, v + 2 * d9 * dv1 + 3 * d9 * dv2 + 4 * d9 * dv3);
+                    Vector3d dv4 = _dt * TotalAccel(_x + 2 * D9 * dx1 + 3 * D9 * dx2 + 4 * D9 * dx3, _v + 2 * D9 * dv1 + 3 * D9 * dv2 + 4 * D9 * dv3);
                     //Vector3d dx4 = dt * (v + 2d / 9 * dv1 + 1d / 3 * dv2 + 4d / 9 * dv3);
 
-                    dx = (2 * dx1 + 3 * dx2 + 4 * dx3) * d9;
-                    dv = (2 * dv1 + 3 * dv2 + 4 * dv3) * d9;
+                    dx = (2 * dx1 + 3 * dx2 + 4 * dx3) * D9;
+                    dv = (2 * dv1 + 3 * dv2 + 4 * dv3) * D9;
 
                     //Vector3d zx = (7 * dx1 + 6 * dx2 + 8 * dx3 + 3 * dx4) * d24;
-                    Vector3d zv = (7 * dv1 + 6 * dv2 + 8 * dv3 + 3 * dv4) * d24;
+                    Vector3d zv = (7 * dv1 + 6 * dv2 + 8 * dv3 + 3 * dv4) * D24;
                     errorv = zv - dv;
                 }
 
 
                 // Consider opening the parachutes. If we do open them, and the dt is not as small as it could be, make it smaller and repeat,
-                Vector3 xForChuteSim = x + dx;
-                double altASL = xForChuteSim.magnitude - bodyRadius;
-                double altAGL = altASL - probableLandingSiteASL;
+                Vector3 xForChuteSim = _x + dx;
+                double altASL = xForChuteSim.magnitude - _bodyRadius;
+                double altAGL = altASL - _probableLandingSiteASL;
                 double pressure = Pressure(xForChuteSim);
 
-                Vector3d airVel = SurfaceVelocity(xForChuteSim, v + dv);
+                Vector3d airVel = SurfaceVelocity(xForChuteSim, _v + dv);
                 double airDensity = AirDensity(xForChuteSim, altASL);
-                double speedOfSound = mainBody.GetSpeedOfSound(Pressure(xForChuteSim), airDensity);
+                double speedOfSound = _mainBody.GetSpeedOfSound(Pressure(xForChuteSim), airDensity);
                 double velocity = airVel.magnitude;
                 double mach = Math.Min(velocity / speedOfSound, 50f);
                 double shockTemp = ShockTemperature(velocity, mach);
 
                 // check if the parachute will open in the next frame or if that frame will be underground
-                bool willChutesOpen = altASL < probableLandingSiteASL || vessel.WillChutesDeploy(altAGL, altASL, probableLandingSiteASL, pressure,
-                    shockTemp, t, parachuteSemiDeployMultiplier);
+                bool willChutesOpen = altASL < _probableLandingSiteASL || _vessel.WillChutesDeploy(altAGL, altASL, _probableLandingSiteASL, pressure,
+                    shockTemp, _t, _parachuteSemiDeployMultiplier);
 
-                double next_dt;
+                double nextDT;
                 double errorMagnitude = Math.Max(errorv.magnitude, 10e-6);
                 if (!willChutesOpen)
                 {
-                    next_dt = dt * 0.9 * Math.Pow(tol / errorMagnitude, 1 / 3d);
+                    nextDT = _dt * 0.9 * Math.Pow(TOL / errorMagnitude, 1 / 3d);
                 }
                 else
                 {
                     // The chute will open at the next dt so we want to make it shorter so they don't
                     // until we have dt = min_dt and we can safely open them
                     // The same system avoids skiping the ground with a large dt
-                    next_dt = dt * 0.5;
+                    nextDT = _dt * 0.5;
                 }
 
                 // I don't see how it could append but it has shown up...
-                if (double.IsNaN(next_dt))
-                    next_dt = min_dt;
+                if (double.IsNaN(nextDT))
+                    nextDT = MinDT;
 
-                next_dt = Math.Max(next_dt, min_dt);
-                next_dt = Math.Min(next_dt, 10);
+                nextDT = Math.Max(nextDT, MinDT);
+                nextDT = Math.Min(nextDT, 10);
 
-                double sqrStartDist = (x - startX).sqrMagnitude;
+                double sqrStartDist = (_x - _startX).sqrMagnitude;
                 // The first 1km is always high precision
                 if (sqrStartDist < 1000 * 1000)
-                    next_dt = Math.Min(next_dt, 0.02);
+                    nextDT = Math.Min(nextDT, 0.02);
                 else if (sqrStartDist < 5000 * 5000)
-                    next_dt = Math.Min(next_dt, 0.5);
+                    nextDT = Math.Min(nextDT, 0.5);
                 else if (sqrStartDist < 10000 * 10000)
-                    next_dt = Math.Min(next_dt, 1);
+                    nextDT = Math.Min(nextDT, 1);
 
-                if ((errorMagnitude > tol || willChutesOpen) && dt > min_dt)
+                if ((errorMagnitude > TOL || willChutesOpen) && _dt > MinDT)
                 {
-                    dt                    = next_dt;
+                    _dt                   = nextDT;
                     repeatWithSmallerStep = true;
                 }
                 else
                 {
-                    maxDragGees = Math.Max(maxDragGees, lastRecordedDrag.magnitude / 9.81f);
-                    parachutesDeploying = vessel.Simulate(altAGL, altASL, probableLandingSiteASL, pressure, shockTemp, t,
-                        parachuteSemiDeployMultiplier);
-                    x += dx;
-                    v += dv;
-                    t += dt;
-                    if (parachutesDeploying)
-                    {
-                        dt = min_dt;
-                    }
-                    else
-                    {
-                        // If a parachute is opening we need to lower dt to make sure we capture the opening sequence properly
-                        dt = next_dt;
-                    }
+                    _maxDragGees = Math.Max(_maxDragGees, _lastRecordedDrag.magnitude / 9.81f);
+                    bool parachutesDeploying = _vessel.Simulate(altAGL, altASL, _probableLandingSiteASL, pressure, shockTemp, _t,
+                        _parachuteSemiDeployMultiplier);
+                    _x  += dx;
+                    _v  += dv;
+                    _t  += _dt;
+                    // If a parachute is opening we need to lower dt to make sure we capture the opening sequence properly
+                    _dt =  parachutesDeploying ? MinDT : nextDT;
                 }
             } while (repeatWithSmallerStep);
         }
@@ -583,80 +484,80 @@ namespace MuMech
         //enforce the descent speed policy
         private void LimitSpeed()
         {
-            if (descentSpeedPolicy == null) return;
+            if (_descentSpeedPolicy == null) return;
 
-            Vector3d surfaceVel = SurfaceVelocity(x, v);
-            double maxAllowedSpeed = descentSpeedPolicy.MaxAllowedSpeed(x, surfaceVel);
+            Vector3d surfaceVel = SurfaceVelocity(_x, _v);
+            double maxAllowedSpeed = _descentSpeedPolicy.MaxAllowedSpeed(_x, surfaceVel);
             if (surfaceVel.magnitude > maxAllowedSpeed)
             {
-                double dV = Math.Min(surfaceVel.magnitude - maxAllowedSpeed, dt * maxThrustAccel);
-                surfaceVel     -= dV * surfaceVel.normalized;
-                deltaVExpended += dV;
-                v              =  surfaceVel + Vector3d.Cross(bodyAngularVelocity, x);
+                double dV = Math.Min(surfaceVel.magnitude - maxAllowedSpeed, _dt * _maxThrustAccel);
+                surfaceVel      -= dV * surfaceVel.normalized;
+                _deltaVExpended += dV;
+                _v              =  surfaceVel + Vector3d.Cross(_bodyAngularVelocity, _x);
             }
         }
 
         private void RecordTrajectory()
         {
-            trajectory.Add(referenceFrame.ToAbsolute(x, t));
+            _trajectory.Add(_referenceFrame.ToAbsolute(_x, _t));
         }
 
         private Vector3d TotalAccel(Vector3d pos, Vector3d vel, bool record = false)
         {
             Vector3d airVel = SurfaceVelocity(pos, vel);
-            double altitude = pos.magnitude - bodyRadius;
+            double altitude = pos.magnitude - _bodyRadius;
 
             double airDensity = AirDensity(pos, altitude);
             double pressure = Pressure(pos);
-            double speedOfSound = mainBody.GetSpeedOfSound(pressure, airDensity);
+            double speedOfSound = _mainBody.GetSpeedOfSound(pressure, airDensity);
             float mach = Mathf.Min((float)(airVel.magnitude / speedOfSound), 50f);
 
             float dynamicPressurekPa = (float)(0.0005 * airDensity * airVel.sqrMagnitude);
 
             double pseudoReynolds = airDensity * airVel.magnitude;
-            double pseudoReDragMult = simCurves.DragCurvePseudoReynolds.Evaluate((float)pseudoReynolds);
+            double pseudoReDragMult = _simCurves.DragCurvePseudoReynolds.Evaluate((float)pseudoReynolds);
 
-            if (once)
+            if (_once)
             {
-                result.prediction.firstDrag          = DragForce(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
-                result.prediction.firstLift          = LiftForce(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
-                result.prediction.mach               = mach;
-                result.prediction.speedOfSound       = speedOfSound;
-                result.prediction.dynamicPressurekPa = dynamicPressurekPa;
+                _result.Prediction.FirstDrag          = DragForce(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
+                _result.Prediction.FirstLift          = LiftForce(pos, vel, dynamicPressurekPa, mach).magnitude / 9.81;
+                _result.Prediction.Mach               = mach;
+                _result.Prediction.SpeedOfSound       = speedOfSound;
+                _result.Prediction.DynamicPressurekPa = dynamicPressurekPa;
             }
 
-            Vector3d dragAccel = DragForce(pos, vel, dynamicPressurekPa, mach) * pseudoReDragMult / vessel.totalMass;
+            Vector3d dragAccel = DragForce(pos, vel, dynamicPressurekPa, mach) * pseudoReDragMult / _vessel.totalMass;
 
             if (record)
-                lastRecordedDrag = dragAccel;
+                _lastRecordedDrag = dragAccel;
 
             Vector3d gravAccel = GravAccel(pos);
-            Vector3d liftAccel = LiftForce(pos, vel, dynamicPressurekPa, mach) / vessel.totalMass;
+            Vector3d liftAccel = LiftForce(pos, vel, dynamicPressurekPa, mach) / _vessel.totalMass;
 
             Vector3d totalAccel = gravAccel + dragAccel + liftAccel;
 
-            if (once)
-                once = false;
+            if (_once)
+                _once = false;
 
             return totalAccel;
         }
 
         private Vector3d GravAccel(Vector3d pos)
         {
-            return -(gravParameter / pos.sqrMagnitude) * pos.normalized;
+            return -(_gravParameter / pos.sqrMagnitude) * pos.normalized;
         }
 
         private Vector3d DragForce(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
-            if (!bodyHasAtmosphere) return Vector3d.zero;
+            if (!_bodyHasAtmosphere) return Vector3d.zero;
 
             Vector3d airVel = SurfaceVelocity(pos, vel);
 
-            Vector3d localVel = attitude * Vector3d.up * airVel.magnitude;
+            Vector3d localVel = _attitude * Vector3d.up * airVel.magnitude;
 
             // TODO : check if it is forward, back, up or down...
             // Lift works with a velocity in SHIP coordinate and return a vector in ship coordinate
-            Vector3d shipDrag = vessel.Drag(localVel, dynamicPressurekPa, mach);
+            Vector3d shipDrag = _vessel.Drag(localVel, dynamicPressurekPa, mach);
 
             //if (once)
             //{
@@ -696,13 +597,13 @@ namespace MuMech
 
         private Vector3d LiftForce(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
-            if (!bodyHasAtmosphere) return Vector3d.zero;
+            if (!_bodyHasAtmosphere) return Vector3d.zero;
 
             Vector3d airVel = SurfaceVelocity(pos, vel);
 
-            Vector3d localVel = attitude * Vector3d.up * airVel.magnitude;
+            Vector3d localVel = _attitude * Vector3d.up * airVel.magnitude;
 
-            Vector3d localLift = vessel.Lift(localVel, dynamicPressurekPa, mach);
+            Vector3d localLift = _vessel.Lift(localVel, dynamicPressurekPa, mach);
 
             QuaternionD vesselToWorld = Quaternion.FromToRotation(localVel, airVel); // QuaternionD.FromToRotation is not working in Unity 4.3
 
@@ -711,14 +612,14 @@ namespace MuMech
 
         private double Pressure(Vector3d pos)
         {
-            double altitude = pos.magnitude - bodyRadius;
+            double altitude = pos.magnitude - _bodyRadius;
             return StaticPressure(altitude);
         }
 
         private Vector3d SurfaceVelocity(Vector3d pos, Vector3d vel)
         {
             //if we're low enough, calculate the airspeed properly:
-            return vel - Vector3d.Cross(bodyAngularVelocity, pos);
+            return vel - Vector3d.Cross(_bodyAngularVelocity, pos);
         }
 
         private double AirDensity(Vector3d pos, double altitude)
@@ -726,48 +627,48 @@ namespace MuMech
             double pressure = StaticPressure(altitude);
             double temp = GetTemperature(pos, altitude);
 
-            return FlightGlobals.getAtmDensity(pressure, temp, mainBody);
+            return FlightGlobals.getAtmDensity(pressure, temp, _mainBody);
         }
 
         private double StaticPressure(double altitude)
         {
-            if (!mainBody.atmosphere)
+            if (!_mainBody.atmosphere)
             {
                 return 0;
             }
 
-            if (altitude >= mainBody.atmosphereDepth)
+            if (altitude >= _mainBody.atmosphereDepth)
             {
                 return 0;
             }
 
-            if (!mainBody.atmosphereUsePressureCurve)
+            if (!_mainBody.atmosphereUsePressureCurve)
             {
-                return mainBody.atmospherePressureSeaLevel *
-                       Math.Pow(1 - mainBody.atmosphereTemperatureLapseRate * altitude / mainBody.atmosphereTemperatureSeaLevel,
-                           mainBody.atmosphereGasMassLapseRate);
+                return _mainBody.atmospherePressureSeaLevel *
+                       Math.Pow(1 - _mainBody.atmosphereTemperatureLapseRate * altitude / _mainBody.atmosphereTemperatureSeaLevel,
+                           _mainBody.atmosphereGasMassLapseRate);
             }
 
-            if (!mainBody.atmospherePressureCurveIsNormalized)
+            if (!_mainBody.atmospherePressureCurveIsNormalized)
             {
-                return simCurves.AtmospherePressureCurve.Evaluate((float)altitude);
+                return _simCurves.AtmospherePressureCurve.Evaluate((float)altitude);
             }
 
-            return Mathf.Lerp(0f, (float)mainBody.atmospherePressureSeaLevel,
-                simCurves.AtmospherePressureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
+            return Mathf.Lerp(0f, (float)_mainBody.atmospherePressureSeaLevel,
+                _simCurves.AtmospherePressureCurve.Evaluate((float)(altitude / _mainBody.atmosphereDepth)));
         }
 
         // Lifted from the Trajectories mod.
         private double GetTemperature(Vector3d position, double altitude)
         {
-            if (!mainBody.atmosphere)
+            if (!_mainBody.atmosphere)
                 return PhysicsGlobals.SpaceTemperature;
 
-            if (altitude > mainBody.atmosphereDepth)
+            if (altitude > _mainBody.atmosphereDepth)
                 return PhysicsGlobals.SpaceTemperature;
 
             Vector3 up = position.normalized;
-            float polarAngle = Mathf.Acos(Vector3.Dot(mainBody.bodyTransform.up, up));
+            float polarAngle = Mathf.Acos(Vector3.Dot(_mainBody.bodyTransform.up, up));
             if (polarAngle > Mathf.PI * 0.5f)
             {
                 polarAngle = Mathf.PI - polarAngle;
@@ -775,33 +676,34 @@ namespace MuMech
 
             float time = (Mathf.PI * 0.5f - polarAngle) * Mathf.Rad2Deg;
 
-            Vector3 sunVector = (FlightGlobals.Bodies[0].position - position + mainBody.position).normalized;
-            float sunAxialDot = Vector3.Dot(sunVector, mainBody.bodyTransform.up);
-            float bodyPolarAngle = Mathf.Acos(Vector3.Dot(mainBody.bodyTransform.up, up));
+            Vector3 sunVector = (FlightGlobals.Bodies[0].position - position + _mainBody.position).normalized;
+            Vector3 bodyUp = _mainBody.bodyTransform.up;
+            float sunAxialDot = Vector3.Dot(sunVector, bodyUp);
+            float bodyPolarAngle = Mathf.Acos(Vector3.Dot(bodyUp, up));
             float sunPolarAngle = Mathf.Acos(sunAxialDot);
             float sunBodyMaxDot = (1.0f + Mathf.Cos(sunPolarAngle - bodyPolarAngle)) * 0.5f;
             float sunBodyMinDot = (1.0f + Mathf.Cos(sunPolarAngle + bodyPolarAngle)) * 0.5f;
             float sunDotCorrected = (1.0f + Vector3.Dot(sunVector,
-                Quaternion.AngleAxis(45f * Mathf.Sign((float)mainBody.rotationPeriod), mainBody.bodyTransform.up) * up)) * 0.5f;
+                Quaternion.AngleAxis(45f * Mathf.Sign((float)_mainBody.rotationPeriod), bodyUp) * up)) * 0.5f;
             float sunDotNormalized = (sunDotCorrected - sunBodyMinDot) / (sunBodyMaxDot - sunBodyMinDot);
-            double atmosphereTemperatureOffset = simCurves.LatitudeTemperatureBiasCurve.Evaluate(time) +
-                                                 (double)simCurves.LatitudeTemperatureSunMultCurve.Evaluate(time) * sunDotNormalized +
-                                                 simCurves.AxialTemperatureSunMultCurve.Evaluate(sunAxialDot);
+            double atmosphereTemperatureOffset = _simCurves.LatitudeTemperatureBiasCurve.Evaluate(time) +
+                                                 (double)_simCurves.LatitudeTemperatureSunMultCurve.Evaluate(time) * sunDotNormalized +
+                                                 _simCurves.AxialTemperatureSunMultCurve.Evaluate(sunAxialDot);
 
             double temperature;
-            if (!mainBody.atmosphereUseTemperatureCurve)
+            if (!_mainBody.atmosphereUseTemperatureCurve)
             {
-                temperature = mainBody.atmosphereTemperatureSeaLevel - mainBody.atmosphereTemperatureLapseRate * altitude;
+                temperature = _mainBody.atmosphereTemperatureSeaLevel - _mainBody.atmosphereTemperatureLapseRate * altitude;
             }
             else
             {
-                temperature = !mainBody.atmosphereTemperatureCurveIsNormalized
-                    ? simCurves.AtmosphereTemperatureCurve.Evaluate((float)altitude)
-                    : UtilMath.Lerp(simCurves.SpaceTemperature, mainBody.atmosphereTemperatureSeaLevel,
-                        simCurves.AtmosphereTemperatureCurve.Evaluate((float)(altitude / mainBody.atmosphereDepth)));
+                temperature = !_mainBody.atmosphereTemperatureCurveIsNormalized
+                    ? _simCurves.AtmosphereTemperatureCurve.Evaluate((float)altitude)
+                    : UtilMath.Lerp(_simCurves.SpaceTemperature, _mainBody.atmosphereTemperatureSeaLevel,
+                        _simCurves.AtmosphereTemperatureCurve.Evaluate((float)(altitude / _mainBody.atmosphereDepth)));
             }
 
-            temperature += simCurves.AtmosphereTemperatureSunMultCurve.Evaluate((float)altitude) * atmosphereTemperatureOffset;
+            temperature += _simCurves.AtmosphereTemperatureSunMultCurve.Evaluate((float)altitude) * atmosphereTemperatureOffset;
 
             return temperature;
         }
@@ -821,60 +723,58 @@ namespace MuMech
                 newtonianTemperatureFactor = UtilMath.LerpUnclamped(newtonianTemperatureFactor, machTemperatureScalar, convectiveMachLerp);
             }
 
-            return newtonianTemperatureFactor * HighLogic.CurrentGame.Parameters.Difficulty.ReentryHeatScale * mainBody.shockTemperatureMultiplier;
+            return newtonianTemperatureFactor * HighLogic.CurrentGame.Parameters.Difficulty.ReentryHeatScale * _mainBody.shockTemperatureMultiplier;
         }
 
-        private double nextLog;
+        private double _nextLog;
 
         public void Log(Vector3d pos, Vector3d vel)
         {
-            if (t > nextLog)
+            if (_t > _nextLog)
             {
-                nextLog = t + 10;
+                _nextLog = _t + 10;
 
-                double altitude = pos.magnitude - bodyRadius;
+                double altitude = pos.magnitude - _bodyRadius;
                 Vector3d airVel = SurfaceVelocity(pos, vel);
 
                 double atmosphericTemperature = GetTemperature(pos, altitude);
 
-                double speedOfSound = mainBody.GetSpeedOfSound(Pressure(pos), AirDensity(pos, altitude));
+                double speedOfSound = _mainBody.GetSpeedOfSound(Pressure(pos), AirDensity(pos, altitude));
                 float mach = Mathf.Min((float)(airVel.magnitude / speedOfSound), 50f);
 
                 float dynamicPressurekPa = (float)(0.0005 * AirDensity(pos, altitude) * airVel.sqrMagnitude);
 
 
-                result.debugLog += "\n "
-                                   + (t - startUT).ToString("F2").PadLeft(8)
-                                   + " Alt:" + altitude.ToString("F0").PadLeft(6)
-                                   + " Vel:" + vel.magnitude.ToString("F2").PadLeft(8)
-                                   + " AirVel:" + airVel.magnitude.ToString("F2").PadLeft(8)
-                                   + " SoS:" + speedOfSound.ToString("F2").PadLeft(6)
-                                   + " mach:" + mach.ToString("F2").PadLeft(6)
-                                   + " dynP:" + dynamicPressurekPa.ToString("F5").PadLeft(9)
-                                   + " Temp:" + atmosphericTemperature.ToString("F2").PadLeft(8)
-                                   + " Lat:" + referenceFrame.Latitude(pos).ToString("F2").PadLeft(6);
+                _result.DebugLog += "\n "
+                                    + (_t - _startUT).ToString("F2").PadLeft(8)
+                                    + " Alt:" + altitude.ToString("F0").PadLeft(6)
+                                    + " Vel:" + vel.magnitude.ToString("F2").PadLeft(8)
+                                    + " AirVel:" + airVel.magnitude.ToString("F2").PadLeft(8)
+                                    + " SoS:" + speedOfSound.ToString("F2").PadLeft(6)
+                                    + " mach:" + mach.ToString("F2").PadLeft(6)
+                                    + " dynP:" + dynamicPressurekPa.ToString("F5").PadLeft(9)
+                                    + " Temp:" + atmosphericTemperature.ToString("F2").PadLeft(8)
+                                    + " Lat:" + _referenceFrame.Latitude(pos).ToString("F2").PadLeft(6);
             }
         }
 
         // FloatCurve (Unity Animation curve) are not thread safe so we need a local copy of the curves for the thread
         public class SimCurves
         {
-            private static readonly Pool<SimCurves> pool = new Pool<SimCurves>(Create, Reset);
+            private static readonly Pool<SimCurves> _pool = new Pool<SimCurves>(Create, Reset);
 
             private SimCurves()
             {
             }
-
-            public static int PoolSize => pool.Size;
 
             private static SimCurves Create()
             {
                 return new SimCurves();
             }
 
-            public virtual void Release()
+            public void Release()
             {
-                pool.Release(this);
+                _pool.Release(this);
             }
 
             private static void Reset(SimCurves obj)
@@ -883,7 +783,7 @@ namespace MuMech
 
             public static SimCurves Borrow(CelestialBody newBody)
             {
-                SimCurves curve = pool.Borrow();
+                SimCurves curve = _pool.Borrow();
                 curve.Setup(newBody);
                 return curve;
             }
@@ -891,7 +791,7 @@ namespace MuMech
             private void Setup(CelestialBody newBody)
             {
                 // No point in copying those again if we already have them loaded
-                if (!loaded)
+                if (!_loaded)
                 {
                     DragCurveCd         = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
                     DragCurveCdPower    = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
@@ -909,12 +809,12 @@ namespace MuMech
                     DragCurvePseudoReynolds = new FloatCurve(PhysicsGlobals.DragCurvePseudoReynolds.Curve.keys);
 
                     SpaceTemperature = PhysicsGlobals.SpaceTemperature;
-                    loaded           = true;
+                    _loaded           = true;
                 }
 
-                if (newBody != body)
+                if (newBody != _body)
                 {
-                    body                              = newBody;
+                    _body                              = newBody;
                     AtmospherePressureCurve           = new FloatCurve(newBody.atmospherePressureCurve.Curve.keys);
                     AtmosphereTemperatureSunMultCurve = new FloatCurve(newBody.atmosphereTemperatureSunMultCurve.Curve.keys);
                     LatitudeTemperatureBiasCurve      = new FloatCurve(newBody.latitudeTemperatureBiasCurve.Curve.keys);
@@ -924,9 +824,9 @@ namespace MuMech
                 }
             }
 
-            private bool loaded;
+            private bool _loaded;
 
-            private CelestialBody body;
+            private CelestialBody _body;
 
             public FloatCurve LiftCurve { get; private set; }
 
@@ -967,70 +867,67 @@ namespace MuMech
 
         public enum Outcome { LANDED, AEROBRAKED, TIMED_OUT, NO_REENTRY, ERROR }
 
-        public struct prediction
+        public struct Prediction
         {
             // debuging
-            public double firstDrag;
-            public double firstLift;
-            public double speedOfSound;
-            public double mach;
-            public double dynamicPressurekPa;
+            public double FirstDrag;
+            public double FirstLift;
+            public double SpeedOfSound;
+            public double Mach;
+            public double DynamicPressurekPa;
         }
 
         public class Result
         {
-            public double maxdt;
-            public int    steps;
+            public double Maxdt;
+            public int    Steps;
 
-            public double timeToComplete;
+            public double TimeToComplete;
 
-            public ulong     id; // give each set of results a new id so we can check to see if the result has changed.
-            public Outcome   outcome;
-            public Exception exception;
+            public ulong     ID; // give each set of results a new id so we can check to see if the result has changed.
+            public Outcome   Outcome;
+            public Exception Exception;
 
-            public CelestialBody  body;
-            public ReferenceFrame referenceFrame;
-            public double         endUT;
+            public CelestialBody  Body;
+            public ReferenceFrame ReferenceFrame;
+            public double         EndUT;
 
-            public AbsoluteVector startPosition;
-            public AbsoluteVector endPosition;
-            public AbsoluteVector endVelocity;
+            public AbsoluteVector StartPosition;
+            public AbsoluteVector EndPosition;
+            public AbsoluteVector EndVelocity;
 
-            public bool           aeroBrake;
-            public double         aeroBrakeUT;
-            public AbsoluteVector aeroBrakePosition;
-            public AbsoluteVector aeroBrakeVelocity;
+            public bool           AeroBrake;
+            public double         AeroBrakeUT;
+            public AbsoluteVector AeroBrakePosition;
+            public AbsoluteVector AeroBrakeVelocity;
 
-            public double               endASL;
-            public List<AbsoluteVector> trajectory;
+            public double               EndASL;
+            public List<AbsoluteVector> Trajectory;
 
-            public double maxDragGees;
-            public double deltaVExpended;
+            public double MaxDragGees;
+            public double DeltaVExpended;
 
-            public bool   multiplierHasError;
-            public double parachuteMultiplier;
+            public bool   MultiplierHasError;
+            public double ParachuteMultiplier;
 
             // Provide all the input paramaters to the simulation in the result to aid debugging
-            public Orbit input_initialOrbit;
+            public Orbit InputInitialOrbit;
 
-            public double input_UT;
+            public double InputUT;
 
             //public double input_dragMassExcludingUsedParachutes;
-            public List<SimulatedParachute> input_parachuteList;
-            public double                   input_mass;
-            public IDescentSpeedPolicy      input_descentSpeedPolicy;
-            public double                   input_decelEndAltitudeASL;
-            public double                   input_maxThrustAccel;
-            public double                   input_parachuteSemiDeployMultiplier;
-            public double                   input_probableLandingSiteASL;
-            public bool                     input_multiplierHasError;
-            public double                   input_dt;
+            public           List<SimulatedParachute> InputParachuteList;
+            public           IDescentSpeedPolicy      InputDescentSpeedPolicy;
+            public           double                   InputDecelEndAltitudeASL;
+            public           double                   InputMaxThrustAccel;
+            public           double                   InputParachuteSemiDeployMultiplier;
+            public           double                   InputProbableLandingSiteASL;
+            public           bool                     InputMultiplierHasError;
+            public           double                   InputDT;
 
-            public string debugLog;
+            public string DebugLog;
 
-            private static readonly Pool<Result> pool = new Pool<Result>(Create, Reset);
-
-            public static int PoolSize => pool.Size;
+            private static readonly Pool<Result> _pool = new Pool<Result>(Create, Reset);
 
             private static Result Create()
             {
@@ -1039,81 +936,78 @@ namespace MuMech
 
             public void Release()
             {
-                if (trajectory != null)
-                    ListPool<AbsoluteVector>.Instance.Release(trajectory);
-                exception = null;
-                pool.Release(this);
+                if (Trajectory != null)
+                    ListPool<AbsoluteVector>.Instance.Release(Trajectory);
+                Exception = null;
+                _pool.Release(this);
             }
 
             private static void Reset(Result obj)
             {
-                obj.aeroBrake = false;
+                obj.AeroBrake = false;
             }
 
             public static Result Borrow()
             {
-                Result result = pool.Borrow();
+                Result result = _pool.Borrow();
                 return result;
             }
 
             // debuging
-            public prediction prediction;
+            public Prediction Prediction;
 
             public Vector3d RelativeEndPosition()
             {
-                return WorldEndPosition() - body.position;
+                return WorldEndPosition() - Body.position;
             }
 
             public Vector3d WorldEndPosition()
             {
-                return referenceFrame.WorldPositionAtCurrentTime(endPosition);
+                return ReferenceFrame.WorldPositionAtCurrentTime(EndPosition);
             }
 
-            public Vector3d WorldEndVelocity()
+            private Vector3d WorldEndVelocity()
             {
-                return referenceFrame.WorldVelocityAtCurrentTime(endVelocity);
+                return ReferenceFrame.WorldVelocityAtCurrentTime(EndVelocity);
             }
 
             public Orbit EndOrbit()
             {
-                return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), body, endUT);
+                return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), Body, EndUT);
             }
 
             public Vector3d WorldAeroBrakePosition()
             {
-                return referenceFrame.WorldPositionAtCurrentTime(aeroBrakePosition);
+                return ReferenceFrame.WorldPositionAtCurrentTime(AeroBrakePosition);
             }
 
             public Vector3d WorldAeroBrakeVelocity()
             {
-                return referenceFrame.WorldVelocityAtCurrentTime(aeroBrakeVelocity);
+                return ReferenceFrame.WorldVelocityAtCurrentTime(AeroBrakeVelocity);
             }
 
             public Orbit AeroBrakeOrbit()
             {
-                return MuUtils.OrbitFromStateVectors(WorldAeroBrakePosition(), WorldAeroBrakeVelocity(), body, endUT);
+                return MuUtils.OrbitFromStateVectors(WorldAeroBrakePosition(), WorldAeroBrakeVelocity(), Body, EndUT);
             }
 
             public Disposable<List<Vector3d>> WorldTrajectory(double timeStep, bool world = true)
             {
                 Disposable<List<Vector3d>> ret = ListPool<Vector3d>.Instance.BorrowDisposable();
 
-                if (trajectory.Count == 0) return ret;
+                if (Trajectory.Count == 0) return ret;
 
-                if (world)
-                    ret.value.Add(referenceFrame.WorldPositionAtCurrentTime(trajectory[0]));
-                else
-                    ret.value.Add(referenceFrame.BodyPositionAtCurrentTime(trajectory[0]));
-                double lastTime = trajectory[0].UT;
-                for (int i = 0; i < trajectory.Count; i++)
+                ret.value.Add(world
+                    ? ReferenceFrame.WorldPositionAtCurrentTime(Trajectory[0])
+                    : ReferenceFrame.BodyPositionAtCurrentTime(Trajectory[0]));
+                double lastTime = Trajectory[0].UT;
+                for (int i = 0; i < Trajectory.Count; i++)
                 {
-                    AbsoluteVector absolute = trajectory[i];
+                    AbsoluteVector absolute = Trajectory[i];
                     if (absolute.UT > lastTime + timeStep)
                     {
-                        if (world)
-                            ret.value.Add(referenceFrame.WorldPositionAtCurrentTime(absolute));
-                        else
-                            ret.value.Add(referenceFrame.BodyPositionAtCurrentTime(absolute));
+                        ret.value.Add(
+                            world ? ReferenceFrame.WorldPositionAtCurrentTime(absolute) : ReferenceFrame.BodyPositionAtCurrentTime(absolute));
                         lastTime = absolute.UT;
                     }
                 }
@@ -1125,9 +1019,9 @@ namespace MuMech
             public double GetOvershoot(EditableAngle targetLatitude, EditableAngle targetLongitude)
             {
                 // Get the start, end and target positions as a set of 3d vectors that we can work with
-                Vector3d end = body.GetWorldSurfacePosition(endPosition.latitude, endPosition.longitude, 0) - body.position;
-                Vector3d target = body.GetWorldSurfacePosition(targetLatitude, targetLongitude, 0) - body.position;
-                Vector3d start = body.GetWorldSurfacePosition(startPosition.latitude, startPosition.longitude, 0) - body.position;
+                Vector3d end = Body.GetWorldSurfacePosition(EndPosition.Latitude, EndPosition.Longitude, 0) - Body.position;
+                Vector3d target = Body.GetWorldSurfacePosition(targetLatitude, targetLongitude, 0) - Body.position;
+                Vector3d start = Body.GetWorldSurfacePosition(StartPosition.Latitude, StartPosition.Longitude, 0) - Body.position;
 
                 // First we need to get two vectors that are non orthogonal to each other and to the vector from the start to the target. TODO can we simplify this code by using Vector3d.Exclude?
                 Vector3d start2Target = target - start;
@@ -1141,9 +1035,9 @@ namespace MuMech
                 var orthog2 = Vector3d.Cross(start2Target, orthog1);
 
                 // Now that we have those two orthogonal vectors, we can project any vector onto the two planes defined by them to give us the vector component that is parallel to start2Target.
-                Vector3d target2end = end - target;
+                Vector3d target2End = end - target;
 
-                Vector3d overshoot = target2end.ProjectOnPlane(orthog1).ProjectOnPlane(orthog2);
+                Vector3d overshoot = target2End.ProjectOnPlane(orthog1).ProjectOnPlane(orthog2);
 
                 // finally how long is it? We know it is parrallel to start2target, so if we add it to start2target, and then get the difference of the lengths, that should give us a positive or negative
                 double overshootLength = (start2Target + overshoot).magnitude - start2Target.magnitude;
@@ -1156,35 +1050,35 @@ namespace MuMech
                 string resultText = "Simulation result\n{";
 
                 resultText += "Inputs:\n{";
-                if (null != input_initialOrbit) { resultText += "\n input_initialOrbit: " + input_initialOrbit; }
+                if (null != InputInitialOrbit) { resultText += "\n input_initialOrbit: " + InputInitialOrbit; }
 
-                resultText += "\n input_UT: " + input_UT;
+                resultText += "\n input_UT: " + InputUT;
                 //resultText += "\n input_dragMassExcludingUsedParachutes: " + input_dragMassExcludingUsedParachutes;
-                resultText += "\n input_mass: " + input_mass;
-                if (null != input_descentSpeedPolicy) { resultText += "\n input_descentSpeedPolicy: " + input_descentSpeedPolicy; }
+                //resultText += "\n input_mass: " + _inputMass;
+                if (null != InputDescentSpeedPolicy) { resultText += "\n input_descentSpeedPolicy: " + InputDescentSpeedPolicy; }
 
-                resultText += "\n input_decelEndAltitudeASL: " + input_decelEndAltitudeASL;
-                resultText += "\n input_maxThrustAccel: " + input_maxThrustAccel;
-                resultText += "\n input_parachuteSemiDeployMultiplier: " + input_parachuteSemiDeployMultiplier;
-                resultText += "\n input_probableLandingSiteASL: " + input_probableLandingSiteASL;
-                resultText += "\n input_multiplierHasError: " + input_multiplierHasError;
-                resultText += "\n input_dt: " + input_dt;
+                resultText += "\n input_decelEndAltitudeASL: " + InputDecelEndAltitudeASL;
+                resultText += "\n input_maxThrustAccel: " + InputMaxThrustAccel;
+                resultText += "\n input_parachuteSemiDeployMultiplier: " + InputParachuteSemiDeployMultiplier;
+                resultText += "\n input_probableLandingSiteASL: " + InputProbableLandingSiteASL;
+                resultText += "\n input_multiplierHasError: " + InputMultiplierHasError;
+                resultText += "\n input_dt: " + InputDT;
                 resultText += "\n}";
-                resultText += "\nid: " + id;
-                resultText += "\noutcome: " + outcome;
-                resultText += "\nmaxdt: " + maxdt;
-                resultText += "\ntimeToComplete: " + timeToComplete;
-                resultText += "\nendUT: " + endUT;
-                if (null != referenceFrame) { resultText += "\nstartPosition: " + referenceFrame.WorldPositionAtCurrentTime(startPosition); }
+                resultText += "\nid: " + ID;
+                resultText += "\noutcome: " + Outcome;
+                resultText += "\nmaxdt: " + Maxdt;
+                resultText += "\ntimeToComplete: " + TimeToComplete;
+                resultText += "\nendUT: " + EndUT;
+                if (null != ReferenceFrame) { resultText += "\nstartPosition: " + ReferenceFrame.WorldPositionAtCurrentTime(StartPosition); }
 
-                if (null != referenceFrame) { resultText += "\nendPosition: " + referenceFrame.WorldPositionAtCurrentTime(endPosition); }
+                if (null != ReferenceFrame) { resultText += "\nendPosition: " + ReferenceFrame.WorldPositionAtCurrentTime(EndPosition); }
 
-                resultText += "\nendASL: " + endASL;
-                resultText += "\nendVelocity: " + endVelocity.longitude + "," + endVelocity.latitude + "," + endVelocity.radius;
-                resultText += "\nmaxDragGees: " + maxDragGees;
-                resultText += "\ndeltaVExpended: " + deltaVExpended;
-                resultText += "\nmultiplierHasError: " + multiplierHasError;
-                resultText += "\nparachuteMultiplier: " + parachuteMultiplier;
+                resultText += "\nendASL: " + EndASL;
+                resultText += "\nendVelocity: " + EndVelocity.Longitude + "," + EndVelocity.Latitude + "," + EndVelocity.Radius;
+                resultText += "\nmaxDragGees: " + MaxDragGees;
+                resultText += "\ndeltaVExpended: " + DeltaVExpended;
+                resultText += "\nmultiplierHasError: " + MultiplierHasError;
+                resultText += "\nparachuteMultiplier: " + ParachuteMultiplier;
                 resultText += "\n}";
 
                 return resultText;
@@ -1235,45 +1129,43 @@ namespace MuMech
     //An AbsoluteVector stores the information needed to unambiguously reconstruct a position or velocity at a later time.
     public struct AbsoluteVector
     {
-        public double latitude;
-        public double longitude;
-        public double radius;
+        public double Latitude;
+        public double Longitude;
+        public double Radius;
         public double UT;
     }
 
     //A ReferenceFrame is a scheme for converting Vector3d positions and velocities into AbsoluteVectors, and vice versa
     public class ReferenceFrame
     {
-        private double        epoch;
-        private Vector3d      lat0lon0AtStart;
-        private Vector3d      lat0lon90AtStart;
-        private Vector3d      lat90AtStart;
-        private CelestialBody referenceBody;
+        private double        _epoch;
+        private Vector3d      _lat0Lon0AtStart;
+        private Vector3d      _lat0Lon90AtStart;
+        private Vector3d      _lat90AtStart;
+        private CelestialBody _referenceBody;
 
         public void UpdateAtCurrentTime(CelestialBody body)
         {
-            lat0lon0AtStart  = body.GetSurfaceNVector(0, 0);
-            lat0lon90AtStart = body.GetSurfaceNVector(0, 90);
-            lat90AtStart     = body.GetSurfaceNVector(90, 0);
-            epoch            = Planetarium.GetUniversalTime();
-            referenceBody    = body;
+            _lat0Lon0AtStart  = body.GetSurfaceNVector(0, 0);
+            _lat0Lon90AtStart = body.GetSurfaceNVector(0, 90);
+            _lat90AtStart     = body.GetSurfaceNVector(90, 0);
+            _epoch            = Planetarium.GetUniversalTime();
+            _referenceBody    = body;
         }
 
         //Vector3d must be either a position RELATIVE to referenceBody, or a velocity
-        public AbsoluteVector ToAbsolute(Vector3d vector3d, double UT)
+        public AbsoluteVector ToAbsolute(Vector3d vector3d, double ut)
         {
-            var absolute = new AbsoluteVector();
+            var absolute = new AbsoluteVector { Latitude = Latitude(vector3d) };
 
-            absolute.latitude = Latitude(vector3d);
+            double longitude = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(vector3d.normalized, _lat0Lon90AtStart),
+                Vector3d.Dot(vector3d.normalized, _lat0Lon0AtStart));
+            longitude          -= 360 * (ut - _epoch) / _referenceBody.rotationPeriod;
+            absolute.Longitude =  MuUtils.ClampDegrees180(longitude);
 
-            double longitude = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(vector3d.normalized, lat0lon90AtStart),
-                Vector3d.Dot(vector3d.normalized, lat0lon0AtStart));
-            longitude          -= 360 * (UT - epoch) / referenceBody.rotationPeriod;
-            absolute.longitude =  MuUtils.ClampDegrees180(longitude);
+            absolute.Radius = vector3d.magnitude;
 
-            absolute.radius = vector3d.magnitude;
-
-            absolute.UT = UT;
+            absolute.UT = ut;
 
             return absolute;
         }
@@ -1282,12 +1174,12 @@ namespace MuMech
         //in world coordinates.
         public Vector3d WorldPositionAtCurrentTime(AbsoluteVector absolute)
         {
-            return referenceBody.position + WorldVelocityAtCurrentTime(absolute);
+            return _referenceBody.position + WorldVelocityAtCurrentTime(absolute);
         }
 
         public Vector3d BodyPositionAtCurrentTime(AbsoluteVector absolute)
         {
-            return referenceBody.position + absolute.radius * referenceBody.GetSurfaceNVector(absolute.latitude, absolute.longitude);
+            return _referenceBody.position + absolute.Radius * _referenceBody.GetSurfaceNVector(absolute.Latitude, absolute.Longitude);
         }
 
         //Interprets a given AbsoluteVector as a velocity, and returns the corresponding Vector3d velocity
@@ -1295,13 +1187,13 @@ namespace MuMech
         public Vector3d WorldVelocityAtCurrentTime(AbsoluteVector absolute)
         {
             double now = Planetarium.GetUniversalTime();
-            double unrotatedLongitude = MuUtils.ClampDegrees360(absolute.longitude - 360 * (now - absolute.UT) / referenceBody.rotationPeriod);
-            return absolute.radius * referenceBody.GetSurfaceNVector(absolute.latitude, unrotatedLongitude);
+            double unrotatedLongitude = MuUtils.ClampDegrees360(absolute.Longitude - 360 * (now - absolute.UT) / _referenceBody.rotationPeriod);
+            return absolute.Radius * _referenceBody.GetSurfaceNVector(absolute.Latitude, unrotatedLongitude);
         }
 
         public double Latitude(Vector3d vector3d)
         {
-            return UtilMath.Rad2Deg * Math.Asin(Vector3d.Dot(vector3d.normalized, lat90AtStart));
+            return UtilMath.Rad2Deg * Math.Asin(Vector3d.Dot(vector3d.normalized, _lat90AtStart));
         }
     }
 }

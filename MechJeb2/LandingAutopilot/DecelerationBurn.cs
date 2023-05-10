@@ -25,7 +25,7 @@ namespace MuMech
                 }
 
                 double decelerationStartTime =
-                    core.landing.Prediction.trajectory.Any() ? core.landing.Prediction.trajectory.First().UT : vesselState.time;
+                    core.landing.Prediction.Trajectory.Any() ? core.landing.Prediction.Trajectory.First().UT : vesselState.time;
                 if (decelerationStartTime - vesselState.time > 5)
                 {
                     core.thrust.targetThrottle = 0;

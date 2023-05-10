@@ -100,8 +100,8 @@ namespace MuMech
                 {
                     if (vesselState.drag < 0.01)
                     {
-                        double decelerationStartTime = core.landing.Prediction.trajectory.Any()
-                            ? core.landing.Prediction.trajectory.First().UT
+                        double decelerationStartTime = core.landing.Prediction.Trajectory.Any()
+                            ? core.landing.Prediction.Trajectory.First().UT
                             : vesselState.time;
                         Vector3d decelerationStartAttitude = -orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
                         decelerationStartAttitude += mainBody.getRFrmVel(orbit.WorldPositionAtUT(decelerationStartTime));
