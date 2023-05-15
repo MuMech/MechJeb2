@@ -412,8 +412,8 @@ namespace MechJebLib.Utils
             return Math.Sqrt(sumsq);
         }
 
-        private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y" };
-        private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y" };
+        private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" };
+        private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y", "r", "q" };
 
         public static string ToSI(this double d, int maxPrecision = -99, int sigFigs = 4)
         {
@@ -427,7 +427,7 @@ namespace MechJebLib.Utils
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d) + offset));
 
             int index = d != 0 ? (int)Math.Abs(Math.Floor(exponent / 3.0)) : 0; // index of the SI prefix
-            if (index > 8) index = 8;                                           // there's only 8 SI prefixes
+            if (index > 10) index = 10;                                         // there's only 10 SI prefixes
 
             int siExponent = Math.Sign(exponent) * index * 3; // the SI prefix exponent
 

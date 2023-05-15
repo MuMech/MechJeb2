@@ -52,8 +52,10 @@ namespace MechJebLibTest.Utils
         [Fact]
         public void ToSITest()
         {
-            Assert.Equal("0.000001000 y", 1e-30.ToSI());
-            Assert.Equal("0.001000 y", 1e-27.ToSI());
+            Assert.Equal("0.000001000 q", 1e-36.ToSI());
+            Assert.Equal("0.001000 q", 1e-33.ToSI());
+            Assert.Equal("1.000 q", 1e-30.ToSI());
+            Assert.Equal("1.000 r", 1e-27.ToSI());
             Assert.Equal("1.000 y", 1e-24.ToSI());
             Assert.Equal("1.000 z", 1e-21.ToSI());
             Assert.Equal("1.000 a", 1e-18.ToSI());
@@ -87,8 +89,10 @@ namespace MechJebLibTest.Utils
             Assert.Equal("1.000 E", 1e18.ToSI());
             Assert.Equal("1.000 Z", 1e21.ToSI());
             Assert.Equal("1.000 Y", 1e24.ToSI());
-            Assert.Equal("1000 Y", 1e27.ToSI());
-            Assert.Equal("1000000 Y", 1e30.ToSI());
+            Assert.Equal("1.000 R", 1e27.ToSI());
+            Assert.Equal("1.000 Q", 1e30.ToSI());
+            Assert.Equal("1000 Q", 1e33.ToSI());
+            Assert.Equal("1000000 Q", 1e36.ToSI());
             Assert.Equal("-1.000  ", (-1d).ToSI());
             Assert.Equal("-12.00  ", (-12d).ToSI());
             Assert.Equal("-123.0  ", (-123d).ToSI());
@@ -102,9 +106,15 @@ namespace MechJebLibTest.Utils
             Assert.Equal("Infinity", double.PositiveInfinity.ToSI());
             Assert.Equal("-Infinity", double.NegativeInfinity.ToSI());
 
-            Assert.Equal("0 y", 1.23456e-27.ToSI(-1));
-            Assert.Equal("0 y", 1.23456e-26.ToSI(-1));
-            Assert.Equal("0 y", 1.23456e-25.ToSI(-1));
+            Assert.Equal("0 q", 1.23456e-33.ToSI(-1));
+            Assert.Equal("0 q", 1.23456e-32.ToSI(-1));
+            Assert.Equal("0 q", 1.23456e-31.ToSI(-1));
+            Assert.Equal("1 q", 1.23456e-30.ToSI(-1));
+            Assert.Equal("12 q", 1.23456e-29.ToSI(-1));
+            Assert.Equal("123 q", 1.23456e-28.ToSI(-1));
+            Assert.Equal("1 r", 1.23456e-27.ToSI(-1));
+            Assert.Equal("12 r", 1.23456e-26.ToSI(-1));
+            Assert.Equal("123 r", 1.23456e-25.ToSI(-1));
             Assert.Equal("1 y", 1.23456e-24.ToSI(-1));
             Assert.Equal("12 y", 1.23456e-23.ToSI(-1));
             Assert.Equal("123 y", 1.23456e-22.ToSI(-1));
