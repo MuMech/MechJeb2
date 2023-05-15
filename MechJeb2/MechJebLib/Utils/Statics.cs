@@ -436,7 +436,10 @@ namespace MechJebLib.Utils
             d /= Math.Pow(10, siExponent); // scale d by the SI prefix exponent
 
             int wholeDigits = d != 0 ? exponent - siExponent + 1 : 1;
-            int decimalDigits = Clamp(sigFigs - wholeDigits, 0, siExponent - maxPrecision);
+            int maxDecimalDigits = siExponent - maxPrecision;
+            int decimalDigits = sigFigs - wholeDigits;
+            decimalDigits = decimalDigits > maxDecimalDigits ? maxDecimalDigits : decimalDigits;
+            decimalDigits = decimalDigits < 0 ? 0 : decimalDigits;
 
             return $"{d.ToString("F" + decimalDigits)} {unit}";
         }
