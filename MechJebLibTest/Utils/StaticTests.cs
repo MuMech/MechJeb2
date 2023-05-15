@@ -43,6 +43,13 @@ namespace MechJebLibTest.Utils
         }
 
         [Fact]
+        public void ClampTest()
+        {
+            Clamp(-2.0, 0, 1).ShouldEqual(0);
+            Clamp(2.0, 0, 1).ShouldEqual(1);
+        }
+
+        [Fact]
         public void ToSITest()
         {
             Assert.Equal("0.000001000 y", 1e-30.ToSI());
@@ -94,6 +101,33 @@ namespace MechJebLibTest.Utils
             Assert.Equal("NaN", double.NaN.ToSI());
             Assert.Equal("Infinity", double.PositiveInfinity.ToSI());
             Assert.Equal("-Infinity", double.NegativeInfinity.ToSI());
+
+            Assert.Equal("0 y", 1.23456e-27.ToSI(-1));
+            Assert.Equal("0 y", 1.23456e-26.ToSI(-1));
+            Assert.Equal("0 y", 1.23456e-25.ToSI(-1));
+            Assert.Equal("1 y", 1.23456e-24.ToSI(-1));
+            Assert.Equal("12 y", 1.23456e-23.ToSI(-1));
+            Assert.Equal("123 y", 1.23456e-22.ToSI(-1));
+            Assert.Equal("1 z", 1.23456e-21.ToSI(-1));
+            Assert.Equal("12 z", 1.23456e-20.ToSI(-1));
+            Assert.Equal("123 z", 1.23456e-19.ToSI(-1));
+            Assert.Equal("1 a", 1.23456e-18.ToSI(-1));
+            Assert.Equal("12 a", 1.23456e-17.ToSI(-1));
+            Assert.Equal("123 a", 1.23456e-16.ToSI(-1));
+            Assert.Equal("1 f", 1.23456e-15.ToSI(-1));
+            Assert.Equal("0.0  ", 0d.ToSI(-1));
+            Assert.Equal("1.0  ", 1d.ToSI(-1));
+            Assert.Equal("1.2  ", 1.23456.ToSI(-1));
+            Assert.Equal("12.3  ", 12.3456.ToSI(-1));
+            Assert.Equal("123.5  ", 123.456.ToSI(-1));
+            Assert.Equal("1.235 k", 1234.56.ToSI(-1));
+            Assert.Equal("12.35 k", 12345.6.ToSI(-1));
+            Assert.Equal("123.5 k", 1.23456e5.ToSI(-1));
+            Assert.Equal("1.235 M", 1.23456e6.ToSI(-1));
+            Assert.Equal("12.35 M", 1.23456e7.ToSI(-1));
+            Assert.Equal("123.5 M", 1.23456e8.ToSI(-1));
+            Assert.Equal("1.235 G", 1.23456e9.ToSI(-1));
+            Assert.Equal("12.35 G", 1.23456e10.ToSI(-1));
         }
     }
 }
