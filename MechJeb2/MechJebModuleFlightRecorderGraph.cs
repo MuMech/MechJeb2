@@ -136,7 +136,7 @@ namespace MuMech
 
             GUILayout.Label(Localizer.Format("#MechJeb_Flightrecord_Label1", GuiUtils.TimeToDHMS(recorder.timeSinceMark)), GUILayout.ExpandWidth(false));//Time <<1>>
 
-            GUILayout.Label(Localizer.Format("#MechJeb_Flightrecord_Label2", recorder.history[recorder.historyIdx].downRange.ToSI(-2)) + "m", GUILayout.ExpandWidth(false));//Downrange <<1>>
+            GUILayout.Label(Localizer.Format("#MechJeb_Flightrecord_Label2", recorder.history[recorder.historyIdx].downRange.ToSI()) + "m", GUILayout.ExpandWidth(false));//Downrange <<1>>
 
             //GUILayout.Label("", GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
@@ -175,7 +175,7 @@ namespace MuMech
 
             double scaleX = downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
 
-            GUILayout.Label((downrange ? scaleX.ToSI(-1, 2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, 1) + "/px"), GUILayout.ExpandWidth(false));
+            GUILayout.Label((downrange ? scaleX.ToSI(2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, 1) + "/px"), GUILayout.ExpandWidth(false));
 
             if (!autoScale && GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
@@ -310,7 +310,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            //GUILayout.Label("X " + MuUtils.ToSI(hPos, -1, 2) + " " + MuUtils.ToSI(hPos + scaleX * width, -1, 2), GUILayout.Width(110));
+            //GUILayout.Label("X " + hPos.ToSI(2) + " " + (hPos+scaleX*width).ToSI(2), GUILayout.Width(110));
 
             color = GUI.color;
 
@@ -514,7 +514,7 @@ namespace MuMech
 
             const int w = 80;
             const int h = 20;
-            
+
             graphState state = graphStates[scaleIdx];
             if (state.labels == null)
                 return;

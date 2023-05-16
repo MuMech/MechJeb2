@@ -14,7 +14,7 @@ namespace MuMech
 {
     //This class just exists to collect miscellaneous info item functions in one place.
     //If any of these functions are useful in another module, they should be moved there.
-    
+
     [UsedImplicitly]
     public class MechJebModuleInfoItems : ComputerModule
     {
@@ -53,7 +53,7 @@ namespace MuMech
         {
             if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
-            return vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude.ToSI(-1) + "m/s";
+            return vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude.ToSI() + "m/s";
         }
 
         [ValueInfoItem("#MechJeb_SurfaceTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)]//Surface TWR
@@ -94,7 +94,7 @@ namespace MuMech
 
         public string OrbitSummary(Orbit o)
         {
-            return (o.eccentricity > 1) ? $"hyperbolic, Pe = {o.PeA.ToSI(2)}m" : $"{o.PeA.ToSI(2)}m x {o.ApA.ToSI(2)}m";
+            return (o.eccentricity > 1) ? $"hyperbolic, Pe = {o.PeA.ToSI()}m" : $"{o.PeA.ToSI()}m x {o.ApA.ToSI()}m";
         }
 
         public string OrbitSummaryWithInclination(Orbit o)
@@ -387,7 +387,7 @@ namespace MuMech
             return vessel.TotalResourceMass("MonoPropellant");
         }
 
-        [ValueInfoItem("#MechJeb_TotalElectricCharge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, siMaxPrecision = 1, units = "Ah")]//Total electric charge
+        [ValueInfoItem("#MechJeb_TotalElectricCharge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, units = "Ah")]//Total electric charge
         public double TotalElectricCharge()
         {
             return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
@@ -534,7 +534,7 @@ namespace MuMech
         public string TargetDistance()
         {
             if (core.target.Target == null) return "N/A";
-            return core.target.Distance.ToSI(-1) + "m";
+            return core.target.Distance.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_HeadingToTarget", InfoItem.Category.Target)]//Heading to target
@@ -575,7 +575,7 @@ namespace MuMech
             if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
             if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
-            return orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time).ToSI(-1) + "m";
+            return orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time).ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_RelativeVelocityAtClosestApproach", InfoItem.Category.Target)]//Rel. vel. at closest approach
@@ -598,7 +598,7 @@ namespace MuMech
                 double relVel =
                     (orbit.WorldOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.WorldOrbitalVelocityAtUT(UT))
                         .magnitude;
-                return relVel.ToSI(-1) + "m/s";
+                return relVel.ToSI() + "m/s";
             }
             catch
             {
@@ -627,7 +627,7 @@ namespace MuMech
 
             if (o == null) return "N/A";
 
-            return o.PeA.ToSI(-1) + "m";
+            return o.PeA.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetCaptureDV", InfoItem.Category.Misc)]//ΔV for capture by target
@@ -645,7 +645,7 @@ namespace MuMech
             double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
             double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
 
-            return (velAtPeriapsis - velCapture).ToSI(-1) + "m/s";
+            return (velAtPeriapsis - velCapture).ToSI() + "m/s";
         }
 
 
@@ -653,14 +653,14 @@ namespace MuMech
         public string TargetApoapsis()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.ApA.ToSI(2) + "m";
+            return core.target.TargetOrbit.ApA.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetPeriapsis", InfoItem.Category.Target)]//Target periapsis
         public string TargetPeriapsis()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.PeA.ToSI(2) + "m";
+            return core.target.TargetOrbit.PeA.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetInclination", InfoItem.Category.Target)]//Target inclination
@@ -748,7 +748,7 @@ namespace MuMech
         public string TargetSMA()
         {
             if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.semiMajorAxis.ToSI(2) + "m";
+            return core.target.TargetOrbit.semiMajorAxis.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetMeanAnomaly", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)]//Target Mean Anomaly

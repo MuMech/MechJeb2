@@ -66,13 +66,13 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label3"), GUILayout.ExpandWidth(false)); //"Turn start when Altitude is "
-                GUILayout.Label(_ascentSettings.AutoTurnStartAltitude.ToSI( -1, 2) + "m ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(_ascentSettings.AutoTurnStartAltitude.ToSI(2) + "m ", GUILayout.ExpandWidth(false));
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GUILayout.ExpandWidth(false)); //"or Velocity reach "
-                GUILayout.Label(_ascentSettings.AutoTurnStartVelocity.ToSI(-1, 3) + "m/s", GUILayout.ExpandWidth(false)); //
+                GUILayout.Label(_ascentSettings.AutoTurnStartVelocity.ToSI(3) + "m/s", GUILayout.ExpandWidth(false)); //
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label5")); //"Turn end altitude: "
-                GUILayout.Label(_ascentSettings.AutoTurnEndAltitude.ToSI(-1, 2) + "m", GuiUtils.middleRightLabel,
+                GUILayout.Label(_ascentSettings.AutoTurnEndAltitude.ToSI(2) + "m", GuiUtils.middleRightLabel,
                     GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }

@@ -234,7 +234,7 @@ namespace MuMech
                 altSLTScale           = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GUILayout.ExpandWidth(true));
                 infoItems.altSLTScale = altSLTScale;
                 stats.altSLT          = Math.Pow(altSLTScale, 2) * stats.editorBody.atmosphereDepth;
-                GUILayout.Label(stats.altSLT.ToSI(2) + "m", GUILayout.Width(80));
+                GUILayout.Label(stats.altSLT.ToSI() + "m", GUILayout.Width(80));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();

@@ -112,16 +112,16 @@ namespace MuMech
         public MovingAverage vesselPitch = new MovingAverage();
         [ValueInfoItem("#MechJeb_Roll", InfoItem.Category.Surface, format = "F1", units = "º")]//Roll
         public MovingAverage vesselRoll = new MovingAverage();
-        [ValueInfoItem("#MechJeb_Altitude_ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]//Altitude (ASL)
+        [ValueInfoItem("#MechJeb_Altitude_ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")]//Altitude (ASL)
         public MovingAverage altitudeASL = new MovingAverage();
-        [ValueInfoItem("#MechJeb_Altitude_true", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = -1, units = "m")]//Altitude (true)
+        [ValueInfoItem("#MechJeb_Altitude_true", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")]//Altitude (true)
         public MovingAverage altitudeTrue = new MovingAverage();
-        [ValueInfoItem("#MechJeb_SurfaceAltitudeASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4, siMaxPrecision = -1, units = "m")]//Surface altitude ASL
+        [ValueInfoItem("#MechJeb_SurfaceAltitudeASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4, units = "m")]//Surface altitude ASL
         public double surfaceAltitudeASL;
 
-        [ValueInfoItem("#MechJeb_Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]//Apoapsis
+        [ValueInfoItem("#MechJeb_Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, category = InfoItem.Category.Orbit)]//Apoapsis
         public MovingAverage orbitApA = new MovingAverage();
-        [ValueInfoItem("#MechJeb_Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, category = InfoItem.Category.Orbit)]//Periapsis
+        [ValueInfoItem("#MechJeb_Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, category = InfoItem.Category.Orbit)]//Periapsis
         public MovingAverage orbitPeA = new MovingAverage();
         [ValueInfoItem("#MechJeb_OrbitalPeriod", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 2, category = InfoItem.Category.Orbit)]//Orbital period
         public MovingAverage orbitPeriod = new MovingAverage();
@@ -137,7 +137,7 @@ namespace MuMech
         public MovingAverage orbitInclination = new MovingAverage();
         [ValueInfoItem("#MechJeb_Eccentricity", InfoItem.Category.Orbit, format = "F3")]//Eccentricity
         public MovingAverage orbitEccentricity = new MovingAverage();
-        [ValueInfoItem("#MechJeb_SemiMajorAxis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]//Semi-major axis
+        [ValueInfoItem("#MechJeb_SemiMajorAxis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")]//Semi-major axis
         public MovingAverage orbitSemiMajorAxis = new MovingAverage();
         [ValueInfoItem("Celestial Longitude", InfoItem.Category.Orbit, format = "F3")]
         public MovingAverage celestialLongitude = new MovingAverage();
@@ -930,7 +930,7 @@ namespace MuMech
         private const double _dVelocitySqrMinThreshold = 1;
         private const double _dAltitudeThreshold = 300;
         private const float _fAoAThreshold = 2;
-        private void CalculateVesselAeroForcesWithCache(Vessel v, out Vector3 farForce, out Vector3 farTorque, Vector3d surfaceVelocity, double altitudeASL) 
+        private void CalculateVesselAeroForcesWithCache(Vessel v, out Vector3 farForce, out Vector3 farTorque, Vector3d surfaceVelocity, double altitudeASL)
         {
             float AoA = Vector3.Angle(v.rootPart.transform.TransformDirection(Vector3.up), surfaceVelocity);
             if ((lastSurfaceVelocity - surfaceVelocity).sqrMagnitude > _dVelocitySqrThreshold
@@ -1375,7 +1375,7 @@ namespace MuMech
         // Altitude of bottom of craft, only calculated when requested because it is a bit expensive
         private bool altitudeBottomIsCurrent = false;
         private double _altitudeBottom;
-        [ValueInfoItem("#MechJeb_Altitude_bottom", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, siMaxPrecision = 0, units = "m")]//Altitude (bottom)
+        [ValueInfoItem("#MechJeb_Altitude_bottom", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")]//Altitude (bottom)
         public double altitudeBottom
         {
             get
