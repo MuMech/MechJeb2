@@ -45,7 +45,7 @@ namespace MuMech
                 runwayIndex = GuiUtils.ComboBox.Box(runwayIndex, availableRunways.Select(p => p.name).ToArray(), this);
                 autoland.runway = availableRunways[runwayIndex];
 
-                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label2") + Vector3d.Distance(vesselState.CoM, autoland.runway.Start()).ToSI(0) + "m");//Distance to runway: 
+                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label2") + Vector3d.Distance(vesselState.CoM, autoland.runway.Start()).ToSI() + "m");//Distance to runway:
 
                 showLandingTarget = GUILayout.Toggle(showLandingTarget, Localizer.Format("#MechJeb_ApproAndLand_label3"));//Show landing navball guidance
 

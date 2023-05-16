@@ -245,7 +245,7 @@ namespace MuMech
             foreach (ConfigNode windowNode in windowNodes)
             {
                 MechJebModuleCustomInfoWindow window = new MechJebModuleCustomInfoWindow(core);
-                
+
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
 
                 window.UpdateRefreshRate();
@@ -290,7 +290,7 @@ namespace MuMech
                     window.enabledEditor = window.enabled;
                     window.enabledFlight = window.enabled;
                 }
-                
+
                 window.items = new List<InfoItem>();
 
                 if (windowNode.HasNode("items"))
@@ -706,7 +706,7 @@ namespace MuMech
             else if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
             else if (format == ANGLE_NS) return Coordinates.AngleToDMS(doubleValue) + (doubleValue > 0 ? " N" : " S");
             else if (format == ANGLE_EW) return Coordinates.AngleToDMS(doubleValue) + (doubleValue > 0 ? " E" : " W");
-            else if (format == SI) return (doubleValue.ToSI( siMaxPrecision, siSigFigs) + units);
+            else if (format == SI) return (doubleValue.ToSI( siSigFigs, siMaxPrecision) + units);
             else return doubleValue.ToString(format) + " " + units;
         }
 
@@ -862,7 +862,7 @@ namespace MuMech
         public string units = "";
         public string format = "";
         public int siSigFigs = 4;
-        public int siMaxPrecision = -99;
+        public int siMaxPrecision = -33;
         public int timeDecimalPlaces = 0;
 
         public ValueInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }

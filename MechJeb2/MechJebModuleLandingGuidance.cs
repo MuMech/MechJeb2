@@ -80,7 +80,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("ASL: " + ASL.ToSI(-1, 4) + "m");
+                GUILayout.Label("ASL: " + ASL.ToSI() + "m");
                 GUILayout.Label(core.target.targetBody.GetExperimentBiomeSafe(core.target.targetLatitude, core.target.targetLongitude));
                 GUILayout.EndHorizontal();
             }
@@ -144,9 +144,9 @@ namespace MuMech
 
                 if (core.landing.enabled)
                 {
-                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label6") + core.landing.status);//Status: 
-                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label7") + (core.landing.CurrentStep != null ? core.landing.CurrentStep.GetType().Name : "N/A"));//Step: 
-                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label8") + (core.landing.descentSpeedPolicy != null ? core.landing.descentSpeedPolicy.GetType().Name : "N/A") + " (" + core.landing.UseAtmosphereToBrake().ToString() + ")");//Mode 
+                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label6") + core.landing.status);//Status:
+                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label7") + (core.landing.CurrentStep != null ? core.landing.CurrentStep.GetType().Name : "N/A"));//Step:
+                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label8") + (core.landing.descentSpeedPolicy != null ? core.landing.descentSpeedPolicy.GetType().Name : "N/A") + " (" + core.landing.UseAtmosphereToBrake().ToString() + ")");//Mode
                     //GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
                     //var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
                     //GUILayout.Label("Drag Length: " + ( dragLength < double.MaxValue ? dragLength.ToString("F2") : "infinite"));
@@ -207,7 +207,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
         }
-        
+
         void DrawGUIPrediction()
         {
             ReentrySimulation.Result result = predictor.Result;
@@ -217,20 +217,20 @@ namespace MuMech
                 {
                     case ReentrySimulation.Outcome.LANDED:
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label9"));//Landing Predictions:
-                        GUILayout.Label(Coordinates.ToStringDMS(result.EndPosition.Latitude, result.EndPosition.Longitude) + "\nASL:" + result.EndASL.ToSI(-1, 4) + "m");
+                        GUILayout.Label(Coordinates.ToStringDMS(result.EndPosition.Latitude, result.EndPosition.Longitude) + "\nASL:" + result.EndASL.ToSI() + "m");
                         GUILayout.Label(result.Body.GetExperimentBiomeSafe(result.EndPosition.Latitude, result.EndPosition.Longitude));
                         double error = Vector3d.Distance(mainBody.GetWorldSurfacePosition(result.EndPosition.Latitude, result.EndPosition.Longitude, 0) - mainBody.position,
                                                          mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position);
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + error.ToSI(0) + "m"
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + error.ToSI() + "m"
                                        + Localizer.Format("#MechJeb_LandingGuidance_Label11") + result.MaxDragGees.ToString("F1") +"g"
                                        +Localizer.Format("#MechJeb_LandingGuidance_Label12") + result.DeltaVExpended.ToString("F1") + "m/s"
-                                       +Localizer.Format("#MechJeb_LandingGuidance_Label13") + (vessel.Landed ? "0.0s" : GuiUtils.TimeToDHMS(result.EndUT - Planetarium.GetUniversalTime(), 1)));//Target difference = \nMax drag: \nDelta-v needed: \nTime to land: 
+                                       +Localizer.Format("#MechJeb_LandingGuidance_Label13") + (vessel.Landed ? "0.0s" : GuiUtils.TimeToDHMS(result.EndUT - Planetarium.GetUniversalTime(), 1)));//Target difference = \nMax drag: \nDelta-v needed: \nTime to land:
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label14"));//Predicted orbit after aerobraking:
                         Orbit o = result.AeroBrakeOrbit();
-                        if (o.eccentricity > 1) GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") + o.eccentricity.ToString("F2"));//Hyperbolic, eccentricity = 
+                        if (o.eccentricity > 1) GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") + o.eccentricity.ToString("F2"));//Hyperbolic, eccentricity =
                         else GUILayout.Label(o.PeA.ToSI(3) + "m x " + o.ApA.ToSI(3) + "m");
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label16", result.MaxDragGees.ToString("F1"))+Localizer.Format("#MechJeb_LandingGuidance_Label17", GuiUtils.TimeToDHMS(result.AeroBrakeUT - Planetarium.GetUniversalTime(), 1)));//Max drag:<<1>>g  \nExit atmosphere in:
                         break;

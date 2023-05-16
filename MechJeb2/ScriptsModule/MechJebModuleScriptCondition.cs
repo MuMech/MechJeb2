@@ -201,12 +201,12 @@ namespace MuMech
         {
             if (selectedCondition == 0) //Altitude
             {
-                return core.vesselState.altitudeBottom.ToSI(-1, 0);
+                return core.vesselState.altitudeBottom.ToSI(0, -1);
             }
 
             if (selectedCondition == 1) //Speed
             {
-                return core.vesselState.speedSurface.value.ToSI(-1, 0);
+                return core.vesselState.speedSurface.value.ToSI(0, -1);
             }
 
             if (selectedCondition == 2) //Distance to target

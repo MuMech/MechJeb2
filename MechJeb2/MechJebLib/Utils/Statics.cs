@@ -415,13 +415,15 @@ namespace MechJebLib.Utils
         private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" };
         private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y", "r", "q" };
 
-        public static string ToSI(this double d, int maxPrecision = -99, int sigFigs = 4)
+        public static string ToSI(this double d, int sigFigs = 4, int maxPrecision = int.MaxValue)
         {
             if (!IsFinite(d)) return d.ToString();
 
+            if (maxPrecision == int.MaxValue)
+                maxPrecision = -29 - sigFigs;
+
             // this is an offset to d to deal with rounding (e.g. 9.9995 gets rounded to 10.00 so gains a wholeDigit)
             // (also 999.95 should be rounded to 1k, so bumps up an SI prefix)
-            // FIXME: probably needs to be fixed to work when maxPrecision kicks in
             double offset = 5 * (d != 0 ? Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(d))) - sigFigs) : 0);
 
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d) + offset));
