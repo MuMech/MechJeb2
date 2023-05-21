@@ -222,9 +222,9 @@ namespace MuMech
 
                         if (i == vessel.currentStage && core.guidance.IsCoasting())
                         {
-                            ct   = Math.Max(ct - vesselState.time - core.guidance.StartCoast, 0);
-                            maxt = Math.Max(maxt - vesselState.time - core.guidance.StartCoast, 0);
-                            mint = Math.Max(mint - vesselState.time - core.guidance.StartCoast, 0);
+                            ct   = Math.Max(ct - (vesselState.time - core.guidance.StartCoast), 0);
+                            maxt = Math.Max(maxt - (vesselState.time - core.guidance.StartCoast), 0);
+                            mint = Math.Max(mint - (vesselState.time - core.guidance.StartCoast), 0);
                         }
 
                         if (_ascentSettings.FixedCoast)
