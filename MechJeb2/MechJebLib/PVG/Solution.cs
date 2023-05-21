@@ -328,7 +328,7 @@ namespace MechJebLib.PVG
         {
             for (int i = 0; i < Phases.Count; i++)
             {
-                if (Phases[i].KSPStage == kspStage)
+                if (Phases[i].KSPStage == kspStage && !Phases[i].Coast)
                     return i;
             }
 
