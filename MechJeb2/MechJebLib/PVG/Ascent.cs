@@ -60,7 +60,8 @@ namespace MechJebLib.PVG
             {
                 // FIXME: the analytic coast integrator is definitely buggy so the Shepperd solver must be buggy
                 if (phase.Coast)
-                    phase.Integrator = new VacuumThrustIntegrator();
+                    //phase.Integrator = new VacuumThrustIntegrator();
+                    phase.Integrator = new VacuumCoastAnalytic();
                 else
                     // FIXME: make a debug setting to flip between these somewhere
                     phase.Integrator = new VacuumThrustAnalytic();

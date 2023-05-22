@@ -59,6 +59,41 @@ namespace MechJebLibTest.Maths
             }
         }
 
+        [Fact]
+        private void RandomForwardAndBack2()
+        {
+            const int NTRIALS = 5;
+
+            var random = new Random();
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                double dt = 40 * random.NextDouble() - 20;
+
+                // XXX: this probably needs a test to reject random orbits that are near-parabolic.  See the
+                // Farnocchia paper.
+
+                (V3 rf, V3 vf, _, _, _, _) = Shepperd.Solve2(1.0, dt, r0, v0);
+                (V3 rp, V3 vp, _, _, _, _) = Shepperd.Solve2(1.0, -dt, rf, vf);
+
+                if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
+                {
+                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
+                                                vp + "\n");
+                }
+
+                if ((rp - r0).magnitude / r0.magnitude > 1e-8 || (vp - v0).magnitude / v0.magnitude > 1e-8)
+                {
+                    _testOutputHelper.WriteLine(r0 + " " + v0);
+                }
+
+                rp.ShouldEqual(r0, 1e-8);
+                vp.ShouldEqual(vp, 1e-8);
+            }
+        }
+
         private readonly VacuumKernel _ode = new VacuumKernel();
 
         private class VacuumKernel

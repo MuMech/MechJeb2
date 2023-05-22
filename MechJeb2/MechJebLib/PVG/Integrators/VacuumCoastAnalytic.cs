@@ -18,14 +18,15 @@ namespace MechJebLib.PVG.Integrators
             using var y0 = ArrayWrapper.Rent(yin);
             using var yf = ArrayWrapper.Rent(yfout);
 
-            (V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) = Shepperd.Solve2(1.0, tf - t0, y0.R, yf.V);
+            (V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) = Shepperd.Solve2(1.0, tf - t0, y0.R, y0.V);
 
             yf.R = rf;
             yf.V = vf;
 
-            yf.PV = stm00 * yf.PV + stm01 * yf.PR;
-            yf.PR = stm10 * yf.PV + stm11 * yf.PR;
+            yf.PV = stm00 * y0.PV - stm01 * y0.PR;
+            yf.PR = -stm10 * y0.PV + stm11 * y0.PR ;
 
+            yf.M  = y0.M;
             yf.Pm = y0.Pm;
 
             yf.DV = y0.DV;

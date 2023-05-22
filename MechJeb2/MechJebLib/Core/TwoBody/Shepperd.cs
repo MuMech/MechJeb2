@@ -5,6 +5,10 @@ namespace MechJebLib.Core.TwoBody
 {
     public static class Shepperd
     {
+        // NOTE: this isn't a faithful reproduction of Shepperd's method, it works
+        // better than Shepperd's method and uses different constants in the continued
+        // faction, although it otherwise has almost the same "shape" of algorithm.
+        // I don't yet understand exactly why or how it works.
         public static (V3 rf, V3 vf) Solve(double mu, double tau, V3 ri, V3 vi)
         {
             double tolerance = 1.0e-12;
@@ -152,7 +156,8 @@ namespace MechJebLib.Core.TwoBody
         //  [ 𝛿r ] = [ stm00 stm01 ] [ r ]
         //  [ 𝛿v ] = [ stm10 stm11 ] [ v ]
         //
-        // NOTE: is it not at all clear to me why this version differs in several ways from the prior version.
+        // NOTE: this is a fairly faithful reproduction of Shepperd's method with a little added bisection method in
+        // case Newton's Method gets into trouble.
         //
         public static ( V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) Solve2(double mu, double tau, V3 ri, V3 vi)
 
@@ -180,13 +185,9 @@ namespace MechJebLib.Core.TwoBody
 
             umin = -umax;
 
-            double delu;
+            double delu = 0.0;
 
-            if (beta <= 0.0)
-            {
-                delu = 0.0;
-            }
-            else
+            if (beta > 0.0)
             {
                 double beta3 = beta * beta * beta;
                 double p = 2.0 * Math.PI * mu * 1 / Math.Sqrt(beta3);
@@ -301,7 +302,7 @@ namespace MechJebLib.Core.TwoBody
             V3 rf = f * ri + g * vi;
             V3 vf = ff * ri + gg * vi;
 
-            uu = g * u2 + 3 * mu * uu;
+            double w = g * u2 + 3 * mu * uu;
             double a0 = mu / (r0 * r0 * r0);
             double a1 = mu / (r1 * r1 * r1);
 
@@ -319,31 +320,31 @@ namespace MechJebLib.Core.TwoBody
             m[2, 1] = fm * u2;
             m[2, 2] = g * u2;
 
-            m[0, 0] -= a0 * a1 * uu;
-            m[0, 2] -= a1 * uu;
-            m[2, 0] -= a0 * uu;
-            m[2, 2] -= uu;
+            m[0, 0] -= a0 * a1 * w;
+            m[0, 2] -= a1 * w;
+            m[2, 0] -= a0 * w;
+            m[2, 2] -= w;
 
             for (int i = 0; i < 3; i++)
             {
-                double t001 = rf[i] * m[1, 0] + vf[i] * m[1, 1];
-                double t002 = rf[i] * m[2, 0] + vf[i] * m[2, 1];
+                double t001 = rf[i] * m[1, 0] + vf[i] * m[2, 0];
+                double t002 = rf[i] * m[1, 1] + vf[i] * m[2, 1];
 
-                double t011 = rf[i] * m[1, 1] + vf[i] * m[1, 2];
-                double t012 = rf[i] * m[2, 1] + vf[i] * m[2, 2];
+                double t011 = rf[i] * m[1, 1] + vf[i] * m[2, 1];
+                double t012 = rf[i] * m[1, 2] + vf[i] * m[2, 2];
 
-                double t101 = rf[i] * m[0, 0] + vf[i] * m[0, 1];
-                double t102 = rf[i] * m[1, 0] + vf[i] * m[1, 1];
+                double t101 = rf[i] * m[0, 0] + vf[i] * m[1, 0];
+                double t102 = rf[i] * m[0, 1] + vf[i] * m[1, 1];
 
-                double t111 = rf[i] * m[0, 1] + vf[i] * m[0, 2];
-                double t112 = rf[i] * m[1, 1] + vf[i] * m[1, 2];
+                double t111 = rf[i] * m[0, 1] + vf[i] * m[1, 1];
+                double t112 = rf[i] * m[0, 2] + vf[i] * m[1, 2];
 
                 for (int j = 0; j < 3; j++)
                 {
                     stm00[i, j] = t001 * ri[j] + t002 * vi[j];
                     stm01[i, j] = t011 * ri[j] + t012 * vi[j];
-                    stm10[i, j] = -t101 * ri[j] + t102 * vi[j];
-                    stm11[i, j] = -t111 * ri[j] + t112 * vi[j];
+                    stm10[i, j] = -t101 * ri[j] - t102 * vi[j];
+                    stm11[i, j] = -t111 * ri[j] - t112 * vi[j];
                 }
             }
 
