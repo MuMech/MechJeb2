@@ -289,6 +289,16 @@ namespace MechJebLib.Primitives
         }
 
         /// <summary>
+        ///     The additive inverse of the matrix.
+        /// </summary>
+        /// <param name="m">input matrix</param>
+        /// <returns>negative matrix</returns>
+        public static M3 operator -(M3 m)
+        {
+            return m * -1;
+        }
+
+        /// <summary>
         ///     This tests for strict equality between two matricies on all values.  Returns false in the presence of NaN values.
         /// </summary>
         /// <param name="lhs">matrix to compare</param>
