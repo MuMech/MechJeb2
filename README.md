@@ -161,6 +161,5 @@ make install
 
 Licensed under the [GNU General Public License, Version 3](LICENSE.md).
 
-Portions (in the "MechJebLib" directory) Dual-Licensed under the [GNU General Public License, Version2](GPLv2-LICENSE.md)
-OR [MIT License](MIT-LICENSE.md) OR CCO Public Domain License (at the choice of the user),
-where it is documented in the affected source code headers.
+Portions (in the "MechJebLib" directory) are placed in the public domain and are documented in
+the affected source code headers.
