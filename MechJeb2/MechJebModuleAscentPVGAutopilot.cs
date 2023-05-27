@@ -169,7 +169,7 @@ namespace MuMech
             }
             else
             {
-                if (core.guidance.IsStable() && vessel.currentStage >= AscentSettings.StagingTrigger) return true;
+                if (core.guidance.IsStable() && vessel.currentStage <= AscentSettings.StagingTrigger) return true;
             }
 
             return false;
