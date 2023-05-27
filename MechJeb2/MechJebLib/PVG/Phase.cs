@@ -1,7 +1,6 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 using System;
@@ -47,7 +46,7 @@ namespace MechJebLib.PVG
 
             return newphase;
         }
-        
+
         private Phase(double m0, double thrust, double isp, double mf, double bt, int kspStage)
         {
             this.KSPStage = kspStage;
@@ -69,7 +68,7 @@ namespace MechJebLib.PVG
             Check.False(Normalized);
 
             var phase = (Phase)this.MemberwiseClone();
-            
+
             phase.ve         = ve / scale.VelocityScale;
             phase.tau        = tau / scale.TimeScale;
             phase.mdot       = mdot / scale.MdotScale;
@@ -101,31 +100,31 @@ namespace MechJebLib.PVG
             Check.PositiveFinite(mf);
             Check.PositiveFinite(isp);
             Check.PositiveFinite(bt);
-            
+
             double mdot = (m0 - mf) / bt;
             double thrust = mdot * (isp * G0);
-            
+
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(thrust);
-            
+
             var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime, Unguided = unguided };
 
             return phase;
         }
-        
+
         public static Phase NewStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(thrust);
             Check.PositiveFinite(isp);
             Check.PositiveFinite(bt);
-            
+
             double mdot = thrust / (isp * G0);
             double mf = m0 - mdot * bt;
-            
+
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(mf);
-            
+
             var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime, Unguided = unguided };
 
             return phase;
@@ -135,7 +134,7 @@ namespace MechJebLib.PVG
         {
             return new Phase(m0, 0, 0, m0, ct, kspStage);
         }
-        
+
         public static Phase NewOptimizedCoast(double m0, double mint, double maxt, int kspStage)
         {
             var phase = new Phase(m0, 0, 0, m0, mint, kspStage) { OptimizeTime = true, mint = mint, maxt = maxt };

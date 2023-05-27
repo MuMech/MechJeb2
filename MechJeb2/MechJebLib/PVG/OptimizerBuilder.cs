@@ -1,7 +1,6 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 #nullable enable
@@ -26,16 +25,16 @@ namespace MechJebLib.PVG
             private double        _mu;
             private double        _rbody;
             private double        _hT;
-            
+
             public Optimizer Build(List<Phase> phases)
             {
                 _phases = phases;
-                
+
                 double m0 = _phases[0].m0;
                 var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody);
 
                 var normalizedPhases = new List<Phase>();
-                
+
                 foreach (Phase phase in _phases)
                 {
                     normalizedPhases.Add(phase.Rescale(problem.Scale));
@@ -45,7 +44,7 @@ namespace MechJebLib.PVG
                     throw new Exception("Optimizer.Build() called with no terminal conditions");
 
                 problem.Terminal = _terminal.Rescale(problem.Scale);
-                
+
                 var solver = new Optimizer(problem, normalizedPhases);
                 return solver;
             }

@@ -1,8 +1,6 @@
 ﻿/*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Copyright Sebastien Gaggini (sebastien.gaggini@gmail.com)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 using System;
