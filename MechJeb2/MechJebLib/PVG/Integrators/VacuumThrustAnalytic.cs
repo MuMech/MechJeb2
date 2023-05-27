@@ -1,7 +1,6 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 #nullable enable
@@ -18,7 +17,7 @@ namespace MechJebLib.PVG.Integrators
         public void Integrate(Vn yin, Vn yfout, Phase phase, double t0, double tf)
         {
             Check.True(phase.Normalized);
-            
+
             using var y0 = ArrayWrapper.Rent(yin);
             using var yf = ArrayWrapper.Rent(yfout);
 
@@ -32,7 +31,7 @@ namespace MechJebLib.PVG.Integrators
                 thrust *= 2;
                 mdot   =  0;
             }
-            
+
             // precompute some values
             double omega = 1.0/Math.Sqrt(rm * rm * rm);
             double dt = tf - t0;
@@ -105,7 +104,7 @@ namespace MechJebLib.PVG.Integrators
                 yf.DV = y0.DV + phase.ve * Math.Log(phase.m0 / (phase.m0 - dt * phase.mdot));
             else
                 yf.DV = y0.DV + phase.thrust / phase.m0 * dt;
-            
+
             yf.Pm = y0.Pm;  // FIXME: this is certainly wrong
         }
 

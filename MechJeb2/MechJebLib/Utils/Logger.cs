@@ -1,7 +1,6 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 #nullable enable
@@ -18,7 +17,7 @@ namespace MechJebLib.Utils
     public class Logger
     {
         private Logger() { }
-        
+
         private static Logger _instance { get; } = new Logger();
 
         private Action<object> _logger = o => { };
@@ -32,7 +31,7 @@ namespace MechJebLib.Utils
         {
             _instance._logger = logger;
         }
-        
+
         public static void Log(string message)
         {
             _instance.LogImpl(message);

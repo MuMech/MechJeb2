@@ -1,7 +1,6 @@
 /*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 #nullable enable
@@ -25,7 +24,7 @@ namespace MechJebLib.PVG
         public int         LmStatus;
         public int         LmIterations;
         public OptimStatus Status;
-        
+
         private readonly Problem                  _problem;
         private readonly List<Phase>              _phases;
         private readonly List<Vn>                 _initial  = new List<Vn>();
@@ -35,7 +34,7 @@ namespace MechJebLib.PVG
         private readonly alglib.minlmreport       _rep = new alglib.minlmreport();
         private readonly alglib.ndimensional_fvec _residualHandle;
         private          alglib.minlmstate        _state = new alglib.minlmstate();
-        
+
         public enum OptimStatus { CREATED, BOOTSTRAPPED, SUCCESS, FAILED }
 
         private Optimizer(Problem problem, IEnumerable<Phase> phases)
@@ -179,9 +178,9 @@ namespace MechJebLib.PVG
         {
             if (_terminating)
                 return;
-            
+
             _timeoutToken.ThrowIfCancellationRequested();
-            
+
             CopyToInitial(yin);
             Shooting();
             // need to backwards integrate the mass costate here
@@ -210,13 +209,13 @@ namespace MechJebLib.PVG
             if (lastFreeBurnPhase >= 0)
                 _phases[lastFreeBurnPhase].LastFreeBurn = true;
         }
-        
+
         private CancellationToken _timeoutToken;
 
         private void UnSafeRun()
         {
             _terminating = false;
-            
+
             AnalyzePhases();
             ExpandArrays();
 
@@ -226,24 +225,24 @@ namespace MechJebLib.PVG
 
             for (int i = 0; i < yGuess.Length; i++)
                 yGuess[i] = _initial[i / ArrayWrapper.ARRAY_WRAPPER_LEN][i % ArrayWrapper.ARRAY_WRAPPER_LEN];
-            
+
             alglib.minlmcreatev(ArrayWrapper.ARRAY_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
             alglib.minlmsetcond(_state, LmEpsx, MaxIter);
             alglib.minlmoptimize(_state, _residualHandle, null, null);
             alglib.minlmresultsbuf(_state, ref yNew, _rep);
-            
+
             LmStatus     = _rep.terminationtype;
             LmIterations = _rep.iterationscount;
-            
+
             if (_rep.terminationtype != 8)
                 ResidualFunction(yNew, z, null);
         }
-        
+
         public Optimizer Run()
         {
             if (Status != OptimStatus.BOOTSTRAPPED)
                 throw new Exception("run should only be called on BOOTSTRAPPED optimizer");
-            
+
             try
             {
                 var  tokenSource = new CancellationTokenSource(); // FIXME: bit of garbage here
@@ -253,30 +252,30 @@ namespace MechJebLib.PVG
             }
             catch (OperationCanceledException)
             {
-                
+
             }
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(_phases[p].ToString());
             }
-            
+
             Log("solved initial: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_initial[p]));
             }
-            
+
             Log("solved terminal: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_terminal[p]));
             }
-            
+
             Log("solved residuals: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_residual[p]));
@@ -341,7 +340,7 @@ namespace MechJebLib.PVG
         {
             if (Status != OptimStatus.SUCCESS)
                 throw new Exception("getting solution from bad/failed optimizer state");
-            
+
             var solution = new Solution(_problem);
 
             Shooting(solution);
@@ -353,9 +352,9 @@ namespace MechJebLib.PVG
         {
             if (Status != OptimStatus.CREATED)
                 throw new Exception("bootstrap should only be called on CREATED optimizer");
-            
+
             ExpandArrays();
-            
+
             using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
             using var integ = ArrayWrapper.Rent(integArray);
 
@@ -365,7 +364,7 @@ namespace MechJebLib.PVG
             for (int p = 0; p <= lastPhase; p++)
             {
                 Phase phase = _phases[p];
-                
+
                 using var y0 = ArrayWrapper.Rent(_initial[p]);
                 using var yf = ArrayWrapper.Rent(_terminal[p]);
 
@@ -386,70 +385,70 @@ namespace MechJebLib.PVG
                     y0.M  = phase.m0;
                     _initial[p].CopyTo(integArray);
                 }
-                
+
                 double tf = t0 + y0.Bt;
-                
+
                 integ.DV = lastDv;
-                
+
                 phase.u0 = GetIntertialHeading(p, y0.PV);
 
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
                 lastDv =  yf.DV;
-                
+
                 t0     += tf;
             }
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(_phases[p].ToString());
             }
-            
+
             Log("bootstrap1 initial: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_initial[p]));
             }
-            
+
             Log("bootstrap1 terminal: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_terminal[p]));
             }
-            
+
             Log("bootstrap1 residuals: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_residual[p]));
             }
 
-            Status = OptimStatus.BOOTSTRAPPED;    
+            Status = OptimStatus.BOOTSTRAPPED;
 
             return this;
         }
-        
+
         public Optimizer Bootstrap(Solution solution)
         {
             if (Status != OptimStatus.CREATED)
                 throw new Exception("bootstrap should only be called on CREATED optimizer");
-            
+
             ExpandArrays();
-            
+
             using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
             using var integ = ArrayWrapper.Rent(integArray);
 
             //double tbar = solution.Tbar(_problem.t0);
-            
+
             double t0 = 0;
             double lastDv = 0;
 
             for (int p = 0; p <= lastPhase; p++)
             {
                 Phase phase = _phases[p];
-                
+
                 using var y0 = ArrayWrapper.Rent(_initial[p]);
                 using var yf = ArrayWrapper.Rent(_terminal[p]);
 
@@ -471,49 +470,49 @@ namespace MechJebLib.PVG
                     y0.M  = phase.m0;
                     _initial[p].CopyTo(integArray);
                 }
-                
+
                 double tf = t0 + y0.Bt;
-                
+
                 integ.DV = lastDv;
 
                 phase.u0 = GetIntertialHeading(p, y0.PV);
-                
+
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
                 lastDv = yf.DV;
 
                 t0 += tf;
-                
+
             }
-            
+
             CalculateResiduals();
 
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(_phases[p].ToString());
             }
-            
+
             Log("bootstrap2 initial: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_initial[p]));
             }
-            
+
             Log("bootstrap2 terminal: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_terminal[p]));
             }
-            
+
             Log("bootstrap2 residuals: ");
-            
+
             for(int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_residual[p]));
             }
-            
+
             Status = OptimStatus.BOOTSTRAPPED;
 
             return this;
