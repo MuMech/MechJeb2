@@ -160,7 +160,16 @@ namespace MuMech
             if (vessel.currentStage != _ascentSettings.OptimizeStage && Solution.Tgo(vesselState.time) > 10)
                 return;
 
-            int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage);
+            // The includeCoast: false flag here is to skip a coast which is in the past in the Solution when
+            // we are ending the coast and the optimizer hasn't run the solution, but CoastBefore is set so
+            // that both the coast and burn have the same KSPStage.  So we want the index of the current burn
+            // and not the index of the first matching KSPStage in the Solution which is the coast.  Might
+            // also consider modifying APIs like IndexForKSPStage to omit stages which are in the past -- but
+            // I have concerns about that with residuals where you may currently be in a burning stage which
+            // is in the "past" in the Solution but you're burning down residuals and you don't know when
+            // the stage will actually run out (assuming it isn't a burn before a coast or an optimized burntime
+            // so that we burn past the end of the stage and into whatever residuals are available).
+            int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage, includeCoasts: false);
             if (solutionIndex < 0)
                 return;
 
