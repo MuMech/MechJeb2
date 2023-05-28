@@ -162,10 +162,7 @@ namespace MuMech
 
             int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage);
             if (solutionIndex < 0)
-            {
-                Done();
                 return;
-            }
 
             // Only enter terminal guidance within 10 seconds of the current stage
             if (Solution.Tgo(vesselState.time, solutionIndex) > 10)
