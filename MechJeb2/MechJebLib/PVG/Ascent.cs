@@ -95,6 +95,9 @@ namespace MechJebLib.PVG
             pvg.Bootstrap(solution);
             pvg.Run();
 
+            if (!pvg.Success())
+                throw new Exception("converged optimizer failed");
+
             using Solution solution2 = pvg.GetSolution();
 
             (V3 rf, V3 vf) = solution2.TerminalStateVectors();
