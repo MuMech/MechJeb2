@@ -16,58 +16,83 @@ namespace MechJebLib.PVG
 {
     public class Phase
     {
-        public double         m0;
-        public double         thrust;
-        public double         isp;
-        public double         mf;
-        public double         bt;
-        public double         maxt;
-        public double         mint;
-        public double         ve;
-        public double         a0;
-        public double         tau;
-        public double         mdot;
-        public double         dv;
-        public double         DropMass = 0.0; // FIXME: unused
-        public bool           OptimizeTime;
-        public bool           Infinite = false;
-        public bool           Unguided;
-        public bool           MassContinuity = false;
-        public bool           LastFreeBurn   = false;
-        public bool           Normalized     = false;
-        public int            KSPStage;
-        public IPVGIntegrator Integrator;
-        public bool           Coast => thrust == 0;
-        public V3             u0;
+        public double m0;
+        public double thrust;
+        public double isp;
+        public double mf;
+        public double bt;
+        public double maxt;
+        public double mint;
+        public double ve;
+        public double a0;
+        public double tau;
+        public double mdot;
+        public double dv;
+        public double DropMass; // FIXME: unused
+        public bool   OptimizeTime;
+        public bool   Infinite = false;
+
+        private bool _analytic = true;
+
+        public bool Analytic
+        {
+            get => _analytic;
+            set
+            {
+                _ipvgIntegrator = null;
+                _analytic       = value;
+            }
+        }
+
+        public bool Unguided;
+        public bool MassContinuity = false;
+        public bool LastFreeBurn   = false;
+        public bool Normalized;
+        public int  KSPStage;
+
+        private IPVGIntegrator? _ipvgIntegrator;
+
+        private IPVGIntegrator _integrator => _ipvgIntegrator ??= GetIntegrator();
+
+        private IPVGIntegrator GetIntegrator()
+        {
+            if (Coast)
+                return new VacuumCoastAnalytic();
+
+            return Analytic ? (IPVGIntegrator)new VacuumThrustAnalytic() : new VacuumThrustIntegrator();
+        }
+
+        public bool Coast => thrust == 0;
+        public V3   u0;
 
         public Phase DeepCopy()
         {
-            var newphase = (Phase) this.MemberwiseClone();
+            var newphase = (Phase)MemberwiseClone();
 
             return newphase;
         }
 
         private Phase(double m0, double thrust, double isp, double mf, double bt, int kspStage)
         {
-            this.KSPStage = kspStage;
-            this.m0       = m0;
-            this.thrust   = thrust;
-            this.isp      = isp;
-            this.mf       = mf;
-            this.bt       = bt;
-            ve            = isp * G0;
-            a0            = thrust / m0;
-            tau           = thrust == 0 ? double.PositiveInfinity : ve / a0;
-            mdot          = ve == 0 ? 0 : thrust / ve;
-            dv            = thrust == 0 ? 0 : -ve * Math.Log(1 - bt / tau);
-            OptimizeTime  = false;
+            KSPStage     = kspStage;
+            this.m0      = m0;
+            this.thrust  = thrust;
+            this.isp     = isp;
+            this.mf      = mf;
+            this.bt      = bt;
+            ve           = isp * G0;
+            a0           = thrust / m0;
+            tau          = thrust == 0 ? double.PositiveInfinity : ve / a0;
+            mdot         = ve == 0 ? 0 : thrust / ve;
+            dv           = thrust == 0 ? 0 : -ve * Math.Log(1 - bt / tau);
+            OptimizeTime = false;
         }
 
         public Phase Rescale(Scale scale)
         {
             Check.False(Normalized);
 
-            var phase = (Phase)this.MemberwiseClone();
+            var phase = (Phase)MemberwiseClone();
 
             phase.ve         = ve / scale.VelocityScale;
             phase.tau        = tau / scale.TimeScale;
@@ -86,15 +111,16 @@ namespace MechJebLib.PVG
 
         public void Integrate(Vn y0, Vn yf, double t0, double tf)
         {
-            Integrator.Integrate(y0, yf, this, t0, tf);
+            _integrator.Integrate(y0, yf, this, t0, tf);
         }
 
         public void Integrate(Vn y0, Vn yf, double t0, double tf, Solution solution)
         {
-            Integrator.Integrate(y0, yf, this, t0, tf, solution);
+            _integrator.Integrate(y0, yf, this, t0, tf, solution);
         }
 
-        public static Phase NewStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
+        public static Phase NewStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false,
+            bool unguided = false)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(mf);
@@ -112,7 +138,8 @@ namespace MechJebLib.PVG
             return phase;
         }
 
-        public static Phase NewStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
+        public static Phase NewStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false,
+            bool unguided = false)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(thrust);

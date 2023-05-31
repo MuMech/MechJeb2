@@ -191,7 +191,8 @@ namespace MechJebLib.Primitives
         private static void Clear(Vn obj)
         {
             // do not resize the array to zero to avoid creating garbage
-            // we will return nonsense in the array values (not zeros) for performance
+            for (int i = 0; i < obj.Count; i++)
+                obj[i] = 0;
         }
 
         public static void Return(Vn obj)
