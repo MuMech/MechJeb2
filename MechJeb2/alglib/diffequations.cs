@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.19.0 (source code generated 2022-06-07)
+ALGLIB 4.00.0 (source code generated 2023-05-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -17,9 +17,11 @@ A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
+#pragma warning disable 1691
 #pragma warning disable 162
 #pragma warning disable 164
 #pragma warning disable 219
+#pragma warning disable 8981
 using System;
 
 public partial class alglib
@@ -514,12 +516,12 @@ public partial class alglib
                 k = 81;
                 klimit = 255;
                 gridpoint = false;
-                xc = -788;
-                v = 809;
-                h = 205;
-                h2 = -838;
-                err = 939;
-                maxgrowpow = -526;
+                xc = -788.0;
+                v = 809.0;
+                h = 205.0;
+                h2 = -838.0;
+                err = 939.0;
+                maxgrowpow = -526.0;
             }
             if( state.rstate.stage==0 )
             {

@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.19.0 (source code generated 2022-06-07)
+ALGLIB 4.00.0 (source code generated 2023-05-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -17,9 +17,11 @@ A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
+#pragma warning disable 1691
 #pragma warning disable 162
 #pragma warning disable 164
 #pragma warning disable 219
+#pragma warning disable 8981
 using System;
 
 public partial class alglib
@@ -978,7 +980,7 @@ public partial class alglib
             //
             // EVD
             //
-            if( !evd.smatrixtdevd(ref d, e, n, 3, ref z, _params) )
+            if( !evd.smatrixtdevd(d, e, n, 3, ref z, _params) )
             {
                 info = -3;
                 return;
@@ -1158,7 +1160,7 @@ public partial class alglib
             //
             // EVD
             //
-            if( !evd.smatrixtdevd(ref d, e, n+2, 3, ref z, _params) )
+            if( !evd.smatrixtdevd(d, e, n+2, 3, ref z, _params) )
             {
                 info = -3;
                 return;
@@ -1281,7 +1283,7 @@ public partial class alglib
             //
             // EVD
             //
-            if( !evd.smatrixtdevd(ref d, e, n+1, 3, ref z, _params) )
+            if( !evd.smatrixtdevd(d, e, n+1, 3, ref z, _params) )
             {
                 info = -3;
                 return;
@@ -2918,17 +2920,17 @@ public partial class alglib
             }
             else
             {
-                s = 359;
-                tmp = -58;
-                eps = -919;
-                a = -909;
-                b = 81;
-                x = 255;
-                t = 74;
-                alpha = -788;
-                beta = 809;
-                v1 = 205;
-                v2 = -838;
+                s = 359.0;
+                tmp = -58.0;
+                eps = -919.0;
+                a = -909.0;
+                b = 81.0;
+                x = 255.0;
+                t = 74.0;
+                alpha = -788.0;
+                beta = 809.0;
+                v1 = 205.0;
+                v2 = -838.0;
             }
             if( state.rstate.stage==0 )
             {
@@ -3296,15 +3298,15 @@ public partial class alglib
                 j = -526;
                 ns = 763;
                 info = -541;
-                c1 = -698;
-                c2 = -900;
-                intg = -318;
-                intk = -940;
-                inta = 1016;
-                v = -229;
-                ta = -536;
-                tb = 487;
-                qeps = -115;
+                c1 = -698.0;
+                c2 = -900.0;
+                intg = -318.0;
+                intk = -940.0;
+                inta = 1016.0;
+                v = -229.0;
+                ta = -536.0;
+                tb = 487.0;
+                qeps = -115.0;
             }
             if( state.rstate.stage==0 )
             {

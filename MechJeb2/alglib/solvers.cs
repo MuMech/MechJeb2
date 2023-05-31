@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.19.0 (source code generated 2022-06-07)
+ALGLIB 4.00.0 (source code generated 2023-05-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -17,9 +17,11 @@ A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
+#pragma warning disable 1691
 #pragma warning disable 162
 #pragma warning disable 164
 #pragma warning disable 219
+#pragma warning disable 8981
 using System;
 
 public partial class alglib
@@ -125,6 +127,7 @@ public partial class alglib
         //
         // Public declarations
         //
+        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
         public double r1 { get { return _innerobj.r1; } set { _innerobj.r1 = value; } }
         public double rinf { get { return _innerobj.rinf; } set { _innerobj.rinf = value; } }
     
@@ -159,6 +162,7 @@ public partial class alglib
         //
         // Public declarations
         //
+        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
         public double r2 { get { return _innerobj.r2; } set { _innerobj.r2 = value; } }
         public double[,] cx { get { return _innerobj.cx; } set { _innerobj.cx = value; } }
         public int n { get { return _innerobj.n; } set { _innerobj.n = value; } }
@@ -219,17 +223,14 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
-        Rep     -   additional report, following fields are set:
-                    * rep.r1    condition number in 1-norm
-                    * rep.rinf  condition number in inf-norm
+        Rep     -   additional report, the following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned matrix
+                    * rep.r1                condition number in 1-norm
+                    * rep.rinf              condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -258,20 +259,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixsolve(double[,] a, int n, double[] b, out int info, out densesolverreport rep, out double[] x)
+    public static void rmatrixsolve(double[,] a, int n, double[] b, out double[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixsolve(a, n, b, ref x, rep.innerobj, null);
     }
     
-    public static void rmatrixsolve(double[,] a, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixsolve(double[,] a, int n, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixsolve(a, n, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void rmatrixsolve(double[,] a, double[] b, out double[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.rmatrixsolve(a, n, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void rmatrixsolve(double[,] a, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.rmatrixsolve(a, n, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -295,14 +320,13 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -331,16 +355,40 @@ public partial class alglib
       -- ALGLIB --
          Copyright 16.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info)
+    public static bool rmatrixsolvefast(double[,] a, int n, double[] b)
     {
-        info = 0;
-        directdensesolvers.rmatrixsolvefast(a, n, b, ref info, null);
+    
+        return directdensesolvers.rmatrixsolvefast(a, n, b, null);
     }
     
-    public static void rmatrixsolvefast(double[,] a, int n, ref double[] b, out int info, alglib.xparams _params)
+    public static bool rmatrixsolvefast(double[,] a, int n, double[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.rmatrixsolvefast(a, n, b, ref info, _params);
+    
+        return directdensesolvers.rmatrixsolvefast(a, n, b, _params);
+    }
+            
+    public static bool rmatrixsolvefast(double[,] a, double[] b)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.rmatrixsolvefast(a, n, b, null);
+    
+        return result;
+    }
+            
+    public static bool rmatrixsolvefast(double[,] a, double[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.rmatrixsolvefast(a, n, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -385,18 +433,14 @@ public partial class alglib
                       More performance, less precision.
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is ill conditioned or singular.
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or exactly singular matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -425,20 +469,48 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out int info, out densesolverreport rep, out double[,] x)
+    public static void rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out double[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, null);
     }
     
-    public static void rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void rmatrixsolvem(double[,] a, int n, double[,] b, int m, bool rfs, out double[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, _params);
+    }
+            
+    public static void rmatrixsolvem(double[,] a, double[,] b, bool rfs, out double[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void rmatrixsolvem(double[,] a, double[,] b, bool rfs, out double[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.rmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -465,18 +537,16 @@ public partial class alglib
                       More performance, less precision.
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         Rep     -   additional report, following fields are set:
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         B       -   array[N]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True for well-conditioned matrix
+        False for extremely badly conditioned or exactly singular problem
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -505,16 +575,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info)
+    public static bool rmatrixsolvemfast(double[,] a, int n, double[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info, null);
+    
+        return directdensesolvers.rmatrixsolvemfast(a, n, b, m, null);
     }
     
-    public static void rmatrixsolvemfast(double[,] a, int n, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static bool rmatrixsolvemfast(double[,] a, int n, double[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.rmatrixsolvemfast(a, n, b, m, ref info, _params);
+    
+        return directdensesolvers.rmatrixsolvemfast(a, n, b, m, _params);
+    }
+            
+    public static bool rmatrixsolvemfast(double[,] a, double[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.rmatrixsolvemfast(a, n, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool rmatrixsolvemfast(double[,] a, double[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.rmatrixsolvemfast(a, n, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -555,36 +653,57 @@ public partial class alglib
         B       -   array[N], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
-        Rep     -   additional report, following fields are set:
-                    * rep.r1    condition number in 1-norm
-                    * rep.rinf  condition number in inf-norm
+        Rep     -   additional report, the following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned matrix
+                    * rep.r1                condition number in 1-norm
+                    * rep.rinf              condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixlusolve(double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x)
+    public static void rmatrixlusolve(double[,] lua, int[] p, int n, double[] b, out double[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, null);
     }
     
-    public static void rmatrixlusolve(double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixlusolve(double[,] lua, int[] p, int n, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void rmatrixlusolve(double[,] lua, int[] p, double[] b, out double[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixlusolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void rmatrixlusolve(double[,] lua, int[] p, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixlusolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        directdensesolvers.rmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -606,29 +725,52 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
+
 
       -- ALGLIB --
          Copyright 18.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixlusolvefast(double[,] lua, int[] p, int n, ref double[] b, out int info)
+    public static bool rmatrixlusolvefast(double[,] lua, int[] p, int n, double[] b)
     {
-        info = 0;
-        directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info, null);
+    
+        return directdensesolvers.rmatrixlusolvefast(lua, p, n, b, null);
     }
     
-    public static void rmatrixlusolvefast(double[,] lua, int[] p, int n, ref double[] b, out int info, alglib.xparams _params)
+    public static bool rmatrixlusolvefast(double[,] lua, int[] p, int n, double[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.rmatrixlusolvefast(lua, p, n, b, ref info, _params);
+    
+        return directdensesolvers.rmatrixlusolvefast(lua, p, n, b, _params);
+    }
+            
+    public static bool rmatrixlusolvefast(double[,] lua, int[] p, double[] b)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)))
+            throw new alglibexception("Error while calling 'rmatrixlusolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        bool result = directdensesolvers.rmatrixlusolvefast(lua, p, n, b, null);
+    
+        return result;
+    }
+            
+    public static bool rmatrixlusolvefast(double[,] lua, int[] p, double[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)))
+            throw new alglibexception("Error while calling 'rmatrixlusolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        bool result = directdensesolvers.rmatrixlusolvefast(lua, p, n, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -671,18 +813,14 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
-                    * rep.r1    condition number in 1-norm
-                    * rep.rinf  condition number in inf-norm
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned matrix
+                    * rep.r1                condition number in 1-norm
+                    * rep.rinf              condition number in inf-norm
         X       -   array[N,M], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -711,20 +849,48 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
+    public static void rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out double[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void rmatrixlusolvem(double[,] lua, int[] p, int n, double[,] b, int m, out double[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void rmatrixlusolvem(double[,] lua, int[] p, double[,] b, out double[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixlusolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void rmatrixlusolvem(double[,] lua, int[] p, double[,] b, out double[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixlusolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        directdensesolvers.rmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -748,14 +914,13 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS:
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N,M]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -784,16 +949,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 18.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info)
+    public static bool rmatrixlusolvemfast(double[,] lua, int[] p, int n, double[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info, null);
+    
+        return directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, null);
     }
     
-    public static void rmatrixlusolvemfast(double[,] lua, int[] p, int n, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static bool rmatrixlusolvemfast(double[,] lua, int[] p, int n, double[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, ref info, _params);
+    
+        return directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, _params);
+    }
+            
+    public static bool rmatrixlusolvemfast(double[,] lua, int[] p, double[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixlusolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        bool result = directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool rmatrixlusolvemfast(double[,] lua, int[] p, double[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixlusolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        bool result = directdensesolvers.rmatrixlusolvemfast(lua, p, n, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -817,35 +1010,56 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x)
+    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, int n, double[] b, out double[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, null);
     }
     
-    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, int n, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, int n, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, double[] b, out double[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixmixedsolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void rmatrixmixedsolve(double[,] a, double[,] lua, int[] p, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixmixedsolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.rmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -869,35 +1083,60 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N,M], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
+    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, int n, double[,] b, int m, out double[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, int n, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, int n, double[,] b, int m, out double[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, double[,] b, out double[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixmixedsolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void rmatrixmixedsolvem(double[,] a, double[,] lua, int[] p, double[,] b, out double[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'rmatrixmixedsolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.rmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -940,18 +1179,14 @@ public partial class alglib
                       More performance, less precision.
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or exactly singular matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N,M], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -980,20 +1215,48 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out int info, out densesolverreport rep, out complex[,] x)
+    public static void cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out complex[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, null);
     }
     
-    public static void cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void cmatrixsolvem(complex[,] a, int n, complex[,] b, int m, bool rfs, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, _params);
+    }
+            
+    public static void cmatrixsolvem(complex[,] a, complex[,] b, bool rfs, out complex[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void cmatrixsolvem(complex[,] a, complex[,] b, bool rfs, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.cmatrixsolvem(a, n, b, m, rfs, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1013,14 +1276,13 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS:
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N,M]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1049,16 +1311,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 16.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info)
+    public static bool cmatrixsolvemfast(complex[,] a, int n, complex[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info, null);
+    
+        return directdensesolvers.cmatrixsolvemfast(a, n, b, m, null);
     }
     
-    public static void cmatrixsolvemfast(complex[,] a, int n, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static bool cmatrixsolvemfast(complex[,] a, int n, complex[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.cmatrixsolvemfast(a, n, b, m, ref info, _params);
+    
+        return directdensesolvers.cmatrixsolvemfast(a, n, b, m, _params);
+    }
+            
+    public static bool cmatrixsolvemfast(complex[,] a, complex[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.cmatrixsolvemfast(a, n, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool cmatrixsolvemfast(complex[,] a, complex[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.cmatrixsolvemfast(a, n, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -1093,17 +1383,14 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or exactly singular matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1132,20 +1419,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixsolve(complex[,] a, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x)
+    public static void cmatrixsolve(complex[,] a, int n, complex[] b, out complex[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixsolve(a, n, b, ref x, rep.innerobj, null);
     }
     
-    public static void cmatrixsolve(complex[,] a, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void cmatrixsolve(complex[,] a, int n, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixsolve(a, n, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixsolve(a, n, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void cmatrixsolve(complex[,] a, complex[] b, out complex[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.cmatrixsolve(a, n, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void cmatrixsolve(complex[,] a, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.cmatrixsolve(a, n, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1162,14 +1473,13 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS:
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1198,16 +1508,40 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info)
+    public static bool cmatrixsolvefast(complex[,] a, int n, complex[] b)
     {
-        info = 0;
-        directdensesolvers.cmatrixsolvefast(a, n, b, ref info, null);
+    
+        return directdensesolvers.cmatrixsolvefast(a, n, b, null);
     }
     
-    public static void cmatrixsolvefast(complex[,] a, int n, ref complex[] b, out int info, alglib.xparams _params)
+    public static bool cmatrixsolvefast(complex[,] a, int n, complex[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.cmatrixsolvefast(a, n, b, ref info, _params);
+    
+        return directdensesolvers.cmatrixsolvefast(a, n, b, _params);
+    }
+            
+    public static bool cmatrixsolvefast(complex[,] a, complex[] b)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.cmatrixsolvefast(a, n, b, null);
+    
+        return result;
+    }
+            
+    public static bool cmatrixsolvefast(complex[,] a, complex[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.cmatrixsolvefast(a, n, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -1246,17 +1580,14 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or exactly singular matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N,M], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1285,20 +1616,48 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
+    public static void cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out complex[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void cmatrixlusolvem(complex[,] lua, int[] p, int n, complex[,] b, int m, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void cmatrixlusolvem(complex[,] lua, int[] p, complex[,] b, out complex[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixlusolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void cmatrixlusolvem(complex[,] lua, int[] p, complex[,] b, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixlusolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        directdensesolvers.cmatrixlusolvem(lua, p, n, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1318,14 +1677,13 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N,M]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1354,16 +1712,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info)
+    public static bool cmatrixlusolvemfast(complex[,] lua, int[] p, int n, complex[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info, null);
+    
+        return directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, null);
     }
     
-    public static void cmatrixlusolvemfast(complex[,] lua, int[] p, int n, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static bool cmatrixlusolvemfast(complex[,] lua, int[] p, int n, complex[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, ref info, _params);
+    
+        return directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, _params);
+    }
+            
+    public static bool cmatrixlusolvemfast(complex[,] lua, int[] p, complex[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixlusolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        bool result = directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool cmatrixlusolvemfast(complex[,] lua, int[] p, complex[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixlusolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        m = ap.cols(b);
+        bool result = directdensesolvers.cmatrixlusolvemfast(lua, p, n, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -1403,35 +1789,56 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or exactly singular matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixlusolve(complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x)
+    public static void cmatrixlusolve(complex[,] lua, int[] p, int n, complex[] b, out complex[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, null);
     }
     
-    public static void cmatrixlusolve(complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void cmatrixlusolve(complex[,] lua, int[] p, int n, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void cmatrixlusolve(complex[,] lua, int[] p, complex[] b, out complex[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixlusolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void cmatrixlusolve(complex[,] lua, int[] p, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)) || (ap.rows(lua)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixlusolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(lua);
+        directdensesolvers.cmatrixlusolve(lua, p, n, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1451,14 +1858,9 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is exactly singular (ill conditioned matrices
-                            are not recognized).
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N]:
-                    * info>0    =>  overwritten by solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
 
     NOTE: unlike  CMatrixLUSolve(),  this   function   does   NOT   check  for
           near-degeneracy of input matrix. It  checks  for  EXACT  degeneracy,
@@ -1469,16 +1871,40 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixlusolvefast(complex[,] lua, int[] p, int n, ref complex[] b, out int info)
+    public static bool cmatrixlusolvefast(complex[,] lua, int[] p, int n, complex[] b)
     {
-        info = 0;
-        directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info, null);
+    
+        return directdensesolvers.cmatrixlusolvefast(lua, p, n, b, null);
     }
     
-    public static void cmatrixlusolvefast(complex[,] lua, int[] p, int n, ref complex[] b, out int info, alglib.xparams _params)
+    public static bool cmatrixlusolvefast(complex[,] lua, int[] p, int n, complex[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.cmatrixlusolvefast(lua, p, n, b, ref info, _params);
+    
+        return directdensesolvers.cmatrixlusolvefast(lua, p, n, b, _params);
+    }
+            
+    public static bool cmatrixlusolvefast(complex[,] lua, int[] p, complex[] b)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)))
+            throw new alglibexception("Error while calling 'cmatrixlusolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        bool result = directdensesolvers.cmatrixlusolvefast(lua, p, n, b, null);
+    
+        return result;
+    }
+            
+    public static bool cmatrixlusolvefast(complex[,] lua, int[] p, complex[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(lua)!=ap.cols(lua)) || (ap.rows(lua)!=ap.len(p)))
+            throw new alglibexception("Error while calling 'cmatrixlusolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(lua);
+        bool result = directdensesolvers.cmatrixlusolvefast(lua, p, n, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -1499,35 +1925,60 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or exactly singular matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N,M], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
+    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, int n, complex[,] b, int m, out complex[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, int n, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, int n, complex[,] b, int m, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, complex[,] b, out complex[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixmixedsolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void cmatrixmixedsolvem(complex[,] a, complex[,] lua, int[] p, complex[,] b, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'cmatrixmixedsolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.cmatrixmixedsolvem(a, lua, p, n, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1547,35 +1998,56 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or exactly singular.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or exactly singular matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x)
+    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, int n, complex[] b, out complex[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, null);
     }
     
-    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, int n, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, int n, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, complex[] b, out complex[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixmixedsolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void cmatrixmixedsolve(complex[,] a, complex[,] lua, int[] p, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(lua)) || (ap.rows(a)!=ap.cols(lua)) || (ap.rows(a)!=ap.len(p)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'cmatrixmixedsolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.cmatrixmixedsolve(a, lua, p, n, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1616,17 +2088,14 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or non-SPD.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or indefinite matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N,M], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1655,20 +2124,48 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
+    public static void spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out double[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void spdmatrixsolvem(double[,] a, int n, bool isupper, double[,] b, int m, out double[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void spdmatrixsolvem(double[,] a, bool isupper, double[,] b, out double[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spdmatrixsolvem(double[,] a, bool isupper, double[,] b, out double[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.spdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1688,13 +2185,13 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular
-                    * -1    N<=0 was passed
-                    *  1    task was solved
         B       -   array[N,M], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1723,16 +2220,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 17.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info)
+    public static bool spdmatrixsolvemfast(double[,] a, int n, bool isupper, double[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info, null);
+    
+        return directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, null);
     }
     
-    public static void spdmatrixsolvemfast(double[,] a, int n, bool isupper, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static bool spdmatrixsolvemfast(double[,] a, int n, bool isupper, double[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, ref info, _params);
+    
+        return directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, _params);
+    }
+            
+    public static bool spdmatrixsolvemfast(double[,] a, bool isupper, double[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool spdmatrixsolvemfast(double[,] a, bool isupper, double[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.spdmatrixsolvemfast(a, n, isupper, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -1773,17 +2298,14 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    matrix is very badly conditioned or non-SPD.
-                    * -1    N<=0 was passed
-                    *  1    task is solved (but matrix A may be ill-conditioned,
-                            check R1/RInf parameters for condition numbers).
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or indefinite matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1812,20 +2334,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x)
+    public static void spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out double[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, null);
     }
     
-    public static void spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void spdmatrixsolve(double[,] a, int n, bool isupper, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void spdmatrixsolve(double[,] a, bool isupper, double[] b, out double[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spdmatrixsolve(double[,] a, bool isupper, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.spdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1845,13 +2391,13 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or non-SPD
-                    * -1    N<=0 was passed
-                    *  1    task was solved
         B       -   array[N], it contains:
-                    * info>0    =>  solution
-                    * info=-3   =>  filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -1880,16 +2426,40 @@ public partial class alglib
       -- ALGLIB --
          Copyright 17.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info)
+    public static bool spdmatrixsolvefast(double[,] a, int n, bool isupper, double[] b)
     {
-        info = 0;
-        directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info, null);
+    
+        return directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, null);
     }
     
-    public static void spdmatrixsolvefast(double[,] a, int n, bool isupper, ref double[] b, out int info, alglib.xparams _params)
+    public static bool spdmatrixsolvefast(double[,] a, int n, bool isupper, double[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, ref info, _params);
+    
+        return directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, _params);
+    }
+            
+    public static bool spdmatrixsolvefast(double[,] a, bool isupper, double[] b)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, null);
+    
+        return result;
+    }
+            
+    public static bool spdmatrixsolvefast(double[,] a, bool isupper, double[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.spdmatrixsolvefast(a, n, isupper, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -1934,35 +2504,60 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or badly conditioned
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task was solved
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or indefinite matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N]:
-                    * for info>0 contains solution
-                    * for info=-3 filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x)
+    public static void spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out double[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out int info, out densesolverreport rep, out double[,] x, alglib.xparams _params)
+    public static void spdmatrixcholeskysolvem(double[,] cha, int n, bool isupper, double[,] b, int m, out double[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0,0];
-        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void spdmatrixcholeskysolvem(double[,] cha, bool isupper, double[,] b, out double[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spdmatrixcholeskysolvem(double[,] cha, bool isupper, double[,] b, out double[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolvem': looks like one of arguments has wrong size");
+        x = new double[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        directdensesolvers.spdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -1985,28 +2580,55 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or badly conditioned
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task was solved
         B       -   array[N]:
-                    * for info>0 overwritten by solution
-                    * for info=-3 filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       -- ALGLIB --
          Copyright 18.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info)
+    public static bool spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, double[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, null);
+    
+        return directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, null);
     }
     
-    public static void spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, ref double[,] b, int m, out int info, alglib.xparams _params)
+    public static bool spdmatrixcholeskysolvemfast(double[,] cha, int n, bool isupper, double[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, _params);
+    
+        return directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, _params);
+    }
+            
+    public static bool spdmatrixcholeskysolvemfast(double[,] cha, bool isupper, double[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        bool result = directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool spdmatrixcholeskysolvemfast(double[,] cha, bool isupper, double[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        bool result = directdensesolvers.spdmatrixcholeskysolvemfast(cha, n, isupper, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -2048,35 +2670,56 @@ public partial class alglib
         B       -   array[N], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or ill conditioned
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         Rep     -   additional report, following fields are set:
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or indefinite matrix
                     * rep.r1    condition number in 1-norm
                     * rep.rinf  condition number in inf-norm
         X       -   array[N]:
-                    * for info>0  - solution
-                    * for info=-3 - filled by zeros
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixcholeskysolve(double[,] cha, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x)
+    public static void spdmatrixcholeskysolve(double[,] cha, int n, bool isupper, double[] b, out double[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, null);
     }
     
-    public static void spdmatrixcholeskysolve(double[,] cha, int n, bool isupper, double[] b, out int info, out densesolverreport rep, out double[] x, alglib.xparams _params)
+    public static void spdmatrixcholeskysolve(double[,] cha, int n, bool isupper, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new double[0];
-        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void spdmatrixcholeskysolve(double[,] cha, bool isupper, double[] b, out double[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spdmatrixcholeskysolve(double[,] cha, bool isupper, double[] b, out double[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolve': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        directdensesolvers.spdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -2097,28 +2740,51 @@ public partial class alglib
         B       -   array[N], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or ill conditioned
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N]:
-                    * for info>0  - overwritten by solution
-                    * for info=-3 - filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or exactly singular system
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, ref double[] b, out int info)
+    public static bool spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, double[] b)
     {
-        info = 0;
-        directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, null);
+    
+        return directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, null);
     }
     
-    public static void spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, ref double[] b, out int info, alglib.xparams _params)
+    public static bool spdmatrixcholeskysolvefast(double[,] cha, int n, bool isupper, double[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, _params);
+    
+        return directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, _params);
+    }
+            
+    public static bool spdmatrixcholeskysolvefast(double[,] cha, bool isupper, double[] b)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        bool result = directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, null);
+    
+        return result;
+    }
+            
+    public static bool spdmatrixcholeskysolvefast(double[,] cha, bool isupper, double[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'spdmatrixcholeskysolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        bool result = directdensesolvers.spdmatrixcholeskysolvefast(cha, n, isupper, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -2159,8 +2825,6 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   same as in RMatrixSolve.
-                    Returns -3 for non-HPD matrices.
         Rep     -   same as in RMatrixSolve
         X       -   same as in RMatrixSolve
 
@@ -2191,20 +2855,48 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
+    public static void hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out complex[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void hpdmatrixsolvem(complex[,] a, int n, bool isupper, complex[,] b, int m, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void hpdmatrixsolvem(complex[,] a, bool isupper, complex[,] b, out complex[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void hpdmatrixsolvem(complex[,] a, bool isupper, complex[,] b, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        m = ap.cols(b);
+        directdensesolvers.hpdmatrixsolvem(a, n, isupper, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -2224,14 +2916,13 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly  singular or is not positive definite.
-                            B is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[0..N-1]:
-                    * overwritten by solution
-                    * zeros, if problem was not solved
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or indefinite system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -2260,16 +2951,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 17.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info)
+    public static bool hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, complex[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info, null);
+    
+        return directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, null);
     }
     
-    public static void hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static bool hpdmatrixsolvemfast(complex[,] a, int n, bool isupper, complex[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, ref info, _params);
+    
+        return directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, _params);
+    }
+            
+    public static bool hpdmatrixsolvemfast(complex[,] a, bool isupper, complex[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool hpdmatrixsolvemfast(complex[,] a, bool isupper, complex[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        m = ap.cols(b);
+        bool result = directdensesolvers.hpdmatrixsolvemfast(a, n, isupper, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -2310,8 +3029,6 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   same as in RMatrixSolve
-                    Returns -3 for non-HPD matrices.
         Rep     -   same as in RMatrixSolve
         X       -   same as in RMatrixSolve
 
@@ -2342,20 +3059,44 @@ public partial class alglib
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x)
+    public static void hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out complex[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, null);
     }
     
-    public static void hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void hpdmatrixsolve(complex[,] a, int n, bool isupper, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void hpdmatrixsolve(complex[,] a, bool isupper, complex[] b, out complex[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void hpdmatrixsolve(complex[,] a, bool isupper, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(a);
+        directdensesolvers.hpdmatrixsolve(a, n, isupper, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -2375,15 +3116,13 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or not positive definite
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task was solved
         B       -   array[0..N-1]:
-                    * overwritten by solution
-                    * zeros, if A is exactly singular (diagonal of its LU
-                      decomposition has exact zeros).
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or indefinite system
 
       ! FREE EDITION OF ALGLIB:
       !
@@ -2412,16 +3151,40 @@ public partial class alglib
       -- ALGLIB --
          Copyright 17.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info)
+    public static bool hpdmatrixsolvefast(complex[,] a, int n, bool isupper, complex[] b)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info, null);
+    
+        return directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, null);
     }
     
-    public static void hpdmatrixsolvefast(complex[,] a, int n, bool isupper, ref complex[] b, out int info, alglib.xparams _params)
+    public static bool hpdmatrixsolvefast(complex[,] a, int n, bool isupper, complex[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, ref info, _params);
+    
+        return directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, _params);
+    }
+            
+    public static bool hpdmatrixsolvefast(complex[,] a, bool isupper, complex[] b)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, null);
+    
+        return result;
+    }
+            
+    public static bool hpdmatrixsolvefast(complex[,] a, bool isupper, complex[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(a)!=ap.cols(a)) || (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixsolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(a);
+        bool result = directdensesolvers.hpdmatrixsolvefast(a, n, isupper, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -2467,35 +3230,60 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS:
-        Info    -   return code:
-                    * -3    A is singular, or VERY close to singular.
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task was solved
         Rep     -   additional report, following fields are set:
-                    * rep.r1    condition number in 1-norm
-                    * rep.rinf  condition number in inf-norm
-        X       -   array[N]:
-                    * for info>0 contains solution
-                    * for info=-3 filled by zeros
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or indefinite matrix
+                    * rep.r1                condition number in 1-norm
+                    * rep.rinf              condition number in inf-norm
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x)
+    public static void hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out complex[,] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, null);
     }
     
-    public static void hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out int info, out densesolverreport rep, out complex[,] x, alglib.xparams _params)
+    public static void hpdmatrixcholeskysolvem(complex[,] cha, int n, bool isupper, complex[,] b, int m, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0,0];
-        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, _params);
+    }
+            
+    public static void hpdmatrixcholeskysolvem(complex[,] cha, bool isupper, complex[,] b, out complex[,] x, out densesolverreport rep)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void hpdmatrixcholeskysolvem(complex[,] cha, bool isupper, complex[,] b, out complex[,] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolvem': looks like one of arguments has wrong size");
+        x = new complex[0,0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        directdensesolvers.hpdmatrixcholeskysolvem(cha, n, isupper, b, m, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -2517,28 +3305,55 @@ public partial class alglib
         M       -   right part size
 
     OUTPUT PARAMETERS:
-        Info    -   return code:
-                    * -3    A is singular, or VERY close to singular.
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task was solved
         B       -   array[N]:
-                    * for info>0 overwritten by solution
-                    * for info=-3 filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or indefinite system
 
       -- ALGLIB --
          Copyright 18.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info)
+    public static bool hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, complex[,] b, int m)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, null);
+    
+        return directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, null);
     }
     
-    public static void hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, ref complex[,] b, int m, out int info, alglib.xparams _params)
+    public static bool hpdmatrixcholeskysolvemfast(complex[,] cha, int n, bool isupper, complex[,] b, int m, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, ref info, _params);
+    
+        return directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, _params);
+    }
+            
+    public static bool hpdmatrixcholeskysolvemfast(complex[,] cha, bool isupper, complex[,] b)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        bool result = directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, null);
+    
+        return result;
+    }
+            
+    public static bool hpdmatrixcholeskysolvemfast(complex[,] cha, bool isupper, complex[,] b, alglib.xparams _params)
+    {
+        int n;
+        int m;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.rows(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolvemfast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        m = ap.cols(b);
+        bool result = directdensesolvers.hpdmatrixcholeskysolvemfast(cha, n, isupper, b, m, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -2580,35 +3395,56 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or ill conditioned
-                            X is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         Rep     -   additional report, following fields are set:
-                    * rep.r1    condition number in 1-norm
-                    * rep.rinf  condition number in inf-norm
-        X       -   array[N]:
-                    * for info>0  - solution
-                    * for info=-3 - filled by zeros
+                    * rep.terminationtype   >0 for success
+                                            -3 for badly conditioned or indefinite matrix
+                    * rep.r1                condition number in 1-norm
+                    * rep.rinf              condition number in inf-norm
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0  => solution
+                    * rep.terminationtype=-3 => filled by zeros
 
       -- ALGLIB --
          Copyright 27.01.2010 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixcholeskysolve(complex[,] cha, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x)
+    public static void hpdmatrixcholeskysolve(complex[,] cha, int n, bool isupper, complex[] b, out complex[] x, out densesolverreport rep)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, null);
     }
     
-    public static void hpdmatrixcholeskysolve(complex[,] cha, int n, bool isupper, complex[] b, out int info, out densesolverreport rep, out complex[] x, alglib.xparams _params)
+    public static void hpdmatrixcholeskysolve(complex[,] cha, int n, bool isupper, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverreport();
         x = new complex[0];
-        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverreport();
+        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, _params);
+    }
+            
+    public static void hpdmatrixcholeskysolve(complex[,] cha, bool isupper, complex[] b, out complex[] x, out densesolverreport rep)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void hpdmatrixcholeskysolve(complex[,] cha, bool isupper, complex[] b, out complex[] x, out densesolverreport rep, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolve': looks like one of arguments has wrong size");
+        x = new complex[0];
+        rep = new densesolverreport();
+        n = ap.rows(cha);
+        directdensesolvers.hpdmatrixcholeskysolve(cha, n, isupper, b, ref x, rep.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -2629,28 +3465,51 @@ public partial class alglib
         B       -   array[0..N-1], right part
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -3    A is is exactly singular or ill conditioned
-                            B is filled by zeros in such cases.
-                    * -1    N<=0 was passed
-                    *  1    task is solved
         B       -   array[N]:
-                    * for info>0  - overwritten by solution
-                    * for info=-3 - filled by zeros
+                    * result=true    =>  overwritten by solution
+                    * result=false   =>  filled by zeros
+
+    RETURNS:
+        True, if the system was solved
+        False, for an extremely badly conditioned or indefinite system
 
       -- ALGLIB --
          Copyright 18.03.2015 by Bochkanov Sergey
     *************************************************************************/
-    public static void hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, ref complex[] b, out int info)
+    public static bool hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, complex[] b)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, null);
+    
+        return directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, null);
     }
     
-    public static void hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, ref complex[] b, out int info, alglib.xparams _params)
+    public static bool hpdmatrixcholeskysolvefast(complex[,] cha, int n, bool isupper, complex[] b, alglib.xparams _params)
     {
-        info = 0;
-        directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, ref info, _params);
+    
+        return directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, _params);
+    }
+            
+    public static bool hpdmatrixcholeskysolvefast(complex[,] cha, bool isupper, complex[] b)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        bool result = directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, null);
+    
+        return result;
+    }
+            
+    public static bool hpdmatrixcholeskysolvefast(complex[,] cha, bool isupper, complex[] b, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.rows(cha)!=ap.cols(cha)) || (ap.rows(cha)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'hpdmatrixcholeskysolvefast': looks like one of arguments has wrong size");
+    
+        n = ap.rows(cha);
+        bool result = directdensesolvers.hpdmatrixcholeskysolvefast(cha, n, isupper, b, _params);
+    
+        return result;
     }
     
     /*************************************************************************
@@ -2671,16 +3530,12 @@ public partial class alglib
         NRows   -   vertical size of A
         NCols   -   horizontal size of A
         B       -   array[0..NCols-1], right part
-        Threshold-  a number in [0,1]. Singular values  beyond  Threshold  are
+        Threshold-  a number in [0,1]. Singular values  beyond  Threshold*Largest are
                     considered  zero.  Set  it to 0.0, if you don't understand
                     what it means, so the solver will choose good value on its
                     own.
 
     OUTPUT PARAMETERS
-        Info    -   return code:
-                    * -4    SVD subroutine failed
-                    * -1    if NRows<=0 or NCols<=0 or Threshold<0 was passed
-                    *  1    if task is solved
         Rep     -   solver report, see below for more info
         X       -   array[0..N-1,0..M-1], it contains:
                     * solution of A*X=B (even for singular A)
@@ -2689,6 +3544,9 @@ public partial class alglib
     SOLVER REPORT
 
     Subroutine sets following fields of the Rep structure:
+    * TerminationType is set to:
+                * -4 for SVD failure
+                * >0 for success
     * R2        reciprocal of condition number: 1/cond(A), 2-norm.
     * N         = NCols
     * K         dim(Null(A))
@@ -2722,20 +3580,48 @@ public partial class alglib
       -- ALGLIB --
          Copyright 24.08.2009 by Bochkanov Sergey
     *************************************************************************/
-    public static void rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out int info, out densesolverlsreport rep, out double[] x)
+    public static void rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out double[] x, out densesolverlsreport rep)
     {
-        info = 0;
-        rep = new densesolverlsreport();
         x = new double[0];
-        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x, null);
+        rep = new densesolverlsreport();
+        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref x, rep.innerobj, null);
     }
     
-    public static void rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out int info, out densesolverlsreport rep, out double[] x, alglib.xparams _params)
+    public static void rmatrixsolvels(double[,] a, int nrows, int ncols, double[] b, double threshold, out double[] x, out densesolverlsreport rep, alglib.xparams _params)
     {
-        info = 0;
-        rep = new densesolverlsreport();
         x = new double[0];
-        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref info, rep.innerobj, ref x, _params);
+        rep = new densesolverlsreport();
+        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref x, rep.innerobj, _params);
+    }
+            
+    public static void rmatrixsolvels(double[,] a, double[] b, double threshold, out double[] x, out densesolverlsreport rep)
+    {
+        int nrows;
+        int ncols;
+        if( (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvels': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverlsreport();
+        nrows = ap.rows(a);
+        ncols = ap.cols(a);
+        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void rmatrixsolvels(double[,] a, double[] b, double threshold, out double[] x, out densesolverlsreport rep, alglib.xparams _params)
+    {
+        int nrows;
+        int ncols;
+        if( (ap.rows(a)!=ap.len(b)))
+            throw new alglibexception("Error while calling 'rmatrixsolvels': looks like one of arguments has wrong size");
+        x = new double[0];
+        rep = new densesolverlsreport();
+        nrows = ap.rows(a);
+        ncols = ap.cols(a);
+        directdensesolvers.rmatrixsolvels(a, nrows, ncols, b, threshold, ref x, rep.innerobj, _params);
+    
+        return;
     }
 
 }
@@ -5172,6 +6058,7 @@ public partial class alglib
     {
         public class densesolverreport : apobject
         {
+            public int terminationtype;
             public double r1;
             public double rinf;
             public densesolverreport()
@@ -5184,6 +6071,7 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 densesolverreport _result = new densesolverreport();
+                _result.terminationtype = terminationtype;
                 _result.r1 = r1;
                 _result.rinf = rinf;
                 return _result;
@@ -5193,6 +6081,7 @@ public partial class alglib
 
         public class densesolverlsreport : apobject
         {
+            public int terminationtype;
             public double r2;
             public double[,] cx;
             public int n;
@@ -5208,6 +6097,7 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 densesolverlsreport _result = new densesolverlsreport();
+                _result.terminationtype = terminationtype;
                 _result.r2 = r2;
                 _result.cx = (double[,])cx.Clone();
                 _result.n = n;
@@ -5252,17 +6142,14 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
-            Rep     -   additional report, following fields are set:
-                        * rep.r1    condition number in 1-norm
-                        * rep.rinf  condition number in inf-norm
+            Rep     -   additional report, the following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned matrix
+                        * rep.r1                condition number in 1-norm
+                        * rep.rinf              condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -5294,34 +6181,26 @@ public partial class alglib
         public static void rmatrixsolve(double[,] a,
             int n,
             double[] b,
-            ref int info,
-            densesolverreport rep,
             ref double[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
-            int i_ = 0;
 
-            info = 0;
             x = new double[0];
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "RMatrixSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixSolve: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixSolve: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "RMatrixSolve: length(B)<N");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n, _params), "RMatrixSolve: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "RMatrixSolve: B contains infinite or NaN values!");
             bm = new double[n, 1];
-            for(i_=0; i_<=n-1;i_++)
-            {
-                bm[i_,0] = b[i_];
-            }
-            rmatrixsolvem(a, n, bm, 1, true, ref info, rep, ref xm, _params);
+            ablasf.rcopyvc(n, b, bm, 0, _params);
+            rmatrixsolvem(a, n, bm, 1, true, ref xm, rep, _params);
             x = new double[n];
-            for(i_=0; i_<=n-1;i_++)
-            {
-                x[i_] = xm[i_,0];
-            }
+            ablasf.rcopycv(n, xm, 0, x, _params);
         }
 
 
@@ -5346,14 +6225,13 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                        * -1    N<=0 was passed
-                        *  1    task is solved 
             B       -   array[N]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+                        
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -5382,25 +6260,26 @@ public partial class alglib
           -- ALGLIB --
              Copyright 16.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void rmatrixsolvefast(double[,] a,
+        public static bool rmatrixsolvefast(double[,] a,
             int n,
             double[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
             int[] p = new int[0];
 
             a = (double[,])a.Clone();
-            info = 0;
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
-            trfac.rmatrixlu(ref a, n, n, ref p, _params);
+            alglib.ap.assert(n>0, "RMatrixSolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixSolveFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixSolveFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "RMatrixSolveFast: length(B)<N");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n, _params), "RMatrixSolveFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "RMatrixSolveFast: B contains infinite or NaN values!");
+            result = true;
+            trfac.rmatrixlu(a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( (double)(a[i,i])==(double)(0) )
@@ -5409,12 +6288,12 @@ public partial class alglib
                     {
                         b[j] = 0.0;
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             rbasiclusolve(a, p, n, b, _params);
-            info = 1;
+            return result;
         }
 
 
@@ -5460,18 +6339,14 @@ public partial class alglib
                           More performance, less precision.
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is ill conditioned or singular.
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or exactly singular matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -5505,9 +6380,8 @@ public partial class alglib
             double[,] b,
             int m,
             bool rfs,
-            ref int info,
-            densesolverreport rep,
             ref double[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] da = new double[0,0];
@@ -5516,18 +6390,16 @@ public partial class alglib
             int i = 0;
             int i_ = 0;
 
-            info = 0;
             x = new double[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "RMatrixSolveM: N<=0");
+            alglib.ap.assert(m>0, "RMatrixSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixSolveM: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixSolveM: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "RMatrixSolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "RMatrixSolveM: cols(B)<M");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n, _params), "RMatrixSolveM: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "RMatrixSolveM: B contains infinite or NaN values!");
             da = new double[n, n];
             
             //
@@ -5541,14 +6413,14 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            trfac.rmatrixlu(ref da, n, n, ref p, _params);
+            trfac.rmatrixlu(da, n, n, ref p, _params);
             if( rfs )
             {
-                rmatrixlusolveinternal(da, p, n, a, true, b, m, ref info, rep, ref x, _params);
+                rmatrixlusolveinternal(da, p, n, a, true, b, m, ref x, rep, _params);
             }
             else
             {
-                rmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
+                rmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref x, rep, _params);
             }
         }
 
@@ -5577,18 +6449,16 @@ public partial class alglib
                           More performance, less precision.
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved
             Rep     -   additional report, following fields are set:
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             B       -   array[N]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+                        
+        RETURNS:
+            True for well-conditioned matrix
+            False for extremely badly conditioned or exactly singular problem
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -5617,13 +6487,13 @@ public partial class alglib
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
         *************************************************************************/
-        public static void rmatrixsolvemfast(double[,] a,
+        public static bool rmatrixsolvemfast(double[,] a,
             int n,
             double[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             double v = 0;
             int i = 0;
             int j = 0;
@@ -5631,18 +6501,17 @@ public partial class alglib
             int[] p = new int[0];
 
             a = (double[,])a.Clone();
-            info = 0;
 
-            
-            //
-            // Check for exact degeneracy
-            //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
-            trfac.rmatrixlu(ref a, n, n, ref p, _params);
+            alglib.ap.assert(n>0, "RMatrixSolveMFast: N<=0");
+            alglib.ap.assert(m>0, "RMatrixSolveMFast: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixSolveMFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixSolveMFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "RMatrixSolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "RMatrixSolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n, _params), "RMatrixSolveMFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "RMatrixSolveMFast: B contains infinite or NaN values!");
+            result = true;
+            trfac.rmatrixlu(a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( (double)(a[i,i])==(double)(0) )
@@ -5654,8 +6523,8 @@ public partial class alglib
                             b[j,k] = 0.0;
                         }
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             
@@ -5676,7 +6545,7 @@ public partial class alglib
             }
             ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, true, 0, b, 0, 0, _params);
             ablas.rmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0, _params);
-            info = 1;
+            return result;
         }
 
 
@@ -5718,17 +6587,14 @@ public partial class alglib
             B       -   array[N], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
-            Rep     -   additional report, following fields are set:
-                        * rep.r1    condition number in 1-norm
-                        * rep.rinf  condition number in inf-norm
+            Rep     -   additional report, the following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned matrix
+                        * rep.r1                condition number in 1-norm
+                        * rep.rinf              condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
             
           -- ALGLIB --
@@ -5738,34 +6604,32 @@ public partial class alglib
             int[] p,
             int n,
             double[] b,
-            ref int info,
-            densesolverreport rep,
             ref double[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
-            int i_ = 0;
+            int i = 0;
 
-            info = 0;
             x = new double[0];
 
-            if( n<=0 )
+            alglib.ap.assert(n>0, "RMatrixLUSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "RMatrixLUSolve: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "RMatrixLUSolve: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "RMatrixLUSolve: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "RMatrixLUSolve: length(B)<N");
+            alglib.ap.assert(apserv.apservisfinitematrix(lua, n, n, _params), "RMatrixLUSolve: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "RMatrixLUSolve: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "RMatrixLUSolve: P contains values outside of [0,N)");
             }
             bm = new double[n, 1];
-            for(i_=0; i_<=n-1;i_++)
-            {
-                bm[i_,0] = b[i_];
-            }
-            rmatrixlusolvem(lua, p, n, bm, 1, ref info, rep, ref xm, _params);
+            ablasf.rcopyvc(n, b, bm, 0, _params);
+            rmatrixlusolvem(lua, p, n, bm, 1, ref xm, rep, _params);
             x = new double[n];
-            for(i_=0; i_<=n-1;i_++)
-            {
-                x[i_] = xm[i_,0];
-            }
+            ablasf.rcopycv(n, xm, 0, x, _params);
         }
 
 
@@ -5788,35 +6652,38 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved 
             B       -   array[N]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
+
 
           -- ALGLIB --
              Copyright 18.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void rmatrixlusolvefast(double[,] lua,
+        public static bool rmatrixlusolvefast(double[,] lua,
             int[] p,
             int n,
             double[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
 
-            info = 0;
-
-            if( n<=0 )
+            alglib.ap.assert(n>0, "RMatrixLUSolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "RMatrixLUSolveFast: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "RMatrixLUSolveFast: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "RMatrixLUSolveFast: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "RMatrixLUSolveFast: length(B)<N");
+            alglib.ap.assert(apserv.apservisfinitematrix(lua, n, n, _params), "RMatrixLUSolveFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "RMatrixLUSolveFast: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "RMatrixLUSolve: P contains values outside of [0,N)");
             }
             for(i=0; i<=n-1; i++)
             {
@@ -5826,12 +6693,13 @@ public partial class alglib
                     {
                         b[j] = 0.0;
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
+            result = true;
             rbasiclusolve(lua, p, n, b, _params);
-            info = 1;
+            return result;
         }
 
 
@@ -5875,18 +6743,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
-                        * rep.r1    condition number in 1-norm
-                        * rep.rinf  condition number in inf-norm
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned matrix
+                        * rep.r1                condition number in 1-norm
+                        * rep.rinf              condition number in inf-norm
             X       -   array[N,M], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -5920,30 +6784,29 @@ public partial class alglib
             int n,
             double[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref double[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] emptya = new double[0,0];
+            int i = 0;
 
-            info = 0;
             x = new double[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
+            alglib.ap.assert(n>0, "RMatrixLUSolveM: N<=0");
+            alglib.ap.assert(m>0, "RMatrixLUSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "RMatrixLUSolveM: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "RMatrixLUSolveM: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "RMatrixLUSolveM: length(P)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "RMatrixLUSolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "RMatrixLUSolveM: cols(B)<M");
+            alglib.ap.assert(apserv.apservisfinitematrix(lua, n, n, _params), "RMatrixLUSolveM: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "RMatrixLUSolveM: LUA contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "RMatrixLUSolve: P contains values outside of [0,N)");
             }
-            
-            //
-            // solve
-            //
-            rmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
+            rmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref x, rep, _params);
         }
 
 
@@ -5968,14 +6831,13 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS:
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                        * -1    N<=0 was passed
-                        *  1    task is solved
             B       -   array[N,M]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -6004,29 +6866,35 @@ public partial class alglib
           -- ALGLIB --
              Copyright 18.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void rmatrixlusolvemfast(double[,] lua,
+        public static bool rmatrixlusolvemfast(double[,] lua,
             int[] p,
             int n,
             double[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             double v = 0;
             int i = 0;
             int j = 0;
             int k = 0;
 
-            info = 0;
-
             
             //
             // Check for exact degeneracy
             //
-            if( n<=0 || m<=0 )
+            alglib.ap.assert(n>0, "RMatrixLUSolveMFast: N<=0");
+            alglib.ap.assert(m>0, "RMatrixLUSolveMFast: M<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "RMatrixLUSolveMFast: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "RMatrixLUSolveMFast: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "RMatrixLUSolveMFast: length(P)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "RMatrixLUSolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "RMatrixLUSolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.apservisfinitematrix(lua, n, n, _params), "RMatrixLUSolveMFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "RMatrixLUSolveMFast: LUA contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "RMatrixLUSolve: P contains values outside of [0,N)");
             }
             for(i=0; i<=n-1; i++)
             {
@@ -6039,10 +6907,11 @@ public partial class alglib
                             b[j,k] = 0.0;
                         }
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
+            result = true;
             
             //
             // Solve with TRSM()
@@ -6061,7 +6930,7 @@ public partial class alglib
             }
             ablas.rmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, b, 0, 0, _params);
             ablas.rmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, b, 0, 0, _params);
-            info = 1;
+            return result;
         }
 
 
@@ -6086,17 +6955,14 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -6106,34 +6972,35 @@ public partial class alglib
             int[] p,
             int n,
             double[] b,
-            ref int info,
-            densesolverreport rep,
             ref double[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
-            int i_ = 0;
+            int i = 0;
 
-            info = 0;
             x = new double[0];
 
-            if( n<=0 )
+            alglib.ap.assert(n>0, "RMatrixMixedSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixMixedSolve: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixMixedSolve: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "RMatrixMixedSolve: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "RMatrixMixedSolve: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "RMatrixMixedSolve: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "RMatrixMixedSolve: length(B)<N");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n, _params), "RMatrixMixedSolve: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(lua, n, n, _params), "RMatrixMixedSolve: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "RMatrixMixedSolve: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "RMatrixLUSolve: P contains values outside of [0,N)");
             }
             bm = new double[n, 1];
-            for(i_=0; i_<=n-1;i_++)
-            {
-                bm[i_,0] = b[i_];
-            }
-            rmatrixmixedsolvem(a, lua, p, n, bm, 1, ref info, rep, ref xm, _params);
+            ablasf.rcopyvc(n, b, bm, 0, _params);
+            rmatrixmixedsolvem(a, lua, p, n, bm, 1, ref xm, rep, _params);
             x = new double[n];
-            for(i_=0; i_<=n-1;i_++)
-            {
-                x[i_] = xm[i_,0];
-            }
+            ablasf.rcopycv(n, xm, 0, x, _params);
         }
 
 
@@ -6158,17 +7025,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N,M], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -6179,28 +7043,31 @@ public partial class alglib
             int n,
             double[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref double[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
-            info = 0;
+            int i = 0;
+
             x = new double[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
+            alglib.ap.assert(n>0, "RMatrixMixedSolveM: N<=0");
+            alglib.ap.assert(m>0, "RMatrixMixedSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "RMatrixMixedSolve: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "RMatrixMixedSolve: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "RMatrixMixedSolve: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "RMatrixMixedSolve: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "RMatrixMixedSolve: length(P)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "RMatrixMixedSolve: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "RMatrixMixedSolve: cols(B)<M");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, n, n, _params), "RMatrixMixedSolve: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(lua, n, n, _params), "RMatrixMixedSolve: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "RMatrixMixedSolve: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "RMatrixLUSolve: P contains values outside of [0,N)");
             }
-            
-            //
-            // solve
-            //
-            rmatrixlusolveinternal(lua, p, n, a, true, b, m, ref info, rep, ref x, _params);
+            rmatrixlusolveinternal(lua, p, n, a, true, b, m, ref x, rep, _params);
         }
 
 
@@ -6244,18 +7111,14 @@ public partial class alglib
                           More performance, less precision.
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or exactly singular matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N,M], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -6289,9 +7152,8 @@ public partial class alglib
             complex[,] b,
             int m,
             bool rfs,
-            ref int info,
-            densesolverreport rep,
             ref complex[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] da = new complex[0,0];
@@ -6300,18 +7162,16 @@ public partial class alglib
             int i = 0;
             int i_ = 0;
 
-            info = 0;
             x = new complex[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "CMatrixSolveM: N<=0");
+            alglib.ap.assert(m>0, "CMatrixSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixSolveM: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixSolveM: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "CMatrixSolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "CMatrixSolveM: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitecmatrix(a, n, n, _params), "CMatrixSolveM: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "CMatrixSolveM: B contains infinite or NaN values!");
             da = new complex[n, n];
             
             //
@@ -6324,14 +7184,14 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            trfac.cmatrixlu(ref da, n, n, ref p, _params);
+            trfac.cmatrixlu(da, n, n, ref p, _params);
             if( rfs )
             {
-                cmatrixlusolveinternal(da, p, n, a, true, b, m, ref info, rep, ref x, _params);
+                cmatrixlusolveinternal(da, p, n, a, true, b, m, ref x, rep, _params);
             }
             else
             {
-                cmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
+                cmatrixlusolveinternal(da, p, n, emptya, false, b, m, ref x, rep, _params);
             }
         }
 
@@ -6353,14 +7213,13 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS:
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                        * -1    N<=0 was passed
-                        *  1    task is solved 
             B       -   array[N,M]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -6389,13 +7248,13 @@ public partial class alglib
           -- ALGLIB --
              Copyright 16.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void cmatrixsolvemfast(complex[,] a,
+        public static bool cmatrixsolvemfast(complex[,] a,
             int n,
             complex[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             complex v = 0;
             int i = 0;
             int j = 0;
@@ -6403,18 +7262,20 @@ public partial class alglib
             int[] p = new int[0];
 
             a = (complex[,])a.Clone();
-            info = 0;
 
+            alglib.ap.assert(n>0, "CMatrixSolveMFast: N<=0");
+            alglib.ap.assert(m>0, "CMatrixSolveMFast: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixSolveMFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixSolveMFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "CMatrixSolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "CMatrixSolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitecmatrix(a, n, n, _params), "CMatrixSolveMFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "CMatrixSolveMFast: B contains infinite or NaN values!");
             
             //
             // Check for exact degeneracy
             //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
-            trfac.cmatrixlu(ref a, n, n, ref p, _params);
+            trfac.cmatrixlu(a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( a[i,i]==0 )
@@ -6426,10 +7287,11 @@ public partial class alglib
                             b[j,k] = 0.0;
                         }
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
+            result = true;
             
             //
             // Solve with TRSM()
@@ -6448,7 +7310,7 @@ public partial class alglib
             }
             ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, true, 0, b, 0, 0, _params);
             ablas.cmatrixlefttrsm(n, m, a, 0, 0, true, false, 0, b, 0, 0, _params);
-            info = 1;
+            return result;
         }
 
 
@@ -6484,17 +7346,14 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or exactly singular matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -6526,29 +7385,28 @@ public partial class alglib
         public static void cmatrixsolve(complex[,] a,
             int n,
             complex[] b,
-            ref int info,
-            densesolverreport rep,
             ref complex[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
             int i_ = 0;
 
-            info = 0;
             x = new complex[0];
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "CMatrixSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixSolve: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixSolve: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "CMatrixSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitecmatrix(a, n, n, _params), "CMatrixSolve: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "CMatrixSolve: B contains infinite or NaN values!");
             bm = new complex[n, 1];
             for(i_=0; i_<=n-1;i_++)
             {
                 bm[i_,0] = b[i_];
             }
-            cmatrixsolvem(a, n, bm, 1, true, ref info, rep, ref xm, _params);
+            cmatrixsolvem(a, n, bm, 1, true, ref xm, rep, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -6571,14 +7429,13 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS:
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                        * -1    N<=0 was passed
-                        *  1    task is solved 
             B       -   array[N]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -6607,25 +7464,25 @@ public partial class alglib
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
         *************************************************************************/
-        public static void cmatrixsolvefast(complex[,] a,
+        public static bool cmatrixsolvefast(complex[,] a,
             int n,
             complex[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
             int[] p = new int[0];
 
             a = (complex[,])a.Clone();
-            info = 0;
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
-            trfac.cmatrixlu(ref a, n, n, ref p, _params);
+            alglib.ap.assert(n>0, "CMatrixSolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixSolveFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixSolveFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "CMatrixSolveFast: length(B)<N");
+            alglib.ap.assert(apserv.isfinitecmatrix(a, n, n, _params), "CMatrixSolveFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "CMatrixSolveFast: B contains infinite or NaN values!");
+            trfac.cmatrixlu(a, n, n, ref p, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( a[i,i]==0 )
@@ -6634,12 +7491,13 @@ public partial class alglib
                     {
                         b[j] = 0.0;
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             cbasiclusolve(a, p, n, b, _params);
-            info = 1;
+            result = true;
+            return result;
         }
 
 
@@ -6679,17 +7537,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or exactly singular matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N,M], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -6723,30 +7578,29 @@ public partial class alglib
             int n,
             complex[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref complex[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] emptya = new complex[0,0];
+            int i = 0;
 
-            info = 0;
             x = new complex[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
+            alglib.ap.assert(n>0, "CMatrixLUSolveM: N<=0");
+            alglib.ap.assert(m>0, "CMatrixLUSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "CMatrixLUSolveM: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "CMatrixLUSolveM: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "CMatrixLUSolveM: length(P)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "CMatrixLUSolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "CMatrixLUSolveM: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitecmatrix(lua, n, n, _params), "CMatrixLUSolveM: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "CMatrixLUSolveM: LUA contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "CMatrixLUSolveM: P contains values outside of [0,N)");
             }
-            
-            //
-            // solve
-            //
-            cmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref info, rep, ref x, _params);
+            cmatrixlusolveinternal(lua, p, n, emptya, false, b, m, ref x, rep, _params);
         }
 
 
@@ -6767,14 +7621,13 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                        * -1    N<=0 was passed
-                        *  1    task is solved 
             B       -   array[N,M]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -6803,30 +7656,36 @@ public partial class alglib
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
         *************************************************************************/
-        public static void cmatrixlusolvemfast(complex[,] lua,
+        public static bool cmatrixlusolvemfast(complex[,] lua,
             int[] p,
             int n,
             complex[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             complex v = 0;
             int i = 0;
             int j = 0;
             int k = 0;
 
-            info = 0;
-
+            alglib.ap.assert(n>0, "CMatrixLUSolveMFast: N<=0");
+            alglib.ap.assert(m>0, "CMatrixLUSolveMFast: M<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "CMatrixLUSolveMFast: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "CMatrixLUSolveMFast: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "CMatrixLUSolveMFast: length(P)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "CMatrixLUSolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "CMatrixLUSolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitecmatrix(lua, n, n, _params), "CMatrixLUSolveMFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "CMatrixLUSolveMFast: LUA contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
+            {
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "RMatrixLUSolve: P contains values outside of [0,N)");
+            }
             
             //
             // Check for exact degeneracy
             //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
             for(i=0; i<=n-1; i++)
             {
                 if( lua[i,i]==0 )
@@ -6838,10 +7697,11 @@ public partial class alglib
                             b[j,k] = 0.0;
                         }
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
+            result = true;
             
             //
             // Solve with TRSM()
@@ -6860,7 +7720,7 @@ public partial class alglib
             }
             ablas.cmatrixlefttrsm(n, m, lua, 0, 0, false, true, 0, b, 0, 0, _params);
             ablas.cmatrixlefttrsm(n, m, lua, 0, 0, true, false, 0, b, 0, 0, _params);
-            info = 1;
+            return result;
         }
 
 
@@ -6901,17 +7761,14 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or exactly singular matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -6920,29 +7777,34 @@ public partial class alglib
             int[] p,
             int n,
             complex[] b,
-            ref int info,
-            densesolverreport rep,
             ref complex[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
+            int i = 0;
             int i_ = 0;
 
-            info = 0;
             x = new complex[0];
 
-            if( n<=0 )
+            alglib.ap.assert(n>0, "CMatrixLUSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "CMatrixLUSolve: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "CMatrixLUSolve: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "CMatrixLUSolve: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "CMatrixLUSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitecmatrix(lua, n, n, _params), "CMatrixLUSolve: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "CMatrixLUSolve: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "CMatrixLUSolve: P contains values outside of [0,N)");
             }
             bm = new complex[n, 1];
             for(i_=0; i_<=n-1;i_++)
             {
                 bm[i_,0] = b[i_];
             }
-            cmatrixlusolvem(lua, p, n, bm, 1, ref info, rep, ref xm, _params);
+            cmatrixlusolvem(lua, p, n, bm, 1, ref xm, rep, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -6968,14 +7830,9 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is exactly singular (ill conditioned matrices
-                                are not recognized).
-                        * -1    N<=0 was passed
-                        *  1    task is solved 
             B       -   array[N]:
-                        * info>0    =>  overwritten by solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
             
         NOTE: unlike  CMatrixLUSolve(),  this   function   does   NOT   check  for
               near-degeneracy of input matrix. It  checks  for  EXACT  degeneracy,
@@ -6986,22 +7843,26 @@ public partial class alglib
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
         *************************************************************************/
-        public static void cmatrixlusolvefast(complex[,] lua,
+        public static bool cmatrixlusolvefast(complex[,] lua,
             int[] p,
             int n,
             complex[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
 
-            info = 0;
-
-            if( n<=0 )
+            alglib.ap.assert(n>0, "CMatrixLUSolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "CMatrixLUSolveFast: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "CMatrixLUSolveFast: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "CMatrixLUSolveFast: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "CMatrixLUSolveFast: length(B)<N");
+            alglib.ap.assert(apserv.isfinitecmatrix(lua, n, n, _params), "CMatrixLUSolveFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "CMatrixLUSolveFast: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "CMatrixLUSolveFast: P contains values outside of [0,N)");
             }
             for(i=0; i<=n-1; i++)
             {
@@ -7011,12 +7872,13 @@ public partial class alglib
                     {
                         b[j] = 0.0;
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             cbasiclusolve(lua, p, n, b, _params);
-            info = 1;
+            result = true;
+            return result;
         }
 
 
@@ -7038,17 +7900,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or exactly singular matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N,M], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -7059,28 +7918,31 @@ public partial class alglib
             int n,
             complex[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref complex[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
-            info = 0;
+            int i = 0;
+
             x = new complex[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
+            alglib.ap.assert(n>0, "CMatrixMixedSolveM: N<=0");
+            alglib.ap.assert(m>0, "CMatrixMixedSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixMixedSolveM: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixMixedSolveM: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "CMatrixMixedSolveM: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "CMatrixMixedSolveM: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "CMatrixMixedSolveM: length(P)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "CMatrixMixedSolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "CMatrixMixedSolveM: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitecmatrix(a, n, n, _params), "CMatrixMixedSolveM: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(lua, n, n, _params), "CMatrixMixedSolveM: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "CMatrixMixedSolveM: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "CMatrixMixedSolveM: P contains values outside of [0,N)");
             }
-            
-            //
-            // solve
-            //
-            cmatrixlusolveinternal(lua, p, n, a, true, b, m, ref info, rep, ref x, _params);
+            cmatrixlusolveinternal(lua, p, n, a, true, b, m, ref x, rep, _params);
         }
 
 
@@ -7101,17 +7963,14 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or exactly singular.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or exactly singular matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -7121,29 +7980,37 @@ public partial class alglib
             int[] p,
             int n,
             complex[] b,
-            ref int info,
-            densesolverreport rep,
             ref complex[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
+            int i = 0;
             int i_ = 0;
 
-            info = 0;
             x = new complex[0];
 
-            if( n<=0 )
+            alglib.ap.assert(n>0, "CMatrixMixedSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "CMatrixMixedSolve: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "CMatrixMixedSolve: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(lua)>=n, "CMatrixMixedSolve: rows(LUA)<N");
+            alglib.ap.assert(alglib.ap.cols(lua)>=n, "CMatrixMixedSolve: cols(LUA)<N");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "CMatrixMixedSolve: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "CMatrixMixedSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitecmatrix(a, n, n, _params), "CMatrixMixedSolve: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(lua, n, n, _params), "CMatrixMixedSolve: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "CMatrixMixedSolve: B contains infinite or NaN values!");
+            for(i=0; i<=n-1; i++)
             {
-                info = -1;
-                return;
+                alglib.ap.assert(p[i]>=0 && p[i]<n, "CMatrixMixedSolve: P contains values outside of [0,N)");
             }
             bm = new complex[n, 1];
             for(i_=0; i_<=n-1;i_++)
             {
                 bm[i_,0] = b[i_];
             }
-            cmatrixmixedsolvem(a, lua, p, n, bm, 1, ref info, rep, ref xm, _params);
+            cmatrixmixedsolvem(a, lua, p, n, bm, 1, ref xm, rep, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -7190,17 +8057,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or non-SPD.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or indefinite matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N,M], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -7234,9 +8098,8 @@ public partial class alglib
             bool isupper,
             double[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref double[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] da = new double[0,0];
@@ -7246,18 +8109,16 @@ public partial class alglib
             int j2 = 0;
             int i_ = 0;
 
-            info = 0;
             x = new double[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "SPDMatrixSolveM: N<=0");
+            alglib.ap.assert(m>0, "SPDMatrixSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixSolveM: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixSolveM: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "SPDMatrixSolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "SPDMatrixSolveM: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper, _params), "SPDMatrixSolveM: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "SPDMatrixSolveM: B contains infinite or NaN values!");
             da = new double[n, n];
             
             //
@@ -7281,7 +8142,7 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            if( !trfac.spdmatrixcholesky(ref da, n, isupper, _params) )
+            if( !trfac.spdmatrixcholesky(da, n, isupper, _params) )
             {
                 x = new double[n, m];
                 for(i=0; i<=n-1; i++)
@@ -7293,11 +8154,11 @@ public partial class alglib
                 }
                 rep.r1 = 0;
                 rep.rinf = 0;
-                info = -3;
+                rep.terminationtype = -3;
                 return;
             }
-            info = 1;
-            spdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref info, rep, ref x, _params);
+            rep.terminationtype = 1;
+            spdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref x, rep, _params);
         }
 
 
@@ -7318,13 +8179,13 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular
-                        * -1    N<=0 was passed
-                        *  1    task was solved
             B       -   array[N,M], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -7353,27 +8214,28 @@ public partial class alglib
           -- ALGLIB --
              Copyright 17.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void spdmatrixsolvemfast(double[,] a,
+        public static bool spdmatrixsolvemfast(double[,] a,
             int n,
             bool isupper,
             double[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
 
             a = (double[,])a.Clone();
-            info = 0;
 
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
-            if( !trfac.spdmatrixcholesky(ref a, n, isupper, _params) )
+            alglib.ap.assert(n>0, "SPDMatrixSolveMFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixSolveMFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixSolveMFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "SPDMatrixSolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "SPDMatrixSolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper, _params), "SPDMatrixSolveMFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "SPDMatrixSolveMFast: B contains infinite or NaN values!");
+            result = true;
+            if( !trfac.spdmatrixcholesky(a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -7382,8 +8244,8 @@ public partial class alglib
                         b[i,j] = 0.0;
                     }
                 }
-                info = -3;
-                return;
+                result = false;
+                return result;
             }
             if( isupper )
             {
@@ -7395,6 +8257,7 @@ public partial class alglib
                 ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, false, 0, b, 0, 0, _params);
                 ablas.rmatrixlefttrsm(n, m, a, 0, 0, false, false, 1, b, 0, 0, _params);
             }
+            return result;
         }
 
 
@@ -7436,17 +8299,14 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    matrix is very badly conditioned or non-SPD.
-                        * -1    N<=0 was passed
-                        *  1    task is solved (but matrix A may be ill-conditioned,
-                                check R1/RInf parameters for condition numbers).
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or indefinite matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -7479,29 +8339,28 @@ public partial class alglib
             int n,
             bool isupper,
             double[] b,
-            ref int info,
-            densesolverreport rep,
             ref double[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
             int i_ = 0;
 
-            info = 0;
             x = new double[0];
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "SPDMatrixSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixSolve: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixSolve: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SPDMatrixSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper, _params), "SPDMatrixSolve: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SPDMatrixSolve: B contains infinite or NaN values!");
             bm = new double[n, 1];
             for(i_=0; i_<=n-1;i_++)
             {
                 bm[i_,0] = b[i_];
             }
-            spdmatrixsolvem(a, n, isupper, bm, 1, ref info, rep, ref xm, _params);
+            spdmatrixsolvem(a, n, isupper, bm, 1, ref xm, rep, _params);
             x = new double[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -7527,13 +8386,13 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or non-SPD
-                        * -1    N<=0 was passed
-                        *  1    task was solved
             B       -   array[N], it contains:
-                        * info>0    =>  solution
-                        * info=-3   =>  filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -7562,34 +8421,35 @@ public partial class alglib
           -- ALGLIB --
              Copyright 17.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void spdmatrixsolvefast(double[,] a,
+        public static bool spdmatrixsolvefast(double[,] a,
             int n,
             bool isupper,
             double[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
 
             a = (double[,])a.Clone();
-            info = 0;
 
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
-            if( !trfac.spdmatrixcholesky(ref a, n, isupper, _params) )
+            alglib.ap.assert(n>0, "SPDMatrixSolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "SPDMatrixSolveFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SPDMatrixSolveFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SPDMatrixSolveFast: length(B)<N");
+            alglib.ap.assert(apserv.isfinitertrmatrix(a, n, isupper, _params), "SPDMatrixSolveFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SPDMatrixSolveFast: B contains infinite or NaN values!");
+            result = true;
+            if( !trfac.spdmatrixcholesky(a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
                     b[i] = 0.0;
                 }
-                info = -3;
-                return;
+                result = false;
+                return result;
             }
             spdbasiccholeskysolve(a, n, isupper, b, _params);
+            return result;
         }
 
 
@@ -7635,17 +8495,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or badly conditioned
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task was solved
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or indefinite matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N]:
-                        * for info>0 contains solution
-                        * for info=-3 filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -7655,30 +8512,23 @@ public partial class alglib
             bool isupper,
             double[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref double[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] emptya = new double[0,0];
 
-            info = 0;
             x = new double[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
-            
-            //
-            // solve
-            //
-            spdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref info, rep, ref x, _params);
+            alglib.ap.assert(n>0, "SPDMatrixCholeskySolveM: N<=0");
+            alglib.ap.assert(m>0, "SPDMatrixCholeskySolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "SPDMatrixCholeskySolveM: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "SPDMatrixCholeskySolveM: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "SPDMatrixCholeskySolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "SPDMatrixCholeskySolveM: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitertrmatrix(cha, n, isupper, _params), "SPDMatrixCholeskySolveM: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "SPDMatrixCholeskySolveM: LUA contains infinite or NaN values!");
+            spdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref x, rep, _params);
         }
 
 
@@ -7702,38 +8552,38 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or badly conditioned
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task was solved
             B       -   array[N]:
-                        * for info>0 overwritten by solution
-                        * for info=-3 filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
 
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
+            
           -- ALGLIB --
              Copyright 18.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void spdmatrixcholeskysolvemfast(double[,] cha,
+        public static bool spdmatrixcholeskysolvemfast(double[,] cha,
             int n,
             bool isupper,
             double[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
             int k = 0;
 
-            info = 0;
-
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "SPDMatrixCholeskySolveMFast: N<=0");
+            alglib.ap.assert(m>0, "SPDMatrixCholeskySolveMFast: M<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "SPDMatrixCholeskySolveMFast: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "SPDMatrixCholeskySolveMFast: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "SPDMatrixCholeskySolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "SPDMatrixCholeskySolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitertrmatrix(cha, n, isupper, _params), "SPDMatrixCholeskySolveMFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.apservisfinitematrix(b, n, m, _params), "SPDMatrixCholeskySolveMFast: LUA contains infinite or NaN values!");
+            result = true;
             for(k=0; k<=n-1; k++)
             {
                 if( (double)(cha[k,k])==(double)(0.0) )
@@ -7745,8 +8595,8 @@ public partial class alglib
                             b[i,j] = 0.0;
                         }
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             if( isupper )
@@ -7759,6 +8609,7 @@ public partial class alglib
                 ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, b, 0, 0, _params);
                 ablas.rmatrixlefttrsm(n, m, cha, 0, 0, false, false, 1, b, 0, 0, _params);
             }
+            return result;
         }
 
 
@@ -7801,17 +8652,14 @@ public partial class alglib
             B       -   array[N], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or ill conditioned
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved
             Rep     -   additional report, following fields are set:
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or indefinite matrix
                         * rep.r1    condition number in 1-norm
                         * rep.rinf  condition number in inf-norm
             X       -   array[N]:
-                        * for info>0  - solution
-                        * for info=-3 - filled by zeros
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -7820,29 +8668,28 @@ public partial class alglib
             int n,
             bool isupper,
             double[] b,
-            ref int info,
-            densesolverreport rep,
             ref double[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             double[,] bm = new double[0,0];
             double[,] xm = new double[0,0];
             int i_ = 0;
 
-            info = 0;
             x = new double[0];
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "SPDMatrixCholeskySolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "SPDMatrixCholeskySolve: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "SPDMatrixCholeskySolve: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SPDMatrixCholeskySolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitertrmatrix(cha, n, isupper, _params), "SPDMatrixCholeskySolve: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SPDMatrixCholeskySolve: B contains infinite or NaN values!");
             bm = new double[n, 1];
             for(i_=0; i_<=n-1;i_++)
             {
                 bm[i_,0] = b[i_];
             }
-            spdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref info, rep, ref xm, _params);
+            spdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref xm, rep, _params);
             x = new double[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -7869,36 +8716,34 @@ public partial class alglib
             B       -   array[N], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or ill conditioned
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved
             B       -   array[N]:
-                        * for info>0  - overwritten by solution
-                        * for info=-3 - filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
 
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or exactly singular system
+            
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
         *************************************************************************/
-        public static void spdmatrixcholeskysolvefast(double[,] cha,
+        public static bool spdmatrixcholeskysolvefast(double[,] cha,
             int n,
             bool isupper,
             double[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int k = 0;
 
-            info = 0;
-
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "SPDMatrixCholeskySolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "SPDMatrixCholeskySolveFast: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "SPDMatrixCholeskySolveFast: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SPDMatrixCholeskySolveFast: length(B)<N");
+            alglib.ap.assert(apserv.isfinitertrmatrix(cha, n, isupper, _params), "SPDMatrixCholeskySolveFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SPDMatrixCholeskySolveFast: B contains infinite or NaN values!");
+            result = true;
             for(k=0; k<=n-1; k++)
             {
                 if( (double)(cha[k,k])==(double)(0.0) )
@@ -7907,11 +8752,12 @@ public partial class alglib
                     {
                         b[i] = 0.0;
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             spdbasiccholeskysolve(cha, n, isupper, b, _params);
+            return result;
         }
 
 
@@ -7953,8 +8799,6 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   same as in RMatrixSolve.
-                        Returns -3 for non-HPD matrices.
             Rep     -   same as in RMatrixSolve
             X       -   same as in RMatrixSolve
 
@@ -7990,9 +8834,8 @@ public partial class alglib
             bool isupper,
             complex[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref complex[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] da = new complex[0,0];
@@ -8002,18 +8845,16 @@ public partial class alglib
             int j2 = 0;
             int i_ = 0;
 
-            info = 0;
             x = new complex[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "HPDMatrixSolveM: N<=0");
+            alglib.ap.assert(m>0, "HPDMatrixSolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "HPDMatrixSolveM: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "HPDMatrixSolveM: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "HPDMatrixSolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "HPDMatrixSolveM: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitectrmatrix(a, n, isupper, _params), "HPDMatrixSolveM: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "HPDMatrixSolveM: B contains infinite or NaN values!");
             da = new complex[n, n];
             
             //
@@ -8036,7 +8877,7 @@ public partial class alglib
                     da[i,i_] = a[i,i_];
                 }
             }
-            if( !trfac.hpdmatrixcholesky(ref da, n, isupper, _params) )
+            if( !trfac.hpdmatrixcholesky(da, n, isupper, _params) )
             {
                 x = new complex[n, m];
                 for(i=0; i<=n-1; i++)
@@ -8048,11 +8889,11 @@ public partial class alglib
                 }
                 rep.r1 = 0;
                 rep.rinf = 0;
-                info = -3;
+                rep.terminationtype = -3;
                 return;
             }
-            info = 1;
-            hpdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref info, rep, ref x, _params);
+            rep.terminationtype = 1;
+            hpdmatrixcholeskysolveinternal(da, n, isupper, a, true, b, m, ref x, rep, _params);
         }
 
 
@@ -8073,15 +8914,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly  singular or is not positive definite.
-                                B is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved
             B       -   array[0..N-1]:
-                        * overwritten by solution
-                        * zeros, if problem was not solved
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
 
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or indefinite system
+            
           ! FREE EDITION OF ALGLIB:
           ! 
           ! Free Edition of ALGLIB supports following important features for  this
@@ -8109,27 +8949,28 @@ public partial class alglib
           -- ALGLIB --
              Copyright 17.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void hpdmatrixsolvemfast(complex[,] a,
+        public static bool hpdmatrixsolvemfast(complex[,] a,
             int n,
             bool isupper,
             complex[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
 
             a = (complex[,])a.Clone();
-            info = 0;
 
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
-            if( !trfac.hpdmatrixcholesky(ref a, n, isupper, _params) )
+            alglib.ap.assert(n>0, "HPDMatrixSolveMFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "HPDMatrixSolveMFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "HPDMatrixSolveMFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "HPDMatrixSolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "HPDMatrixSolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitectrmatrix(a, n, isupper, _params), "HPDMatrixSolveMFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "HPDMatrixSolveMFast: B contains infinite or NaN values!");
+            result = true;
+            if( !trfac.hpdmatrixcholesky(a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
@@ -8138,8 +8979,8 @@ public partial class alglib
                         b[i,j] = 0.0;
                     }
                 }
-                info = -3;
-                return;
+                result = false;
+                return result;
             }
             if( isupper )
             {
@@ -8151,6 +8992,7 @@ public partial class alglib
                 ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, false, 0, b, 0, 0, _params);
                 ablas.cmatrixlefttrsm(n, m, a, 0, 0, false, false, 2, b, 0, 0, _params);
             }
+            return result;
         }
 
 
@@ -8192,8 +9034,6 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   same as in RMatrixSolve
-                        Returns -3 for non-HPD matrices.
             Rep     -   same as in RMatrixSolve
             X       -   same as in RMatrixSolve
 
@@ -8228,29 +9068,28 @@ public partial class alglib
             int n,
             bool isupper,
             complex[] b,
-            ref int info,
-            densesolverreport rep,
             ref complex[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
             int i_ = 0;
 
-            info = 0;
             x = new complex[0];
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "HPDMatrixSolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "HPDMatrixSolve: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "HPDMatrixSolve: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "HPDMatrixSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitectrmatrix(a, n, isupper, _params), "HPDMatrixSolve: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "HPDMatrixSolve: B contains infinite or NaN values!");
             bm = new complex[n, 1];
             for(i_=0; i_<=n-1;i_++)
             {
                 bm[i_,0] = b[i_];
             }
-            hpdmatrixsolvem(a, n, isupper, bm, 1, ref info, rep, ref xm, _params);
+            hpdmatrixsolvem(a, n, isupper, bm, 1, ref xm, rep, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -8276,15 +9115,13 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or not positive definite
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task was solved 
             B       -   array[0..N-1]:
-                        * overwritten by solution
-                        * zeros, if A is exactly singular (diagonal of its LU
-                          decomposition has exact zeros).
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or indefinite system
 
           ! FREE EDITION OF ALGLIB:
           ! 
@@ -8313,34 +9150,35 @@ public partial class alglib
           -- ALGLIB --
              Copyright 17.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void hpdmatrixsolvefast(complex[,] a,
+        public static bool hpdmatrixsolvefast(complex[,] a,
             int n,
             bool isupper,
             complex[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
 
             a = (complex[,])a.Clone();
-            info = 0;
 
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
-            if( !trfac.hpdmatrixcholesky(ref a, n, isupper, _params) )
+            alglib.ap.assert(n>0, "HPDMatrixSolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=n, "HPDMatrixSolveFast: rows(A)<N");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "HPDMatrixSolveFast: cols(A)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "HPDMatrixSolveFast: length(B)<N");
+            alglib.ap.assert(apserv.isfinitectrmatrix(a, n, isupper, _params), "HPDMatrixSolveFast: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "HPDMatrixSolveFast: B contains infinite or NaN values!");
+            result = true;
+            if( !trfac.hpdmatrixcholesky(a, n, isupper, _params) )
             {
                 for(i=0; i<=n-1; i++)
                 {
                     b[i] = 0.0;
                 }
-                info = -3;
-                return;
+                result = false;
+                return result;
             }
             hpdbasiccholeskysolve(a, n, isupper, b, _params);
+            return result;
         }
 
 
@@ -8387,17 +9225,14 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS:
-            Info    -   return code:
-                        * -3    A is singular, or VERY close to singular.
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task was solved
             Rep     -   additional report, following fields are set:
-                        * rep.r1    condition number in 1-norm
-                        * rep.rinf  condition number in inf-norm
-            X       -   array[N]:
-                        * for info>0 contains solution
-                        * for info=-3 filled by zeros
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or indefinite matrix
+                        * rep.r1                condition number in 1-norm
+                        * rep.rinf              condition number in inf-norm
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -8407,32 +9242,23 @@ public partial class alglib
             bool isupper,
             complex[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref complex[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] emptya = new complex[0,0];
 
-            info = 0;
             x = new complex[0,0];
 
-            
-            //
-            // prepare: check inputs, allocate space...
-            //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
-            
-            //
-            // 1. scale matrix, max(|U[i,j]|)
-            // 2. factorize scaled matrix
-            // 3. solve
-            //
-            hpdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref info, rep, ref x, _params);
+            alglib.ap.assert(n>0, "HPDMatrixCholeskySolveM: N<=0");
+            alglib.ap.assert(m>0, "HPDMatrixCholeskySolveM: M<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "HPDMatrixCholeskySolveM: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "HPDMatrixCholeskySolveM: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "HPDMatrixCholeskySolveM: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "HPDMatrixCholeskySolveM: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitectrmatrix(cha, n, isupper, _params), "HPDMatrixCholeskySolveM: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "HPDMatrixCholeskySolveM: LUA contains infinite or NaN values!");
+            hpdmatrixcholeskysolveinternal(cha, n, isupper, emptya, false, b, m, ref x, rep, _params);
         }
 
 
@@ -8455,38 +9281,38 @@ public partial class alglib
             M       -   right part size
 
         OUTPUT PARAMETERS:
-            Info    -   return code:
-                        * -3    A is singular, or VERY close to singular.
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task was solved
             B       -   array[N]:
-                        * for info>0 overwritten by solution
-                        * for info=-3 filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or indefinite system
 
           -- ALGLIB --
              Copyright 18.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void hpdmatrixcholeskysolvemfast(complex[,] cha,
+        public static bool hpdmatrixcholeskysolvemfast(complex[,] cha,
             int n,
             bool isupper,
             complex[,] b,
             int m,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int j = 0;
             int k = 0;
 
-            info = 0;
-
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "HPDMatrixCholeskySolveMFast: N<=0");
+            alglib.ap.assert(m>0, "HPDMatrixCholeskySolveMFast: M<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "HPDMatrixCholeskySolveMFast: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "HPDMatrixCholeskySolveMFast: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.rows(b)>=n, "HPDMatrixCholeskySolveMFast: rows(B)<N");
+            alglib.ap.assert(alglib.ap.cols(b)>=m, "HPDMatrixCholeskySolveMFast: cols(B)<M");
+            alglib.ap.assert(apserv.isfinitectrmatrix(cha, n, isupper, _params), "HPDMatrixCholeskySolveMFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecmatrix(b, n, m, _params), "HPDMatrixCholeskySolveMFast: LUA contains infinite or NaN values!");
+            result = true;
             for(k=0; k<=n-1; k++)
             {
                 if( (double)(cha[k,k].x)==(double)(0.0) && (double)(cha[k,k].y)==(double)(0.0) )
@@ -8498,8 +9324,8 @@ public partial class alglib
                             b[i,j] = 0.0;
                         }
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             if( isupper )
@@ -8512,6 +9338,7 @@ public partial class alglib
                 ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 0, b, 0, 0, _params);
                 ablas.cmatrixlefttrsm(n, m, cha, 0, 0, false, false, 2, b, 0, 0, _params);
             }
+            return result;
         }
 
 
@@ -8554,17 +9381,14 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or ill conditioned
-                                X is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved
             Rep     -   additional report, following fields are set:
-                        * rep.r1    condition number in 1-norm
-                        * rep.rinf  condition number in inf-norm
-            X       -   array[N]:
-                        * for info>0  - solution
-                        * for info=-3 - filled by zeros
+                        * rep.terminationtype   >0 for success
+                                                -3 for badly conditioned or indefinite matrix
+                        * rep.r1                condition number in 1-norm
+                        * rep.rinf              condition number in inf-norm
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0  => solution
+                        * rep.terminationtype=-3 => filled by zeros
 
           -- ALGLIB --
              Copyright 27.01.2010 by Bochkanov Sergey
@@ -8573,29 +9397,28 @@ public partial class alglib
             int n,
             bool isupper,
             complex[] b,
-            ref int info,
-            densesolverreport rep,
             ref complex[] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             complex[,] bm = new complex[0,0];
             complex[,] xm = new complex[0,0];
             int i_ = 0;
 
-            info = 0;
             x = new complex[0];
 
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "HPDMatrixCholeskySolve: N<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "HPDMatrixCholeskySolve: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "HPDMatrixCholeskySolve: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "HPDMatrixCholeskySolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitectrmatrix(cha, n, isupper, _params), "HPDMatrixCholeskySolve: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "HPDMatrixCholeskySolve: B contains infinite or NaN values!");
             bm = new complex[n, 1];
             for(i_=0; i_<=n-1;i_++)
             {
                 bm[i_,0] = b[i_];
             }
-            hpdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref info, rep, ref xm, _params);
+            hpdmatrixcholeskysolvem(cha, n, isupper, bm, 1, ref xm, rep, _params);
             x = new complex[n];
             for(i_=0; i_<=n-1;i_++)
             {
@@ -8622,36 +9445,34 @@ public partial class alglib
             B       -   array[0..N-1], right part
 
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -3    A is is exactly singular or ill conditioned
-                                B is filled by zeros in such cases.
-                        * -1    N<=0 was passed
-                        *  1    task is solved
             B       -   array[N]:
-                        * for info>0  - overwritten by solution
-                        * for info=-3 - filled by zeros
+                        * result=true    =>  overwritten by solution
+                        * result=false   =>  filled by zeros
+
+        RETURNS:
+            True, if the system was solved
+            False, for an extremely badly conditioned or indefinite system
 
           -- ALGLIB --
              Copyright 18.03.2015 by Bochkanov Sergey
         *************************************************************************/
-        public static void hpdmatrixcholeskysolvefast(complex[,] cha,
+        public static bool hpdmatrixcholeskysolvefast(complex[,] cha,
             int n,
             bool isupper,
             complex[] b,
-            ref int info,
             alglib.xparams _params)
         {
+            bool result = new bool();
             int i = 0;
             int k = 0;
 
-            info = 0;
-
-            info = 1;
-            if( n<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0, "HPDMatrixCholeskySolveFast: N<=0");
+            alglib.ap.assert(alglib.ap.rows(cha)>=n, "HPDMatrixCholeskySolveFast: rows(CHA)<N");
+            alglib.ap.assert(alglib.ap.cols(cha)>=n, "HPDMatrixCholeskySolveFast: cols(CHA)<N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "HPDMatrixCholeskySolveFast: length(B)<N");
+            alglib.ap.assert(apserv.isfinitectrmatrix(cha, n, isupper, _params), "HPDMatrixCholeskySolveFast: LUA contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitecvector(b, n, _params), "HPDMatrixCholeskySolveFast: B contains infinite or NaN values!");
+            result = true;
             for(k=0; k<=n-1; k++)
             {
                 if( (double)(cha[k,k].x)==(double)(0.0) && (double)(cha[k,k].y)==(double)(0.0) )
@@ -8660,11 +9481,12 @@ public partial class alglib
                     {
                         b[i] = 0.0;
                     }
-                    info = -3;
-                    return;
+                    result = false;
+                    return result;
                 }
             }
             hpdbasiccholeskysolve(cha, n, isupper, b, _params);
+            return result;
         }
 
 
@@ -8686,16 +9508,12 @@ public partial class alglib
             NRows   -   vertical size of A
             NCols   -   horizontal size of A
             B       -   array[0..NCols-1], right part
-            Threshold-  a number in [0,1]. Singular values  beyond  Threshold  are
+            Threshold-  a number in [0,1]. Singular values  beyond  Threshold*Largest are
                         considered  zero.  Set  it to 0.0, if you don't understand
                         what it means, so the solver will choose good value on its
                         own.
                         
         OUTPUT PARAMETERS
-            Info    -   return code:
-                        * -4    SVD subroutine failed
-                        * -1    if NRows<=0 or NCols<=0 or Threshold<0 was passed
-                        *  1    if task is solved
             Rep     -   solver report, see below for more info
             X       -   array[0..N-1,0..M-1], it contains:
                         * solution of A*X=B (even for singular A)
@@ -8704,6 +9522,9 @@ public partial class alglib
         SOLVER REPORT
 
         Subroutine sets following fields of the Rep structure:
+        * TerminationType is set to:
+                    * -4 for SVD failure
+                    * >0 for success
         * R2        reciprocal of condition number: 1/cond(A), 2-norm.
         * N         = NCols
         * K         dim(Null(A))
@@ -8742,9 +9563,8 @@ public partial class alglib
             int ncols,
             double[] b,
             double threshold,
-            ref int info,
-            densesolverlsreport rep,
             ref double[] x,
+            densesolverlsreport rep,
             alglib.xparams _params)
         {
             double[] sv = new double[0];
@@ -8772,14 +9592,16 @@ public partial class alglib
             bool smallerr = new bool();
             int i_ = 0;
 
-            info = 0;
             x = new double[0];
 
-            if( (nrows<=0 || ncols<=0) || (double)(threshold)<(double)(0) )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(nrows>0, "RMatrixSolveLS: NRows<=0");
+            alglib.ap.assert(ncols>0, "RMatrixSolveLS: NCols<=0");
+            alglib.ap.assert(math.isfinite(threshold) && (double)(threshold)>=(double)(0), "RMatrixSolveLS: Threshold<0 or is infinite");
+            alglib.ap.assert(alglib.ap.rows(a)>=nrows, "RMatrixSolveLS: rows(A)<NRows");
+            alglib.ap.assert(alglib.ap.cols(a)>=ncols, "RMatrixSolveLS: cols(A)<NCols");
+            alglib.ap.assert(alglib.ap.len(b)>=nrows, "RMatrixSolveLS: length(B)<NRows");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, nrows, ncols, _params), "RMatrixSolveLS: A contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(b, nrows, _params), "RMatrixSolveLS: B contains infinite or NaN values!");
             if( (double)(threshold)==(double)(0) )
             {
                 threshold = 1000*math.machineepsilon;
@@ -8794,11 +9616,11 @@ public partial class alglib
             {
                 if( svdfailed )
                 {
-                    info = -4;
+                    rep.terminationtype = -4;
                 }
                 else
                 {
-                    info = 1;
+                    rep.terminationtype = 1;
                 }
                 x = new double[ncols];
                 for(i=0; i<=ncols-1; i++)
@@ -8835,7 +9657,7 @@ public partial class alglib
                 rep.r2 = 0;
             }
             rep.n = ncols;
-            info = 1;
+            rep.terminationtype = 1;
             
             //
             // Iterative refinement of xc combined with solution:
@@ -8993,9 +9815,8 @@ public partial class alglib
             bool havea,
             double[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref double[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             int i = 0;
@@ -9016,25 +9837,16 @@ public partial class alglib
             bool terminatenexttime = new bool();
             int i_ = 0;
 
-            info = 0;
             x = new double[0,0];
 
             
             //
             // prepare: check inputs, allocate space...
             //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0 && m>0, "RMatrixLUSolveInternal: integrity check 7656 failed");
             for(i=0; i<=n-1; i++)
             {
-                if( p[i]>n-1 || p[i]<i )
-                {
-                    info = -1;
-                    return;
-                }
+                alglib.ap.assert(p[i]<=n-1 && p[i]>=i, "RMatrixLUSolveInternal: incorrect pivot, P[i]<i or P[i]>=N");
             }
             x = new double[n, m];
             y = new double[n];
@@ -9049,6 +9861,7 @@ public partial class alglib
             //
             rep.r1 = rcond.rmatrixlurcond1(lua, n, _params);
             rep.rinf = rcond.rmatrixlurcondinf(lua, n, _params);
+            rep.terminationtype = 1;
             if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) || (double)(rep.rinf)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
@@ -9060,10 +9873,9 @@ public partial class alglib
                 }
                 rep.r1 = 0;
                 rep.rinf = 0;
-                info = -3;
+                rep.terminationtype = -3;
                 return;
             }
-            info = 1;
             
             //
             // First stage of solution: rough solution with TRSM()
@@ -9161,26 +9973,20 @@ public partial class alglib
             bool havea,
             double[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref double[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             int i = 0;
             int j = 0;
 
-            info = 0;
             x = new double[0,0];
 
             
             //
             // prepare: check inputs, allocate space...
             //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0 && m>0, "SPDMatrixCholeskySolveInternal: integrity check 9858 failed");
             x = new double[n, m];
             
             //
@@ -9188,6 +9994,7 @@ public partial class alglib
             //
             rep.r1 = rcond.spdmatrixcholeskyrcond(cha, n, isupper, _params);
             rep.rinf = rep.r1;
+            rep.terminationtype = 1;
             if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
@@ -9199,10 +10006,9 @@ public partial class alglib
                 }
                 rep.r1 = 0;
                 rep.rinf = 0;
-                info = -3;
+                rep.terminationtype = -3;
                 return;
             }
-            info = 1;
             
             //
             // Solve with TRSM()
@@ -9240,9 +10046,8 @@ public partial class alglib
             bool havea,
             complex[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref complex[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             int i = 0;
@@ -9263,25 +10068,16 @@ public partial class alglib
             bool terminatenexttime = new bool();
             int i_ = 0;
 
-            info = 0;
             x = new complex[0,0];
 
             
             //
             // prepare: check inputs, allocate space...
             //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
+            alglib.ap.assert(n>0 && m>0, "CMatrixLUSolveInternal: integrity check 9302 failed");
             for(i=0; i<=n-1; i++)
             {
-                if( p[i]>n-1 || p[i]<i )
-                {
-                    info = -1;
-                    return;
-                }
+                alglib.ap.assert(p[i]<=n-1 && p[i]>=i, "CMatrixLUSolveInternal: incorrect pivot P[i]<i or P[I]>=N");
             }
             x = new complex[n, m];
             y = new complex[n];
@@ -9297,6 +10093,7 @@ public partial class alglib
             //
             rep.r1 = rcond.cmatrixlurcond1(lua, n, _params);
             rep.rinf = rcond.cmatrixlurcondinf(lua, n, _params);
+            rep.terminationtype = 1;
             if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) || (double)(rep.rinf)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
@@ -9308,10 +10105,9 @@ public partial class alglib
                 }
                 rep.r1 = 0;
                 rep.rinf = 0;
-                info = -3;
+                rep.terminationtype = -3;
                 return;
             }
-            info = 1;
             
             //
             // First phase: solve with TRSM()
@@ -9434,9 +10230,8 @@ public partial class alglib
             bool havea,
             complex[,] b,
             int m,
-            ref int info,
-            densesolverreport rep,
             ref complex[,] x,
+            densesolverreport rep,
             alglib.xparams _params)
         {
             int i = 0;
@@ -9448,18 +10243,12 @@ public partial class alglib
             complex[] xb = new complex[0];
             complex[] tx = new complex[0];
 
-            info = 0;
             x = new complex[0,0];
 
             
             //
             // prepare: check inputs, allocate space...
             //
-            if( n<=0 || m<=0 )
-            {
-                info = -1;
-                return;
-            }
             x = new complex[n, m];
             y = new complex[n];
             xc = new complex[n];
@@ -9473,6 +10262,7 @@ public partial class alglib
             //
             rep.r1 = rcond.hpdmatrixcholeskyrcond(cha, n, isupper, _params);
             rep.rinf = rep.r1;
+            rep.terminationtype = 1;
             if( (double)(rep.r1)<(double)(rcond.rcondthreshold(_params)) )
             {
                 for(i=0; i<=n-1; i++)
@@ -9484,10 +10274,9 @@ public partial class alglib
                 }
                 rep.r1 = 0;
                 rep.rinf = 0;
-                info = -3;
+                rep.terminationtype = -3;
                 return;
             }
-            info = 1;
             
             //
             // solve
@@ -11370,9 +12159,9 @@ public partial class alglib
             else
             {
                 outeridx = 359;
-                res = -58;
-                prevres = -919;
-                res0 = -909;
+                res = -58.0;
+                prevres = -919.0;
+                res0 = -909.0;
             }
             if( state.rstate.stage==0 )
             {
@@ -12001,9 +12790,9 @@ public partial class alglib
             else
             {
                 i = 359;
-                uvar = -58;
-                bnorm = -919;
-                v = -909;
+                uvar = -58.0;
+                bnorm = -919.0;
+                v = -909.0;
             }
             if( state.rstate.stage==0 )
             {
@@ -13156,7 +13945,7 @@ public partial class alglib
             {
                 summn = 359;
                 i = -58;
-                bnorm = -919;
+                bnorm = -919.0;
             }
             if( state.rstate.stage==0 )
             {
@@ -14292,12 +15081,12 @@ public partial class alglib
                 m = -58;
                 i = -919;
                 b = true;
-                lambdaup = 81;
-                lambdadown = 255;
-                lambdav = 74;
-                rho = -788;
-                mu = 809;
-                stepnorm = 205;
+                lambdaup = 81.0;
+                lambdadown = 255.0;
+                lambdav = 74.0;
+                rho = -788.0;
+                mu = 809.0;
+                stepnorm = 205.0;
             }
             if( state.rstate.stage==0 )
             {

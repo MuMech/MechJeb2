@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 3.19.0 (source code generated 2022-06-07)
+ALGLIB 4.00.0 (source code generated 2023-05-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -17,9 +17,11 @@ A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
+#pragma warning disable 1691
 #pragma warning disable 162
 #pragma warning disable 164
 #pragma warning disable 219
+#pragma warning disable 8981
 using System;
 
 public partial class alglib
@@ -55,36 +57,36 @@ public partial class alglib
       -- ALGLIB --
          Copyright 29.05.2009 by Bochkanov Sergey
     *************************************************************************/
-    public static void fftc1d(ref complex[] a, int n)
+    public static void fftc1d(complex[] a, int n)
     {
     
-        fft.fftc1d(ref a, n, null);
+        fft.fftc1d(a, n, null);
     }
     
-    public static void fftc1d(ref complex[] a, int n, alglib.xparams _params)
+    public static void fftc1d(complex[] a, int n, alglib.xparams _params)
     {
     
-        fft.fftc1d(ref a, n, _params);
+        fft.fftc1d(a, n, _params);
     }
             
-    public static void fftc1d(ref complex[] a)
+    public static void fftc1d(complex[] a)
     {
         int n;
     
     
         n = ap.len(a);
-        fft.fftc1d(ref a, n, null);
+        fft.fftc1d(a, n, null);
     
         return;
     }
             
-    public static void fftc1d(ref complex[] a, alglib.xparams _params)
+    public static void fftc1d(complex[] a, alglib.xparams _params)
     {
         int n;
     
     
         n = ap.len(a);
-        fft.fftc1d(ref a, n, _params);
+        fft.fftc1d(a, n, _params);
     
         return;
     }
@@ -109,36 +111,36 @@ public partial class alglib
       -- ALGLIB --
          Copyright 29.05.2009 by Bochkanov Sergey
     *************************************************************************/
-    public static void fftc1dinv(ref complex[] a, int n)
+    public static void fftc1dinv(complex[] a, int n)
     {
     
-        fft.fftc1dinv(ref a, n, null);
+        fft.fftc1dinv(a, n, null);
     }
     
-    public static void fftc1dinv(ref complex[] a, int n, alglib.xparams _params)
+    public static void fftc1dinv(complex[] a, int n, alglib.xparams _params)
     {
     
-        fft.fftc1dinv(ref a, n, _params);
+        fft.fftc1dinv(a, n, _params);
     }
             
-    public static void fftc1dinv(ref complex[] a)
+    public static void fftc1dinv(complex[] a)
     {
         int n;
     
     
         n = ap.len(a);
-        fft.fftc1dinv(ref a, n, null);
+        fft.fftc1dinv(a, n, null);
     
         return;
     }
             
-    public static void fftc1dinv(ref complex[] a, alglib.xparams _params)
+    public static void fftc1dinv(complex[] a, alglib.xparams _params)
     {
         int n;
     
     
         n = ap.len(a);
-        fft.fftc1dinv(ref a, n, _params);
+        fft.fftc1dinv(a, n, _params);
     
         return;
     }
@@ -291,16 +293,16 @@ public partial class alglib
       -- ALGLIB --
          Copyright 04.06.2009 by Bochkanov Sergey
     *************************************************************************/
-    public static void fhtr1d(ref double[] a, int n)
+    public static void fhtr1d(double[] a, int n)
     {
     
-        fht.fhtr1d(ref a, n, null);
+        fht.fhtr1d(a, n, null);
     }
     
-    public static void fhtr1d(ref double[] a, int n, alglib.xparams _params)
+    public static void fhtr1d(double[] a, int n, alglib.xparams _params)
     {
     
-        fht.fhtr1d(ref a, n, _params);
+        fht.fhtr1d(a, n, _params);
     }
     
     /*************************************************************************
@@ -319,16 +321,16 @@ public partial class alglib
       -- ALGLIB --
          Copyright 29.05.2009 by Bochkanov Sergey
     *************************************************************************/
-    public static void fhtr1dinv(ref double[] a, int n)
+    public static void fhtr1dinv(double[] a, int n)
     {
     
-        fht.fhtr1dinv(ref a, n, null);
+        fht.fhtr1dinv(a, n, null);
     }
     
-    public static void fhtr1dinv(ref double[] a, int n, alglib.xparams _params)
+    public static void fhtr1dinv(double[] a, int n, alglib.xparams _params)
     {
     
-        fht.fhtr1dinv(ref a, n, _params);
+        fht.fhtr1dinv(a, n, _params);
     }
 
 }
@@ -850,7 +852,7 @@ public partial class alglib
           -- ALGLIB --
              Copyright 29.05.2009 by Bochkanov Sergey
         *************************************************************************/
-        public static void fftc1d(ref complex[] a,
+        public static void fftc1d(complex[] a,
             int n,
             alglib.xparams _params)
         {
@@ -922,7 +924,7 @@ public partial class alglib
           -- ALGLIB --
              Copyright 29.05.2009 by Bochkanov Sergey
         *************************************************************************/
-        public static void fftc1dinv(ref complex[] a,
+        public static void fftc1dinv(complex[] a,
             int n,
             alglib.xparams _params)
         {
@@ -943,7 +945,7 @@ public partial class alglib
             {
                 a[i].y = -a[i].y;
             }
-            fftc1d(ref a, n, _params);
+            fftc1d(a, n, _params);
             for(i=0; i<=n-1; i++)
             {
                 a[i].x = a[i].x/n;
@@ -1067,7 +1069,7 @@ public partial class alglib
                 {
                     f[i] = a[i];
                 }
-                fftc1d(ref f, n, _params);
+                fftc1d(f, n, _params);
             }
         }
 
@@ -1329,7 +1331,7 @@ public partial class alglib
           -- ALGLIB --
              Copyright 04.06.2009 by Bochkanov Sergey
         *************************************************************************/
-        public static void fhtr1d(ref double[] a,
+        public static void fhtr1d(double[] a,
             int n,
             alglib.xparams _params)
         {
@@ -1374,7 +1376,7 @@ public partial class alglib
           -- ALGLIB --
              Copyright 29.05.2009 by Bochkanov Sergey
         *************************************************************************/
-        public static void fhtr1dinv(ref double[] a,
+        public static void fhtr1dinv(double[] a,
             int n,
             alglib.xparams _params)
         {
@@ -1396,7 +1398,7 @@ public partial class alglib
             //
             //     invfht(x) = fht(x)/N
             //
-            fhtr1d(ref a, n, _params);
+            fhtr1d(a, n, _params);
             for(i=0; i<=n-1; i++)
             {
                 a[i] = a[i]/n;
@@ -2538,7 +2540,7 @@ public partial class alglib
                 {
                     bbuf[j] = 0;
                 }
-                fft.fftc1d(ref bbuf, q+n-1, _params);
+                fft.fftc1d(bbuf, q+n-1, _params);
                 
                 //
                 // prepare FFT plan for chunks of A

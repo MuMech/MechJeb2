@@ -947,7 +947,7 @@ namespace MuMech
             }
             alglib.minqpstate state;
             alglib.minqpcreate(n, out state);
-            alglib.minqpsetquadraticterm(state, a);
+            alglib.minqpsetquadraticterm(state, a, false);
             alglib.minqpsetlinearterm(state, b);
             alglib.minqpsetbc(state, boundL, boundU);
             alglib.minqpsetalgobleic(state, 0.0, 0.0, 0.0, 0);

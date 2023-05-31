@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 3.19.0 (source code generated 2022-06-07)
+ALGLIB 4.00.0 (source code generated 2023-05-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -24,6 +24,8 @@ using Avx2 = System.Runtime.Intrinsics.X86.Avx2;
 using Fma  = System.Runtime.Intrinsics.X86.Fma;
 using Intrinsics = System.Runtime.Intrinsics;
 #endif
+#pragma warning disable 1691
+#pragma warning disable 8981
 using System;
 public partial class alglib
 {
@@ -671,136 +673,6 @@ public partial class alglib
             }
             return "{" + String.Join(",", result) + "}";
         }
-
-        /****************************************************************
-        checks that matrix is symmetric.
-        max|A-A^T| is calculated; if it is within 1.0E-14 of max|A|,
-        matrix is considered symmetric
-        ****************************************************************/
-        public static bool issymmetric(double[,] a)
-        {
-            int i, j, n;
-            double err, mx, v1, v2;
-            if( rows(a)!=cols(a) )
-                return false;
-            n = rows(a);
-            if( n==0 )
-                return true;
-            mx = 0;
-            err = 0;
-            for( i=0; i<n; i++)
-            {
-                for(j=i+1; j<n; j++)
-                {
-                    v1 = a[i,j];
-                    v2 = a[j,i];
-                    if( !math.isfinite(v1) )
-                        return false;
-                    if( !math.isfinite(v2) )
-                        return false;
-                    err = Math.Max(err, Math.Abs(v1-v2));
-                    mx  = Math.Max(mx,  Math.Abs(v1));
-                    mx  = Math.Max(mx,  Math.Abs(v2));
-                }
-                v1 = a[i,i];
-                if( !math.isfinite(v1) )
-                    return false;
-                mx = Math.Max(mx, Math.Abs(v1));
-            }
-            if( mx==0 )
-                return true;
-            return err/mx<=1.0E-14;
-        }
-        
-        /****************************************************************
-        checks that matrix is Hermitian.
-        max|A-A^H| is calculated; if it is within 1.0E-14 of max|A|,
-        matrix is considered Hermitian
-        ****************************************************************/
-        public static bool ishermitian(complex[,] a)
-        {
-            int i, j, n;
-            double err, mx;
-            complex v1, v2, vt;
-            if( rows(a)!=cols(a) )
-                return false;
-            n = rows(a);
-            if( n==0 )
-                return true;
-            mx = 0;
-            err = 0;
-            for( i=0; i<n; i++)
-            {
-                for(j=i+1; j<n; j++)
-                {
-                    v1 = a[i,j];
-                    v2 = a[j,i];
-                    if( !math.isfinite(v1.x) )
-                        return false;
-                    if( !math.isfinite(v1.y) )
-                        return false;
-                    if( !math.isfinite(v2.x) )
-                        return false;
-                    if( !math.isfinite(v2.y) )
-                        return false;
-                    vt.x = v1.x-v2.x;
-                    vt.y = v1.y+v2.y;
-                    err = Math.Max(err, math.abscomplex(vt));
-                    mx  = Math.Max(mx,  math.abscomplex(v1));
-                    mx  = Math.Max(mx,  math.abscomplex(v2));
-                }
-                v1 = a[i,i];
-                if( !math.isfinite(v1.x) )
-                    return false;
-                if( !math.isfinite(v1.y) )
-                    return false;
-                err = Math.Max(err, Math.Abs(v1.y));
-                mx = Math.Max(mx, math.abscomplex(v1));
-            }
-            if( mx==0 )
-                return true;
-            return err/mx<=1.0E-14;
-        }
-        
-        
-        /****************************************************************
-        Forces symmetricity by copying upper half of A to the lower one
-        ****************************************************************/
-        public static bool forcesymmetric(double[,] a)
-        {
-            int i, j, n;
-            if( rows(a)!=cols(a) )
-                return false;
-            n = rows(a);
-            if( n==0 )
-                return true;
-            for( i=0; i<n; i++)
-                for(j=i+1; j<n; j++)
-                    a[i,j] = a[j,i];
-            return true;
-        }
-        
-        /****************************************************************
-        Forces Hermiticity by copying upper half of A to the lower one
-        ****************************************************************/
-        public static bool forcehermitian(complex[,] a)
-        {
-            int i, j, n;
-            complex v;
-            if( rows(a)!=cols(a) )
-                return false;
-            n = rows(a);
-            if( n==0 )
-                return true;
-            for( i=0; i<n; i++)
-                for(j=i+1; j<n; j++)
-                {
-                    v = a[j,i];
-                    a[i,j].x = v.x;
-                    a[i,j].y = -v.y;
-                }
-            return true;
-        }
         
         /********************************************************************
         Tracing and logging
@@ -855,6 +727,226 @@ public partial class alglib
                 return;
             }
         }
+        
+        /********************************************************************
+        array of objects and related functions
+        ********************************************************************/
+        public class objarray : apobject
+        {
+            /* lock object which protects array */
+            private smp.ae_lock array_lock;
+        
+            /* elements count */
+            private int cnt;
+        
+            /* storage size */
+            private int capacity;
+        
+            /* whether capacity can be automatically increased or not */
+            private bool fixed_capacity;
+        
+            /* pointers to objects */
+            private apobject[] arr;
+        
+            public objarray()
+            {
+                init();
+            }
+            
+            public override void init()
+            {
+                cnt = 0;
+                capacity = 0;
+                fixed_capacity = false;
+                arr = null;
+                smp.ae_init_lock(ref array_lock);
+            }
+            
+            public override apobject make_copy()
+            {
+                int i;
+                objarray result = new objarray();
+                result.cnt = cnt;
+                result.capacity = capacity;
+                result.fixed_capacity = fixed_capacity;
+                AE_CRITICAL_ASSERT(cnt<=capacity);
+                if( result.capacity>0 )
+                {
+                    result.arr = new apobject[result.capacity];
+                    for(i=0; i<result.cnt; i++)
+                        result.arr[i] = arr[i].make_copy();
+                }
+                return result;
+            }
+
+
+            /************************************************************************
+            This function clears dynamic objects array.
+
+            After call to this function all objects managed by array are destroyed and
+            their memory is freed. Array capacity does not change.
+
+            NOTE: this function is thread-unsafe.
+            ************************************************************************/
+            public void clear()
+            {
+                int i;
+                for(i=0; i<cnt; i++)
+                    arr[i] = null;
+                cnt = 0;
+            }
+
+            /************************************************************************
+            Internal function which modifies array capacity, ignoring fixed_capacity
+            flag.
+            ************************************************************************/
+            void _set_capacity(int new_capacity)
+            {
+                int i;
+                
+                /* integrity checks */
+                ap.assert(cnt<=new_capacity, "objarray._set_capacity: new capacity is less than present size");
+                
+                /* quick exit */
+                if( cnt==new_capacity )
+                    return;
+                 
+                /* increase capacity */
+                capacity = new_capacity;
+                     
+                /* allocate new memory, copy data */
+                apobject[] new_arr = new apobject[new_capacity];
+                for(i=0; i<cnt; i++)
+                    new_arr[i] = arr[i];
+                arr = new_arr;
+            }
+
+            /************************************************************************
+            This function sets array into special fixed capacity  mode  which  allows
+            concurrent appends, writes and reads to be performed.
+
+            new_capacity        new capacity, must be at least equal to current length.
+
+            On output:
+            * array capacity increased to new_capacity exactly
+            * all present elements are retained
+            * if array size already exceeds new_capacity, an exception is generated
+            ************************************************************************/
+            public void set_fixed_capacity(int new_capacity)
+            {
+                ap.assert(cnt<=new_capacity, "objarray.set_fixed_capacity: new capacity is less than present size");
+                _set_capacity(new_capacity);
+                fixed_capacity = true;
+            }
+
+            /************************************************************************
+            get length
+            ************************************************************************/
+            public int getlength()
+            {
+                return cnt;
+            }
+
+            /************************************************************************
+            This function retrieves element from the array and assigns it to PTR.
+
+            arr                 array.
+            idx                 element index
+            ptr                 assign target
+
+            On output:
+            * pointer with index idx is assigned to PTR
+            * out-of-bounds access will result in exception being generated
+            ************************************************************************/
+            public void get<T>(int idx, ref T ptr) where T : alglib.apobject
+            {
+                if( idx<0 || idx>=cnt )
+                    ap.assert(false, "ObjArray: out of bounds read access was performed");
+                ptr = (T)arr[idx];
+            }
+
+
+            /************************************************************************
+            This function atomically appends object  to arr, increasing array  length
+            by 1 and returns index of the element being added.
+
+            arr                 array.
+            ptr                 object reference
+
+            Notes:
+            * if array has fixed capacity and its size is already at  its  limit,  an
+              exception will be generated
+            * ptr can be null
+
+            This function is partially thread-safe:
+            * parallel threads can concurrently append elements using this function
+            * for fixed-capacity arrays it is possible to combine appends with reads,
+              e.g. to use ae_obj_array_get()
+            ************************************************************************/
+            public int append(apobject ptr)
+            {
+                int result;
+                
+                /* initial integrity checks */
+                ap.assert(!fixed_capacity || cnt<capacity, "objarray.append: unable to append, all capacity is used up");
+                
+                /* get primary lock */
+                smp.ae_acquire_lock(array_lock);
+                try
+                {
+                    /* reallocate if needed */
+                    if( cnt==capacity )
+                    {
+                        /* one more integrity check */
+                        AE_CRITICAL_ASSERT(!fixed_capacity);
+                        
+                        /* increase capacity */
+                        _set_capacity(2*capacity+8);
+                    }
+                    
+                    /* append ptr */
+                    arr[cnt] = ptr;
+                
+                    /* issue memory fence (necessary for correct ae_obj_array_get_length) and increase array size */
+                    System.Threading.Thread.MemoryBarrier();
+                    result = cnt;
+                    cnt = result+1;
+                }
+                finally
+                {
+                    /* release primary lock */
+                    smp.ae_release_lock(array_lock);
+                }
+                
+                /* done */
+                return result;
+            }
+
+            /************************************************************************
+            This function sets idx-th element of array to ptr.
+
+            Notes:
+            * array size must be  at  least  idx+1,  an  exception will be generated
+              otherwise
+            * ptr can be null
+            * this function does NOT change array size and capacity
+
+            This function is partially thread-safe: it is  safe  as  long  as  array
+            capacity is not changed by concurrently called functions.
+
+            idx                 element index
+            ptr                 object
+
+            ************************************************************************/
+            public void rewrite(int idx, apobject ptr)
+            {
+                /* initial integrity checks */
+                if( idx<0 || idx>=cnt )
+                    ap.assert(false, "objarray.rewrite: out of bounds idx");
+                arr[idx] = ptr;
+            }
+        }
+
     };
     
     /********************************************************************
@@ -2391,12 +2483,18 @@ public partial class alglib
 
         pool                pool
 
-        NOTE: this function is NOT thread-safe. It does not acquire pool lock, so
-              you should NOT call it when lock can be used by another thread.
+        NOTE: this function is thread-safe.
         ************************************************************************/
         public static void ae_shared_pool_clear_recycled(shared_pool pool)
         {
+            /* acquire lock */
+            ae_acquire_lock(pool.pool_lock);
+            
+            /* drop recycled objects list */
             pool.recycled_objects = null;
+            
+            /* release lock object */
+            ae_release_lock(pool.pool_lock);
         }
 
 
@@ -2493,6 +2591,22 @@ public partial class alglib
             pool.enumeration_counter = null;
         }
     }
+    
+    /*************************************************************************
+    APSERV overrides
+    *************************************************************************/
+    #if ALGLIB_NO_FAST_KERNELS==false
+    public partial class apserv
+    {
+        /*************************************************************************
+        Maximum concurrency on given system, with given compilation settings
+        *************************************************************************/
+        public static int maxconcurrency(alglib.xparams _params)
+        {
+            return System.Environment.ProcessorCount;
+        }
+    }
+    #endif
 }
 #if ALGLIB_NO_FAST_KERNELS==false
 #if ALGLIB_USE_SIMD && !_ALGLIB_ALREADY_DEFINED_SIMD_ALIASES
@@ -7244,6 +7358,382 @@ public partial class alglib
             }
             result = true;
             return result;
+        }
+    }
+        
+    /*************************************************************************
+    RBF far field expansion kernels
+    *************************************************************************/
+    public partial class rbfv3farfields
+    {
+        /*************************************************************************
+        Fast kernel for biharmonic panel with NY=1
+
+        INPUT PARAMETERS:
+            D0, D1, D2      -   evaluation point minus (Panel.C0,Panel.C1,Panel.C2)
+
+        OUTPUT PARAMETERS:
+            F               -   model value
+            InvPowRPPlus1   -   1/(R^(P+1))
+
+          -- ALGLIB --
+             Copyright 19.11.2022 by Sergey Bochkanov
+        *************************************************************************/
+        #if ALGLIB_USE_SIMD
+        private static unsafe bool try_bhpaneleval1fastkernel(double d0,
+            double d1,
+            double d2,
+            int panelp,
+            double* pnma,
+            double* pnmb,
+            double* pmmcdiag,
+            double* ynma,
+            double* tblrmodmn,
+            out double f,
+            out double invpowrpplus1)
+        {
+            f = 0;
+            invpowrpplus1 = 0;
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            //#if !ALGLIB_NO_FMA
+            //if( Fma.IsSupported )
+            //{
+            //    return true;
+            //}
+            //#endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int n;
+                double r, r2, r01, invr, sintheta, costheta;
+                complex expiphi, expiphi2, expiphi3, expiphi4;
+                int jj;
+                double sml = 1.0E-100;
+                
+                f = 0.0;
+                invpowrpplus1 = 0.0;
+                
+                
+                /*
+                 *Convert to spherical polar coordinates.
+                 *
+                 * NOTE: we make sure that R is non-zero by adding extremely small perturbation
+                 */
+                r2 = d0*d0+d1*d1+d2*d2+sml;
+                r = System.Math.Sqrt(r2);
+                r01 = System.Math.Sqrt(d0*d0+d1*d1+sml);
+                costheta = d2/r;
+                sintheta = r01/r;
+                expiphi.x = d0/r01;
+                expiphi.y = d1/r01;
+                invr = 1.0/r;
+                
+                /*
+                 * prepare precomputed quantities
+                 */
+                double powsintheta2 = sintheta*sintheta;
+                double powsintheta3 = powsintheta2*sintheta;
+                double powsintheta4 = powsintheta2*powsintheta2;
+                expiphi2.x = expiphi.x*expiphi.x-expiphi.y*expiphi.y;
+                expiphi2.y = 2*expiphi.x*expiphi.y;
+                expiphi3.x = expiphi2.x*expiphi.x-expiphi2.y*expiphi.y;
+                expiphi3.y = expiphi2.x*expiphi.y+expiphi.x*expiphi2.y;
+                expiphi4.x = expiphi2.x*expiphi2.x-expiphi2.y*expiphi2.y;
+                expiphi4.y = 2*expiphi2.x*expiphi2.y;
+                
+                /*
+                 * Compute far field expansion for a cluster of basis functions f=r
+                 *
+                 * NOTE: the original paper by Beatson et al. uses f=r as the basis function,
+                 *       whilst ALGLIB uses f=-r due to conditional positive definiteness requirement.
+                 *       We will perform conversion later.
+                 */
+                Intrinsics.Vector256<double> v_costheta      = Intrinsics.Vector256.Create(costheta);
+                Intrinsics.Vector256<double> v_r2            = Intrinsics.Vector256.Create(r2);
+                Intrinsics.Vector256<double> v_f             = Intrinsics.Vector256<double>.Zero;
+                Intrinsics.Vector256<double> v_invr          = Intrinsics.Vector256.Create(invr);
+                Intrinsics.Vector256<double> v_powsinthetaj  = Intrinsics.Vector256.Create(1.0, sintheta, powsintheta2, powsintheta3);
+                Intrinsics.Vector256<double> v_powsintheta4  = Intrinsics.Vector256.Create(powsintheta4);
+                Intrinsics.Vector256<double> v_expijphix     = Intrinsics.Vector256.Create(1.0, expiphi.x, expiphi2.x, expiphi3.x);
+                Intrinsics.Vector256<double> v_expijphiy     = Intrinsics.Vector256.Create(0.0, expiphi.y, expiphi2.y, expiphi3.y);
+                Intrinsics.Vector256<double> v_expi4phix     = Intrinsics.Vector256.Create(expiphi4.x);
+                Intrinsics.Vector256<double> v_expi4phiy     = Intrinsics.Vector256.Create(expiphi4.y);
+                for(jj=0; jj<4; jj++)
+                {
+                    Intrinsics.Vector256<double> pnm_cur = Intrinsics.Vector256<double>.Zero, pnm_prev = Intrinsics.Vector256<double>.Zero, pnm_new;
+                    Intrinsics.Vector256<double> v_powrminusj1 = Intrinsics.Vector256.Create(invr);
+                    for(n=0; n<jj*4; n++)
+                        v_powrminusj1 = Avx2.Multiply(v_powrminusj1, v_invr);
+                    for(n=jj*4; n<16; n++)
+                    {
+                        int j0=jj*4;
+                        int j1=j0+4;
+                        
+                        
+                        pnm_new = Avx2.Multiply(v_powsinthetaj, Avx2.LoadVector256(pmmcdiag+n*16+j0));
+                        pnm_new = Avx2.Add(pnm_new, Avx2.Multiply(v_costheta,Avx2.Multiply(pnm_cur,Avx2.LoadVector256(pnma+n*16+j0))));
+                        pnm_new = Avx2.Add(pnm_new, Avx2.Multiply(pnm_prev,Avx2.LoadVector256(pnmb+n*16+j0)));
+                        pnm_prev = pnm_cur;
+                        pnm_cur  = pnm_new;
+                        
+                        Intrinsics.Vector256<double> v_tmp = Avx2.Multiply(pnm_cur, Avx2.LoadVector256(ynma+n*16+j0));
+                        Intrinsics.Vector256<double> v_sphericalx = Avx2.Multiply(v_tmp, v_expijphix);
+                        Intrinsics.Vector256<double> v_sphericaly = Avx2.Multiply(v_tmp, v_expijphiy);
+                        
+                        Intrinsics.Vector256<double> v_summnx = Avx2.Add(Avx2.Multiply(v_r2,Avx2.LoadVector256(tblrmodmn+n*64+j0+32)),Avx2.LoadVector256(tblrmodmn+n*64+j0));
+                        Intrinsics.Vector256<double> v_summny = Avx2.Add(Avx2.Multiply(v_r2,Avx2.LoadVector256(tblrmodmn+n*64+j0+48)),Avx2.LoadVector256(tblrmodmn+n*64+j0+16));
+                        
+                        Intrinsics.Vector256<double> v_z = Avx2.Subtract(Avx2.Multiply(v_sphericalx,v_summnx),Avx2.Multiply(v_sphericaly,v_summny));
+                        
+                        v_f = Avx2.Add(v_f, Avx2.Multiply(v_powrminusj1, v_z));
+                        v_powrminusj1 = Avx2.Multiply(v_powrminusj1, v_invr);
+                    }
+                    Intrinsics.Vector256<double> v_expijphix_new = Avx2.Subtract(Avx2.Multiply(v_expijphix,v_expi4phix),Avx2.Multiply(v_expijphiy,v_expi4phiy));
+                    Intrinsics.Vector256<double> v_expijphiy_new = Avx2.Add(Avx2.Multiply(v_expijphix,v_expi4phiy),Avx2.Multiply(v_expijphiy,v_expi4phix));
+                    v_powsinthetaj = Avx2.Multiply(v_powsinthetaj, v_powsintheta4);
+                    v_expijphix = v_expijphix_new;
+                    v_expijphiy = v_expijphiy_new;
+                }
+                
+                double *ttt = stackalloc double[4];
+                Avx2.Store(ttt, v_f);
+                for(int k=0; k<4; k++)
+                    f += ttt[k];
+                
+                double r4 = r2*r2;
+                double r8 = r4*r4;
+                double r16 = r8*r8;
+                invpowrpplus1 = 1/r16;
+    
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        private static bool bhpaneleval1fastkernel(double d0,
+            double d1,
+            double d2,
+            int panelp,
+            double[] pnma,
+            double[] pnmb,
+            double[] pmmcdiag,
+            double[] ynma,
+            double[] tblrmodmn,
+            ref double f,
+            ref double invpowrpplus1,
+            alglib.xparams _params)
+        {
+            #if ALGLIB_USE_SIMD
+            unsafe
+            {
+                fixed(double* p_pnma=pnma, p_pnmb = pnmb, p_pmmcdiag=pmmcdiag, p_ynma=ynma, p_tblrmodmn=tblrmodmn)
+                {
+                    if( try_bhpaneleval1fastkernel(d0, d1, d2, panelp, p_pnma, p_pnmb,p_pmmcdiag, p_ynma, p_tblrmodmn, out f, out invpowrpplus1) )
+                        return true;
+                }
+            }
+            #endif
+            
+            //
+            // No fast kernel
+            //
+            return false;
+        }
+        
+        
+        /*************************************************************************
+        Fast kernel for biharmonic panel with NY=1
+
+        INPUT PARAMETERS:
+            D0, D1, D2      -   evaluation point minus (Panel.C0,Panel.C1,Panel.C2)
+
+        OUTPUT PARAMETERS:
+            F               -   model value
+            InvPowRPPlus1   -   1/(R^(P+1))
+
+          -- ALGLIB --
+             Copyright 19.11.2022 by Sergey Bochkanov
+        *************************************************************************/
+        #if ALGLIB_USE_SIMD
+        private static unsafe bool try_bhpanelevalfastkernel(double d0,
+            double d1,
+            double d2,
+            int ny,
+            int panelp,
+            double* pnma,
+            double* pnmb,
+            double* pmmcdiag,
+            double* ynma,
+            double* tblrmodmn,
+            double* f,
+            out double invpowrpplus1)
+        {
+            invpowrpplus1 = 0;
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            //#if !ALGLIB_NO_FMA
+            //if( Fma.IsSupported )
+            //{
+            //    return true;
+            //}
+            //#endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int n;
+                double r, r2, r01, invr, sintheta, costheta;
+                complex expiphi, expiphi2, expiphi3, expiphi4;
+                int jj;
+                double sml = 1.0E-100;
+                
+    
+                /*
+                 * Precomputed buffer which is enough for NY up to 16
+                 */
+                if( ny>16 )
+                    return false;
+                Intrinsics.Vector256<double>* v_f = stackalloc Intrinsics.Vector256<double>[ny];
+                for(int k=0; k<ny; k++)
+                {
+                    v_f[k] = Intrinsics.Vector256<double>.Zero;
+                    f[k] = 0.0;
+                }
+                invpowrpplus1 = 0.0;
+                
+                
+                /*
+                 *Convert to spherical polar coordinates.
+                 *
+                 * NOTE: we make sure that R is non-zero by adding extremely small perturbation
+                 */
+                r2 = d0*d0+d1*d1+d2*d2+sml;
+                r = System.Math.Sqrt(r2);
+                r01 = System.Math.Sqrt(d0*d0+d1*d1+sml);
+                costheta = d2/r;
+                sintheta = r01/r;
+                expiphi.x = d0/r01;
+                expiphi.y = d1/r01;
+                invr = 1.0/r;
+                
+                /*
+                 * prepare precomputed quantities
+                 */
+                double powsintheta2 = sintheta*sintheta;
+                double powsintheta3 = powsintheta2*sintheta;
+                double powsintheta4 = powsintheta2*powsintheta2;
+                expiphi2.x = expiphi.x*expiphi.x-expiphi.y*expiphi.y;
+                expiphi2.y = 2*expiphi.x*expiphi.y;
+                expiphi3.x = expiphi2.x*expiphi.x-expiphi2.y*expiphi.y;
+                expiphi3.y = expiphi2.x*expiphi.y+expiphi.x*expiphi2.y;
+                expiphi4.x = expiphi2.x*expiphi2.x-expiphi2.y*expiphi2.y;
+                expiphi4.y = 2*expiphi2.x*expiphi2.y;
+                
+                /*
+                 * Compute far field expansion for a cluster of basis functions f=r
+                 *
+                 * NOTE: the original paper by Beatson et al. uses f=r as the basis function,
+                 *       whilst ALGLIB uses f=-r due to conditional positive definiteness requirement.
+                 *       We will perform conversion later.
+                 */
+                Intrinsics.Vector256<double> v_costheta      = Intrinsics.Vector256.Create(costheta);
+                Intrinsics.Vector256<double> v_r2            = Intrinsics.Vector256.Create(r2);
+                Intrinsics.Vector256<double> v_invr          = Intrinsics.Vector256.Create(invr);
+                Intrinsics.Vector256<double> v_powsinthetaj  = Intrinsics.Vector256.Create(1.0, sintheta, powsintheta2, powsintheta3);
+                Intrinsics.Vector256<double> v_powsintheta4  = Intrinsics.Vector256.Create(powsintheta4);
+                Intrinsics.Vector256<double> v_expijphix     = Intrinsics.Vector256.Create(1.0, expiphi.x, expiphi2.x, expiphi3.x);
+                Intrinsics.Vector256<double> v_expijphiy     = Intrinsics.Vector256.Create(0.0, expiphi.y, expiphi2.y, expiphi3.y);
+                Intrinsics.Vector256<double> v_expi4phix     = Intrinsics.Vector256.Create(expiphi4.x);
+                Intrinsics.Vector256<double> v_expi4phiy     = Intrinsics.Vector256.Create(expiphi4.y);
+                for(jj=0; jj<4; jj++)
+                {
+                    Intrinsics.Vector256<double> pnm_cur = Intrinsics.Vector256<double>.Zero, pnm_prev = Intrinsics.Vector256<double>.Zero, pnm_new;
+                    Intrinsics.Vector256<double> v_powrminusj1 = Intrinsics.Vector256.Create(invr);
+                    for(n=0; n<jj*4; n++)
+                        v_powrminusj1 = Avx2.Multiply(v_powrminusj1, v_invr);
+                    for(n=jj*4; n<16; n++)
+                    {
+                        int j0=jj*4;
+                        int j1=j0+4;
+                        
+                        
+                        pnm_new = Avx2.Multiply(v_powsinthetaj, Avx2.LoadVector256(pmmcdiag+n*16+j0));
+                        pnm_new = Avx2.Add(pnm_new, Avx2.Multiply(v_costheta,Avx2.Multiply(pnm_cur,Avx2.LoadVector256(pnma+n*16+j0))));
+                        pnm_new = Avx2.Add(pnm_new, Avx2.Multiply(pnm_prev,Avx2.LoadVector256(pnmb+n*16+j0)));
+                        pnm_prev = pnm_cur;
+                        pnm_cur  = pnm_new;
+                        
+                        Intrinsics.Vector256<double> v_tmp = Avx2.Multiply(pnm_cur, Avx2.LoadVector256(ynma+n*16+j0));
+                        Intrinsics.Vector256<double> v_sphericalx = Avx2.Multiply(v_tmp, v_expijphix);
+                        Intrinsics.Vector256<double> v_sphericaly = Avx2.Multiply(v_tmp, v_expijphiy);
+                        
+                        double *p_rmodmn = tblrmodmn+n*64+j0;
+                        for(int k=0; k<ny; k++)
+                        {
+                            Intrinsics.Vector256<double> v_summnx = Avx2.Add(Avx2.Multiply(v_r2,Avx2.LoadVector256(p_rmodmn+32)),Avx2.LoadVector256(p_rmodmn));
+                            Intrinsics.Vector256<double> v_summny = Avx2.Add(Avx2.Multiply(v_r2,Avx2.LoadVector256(p_rmodmn+48)),Avx2.LoadVector256(p_rmodmn+16));
+                            Intrinsics.Vector256<double> v_z = Avx2.Subtract(Avx2.Multiply(v_sphericalx,v_summnx),Avx2.Multiply(v_sphericaly,v_summny));
+                            v_f[k] = Avx2.Add(v_f[k], Avx2.Multiply(v_powrminusj1, v_z));
+                            p_rmodmn += 1024;
+                        }
+                        v_powrminusj1 = Avx2.Multiply(v_powrminusj1, v_invr);
+                    }
+                    Intrinsics.Vector256<double> v_expijphix_new = Avx2.Subtract(Avx2.Multiply(v_expijphix,v_expi4phix),Avx2.Multiply(v_expijphiy,v_expi4phiy));
+                    Intrinsics.Vector256<double> v_expijphiy_new = Avx2.Add(Avx2.Multiply(v_expijphix,v_expi4phiy),Avx2.Multiply(v_expijphiy,v_expi4phix));
+                    v_powsinthetaj = Avx2.Multiply(v_powsinthetaj, v_powsintheta4);
+                    v_expijphix = v_expijphix_new;
+                    v_expijphiy = v_expijphiy_new;
+                }
+                
+                double *ttt = stackalloc double[4];
+                for(int t=0; t<ny; t++)
+                {
+                    Avx2.Store(ttt, v_f[t]);
+                    for(int k=0; k<4; k++)
+                        f[t] += ttt[k];
+                }
+                
+                double r4 = r2*r2;
+                double r8 = r4*r4;
+                double r16 = r8*r8;
+                invpowrpplus1 = 1/r16;
+    
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+        private static bool bhpanelevalfastkernel(double d0,
+            double d1,
+            double d2,
+            int ny,
+            int panelp,
+            double[] pnma,
+            double[] pnmb,
+            double[] pmmcdiag,
+            double[] ynma,
+            double[] tblrmodmn,
+            double[] f,
+            ref double invpowrpplus1,
+            alglib.xparams _params)
+        {
+            #if ALGLIB_USE_SIMD
+            unsafe
+            {
+                fixed(double* p_pnma=pnma, p_pnmb = pnmb, p_pmmcdiag=pmmcdiag, p_ynma=ynma, p_tblrmodmn=tblrmodmn, p_f=f)
+                {
+                    if( try_bhpanelevalfastkernel(d0, d1, d2, ny, panelp, p_pnma, p_pnmb,p_pmmcdiag, p_ynma, p_tblrmodmn, p_f, out invpowrpplus1) )
+                        return true;
+                }
+            }
+            #endif
+            
+            //
+            // No fast kernel
+            //
+            return false;
         }
     }
 }
