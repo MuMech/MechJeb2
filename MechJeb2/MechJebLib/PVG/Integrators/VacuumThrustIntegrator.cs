@@ -30,7 +30,8 @@ namespace MechJebLib.PVG.Integrators
                 using var dy = ArrayWrapper.Rent(dyout);
 
                 double at = Phase.thrust / y.M;
-                if (Phase.Infinite) at *= 2;
+                if (Phase.Infinite)
+                    at *= 2;
 
                 double r2 = y.R.sqrMagnitude;
                 double r = Math.Sqrt(r2);
@@ -57,14 +58,18 @@ namespace MechJebLib.PVG.Integrators
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
         {
-            _solver.ThrowOnMaxIter = true;
+            _solver.ThrowOnMaxIter = false;
+            _solver.Rtol           = 0;
+            _solver.Atol           = 1e-9;
             _ode.Phase             = phase;
             _solver.Solve(_ode.dydt, y0, yf, t0, tf);
         }
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf, Solution solution)
         {
-            _solver.ThrowOnMaxIter = true;
+            _solver.ThrowOnMaxIter = false;
+            _solver.Rtol           = 0;
+            _solver.Atol           = 1e-9;
             _ode.Phase             = phase;
             var interpolant = Hn.Get(VacuumThrustKernel.N);
             _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant);
