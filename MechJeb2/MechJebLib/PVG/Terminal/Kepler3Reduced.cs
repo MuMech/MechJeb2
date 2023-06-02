@@ -42,7 +42,7 @@ namespace MechJebLib.PVG.Terminal
             return new Kepler3Reduced(_smaT / scale.LengthScale, _eccT, _incT);
         }
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputWrapper yf)
         {
             var hf = V3.Cross(yf.R, yf.V);
             var n = new V3(0, 0, 1);

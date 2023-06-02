@@ -44,7 +44,7 @@ namespace MechJebLib.PVG.Terminal
             return new FlightPathAngle5Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT, _lanT);
         }
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputWrapper yf)
         {
             var hf = V3.Cross(yf.R, yf.V);
             V3 hmiss = hf - _hT;

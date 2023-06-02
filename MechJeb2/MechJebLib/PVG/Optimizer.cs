@@ -48,9 +48,9 @@ namespace MechJebLib.PVG
         private void ExpandArrays()
         {
             while (_initial.Count < _phases.Count)
-                _initial.Add(Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN));
+                _initial.Add(Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN));
             while (_terminal.Count < _phases.Count)
-                _terminal.Add(Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN));
+                _terminal.Add(Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN));
             while (_residual.Count < _phases.Count)
                 _residual.Add(Vn.Rent(ResidualWrapper.RESIDUAL_WRAPPER_LEN));
         }
@@ -58,14 +58,14 @@ namespace MechJebLib.PVG
         private void CopyToInitial(double[] yin)
         {
             for (int i = 0; i < yin.Length; i++)
-                _initial[i / ArrayWrapper.ARRAY_WRAPPER_LEN][i % ArrayWrapper.ARRAY_WRAPPER_LEN] = yin[i];
+                _initial[i / OutputWrapper.OUTPUT_WRAPPER_LEN][i % OutputWrapper.OUTPUT_WRAPPER_LEN] = yin[i];
         }
 
         private double CalcBTConstraint(int p)
         {
-            using var yfp = ArrayWrapper.Rent(_terminal[p]);
-            using var y0p = ArrayWrapper.Rent(_initial[p]);
-            using var yf = ArrayWrapper.Rent(_terminal[lastPhase]);
+            var yfp = OutputWrapper.CreateFrom(_terminal[p]);
+            var y0p = InputWrapper.CreateFrom(_initial[p]);
+            var yf = OutputWrapper.CreateFrom(_terminal[lastPhase]);
 
             // handle coasts
             if (_phases[p].Coast && _phases[p].OptimizeTime)
@@ -79,7 +79,7 @@ namespace MechJebLib.PVG
                 {
                     if (p == 0)
                         return yfp.H0; // initial first coast
-                    return yfp.H0; // coast after jettison
+                    return yfp.H0;     // coast after jettison
                     // FIXME: coasts during stages
                 }
 
@@ -92,7 +92,7 @@ namespace MechJebLib.PVG
 
                 if (_phases[p].DropMass > 0 && p < lastPhase)
                 {
-                    using var y0p1 = ArrayWrapper.Rent(_initial[p + 1]);
+                    var y0p1 = OutputWrapper.CreateFrom(_initial[p + 1]);
                     return H(yfp, p) - H(y0p1, p + 1);
                 }
 
@@ -103,15 +103,15 @@ namespace MechJebLib.PVG
             return y0p.Bt - _phases[p].bt;
         }
 
-        private double H(ArrayWrapper y, int p)
+        private double H(OutputWrapper y, int p)
         {
             return y.H0 + _phases[p].thrust * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot;
         }
 
         private void BaseResiduals()
         {
-            using var y0 = ArrayWrapper.Rent(_initial[0]);
-            using var yf = ArrayWrapper.Rent(_terminal[lastPhase]);
+            var y0 = InputWrapper.CreateFrom(_initial[0]);
+            var yf = OutputWrapper.CreateFrom(_terminal[lastPhase]);
             using var z = ResidualWrapper.Rent(_residual[0]);
 
             z.R        = y0.R - _problem.R0Bar;
@@ -126,8 +126,8 @@ namespace MechJebLib.PVG
         {
             for (int p = 1; p < _phases.Count; p++)
             {
-                using var y0 = ArrayWrapper.Rent(_initial[p]);
-                using var yf = ArrayWrapper.Rent(_terminal[p - 1]);
+                var y0 = InputWrapper.CreateFrom(_initial[p]);
+                var yf = OutputWrapper.CreateFrom(_terminal[p - 1]);
                 using var z = ResidualWrapper.Rent(_residual[p]);
 
                 z.RContinuity  = yf.R - y0.R;
@@ -171,8 +171,7 @@ namespace MechJebLib.PVG
             Znorm = Math.Sqrt(Znorm);
         }
 
-        private bool _terminating = false;
-
+        private bool _terminating;
 
         internal void ResidualFunction(double[] yin, double[] zout, object? o)
         {
@@ -201,7 +200,7 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                _phases[p].LastFreeBurn       = false;
+                _phases[p].LastFreeBurn = false;
                 if (_phases[p].OptimizeTime && !_phases[p].Coast)
                     lastFreeBurnPhase = p;
             }
@@ -219,14 +218,14 @@ namespace MechJebLib.PVG
             AnalyzePhases();
             ExpandArrays();
 
-            double[] yGuess = new double[_phases.Count * ArrayWrapper.ARRAY_WRAPPER_LEN];
-            double[] yNew = new double[_phases.Count * ArrayWrapper.ARRAY_WRAPPER_LEN];
+            double[] yGuess = new double[_phases.Count * OutputWrapper.OUTPUT_WRAPPER_LEN];
+            double[] yNew = new double[_phases.Count * OutputWrapper.OUTPUT_WRAPPER_LEN];
             double[] z = new double[_phases.Count * ResidualWrapper.RESIDUAL_WRAPPER_LEN];
 
             for (int i = 0; i < yGuess.Length; i++)
-                yGuess[i] = _initial[i / ArrayWrapper.ARRAY_WRAPPER_LEN][i % ArrayWrapper.ARRAY_WRAPPER_LEN];
+                yGuess[i] = _initial[i / OutputWrapper.OUTPUT_WRAPPER_LEN][i % OutputWrapper.OUTPUT_WRAPPER_LEN];
 
-            alglib.minlmcreatev(ArrayWrapper.ARRAY_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
+            alglib.minlmcreatev(OutputWrapper.OUTPUT_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
             alglib.minlmsetcond(_state, LmEpsx, MaxIter);
             alglib.minlmoptimize(_state, _residualHandle, null, null);
             alglib.minlmresultsbuf(_state, ref yNew, _rep);
@@ -245,38 +244,37 @@ namespace MechJebLib.PVG
 
             try
             {
-                var  tokenSource = new CancellationTokenSource(); // FIXME: bit of garbage here
+                var tokenSource = new CancellationTokenSource(); // FIXME: bit of garbage here
                 tokenSource.CancelAfter(OptimizerTimeout);
                 _timeoutToken = tokenSource.Token;
                 UnSafeRun();
             }
             catch (OperationCanceledException)
             {
-
             }
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(_phases[p].ToString());
             }
 
             Log("solved initial: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_initial[p]));
             }
 
             Log("solved terminal: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_terminal[p]));
             }
 
             Log("solved residuals: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_residual[p]));
             }
@@ -288,8 +286,9 @@ namespace MechJebLib.PVG
 
         private void Shooting(Solution? solution = null)
         {
-            using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
-            using var integ = ArrayWrapper.Rent(integArray);
+            using var integArray = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
+
+            var y0 = new InputWrapper();
 
             double t0 = 0;
             double lastDv = 0;
@@ -298,55 +297,37 @@ namespace MechJebLib.PVG
             {
                 Phase phase = _phases[p];
 
-                using var y0 = ArrayWrapper.Rent(_initial[p]);
-                using var yf = ArrayWrapper.Rent(_terminal[p]);
+                y0.CopyFrom(_initial[p]);
 
                 if (p == 0)
                 {
                     y0.R = _problem.R0Bar;
                     y0.V = _problem.V0Bar;
                     y0.M = _problem.M0Bar;
-                    y0.CopyTo(integArray);
-                }
-                else
-                {
-                    y0.CopyTo(integArray);
                 }
 
-                integ.DV = lastDv;
+                y0.CopyTo(_initial[p]);
 
                 double bt = phase.OptimizeTime ? y0.Bt : phase.bt;
-
                 double tf = t0 + bt;
-
                 phase.u0 = GetIntertialHeading(p, y0.PV);
 
-                if (solution != null)
-                {
-                    phase.Integrate(integArray, _terminal[p], t0, tf, solution);
-                }
-                else
-                {
-                    phase.Integrate(integArray, _terminal[p], t0, tf);
-                }
+                var y0p = new OutputWrapper(y0);
+                y0p.DV = lastDv;
+                y0p.CopyTo(integArray);
 
+                if (solution != null)
+                    phase.Integrate(integArray, _terminal[p], t0, tf, solution);
+                else
+                    phase.Integrate(integArray, _terminal[p], t0, tf);
+
+                var yf = OutputWrapper.CreateFrom(_terminal[p]);
                 lastDv = yf.DV;
 
                 t0 += bt;
             }
         }
 
-        public Solution GetSolution()
-        {
-            if (Status != OptimStatus.SUCCESS)
-                throw new Exception("getting solution from bad/failed optimizer state");
-
-            var solution = new Solution(_problem);
-
-            Shooting(solution);
-
-            return solution;
-        }
 
         public Optimizer Bootstrap(V3 pv0, V3 pr0)
         {
@@ -355,8 +336,7 @@ namespace MechJebLib.PVG
 
             ExpandArrays();
 
-            using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
-            using var integ = ArrayWrapper.Rent(integArray);
+            using var integArray = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
 
             double t0 = 0;
             double lastDv = 0;
@@ -365,8 +345,7 @@ namespace MechJebLib.PVG
             {
                 Phase phase = _phases[p];
 
-                using var y0 = ArrayWrapper.Rent(_initial[p]);
-                using var yf = ArrayWrapper.Rent(_terminal[p]);
+                var y0 = new InputWrapper();
 
                 if (p == 0)
                 {
@@ -376,51 +355,54 @@ namespace MechJebLib.PVG
                     y0.PV = pv0;
                     y0.PR = pr0;
                     y0.Bt = phase.bt;
-                    y0.CopyTo(integArray);
                 }
                 else
                 {
                     _terminal[p - 1].CopyTo(_initial[p]);
+                    y0.CopyFrom(_initial[p]);
                     y0.Bt = phase.bt;
                     y0.M  = phase.m0;
-                    _initial[p].CopyTo(integArray);
                 }
 
+                y0.CopyTo(_initial[p]);
+
                 double tf = t0 + y0.Bt;
-
-                integ.DV = lastDv;
-
                 phase.u0 = GetIntertialHeading(p, y0.PV);
+
+                var y0p = new OutputWrapper(y0);
+                y0p.DV = lastDv;
+                y0p.CopyTo(integArray);
 
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
-                lastDv =  yf.DV;
+                var yf = OutputWrapper.CreateFrom(_terminal[p]);
+                lastDv = yf.DV;
 
-                t0     += tf;
+                t0 += tf;
             }
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(_phases[p].ToString());
             }
 
             Log("bootstrap1 initial: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_initial[p]));
             }
 
             Log("bootstrap1 terminal: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_terminal[p]));
             }
 
             Log("bootstrap1 residuals: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_residual[p]));
             }
@@ -437,8 +419,7 @@ namespace MechJebLib.PVG
 
             ExpandArrays();
 
-            using var integArray = Vn.Rent(ArrayWrapper.ARRAY_WRAPPER_LEN);
-            using var integ = ArrayWrapper.Rent(integArray);
+            using var integArray = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
 
             //double tbar = solution.Tbar(_problem.t0);
 
@@ -449,8 +430,7 @@ namespace MechJebLib.PVG
             {
                 Phase phase = _phases[p];
 
-                using var y0 = ArrayWrapper.Rent(_initial[p]);
-                using var yf = ArrayWrapper.Rent(_terminal[p]);
+                var y0 = new InputWrapper();
 
                 if (p == 0)
                 {
@@ -460,55 +440,57 @@ namespace MechJebLib.PVG
                     y0.Bt = phase.bt;
                     y0.PV = solution.Pv(_problem.T0);
                     y0.PR = solution.Pr(_problem.T0);
-                    y0.CopyTo(integArray);
-                    integ.DV = 0;
                 }
                 else
                 {
                     _terminal[p - 1].CopyTo(_initial[p]);
+                    y0.CopyFrom(_initial[p]);
                     y0.Bt = phase.bt;
                     y0.M  = phase.m0;
-                    _initial[p].CopyTo(integArray);
                 }
+
+                y0.CopyTo(_initial[p]);
 
                 double tf = t0 + y0.Bt;
 
-                integ.DV = lastDv;
-
                 phase.u0 = GetIntertialHeading(p, y0.PV);
+
+                var y0p = new OutputWrapper(y0);
+                y0p.DV = lastDv;
+                y0p.CopyTo(integArray);
 
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
+                var yf = OutputWrapper.CreateFrom(_terminal[p]);
                 lastDv = yf.DV;
 
                 t0 += tf;
-
             }
 
             CalculateResiduals();
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(_phases[p].ToString());
             }
 
             Log("bootstrap2 initial: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_initial[p]));
             }
 
             Log("bootstrap2 terminal: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_terminal[p]));
             }
 
             Log("bootstrap2 residuals: ");
 
-            for(int p = 0; p <= lastPhase; p++)
+            for (int p = 0; p <= lastPhase; p++)
             {
                 Log(DoubleArrayString(_residual[p]));
             }
@@ -527,6 +509,18 @@ namespace MechJebLib.PVG
                 return _phases[p - 1].u0;
 
             return pv0.normalized;
+        }
+
+        public Solution GetSolution()
+        {
+            if (Status != OptimStatus.SUCCESS)
+                throw new Exception("getting solution from bad/failed optimizer state");
+
+            var solution = new Solution(_problem);
+
+            Shooting(solution);
+
+            return solution;
         }
 
         public bool Success()

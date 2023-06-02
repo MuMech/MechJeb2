@@ -155,9 +155,15 @@ namespace MechJebLibTest.PVG
             solution.Vgo(0).ShouldEqual(8498.9352440057573, 1e-7);
             solution.Pv(0).ShouldEqual(new V3(0.24009395607850137, 0.21526467329187604, 0.13094696426599889), 1e-7);
 
+            double aprf = MechJebLib.Core.Maths.ApoapsisFromKeplerian(smaf, eccf);
+            double perf = MechJebLib.Core.Maths.PeriapsisFromKeplerian(smaf, eccf);
+
+            perf.ShouldEqual(PeR, 1e-9);
+            aprf.ShouldEqual(ApR, 1e-9);
+
             pvg.Znorm.ShouldBeZero(1e-9);
             smaf.ShouldEqual(6556500.0000104867, 1e-7);
-            eccf.ShouldEqual(7.6259820388658756E-05, 1e-7);
+            eccf.ShouldEqual(7.6259809968559891E-05, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
             argpf.ShouldEqual(1.6494150858682159, 1e-7);

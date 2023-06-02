@@ -62,7 +62,7 @@ namespace MechJebLib.PVG.Terminal
             return new Kepler5Reduced(_smaT / scale.LengthScale, _eccT, _incT, _lanT, _argpT);
         }
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputWrapper yf)
         {
             double rfm = yf.R.magnitude;
             double rf3 = rfm * rfm * rfm;
