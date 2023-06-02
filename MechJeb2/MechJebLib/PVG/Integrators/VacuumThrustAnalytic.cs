@@ -18,8 +18,8 @@ namespace MechJebLib.PVG.Integrators
         {
             Check.True(phase.Normalized);
 
-            using var y0 = ArrayWrapper.Rent(yin);
-            using var yf = ArrayWrapper.Rent(yfout);
+            var y0 = OutputWrapper.CreateFrom(yin);
+            var yf = new OutputWrapper();
 
             double rm = y0.R.magnitude;
 
@@ -106,15 +106,16 @@ namespace MechJebLib.PVG.Integrators
                 yf.DV = y0.DV + phase.thrust / phase.m0 * dt;
 
             yf.Pm = y0.Pm;  // FIXME: this is certainly wrong
+
+            yf.CopyTo(yfout);
         }
 
         public void Integrate(Vn y0in, Vn yfout, Phase phase, double t0, double tf, Solution solution)
         {
             // kinda janky way to compute interpolants with intermediate points
-            var interpolant = Hn.Get(ArrayWrapper.ARRAY_WRAPPER_LEN);
+            var interpolant = Hn.Get(OutputWrapper.OUTPUT_WRAPPER_LEN);
             interpolant.Add(t0, y0in);
             const int SEGMENTS = 20;
-            using var y0 = ArrayWrapper.Rent(y0in);
 
             for (int i = 1; i < 21; i++)
             {

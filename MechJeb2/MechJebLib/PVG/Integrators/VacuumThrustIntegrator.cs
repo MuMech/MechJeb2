@@ -18,7 +18,7 @@ namespace MechJebLib.PVG.Integrators
     {
         private class VacuumThrustKernel
         {
-            public static int N => ArrayWrapper.ARRAY_WRAPPER_LEN;
+            public static int N => OutputWrapper.OUTPUT_WRAPPER_LEN;
 
             public Phase Phase = null!;
 
@@ -26,8 +26,8 @@ namespace MechJebLib.PVG.Integrators
             {
                 Check.True(Phase.Normalized);
 
-                using var y = ArrayWrapper.Rent(yin);
-                using var dy = ArrayWrapper.Rent(dyout);
+                var y = OutputWrapper.CreateFrom(yin);
+                var dy = new OutputWrapper();
 
                 double at = Phase.thrust / y.M;
                 if (Phase.Infinite)
@@ -50,6 +50,8 @@ namespace MechJebLib.PVG.Integrators
                     ? _phase.ThrustBar * V3.Dot(y.PV, u) / (y.M * y.M)
                     : 0; */
                 dy.DV = at;
+
+                dy.CopyTo(dyout);
             }
         }
 

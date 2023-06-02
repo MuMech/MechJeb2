@@ -121,7 +121,8 @@
         <Compile Include="MechJebLib\Maneuvers\ReturnFromMoon.cs" />
         <Compile Include="MechJebLib\Primitives\Vn.cs" />
         <Compile Include="MechJebLib\Primitives\Scale.cs" />
-        <Compile Include="MechJebLib\PVG\ArrayWrapper.cs" />
+        <Compile Include="MechJebLib\PVG\InputWrapper.cs" />
+        <Compile Include="MechJebLib\PVG\OutputWrapper.cs" />
         <Compile Include="MechJebLib\PVG\AscentBuilder.cs" />
         <Compile Include="MechJebLib\PVG\Integrators\IPVGIntegrator.cs" />
         <Compile Include="MechJebLib\PVG\Integrators\VacuumCoastAnalytic.cs" />

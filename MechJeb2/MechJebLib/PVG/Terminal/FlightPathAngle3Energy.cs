@@ -34,7 +34,7 @@ namespace MechJebLib.PVG.Terminal
             return new FlightPathAngle3Energy(_gammaT, _rT / scale.LengthScale, _incT);
         }
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(ArrayWrapper yf)
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputWrapper yf)
         {
             var hf = V3.Cross(yf.R, yf.V);
 

@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using MechJebLib.Utils;
@@ -448,6 +449,20 @@ namespace MechJebLib.Primitives
         public bool IsFinite()
         {
             return Statics.IsFinite(x) && Statics.IsFinite(y) && Statics.IsFinite(z);
+        }
+
+        public void CopyFrom(IList<double> other, int index = 0)
+        {
+            this[0] = other[index];
+            this[1] = other[index + 1];
+            this[2] = other[index + 2];
+        }
+
+        public void CopyTo(IList<double> other, int index = 0)
+        {
+            other[index]     = this[0];
+            other[index + 1] = this[1];
+            other[index + 2] = this[2];
         }
     }
 }

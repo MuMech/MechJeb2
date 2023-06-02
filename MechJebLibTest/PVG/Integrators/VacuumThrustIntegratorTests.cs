@@ -39,7 +39,7 @@ namespace MechJebLibTest.PVG
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            using var wrapper = ArrayWrapper.Rent(y0);
+            var wrapper = InputWrapper.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 
@@ -50,8 +50,8 @@ namespace MechJebLibTest.PVG
 
             integrator.Integrate(y0, yf, normalizedPhase, 0, 0.21143859334689075);
 
-            using var expected = ArrayWrapper.Rent(terminal);
-            using var actual = ArrayWrapper.Rent(yf);
+            var expected = OutputWrapper.CreateFrom(terminal);
+            var actual = OutputWrapper.CreateFrom(yf);
 
             _testOutputHelper.WriteLine($"{(actual.R - expected.R).magnitude / expected.R.magnitude}");
             _testOutputHelper.WriteLine($"{(actual.V - expected.V).magnitude / expected.V.magnitude}");
@@ -87,7 +87,7 @@ namespace MechJebLibTest.PVG
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            using var wrapper = ArrayWrapper.Rent(y0);
+            var wrapper = InputWrapper.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 
@@ -129,7 +129,7 @@ namespace MechJebLibTest.PVG
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            using var wrapper = ArrayWrapper.Rent(y0);
+            var wrapper = InputWrapper.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 
