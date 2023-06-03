@@ -502,7 +502,7 @@ namespace MuMech
                             continue;
                         PartResource r = p.Resources.Get(propellant.id);
 
-                        if (r.amount > p.resourceRequestRemainingThreshold)
+                        if (r.amount <= p.resourceRequestRemainingThreshold)
                             continue;
                         if (r.info.id == PartResourceLibrary.ElectricityHashcode)
                             continue;
