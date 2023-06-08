@@ -18,7 +18,7 @@ namespace MechJebLib.PVG.Integrators
     {
         private class VacuumThrustKernel
         {
-            public static int N => OutputWrapper.OUTPUT_WRAPPER_LEN;
+            public static int N => OutputLayout.OUTPUT_LAYOUT_LEN;
 
             public Phase Phase = null!;
 
@@ -26,8 +26,8 @@ namespace MechJebLib.PVG.Integrators
             {
                 Check.True(Phase.Normalized);
 
-                var y = OutputWrapper.CreateFrom(yin);
-                var dy = new OutputWrapper();
+                var y = OutputLayout.CreateFrom(yin);
+                var dy = new OutputLayout();
 
                 double at = Phase.thrust / y.M;
                 if (Phase.Infinite)
@@ -60,8 +60,9 @@ namespace MechJebLib.PVG.Integrators
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
         {
-            _solver.ThrowOnMaxIter = false;
-            _solver.Rtol           = 0;
+            _solver.ThrowOnMaxIter = true;
+            _solver.Maxiter        = 20000;
+            _solver.Rtol           = 1e-9;
             _solver.Atol           = 1e-9;
             _ode.Phase             = phase;
             _solver.Solve(_ode.dydt, y0, yf, t0, tf);
@@ -69,8 +70,9 @@ namespace MechJebLib.PVG.Integrators
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf, Solution solution)
         {
-            _solver.ThrowOnMaxIter = false;
-            _solver.Rtol           = 0;
+            _solver.ThrowOnMaxIter = true;
+            _solver.Maxiter        = 2000;
+            _solver.Rtol           = 1e-9;
             _solver.Atol           = 1e-9;
             _ode.Phase             = phase;
             var interpolant = Hn.Get(VacuumThrustKernel.N);

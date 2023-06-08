@@ -18,8 +18,8 @@ namespace MechJebLib.PVG.Integrators
         {
             Check.True(phase.Normalized);
 
-            var y0 = OutputWrapper.CreateFrom(yin);
-            var yf = new OutputWrapper();
+            var y0 = OutputLayout.CreateFrom(yin);
+            var yf = new OutputLayout();
 
             double rm = y0.R.magnitude;
 
@@ -113,7 +113,7 @@ namespace MechJebLib.PVG.Integrators
         public void Integrate(Vn y0in, Vn yfout, Phase phase, double t0, double tf, Solution solution)
         {
             // kinda janky way to compute interpolants with intermediate points
-            var interpolant = Hn.Get(OutputWrapper.OUTPUT_WRAPPER_LEN);
+            var interpolant = Hn.Get(OutputLayout.OUTPUT_LAYOUT_LEN);
             interpolant.Add(t0, y0in);
             const int SEGMENTS = 20;
 

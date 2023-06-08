@@ -55,7 +55,7 @@ namespace MechJebLibTest.Maths
                 int count1 = random.Next(20, 40);
                 int count2 = random.Next(5, 40);
 
-                var solver = new BS3 { Interpnum = count1, Rtol = 1e-9, Atol = 0, Maxiter = 200000 };
+                var solver = new BS3 { Interpnum = count1, Rtol = 1e-8, Atol = 1e-8, Maxiter = 200000 };
                 var ode = new SimpleOscillator(k, m);
                 var f = new Action<IList<double>, double, IList<double>>(ode.dydt);
 
