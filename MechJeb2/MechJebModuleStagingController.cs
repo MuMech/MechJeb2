@@ -3,6 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using KSP.UI.Screens;
 using Smooth.Slinq;
+using Smooth.Slinq.Context;
 using UnityEngine;
 
 namespace MuMech
@@ -32,7 +33,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
 
-        [Persistent(pass = (int)Pass.Type)] public EditableDouble clampAutoStageThrustPct = 0.99;
+        [Persistent(pass = (int)Pass.Type)]
+        public EditableDouble clampAutoStageThrustPct = 0.99;
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDoubleMult fairingMaxAerothermalFlux = new EditableDoubleMult(1135);
@@ -201,7 +203,6 @@ namespace MuMech
             GuiUtils.SimpleTextBox(sFairingMinAltitude, fairingMinAltitude, "km", 50);                 //altitude
             GuiUtils.SimpleTextBox(sFairingMaxAerothermalFlux, fairingMaxAerothermalFlux, "W/m²", 50); //aerothermal flux
 
-
             GUILayout.BeginHorizontal();
             hotStaging = GUILayout.Toggle(hotStaging, CachedLocalizer.Instance.MechJeb_Ascent_hotStaging); //"Support hotstaging"
             GUILayout.FlexibleSpace();
@@ -260,7 +261,8 @@ namespace MuMech
 
             // if autostage enabled, and if we've already staged at least once, and if there are stages left,
             // and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (waitingForFirstStaging || vessel.currentStage <= 0 || vessel.currentStage <= autostageLimit || vesselState.time - lastStageTime < autostagePostDelay)
+            if (waitingForFirstStaging || vessel.currentStage <= 0 || vessel.currentStage <= autostageLimit ||
+                vesselState.time - lastStageTime < autostagePostDelay)
             {
                 return;
             }
@@ -506,7 +508,7 @@ namespace MuMech
                             continue;
                         if (r.info.id == PartResourceLibrary.ElectricityHashcode)
                             continue;
-                        if(!tankResources.Contains(r.info.id))
+                        if (!tankResources.Contains(r.info.id))
                             continue;
 
                         if (propellant.GetFlowMode() == ResourceFlowMode.NO_FLOW)
@@ -612,15 +614,45 @@ namespace MuMech
         }
 
         // determine if there is a fairing to be deployed
-        public bool HasFairing(int inverseStage)
+        private bool HasFairing(int inverseStage)
         {
             if (hasFairingCache.TryGetValue(inverseStage, out bool result))
                 return result;
-            result = vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage
-                                                      && (p.HasModule<ModuleProceduralFairing>() || (VesselState.isLoadedProceduralFairing &&
-                                                          p.Modules.Contains("ProceduralFairingDecoupler")))) != null;
+            result = HasFairingUncached(inverseStage);
             hasFairingCache.Add(inverseStage, result);
             return result;
+        }
+
+        private readonly List<Part> _partsInStage =  new List<Part>();
+
+        private bool HasFairingUncached(int inverseStage)
+        {
+            _partsInStage.Clear();
+            vessel.parts.Slinq().Where((p, s) => p.inverseStage == s, inverseStage).AddTo(_partsInStage);
+
+            // proc parts are reasonably easy, but all the parts in the stage must be payload fairings for them to
+            // be treated as payload fairings here.  a payload fairing and a stack decoupler will bypass the fairing
+            // checks which will then cause it to be detatched normally when the stack decouples, fixing the issue where
+            // fairings block stack separation.
+
+            // ReSharper disable once SuggestVarOrType_Elsewhere
+            if (_partsInStage.Slinq().Any(p => p.IsProceduralFairing()))
+                // if we have any PF in the stage we must have ALL payload fairings, and we do not do the
+                // decoupler check below
+                return _partsInStage.Slinq().All(p => p.IsProceduralFairingPayloadFairing());
+
+            // this is simple, but subtle:
+            //   1. we do not identify fairings as separate from decouplers here because of part mods like RSB
+            //      which only put a stock decoupler in the staging.
+            //   2. if we see ONLY decouplers with no child parts and no other parts we assume payload fairing
+            //   3. an interstage fairing mixed with a stack decoupler will not be identified as a fairing.
+            //   4. a stack decoupler alone in the stage (like RO hotstaging) will not be identified as a fairing
+            //      (stack decouplers have children).
+            //   5. a payload fairing placed in a stage with a stack decoupler will also not be identified as a
+            //      payload fairing now (fixing payload fairings causing stacks to not decouple).
+            // if a user requires an interstage fairing that is alone in a stage with no stack decoupler, engine, or
+            // anything else in the stage (for cinematics?) then the user MUST use proc fairings.
+            return _partsInStage.Slinq().All(p => p.IsDecoupler() && !p.IsLaunchClamp() && p.children.Count == 0);
         }
     }
 }

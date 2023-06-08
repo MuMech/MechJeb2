@@ -297,7 +297,7 @@ namespace MechJebLib.Core
 
         public static double LatitudeFromBCI(V3 r)
         {
-            return Math.Asin(Clamp(r.z / r.magnitude, -1, 1));
+            return SafeAsin(r.z / r.magnitude);
         }
 
         public static double LongitudeFromBCI(V3 r)
