@@ -41,7 +41,7 @@ namespace MechJebLib.PVG.Terminal
             return new FlightPathAngle4Energy(_rT / scale.LengthScale, _incT, _lanT);
         }
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputWrapper yf)
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {
             double con1 = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
             double con2 = V3.Dot(yf.R.normalized, yf.V.normalized);

@@ -14,6 +14,10 @@ namespace MechJebLib.Core.ODE
 {
     using IVPFunc = Action<IList<double>, double, IList<double>>;
 
+    /*
+     * BS3 requires a smaller Rtol+Atol of 1e-8 and higher MaxIterations of 20,000 (10x DP5) or so.
+     * - Without fixing the minstepsize to always take at least a minimum floating point step, BS3 may hang.
+     */
     public class BS3 : AbstractRungeKutta
     {
         protected override int Order               => 3;
@@ -53,11 +57,11 @@ namespace MechJebLib.Core.ODE
             f(Ynew, T + C3 * h, K[3]);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
+                Ynew[i] = Y[i] + h * (A41 * Dy[i] + A42 * K[2][i] + A43 * K[3][i]);
             f(Ynew, T + h, K[4]);
 
             for (int i = 0; i < N; i++)
-                err[i] = K[1][i] * E1 + K[2][i] * E2 + K[3][i] * E3 + K[4][i] * E4;
+                err[i] = Dy[i] * E1 + K[2][i] * E2 + K[3][i] * E3 + K[4][i] * E4;
 
             K[4].CopyTo(Dynew);
         }

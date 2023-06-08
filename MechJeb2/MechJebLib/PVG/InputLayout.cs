@@ -4,9 +4,10 @@ using MechJebLib.Primitives;
 
 namespace MechJebLib.PVG
 {
-    public struct InputWrapper
+    public struct InputLayout
     {
-        public const int INPUT_WRAPPER_LEN = 15;
+        public const int INPUT_LAYOUT_LEN = 15;
+        public const int BT_INDEX          = 14;
 
         public V3 R;
 
@@ -42,7 +43,7 @@ namespace MechJebLib.PVG
             PR.CopyTo(other, 9);
             other[12] = M;
             other[13] = Pm;
-            other[14] = Bt;
+            other[BT_INDEX] = Bt;
         }
 
         public void CopyFrom(IList<double> other)
@@ -53,20 +54,14 @@ namespace MechJebLib.PVG
             PR.CopyFrom(other, 9);
             M  = other[12];
             Pm = other[13];
-            Bt = other[14];
+            Bt = other[BT_INDEX];
         }
 
-        public static InputWrapper CreateFrom(IList<double> other)
+        public static InputLayout CreateFrom(IList<double> other)
         {
-            var a = new InputWrapper();
+            var a = new InputLayout();
 
-            a.R.CopyFrom(other);
-            a.V.CopyFrom(other, 3);
-            a.PV.CopyFrom(other, 6);
-            a.PR.CopyFrom(other, 9);
-            a.M  = other[12];
-            a.Pm = other[13];
-            a.Bt = other[14];
+            a.CopyFrom(other);
 
             return a;
         }

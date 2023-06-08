@@ -14,8 +14,8 @@ namespace MechJebLib.PVG.Integrators
     {
         public void Integrate(Vn yin, Vn yfout, Phase phase, double t0, double tf)
         {
-            var y0 = OutputWrapper.CreateFrom(yin);
-            var yf = new OutputWrapper();
+            var y0 = OutputLayout.CreateFrom(yin);
+            var yf = new OutputLayout();
 
             (V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) = Shepperd.Solve2(1.0, tf - t0, y0.R, y0.V);
 
@@ -35,7 +35,7 @@ namespace MechJebLib.PVG.Integrators
 
         public void Integrate(Vn yin, Vn yfout, Phase phase, double t0, double tf, Solution solution)
         {
-            var interpolant = Hn.Get(OutputWrapper.OUTPUT_WRAPPER_LEN);
+            var interpolant = Hn.Get(OutputLayout.OUTPUT_LAYOUT_LEN);
             interpolant.Add(t0, yin);
             for (int i = 1; i < 21; i++)
             {

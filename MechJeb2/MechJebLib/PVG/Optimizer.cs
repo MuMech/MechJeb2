@@ -48,9 +48,9 @@ namespace MechJebLib.PVG
         private void ExpandArrays()
         {
             while (_initial.Count < _phases.Count)
-                _initial.Add(Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN));
+                _initial.Add(Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN));
             while (_terminal.Count < _phases.Count)
-                _terminal.Add(Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN));
+                _terminal.Add(Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN));
             while (_residual.Count < _phases.Count)
                 _residual.Add(Vn.Rent(ResidualWrapper.RESIDUAL_WRAPPER_LEN));
         }
@@ -58,14 +58,14 @@ namespace MechJebLib.PVG
         private void CopyToInitial(double[] yin)
         {
             for (int i = 0; i < yin.Length; i++)
-                _initial[i / OutputWrapper.OUTPUT_WRAPPER_LEN][i % OutputWrapper.OUTPUT_WRAPPER_LEN] = yin[i];
+                _initial[i / OutputLayout.OUTPUT_LAYOUT_LEN][i % OutputLayout.OUTPUT_LAYOUT_LEN] = yin[i];
         }
 
         private double CalcBTConstraint(int p)
         {
-            var yfp = OutputWrapper.CreateFrom(_terminal[p]);
-            var y0p = InputWrapper.CreateFrom(_initial[p]);
-            var yf = OutputWrapper.CreateFrom(_terminal[lastPhase]);
+            var yfp = OutputLayout.CreateFrom(_terminal[p]);
+            var y0p = InputLayout.CreateFrom(_initial[p]);
+            var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
 
             // handle coasts
             if (_phases[p].Coast && _phases[p].OptimizeTime)
@@ -92,7 +92,7 @@ namespace MechJebLib.PVG
 
                 if (_phases[p].DropMass > 0 && p < lastPhase)
                 {
-                    var y0p1 = OutputWrapper.CreateFrom(_initial[p + 1]);
+                    var y0p1 = OutputLayout.CreateFrom(_initial[p + 1]);
                     return H(yfp, p) - H(y0p1, p + 1);
                 }
 
@@ -103,15 +103,15 @@ namespace MechJebLib.PVG
             return y0p.Bt - _phases[p].bt;
         }
 
-        private double H(OutputWrapper y, int p)
+        private double H(OutputLayout y, int p)
         {
             return y.H0 + _phases[p].thrust * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot;
         }
 
         private void BaseResiduals()
         {
-            var y0 = InputWrapper.CreateFrom(_initial[0]);
-            var yf = OutputWrapper.CreateFrom(_terminal[lastPhase]);
+            var y0 = InputLayout.CreateFrom(_initial[0]);
+            var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
             using var z = ResidualWrapper.Rent(_residual[0]);
 
             z.R        = y0.R - _problem.R0Bar;
@@ -126,8 +126,8 @@ namespace MechJebLib.PVG
         {
             for (int p = 1; p < _phases.Count; p++)
             {
-                var y0 = InputWrapper.CreateFrom(_initial[p]);
-                var yf = OutputWrapper.CreateFrom(_terminal[p - 1]);
+                var y0 = InputLayout.CreateFrom(_initial[p]);
+                var yf = OutputLayout.CreateFrom(_terminal[p - 1]);
                 using var z = ResidualWrapper.Rent(_residual[p]);
 
                 z.RContinuity  = yf.R - y0.R;
@@ -218,14 +218,27 @@ namespace MechJebLib.PVG
             AnalyzePhases();
             ExpandArrays();
 
-            double[] yGuess = new double[_phases.Count * OutputWrapper.OUTPUT_WRAPPER_LEN];
-            double[] yNew = new double[_phases.Count * OutputWrapper.OUTPUT_WRAPPER_LEN];
+            double[] yGuess = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
+            double[] yNew = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
             double[] z = new double[_phases.Count * ResidualWrapper.RESIDUAL_WRAPPER_LEN];
+            double[] bndu = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
+            double[] bndl = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
+
+            for (int i = 0; i < bndu.Length; i++)
+            {
+                bndu[i] = double.PositiveInfinity;
+                bndl[i] = double.NegativeInfinity;
+            }
 
             for (int i = 0; i < yGuess.Length; i++)
-                yGuess[i] = _initial[i / OutputWrapper.OUTPUT_WRAPPER_LEN][i % OutputWrapper.OUTPUT_WRAPPER_LEN];
+                yGuess[i] = _initial[i / InputLayout.INPUT_LAYOUT_LEN][i % InputLayout.INPUT_LAYOUT_LEN];
 
-            alglib.minlmcreatev(OutputWrapper.OUTPUT_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
+            for (int i = 0; i < _phases.Count; i++)
+                if (!_phases[i].Coast && !_phases[i].Infinite)
+                    bndu[i*InputLayout.INPUT_LAYOUT_LEN+InputLayout.BT_INDEX] = _phases[i].tau * 0.999;
+
+            alglib.minlmcreatev(ResidualWrapper.RESIDUAL_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
+            alglib.minlmsetbc(_state, bndl, bndu);
             alglib.minlmsetcond(_state, LmEpsx, MaxIter);
             alglib.minlmoptimize(_state, _residualHandle, null, null);
             alglib.minlmresultsbuf(_state, ref yNew, _rep);
@@ -286,9 +299,9 @@ namespace MechJebLib.PVG
 
         private void Shooting(Solution? solution = null)
         {
-            using var integArray = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
+            using var integArray = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
 
-            var y0 = new InputWrapper();
+            var y0 = new InputLayout();
 
             double t0 = 0;
             double lastDv = 0;
@@ -312,7 +325,7 @@ namespace MechJebLib.PVG
                 double tf = t0 + bt;
                 phase.u0 = GetIntertialHeading(p, y0.PV);
 
-                var y0p = new OutputWrapper(y0);
+                var y0p = new OutputLayout(y0);
                 y0p.DV = lastDv;
                 y0p.CopyTo(integArray);
 
@@ -321,7 +334,7 @@ namespace MechJebLib.PVG
                 else
                     phase.Integrate(integArray, _terminal[p], t0, tf);
 
-                var yf = OutputWrapper.CreateFrom(_terminal[p]);
+                var yf = OutputLayout.CreateFrom(_terminal[p]);
                 lastDv = yf.DV;
 
                 t0 += bt;
@@ -336,7 +349,7 @@ namespace MechJebLib.PVG
 
             ExpandArrays();
 
-            using var integArray = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
+            using var integArray = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
 
             double t0 = 0;
             double lastDv = 0;
@@ -345,7 +358,7 @@ namespace MechJebLib.PVG
             {
                 Phase phase = _phases[p];
 
-                var y0 = new InputWrapper();
+                var y0 = new InputLayout();
 
                 if (p == 0)
                 {
@@ -369,13 +382,13 @@ namespace MechJebLib.PVG
                 double tf = t0 + y0.Bt;
                 phase.u0 = GetIntertialHeading(p, y0.PV);
 
-                var y0p = new OutputWrapper(y0);
+                var y0p = new OutputLayout(y0);
                 y0p.DV = lastDv;
                 y0p.CopyTo(integArray);
 
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
-                var yf = OutputWrapper.CreateFrom(_terminal[p]);
+                var yf = OutputLayout.CreateFrom(_terminal[p]);
                 lastDv = yf.DV;
 
                 t0 += tf;
@@ -419,7 +432,7 @@ namespace MechJebLib.PVG
 
             ExpandArrays();
 
-            using var integArray = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
+            using var integArray = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
 
             //double tbar = solution.Tbar(_problem.t0);
 
@@ -430,7 +443,7 @@ namespace MechJebLib.PVG
             {
                 Phase phase = _phases[p];
 
-                var y0 = new InputWrapper();
+                var y0 = new InputLayout();
 
                 if (p == 0)
                 {
@@ -455,13 +468,13 @@ namespace MechJebLib.PVG
 
                 phase.u0 = GetIntertialHeading(p, y0.PV);
 
-                var y0p = new OutputWrapper(y0);
+                var y0p = new OutputLayout(y0);
                 y0p.DV = lastDv;
                 y0p.CopyTo(integArray);
 
                 phase.Integrate(integArray, _terminal[p], t0, tf);
 
-                var yf = OutputWrapper.CreateFrom(_terminal[p]);
+                var yf = OutputLayout.CreateFrom(_terminal[p]);
                 lastDv = yf.DV;
 
                 t0 += tf;

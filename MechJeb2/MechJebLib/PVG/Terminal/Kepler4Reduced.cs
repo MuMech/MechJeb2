@@ -44,7 +44,7 @@ namespace MechJebLib.PVG.Terminal
             return new Kepler4Reduced(_smaT / scale.LengthScale, _eccT, _incT, _lanT);
         }
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputWrapper yf)
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {
             double rfm = yf.R.magnitude;
             double rf3 = rfm * rfm * rfm;

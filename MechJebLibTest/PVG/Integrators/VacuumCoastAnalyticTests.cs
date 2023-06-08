@@ -35,13 +35,13 @@ namespace MechJebLibTest.PVG
                 var pv0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 40 * random.NextDouble() - 20;
 
-                using var yin = Vn.Rent(InputWrapper.INPUT_WRAPPER_LEN);
-                using var yout = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
-                using var yout2 = Vn.Rent(OutputWrapper.OUTPUT_WRAPPER_LEN);
+                using var yin = Vn.Rent(InputLayout.INPUT_LAYOUT_LEN);
+                using var yout = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
+                using var yout2 = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
 
-                var y0 = new InputWrapper();
-                var yf = OutputWrapper.CreateFrom(yout);
-                var yf2 = OutputWrapper.CreateFrom(yout2);
+                var y0 = new InputLayout();
+                var yf = OutputLayout.CreateFrom(yout);
+                var yf2 = OutputLayout.CreateFrom(yout2);
 
                 y0.R  = r0;
                 y0.V  = v0;

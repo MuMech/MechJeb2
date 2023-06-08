@@ -69,7 +69,7 @@ namespace MechJebLib.PVG
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return x.R * _lengthScale;
         }
 
@@ -77,7 +77,7 @@ namespace MechJebLib.PVG
         public V3 Constant(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return V3.Cross(x.PR, x.R) + V3.Cross(x.PV, x.V);
         }
 
@@ -85,7 +85,7 @@ namespace MechJebLib.PVG
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return x.V * _velocityScale;
         }
 
@@ -98,7 +98,7 @@ namespace MechJebLib.PVG
         public V3 PvBar(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return x.PV;
         }
 
@@ -111,7 +111,7 @@ namespace MechJebLib.PVG
         public V3 PrBar(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return x.PR;
         }
 
@@ -119,7 +119,7 @@ namespace MechJebLib.PVG
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return x.M * _massScale;
         }
 
@@ -143,7 +143,7 @@ namespace MechJebLib.PVG
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return x.DV * _velocityScale;
         }
 
@@ -153,9 +153,9 @@ namespace MechJebLib.PVG
             double min = tbar > _tmin[n] ? tbar : _tmin[n];
             double max = _tmax[n];
             using Vn ddmin = Interpolate(n, min);
-            var xmin = OutputWrapper.CreateFrom(ddmin);
+            var xmin = OutputLayout.CreateFrom(ddmin);
             using Vn ddmax = Interpolate(n, max);
-            var xmax = OutputWrapper.CreateFrom(ddmax);
+            var xmax = OutputLayout.CreateFrom(ddmax);
             return Math.Max(xmax.DV - xmin.DV, 0) * _velocityScale;
         }
 
@@ -257,7 +257,7 @@ namespace MechJebLib.PVG
             V3 u;
 
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
 
             int phase = IndexForTbar(tbar);
 
@@ -287,7 +287,7 @@ namespace MechJebLib.PVG
         public (V3 r, V3 v) StateVectors(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputWrapper.CreateFrom(xraw);
+            var x = OutputLayout.CreateFrom(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
 

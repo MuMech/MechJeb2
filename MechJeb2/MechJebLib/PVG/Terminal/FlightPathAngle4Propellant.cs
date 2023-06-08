@@ -43,7 +43,7 @@ namespace MechJebLib.PVG.Terminal
             return new FlightPathAngle4Propellant(_gammaT, _rT, _vT, _incT);
         }
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputWrapper yf)
+        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {
             var n = new V3(0, 0, 1);
             var rn = V3.Cross(yf.R, n);

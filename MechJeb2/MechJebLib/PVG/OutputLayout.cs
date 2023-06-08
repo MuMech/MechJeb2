@@ -12,9 +12,9 @@ using MechJebLib.Utils;
 
 namespace MechJebLib.PVG
 {
-    public struct OutputWrapper
+    public struct OutputLayout
     {
-        public const int OUTPUT_WRAPPER_LEN = 15;
+        public const int OUTPUT_LAYOUT_LEN = 15;
 
         public V3 R;
 
@@ -42,7 +42,7 @@ namespace MechJebLib.PVG
 
         public double DV;
 
-        public OutputWrapper(InputWrapper other)
+        public OutputLayout(InputLayout other)
         {
             R  = other.R;
             V  = other.V;
@@ -75,17 +75,11 @@ namespace MechJebLib.PVG
             DV = other[14];
         }
 
-        public static OutputWrapper CreateFrom(IList<double> other)
+        public static OutputLayout CreateFrom(IList<double> other)
         {
-            var a = new OutputWrapper();
+            var a = new OutputLayout();
 
-            a.R.CopyFrom(other, 0);
-            a.V.CopyFrom(other, 3);
-            a.PV.CopyFrom(other, 6);
-            a.PR.CopyFrom(other, 9);
-            a.M  = other[12];
-            a.Pm = other[13];
-            a.DV = other[14];
+            a.CopyFrom(other);
 
             return a;
         }
