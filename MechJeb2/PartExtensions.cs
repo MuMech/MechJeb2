@@ -231,6 +231,34 @@ namespace MuMech
             return false;
         }
 
+        /// <summary>
+        ///     Determines if a given part is a ProceduralFairingDecoupler
+        /// </summary>
+        /// <param name="p">the part to check</param>
+        /// <returns>if the part is a procfairing payload decoupler</returns>
+        public static bool IsProceduralFairing(this Part p)
+        {
+            if (!VesselState.isLoadedProceduralFairing) return false;
+            return p.Modules.Contains("ProceduralFairingDecoupler");
+        }
+
+        /// <summary>
+        ///     Determines if a given part is a ProceduralFairingDecoupler which is attached to a payload ProceduralFairingBase
+        /// </summary>
+        /// <param name="p">the part to check</param>
+        /// <returns>if the part is a procfairing payload decoupler</returns>
+        public static bool IsProceduralFairingPayloadFairing(this Part p)
+        {
+            if (!p.IsProceduralFairing()) return false;
+            Part basepart = p.parent;
+            if (basepart is null)
+                throw new Exception("ProceduralFairingDecoupler parent is null--fix your root staging?");
+            PartModule fairingbase = basepart.Modules.GetModule("ProceduralFairingBase");
+            if (fairingbase is null)
+                throw new Exception("ProceduralFairingBase not found in parent part, weird.");
+            return fairingbase.Fields["mode"].GetValue<string>(fairingbase) == "Payload";
+        }
+
         public static bool IsUnfiredDecoupler(this Part p, out Part decoupledPart)
         {
             foreach (PartModule m in p.Modules)
