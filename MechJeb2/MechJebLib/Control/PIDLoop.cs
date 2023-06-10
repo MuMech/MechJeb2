@@ -16,12 +16,12 @@ namespace MechJebLib.Control
         public double Ki        { get; set; }
         public double Kd        { get; set; }
         public double Ts        { get; set; } = 0.02;
-        public double N         { get; set; } = 50;
+        public double N         { get; set; } = 50; // N = (4/Ts) * (1 - e^(-Ts/(2*Tf))) (trapezoidal discretization)
         public double B         { get; set; } = 1;
         public double C         { get; set; } = 1;
         public double SmoothIn  { get; set; } = 1.0;
         public double SmoothOut { get; set; } = 1.0;
-        public double Deadband  { get; set; } = 0;
+        public double Deadband  { get; set; }
         public double MinOutput { get; set; } = double.MinValue;
         public double MaxOutput { get; set; } = double.MaxValue;
         public bool   Clegg     { get; set; } = true;

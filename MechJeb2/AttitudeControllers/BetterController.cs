@@ -18,22 +18,22 @@ namespace MuMech.AttitudeControllers
         private readonly EditableDouble PosDeadband = new EditableDouble(0.0001);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKp = new EditableDouble(9.18299345180006);
+        private readonly EditableDouble VelKp = new EditableDouble(35);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKi = new EditableDouble(16.2833478287224);
+        private readonly EditableDouble VelKi = new EditableDouble(16.6);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelKd = new EditableDouble(-0.0921320503942923);
+        private readonly EditableDouble VelKd = new EditableDouble(0.425);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelN = new EditableDouble(99.672083845959);
+        private readonly EditableDouble VelN = new EditableDouble(84.1994541201249);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelB = new EditableDouble(0.596313214751797);
+        private readonly EditableDouble VelB = new EditableDouble(0.994);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        private readonly EditableDouble VelC = new EditableDouble(0.596313214751797);
+        private readonly EditableDouble VelC = new EditableDouble(0.0185);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private readonly EditableDouble VelDeadband = new EditableDouble(0.0001);
@@ -68,20 +68,20 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private bool useStoppingTime = true;
 
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         private int _version = -1;
 
         private void Defaults()
         {
             PosKp.val            = 1.98;
             PosDeadband.val      = 0.0001;
-            VelKp.val            = 9.18299345180006;
-            VelKi.val            = 16.2833478287224;
-            VelKd.val            = -0.0921320503942923;
-            VelN.val             = 99.6720838459594;
-            VelB.val             = 0.596313214751797;
-            VelC.val             = 0.596313214751797;
-            VelDeadband.val      = 0.001;
+            VelKp.val            = 35;
+            VelKi.val            = 16.6;
+            VelKd.val            = 0.425;
+            VelN.val             = 84.1994541201249;
+            VelB.val             = 0.994;
+            VelC.val             = 0.0185;
+            VelDeadband.val      = 0.0001;
             VelClegg             = false;
             VelSmoothIn.val      = 1.0;
             VelSmoothOut.val     = 1.0;
@@ -89,7 +89,7 @@ namespace MuMech.AttitudeControllers
             maxStoppingTime.val  = 2;
             minFlipTime.val      = 120;
             rollControlRange.val = 5;
-            _version             = 2;
+            _version             = 3;
         }
 
         private readonly PIDLoop[] _pid = { new PIDLoop(), new PIDLoop(), new PIDLoop() };
