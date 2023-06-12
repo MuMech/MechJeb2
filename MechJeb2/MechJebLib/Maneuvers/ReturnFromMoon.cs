@@ -129,7 +129,7 @@ namespace MechJebLib.Maneuvers
             if (ecc < 1)
             {
                 // do the planet first which is analogous to heliocentric in a transfer
-                V3 v1 = ChangeOrbitalElement.DeltaV(centralMu, moonR0, moonV0, peR, ChangeOrbitalElement.Type.PERIAPSIS);
+                V3 v1 = ChangeOrbitalElement.ChangePeriapsis(centralMu, moonR0, moonV0, peR);
 
                 // then do the source moon SOI
                 V3 vneg, vpos, rburn;

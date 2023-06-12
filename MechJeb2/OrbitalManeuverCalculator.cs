@@ -64,7 +64,7 @@ namespace MuMech
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            V3 dv = ChangeOrbitalElement.DeltaV(o.referenceBody.gravParameter, r, v, newPeR, ChangeOrbitalElement.Type.PERIAPSIS);
+            V3 dv = ChangeOrbitalElement.ChangePeriapsis(o.referenceBody.gravParameter, r, v, newPeR);
 
             return dv.V3ToWorld();
         }
@@ -80,7 +80,7 @@ namespace MuMech
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            V3 dv = ChangeOrbitalElement.DeltaV(o.referenceBody.gravParameter, r, v, newApR, ChangeOrbitalElement.Type.APOAPSIS);
+            V3 dv = ChangeOrbitalElement.ChangeApoapsis(o.referenceBody.gravParameter, r, v, newApR);
 
             return dv.V3ToWorld();
         }
@@ -92,7 +92,16 @@ namespace MuMech
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            V3 dv = ChangeOrbitalElement.DeltaV(o.referenceBody.gravParameter, r, v, newEcc, ChangeOrbitalElement.Type.ECC);
+            V3 dv = ChangeOrbitalElement.ChangeECC(o.referenceBody.gravParameter, r, v, newEcc);
+
+            return dv.V3ToWorld();
+        }
+
+        public static Vector3d DeltaVForSemiMajorAxis(Orbit o, double ut, double newSMA)
+        {
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
+
+            V3 dv = ChangeOrbitalElement.ChangeSMA(o.referenceBody.gravParameter, r, v, newSMA);
 
             return dv.V3ToWorld();
         }
@@ -956,15 +965,6 @@ namespace MuMech
             Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(UtilMath.Deg2Rad * desiredHeading) * o.North(UT);
             Vector3d desiredHorizontalVelocity = eastComponent + northComponent;
             return desiredHorizontalVelocity - actualHorizontalVelocity;
-        }
-
-        public static Vector3d DeltaVForSemiMajorAxis(Orbit o, double ut, double newSMA)
-        {
-            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
-
-            V3 dv = ChangeOrbitalElement.DeltaV(o.referenceBody.gravParameter, r, v, newSMA, ChangeOrbitalElement.Type.SMA);
-
-            return dv.V3ToWorld();
         }
 
         public static Vector3d DeltaVToShiftNodeLongitude(Orbit o, double UT, double newNodeLong)

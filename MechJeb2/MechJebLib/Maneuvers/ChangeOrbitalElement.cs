@@ -14,7 +14,7 @@ namespace MechJebLib.Maneuvers
 {
     public static class ChangeOrbitalElement
     {
-        public enum Type { PERIAPSIS, APOAPSIS, SMA, ECC }
+        private enum Type { PERIAPSIS, APOAPSIS, SMA, ECC }
 
         private struct Args
         {
@@ -53,7 +53,7 @@ namespace MechJebLib.Maneuvers
             }
         }
 
-        public static V3 DeltaV(double mu, V3 r, V3 v, double value, Type type)
+        private static V3 DeltaV(double mu, V3 r, V3 v, double value, Type type)
         {
             if (!mu.IsFinite())
                 throw new ArgumentException("bad mu in ChangeOrbitalElement");
@@ -61,26 +61,6 @@ namespace MechJebLib.Maneuvers
                 throw new ArgumentException("bad r in ChangeOrbitalElement");
             if (!v.IsFinite())
                 throw new ArgumentException("bad v in ChangeOrbitalElement");
-
-            switch (type)
-            {
-                case Type.PERIAPSIS:
-                    if (value < 0 || (value > r.magnitude) | !value.IsFinite())
-                        throw new ArgumentException($"Bad periapsis in ChangeOrbitalElement = {value}");
-                    break;
-                case Type.APOAPSIS:
-                    if (!value.IsFinite() || (value > 0 && value < r.magnitude))
-                        throw new ArgumentException($"Bad apoapsis in ChangeOrbitalElement = {value}");
-                    break;
-                case Type.SMA:
-                    if (!value.IsFinite())
-                        throw new ArgumentException($"Bad SMA in ChangeOrbitalElement = {value}");
-                    break;
-                case Type.ECC:
-                    if (!value.IsFinite() || value < 0)
-                        throw new ArgumentException($"Bad Ecc in ChangeOrbitalElement = {value}");
-                    break;
-            }
 
             const double DIFFSTEP = 1e-7;
             const double EPSX = 1e-15;
@@ -130,6 +110,38 @@ namespace MechJebLib.Maneuvers
                 );
 
             return rot * new V3(x[0], x[1], 0) * scale.VelocityScale;
+        }
+
+        public static V3 ChangePeriapsis(double mu, V3 r, V3 v, double peR)
+        {
+            if (peR < 0 || (peR > r.magnitude) | !peR.IsFinite())
+                throw new ArgumentException($"Bad periapsis in ChangeOrbitalElement = {peR}");
+
+            return DeltaV(mu, r, v, peR, Type.PERIAPSIS);
+        }
+
+        public static V3 ChangeApoapsis(double mu, V3 r, V3 v, double apR)
+        {
+            if (!apR.IsFinite() || (apR > 0 && apR < r.magnitude))
+                throw new ArgumentException($"Bad apoapsis in ChangeOrbitalElement = {apR}");
+
+            return DeltaV(mu, r, v, apR, Type.APOAPSIS);
+        }
+
+        public static V3 ChangeSMA(double mu, V3 r, V3 v, double sma)
+        {
+            if (!sma.IsFinite())
+                throw new ArgumentException($"Bad SMA in ChangeOrbitalElement = {sma}");
+
+            return DeltaV(mu, r, v, sma, Type.SMA);
+        }
+
+        public static V3 ChangeECC(double mu, V3 r, V3 v, double ecc)
+        {
+            if (!ecc.IsFinite() || ecc < 0)
+                throw new ArgumentException($"Bad Ecc in ChangeOrbitalElement = {ecc}");
+
+            return DeltaV(mu, r, v, ecc, Type.ECC);
         }
     }
 }
