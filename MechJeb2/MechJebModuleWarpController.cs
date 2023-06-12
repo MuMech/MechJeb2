@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Linq;
 using JetBrains.Annotations;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -13,36 +12,37 @@ namespace MuMech
             : base(core)
         {
             WarpPaused = false;
-            priority = 100;
-            enabled = true;
+            priority   = 100;
+            enabled    = true;
         }
 
-        double warpIncreaseAttemptTime = 0;
+        private double warpIncreaseAttemptTime;
 
-        private int lastAskedIndex = 0;
+        private int lastAskedIndex;
 
-        public double warpToUT { get; private set; }
-        public bool WarpPaused { get; private set; }
+        public double warpToUT   { get; private set; }
+        public bool   WarpPaused { get; private set; }
 
         [Persistent(pass = (int)Pass.Global)]
         public bool activateSASOnWarp = true;
 
         [Persistent(pass = (int)Pass.Global)]
-        public bool useQuickWarp = false;
+        public bool useQuickWarp;
 
         public void useQuickWarpInfoItem()
         {
-            useQuickWarp = GUILayout.Toggle(useQuickWarp, Localizer.Format("#MechJeb_WarpHelper_checkbox1"));//"Quick warp"
+            useQuickWarp = GUILayout.Toggle(useQuickWarp, Localizer.Format("#MechJeb_WarpHelper_checkbox1")); //"Quick warp"
         }
 
-        [GeneralInfoItem("#MechJeb_MJWarpControl", InfoItem.Category.Misc)]//MJ Warp Control
+        [GeneralInfoItem("#MechJeb_MJWarpControl", InfoItem.Category.Misc)] //MJ Warp Control
         public void ControlWarpButton()
         {
-            if (WarpPaused && GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button3")))//"Resume MJ Warp"
+            if (WarpPaused && GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button3"))) //"Resume MJ Warp"
             {
                 ResumeWarp();
             }
-            if (!WarpPaused && GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button4")))//"Pause MJ Warp"
+
+            if (!WarpPaused && GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button4"))) //"Pause MJ Warp"
             {
                 PauseWarp();
             }
@@ -53,7 +53,8 @@ namespace MuMech
             if (!WarpPaused && lastAskedIndex > 0 && lastAskedIndex != TimeWarp.CurrentRateIndex)
             {
                 // Rate limited by the altitude so we should not care
-                if (!vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody))
+                if (!vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH &&
+                    TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody))
                     return;
 
                 //print("Warppause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex + " WarpMode=" + TimeWarp.WarpMode + " MaxCurrentRate=" + TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody));
@@ -64,7 +65,8 @@ namespace MuMech
             }
         }
 
-        public override void OnFixedUpdate() {
+        public override void OnFixedUpdate()
+        {
             if (warpToUT > 0)
                 WarpToUT(warpToUT);
         }
@@ -97,7 +99,8 @@ namespace MuMech
                 lastAskedIndex = rateIndex;
                 if (WarpPaused)
                 {
-                    ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WarpHelper_scrmsg"));//"MJ : Warp paused - resume in the Warp Helper menu"
+                    ScreenMessages.PostScreenMessage(
+                        Localizer.Format("#MechJeb_WarpHelper_scrmsg")); //"MJ : Warp paused - resume in the Warp Helper menu"
                 }
                 else
                 {
@@ -111,7 +114,8 @@ namespace MuMech
 
         public void WarpToUT(double UT, double maxRate = -1)
         {
-            if (UT <= vesselState.time) {
+            if (UT <= vesselState.time)
+            {
                 warpToUT = 0.0;
                 return;
             }
@@ -120,37 +124,43 @@ namespace MuMech
                 maxRate = TimeWarp.fetch.warpRates[TimeWarp.fetch.warpRates.Length - 1];
 
             double desiredRate;
-            if (useQuickWarp) {
+            if (useQuickWarp)
+            {
                 desiredRate = 1;
-                if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL && orbit.EndUT < UT) {
-                    for(int i=0; i<TimeWarp.fetch.warpRates.Length; i++){
+                if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL && orbit.EndUT < UT)
+                {
+                    for (int i = 0; i < TimeWarp.fetch.warpRates.Length; i++)
+                    {
                         if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= orbit.EndUT - vesselState.time)
                             desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
                         else break;
                     }
                 }
-                else{
-                    for(int i=0; i<TimeWarp.fetch.warpRates.Length; i++){
+                else
+                {
+                    for (int i = 0; i < TimeWarp.fetch.warpRates.Length; i++)
+                    {
                         if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= UT - vesselState.time)
                             desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
                         else break;
                     }
                 }
             }
-            else desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * (float)TimeWarp.CurrentRateIndex));
-            
+            else desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * TimeWarp.CurrentRateIndex));
+
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
             if (!vessel.LandedOrSplashed &&
-               vesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, mainBody))
+                vesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, mainBody))
             {
                 //too low to use any regular warp rates. Use physics warp at a max of x2:
                 WarpPhysicsAtRate((float)Math.Min(desiredRate, 2));
             }
             else
             {
-                WarpRegularAtRate((float)desiredRate,useQuickWarp,useQuickWarp);
+                WarpRegularAtRate((float)desiredRate, useQuickWarp, useQuickWarp);
             }
+
             warpToUT = UT;
         }
 
@@ -163,7 +173,8 @@ namespace MuMech
             {
                 DecreaseRegularWarp(instantOnDecrease);
             }
-            else if (TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.warpRates.Length && TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
+            else if (TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.warpRates.Length &&
+                     TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
             {
                 IncreaseRegularWarp(instantOnIncrease);
             }
@@ -178,7 +189,8 @@ namespace MuMech
             {
                 DecreasePhysicsWarp(instantOnDecrease);
             }
-            else if (TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.physicsWarpRates.Length && TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
+            else if (TimeWarp.CurrentRateIndex + 1 < TimeWarp.fetch.physicsWarpRates.Length &&
+                     TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex + 1] <= maxRate)
             {
                 IncreasePhysicsWarp(instantOnIncrease);
             }
@@ -196,8 +208,10 @@ namespace MuMech
                     TimeWarp.fetch.Mode = TimeWarp.Modes.HIGH;
                     SetTimeWarpRate(0, true);
                 }
+
                 return false;
             }
+
             return true;
         }
 
@@ -211,6 +225,7 @@ namespace MuMech
                 SetTimeWarpRate(0, true);
                 return false;
             }
+
             return true;
         }
 
@@ -226,7 +241,9 @@ namespace MuMech
                 if (TimeWarp.fetch.GetAltitudeLimit(TimeWarp.CurrentRateIndex + 1, mainBody) > instantAltitudeASL) return false;
                 //altitude too low to increase warp
             }
-            if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate) return false; //most recent warp change is not yet complete
+
+            if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
+                return false;                                                 //most recent warp change is not yet complete
             if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
             warpIncreaseAttemptTime = vesselState.time;
@@ -240,7 +257,8 @@ namespace MuMech
 
             //do a bunch of checks to see if we can increase the warp rate:
             if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.physicsWarpRates.Length) return false; //already at max warp
-            if (TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate) return false; //most recent warp change is not yet complete
+            if (TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
+                return false;                                                 //most recent warp change is not yet complete
             if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
             warpIncreaseAttemptTime = vesselState.time;
@@ -271,7 +289,8 @@ namespace MuMech
         public bool MinimumWarp(bool instant = false)
         {
             warpToUT = 0.0;
-            if (TimeWarp.CurrentRateIndex == 0) return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
+            if (TimeWarp.CurrentRateIndex == 0)
+                return false; //Somehow setting TimeWarp.SetRate to 0 when already at 0 causes unexpected rapid separation (Kraken)
             SetTimeWarpRate(0, instant);
             return true;
         }

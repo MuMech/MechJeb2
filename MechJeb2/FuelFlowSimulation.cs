@@ -30,14 +30,15 @@ namespace MuMech
             _partLookup.Clear();
 
             _kpaToAtmospheres = f._kpaToAtmospheres;
-            _simStage = f._simStage;
+            _simStage         = f._simStage;
 
             Profiler.BeginSample("BorrowAndCopyFrom");
             foreach (FuelNode n in f._nodes)
             {
-                FuelNode n2 = FuelNode.BorrowAndCopyFrom(n);
+                var n2 = FuelNode.BorrowAndCopyFrom(n);
                 _nodes.Add(n2);
             }
+
             Profiler.EndSample();
 
             foreach (FuelNode node in _nodes)
@@ -54,6 +55,7 @@ namespace MuMech
                 Part p = node.part;
                 node.AddCrossfeedSources(p.crossfeedPartSet.GetParts(), _nodeLookup);
             }
+
             Profiler.EndSample();
 
             Profiler.EndSample();
@@ -77,7 +79,7 @@ namespace MuMech
             for (int index = 0; index < parts.Count; index++)
             {
                 Part part = parts[index];
-                FuelNode node = FuelNode.Borrow(part, dVLinearThrust);
+                var node = FuelNode.Borrow(part, dVLinearThrust);
                 _nodeLookup[part] = node;
                 _partLookup[node] = part;
                 _nodes.Add(node);
@@ -103,6 +105,7 @@ namespace MuMech
                     HashSet<Part> set = p.crossfeedPartSet.GetParts();
                     node.AddCrossfeedSources(set, _nodeLookup);
                 }
+
                 if (node.decoupledInStage >= _simStage) _simStage = node.decoupledInStage + 1;
             }
 
@@ -419,9 +422,10 @@ namespace MuMech
                 if (_simStage == activeEngines.value[i].inverseStage)
                 {
                     sumSpoolupThrust += thrust;
-                    sumSpoolup += activeEngines.value[i].partSpoolupTime * thrust;
+                    sumSpoolup       += activeEngines.value[i].partSpoolupTime * thrust;
                 }
             }
+
             if (sumSpoolupThrust > 0)
                 sumSpoolup /= sumSpoolupThrust;
 
@@ -438,6 +442,7 @@ namespace MuMech
                 if (n.isEngine && n.inverseStage >= _simStage && n.isDrawingResources && n.CanDrawNeededResources(_nodes))
                     activeEngines.value.Add(n);
             }
+
             return activeEngines;
         }
     }

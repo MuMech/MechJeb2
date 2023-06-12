@@ -8,14 +8,13 @@
 
 using System;
 using JetBrains.Annotations;
-using UnityEngine;
 
 namespace MuMech
 {
     [UsedImplicitly]
     public class MechJebModuleSpinupController : ComputerModule
     {
-        private enum SpinupState { INITIALIZED, STARTING, STABILIZING, SPINUP, FINISHED  }
+        private enum SpinupState { INITIALIZED, STARTING, STABILIZING, SPINUP, FINISHED }
 
         public double RollAngularVelocity = 0;
 
@@ -37,13 +36,13 @@ namespace MuMech
         {
             _state = SpinupState.FINISHED;
             core.attitude.SetOmegaTarget(roll: double.NaN);
-            core.attitude.SetActuationControl(true, true);
+            core.attitude.SetActuationControl();
             // FIXME: this might overwrite someone else, but the only other consumer so far is the GuidanceController
             core.staging.autostageLimitInternal = 0;
             core.attitude.users.Remove(this);
             base.OnModuleDisabled();
         }
-        
+
         public override void OnStart(PartModule.StartState state)
         {
             GameEvents.onStageActivate.Add(HandleStageEvent);
@@ -67,13 +66,13 @@ namespace MuMech
                 return;
 
             core.staging.autostageLimitInternal = vessel.currentStage;
-            
+
             if (vesselState.time < _startTime)
                 return;
 
             if (_state == SpinupState.STARTING)
                 _state = SpinupState.STABILIZING;
-            
+
             if (vessel.angularVelocityD.y / RollAngularVelocity >= 0.99)
                 enabled = false;
 

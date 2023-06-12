@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using JetBrains.Annotations;
-using UnityEngine;
+﻿using JetBrains.Annotations;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -10,13 +9,14 @@ namespace MuMech
     {
         public MechJebModuleSolarPanelController(MechJebCore core)
             : base(core)
-        { }
-        
-        [GeneralInfoItem("#MechJeb_ToggleSolarPanels", InfoItem.Category.Misc, showInEditor = false)]//Toggle solar panels
+        {
+        }
+
+        [GeneralInfoItem("#MechJeb_ToggleSolarPanels", InfoItem.Category.Misc, showInEditor = false)] //Toggle solar panels
         public void SolarPanelDeployButton()
         {
-            autoDeploy = GUILayout.Toggle(autoDeploy, Localizer.Format("#MechJeb_SolarPanelDeployButton"));//"Auto-deploy solar panels"
-            
+            autoDeploy = GUILayout.Toggle(autoDeploy, Localizer.Format("#MechJeb_SolarPanelDeployButton")); //"Auto-deploy solar panels"
+
             if (GUILayout.Button(buttonText))
             {
                 if (ExtendingOrRetracting())
@@ -39,11 +39,11 @@ namespace MuMech
             switch (deployablePartState)
             {
                 case DeployablePartState.EXTENDED:
-                    return Localizer.Format("#MechJeb_SolarPanelDeploy");//"Toggle solar panels (currently extended)"
+                    return Localizer.Format("#MechJeb_SolarPanelDeploy"); //"Toggle solar panels (currently extended)"
                 case DeployablePartState.RETRACTED:
-                    return Localizer.Format("#MechJeb_SolarPanelRetracted");//"Toggle solar panels (currently retracted)"
+                    return Localizer.Format("#MechJeb_SolarPanelRetracted"); //"Toggle solar panels (currently retracted)"
                 default:
-                    return Localizer.Format("#MechJeb_SolarPanelToggle");//"Toggle solar panels"
+                    return Localizer.Format("#MechJeb_SolarPanelToggle"); //"Toggle solar panels"
             }
         }
     }

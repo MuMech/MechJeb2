@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+#nullable enable
+
 using System;
 using JetBrains.Annotations;
+using MechJebLib.Core;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-
-#nullable enable
 
 namespace MechJebLib.Maneuvers
 {
@@ -120,7 +121,7 @@ namespace MechJebLib.Maneuvers
             Scale moonToPlanetScale = moonScale.ConvertTo(planetScale);
 
 
-            (double _, double ecc) = Core.Maths.SmaEccFromStateVectors(moonMu, r0, v0);
+            (double _, double ecc) = Maths.SmaEccFromStateVectors(moonMu, r0, v0);
 
             double dt, tt1;
             V3 rf, vf, dv, r2, v2;
@@ -132,16 +133,16 @@ namespace MechJebLib.Maneuvers
 
                 // then do the source moon SOI
                 V3 vneg, vpos, rburn;
-                (vneg, vpos, rburn, dt) = Core.Maths.SingleImpulseHyperbolicBurn(moonMu, r0, v0, v1);
+                (vneg, vpos, rburn, dt) = Maths.SingleImpulseHyperbolicBurn(moonMu, r0, v0, v1);
                 dv                      = vpos - vneg;
-                tt1                     = Core.Maths.TimeToNextRadius(moonMu, rburn, vpos, moonSOI);
+                tt1                     = Maths.TimeToNextRadius(moonMu, rburn, vpos, moonSOI);
                 (r2, v2)                = Shepperd.Solve(moonMu, tt1, rburn, vpos);
             }
             else
             {
                 dt       = 0;
                 dv       = V3.zero;
-                tt1      = Core.Maths.TimeToNextRadius(moonMu, r0, v0, moonSOI);
+                tt1      = Maths.TimeToNextRadius(moonMu, r0, v0, moonSOI);
                 (r2, v2) = Shepperd.Solve(moonMu, tt1, r0, v0);
             }
 
@@ -151,7 +152,7 @@ namespace MechJebLib.Maneuvers
             V3 v2Sph = v2.cart2sph;
             V3 r2Planet = r2 + moonR2;
             V3 v2Planet = v2 + moonV2;
-            double tt2 = Core.Maths.TimeToNextPeriapsis(centralMu, r2Planet, v2Planet);
+            double tt2 = Maths.TimeToNextPeriapsis(centralMu, r2Planet, v2Planet);
             (rf, vf) = Shepperd.Solve(centralMu, tt2, r2Planet, v2Planet);
 
             dv       /= moonScale.VelocityScale;
@@ -240,7 +241,7 @@ namespace MechJebLib.Maneuvers
             V3 dv;
             int i = 0;
 
-            (double _, double ecc) = Core.Maths.SmaEccFromStateVectors(moonMu, r0, v0);
+            (double _, double ecc) = Maths.SmaEccFromStateVectors(moonMu, r0, v0);
 
             while (true)
             {
@@ -249,14 +250,14 @@ namespace MechJebLib.Maneuvers
                     break;
                 if (i++ >= 5)
                     throw new Exception("Maximum iterations exceeded with no valid future solution");
-                (r0, v0) = Shepperd.Solve(moonMu, Core.Maths.PeriodFromStateVectors(moonMu, r0, v0), r0, v0);
+                (r0, v0) = Shepperd.Solve(moonMu, Maths.PeriodFromStateVectors(moonMu, r0, v0), r0, v0);
             }
 
             (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
-            double tt1 = Core.Maths.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
+            double tt1 = Maths.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
             (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
-            double newPeR = Core.Maths.PeriapsisFromStateVectors(centralMu, moonR2 + r2, moonV2 + v2);
+            double newPeR = Maths.PeriapsisFromStateVectors(centralMu, moonR2 + r2, moonV2 + v2);
 
             return (dv, dt, newPeR);
         }

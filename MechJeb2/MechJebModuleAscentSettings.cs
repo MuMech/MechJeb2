@@ -204,9 +204,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDouble MinCoast = MIN_COAST_DEFAULT;
 
-        [Persistent(pass = (int)(Pass.Type))]
+        [Persistent(pass = (int)Pass.Type)]
         public bool CoastBeforeFlag = false;
-        
+
         [Persistent(pass = (int)Pass.Type)]
         public bool FixedCoast = FIXED_COAST_DEFAULT;
 

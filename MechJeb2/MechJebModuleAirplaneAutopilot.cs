@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using UnityEngine;
+
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace MuMech
@@ -16,30 +17,30 @@ namespace MuMech
         [Persistent(pass = (int)Pass.Local)]
         public double AltitudeTarget = 0, HeadingTarget = 90, RollTarget = 0, SpeedTarget = 0, VertSpeedTarget = 0;
 
-        [Persistent(pass = (int)Pass.Local)] 
+        [Persistent(pass = (int)Pass.Local)]
         public double BankAngle = 30;
 
-        [Persistent(pass = (int)Pass.Local)] 
+        [Persistent(pass = (int)Pass.Local)]
         public readonly EditableDouble AccKp = 0.5, AccKi = 0.5, AccKd = 0.005;
 
         [Persistent(pass = (int)Pass.Local)]
         public readonly EditableDouble PitKp = 2.0, PitKi = 1.0, PitKd = 0.005;
 
-        [Persistent(pass = (int)Pass.Local)] 
+        [Persistent(pass = (int)Pass.Local)]
         public readonly EditableDouble RolKp = 0.5, RolKi = 0.02, RolKd = 0.5;
 
-        [Persistent(pass = (int)Pass.Local)] 
+        [Persistent(pass = (int)Pass.Local)]
         public readonly EditableDouble YawKp = 1.0, YawKi = 0.25, YawKd = 0.02;
 
-        [Persistent(pass = (int)Pass.Local)] 
+        [Persistent(pass = (int)Pass.Local)]
         public readonly EditableDouble YawLimit = 10, RollLimit = 45, PitchDownLimit = 15, PitchUpLimit = 25;
 
         public PIDController AccelerationPIDController, PitchPIDController, RollPIDController, YawPIDController;
 
         public double AErr, CurAcc, Spd;
         public double CurrYaw;
-        public double PitchErr,           RollErr,        YawErr;
-        public double PitchAct,           RollAct,        YawAct;
+        public double PitchErr,            RollErr,         YawErr;
+        public double PitchAct,            RollAct,         YawAct;
         public double RealVertSpeedTarget, RealPitchTarget, RealRollTarget, RealYawTarget, RealAccelerationTarget;
 
         private bool _initPitchController;
@@ -76,8 +77,8 @@ namespace MuMech
 
         public void EnableHeadingHold()
         {
-            HeadingHoldEnabled = true;
-            RollHoldEnabled    = true;
+            HeadingHoldEnabled  = true;
+            RollHoldEnabled     = true;
             _initRollController = true;
             _initYawController  = true;
             YawPIDController.Reset();
@@ -95,7 +96,7 @@ namespace MuMech
             if (!enabled)
                 return;
 
-            Spd             = vesselState.speedSurface;
+            Spd              = vesselState.speedSurface;
             SpeedHoldEnabled = true;
             core.thrust.users.Add(this);
             AccelerationPIDController.Reset();
@@ -225,10 +226,10 @@ namespace MuMech
             if (SpeedHoldEnabled)
             {
                 double spd = vesselState.speedSurface;
-                CurAcc                            = (spd - Spd) / Time.fixedDeltaTime;
-                Spd                               = spd;
+                CurAcc                             = (spd - Spd) / Time.fixedDeltaTime;
+                Spd                                = spd;
                 RealAccelerationTarget             = (SpeedTarget - spd) / 4;
-                AErr                              = RealAccelerationTarget - CurAcc;
+                AErr                               = RealAccelerationTarget - CurAcc;
                 AccelerationPIDController.intAccum = MuUtils.Clamp(AccelerationPIDController.intAccum, -1 / AccKi, 1 / AccKi);
                 double tAct = AccelerationPIDController.Compute(AErr);
                 if (!double.IsNaN(tAct))
@@ -273,10 +274,10 @@ namespace MuMech
                 RealPitchTarget = vesselState.vesselPitch + adjustment;
 
                 RealPitchTarget = UtilMath.Clamp(RealPitchTarget, -PitchDownLimit, PitchUpLimit);
-                PitchErr       = MuUtils.ClampDegrees180(RealPitchTarget - vesselState.vesselPitch);
+                PitchErr        = MuUtils.ClampDegrees180(RealPitchTarget - vesselState.vesselPitch);
 
                 PitchPIDController.intAccum = UtilMath.Clamp(PitchPIDController.intAccum, -100 / PitKi, 100 / PitKi);
-                PitchAct                   = PitchPIDController.Compute(PitchErr) / 100;
+                PitchAct                    = PitchPIDController.Compute(PitchErr) / 100;
 
                 if (double.IsNaN(PitchAct))
                 {
@@ -322,10 +323,10 @@ namespace MuMech
             {
                 RealRollTarget = UtilMath.Clamp(RealRollTarget, -BankAngle, BankAngle);
                 RealRollTarget = UtilMath.Clamp(RealRollTarget, -RollLimit, RollLimit);
-                RollErr       = MuUtils.ClampDegrees180(RealRollTarget - -vesselState.currentRoll);
+                RollErr        = MuUtils.ClampDegrees180(RealRollTarget - -vesselState.currentRoll);
 
                 RollPIDController.intAccum = MuUtils.Clamp(RollPIDController.intAccum, -100 / RolKi, 100 / RolKi);
-                RollAct                   = RollPIDController.Compute(RollErr) / 100;
+                RollAct                    = RollPIDController.Compute(RollErr) / 100;
 
                 if (double.IsNaN(RollAct))
                     RollPIDController.Reset();
@@ -336,10 +337,10 @@ namespace MuMech
             if (HeadingHoldEnabled)
             {
                 RealYawTarget = UtilMath.Clamp(RealYawTarget, -YawLimit, YawLimit);
-                YawErr       = MuUtils.ClampDegrees180(RealYawTarget - CurrYaw);
+                YawErr        = MuUtils.ClampDegrees180(RealYawTarget - CurrYaw);
 
                 YawPIDController.intAccum = MuUtils.Clamp(YawPIDController.intAccum, -100 / YawKi, 100 / YawKi);
-                YawAct                   = YawPIDController.Compute(YawErr) / 100;
+                YawAct                    = YawPIDController.Compute(YawErr) / 100;
 
                 if (double.IsNaN(YawAct))
                     YawPIDController.Reset();

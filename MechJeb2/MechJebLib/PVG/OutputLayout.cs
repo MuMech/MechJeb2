@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 
 namespace MechJebLib.PVG
 {
@@ -55,7 +54,7 @@ namespace MechJebLib.PVG
 
         public void CopyTo(IList<double> other)
         {
-            R.CopyTo(other, 0);
+            R.CopyTo(other);
             V.CopyTo(other, 3);
             PV.CopyTo(other, 6);
             PR.CopyTo(other, 9);
@@ -66,7 +65,7 @@ namespace MechJebLib.PVG
 
         public void CopyFrom(IList<double> other)
         {
-            R.CopyFrom(other, 0);
+            R.CopyFrom(other);
             V.CopyFrom(other, 3);
             PV.CopyFrom(other, 6);
             PR.CopyFrom(other, 9);

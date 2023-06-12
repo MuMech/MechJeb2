@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
 using static MechJebLib.Utils.Statics;
-
 
 namespace MuMech
 {
@@ -13,12 +11,12 @@ namespace MuMech
     public class MechJebModuleRCSBalancer : ComputerModule
     {
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)]//Smart RCS translation
+        [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)] //Smart RCS translation
         public bool smartTranslation = false;
 
         // Overdrive
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
-        [EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")]//RCS balancer overdrive
+        [EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")] //RCS balancer overdrive
         public EditableDoubleMult overdrive = new EditableDoubleMult(1, 0.01);
 
         // Advanced options
@@ -35,35 +33,38 @@ namespace MuMech
         // Advanced: tuning parameters
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble tuningParamFactorTorque = 1;
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble tuningParamFactorTranslate = 0.005;
+
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public EditableDouble tuningParamFactorWaste = 1;
 
         // Variables for RCS solving.
-        private readonly RCSSolverThread solverThread = new RCSSolverThread();
-        private List<RCSSolver.Thruster> thrusters = null;
-        private double[] throttles = null;
+        private readonly RCSSolverThread          solverThread = new RCSSolverThread();
+        private          List<RCSSolver.Thruster> thrusters;
+        private          double[]                 throttles;
 
-        [EditableInfoItem("#MechJeb_RCSBalancerPrecision", InfoItem.Category.Thrust)]//RCS balancer precision
+        [EditableInfoItem("#MechJeb_RCSBalancerPrecision", InfoItem.Category.Thrust)] //RCS balancer precision
         public EditableInt calcPrecision = 3;
 
-        [GeneralInfoItem("#MechJeb_RCSBalancerInfo", InfoItem.Category.Thrust)]//RCS balancer info
+        [GeneralInfoItem("#MechJeb_RCSBalancerInfo", InfoItem.Category.Thrust)] //RCS balancer info
         public void RCSBalancerInfoItem()
         {
             GUILayout.BeginVertical();
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label1"), (solverThread.calculationTime * 1000).ToString("F0") + " ms");//"Calculation time"
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label2"), solverThread.taskCount);//"Pending tasks"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label1"),
+                (solverThread.calculationTime * 1000).ToString("F0") + " ms");                                    //"Calculation time"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label2"), solverThread.taskCount); //"Pending tasks"
 
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label3"),   solverThread.cacheSize);//"Cache size"
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"),   solverThread.cacheHits);//"Cache hits"
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label5"), solverThread.cacheMisses);//"Cache misses"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label3"), solverThread.cacheSize);   //"Cache size"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"), solverThread.cacheHits);   //"Cache hits"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label5"), solverThread.cacheMisses); //"Cache misses"
 
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), solverThread.comError.ToSI() + "m");//"CoM shift"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"), solverThread.comErrorThreshold.ToSI() + "m");//"CoM recalc"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), solverThread.maxComError.ToSI() + "m");//"Max CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), solverThread.comError.ToSI() + "m");          //"CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"), solverThread.comErrorThreshold.ToSI() + "m"); //"CoM recalc"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), solverThread.maxComError.ToSI() + "m");       //"Max CoM shift"
 
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.statusString);//"Status"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.statusString); //"Status"
 
             string error = solverThread.errorString;
             if (!string.IsNullOrEmpty(error))
@@ -74,11 +75,11 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("#MechJeb_RCSThrusterStates", InfoItem.Category.Thrust)]//RCS thruster states
+        [GeneralInfoItem("#MechJeb_RCSThrusterStates", InfoItem.Category.Thrust)] //RCS thruster states
         private void RCSThrusterStateInfoItem()
         {
             GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_RCSThrusterStates_Label1"));//"RCS thrusters states (scaled to 0-9)"
+            GUILayout.Label(Localizer.Format("#MechJeb_RCSThrusterStates_Label1")); //"RCS thrusters states (scaled to 0-9)"
 
             bool firstRcsModule = true;
             string thrusterStates = "";
@@ -91,16 +92,19 @@ namespace MuMech
                     {
                         thrusterStates += " ";
                     }
-                    firstRcsModule = false;
-                    thrusterStates += String.Format("({0:F0}:", pm.thrusterPower * 9);
+
+                    firstRcsModule =  false;
+                    thrusterStates += string.Format("({0:F0}:", pm.thrusterPower * 9);
                     for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
                         if (i != 0)
                         {
                             thrusterStates += ",";
                         }
+
                         thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
                     }
+
                     thrusterStates += ")";
                 }
             }
@@ -109,7 +113,7 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("#MechJeb_RCSPartThrottles", InfoItem.Category.Thrust)]//RCS part throttles
+        [GeneralInfoItem("#MechJeb_RCSPartThrottles", InfoItem.Category.Thrust)] //RCS part throttles
         private void RCSPartThrottlesInfoItem()
         {
             GUILayout.BeginVertical();
@@ -126,7 +130,8 @@ namespace MuMech
                     {
                         thrusterStates += " ";
                     }
-                    firstRcsModule = false;
+
+                    firstRcsModule =  false;
                     thrusterStates += pm.thrusterPower.ToString("F1");
                 }
             }
@@ -135,18 +140,19 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        [GeneralInfoItem("#MechJeb_ControlVector", InfoItem.Category.Thrust)]//Control vector
+        [GeneralInfoItem("#MechJeb_ControlVector", InfoItem.Category.Thrust)] //Control vector
         private void ControlVectorInfoItem()
         {
             FlightCtrlState s = FlightInputHandler.state;
 
-            string xyz = String.Format("{0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
-            string rpy = String.Format("{0:F2} {1:F2} {2:F2}", s.roll, s.pitch, s.yaw);
+            string xyz = string.Format("{0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
+            string rpy = string.Format("{0:F2} {1:F2} {2:F2}", s.roll, s.pitch, s.yaw);
             GUILayout.BeginVertical();
             GuiUtils.SimpleLabel("X/Y/Z", xyz);
             GuiUtils.SimpleLabel("R/P/Y", rpy);
             GUILayout.EndVertical();
         }
+
         public MechJebModuleRCSBalancer(MechJebCore core)
             : base(core)
         {
@@ -202,8 +208,8 @@ namespace MuMech
             //     backward (n): z +1
             // To turn this vector into a vessel-relative one, we need to negate
             // each value and also swap the Y and Z values.
-            Vector3 direction = new Vector3(-s.X, -s.Z, -s.Y);
-            
+            var direction = new Vector3(-s.X, -s.Z, -s.Y);
+
             // RCS balancing on rotation isn't supported.
             //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
 
@@ -215,7 +221,7 @@ namespace MuMech
             // better to not move at all than move in the wrong direction.
             if (throttles.Length != thrusters.Count)
             {
-                throttles = new double[thrusters.Count];
+                throttles    = new double[thrusters.Count];
                 cutThrottles = true;
             }
 
@@ -237,11 +243,11 @@ namespace MuMech
         public void UpdateTuningParameters()
         {
             double wasteThreshold = overdrive * overdriveScale;
-            RCSSolverTuningParams tuningParams = new RCSSolverTuningParams();
-            tuningParams.wasteThreshold     = wasteThreshold;
-            tuningParams.factorTorque       = tuningParamFactorTorque;
-            tuningParams.factorTranslate    = tuningParamFactorTranslate;
-            tuningParams.factorWaste        = tuningParamFactorWaste;
+            var tuningParams = new RCSSolverTuningParams();
+            tuningParams.wasteThreshold  = wasteThreshold;
+            tuningParams.factorTorque    = tuningParamFactorTorque;
+            tuningParams.factorTranslate = tuningParamFactorTranslate;
+            tuningParams.factorWaste     = tuningParamFactorWaste;
             solverThread.UpdateTuningParameters(tuningParams);
         }
 

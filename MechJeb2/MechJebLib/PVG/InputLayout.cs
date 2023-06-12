@@ -7,7 +7,7 @@ namespace MechJebLib.PVG
     public struct InputLayout
     {
         public const int INPUT_LAYOUT_LEN = 15;
-        public const int BT_INDEX          = 14;
+        public const int BT_INDEX         = 14;
 
         public V3 R;
 
@@ -41,14 +41,14 @@ namespace MechJebLib.PVG
             V.CopyTo(other, 3);
             PV.CopyTo(other, 6);
             PR.CopyTo(other, 9);
-            other[12] = M;
-            other[13] = Pm;
+            other[12]       = M;
+            other[13]       = Pm;
             other[BT_INDEX] = Bt;
         }
 
         public void CopyFrom(IList<double> other)
         {
-            R.CopyFrom(other, 0);
+            R.CopyFrom(other);
             V.CopyFrom(other, 3);
             PV.CopyFrom(other, 6);
             PR.CopyFrom(other, 9);

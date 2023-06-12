@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace MuMech
 {
@@ -9,36 +8,36 @@ namespace MuMech
         public MechJebModuleDeployableController(MechJebCore core) : base(core)
         {
             priority = 200;
-            enabled = true;
+            enabled  = true;
         }
 
-
         protected string buttonText;
-        protected bool extended;
+        protected bool   extended;
 
         [Persistent(pass = (int)Pass.Global)]
         public bool autoDeploy = false;
 
-        [Persistent(pass = (int)(Pass.Local))]
-        protected bool prev_shouldDeploy = false;
+        [Persistent(pass = (int)Pass.Local)]
+        protected bool prev_shouldDeploy;
 
         public bool prev_autoDeploy = true;
 
         protected string type = "";
 
         protected List<ModuleDeployablePart> cachedPartModules = new List<ModuleDeployablePart>(16);
+
         protected void DiscoverDeployablePartModules()
         {
             cachedPartModules.Clear();
             foreach (Part p in vessel.Parts)
-                foreach (PartModule pm in p.Modules)
-                    if (pm != null && pm is ModuleDeployablePart mdp && isModules(mdp))
-                        cachedPartModules.Add(mdp);
+            foreach (PartModule pm in p.Modules)
+                if (pm != null && pm is ModuleDeployablePart mdp && isModules(mdp))
+                    cachedPartModules.Add(mdp);
         }
 
         protected bool isDeployable(ModuleDeployablePart sa)
         {
-            return (sa.Events["Extend"].active || sa.Events["Retract"].active);
+            return sa.Events["Extend"].active || sa.Events["Retract"].active;
         }
 
         public void ExtendAll()
@@ -47,13 +46,14 @@ namespace MuMech
                 if (mdp != null && isDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
                     mdp.Extend();
         }
-        
+
         public void RetractAll()
         {
             foreach (ModuleDeployablePart mdp in cachedPartModules)
                 if (mdp != null && isDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
                     mdp.Retract();
         }
+
         public bool AllRetracted()
         {
             foreach (ModuleDeployablePart mdp in cachedPartModules)
@@ -81,7 +81,8 @@ namespace MuMech
             if (PeT > 0 && PeT < dt)
                 min_alt = orbit.PeA;
             else
-                min_alt = Math.Sqrt(Math.Min(orbit.getRelativePositionAtUT(t).sqrMagnitude, orbit.getRelativePositionAtUT(t + dt).sqrMagnitude)) - mainBody.Radius;
+                min_alt = Math.Sqrt(Math.Min(orbit.getRelativePositionAtUT(t).sqrMagnitude, orbit.getRelativePositionAtUT(t + dt).sqrMagnitude)) -
+                          mainBody.Radius;
 
             if (min_alt > mainBody.RealMaxAtmosphereAltitude())
                 return true;
@@ -96,13 +97,13 @@ namespace MuMech
             {
                 bool tmp = ShouldDeploy();
 
-                if (tmp && (!prev_shouldDeploy || (autoDeploy != prev_autoDeploy)))
+                if (tmp && (!prev_shouldDeploy || autoDeploy != prev_autoDeploy))
                     ExtendAll();
-                else if (!tmp && (prev_shouldDeploy || (autoDeploy != prev_autoDeploy)))
+                else if (!tmp && (prev_shouldDeploy || autoDeploy != prev_autoDeploy))
                     RetractAll();
 
                 prev_shouldDeploy = tmp;
-                prev_autoDeploy = true;
+                prev_autoDeploy   = true;
             }
             else
             {
@@ -119,14 +120,14 @@ namespace MuMech
         protected bool ExtendingOrRetracting()
         {
             foreach (ModuleDeployablePart mdp in cachedPartModules)
-                if (mdp != null && isDeployable(mdp) 
-                    && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING || mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
+                if (mdp != null && isDeployable(mdp)
+                                && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING ||
+                                    mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
                     return true;
             return false;
         }
 
         protected abstract bool isModules(ModuleDeployablePart p);
-
 
         protected enum DeployablePartState
         {
@@ -135,12 +136,17 @@ namespace MuMech
         }
 
         protected abstract string getButtonText(DeployablePartState deployablePartState);
+
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
             if (HighLogic.LoadedSceneIsFlight)
                 DiscoverDeployablePartModules();
         }
-        public override void OnVesselWasModified(Vessel v) => DiscoverDeployablePartModules();
+
+        public override void OnVesselWasModified(Vessel v)
+        {
+            DiscoverDeployablePartModules();
+        }
     }
 }

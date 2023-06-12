@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using JetBrains.Annotations;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -10,7 +10,7 @@ namespace MuMech
     {
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }
 
-        MechJebModuleDockingAutopilot autopilot;
+        private MechJebModuleDockingAutopilot autopilot;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -21,7 +21,7 @@ namespace MuMech
         {
             if (!core.target.NormalTargetExists)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label1"));//"Choose a target to dock with"
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label1")); //"Choose a target to dock with"
                 base.WindowGUI(windowID);
                 return;
             }
@@ -31,16 +31,19 @@ namespace MuMech
             // GetReferenceTransformPart is null after undocking ...
             if (vessel.GetReferenceTransformPart() == null || !vessel.GetReferenceTransformPart().Modules.Contains("ModuleDockingNode"))
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label2"),GuiUtils.yellowLabel);//Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label2"),
+                    GuiUtils.yellowLabel); //Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
             }
 
             if (!(core.target.Target is ModuleDockingNode))
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),GuiUtils.yellowLabel);//Warning: target is not a docking port. Right click the target docking port and select "Set as target"
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),
+                    GuiUtils.yellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
             }
 
             bool onAxisNodeExists = false;
-            foreach (ITargetable node in vessel.GetTargetables().Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
+            foreach (ITargetable node in vessel.GetTargetables()
+                         .Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
             {
                 if (Vector3d.Angle(node.GetTransform().forward, vessel.ReferenceTransform.up) < 2)
                 {
@@ -51,19 +54,22 @@ namespace MuMech
 
             if (!onAxisNodeExists)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label4"),GuiUtils.yellowLabel);//Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select "Control from here."
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label4"),
+                    GuiUtils.yellowLabel); //Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select "Control from here."
             }
 
-            bool active = GUILayout.Toggle(autopilot.enabled, Localizer.Format("#MechJeb_Docking_checkbox1"));// "Autopilot enabled"
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_label5"), autopilot.speedLimit, "m/s");//"Speed limit"
+            bool active = GUILayout.Toggle(autopilot.enabled, Localizer.Format("#MechJeb_Docking_checkbox1")); // "Autopilot enabled"
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_label5"), autopilot.speedLimit, "m/s");  //"Speed limit"
 
-            autopilot.overrideSafeDistance = GUILayout.Toggle(autopilot.overrideSafeDistance, Localizer.Format("#MechJeb_Docking_checkbox2"));//"Override Safe Distance"
+            autopilot.overrideSafeDistance =
+                GUILayout.Toggle(autopilot.overrideSafeDistance, Localizer.Format("#MechJeb_Docking_checkbox2")); //"Override Safe Distance"
             if (autopilot.overrideSafeDistance)
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_checkbox3"), autopilot.overridenSafeDistance, "m");//"Safe Distance"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_checkbox3"), autopilot.overridenSafeDistance, "m"); //"Safe Distance"
 
-            autopilot.overrideTargetSize = GUILayout.Toggle(autopilot.overrideTargetSize, Localizer.Format("#MechJeb_Docking_checkbox4"));//"Override Start Distance"
+            autopilot.overrideTargetSize =
+                GUILayout.Toggle(autopilot.overrideTargetSize, Localizer.Format("#MechJeb_Docking_checkbox4")); //"Override Start Distance"
             if (autopilot.overrideTargetSize)
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_label6"), autopilot.overridenTargetSize, "m");//"Start Distance"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_label6"), autopilot.overridenTargetSize, "m"); //"Start Distance"
 
             if (autopilot.overridenSafeDistance < 0)
                 autopilot.overridenSafeDistance = 0;
@@ -71,9 +77,10 @@ namespace MuMech
             if (autopilot.overridenTargetSize < 10)
                 autopilot.overridenTargetSize = 10;
 
-            autopilot.drawBoundingBox = GUILayout.Toggle(autopilot.drawBoundingBox, Localizer.Format("#MechJeb_Docking_checkbox5"));//"Draw Bounding Box"
+            autopilot.drawBoundingBox =
+                GUILayout.Toggle(autopilot.drawBoundingBox, Localizer.Format("#MechJeb_Docking_checkbox5")); //"Draw Bounding Box"
 
-            if (GUILayout.Button(Localizer.Format("#MechJeb_Docking_button")))//"Dump Bounding Box Info"
+            if (GUILayout.Button(Localizer.Format("#MechJeb_Docking_button"))) //"Dump Bounding Box Info"
             {
                 vessel.GetBoundingBox(true);
 
@@ -85,15 +92,18 @@ namespace MuMech
             }
 
 
-            GUILayout.Label(Localizer.Format("#MechJeb_Docking_label7", autopilot.safeDistance.ToString("F2")), GUILayout.ExpandWidth(false));//"safeDistance "
-            GUILayout.Label(Localizer.Format("#MechJeb_Docking_label8", autopilot.targetSize.ToString("F2")), GUILayout.ExpandWidth(false));//"targetSize   "
-			
+            GUILayout.Label(Localizer.Format("#MechJeb_Docking_label7", autopilot.safeDistance.ToString("F2")),
+                GUILayout.ExpandWidth(false)); //"safeDistance "
+            GUILayout.Label(Localizer.Format("#MechJeb_Docking_label8", autopilot.targetSize.ToString("F2")),
+                GUILayout.ExpandWidth(false)); //"targetSize   "
+
             if (autopilot.speedLimit < 0)
                 autopilot.speedLimit = 0;
 
 
             GUILayout.BeginHorizontal();
-            autopilot.forceRol = GUILayout.Toggle(autopilot.forceRol, Localizer.Format("#MechJeb_Docking_checkbox6"), GUILayout.ExpandWidth(false));//"Force Roll :"
+            autopilot.forceRol =
+                GUILayout.Toggle(autopilot.forceRol, Localizer.Format("#MechJeb_Docking_checkbox6"), GUILayout.ExpandWidth(false)); //"Force Roll :"
 
             autopilot.rol.text = GUILayout.TextField(autopilot.rol.text, GUILayout.Width(30));
             GUILayout.Label("°", GUILayout.ExpandWidth(false));
@@ -113,18 +123,18 @@ namespace MuMech
 
             if (autopilot.enabled)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label9", autopilot.status));//"Status: <<1>>"
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label9", autopilot.status)); //"Status: <<1>>"
                 Vector3d error = core.rcs.targetVelocity - vesselState.orbitalVelocity;
                 double error_x = Vector3d.Dot(error, vessel.GetTransform().right);
                 double error_y = Vector3d.Dot(error, vessel.GetTransform().forward);
                 double error_z = Vector3d.Dot(error, vessel.GetTransform().up);
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label10", error_x.ToString("F2"))+ " m/s  [L/J]");//Error X: <<1>>
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label11", error_y.ToString("F2"))+ " m/s  [I/K]");//Error Y: <<1>>
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label12", error_z.ToString("F2"))+ " m/s  [H/N]");//Error Z: <<1>>
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label10", error_x.ToString("F2")) + " m/s  [L/J]"); //Error X: <<1>>
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label11", error_y.ToString("F2")) + " m/s  [I/K]"); //Error Y: <<1>>
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label12", error_z.ToString("F2")) + " m/s  [H/N]"); //Error Z: <<1>>
 
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label13", autopilot.zSep.ToString("F2")) + "m");//Distance Dock: <<1>>
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label14", autopilot.lateralSep.magnitude.ToString("F2")) + "m");//Distance Dock Axis: <<1>>
-
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label13", autopilot.zSep.ToString("F2")) + "m"); //Distance Dock: <<1>>
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_label14", autopilot.lateralSep.magnitude.ToString("F2")) +
+                                "m"); //Distance Dock Axis: <<1>>
             }
 
             GUILayout.EndVertical();
@@ -134,7 +144,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(300), GUILayout.Height(50) };
+            return new[] { GUILayout.Width(300), GUILayout.Height(50) };
         }
 
         public override void OnModuleDisabled()
@@ -144,7 +154,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return Localizer.Format("#MechJeb_Docking_title");//"Docking Autopilot"
+            return Localizer.Format("#MechJeb_Docking_title"); //"Docking Autopilot"
         }
 
         public override string IconName()

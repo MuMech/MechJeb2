@@ -33,7 +33,7 @@ namespace MuMech
         public           bool RCS_auto           = false;
         private readonly bool attitudeRCScontrol = true;
 
-        [Persistent(pass                                                          = (int) Pass.Global)]
+        [Persistent(pass = (int)Pass.Global)]
         [ValueInfoItem("#MechJeb_SteeringError", InfoItem.Category.Vessel, format = "F1", units = "º")]
         //Steering error
         public MovingAverage steeringError = new MovingAverage();
@@ -44,14 +44,15 @@ namespace MuMech
 
         private AttitudeReference _attitudeReference = AttitudeReference.INERTIAL;
 
-        public Vector3d AxisControl        { get; private set; } = Vector3d.one;
-        public Vector3d ActuationControl   { get; private set; } = Vector3d.one;
-        public Vector3d OmegaTarget        { get; private set; } = new Vector3d(double.NaN, double.NaN, double.NaN);
+        public Vector3d AxisControl      { get; private set; } = Vector3d.one;
+        public Vector3d ActuationControl { get; private set; } = Vector3d.one;
+        public Vector3d OmegaTarget      { get; private set; } = new Vector3d(double.NaN, double.NaN, double.NaN);
 
         public           BaseAttitudeController       Controller { get; private set; }
         private readonly List<BaseAttitudeController> _controllers = new List<BaseAttitudeController>();
 
-        [Persistent(pass = (int) Pass.Global)] public int activeController = 3;
+        [Persistent(pass = (int)Pass.Global)]
+        public int activeController = 3;
 
         public void SetActiveController(int i)
         {
@@ -64,7 +65,7 @@ namespace MuMech
         {
             timeCount = 50;
             SetAxisControl(true, true, true);
-            SetActuationControl(true, true, true);
+            SetActuationControl();
             SetOmegaTarget();
             Controller.OnModuleEnabled();
         }
@@ -293,8 +294,8 @@ namespace MuMech
         public void attitudeTo(double heading, double pitch, double roll, object controller, bool AxisCtrlPitch = true, bool AxisCtrlYaw = true,
             bool AxisCtrlRoll = true, bool fixCOT = false)
         {
-            Quaternion attitude = Quaternion.AngleAxis((float) heading, Vector3.up) * Quaternion.AngleAxis(-(float) pitch, Vector3.right) *
-                                  Quaternion.AngleAxis(-(float) roll, Vector3.forward);
+            Quaternion attitude = Quaternion.AngleAxis((float)heading, Vector3.up) * Quaternion.AngleAxis(-(float)pitch, Vector3.right) *
+                                  Quaternion.AngleAxis(-(float)roll, Vector3.forward);
             AttitudeReference reference = fixCOT ? AttitudeReference.SURFACE_NORTH_COT : AttitudeReference.SURFACE_NORTH;
             attitudeTo(attitude, reference, controller, AxisCtrlPitch,
                 AxisCtrlYaw, AxisCtrlRoll);
@@ -434,12 +435,12 @@ namespace MuMech
 
             if (!userCommandingRoll)
                 if (!double.IsNaN(act.y))
-                    s.roll = Mathf.Clamp((float) act.y, -drive_limit, drive_limit);
+                    s.roll = Mathf.Clamp((float)act.y, -drive_limit, drive_limit);
 
             if (!userCommandingPitch && !userCommandingYaw)
             {
-                if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float) act.x, -drive_limit, drive_limit);
-                if (!double.IsNaN(act.z)) s.yaw   = Mathf.Clamp((float) act.z, -drive_limit, drive_limit);
+                if (!double.IsNaN(act.x)) s.pitch = Mathf.Clamp((float)act.x, -drive_limit, drive_limit);
+                if (!double.IsNaN(act.z)) s.yaw   = Mathf.Clamp((float)act.z, -drive_limit, drive_limit);
             }
 
             // RCS and SAS control:

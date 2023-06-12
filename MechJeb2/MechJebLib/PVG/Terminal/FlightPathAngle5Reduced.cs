@@ -36,7 +36,7 @@ namespace MechJebLib.PVG.Terminal
             _lanT   = Clamp2Pi(lanT);
             _incT   = Math.Abs(ClampPi(incT));
 
-            _hT = MechJebLib.Core.Maths.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
+            _hT = Maths.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
         }
 
         public IPVGTerminal Rescale(Scale scale)

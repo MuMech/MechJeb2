@@ -238,7 +238,8 @@ namespace MuMech
             {
                 Dispatcher.InvokeAsync(() =>
                 {
-                    Debug.Log($"[MechJeb TransferCalculator] BUG mu = {initialOrbit.referenceBody.gravParameter} r0 = {r0} v0 = {v0} vinf = {exitVelocity}");
+                    Debug.Log(
+                        $"[MechJeb TransferCalculator] BUG mu = {initialOrbit.referenceBody.gravParameter} r0 = {r0} v0 = {v0} vinf = {exitVelocity}");
                 });
             }
 

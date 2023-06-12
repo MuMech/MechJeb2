@@ -84,7 +84,9 @@ namespace MuMech
             double attR = mainBody.Radius + AscentSettings.DesiredAttachAlt;
 
             bool lanflag = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan || _ascentSettings.LaunchingToLan;
-            double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan ? core.target.TargetOrbit.LAN : (double)AscentSettings.DesiredLan;
+            double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan
+                ? core.target.TargetOrbit.LAN
+                : (double)AscentSettings.DesiredLan;
 
             double inclination = AscentSettings.DesiredInclination;
 

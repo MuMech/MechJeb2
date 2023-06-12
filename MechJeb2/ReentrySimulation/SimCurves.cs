@@ -48,7 +48,7 @@ namespace MuMech
                     _dragCurveTip     = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
 
                     _liftCurve     = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
-                    LiftMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    LiftMachCurve  = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
                     _dragCurve     = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragCurve.Curve.keys);
                     _dragMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragMachCurve.Curve.keys);
 

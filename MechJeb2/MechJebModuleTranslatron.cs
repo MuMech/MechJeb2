@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using UnityEngine;
-using KSP.UI.Screens;
 using KSP.Localization;
+using KSP.UI.Screens;
+using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -11,7 +11,11 @@ namespace MuMech
     [UsedImplicitly]
     public class MechJebModuleTranslatron : DisplayModule
     {
-        protected static string[] trans_texts = { Localizer.Format("#MechJeb_Translatron_off"), Localizer.Format("#MechJeb_Translatron_KEEP_OBT"), Localizer.Format("#MechJeb_Translatron_KEEP_SURF"), Localizer.Format("#MechJeb_Translatron_KEEP_VERT") };
+        protected static string[] trans_texts =
+        {
+            Localizer.Format("#MechJeb_Translatron_off"), Localizer.Format("#MechJeb_Translatron_KEEP_OBT"),
+            Localizer.Format("#MechJeb_Translatron_KEEP_SURF"), Localizer.Format("#MechJeb_Translatron_KEEP_VERT")
+        };
         //protected static string[] trans_texts = { "OFF", "KEEP\nOBT", "KEEP\nSURF", "KEEP\nVERT" };
 
         public enum AbortStage
@@ -25,9 +29,9 @@ namespace MuMech
         }
 
         protected AbortStage abort = AbortStage.OFF;
-        protected double burnUpTime = 0;
+        protected double     burnUpTime;
 
-        protected bool autoMode = false;
+        protected bool autoMode;
 
         [Persistent(pass = (int)Pass.Local)]
         public EditableDouble trans_spd = new EditableDouble(0);
@@ -48,32 +52,34 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(130) };
+            return new[] { GUILayout.Width(130) };
         }
 
         protected override void WindowGUI(int windowID)
         {
-            if (buttonStyle==null)
+            if (buttonStyle == null)
             {
-                buttonStyle = new GUIStyle(GUI.skin.button);
+                buttonStyle                  = new GUIStyle(GUI.skin.button);
                 buttonStyle.normal.textColor = buttonStyle.focused.textColor = Color.white;
-                buttonStyle.hover.textColor = buttonStyle.active.textColor = Color.yellow;
-                buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = buttonStyle.onActive.textColor = Color.green;
+                buttonStyle.hover.textColor  = buttonStyle.active.textColor  = Color.yellow;
+                buttonStyle.onNormal.textColor =
+                    buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = buttonStyle.onActive.textColor = Color.green;
                 buttonStyle.padding = new RectOffset(8, 8, 8, 8);
             }
 
             GUILayout.BeginVertical();
 
-            if ((core.thrust.users.Count > 1) && !core.thrust.users.Contains(this))
+            if (core.thrust.users.Count > 1 && !core.thrust.users.Contains(this))
             {
                 if (!autoMode)
                 {
                     windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
-                    autoMode = true;
+                    autoMode  = true;
                 }
 
                 buttonStyle.normal.textColor = Color.red;
-                buttonStyle.onActive = buttonStyle.onFocused = buttonStyle.onHover = buttonStyle.onNormal = buttonStyle.active = buttonStyle.focused = buttonStyle.hover = buttonStyle.normal;
+                buttonStyle.onActive = buttonStyle.onFocused = buttonStyle.onHover =
+                    buttonStyle.onNormal = buttonStyle.active = buttonStyle.focused = buttonStyle.hover = buttonStyle.normal;
                 GUILayout.Button(Localizer.Format("#MechJeb_Trans_auto"), buttonStyle, GUILayout.ExpandWidth(true));
             }
             else
@@ -81,54 +87,65 @@ namespace MuMech
                 if (autoMode)
                 {
                     windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
-                    autoMode = false;
+                    autoMode  = false;
                 }
 
-                MechJebModuleThrustController.TMode newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, buttonStyle);
+                var newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, buttonStyle);
                 SetMode(newMode);
 
-                float val = (GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1); // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
+                float
+                    val = GameSettings.MODIFIER_KEY.GetKey()
+                        ? 5
+                        : 1; // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
 
-                core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, Localizer.Format("#MechJeb_Trans_kill_h"), GUILayout.ExpandWidth(true));
+                core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, Localizer.Format("#MechJeb_Trans_kill_h"),
+                    GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Trans_spd"), trans_spd, "", 37);
                 bool change = false;
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
                     trans_spd -= val;
-                    change = true;
+                    change    =  true;
                 }
+
                 if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
                 {
                     trans_spd = 0;
-                    change = true;
+                    change    = true;
                 }
+
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
                     trans_spd += val;
-                    change = true;
+                    change    =  true;
                 }
+
                 GUILayout.EndHorizontal();
 
-                if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act")+":", buttonStyle, GUILayout.ExpandWidth(true)) || change)
+                if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act") + ":", buttonStyle, GUILayout.ExpandWidth(true)) || change)
                 {
-                    core.thrust.trans_spd_act = (float)trans_spd.val;
+                    core.thrust.trans_spd_act  = (float)trans_spd.val;
                     GUIUtility.keyboardControl = 0;
                 }
             }
 
             if (core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + core.thrust.trans_spd_act.ToSI() + "m/s", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + core.thrust.trans_spd_act.ToSI() + "m/s",
+                    GUILayout.ExpandWidth(true));
             }
 
             GUILayout.FlexibleSpace();
-            
+
             GUILayout.Label("Automation", GuiUtils.UpperCenterLabel, GUILayout.ExpandWidth(true));
 
-            buttonStyle.normal.textColor = buttonStyle.focused.textColor = buttonStyle.hover.textColor = buttonStyle.active.textColor = buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = buttonStyle.onActive.textColor = (abort != AbortStage.OFF) ? Color.red : Color.green;
+            buttonStyle.normal.textColor = buttonStyle.focused.textColor = buttonStyle.hover.textColor = buttonStyle.active.textColor =
+                buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor =
+                    buttonStyle.onActive.textColor = abort != AbortStage.OFF ? Color.red : Color.green;
 
-            if (GUILayout.Button((abort != AbortStage.OFF) ? Localizer.Format("#MechJeb_Trans_NOPANIC") : Localizer.Format("#MechJeb_Trans_PANIC"), buttonStyle, GUILayout.ExpandWidth(true)))
+            if (GUILayout.Button(abort != AbortStage.OFF ? Localizer.Format("#MechJeb_Trans_NOPANIC") : Localizer.Format("#MechJeb_Trans_PANIC"),
+                    buttonStyle, GUILayout.ExpandWidth(true)))
             {
                 PanicSwitch();
             }
@@ -145,7 +162,7 @@ namespace MuMech
             if (core.thrust.tmode != oldMode)
             {
                 core.thrust.trans_spd_act = Convert.ToInt16(trans_spd);
-                windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
+                windowPos                 = new Rect(windowPos.x, windowPos.y, 10, 10);
                 if (core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)
                 {
                     core.thrust.users.Remove(this);
@@ -161,7 +178,7 @@ namespace MuMech
         {
             if (abort != AbortStage.OFF)
             {
-                if ((abort == AbortStage.LAND) || (abort == AbortStage.LANDING))
+                if (abort == AbortStage.LAND || abort == AbortStage.LANDING)
                 {
                     core.GetComputerModule<MechJebModuleLandingAutopilot>().StopLanding();
                 }
@@ -171,6 +188,7 @@ namespace MuMech
                     core.thrust.users.Remove(this);
                     core.attitude.attitudeDeactivate();
                 }
+
                 abort = AbortStage.OFF;
             }
             else
@@ -195,20 +213,23 @@ namespace MuMech
                     }
                 }
             }
-            List<Part> decouplers = new List<Part>();
+
+            var decouplers = new List<Part>();
             for (int i = 0; i < part.vessel.parts.Count; i++)
             {
                 Part child = part.vessel.parts[i];
-                if ((child.inverseStage > minStage) &&
+                if (child.inverseStage > minStage &&
                     (child.HasModule<ModuleDecouple>() || child.HasModule<ModuleAnchoredDecoupler>()))
                 {
                     decouplers.Add(child);
                 }
             }
+
             for (int i = 0; i < decouplers.Count; i++)
             {
                 decouplers[i].force_activate();
             }
+
             if (part.vessel == FlightGlobals.ActiveVessel)
             {
                 StageManager.ActivateStage(minStage);
@@ -219,8 +240,15 @@ namespace MuMech
         {
             // Fix the Translatron behavior which kill HS.
             // TODO : proper fix that register the attitude controler outside of Drive
-            if (!core.attitude.users.Contains(this) && ( core.thrust.trans_kill_h && core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)) { core.attitude.users.Add(this); }
-            if ( core.attitude.users.Contains(this) && (!core.thrust.trans_kill_h || core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)) { core.attitude.users.Remove(this); }
+            if (!core.attitude.users.Contains(this) && core.thrust.trans_kill_h && core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)
+            {
+                core.attitude.users.Add(this);
+            }
+
+            if (core.attitude.users.Contains(this) && (!core.thrust.trans_kill_h || core.thrust.tmode == MechJebModuleThrustController.TMode.OFF))
+            {
+                core.attitude.users.Remove(this);
+            }
 
             if (abort != AbortStage.OFF)
             {
@@ -229,25 +257,26 @@ namespace MuMech
                     case AbortStage.THRUSTOFF:
                         FlightInputHandler.SetNeutralControls();
                         s.mainThrottle = 0;
-                        abort = AbortStage.DECOUPLE;
+                        abort          = AbortStage.DECOUPLE;
                         break;
                     case AbortStage.DECOUPLE:
                         recursiveDecouple();
-                        abort = AbortStage.BURNUP;
+                        abort      = AbortStage.BURNUP;
                         burnUpTime = Planetarium.GetUniversalTime();
                         break;
                     case AbortStage.BURNUP:
-                        if ((Planetarium.GetUniversalTime() - burnUpTime < 2) || (vesselState.speedVertical < 10))
+                        if (Planetarium.GetUniversalTime() - burnUpTime < 2 || vesselState.speedVertical < 10)
                         {
                             core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
                             core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
                             double int_error = Math.Abs(Vector3d.Angle(vesselState.up, vesselState.forward));
-                            core.thrust.trans_spd_act = (int_error < 90) ? 100 : 0;
+                            core.thrust.trans_spd_act = int_error < 90 ? 100 : 0;
                         }
                         else
                         {
                             abort = AbortStage.LAND;
                         }
+
                         break;
                     case AbortStage.LAND:
                         core.thrust.users.Remove(this);
@@ -259,9 +288,11 @@ namespace MuMech
                         {
                             abort = AbortStage.OFF;
                         }
+
                         break;
                 }
             }
+
             base.Drive(s);
         }
     }

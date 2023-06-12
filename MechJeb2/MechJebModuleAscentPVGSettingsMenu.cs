@@ -47,7 +47,7 @@ namespace MuMech
 
             int topstage = -1;
 
-            if ( _ascentSettings.LastStage < core.stageStats.vacStats.Length && core.stageStats.vacStats.Length > 0)
+            if (_ascentSettings.LastStage < core.stageStats.vacStats.Length && core.stageStats.vacStats.Length > 0)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
@@ -125,6 +125,7 @@ namespace MuMech
                     GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label20,
                         GuiUtils.yellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
             }
+
             core.guidance.ShouldDrawTrajectory = GUILayout.Toggle(core.guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");
             GUILayout.EndVertical();
 

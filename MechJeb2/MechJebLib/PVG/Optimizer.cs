@@ -235,7 +235,7 @@ namespace MechJebLib.PVG
 
             for (int i = 0; i < _phases.Count; i++)
                 if (!_phases[i].Coast && !_phases[i].Infinite)
-                    bndu[i*InputLayout.INPUT_LAYOUT_LEN+InputLayout.BT_INDEX] = _phases[i].tau * 0.999;
+                    bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau * 0.999;
 
             alglib.minlmcreatev(ResidualWrapper.RESIDUAL_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
             alglib.minlmsetbc(_state, bndl, bndu);
@@ -340,7 +340,6 @@ namespace MechJebLib.PVG
                 t0 += bt;
             }
         }
-
 
         public Optimizer Bootstrap(V3 pv0, V3 pr0)
         {

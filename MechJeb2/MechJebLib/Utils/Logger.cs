@@ -10,9 +10,9 @@ using System;
 namespace MechJebLib.Utils
 {
     /// <summary>
-    /// Singleton logger with some minimum viable dependency injection.  This is necesary
-    /// to keep Debug.Log from pulling Unity into MechJebLib.  The logger passed into
-    /// Register should probably be thread safe.
+    ///     Singleton logger with some minimum viable dependency injection.  This is necesary
+    ///     to keep Debug.Log from pulling Unity into MechJebLib.  The logger passed into
+    ///     Register should probably be thread safe.
     /// </summary>
     public class Logger
     {

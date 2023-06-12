@@ -9,7 +9,6 @@ using AssertExtensions;
 using MechJebLib.Core.ODE;
 using MechJebLib.Primitives;
 using Xunit;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.Maths
 {

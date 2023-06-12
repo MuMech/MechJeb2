@@ -3,7 +3,6 @@ using System.Linq;
 using JetBrains.Annotations;
 using KSP.UI.Screens;
 using Smooth.Slinq;
-using Smooth.Slinq.Context;
 using UnityEngine;
 
 namespace MuMech
@@ -623,7 +622,7 @@ namespace MuMech
             return result;
         }
 
-        private readonly List<Part> _partsInStage =  new List<Part>();
+        private readonly List<Part> _partsInStage = new List<Part>();
 
         private bool HasFairingUncached(int inverseStage)
         {

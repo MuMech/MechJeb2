@@ -2,7 +2,7 @@ using System;
 
 namespace MuMech
 {
-   public partial class FuelFlowSimulation
+    public partial class FuelFlowSimulation
     {
         //A FuelStats struct describes the result of the simulation over a certain interval of time (e.g., one stage)
         public struct FuelStats
@@ -50,7 +50,7 @@ namespace MuMech
                 {
                     // we integrate to the time-averaged maxthrust to accomodate weirdness like ullage motors that burnout and tiny segments
                     // that turn off the engines for some reason.  this is so PVG has a number which is closest to reality.
-                    MaxThrust    = sumDT > 1e-10 ? (MaxThrust * DeltaTime + s.MaxThrust * sDeltaTime ) / ( DeltaTime + sDeltaTime) : MaxThrust,
+                    MaxThrust    = sumDT > 1e-10 ? (MaxThrust * DeltaTime + s.MaxThrust * sDeltaTime) / (DeltaTime + sDeltaTime) : MaxThrust,
                     StartMass    = StartMass,
                     EndMass      = s.EndMass,
                     ResourceMass = StartMass - s.EndMass,
@@ -61,7 +61,7 @@ namespace MuMech
                     DeltaTime    = sumDT,
                     DeltaV       = DeltaV + s.DeltaV,
                     // ReSharper disable once CompareOfFloatsByEqualityOperator
-                    Isp          = StartMass == s.EndMass ? 0 : (DeltaV + s.DeltaV) / (9.80665f * Math.Log(StartMass / s.EndMass))
+                    Isp = StartMass == s.EndMass ? 0 : (DeltaV + s.DeltaV) / (9.80665f * Math.Log(StartMass / s.EndMass))
                 };
             }
         }

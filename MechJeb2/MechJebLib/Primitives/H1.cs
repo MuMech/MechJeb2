@@ -5,7 +5,6 @@
 
 #nullable enable
 
-using MechJebLib.Core;
 using MechJebLib.Core.Functions;
 using MechJebLib.Utils;
 
