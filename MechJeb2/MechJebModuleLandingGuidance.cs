@@ -2,28 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
 using static MechJebLib.Utils.Statics;
-
 
 namespace MuMech
 {
     [UsedImplicitly]
     public class MechJebModuleLandingGuidance : DisplayModule
     {
-        public MechJebModuleLandingPredictions predictor;
-        public static List<LandingSite> landingSites;
+        public        MechJebModuleLandingPredictions predictor;
+        public static List<LandingSite>               landingSites;
 
-        [Persistent(pass = (int)(Pass.Global|Pass.Local))]
-        public int landingSiteIdx = 0;
+        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        public int landingSiteIdx;
 
         public struct LandingSite
         {
-            public string name;
+            public string        name;
             public CelestialBody body;
-            public double latitude;
-            public double longitude;
+            public double        latitude;
+            public double        longitude;
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -36,7 +35,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(200), GUILayout.Height(150) };
+            return new[] { GUILayout.Width(200), GUILayout.Height(150) };
         }
 
         private void moveByMeter(ref EditableAngle angle, double distance, double Alt)
@@ -51,8 +50,8 @@ namespace MuMech
 
             if (core.target.PositionTargetExists)
             {
-                var ASL = core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude);
-                GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label1"));//Target coordinates:
+                double ASL = core.vessel.mainBody.TerrainAltitude(core.target.targetLatitude, core.target.targetLongitude);
+                GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label1")); //Target coordinates:
 
                 GUILayout.BeginHorizontal();
                 core.target.targetLatitude.DrawEditGUI(EditableAngle.Direction.NS);
@@ -60,11 +59,13 @@ namespace MuMech
                 {
                     moveByMeter(ref core.target.targetLatitude, 10, ASL);
                 }
+
                 GUILayout.Label("10m");
                 if (GUILayout.Button("▼"))
                 {
                     moveByMeter(ref core.target.targetLatitude, -10, ASL);
                 }
+
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 core.target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
@@ -72,11 +73,13 @@ namespace MuMech
                 {
                     moveByMeter(ref core.target.targetLongitude, -10, ASL);
                 }
+
                 GUILayout.Label("10m");
                 if (GUILayout.Button("►"))
                 {
                     moveByMeter(ref core.target.targetLongitude, 10, ASL);
                 }
+
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
@@ -86,23 +89,25 @@ namespace MuMech
             }
             else
             {
-                if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button1")))//Enter target coordinates
+                if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button1"))) //Enter target coordinates
                 {
                     core.target.SetPositionTarget(mainBody, core.target.targetLatitude, core.target.targetLongitude);
                 }
             }
 
-            if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button2"))) core.target.PickPositionTargetOnMap();//Pick target on map
+            if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button2"))) core.target.PickPositionTargetOnMap(); //Pick target on map
 
-            List<LandingSite> availableLandingSites = landingSites.Where(p => p.body == mainBody).ToList();
+            var availableLandingSites = landingSites.Where(p => p.body == mainBody).ToList();
             if (availableLandingSites.Any())
             {
                 GUILayout.BeginHorizontal();
                 landingSiteIdx = GuiUtils.ComboBox.Box(landingSiteIdx, availableLandingSites.Select(p => p.name).ToArray(), this);
                 if (GUILayout.Button("Set", GUILayout.ExpandWidth(false)))
                 {
-                    core.target.SetPositionTarget(mainBody, availableLandingSites[landingSiteIdx].latitude, availableLandingSites[landingSiteIdx].longitude);
+                    core.target.SetPositionTarget(mainBody, availableLandingSites[landingSiteIdx].latitude,
+                        availableLandingSites[landingSiteIdx].longitude);
                 }
+
                 GUILayout.EndHorizontal();
             }
 
@@ -110,43 +115,53 @@ namespace MuMech
 
             if (core.landing != null)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label2"));//Autopilot:
+                GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label2")); //Autopilot:
 
-                predictor.maxOrbits = core.landing.enabled ? 0.5 : 4;
+                predictor.maxOrbits        = core.landing.enabled ? 0.5 : 4;
                 predictor.noSkipToFreefall = !core.landing.enabled;
 
                 if (core.landing.enabled)
                 {
-                    if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button3"))) core.landing.StopLanding();//Abort autoland
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button3"))) core.landing.StopLanding(); //Abort autoland
                 }
                 else
                 {
                     GUILayout.BeginHorizontal();
                     if (!core.target.PositionTargetExists || vessel.LandedOrSplashed) GUI.enabled = false;
-                    if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button4"))) core.landing.LandAtPositionTarget(this);//Land at target
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button4")))
+                        core.landing.LandAtPositionTarget(this); //Land at target
                     GUI.enabled = !vessel.LandedOrSplashed;
-                    if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button5"))) core.landing.LandUntargeted(this);//Land somewhere
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button5"))) core.landing.LandUntargeted(this); //Land somewhere
                     GUI.enabled = true;
                     GUILayout.EndHorizontal();
                 }
 
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label3"), core.landing.touchdownSpeed, "m/s", 35);//Touchdown speed:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label3"), core.landing.touchdownSpeed, "m/s",
+                    35); //Touchdown speed:
 
-                if (core.landing != null) core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_LandingGuidance_checkbox1"));//Auto-warp
+                if (core.landing != null)
+                    core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_LandingGuidance_checkbox1")); //Auto-warp
 
-                core.landing.deployGears = GUILayout.Toggle(core.landing.deployGears, Localizer.Format("#MechJeb_LandingGuidance_checkbox2"));//Deploy Landing Gear
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label4"), core.landing.limitGearsStage, "", 35);//"Stage Limit:"
-                core.landing.deployChutes = GUILayout.Toggle(core.landing.deployChutes, Localizer.Format("#MechJeb_LandingGuidance_checkbox3"));//Deploy Parachutes
+                core.landing.deployGears =
+                    GUILayout.Toggle(core.landing.deployGears, Localizer.Format("#MechJeb_LandingGuidance_checkbox2")); //Deploy Landing Gear
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label4"), core.landing.limitGearsStage, "", 35); //"Stage Limit:"
+                core.landing.deployChutes =
+                    GUILayout.Toggle(core.landing.deployChutes, Localizer.Format("#MechJeb_LandingGuidance_checkbox3")); //Deploy Parachutes
                 predictor.deployChutes = core.landing.deployChutes;
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label5"), core.landing.limitChutesStage, "", 35);//Stage Limit:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label5"), core.landing.limitChutesStage, "", 35); //Stage Limit:
                 predictor.limitChutesStage = core.landing.limitChutesStage;
-                core.landing.rcsAdjustment = GUILayout.Toggle(core.landing.rcsAdjustment, Localizer.Format("#MechJeb_LandingGuidance_checkbox4"));//Use RCS for small adjustment
+                core.landing.rcsAdjustment =
+                    GUILayout.Toggle(core.landing.rcsAdjustment,
+                        Localizer.Format("#MechJeb_LandingGuidance_checkbox4")); //Use RCS for small adjustment
 
                 if (core.landing.enabled)
                 {
-                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label6") + core.landing.status);//Status:
-                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label7") + (core.landing.CurrentStep != null ? core.landing.CurrentStep.GetType().Name : "N/A"));//Step:
-                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label8") + (core.landing.descentSpeedPolicy != null ? core.landing.descentSpeedPolicy.GetType().Name : "N/A") + " (" + core.landing.UseAtmosphereToBrake().ToString() + ")");//Mode
+                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label6") + core.landing.status); //Status:
+                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label7") +
+                                    (core.landing.CurrentStep != null ? core.landing.CurrentStep.GetType().Name : "N/A")); //Step:
+                    GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label8") +
+                                    (core.landing.descentSpeedPolicy != null ? core.landing.descentSpeedPolicy.GetType().Name : "N/A") + " (" +
+                                    core.landing.UseAtmosphereToBrake() + ")"); //Mode
                     //GUILayout.Label("DecEndAlt: " + core.landing.DecelerationEndAltitude().ToString("F2"));
                     //var dragLength = mainBody.DragLength(core.landing.LandingAltitude, core.landing.vesselAverageDrag, vesselState.mass);
                     //GUILayout.Label("Drag Length: " + ( dragLength < double.MaxValue ? dragLength.ToString("F2") : "infinite"));
@@ -166,7 +181,7 @@ namespace MuMech
 
         public void SetAndLandTargetKSC()
         {
-            var ksc = landingSites.First(x => x.name == "KSC Pad");
+            LandingSite ksc = landingSites.First(x => x.name == "KSC Pad");
             core.target.SetPositionTarget(mainBody, ksc.latitude, ksc.longitude);
             core.landing.LandAtPositionTarget(this);
         }
@@ -177,13 +192,12 @@ namespace MuMech
             core.landing.LandUntargeted(this);
         }
 
-
-        [GeneralInfoItem("#MechJeb_LandingPredictions", InfoItem.Category.Misc)]//Landing predictions
-        void DrawGUITogglePredictions()
+        [GeneralInfoItem("#MechJeb_LandingPredictions", InfoItem.Category.Misc)] //Landing predictions
+        private void DrawGUITogglePredictions()
         {
             GUILayout.BeginVertical();
 
-            bool active = GUILayout.Toggle(predictor.enabled, Localizer.Format("#MechJeb_LandingGuidance_checkbox5"));//Show landing predictions
+            bool active = GUILayout.Toggle(predictor.enabled, Localizer.Format("#MechJeb_LandingGuidance_checkbox5")); //Show landing predictions
             if (predictor.enabled != active)
             {
                 if (active)
@@ -198,17 +212,21 @@ namespace MuMech
 
             if (predictor.enabled)
             {
-                predictor.makeAerobrakeNodes = GUILayout.Toggle(predictor.makeAerobrakeNodes, Localizer.Format("#MechJeb_LandingGuidance_checkbox6"));//"Show aerobrake nodes"
-                predictor.showTrajectory = GUILayout.Toggle(predictor.showTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox7"));//Show trajectory
-                predictor.worldTrajectory = GUILayout.Toggle(predictor.worldTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox8"));//World trajectory
-                predictor.camTrajectory = GUILayout.Toggle(predictor.camTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox9"));//Camera trajectory (WIP)
+                predictor.makeAerobrakeNodes =
+                    GUILayout.Toggle(predictor.makeAerobrakeNodes, Localizer.Format("#MechJeb_LandingGuidance_checkbox6")); //"Show aerobrake nodes"
+                predictor.showTrajectory =
+                    GUILayout.Toggle(predictor.showTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox7")); //Show trajectory
+                predictor.worldTrajectory =
+                    GUILayout.Toggle(predictor.worldTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox8")); //World trajectory
+                predictor.camTrajectory =
+                    GUILayout.Toggle(predictor.camTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox9")); //Camera trajectory (WIP)
                 DrawGUIPrediction();
             }
 
             GUILayout.EndVertical();
         }
 
-        void DrawGUIPrediction()
+        private void DrawGUIPrediction()
         {
             ReentrySimulation.Result result = predictor.Result;
             if (result != null)
@@ -216,32 +234,45 @@ namespace MuMech
                 switch (result.Outcome)
                 {
                     case ReentrySimulation.Outcome.LANDED:
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label9"));//Landing Predictions:
-                        GUILayout.Label(Coordinates.ToStringDMS(result.EndPosition.Latitude, result.EndPosition.Longitude) + "\nASL:" + result.EndASL.ToSI() + "m");
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label9")); //Landing Predictions:
+                        GUILayout.Label(Coordinates.ToStringDMS(result.EndPosition.Latitude, result.EndPosition.Longitude) + "\nASL:" +
+                                        result.EndASL.ToSI() + "m");
                         GUILayout.Label(result.Body.GetExperimentBiomeSafe(result.EndPosition.Latitude, result.EndPosition.Longitude));
-                        double error = Vector3d.Distance(mainBody.GetWorldSurfacePosition(result.EndPosition.Latitude, result.EndPosition.Longitude, 0) - mainBody.position,
-                                                         mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position);
+                        double error = Vector3d.Distance(
+                            mainBody.GetWorldSurfacePosition(result.EndPosition.Latitude, result.EndPosition.Longitude, 0) - mainBody.position,
+                            mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position);
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + error.ToSI() + "m"
-                                       + Localizer.Format("#MechJeb_LandingGuidance_Label11") + result.MaxDragGees.ToString("F1") +"g"
-                                       +Localizer.Format("#MechJeb_LandingGuidance_Label12") + result.DeltaVExpended.ToString("F1") + "m/s"
-                                       +Localizer.Format("#MechJeb_LandingGuidance_Label13") + (vessel.Landed ? "0.0s" : GuiUtils.TimeToDHMS(result.EndUT - Planetarium.GetUniversalTime(), 1)));//Target difference = \nMax drag: \nDelta-v needed: \nTime to land:
+                                        + Localizer.Format("#MechJeb_LandingGuidance_Label11") + result.MaxDragGees.ToString("F1") + "g"
+                                        + Localizer.Format("#MechJeb_LandingGuidance_Label12") + result.DeltaVExpended.ToString("F1") + "m/s"
+                                        + Localizer.Format("#MechJeb_LandingGuidance_Label13") + (vessel.Landed
+                                            ? "0.0s"
+                                            : GuiUtils.TimeToDHMS(result.EndUT - Planetarium.GetUniversalTime(),
+                                                1))); //Target difference = \nMax drag: \nDelta-v needed: \nTime to land:
                         break;
 
                     case ReentrySimulation.Outcome.AEROBRAKED:
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label14"));//Predicted orbit after aerobraking:
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label14")); //Predicted orbit after aerobraking:
                         Orbit o = result.AeroBrakeOrbit();
-                        if (o.eccentricity > 1) GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") + o.eccentricity.ToString("F2"));//Hyperbolic, eccentricity =
+                        if (o.eccentricity > 1)
+                            GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") +
+                                            o.eccentricity.ToString("F2")); //Hyperbolic, eccentricity =
                         else GUILayout.Label(o.PeA.ToSI(3) + "m x " + o.ApA.ToSI(3) + "m");
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label16", result.MaxDragGees.ToString("F1"))+Localizer.Format("#MechJeb_LandingGuidance_Label17", GuiUtils.TimeToDHMS(result.AeroBrakeUT - Planetarium.GetUniversalTime(), 1)));//Max drag:<<1>>g  \nExit atmosphere in:
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label16", result.MaxDragGees.ToString("F1")) +
+                                        Localizer.Format("#MechJeb_LandingGuidance_Label17",
+                                            GuiUtils.TimeToDHMS(result.AeroBrakeUT - Planetarium.GetUniversalTime(),
+                                                1))); //Max drag:<<1>>g  \nExit atmosphere in:
                         break;
 
                     case ReentrySimulation.Outcome.NO_REENTRY:
                         GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label18_1")
-                                      + orbit.PeA.ToSI(3) + "m Pe > " + mainBody.RealMaxAtmosphereAltitude().ToSI(3) + (mainBody.atmosphere ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2") : Localizer.Format("#MechJeb_LandingGuidance_Label18_3")));//"Orbit does not reenter:\n""m atmosphere height""m ground"
+                                        + orbit.PeA.ToSI(3) + "m Pe > " + mainBody.RealMaxAtmosphereAltitude().ToSI(3) + (mainBody.atmosphere
+                                            ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2")
+                                            : Localizer.Format(
+                                                "#MechJeb_LandingGuidance_Label18_3"))); //"Orbit does not reenter:\n""m atmosphere height""m ground"
                         break;
 
                     case ReentrySimulation.Outcome.TIMED_OUT:
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label19"));//Reentry simulation timed out.
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label19")); //Reentry simulation timed out.
                         break;
                 }
             }
@@ -252,7 +283,7 @@ namespace MuMech
             landingSites = new List<LandingSite>();
 
             // Import landing sites from users createded .cfg
-            foreach (var mjConf in GameDatabase.Instance.GetConfigs("MechJeb2Landing"))
+            foreach (UrlDir.UrlConfig mjConf in GameDatabase.Instance.GetConfigs("MechJeb2Landing"))
             {
                 foreach (ConfigNode site in mjConf.config.GetNode("LandingSites").GetNodes("Site"))
                 {
@@ -276,13 +307,7 @@ namespace MuMech
                     if (landingSites.All(p => p.name != launchSiteName))
                     {
                         print("Adding " + launchSiteName);
-                        landingSites.Add(new LandingSite()
-                        {
-                            name = launchSiteName,
-                            latitude = latitude,
-                            longitude = longitude,
-                            body = body
-                        });
+                        landingSites.Add(new LandingSite { name = launchSiteName, latitude = latitude, longitude = longitude, body = body });
                     }
                 }
             }
@@ -293,18 +318,15 @@ namespace MuMech
                 if (site.spawnPoints.Length > 0)
                 {
                     LaunchSite.SpawnPoint point = site.spawnPoints[0];
-                    landingSites.Add(new LandingSite()
+                    landingSites.Add(new LandingSite
                     {
-                        name = point.name.Replace("_", " "),
-                        latitude = point.latitude,
-                        longitude = point.longitude,
-                        body = site.Body
+                        name = point.name.Replace("_", " "), latitude = point.latitude, longitude = point.longitude, body = site.Body
                     });
                 }
             }
 
             // Import KerbTown/Kerbal-Konstructs launch site
-            foreach (var config in GameDatabase.Instance.GetConfigs("STATIC"))
+            foreach (UrlDir.UrlConfig config in GameDatabase.Instance.GetConfigs("STATIC"))
             {
                 foreach (ConfigNode instances in config.config.GetNodes("Instances"))
                 {
@@ -327,12 +349,12 @@ namespace MuMech
 
                     if (body != null && landingSites.All(p => p.name != launchSiteName))
                     {
-                        landingSites.Add(new LandingSite()
+                        landingSites.Add(new LandingSite
                         {
-                            name = launchSiteName,
-                            latitude = !double.IsNaN(latitude) ? latitude : 0,
+                            name      = launchSiteName,
+                            latitude  = !double.IsNaN(latitude) ? latitude : 0,
                             longitude = !double.IsNaN(longitude) ? longitude : 0,
-                            body = body
+                            body      = body
                         });
                     }
                 }
@@ -368,12 +390,9 @@ namespace MuMech
 
                         if (landingSites.All(p => p.name != launchSiteName))
                         {
-                            landingSites.Add(new LandingSite()
+                            landingSites.Add(new LandingSite
                             {
-                                name = launchSiteName,
-                                latitude = latitude,
-                                longitude = longitude,
-                                body = Planetarium.fetch.Home
+                                name = launchSiteName, latitude = latitude, longitude = longitude, body = Planetarium.fetch.Home
                             });
                         }
                     }
@@ -388,7 +407,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return Localizer.Format("#MechJeb_LandingGuidance_title");//Landing Guidance
+            return Localizer.Format("#MechJeb_LandingGuidance_title"); //Landing Guidance
         }
 
         public override string IconName()

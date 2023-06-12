@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using JetBrains.Annotations;
-using UnityEngine;
 using UnityEngine.Profiling;
 using UnityToolbag;
 
@@ -17,18 +17,17 @@ namespace MuMech
     {
         public MechJebModuleStageStats(MechJebCore core) : base(core) { }
 
-        [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)]//ΔV include cosine losses
+        [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)] //ΔV include cosine losses
         public bool dVLinearThrust = true;
 
         public FuelFlowSimulation.FuelStats[] atmoStats = { };
-        public FuelFlowSimulation.FuelStats[] vacStats = { };
-
+        public FuelFlowSimulation.FuelStats[] vacStats  = { };
 
         // Those are used to store the next result from the thread since we must move result 
         // to atmoStats/vacStats only in the main thread.
         private FuelFlowSimulation.FuelStats[] newAtmoStats;
         private FuelFlowSimulation.FuelStats[] newVacStats;
-        private bool resultReady = false;
+        private bool                           resultReady;
 
         public void RequestUpdate(object controller, bool wait = false)
         {
@@ -42,7 +41,7 @@ namespace MuMech
             {
                 TryStartSimulation();
             }
-            
+
             // wait means the code needs some result to run so we wait if we do not have any result yet
             if (wait && atmoStats.Length == 0 && (simulationRunning || TryStartSimulation()))
             {
@@ -51,24 +50,25 @@ namespace MuMech
                     // wait for a sim to be ready. Risked ?
                     Thread.Sleep(1);
                 }
+
                 IsResultReady();
             }
         }
 
         public CelestialBody editorBody;
-        public bool liveSLT = true;
-        public double altSLT = 0;
-        public double mach = 0;
+        public bool          liveSLT = true;
+        public double        altSLT  = 0;
+        public double        mach    = 0;
 
-        protected bool updateRequested = false;
-        protected bool simulationRunning = false;
-        protected System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        protected bool      updateRequested;
+        protected bool      simulationRunning;
+        protected Stopwatch stopwatch = new Stopwatch();
 
         private int needRebuild = 1;
 
         private readonly FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
 
-        long millisecondsBetweenSimulations;
+        private long millisecondsBetweenSimulations;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -90,12 +90,12 @@ namespace MuMech
             setDirty();
         }
 
-        void onEditorShipModified(ShipConstruct data)
+        private void onEditorShipModified(ShipConstruct data)
         {
             setDirty();
         }
 
-        void setDirty()
+        private void setDirty()
         {
             // The ship is not really ready in the first frame following the event so we wait 2
             needRebuild = 2;
@@ -136,15 +136,15 @@ namespace MuMech
         {
             if (resultReady)
             {
-                atmoStats = newAtmoStats;
-                vacStats = newVacStats;
+                atmoStats   = newAtmoStats;
+                vacStats    = newVacStats;
                 resultReady = false;
             }
         }
 
         private bool TryStartSimulation()
         {
-            if (!simulationRunning && ((HighLogic.LoadedSceneIsEditor && editorBody != null) || (vessel != null)))
+            if (!simulationRunning && ((HighLogic.LoadedSceneIsEditor && editorBody != null) || vessel != null))
             {
                 //We should be running simulations periodically, but one is not running right now.
                 //Check if enough time has passed since the last one to start a new one:
@@ -160,12 +160,11 @@ namespace MuMech
                         StartSimulation();
                         return true;
                     }
-                    else
-                    {
-                        users.Clear();
-                    }
+
+                    users.Clear();
                 }
             }
+
             return false;
         }
 
@@ -175,11 +174,11 @@ namespace MuMech
             try
             {
                 simulationRunning = true;
-                resultReady = false;
+                resultReady       = false;
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
-                
+
                 //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
-                List<Part> parts = (HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts);
+                List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts;
 
                 if (HighLogic.LoadedSceneIsEditor)
                 {
@@ -222,6 +221,7 @@ namespace MuMech
                 stopwatch.Start();
                 simulationRunning = false;
             }
+
             Profiler.EndSample();
         }
 
@@ -231,13 +231,17 @@ namespace MuMech
             {
                 CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : vessel.mainBody;
 
-                double staticPressureKpa = (HighLogic.LoadedSceneIsEditor || !liveSLT ? (simBody.atmosphere ? simBody.GetPressure(altSLT) : 0) : vessel.staticPressurekPa);
-                double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT ? simBody.GetDensity(simBody.GetPressure(altSLT), simBody.GetTemperature(0)) : vessel.atmDensity) / 1.225;
+                double staticPressureKpa = HighLogic.LoadedSceneIsEditor || !liveSLT
+                    ? simBody.atmosphere ? simBody.GetPressure(altSLT) : 0
+                    : vessel.staticPressurekPa;
+                double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT
+                    ? simBody.GetDensity(simBody.GetPressure(altSLT), simBody.GetTemperature(0))
+                    : vessel.atmDensity) / 1.225;
                 double mach = HighLogic.LoadedSceneIsEditor ? this.mach : vessel.mach;
 
                 //Run the simulation
                 newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
-                newVacStats = sims[1].SimulateAllStages(1.0f, 0.0, 0.0, mach);
+                newVacStats  = sims[1].SimulateAllStages(1.0f, 0.0, 0.0, mach);
             }
             catch (Exception e)
             {
@@ -254,7 +258,7 @@ namespace MuMech
 
             //start the stopwatch that will count off this delay
             stopwatch.Start();
-            resultReady = true;
+            resultReady       = true;
             simulationRunning = false;
         }
     }

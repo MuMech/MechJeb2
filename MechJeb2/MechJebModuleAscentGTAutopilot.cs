@@ -61,7 +61,7 @@ namespace MuMech
 
                 case AscentMode.EXIT:
                     return false;
-                
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -71,8 +71,8 @@ namespace MuMech
 
         private void DriveVerticalAscent()
         {
-            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) _mode            = AscentMode.INITIATE_TURN;
-            if (orbit.ApA > AscentSettings.IntermediateAltitude) _mode = AscentMode.GRAVITY_TURN;
+            if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) _mode = AscentMode.INITIATE_TURN;
+            if (orbit.ApA > AscentSettings.IntermediateAltitude) _mode                       = AscentMode.GRAVITY_TURN;
 
             //during the vertical ascent we just thrust straight up at max throttle
             AttitudeTo(90);
@@ -118,12 +118,12 @@ namespace MuMech
             AttitudeTo(90 - AscentSettings.TurnStartPitch);
 
 
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
-                if (core.thrust.targetThrottle < 1.0F)
-                {
-                    Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
-                    return;
-                }
+            core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
+            if (core.thrust.targetThrottle < 1.0F)
+            {
+                Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
+                return;
+            }
 
 
             Status = Localizer.Format("#MechJeb_Ascent_status20"); //"Initiate gravity turn"
@@ -162,15 +162,15 @@ namespace MuMech
             // srfvelPitch == zero AoA
             AttitudeTo(SrfvelPitch() * pitchfade);
 
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
-                if (core.thrust.targetThrottle < 1.0F)
-                {
-                    Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
-                    return;
-                }
+            core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
+            if (core.thrust.targetThrottle < 1.0F)
+            {
+                Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
+                return;
+            }
 
 
-                Status = Localizer.Format("#MechJeb_Ascent_status22"); //"Gravity turn"
+            Status = Localizer.Format("#MechJeb_Ascent_status22"); //"Gravity turn"
         }
 
         private void DriveHoldAP()

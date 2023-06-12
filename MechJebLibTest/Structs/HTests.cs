@@ -13,6 +13,7 @@ namespace MechJebLibTest.Structs
     public class HTests
     {
         private readonly H1 _interpolant1 = H1.Get();
+
         private readonly H3 _interpolant3 = H3.Get();
         //private readonly CN _interpolantN1 = new CN(1);
 
@@ -32,7 +33,6 @@ namespace MechJebLibTest.Structs
             _interpolant1.Add(1, 0, 0);
             _interpolant1.Evaluate(0.5).ShouldEqual(0, 1e-15);
             _interpolant1.Evaluate(0.5).ShouldEqual(0, 1e-15);
-
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace MechJebLibTest.Structs
             _interpolant1.Evaluate(2.0).ShouldEqual(1.0, 1e-15);
 
             _interpolant1.Evaluate(2.5).ShouldEqual(1.0, 1e-15);
-       }
+        }
 
         [Fact]
         public void H1SingleEntry2()
@@ -112,8 +112,8 @@ namespace MechJebLibTest.Structs
             _interpolant3.Add(1, V3.one, -V3.one);
             _interpolant3.Add(2, V3.zero, -V3.one);
 
-            _interpolant3.Evaluate(0.5).ShouldEqual(V3.one*0.5, 1e-15);
-            _interpolant3.Evaluate(1.5).ShouldEqual(V3.one*0.5, 1e-15);
+            _interpolant3.Evaluate(0.5).ShouldEqual(V3.one * 0.5, 1e-15);
+            _interpolant3.Evaluate(1.5).ShouldEqual(V3.one * 0.5, 1e-15);
         }
 
         [Fact]

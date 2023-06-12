@@ -1,21 +1,21 @@
 ﻿using System.Linq;
 using JetBrains.Annotations;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
     [UsedImplicitly]
-    class MechJebModuleSmartRcs : DisplayModule
+    internal class MechJebModuleSmartRcs : DisplayModule
     {
-
         public enum Target
         {
             OFF,
-            ZERO_RVEL,
+            ZERO_RVEL
         }
 
-        public static readonly string[] TargetTexts = { Localizer.Format("#MechJeb_SmartRcs_button1"), Localizer.Format("#MechJeb_SmartRcs_button2") };//"OFF", "ZERO RVEL"
+        public static readonly string[]
+            TargetTexts = { Localizer.Format("#MechJeb_SmartRcs_button1"), Localizer.Format("#MechJeb_SmartRcs_button2") }; //"OFF", "ZERO RVEL"
 
         public Target target;
 
@@ -23,15 +23,17 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.Global)]
         public bool autoDisableSmartRCS = true;
-        [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)]//Disable SmartRcs automatically
+
+        [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)] //Disable SmartRcs automatically
         public void AutoDisableSmartRCS()
         {
-            autoDisableSmartRCS = GUILayout.Toggle(autoDisableSmartRCS, Localizer.Format("#MechJeb_SmartRcs_checkbox1 "));//"Disable SmartRcs automatically"
+            autoDisableSmartRCS =
+                GUILayout.Toggle(autoDisableSmartRCS, Localizer.Format("#MechJeb_SmartRcs_checkbox1 ")); //"Disable SmartRcs automatically"
         }
 
         protected void TargetButton(Target bt)
         {
-            if (GUILayout.Button(TargetTexts[(int)bt], (target == bt) ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
+            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
             {
                 target = bt;
                 Engage();
@@ -44,30 +46,29 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-
             if (btNormal == null)
             {
-                btNormal = new GUIStyle(GUI.skin.button);
+                btNormal                  = new GUIStyle(GUI.skin.button);
                 btNormal.normal.textColor = btNormal.focused.textColor = Color.white;
-                btNormal.hover.textColor = btNormal.active.textColor = Color.yellow;
+                btNormal.hover.textColor  = btNormal.active.textColor  = Color.yellow;
                 btNormal.onNormal.textColor =
                     btNormal.onFocused.textColor = btNormal.onHover.textColor = btNormal.onActive.textColor = Color.green;
                 btNormal.padding = new RectOffset(8, 8, 8, 8);
 
-                btActive = new GUIStyle(btNormal);
-                btActive.active = btActive.onActive;
-                btActive.normal = btActive.onNormal;
+                btActive           = new GUIStyle(btNormal);
+                btActive.active    = btActive.onActive;
+                btActive.normal    = btActive.onNormal;
                 btActive.onFocused = btActive.focused;
-                btActive.hover = btActive.onHover;
+                btActive.hover     = btActive.onHover;
 
-                btAuto = new GUIStyle(btNormal);
+                btAuto                  = new GUIStyle(btNormal);
                 btAuto.normal.textColor = Color.red;
                 btAuto.onActive =
                     btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;
             }
 
             // Disable if RCS is used by an other module
-            if (core.rcs.enabled && core.rcs.users.Count(u => !this.Equals(u)) > 0)
+            if (core.rcs.enabled && core.rcs.users.Count(u => !Equals(u)) > 0)
             {
                 if (autoDisableSmartRCS)
                 {
@@ -75,11 +76,12 @@ namespace MuMech
                     if (core.rcs.users.Contains(this))
                         core.rcs.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
-                GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GUILayout.ExpandWidth(true));//"AUTO"
+
+                GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GUILayout.ExpandWidth(true)); //"AUTO"
             }
             else if (core.target.Target == null)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_SmartRcs_label1"));//"Choose a target"
+                GUILayout.Label(Localizer.Format("#MechJeb_SmartRcs_label1")); //"Choose a target"
             }
             else
             {
@@ -91,11 +93,13 @@ namespace MuMech
 
                 GUILayout.EndVertical();
             }
-            core.rcs.rcsThrottle = GUILayout.Toggle(core.rcs.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2"));//" RCS throttle when engines are offline"
-            core.rcs.rcsForRotation = GUILayout.Toggle(core.rcs.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3"));// " Use RCS for rotation"
+
+            core.rcs.rcsThrottle =
+                GUILayout.Toggle(core.rcs.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2")); //" RCS throttle when engines are offline"
+            core.rcs.rcsForRotation =
+                GUILayout.Toggle(core.rcs.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3")); // " Use RCS for rotation"
             base.WindowGUI(windowID);
         }
-
 
         public void Engage()
         {
@@ -113,18 +117,17 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(180), GUILayout.Height(100) };
+            return new[] { GUILayout.Width(180), GUILayout.Height(100) };
         }
-        
+
         public override string GetName()
         {
-            return Localizer.Format("#MechJeb_SmartRcs_title");//"SmartRcs"
+            return Localizer.Format("#MechJeb_SmartRcs_title"); //"SmartRcs"
         }
 
         public override string IconName()
         {
             return "SmartRcs";
         }
-
     }
 }

@@ -44,7 +44,7 @@ namespace MuMech
         // FIXME: that's a lie, its used all over the place.
         private CelestialBody _mainBody;
 
-        private double        _maxThrustAccel;
+        private double _maxThrustAccel;
 
         // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
         private double _probableLandingSiteASL;

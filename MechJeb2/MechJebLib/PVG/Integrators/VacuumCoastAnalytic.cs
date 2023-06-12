@@ -23,7 +23,7 @@ namespace MechJebLib.PVG.Integrators
             yf.V = vf;
 
             yf.PV = stm00 * y0.PV - stm01 * y0.PR;
-            yf.PR = -stm10 * y0.PV + stm11 * y0.PR ;
+            yf.PR = -stm10 * y0.PV + stm11 * y0.PR;
 
             yf.M  = y0.M;
             yf.Pm = y0.Pm;

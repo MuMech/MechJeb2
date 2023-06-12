@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using JetBrains.Annotations;
-using UnityEngine;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -10,34 +10,42 @@ namespace MuMech
     public class MechJebModuleWarpHelper : DisplayModule
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
-        static readonly string[] warpTargetStrings = new string[] { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"),  Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") };//"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
+
+        private static readonly string[] warpTargetStrings =
+        {
+            Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"),
+            Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"),
+            Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"),
+            Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text8")
+        }; //"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
+
         [Persistent(pass = (int)Pass.Global)]
         public WarpTarget warpTarget = WarpTarget.Periapsis;
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableTime leadTime = 0;
 
-        public bool warping = false;
-        readonly EditableTime timeOffset = 0;
+        public           bool         warping;
+        private readonly EditableTime timeOffset = 0;
 
-        double targetUT = 0;
+        private double targetUT;
 
-        [Persistent(pass = (int)(Pass.Local|Pass.Type|Pass.Global))]
-        readonly EditableDouble phaseAngle = 0;
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        private readonly EditableDouble phaseAngle = 0;
 
         protected override void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GUILayout.ExpandWidth(false));//"Warp to: "
+            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GUILayout.ExpandWidth(false)); //"Warp to: "
             warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
             GUILayout.EndHorizontal();
 
             if (warpTarget == WarpTarget.Time)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GUILayout.ExpandWidth(true));//"Warp for: "
+                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GUILayout.ExpandWidth(true)); //"Warp for: "
                 timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
                 GUILayout.EndHorizontal();
             }
@@ -45,18 +53,18 @@ namespace MuMech
             {
                 // I wonder if I should check for target that don't make sense
                 if (!core.target.NormalTargetExists)
-                    GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label3"));//"You need a target"
+                    GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label3")); //"You need a target"
                 else
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label4"), phaseAngle, "º", 60);//"Phase Angle:"
+                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label4"), phaseAngle, "º", 60); //"Phase Angle:"
             }
 
             GUILayout.BeginHorizontal();
 
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label5"), leadTime, "");//"Lead time: "
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label5"), leadTime, ""); //"Lead time: "
 
             if (warping)
             {
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button1")))//"Abort"
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button1"))) //"Abort"
                 {
                     warping = false;
                     core.warp.MinimumWarp(true);
@@ -64,7 +72,7 @@ namespace MuMech
             }
             else
             {
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button2")))//"Warp"
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button2"))) //"Warp"
                 {
                     warping = true;
 
@@ -83,7 +91,8 @@ namespace MuMech
                             break;
 
                         case WarpTarget.Node:
-                            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any()) targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
+                            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
+                                targetUT = vessel.patchedConicSolver.maneuverNodes[0].UT;
                             break;
 
                         case WarpTarget.Time:
@@ -94,12 +103,12 @@ namespace MuMech
                             if (core.target.NormalTargetExists)
                             {
                                 Orbit reference;
-                                if (core.target.TargetOrbit.referenceBody == orbit.referenceBody) 
+                                if (core.target.TargetOrbit.referenceBody == orbit.referenceBody)
                                     reference = orbit; // we orbit arround the same body
                                 else
-                                    reference = orbit.referenceBody.orbit; 
+                                    reference = orbit.referenceBody.orbit;
                                 // From Kerbal Alarm Clock
-                                double angleChangePerSec = (360 / core.target.TargetOrbit.period) - (360 / reference.period);
+                                double angleChangePerSec = 360 / core.target.TargetOrbit.period - 360 / reference.period;
                                 double currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
                                 double angleDigff = currentAngle - phaseAngle;
                                 if (angleDigff > 0 && angleChangePerSec > 0)
@@ -109,17 +118,20 @@ namespace MuMech
                                 double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
                                 targetUT = vesselState.time + TimeToTarget;
                             }
+
                             break;
 
                         case WarpTarget.AtmosphericEntry:
                             try
                             {
-                                targetUT = OrbitExtensions.NextTimeOfRadius(vessel.orbit, vesselState.time, vesselState.mainBody.Radius + vesselState.mainBody.RealMaxAtmosphereAltitude());
+                                targetUT = vessel.orbit.NextTimeOfRadius(vesselState.time,
+                                    vesselState.mainBody.Radius + vesselState.mainBody.RealMaxAtmosphereAltitude());
                             }
                             catch
                             {
                                 warping = false;
                             }
+
                             break;
 
                         case WarpTarget.SuicideBurn:
@@ -131,6 +143,7 @@ namespace MuMech
                             {
                                 warping = false;
                             }
+
                             break;
 
                         default:
@@ -144,7 +157,9 @@ namespace MuMech
 
             core.warp.useQuickWarpInfoItem();
 
-            if (warping) GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") + warpTargetStrings[(int)warpTarget] + ".");//"Warping to "
+            if (warping)
+                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") +
+                                warpTargetStrings[(int)warpTarget] + "."); //"Warping to "
 
             core.warp.ControlWarpButton();
 
@@ -182,19 +197,19 @@ namespace MuMech
             }
         }
 
-        public override UnityEngine.GUILayoutOption[] WindowOptions()
+        public override GUILayoutOption[] WindowOptions()
         {
-            return new GUILayoutOption[] { GUILayout.Width(240), GUILayout.Height(50) };
+            return new[] { GUILayout.Width(240), GUILayout.Height(50) };
         }
 
         public override bool isActive()
         {
-            return warping;            
+            return warping;
         }
 
         public override string GetName()
         {
-            return Localizer.Format("#MechJeb_WarpHelper_title");//"Warp Helper"
+            return Localizer.Format("#MechJeb_WarpHelper_title"); //"Warp Helper"
         }
 
         public override string IconName()

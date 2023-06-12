@@ -38,10 +38,11 @@ namespace MechJebLib.PVG
             public int       _optimizedCoastPhase { get; private set; } = -1;
             public Solution? _solution            { get; private set; }
 
-
-            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
+            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false,
+                bool unguided = false)
             {
-                Log($"[MechJebLib.AscentBuilder] AddStageUsingFinalMass({m0}, {mf}, {isp}, {bt}, {kspStage}, {(optimizeTime?"true":"false")}, {(unguided?"true":"false")})");
+                Log(
+                    $"[MechJebLib.AscentBuilder] AddStageUsingFinalMass({m0}, {mf}, {isp}, {bt}, {kspStage}, {(optimizeTime ? "true" : "false")}, {(unguided ? "true" : "false")})");
 
                 _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, optimizeTime, unguided));
                 if (optimizeTime)
@@ -50,9 +51,11 @@ namespace MechJebLib.PVG
                 return this;
             }
 
-            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false, bool unguided = false)
+            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false,
+                bool unguided = false)
             {
-                Log($"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {thrust}, {isp}, {bt}, {kspStage}, {(optimizeTime?"true":"false")}, {(unguided?"true":"false")})");
+                Log(
+                    $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {thrust}, {isp}, {bt}, {kspStage}, {(optimizeTime ? "true" : "false")}, {(unguided ? "true" : "false")})");
 
                 _phases.Add(Phase.NewStageUsingThrust(m0, thrust, isp, bt, kspStage, optimizeTime, unguided));
                 if (optimizeTime)
@@ -106,9 +109,11 @@ namespace MechJebLib.PVG
             }
 
             // This magical interface needs to be busted up
-            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag, bool lanflag)
+            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag,
+                bool lanflag)
             {
-                Log($"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {(attachAltFlag?"true":"false")}, {(lanflag?"true":"false")})");
+                Log(
+                    $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")})");
                 _peR           = peR;
                 _apR           = apR;
                 _attR          = attR;
@@ -123,7 +128,7 @@ namespace MechJebLib.PVG
 
             public AscentBuilder OldSolution(Solution solution)
             {
-                Log($"[MechJebLib.AscentBuilder] OldSolution(<solution>)");
+                Log("[MechJebLib.AscentBuilder] OldSolution(<solution>)");
 
                 _solution = solution;
 
@@ -132,7 +137,7 @@ namespace MechJebLib.PVG
 
             public AscentBuilder FixedBurnTime(bool fixedBurnTime)
             {
-                Log($"[MechJebLib.AscentBuilder] FixedBurnTime({(fixedBurnTime?"true":"false")})");
+                Log($"[MechJebLib.AscentBuilder] FixedBurnTime({(fixedBurnTime ? "true" : "false")})");
                 _fixedBurnTime = fixedBurnTime;
 
                 return this;

@@ -4,6 +4,7 @@
  */
 
 using System;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
@@ -37,16 +38,16 @@ namespace MechJebLib.Maneuvers
             switch (type)
             {
                 case Type.PERIAPSIS:
-                    fi[1] = Core.Maths.PeriapsisFromStateVectors(1.0, p, q + dv) - value;
+                    fi[1] = Maths.PeriapsisFromStateVectors(1.0, p, q + dv) - value;
                     break;
                 case Type.APOAPSIS:
-                    fi[1] = 1.0 / Core.Maths.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / value;
+                    fi[1] = 1.0 / Maths.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
                 case Type.SMA:
-                    fi[1] = 1.0 / Core.Maths.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
+                    fi[1] = 1.0 / Maths.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
                 case Type.ECC:
-                    double ecc = Core.Maths.EccFromStateVectors(1.0, p, q + dv);
+                    double ecc = Maths.EccFromStateVectors(1.0, p, q + dv);
                     fi[1] = ecc - value;
                     break;
             }
@@ -93,7 +94,7 @@ namespace MechJebLib.Maneuvers
 
             var scale = Scale.Create(mu, r.magnitude);
 
-            (V3 p, V3 q, Q3 rot) = Core.Maths.PerifocalFromStateVectors(mu, r, v);
+            (V3 p, V3 q, Q3 rot) = Maths.PerifocalFromStateVectors(mu, r, v);
 
             p /= scale.LengthScale;
             q /= scale.VelocityScale;

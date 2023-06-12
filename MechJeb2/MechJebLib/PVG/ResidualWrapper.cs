@@ -159,7 +159,6 @@ namespace MechJebLib.PVG
 
         public static void Clear(ResidualWrapper obj)
         {
-
         }
     }
 }

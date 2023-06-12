@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -8,16 +9,15 @@ namespace MuMech
     {
         //public interface:
         [Persistent(pass = (int)Pass.Global)]
-        public bool autowarp = true;      //whether to auto-warp to nodes
+        public bool autowarp = true; //whether to auto-warp to nodes
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble leadTime = 3; //how many seconds before a burn to end warp (note that we align with the node before warping)
 
         [Persistent(pass = (int)Pass.Global)]
-        public EditableDouble tolerance = 0.1;    //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
+        public EditableDouble tolerance = 0.1; //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
-
-        [ValueInfoItem("#MechJeb_NodeBurnLength", InfoItem.Category.Thrust)]//Node Burn Length
+        [ValueInfoItem("#MechJeb_NodeBurnLength", InfoItem.Category.Thrust)] //Node Burn Length
         public string NextNodeBurnTime()
         {
             if (!vessel.patchedConicsUnlocked())
@@ -35,11 +35,12 @@ namespace MuMech
                 ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
                 dV = node.GetBurnVector(orbit).magnitude;
             }
+
             double halfBurnTime, spool;
             return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTime, out spool));
         }
 
-        [ValueInfoItem("#MechJeb_NodeBurnCountdown", InfoItem.Category.Thrust)]//Node Burn Countdown
+        [ValueInfoItem("#MechJeb_NodeBurnCountdown", InfoItem.Category.Thrust)] //Node Burn Countdown
         public string NextNodeCountdown()
         {
             if (!vessel.patchedConicsUnlocked() || vessel.patchedConicSolver.maneuverNodes.Count == 0)
@@ -55,6 +56,7 @@ namespace MuMech
             {
                 dV = node.GetBurnVector(orbit).magnitude;
             }
+
             double UT = node.UT;
             double halfBurnTIme, spool;
             BurnTime(dV, out halfBurnTIme, out spool);
@@ -70,8 +72,8 @@ namespace MuMech
         {
             mode = Mode.ONE_NODE;
             users.Add(controller);
-            burnTriggered = false;
-            alignedForBurn = false;
+            burnTriggered   = false;
+            alignedForBurn  = false;
             remainingDeltaV = 0;
         }
 
@@ -79,7 +81,7 @@ namespace MuMech
         {
             mode = Mode.ONE_PNODE;
             users.Add(controller);
-            burnTriggered = false;
+            burnTriggered  = false;
             alignedForBurn = false;
 
             remainingDeltaV = vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude;
@@ -89,8 +91,8 @@ namespace MuMech
         {
             mode = Mode.ALL_NODES;
             users.Add(controller);
-            burnTriggered = false;
-            alignedForBurn = false;
+            burnTriggered   = false;
+            alignedForBurn  = false;
             remainingDeltaV = 0;
         }
 
@@ -99,7 +101,7 @@ namespace MuMech
             core.warp.MinimumWarp();
             users.Clear();
             remainingDeltaV = 0;
-            burnTriggered = false;
+            burnTriggered   = false;
         }
 
         public override void OnModuleEnabled()
@@ -116,24 +118,27 @@ namespace MuMech
             remainingDeltaV = 0;
         }
 
-        protected enum Mode { ONE_NODE,ONE_PNODE, ALL_NODES };
+        protected enum Mode { ONE_NODE, ONE_PNODE, ALL_NODES }
+
         protected Mode mode = Mode.ONE_NODE;
 
-        public bool burnTriggered = false;
-        public bool alignedForBurn = false;
-        protected double remainingDeltaV = 0; // for Principia
-        protected bool nearingBurn = false;
+        public    bool   burnTriggered;
+        public    bool   alignedForBurn;
+        protected double remainingDeltaV; // for Principia
+        protected bool   nearingBurn;
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!burnTriggered && nearingBurn && core.thrust.limitToPreventUnstableIgnition && vesselState.lowestUllage != VesselState.UllageState.VeryStable)
+            if (!burnTriggered && nearingBurn && core.thrust.limitToPreventUnstableIgnition &&
+                vesselState.lowestUllage != VesselState.UllageState.VeryStable)
             {
                 if (vessel.hasEnabledRCSModules())
                 {
                     if (!vessel.ActionGroups[KSPActionGroup.RCS])
                     {
-                        vessel.ActionGroups.SetGroup(KSPActionGroup.RCS,true);
+                        vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                     }
+
                     s.Z = -1.0F;
                 }
             }
@@ -160,23 +165,25 @@ namespace MuMech
                     Abort();
                     return;
                 }
+
                 //aim along the node
                 ManeuverNode node = hasNodes ? vessel.patchedConicSolver.maneuverNodes[0] : null;
                 if (hasNodes)
                 {
-                    core.attitude.attitudeTo(Vector3d.forward,AttitudeReference.MANEUVER_NODE_COT,this);
+                    core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
                 }
                 else
                 {
                     if (!core.attitude.attitudeKILLROT)
                     {
-                        core.attitude.attitudeTo(UnityEngine.Quaternion.LookRotation(vessel.GetTransform().up,-vessel.GetTransform().forward),AttitudeReference.INERTIAL,this);
+                        core.attitude.attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward),
+                            AttitudeReference.INERTIAL, this);
                         core.attitude.attitudeKILLROT = true;
                     }
                 }
 
                 double halfBurnTime, spool;
-                BurnTime(remainingDeltaV,out halfBurnTime,out spool);
+                BurnTime(remainingDeltaV, out halfBurnTime, out spool);
 
                 double timeToNode = hasNodes ? node.UT - vesselState.time : -1;
                 //print("$$$$$$$ Executor: Node in " + timeToNode + ", spool " + spool.ToString("F3"));
@@ -190,8 +197,8 @@ namespace MuMech
                 if (autowarp && !burnTriggered)
                 {
                     if (timeToNode > 600 || (MuUtils.PhysicsRunning()
-                        ? core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001
-                        : core.attitude.attitudeAngleFromTarget() < 10))
+                            ? core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001
+                            : core.attitude.attitudeAngleFromTarget() < 10))
                     {
                         core.warp.WarpToUT(timeToNode + vesselState.time - spool - leadTime);
                     }
@@ -212,8 +219,8 @@ namespace MuMech
                     {
                         if (core.attitude.attitudeAngleFromTarget() < 90)
                         {
-                            double timeConstant = (remainingDeltaV > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
-                            core.thrust.ThrustForDV(remainingDeltaV + tolerance,timeConstant);
+                            double timeConstant = remainingDeltaV > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2;
+                            core.thrust.ThrustForDV(remainingDeltaV + tolerance, timeConstant);
                             // We'll subtract delta V later.
                         }
                         else
@@ -229,6 +236,7 @@ namespace MuMech
                         }
                     }
                 }
+
                 if ((burnTriggered || nearingBurn) && MuUtils.PhysicsRunning())
                 {
                     // decrement remaining dV based on engine and RCS thrust
@@ -236,10 +244,10 @@ namespace MuMech
                     // We also can't just use vesselState.currentThrustAccel because only engines are counted.
                     // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
                     Vector3d dV = (vessel.acceleration_immediate - vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
-                    remainingDeltaV -= Vector3d.Dot(dV,core.attitude.targetAttitude());
+                    remainingDeltaV -= Vector3d.Dot(dV, core.attitude.targetAttitude());
                 }
             }
-            else if(hasNodes)
+            else if (hasNodes)
             {
                 //check if we've finished a node:
                 ManeuverNode node = vessel.patchedConicSolver.maneuverNodes[0];
@@ -256,22 +264,21 @@ namespace MuMech
                         Abort();
                         return;
                     }
-                    else if (mode == Mode.ALL_NODES)
+
+                    if (mode == Mode.ALL_NODES)
                     {
                         if (vessel.patchedConicSolver.maneuverNodes.Count == 0)
                         {
                             Abort();
                             return;
                         }
-                        else
-                        {
-                            node = vessel.patchedConicSolver.maneuverNodes[0];
-                        }
+
+                        node = vessel.patchedConicSolver.maneuverNodes[0];
                     }
                 }
 
                 //aim along the node
-                core.attitude.attitudeTo(Vector3d.forward,AttitudeReference.MANEUVER_NODE_COT,this);
+                core.attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
 
                 double halfBurnTime, spool;
                 BurnTime(dVLeft, out halfBurnTime, out spool);
@@ -290,7 +297,8 @@ namespace MuMech
                 //autowarp, but only if we're already aligned with the node
                 if (autowarp && !burnTriggered)
                 {
-                    if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001) || (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                    if ((core.attitude.attitudeAngleFromTarget() < 1 && core.vessel.angularVelocity.magnitude < 0.001) ||
+                        (core.attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
                     {
                         core.warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                     }
@@ -311,8 +319,8 @@ namespace MuMech
                     {
                         if (core.attitude.attitudeAngleFromTarget() < 90)
                         {
-                            double timeConstant = (dVLeft > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2);
-                            core.thrust.ThrustForDV(dVLeft + tolerance,timeConstant);
+                            double timeConstant = dVLeft > 10 || vesselState.minThrustAccel > 0.25 * vesselState.maxThrustAccel ? 0.5 : 2;
+                            core.thrust.ThrustForDV(dVLeft + tolerance, timeConstant);
                         }
                         else
                         {
@@ -330,8 +338,6 @@ namespace MuMech
             }
         }
 
-        
-
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
         {
             double dvLeft = dv;
@@ -339,18 +345,18 @@ namespace MuMech
 
             double burnTime = 0;
             halfBurnTime = 0;
-            spoolupTime = 0;
+            spoolupTime  = 0;
 
             // Old code:
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
 
-            var stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this, true);
 
             double lastStageBurnTime = 0;
             for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
             {
-                var s = stats.vacStats[i];
+                FuelFlowSimulation.FuelStats s = stats.vacStats[i];
                 if (s.DeltaV <= 0 || s.StartThrust <= 0)
                 {
                     if (core.staging.enabled)
@@ -359,9 +365,10 @@ namespace MuMech
                         // Add the remaining wait time
                         if (burnTime - lastStageBurnTime < core.staging.autostagePreDelay && i != stats.vacStats.Length - 1)
                             burnTime += core.staging.autostagePreDelay - (burnTime - lastStageBurnTime);
-                        burnTime += core.staging.autostagePreDelay;
-                        lastStageBurnTime = burnTime;
+                        burnTime          += core.staging.autostagePreDelay;
+                        lastStageBurnTime =  burnTime;
                     }
+
                     continue;
                 }
 
@@ -385,11 +392,11 @@ namespace MuMech
                 // TODO: Be smarter about throttle limits on future stages.
                 if (i == stats.vacStats.Length - 1)
                 {
-                        stageAvgAccel *= (double)this.vesselState.throttleFixedLimit;
+                    stageAvgAccel *= vesselState.throttleFixedLimit;
                 }
 
                 halfBurnTime += Math.Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
-                halfDvLeft = Math.Max(0, halfDvLeft - stageBurnDv);
+                halfDvLeft   =  Math.Max(0, halfDvLeft - stageBurnDv);
 
                 burnTime += stageBurnDv / stageAvgAccel;
 
@@ -413,13 +420,13 @@ namespace MuMech
             {
                 if (burnTime < spoolupTime * 0.5d)
                 {
-                    spoolupTime = burnTime / (spoolupTime * 0.5d);
-                    burnTime += spoolupTime;
+                    spoolupTime  =  burnTime / (spoolupTime * 0.5d);
+                    burnTime     += spoolupTime;
                     halfBurnTime += spoolupTime;
                 }
                 else
                 {
-                    burnTime += spoolupTime;
+                    burnTime     += spoolupTime;
                     halfBurnTime += spoolupTime;
                 }
             }

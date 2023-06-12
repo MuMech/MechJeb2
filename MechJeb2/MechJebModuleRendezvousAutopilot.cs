@@ -3,19 +3,19 @@ using JetBrains.Annotations;
 using KSP.Localization;
 using static MechJebLib.Utils.Statics;
 
-
 namespace MuMech
 {
     [UsedImplicitly]
     public class MechJebModuleRendezvousAutopilot : ComputerModule
     {
-
         public MechJebModuleRendezvousAutopilot(MechJebCore core) : base(core) { }
 
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble desiredDistance = 100;
+
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxPhasingOrbits = 5;
+
         [Persistent(pass = (int)Pass.Global)]
         public EditableDouble maxClosingSpeed = 100;
 
@@ -63,7 +63,7 @@ namespace MuMech
                 //finished
                 users.Clear();
                 core.thrust.ThrustOff();
-                status = Localizer.Format("#MechJeb_RZauto_statu1");//"Successful rendezvous"
+                status = Localizer.Format("#MechJeb_RZauto_statu1"); //"Successful rendezvous"
             }
             else if (core.target.Distance < desiredDistance * 1.05 + 2)
             {
@@ -71,7 +71,7 @@ namespace MuMech
                 double UT = vesselState.time;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
-                status = Localizer.Format("#MechJeb_RZauto_statu2", desiredDistance.ToString());//"Within " +  + "m: matching velocities."
+                status = Localizer.Format("#MechJeb_RZauto_statu2", desiredDistance.ToString()); //"Within " +  + "m: matching velocities."
             }
             else if (core.target.Distance < vesselState.radius / 25)
             {
@@ -95,7 +95,7 @@ namespace MuMech
 
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
-                    status = Localizer.Format("#MechJeb_RZauto_statu3");//"Planning to match velocities at closest approach."
+                    status = Localizer.Format("#MechJeb_RZauto_statu3"); //"Planning to match velocities at closest approach."
                 }
                 else
                 {
@@ -109,7 +109,7 @@ namespace MuMech
                     (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, closingTime);
                     vessel.PlaceManeuverNode(orbit, dV, UT);
 
-                    status = Localizer.Format("#MechJeb_RZauto_statu4");//"Close to target: plotting intercept"
+                    status = Localizer.Format("#MechJeb_RZauto_statu4"); //"Close to target: plotting intercept"
                 }
             }
             else if (orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time) < core.target.TargetOrbit.semiMajorAxis / 25)
@@ -132,14 +132,15 @@ namespace MuMech
 
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
-                status = Localizer.Format("#MechJeb_RZauto_statu5");//"On intercept course. Planning to match velocities at closest approach."
+                status = Localizer.Format("#MechJeb_RZauto_statu5"); //"On intercept course. Planning to match velocities at closest approach."
             }
             else if (orbit.RelativeInclination(core.target.TargetOrbit) < 0.05 && orbit.eccentricity < 0.05)
             {
                 //We're not on an intercept course, but we have a circular orbit in the right plane.
 
                 double hohmannUT;
-                Vector3d hohmannDV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out hohmannUT);
+                Vector3d hohmannDV =
+                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out hohmannUT);
 
                 double numPhasingOrbits = (hohmannUT - vesselState.time) / orbit.period;
 
@@ -150,7 +151,8 @@ namespace MuMech
                     //It won't be too long until the intercept window. Plot a Hohmann transfer intercept.
                     vessel.PlaceManeuverNode(orbit, hohmannDV, hohmannUT);
 
-                    status = Localizer.Format("#MechJeb_RZauto_statu6", numPhasingOrbits.ToString("F2"));//"Planning Hohmann transfer for intercept after " +  + " phasing orbits."
+                    status = Localizer.Format("#MechJeb_RZauto_statu6",
+                        numPhasingOrbits.ToString("F2")); //"Planning Hohmann transfer for intercept after " +  + " phasing orbits."
                 }
                 else
                 {
@@ -159,8 +161,9 @@ namespace MuMech
                     double lowPhasingRadius = core.target.TargetOrbit.semiMajorAxis / axisRatio;
                     double highPhasingRadius = core.target.TargetOrbit.semiMajorAxis * axisRatio;
 
-                    bool useLowPhasingRadius = (lowPhasingRadius > mainBody.Radius + mainBody.RealMaxAtmosphereAltitude() + 3000) && (orbit.semiMajorAxis < core.target.TargetOrbit.semiMajorAxis);
-                    double phasingOrbitRadius = (useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius);
+                    bool useLowPhasingRadius = lowPhasingRadius > mainBody.Radius + mainBody.RealMaxAtmosphereAltitude() + 3000 &&
+                                               orbit.semiMajorAxis < core.target.TargetOrbit.semiMajorAxis;
+                    double phasingOrbitRadius = useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius;
 
                     if (orbit.ApR < phasingOrbitRadius)
                     {
@@ -189,7 +192,9 @@ namespace MuMech
                         vessel.PlaceManeuverNode(orbit, dV, UT);
                     }
 
-                    status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"),maxPhasingOrbits.text,(phasingOrbitRadius - mainBody.Radius).ToSI(0));//"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
+                    status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"), maxPhasingOrbits.text,
+                        (phasingOrbitRadius - mainBody.Radius)
+                        .ToSI(0)); //"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
                 }
             }
             else if (orbit.RelativeInclination(core.target.TargetOrbit) < 0.05)
@@ -198,16 +203,18 @@ namespace MuMech
 
                 bool circularizeAtPe;
                 if (orbit.eccentricity > 1) circularizeAtPe = true;
-                else circularizeAtPe = Math.Abs(orbit.PeR - core.target.TargetOrbit.semiMajorAxis) < Math.Abs(orbit.ApR - core.target.TargetOrbit.semiMajorAxis);
+                else
+                    circularizeAtPe = Math.Abs(orbit.PeR - core.target.TargetOrbit.semiMajorAxis) <
+                                      Math.Abs(orbit.ApR - core.target.TargetOrbit.semiMajorAxis);
 
                 double UT;
                 if (circularizeAtPe) UT = Math.Max(vesselState.time, orbit.NextPeriapsisTime(vesselState.time));
-                else UT = orbit.NextApoapsisTime(vesselState.time);
+                else UT                 = orbit.NextApoapsisTime(vesselState.time);
 
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(orbit, UT);
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
-                status = Localizer.Format("#MechJeb_RZauto_statu8");//"Circularizing."
+                status = Localizer.Format("#MechJeb_RZauto_statu8"); //"Circularizing."
             }
             else
             {
@@ -215,7 +222,8 @@ namespace MuMech
                 bool ascending;
                 if (orbit.eccentricity < 1)
                 {
-                    if (orbit.TimeOfAscendingNode(core.target.TargetOrbit, vesselState.time) < orbit.TimeOfDescendingNode(core.target.TargetOrbit, vesselState.time))
+                    if (orbit.TimeOfAscendingNode(core.target.TargetOrbit, vesselState.time) <
+                        orbit.TimeOfDescendingNode(core.target.TargetOrbit, vesselState.time))
                     {
                         ascending = true;
                     }
@@ -238,12 +246,13 @@ namespace MuMech
 
                 double UT;
                 Vector3d dV;
-                if (ascending) dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.TargetOrbit, vesselState.time, out UT);
+                if (ascending)
+                    dV  = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.TargetOrbit, vesselState.time, out UT);
                 else dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(orbit, core.target.TargetOrbit, vesselState.time, out UT);
 
                 vessel.PlaceManeuverNode(orbit, dV, UT);
 
-                status = Localizer.Format("#MechJeb_RZauto_statu9");//"Matching planes."
+                status = Localizer.Format("#MechJeb_RZauto_statu9"); //"Matching planes."
             }
         }
     }

@@ -33,7 +33,7 @@ namespace MechJebLib.PVG.Integrators
             }
 
             // precompute some values
-            double omega = 1.0/Math.Sqrt(rm * rm * rm);
+            double omega = 1.0 / Math.Sqrt(rm * rm * rm);
             double dt = tf - t0;
             double delta = dt / 4;
             double comega1 = Math.Cos(omega * delta);
@@ -105,7 +105,7 @@ namespace MechJebLib.PVG.Integrators
             else
                 yf.DV = y0.DV + phase.thrust / phase.m0 * dt;
 
-            yf.Pm = y0.Pm;  // FIXME: this is certainly wrong
+            yf.Pm = y0.Pm; // FIXME: this is certainly wrong
 
             yf.CopyTo(yfout);
         }

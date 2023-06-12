@@ -8,8 +8,8 @@ namespace MuMech
     public static class OrbitExtensions
     {
         /// <summary>
-        /// Get the orbital velocity at a given time in left handed world coordinates.  This value will rotate
-        /// due to the inverse rotation tick-to-tick.
+        ///     Get the orbital velocity at a given time in left handed world coordinates.  This value will rotate
+        ///     due to the inverse rotation tick-to-tick.
         /// </summary>
         /// <param name="o">Orbit</param>
         /// <param name="UT">Universal Time</param>
@@ -21,8 +21,8 @@ namespace MuMech
         }
 
         /// <summary>
-        /// Get the body centered inertial position at a given time in left handed world coordinates.  This value
-        /// will rotate due to the inverse rotation tick-to-tick.
+        ///     Get the body centered inertial position at a given time in left handed world coordinates.  This value
+        ///     will rotate due to the inverse rotation tick-to-tick.
         /// </summary>
         /// <param name="o">Orbit</param>
         /// <param name="UT">Universal Time</param>
@@ -34,8 +34,8 @@ namespace MuMech
         }
 
         /// <summary>
-        /// Get the world space position at a given time in left handed world coordinates.  This value
-        /// will rotate due to the inverse rotation tick-to-tick.
+        ///     Get the world space position at a given time in left handed world coordinates.  This value
+        ///     will rotate due to the inverse rotation tick-to-tick.
         /// </summary>
         /// <param name="o">Orbit</param>
         /// <param name="UT">Universal Time</param>
@@ -47,8 +47,8 @@ namespace MuMech
         }
 
         /// <summary>
-        /// Get the orbital velocity at a given time in right handed coordinates.  This value will rotate
-        /// due to the inverse rotation tick-to-tick.
+        ///     Get the orbital velocity at a given time in right handed coordinates.  This value will rotate
+        ///     due to the inverse rotation tick-to-tick.
         /// </summary>
         /// <param name="o">Orbit</param>
         /// <param name="UT">Universal Time</param>
@@ -60,8 +60,8 @@ namespace MuMech
         }
 
         /// <summary>
-        /// Get the body centered inertial position at a given time in right handed coordinates.  This value
-        /// will rotate due to the inverse rotation tick-to-tick.
+        ///     Get the body centered inertial position at a given time in right handed coordinates.  This value
+        ///     will rotate due to the inverse rotation tick-to-tick.
         /// </summary>
         /// <param name="o">Orbit</param>
         /// <param name="UT">Universal Time</param>
@@ -73,8 +73,8 @@ namespace MuMech
         }
 
         /// <summary>
-        /// Get both position and velocity state vectors at a given time in right handed coordinates.  This value
-        /// will rotate due to the inverse rotation tick-to-tick.
+        ///     Get both position and velocity state vectors at a given time in right handed coordinates.  This value
+        ///     will rotate due to the inverse rotation tick-to-tick.
         /// </summary>
         /// <param name="o">Orbit</param>
         /// <param name="ut">Universal Time</param>
@@ -584,7 +584,7 @@ namespace MuMech
         public static double SynodicPeriod(this Orbit a, Orbit b)
         {
             int sign = Vector3d.Dot(a.OrbitNormal(), b.OrbitNormal()) > 0 ? 1 : -1; //detect relative retrograde motion
-            return Math.Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period));                      //period after which the phase angle repeats
+            return Math.Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period));        //period after which the phase angle repeats
         }
 
         //Computes the phase angle between two orbiting objects.

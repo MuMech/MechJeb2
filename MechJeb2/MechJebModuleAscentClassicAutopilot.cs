@@ -89,7 +89,7 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             if (!IsVerticalAscent(vesselState.altitudeTrue, vesselState.speedSurface)) _mode = AscentMode.GRAVITY_TURN;
-            if (orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode                      = AscentMode.COAST_TO_APOAPSIS;
+            if (orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode                       = AscentMode.COAST_TO_APOAPSIS;
 
             //during the vertical ascent we just thrust straight up at max throttle
             AttitudeTo(90);
@@ -143,9 +143,9 @@ namespace MuMech
                 difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
                 double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * velocityError;
 
-                double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset), -Math.PI/6, Math.PI/6);
+                double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset), -Math.PI / 6, Math.PI / 6);
 
-                desiredFlightPathAngle = MuUtils.Clamp(desiredFlightPathAngle + steerAngle, -Math.PI/2, Math.PI/2);
+                desiredFlightPathAngle = MuUtils.Clamp(desiredFlightPathAngle + steerAngle, -Math.PI / 2, Math.PI / 2);
             }
 
             AttitudeTo(desiredFlightPathAngle * UtilMath.Rad2Deg);

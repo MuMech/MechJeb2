@@ -1,8 +1,9 @@
 using System;
 using JetBrains.Annotations;
-using ModuleWheels;
-using UnityEngine;
 using KSP.Localization;
+using ModuleWheels;
+using MuMech.Landing;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -14,33 +15,37 @@ namespace MuMech
     [UsedImplicitly]
     public class MechJebModuleLandingAutopilot : AutopilotModule
     {
-        bool deployedGears;
-        public bool landAtTarget;
+        private bool deployedGears;
+        public  bool landAtTarget;
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableDouble touchdownSpeed = 0.5;
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public bool deployGears = true;
+
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableInt limitGearsStage = 0;
+
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public bool deployChutes = true;
+
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableInt limitChutesStage = 0;
+
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public bool rcsAdjustment = true;
 
         // This is used to adjust the height at which the parachutes semi deploy as a means of
         // targeting the landing in an atmosphere where it is not possible to control atitude
         // to perform course correction burns.
-        ParachutePlan parachutePlan = null;
+        private ParachutePlan parachutePlan;
 
         //Landing prediction data:
-        MechJebModuleLandingPredictions predictor;
-        public ReentrySimulation.Result Prediction => predictor.Result;
+        private MechJebModuleLandingPredictions predictor;
+        public  ReentrySimulation.Result        Prediction => predictor.Result;
 
-        ReentrySimulation.Result ErrorPrediction => predictor.GetErrorResult();
+        private ReentrySimulation.Result ErrorPrediction => predictor.GetErrorResult();
 
         public bool PredictionReady //We shouldn't do any autopilot stuff until this is true
         {
@@ -51,24 +56,20 @@ namespace MuMech
                 {
                     return false;
                 }
-                else if (Prediction.Outcome != ReentrySimulation.Outcome.LANDED)
+
+                if (Prediction.Outcome != ReentrySimulation.Outcome.LANDED)
                 {
                     return false;
                 }
-                else
-                {
-                    return true;
-                }
+
+                return true;
             }
         }
-        bool ErrorPredictionReady // We shouldn't try to use an ErrorPrediction until this is true.
-        {
-            get
-            {
-                return (ErrorPrediction != null) &&
-                    (ErrorPrediction.Outcome == ReentrySimulation.Outcome.LANDED);
-            }
-        }
+
+        private bool ErrorPredictionReady =>
+            ErrorPrediction != null &&
+            ErrorPrediction.Outcome == ReentrySimulation.Outcome.LANDED; // We shouldn't try to use an ErrorPrediction until this is true.
+
         public double LandingAltitude // The altitude above sea level of the terrain at the landing site
         {
             get
@@ -96,29 +97,19 @@ namespace MuMech
 
                     return Prediction.EndASL;
                 }
-                else
-                {
-                    return 0;
-                }
+
+                return 0;
             }
         }
 
-        public Vector3d LandingSite // The current position of the landing site
-        {
-            get
-            {
-                return mainBody.GetWorldSurfacePosition(Prediction.EndPosition.Latitude,
-                    Prediction.EndPosition.Longitude, LandingAltitude) - mainBody.position;
-            }
-        }
+        public Vector3d LandingSite =>
+            mainBody.GetWorldSurfacePosition(Prediction.EndPosition.Latitude,
+                Prediction.EndPosition.Longitude, LandingAltitude) - mainBody.position; // The current position of the landing site
 
-        Vector3d RotatedLandingSite // The position where the landing site will be when we land at it
-        {
-            get { return Prediction.WorldEndPosition(); }
-        }
+        private Vector3d RotatedLandingSite => Prediction.WorldEndPosition(); // The position where the landing site will be when we land at it
 
         public IDescentSpeedPolicy descentSpeedPolicy;
-        public double vesselAverageDrag;
+        public double              vesselAverageDrag;
 
         public MechJebModuleLandingAutopilot(MechJebCore core)
             : base(core)
@@ -146,11 +137,11 @@ namespace MuMech
             parachutePlan.StartPlanning();
 
             if (orbit.PeA < 0)
-                setStep(new Landing.CourseCorrection(core));
+                setStep(new CourseCorrection(core));
             else if (UseLowDeorbitStrategy())
-                setStep(new Landing.PlaneChange(core));
+                setStep(new PlaneChange(core));
             else
-                setStep(new Landing.DeorbitBurn(core));
+                setStep(new DeorbitBurn(core));
         }
 
         public void LandUntargeted(object controller)
@@ -161,15 +152,15 @@ namespace MuMech
             deployedGears = false;
 
             // Create a new parachute plan
-            this.parachutePlan = new ParachutePlan(this);
-            this.parachutePlan.StartPlanning();
+            parachutePlan = new ParachutePlan(this);
+            parachutePlan.StartPlanning();
 
-            setStep(new Landing.UntargetedDeorbit(core));
+            setStep(new UntargetedDeorbit(core));
         }
 
         public void StopLanding()
         {
-            this.users.Clear();
+            users.Clear();
             core.thrust.ThrustOff();
             core.thrust.users.Remove(this);
             if (core.landing.rcsAdjustment)
@@ -181,17 +172,17 @@ namespace MuMech
         {
             if (!active)
                 return;
-            
+
             descentSpeedPolicy = PickDescentSpeedPolicy();
 
-            predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
-            predictor.decelEndAltitudeASL = DecelerationEndAltitude();
-            predictor.parachuteSemiDeployMultiplier = this.parachutePlan.Multiplier;
+            predictor.descentSpeedPolicy            = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
+            predictor.decelEndAltitudeASL           = DecelerationEndAltitude();
+            predictor.parachuteSemiDeployMultiplier = parachutePlan.Multiplier;
 
             // Consider lowering the langing gear
             {
                 double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
-                if (deployGears && !deployedGears && (minalt < 1000))
+                if (deployGears && !deployedGears && minalt < 1000)
                     DeployLandingGears();
             }
 
@@ -244,27 +235,38 @@ namespace MuMech
                 orbitLandingPosition = orbit.WorldBCIPositionAtUT(orbit.NextPeriapsisTime(vesselState.time));
 
             // convertOrbitToActual is a rotation that rotates orbitLandingPosition on actualLandingPosition
-            Quaternion convertOrbitToActual = Quaternion.FromToRotation(orbitLandingPosition, actualLandingPosition);
+            var convertOrbitToActual = Quaternion.FromToRotation(orbitLandingPosition, actualLandingPosition);
 
             // Consider the effect small changes in the velocity in each of these three directions
-            Vector3d[] perturbationDirections = { vesselState.surfaceVelocity.normalized, vesselState.radialPlusSurface, vesselState.normalPlusSurface };
+            Vector3d[] perturbationDirections =
+            {
+                vesselState.surfaceVelocity.normalized, vesselState.radialPlusSurface, vesselState.normalPlusSurface
+            };
 
             // Compute the effect burns in these directions would
             // have on the landing position, where we approximate the landing position as the place
             // the perturbed orbit would intersect the planet.
-            Vector3d[] deltas = new Vector3d[3];
+            var deltas = new Vector3d[3];
             for (int i = 0; i < 3; i++)
             {
-                const double perturbationDeltaV = 1; //warning: hard experience shows that setting this too low leads to bewildering bugs due to finite precision of Orbit functions
-                Orbit perturbedOrbit = orbit.PerturbedOrbit(vesselState.time, perturbationDeltaV * perturbationDirections[i]); //compute the perturbed orbit
+                const double
+                    perturbationDeltaV =
+                        1; //warning: hard experience shows that setting this too low leads to bewildering bugs due to finite precision of Orbit functions
+                Orbit perturbedOrbit =
+                    orbit.PerturbedOrbit(vesselState.time, perturbationDeltaV * perturbationDirections[i]); //compute the perturbed orbit
                 double perturbedLandingTime;
                 if (perturbedOrbit.PeR < endRadius) perturbedLandingTime = perturbedOrbit.NextTimeOfRadius(vesselState.time, endRadius);
-                else perturbedLandingTime = perturbedOrbit.NextPeriapsisTime(vesselState.time);
+                else perturbedLandingTime                                = perturbedOrbit.NextPeriapsisTime(vesselState.time);
                 Vector3d perturbedLandingPosition = perturbedOrbit.WorldBCIPositionAtUT(perturbedLandingTime); //find where it hits the planet
-                Vector3d landingDelta = perturbedLandingPosition - orbitLandingPosition; //find the difference between that and the original orbit's intersection point
-                landingDelta = convertOrbitToActual * landingDelta; //rotate that difference vector so that we can now think of it as starting at the actual landing position
-                landingDelta = Vector3d.Exclude(actualLandingPosition, landingDelta); //project the difference vector onto the plane tangent to the actual landing position
-                deltas[i] = landingDelta / perturbationDeltaV; //normalize by the delta-V considered, so that deltas now has units of meters per (meter/second) [i.e., seconds]
+                Vector3d
+                    landingDelta = perturbedLandingPosition -
+                                   orbitLandingPosition; //find the difference between that and the original orbit's intersection point
+                landingDelta = convertOrbitToActual *
+                               landingDelta; //rotate that difference vector so that we can now think of it as starting at the actual landing position
+                landingDelta = Vector3d.Exclude(actualLandingPosition,
+                    landingDelta); //project the difference vector onto the plane tangent to the actual landing position
+                deltas[i] = landingDelta /
+                            perturbationDeltaV; //normalize by the delta-V considered, so that deltas now has units of meters per (meter/second) [i.e., seconds]
             }
 
             // Now deltas stores the predicted offsets in landing position produced by each of the three perturbations.
@@ -273,9 +275,10 @@ namespace MuMech
             // First we compute the target landing position. We have to convert the latitude and longitude of the target
             // into a position. We can't just get the current position of those coordinates, because the planet will
             // rotate during the descent, so we have to account for that.
-            Vector3d desiredLandingPosition = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
+            Vector3d desiredLandingPosition =
+                mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
             float bodyRotationAngleDuringDescent = (float)(360 * (Prediction.EndUT - vesselState.time) / mainBody.rotationPeriod);
-            Quaternion bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
+            var bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;
 
             Vector3d desiredDelta = desiredLandingPosition - actualLandingPosition;
@@ -293,28 +296,28 @@ namespace MuMech
                 // detect and handle the case where radial+ burns actually bring the landing sign closer
                 // (e.g. when we are traveling close to straight up)
                 downrangeDirection = (deltas[0].magnitude * perturbationDirections[0]
-                    + Math.Sign(Vector3d.Dot(deltas[0], deltas[1])) * deltas[1].magnitude * perturbationDirections[1]).normalized;
+                                      + Math.Sign(Vector3d.Dot(deltas[0], deltas[1])) * deltas[1].magnitude * perturbationDirections[1]).normalized;
 
                 downrangeDelta = Vector3d.Dot(downrangeDirection, perturbationDirections[0]) * deltas[0]
-                    + Vector3d.Dot(downrangeDirection, perturbationDirections[1]) * deltas[1];
+                                 + Vector3d.Dot(downrangeDirection, perturbationDirections[1]) * deltas[1];
             }
             else
             {
                 // If we aren't allowed to burn prograde, downrange component of the landing
                 // position has to be controlled by radial+/- burns:
                 downrangeDirection = perturbationDirections[1];
-                downrangeDelta = deltas[1];
+                downrangeDelta     = deltas[1];
             }
 
             // Now solve a 2x2 system of linear equations to determine the linear combination
             // of perturbationDirection01 and normal+ that will give the desired offset in the
             // predicted landing position.
-            Matrix2x2 A = new Matrix2x2(
+            var A = new Matrix2x2(
                 downrangeDelta.sqrMagnitude, Vector3d.Dot(downrangeDelta, deltas[2]),
                 Vector3d.Dot(downrangeDelta, deltas[2]), deltas[2].sqrMagnitude
             );
 
-            Vector2d b = new Vector2d(Vector3d.Dot(desiredDelta, downrangeDelta), Vector3d.Dot(desiredDelta, deltas[2]));
+            var b = new Vector2d(Vector3d.Dot(desiredDelta, downrangeDelta), Vector3d.Dot(desiredDelta, deltas[2]));
 
             Vector2d coeffs = A.inverse() * b;
 
@@ -338,10 +341,8 @@ namespace MuMech
                 parachutePlan.ClearData();
                 return;
             }
-            else
-            {
-                predictor.runErrorSimulations = true;
-            }
+
+            predictor.runErrorSimulations = true;
 
             // Is there an error prediction available? If so add that into the mix
             if (ErrorPredictionReady && !double.IsNaN(ErrorPrediction.ParachuteMultiplier))
@@ -356,7 +357,7 @@ namespace MuMech
             }
         }
 
-        void DeployParachutes()
+        private void DeployParachutes()
         {
             if (vesselState.mainBody.atmosphere && deployChutes)
             {
@@ -365,7 +366,7 @@ namespace MuMech
                     ModuleParachute p = vesselState.parachutes[i];
                     // what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
                     double LandingSiteASL = LandingAltitude;
-                    double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * this.parachutePlan.Multiplier;
+                    double ParachuteDeployAboveGroundAtLandingSite = p.deployAltitude * parachutePlan.Multiplier;
 
                     double ASLDeployAltitude = ParachuteDeployAboveGroundAtLandingSite + LandingSiteASL;
 
@@ -388,7 +389,7 @@ namespace MuMech
             for (int i = 0; i < vesselState.parachutes.Count; i++)
             {
                 ModuleParachute p = vesselState.parachutes[i];
-                if (Math.Max(p.part.inverseStage,0) >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
+                if (Math.Max(p.part.inverseStage, 0) >= limitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
                 {
                     return true;
                 }
@@ -398,13 +399,12 @@ namespace MuMech
         }
 
         // This methods works out if there are any parachutes that have already been deployed (or semi deployed)
-        bool ParachutesDeployed()
+        private bool ParachutesDeployed()
         {
             return vesselState.parachuteDeployed;
         }
 
-
-        void DeployLandingGears()
+        private void DeployLandingGears()
         {
             for (int i = 0; i < vessel.parts.Count; i++)
             {
@@ -422,14 +422,16 @@ namespace MuMech
                     }
                 }
             }
+
             deployedGears = true;
         }
 
-        IDescentSpeedPolicy PickDescentSpeedPolicy()
+        private IDescentSpeedPolicy PickDescentSpeedPolicy()
         {
             if (UseAtmosphereToBrake())
             {
-                return new PoweredCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
+                return new PoweredCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81,
+                    vesselState.limitedMaxThrustAccel);
             }
 
             return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
@@ -447,13 +449,11 @@ namespace MuMech
                 //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
                 return 1.1 * landingSiteDragLength + LandingAltitude;
             }
-            else
-            {
-                //if the atmosphere is thin, the deceleration burn should end
-                //500 meters above the landing site to allow for a controlled final descent
-                //MechJebCore.print("DecelerationEndAltitude Vacum " + (500 + LandingAltitude).ToString("F2"));
-                return 500 + LandingAltitude;
-            }
+
+            //if the atmosphere is thin, the deceleration burn should end
+            //500 meters above the landing site to allow for a controlled final descent
+            //MechJebCore.print("DecelerationEndAltitude Vacum " + (500 + LandingAltitude).ToString("F2"));
+            return 500 + LandingAltitude;
         }
 
         //On planets with thick enough atmospheres, we shouldn't do a deceleration burn. Rather,
@@ -467,10 +467,12 @@ namespace MuMech
             double landingSiteDragLength = mainBody.DragLength(LandingAltitude, vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
 
             //if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
-            if (mainBody.RealMaxAtmosphereAltitude() > 0 && landingSiteDragLength < 0.7 * mainBody.RealMaxAtmosphereAltitude()) // the ratio is totally arbitrary until I get something better
+            if (mainBody.RealMaxAtmosphereAltitude() > 0 &&
+                landingSiteDragLength < 0.7 * mainBody.RealMaxAtmosphereAltitude()) // the ratio is totally arbitrary until I get something better
             {
                 return true;
             }
+
             return false;
         }
 
@@ -490,10 +492,13 @@ namespace MuMech
                 float partAreaDrag = 0;
                 for (int f = 0; f < 6; f++)
                 {
-                    partAreaDrag = part.DragCubes.WeightedDrag[f] * part.DragCubes.AreaOccluded[f]; // * PhysicsGlobals.DragCurveValue(0.5, machNumber) but I ll assume it is 1 for now
+                    partAreaDrag = part.DragCubes.WeightedDrag[f] *
+                                   part.DragCubes.AreaOccluded[f]; // * PhysicsGlobals.DragCurveValue(0.5, machNumber) but I ll assume it is 1 for now
                 }
+
                 dragCoef += partAreaDrag / 6;
             }
+
             return dragCoef * PhysicsGlobals.DragCubeMultiplier;
         }
 
@@ -523,14 +528,16 @@ namespace MuMech
                                 maxCoef = Mathf.Max(maxCoef, p.part.DragCubes.WeightedDrag[f] - dragCube.Weight * dragCube.Drag[f]);
                             }
                         }
+
                         addedDragCoef += maxCoef;
                     }
                 }
             }
+
             return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
         }
 
-        bool UseLowDeorbitStrategy()
+        private bool UseLowDeorbitStrategy()
         {
             if (mainBody.atmosphere) return false;
 
@@ -551,43 +558,42 @@ namespace MuMech
                 vesselState.surfaceVelocity + dt * vesselState.gravityForce);
         }
 
-        [ValueInfoItem("#MechJeb_ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)]//ParachuteControlInfo
+        [ValueInfoItem("#MechJeb_ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)] //ParachuteControlInfo
         public string ParachuteControlInfo()
         {
-            if (this.ParachutesDeployable())
+            if (ParachutesDeployable())
             {
-                string retVal = Localizer.Format("#MechJeb_ChuteMultiplier", this.parachutePlan.Multiplier.ToString("F7"));//"'Chute Multiplier: " +
-                retVal += Localizer.Format("#MechJeb_MultiplierQuality", this.parachutePlan.MultiplierQuality.ToString("F1"));//"\nMultiplier Quality: " +  + "%"
-                retVal += Localizer.Format("#MechJeb_Usingpredictions", this.parachutePlan.MultiplierDataAmount);//"\nUsing " +  + " predictions"
+                string retVal = Localizer.Format("#MechJeb_ChuteMultiplier", parachutePlan.Multiplier.ToString("F7")); //"'Chute Multiplier: " +
+                retVal += Localizer.Format("#MechJeb_MultiplierQuality",
+                    parachutePlan.MultiplierQuality.ToString("F1"));                                         //"\nMultiplier Quality: " +  + "%"
+                retVal += Localizer.Format("#MechJeb_Usingpredictions", parachutePlan.MultiplierDataAmount); //"\nUsing " +  + " predictions"
 
                 return retVal;
             }
-            else
-            {
-                return "N/A";
-            }
+
+            return "N/A";
         }
 
         public void SetTargetKSC(MechJebCore controller)
         {
             users.Add(controller);
-            core.target.SetPositionTarget(mainBody, MechJebModuleLandingGuidance.landingSites[0].latitude, MechJebModuleLandingGuidance.landingSites[0].longitude);
+            core.target.SetPositionTarget(mainBody, MechJebModuleLandingGuidance.landingSites[0].latitude,
+                MechJebModuleLandingGuidance.landingSites[0].longitude);
         }
     }
 
-
     //A descent speed policy that gives the max safe speed if our entire velocity were straight down
-    class SafeDescentSpeedPolicy : IDescentSpeedPolicy
+    internal class SafeDescentSpeedPolicy : IDescentSpeedPolicy
     {
-        readonly double terrainRadius;
-        readonly double g;
-        readonly double thrust;
+        private readonly double terrainRadius;
+        private readonly double g;
+        private readonly double thrust;
 
         public SafeDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
             this.terrainRadius = terrainRadius;
-            this.g = g;
-            this.thrust = thrust;
+            this.g             = g;
+            this.thrust        = thrust;
         }
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
@@ -597,24 +603,23 @@ namespace MuMech
         }
     }
 
-    class PoweredCoastDescentSpeedPolicy : IDescentSpeedPolicy
+    internal class PoweredCoastDescentSpeedPolicy : IDescentSpeedPolicy
     {
-        readonly float terrainRadius;
-        readonly float g;
-        readonly float thrust;
+        private readonly float terrainRadius;
+        private readonly float g;
+        private readonly float thrust;
 
         public PoweredCoastDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
             this.terrainRadius = (float)terrainRadius;
-            this.g = (float)g;
-            this.thrust = (float)thrust;
+            this.g             = (float)g;
+            this.thrust        = (float)thrust;
         }
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
         {
-
             if (terrainRadius < pos.magnitude)
-                return Double.MaxValue;
+                return double.MaxValue;
 
             double vSpeed = Vector3d.Dot(vel, pos.normalized);
             double ToF = (vSpeed + Math.Sqrt(vSpeed * vSpeed + 2 * g * (pos.magnitude - terrainRadius))) / g;
@@ -624,17 +629,17 @@ namespace MuMech
         }
     }
 
-    class GravityTurnDescentSpeedPolicy : IDescentSpeedPolicy
+    internal class GravityTurnDescentSpeedPolicy : IDescentSpeedPolicy
     {
-        readonly double terrainRadius;
-        readonly double g;
-        readonly double thrust;
+        private readonly double terrainRadius;
+        private readonly double g;
+        private readonly double thrust;
 
         public GravityTurnDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
             this.terrainRadius = terrainRadius;
-            this.g = g;
-            this.thrust = thrust;
+            this.g             = g;
+            this.thrust        = thrust;
         }
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
@@ -649,8 +654,9 @@ namespace MuMech
             {
                 double test = (upperBound + lowerBound) / 2;
                 if (GravityTurnFallDistance(pos, test * vel.normalized) < maxFallDistance) lowerBound = test;
-                else upperBound = test;
+                else upperBound                                                                       = test;
             }
+
             return 0.95 * ((upperBound + lowerBound) / 2);
         }
 
@@ -663,10 +669,10 @@ namespace MuMech
             {
                 Vector3d gVec = -g * x.normalized;
                 Vector3d thrustVec = -thrust * v.normalized;
-                double dt = (1.0 / (steps - i)) * (v.magnitude / thrust);
+                double dt = 1.0 / (steps - i) * (v.magnitude / thrust);
                 Vector3d newV = v + dt * (thrustVec + gVec);
                 x += dt * (v + newV) / 2;
-                v = newV;
+                v =  newV;
             }
 
             double endRadius = x.magnitude;
@@ -678,38 +684,39 @@ namespace MuMech
     }
 
     // Class to hold all the information about the planned deployment of parachutes.
-    class ParachutePlan
+    internal class ParachutePlan
     {
         // We use a linear regression to calculate the best place to deploy based on previous predictions
-        LinearRegression regression;
-        ReentrySimulation.Result lastResult; //  store the last result so that we can check if any new result is actually a new one, or the same one again.
-        ReentrySimulation.Result lastErrorResult; //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
-        readonly CelestialBody body;
-        readonly MechJebModuleLandingAutopilot autoPilot;
-        bool parachutePresent = false;
-        double maxSemiDeployHeight;
-        double minSemiDeployHeight;
-        double maxMultiplier;
-        double currentMultiplier;  // This is multiplied with the parachutes fulldeploy height to give the height at which the parachutes will be semideployed.
-        double correlation; // This is the correlation coefficient of the dataset, and is used to tell if the data set is providing helpful information or not. It is exposed outside the class as a "quality percentage" where -1 -> 100% and 0 or more -> 0%
-        const int dataSetSize = 40;
+        private LinearRegression regression;
 
-        public double Multiplier
-        {
-            get { return currentMultiplier; }
-        }
+        private ReentrySimulation.Result
+            lastResult; //  store the last result so that we can check if any new result is actually a new one, or the same one again.
 
-        public int MultiplierDataAmount
-        {
-            get { return this.regression.dataSetSize; }
-        }
+        private ReentrySimulation.Result
+            lastErrorResult; //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
+
+        private readonly CelestialBody                 body;
+        private readonly MechJebModuleLandingAutopilot autoPilot;
+        private          bool                          parachutePresent;
+        private          double                        maxSemiDeployHeight;
+        private          double                        minSemiDeployHeight;
+        private          double                        maxMultiplier;
+
+        private double
+            correlation; // This is the correlation coefficient of the dataset, and is used to tell if the data set is providing helpful information or not. It is exposed outside the class as a "quality percentage" where -1 -> 100% and 0 or more -> 0%
+
+        private const int dataSetSize = 40;
+
+        public double Multiplier { get; private set; }
+
+        public int MultiplierDataAmount => regression.dataSetSize;
 
         public double MultiplierQuality
         {
             get
             {
-                double corr = this.correlation;
-                if (Double.IsNaN(corr)) return 0;
+                double corr = correlation;
+                if (double.IsNaN(corr)) return 0;
                 return Math.Max(0, corr * -100);
             }
         }
@@ -724,6 +731,7 @@ namespace MuMech
                 {
                     if (newResult.ID == lastErrorResult.ID) { return; }
                 }
+
                 lastErrorResult = newResult;
             }
             else
@@ -732,11 +740,12 @@ namespace MuMech
                 {
                     if (newResult.ID == lastResult.ID) { return; }
                 }
+
                 lastResult = newResult;
             }
 
             // What was the overshoot for this new result?
-            double overshoot = newResult.GetOvershoot(this.autoPilot.core.target.targetLatitude, this.autoPilot.core.target.targetLongitude);
+            double overshoot = newResult.GetOvershoot(autoPilot.core.target.targetLatitude, autoPilot.core.target.targetLongitude);
 
             //Debug.Log("overshoot: " + overshoot.ToString("F2") + " multiplier: " + newResult.parachuteMultiplier.ToString("F4") + " hasError:" + newResult.multiplierHasError);
 
@@ -748,15 +757,12 @@ namespace MuMech
             if (correlation > -0.2) // TODO this is the best value to test for non-correlation?
             {
                 // If the correlation is less that 0 then we will give up controlling the parachutes and throw away the dataset. Also check that we have got several bits of data, just in case we get two datapoints that are badly correlated.
-                if (correlation > 0 && this.regression.dataSetSize > 5)
+                if (correlation > 0 && regression.dataSetSize > 5)
                 {
                     ClearData();
                     // Debug.Log("Giving up control of the parachutes as the data does not correlate: " + correlation);
                 }
-                else
-                {
-                    // Debug.Log("Ignoring the simulation dataset because the correlation is not significant enough: " + correlation);
-                }
+                // Debug.Log("Ignoring the simulation dataset because the correlation is not significant enough: " + correlation);
             }
             else
             {
@@ -764,7 +770,7 @@ namespace MuMech
                 int dataSetSize = regression.dataSetSize;
                 if (dataSetSize == 1)
                 {
-                    this.currentMultiplier *= 0.99999;
+                    Multiplier *= 0.99999;
                 }
                 else if (dataSetSize == 2)
                 {
@@ -775,40 +781,39 @@ namespace MuMech
                     // Use the linear regression to give us a new prediction for when to open the parachutes
                     try
                     {
-                        this.currentMultiplier = regression.yIntercept;
+                        Multiplier = regression.yIntercept;
                     }
                     catch (Exception)
                     {
                         // If there is not enough data then we expect an exception. However we need to vary the multiplier everso slightly so that we get different data in order to start generating data. This should never happen as we have already checked the size of the dataset.
-                        this.currentMultiplier *= 0.99999;
+                        Multiplier *= 0.99999;
                     }
                 }
 
                 // Impose sensible limits on the multiplier
-                if (this.currentMultiplier < 1 || double.IsNaN(currentMultiplier)) { this.currentMultiplier = 1; }
-                if (this.currentMultiplier > this.maxMultiplier) { this.currentMultiplier = this.maxMultiplier; }
-            }
+                if (Multiplier < 1 || double.IsNaN(Multiplier)) { Multiplier = 1; }
 
-            return;
+                if (Multiplier > maxMultiplier) { Multiplier = maxMultiplier; }
+            }
         }
 
         public ParachutePlan(MechJebModuleLandingAutopilot _autopliot)
         {
             // Create the linear regression for storing previous prediction results
-            this.regression = new LinearRegression(dataSetSize); // Store the previous however many predictions
+            regression = new LinearRegression(dataSetSize); // Store the previous however many predictions
 
             // Take a reference to the landing autopilot module that we are working for.
-            this.autoPilot = _autopliot;
+            autoPilot = _autopliot;
 
             // Take a note of which body this parachute plan is for. If we go to a different body, we will need a new plan!
-            this.body = _autopliot.vessel.orbit.referenceBody;
+            body = _autopliot.vessel.orbit.referenceBody;
         }
 
         // Throw away any old data, and create a new empty dataset
         public void ClearData()
         {
             // Create the linear regression for storing previous prediction results
-            this.regression = new LinearRegression(dataSetSize); // Stored the previous 20 predictions
+            regression = new LinearRegression(dataSetSize); // Stored the previous 20 predictions
         }
 
         public void StartPlanning()
@@ -823,10 +828,11 @@ namespace MuMech
             {
                 ModuleParachute p = autoPilot.vesselState.parachutes[i];
                 if (p.minAirPressureToOpen > minSemiDeployPressure)
-                // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
+                    // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
                 {
                     minSemiDeployPressure = p.minAirPressureToOpen;
                 }
+
                 if (p.deployAltitude > maxFullDeployHeight)
                 {
                     maxFullDeployHeight = p.deployAltitude;
@@ -849,40 +855,39 @@ namespace MuMech
                 maxMultiplier = maxSemiDeployHeight / minSemiDeployHeight;
 
                 // Set the inital multiplier to be the mid point.
-                currentMultiplier = maxMultiplier / 2;
+                Multiplier = maxMultiplier / 2;
             }
         }
     }
 
     // A class to hold a set of x,y data and perform linear regression analysis on it
-    class LinearRegression
+    internal class LinearRegression
     {
-        readonly double[] x;
-        readonly double[] y;
-        readonly int maxDataPoints;
-        int dataPointCount;
-        int currentDataPoint;
-        double sumX;
-        double sumY;
-        double sumXX;
-        double sumXY;
-        double sumYY;
+        private readonly double[] x;
+        private readonly double[] y;
+        private readonly int      maxDataPoints;
+        private          int      currentDataPoint;
+        private          double   sumX;
+        private          double   sumY;
+        private          double   sumXX;
+        private          double   sumXY;
+        private          double   sumYY;
 
         public LinearRegression(int _maxDataPoints)
         {
-            this.maxDataPoints = _maxDataPoints;
-            this.dataPointCount = 0;
-            this.currentDataPoint = -1;
+            maxDataPoints    = _maxDataPoints;
+            dataSetSize      = 0;
+            currentDataPoint = -1;
 
-            this.x = new double[_maxDataPoints];
-            this.y = new double[_maxDataPoints];
+            x = new double[_maxDataPoints];
+            y = new double[_maxDataPoints];
         }
 
         // Add a new data point. It might be that this will replace an old data point, or it might be that this is the first or second datapoints
         public void Add(double _x, double _y)
         {
             currentDataPoint++;
-            dataPointCount++;
+            dataSetSize++;
 
             // wrap back to the beginning if we have got the end of the array
             if (currentDataPoint >= maxDataPoints)
@@ -891,29 +896,29 @@ namespace MuMech
             }
 
             // If we have maxed out the number of data points then we need to remove the old values from the running totals
-            if (dataPointCount > maxDataPoints)
+            if (dataSetSize > maxDataPoints)
             {
-                dataPointCount = maxDataPoints;
+                dataSetSize = maxDataPoints;
             }
 
             x[currentDataPoint] = _x;
             y[currentDataPoint] = _y;
 
             // Calculate the new totals
-            sumX = 0;
-            sumY = 0;
+            sumX  = 0;
+            sumY  = 0;
             sumXX = 0;
             sumXY = 0;
             sumYY = 0;
 
-            for (int i = 0; i < dataPointCount; i++)
+            for (int i = 0; i < dataSetSize; i++)
             {
                 double thisx = x[i];
                 double thisy = y[i];
 
-                sumX += thisx;
+                sumX  += thisx;
                 sumXX += thisx * thisx;
-                sumY += thisy;
+                sumY  += thisy;
                 sumYY += thisy * thisy;
                 sumXY += thisx * thisy;
             }
@@ -924,12 +929,12 @@ namespace MuMech
             get
             {
                 // Require at least half the datapoints in the dataset
-                if (this.dataPointCount < 2)
+                if (dataSetSize < 2)
                 {
                     throw new Exception("Not enough data to calculate trend line");
                 }
 
-                double result = (sumXY - ((sumX * sumY) / dataPointCount)) / (sumXX - ((sumX * sumX) / dataPointCount));
+                double result = (sumXY - sumX * sumY / dataSetSize) / (sumXX - sumX * sumX / dataSetSize);
 
                 return result;
             }
@@ -939,28 +944,22 @@ namespace MuMech
         {
             get
             {
-                double result = (sumY / dataPointCount) - (slope * (sumX / dataPointCount));
+                double result = sumY / dataSetSize - slope * (sumX / dataSetSize);
 
                 return result;
             }
         }
 
-        public int dataSetSize
-        {
-            get
-            {
-                return this.dataPointCount;
-            }
-        }
+        public int dataSetSize { get; private set; }
 
         // Calculation the Pearson product-moment correlation coefficient
         public double CorrelationCoefficient
         {
             get
             {
-                double stdX = Math.Sqrt(sumXX / dataPointCount - sumX * sumX / dataPointCount / dataPointCount);
-                double stdY = Math.Sqrt(sumYY / dataPointCount - sumY * sumY / dataPointCount / dataPointCount);
-                double covariance = (sumXY / dataPointCount - sumX * sumY / dataPointCount / dataPointCount);
+                double stdX = Math.Sqrt(sumXX / dataSetSize - sumX * sumX / dataSetSize / dataSetSize);
+                double stdY = Math.Sqrt(sumYY / dataSetSize - sumY * sumY / dataSetSize / dataSetSize);
+                double covariance = sumXY / dataSetSize - sumX * sumY / dataSetSize / dataSetSize;
 
                 return covariance / stdX / stdY;
             }

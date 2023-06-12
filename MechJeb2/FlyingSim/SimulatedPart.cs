@@ -237,7 +237,6 @@ namespace MuMech
             dest.SetDragWeights();
 
             simCurves.CopyTo(dest);
-
         }
 
         protected static void CopyDragCube(DragCube source, DragCube dest)

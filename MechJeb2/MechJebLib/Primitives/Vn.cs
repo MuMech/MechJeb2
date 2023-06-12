@@ -10,6 +10,7 @@ using System.Collections;
 using System.Collections.Generic;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
+
 // ReSharper disable InconsistentNaming
 
 namespace MechJebLib.Primitives
@@ -245,9 +246,9 @@ namespace MechJebLib.Primitives
             return _values.Remove(item);
         }
 
-        public int  Count      => _values.Count;
+        public int Count => _values.Count;
 
-        public bool IsReadOnly => ((ICollection<double>) _values).IsReadOnly;
+        public bool IsReadOnly => ((ICollection<double>)_values).IsReadOnly;
 
         public int IndexOf(double item)
         {

@@ -24,15 +24,19 @@ namespace MuMech
             {
                 if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
                 {
-                    RFpredictedMaximumResiduals = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
+                    RFpredictedMaximumResiduals =
+                        ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
                     if (RFpredictedMaximumResiduals == null)
                     {
-                        Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
+                        Debug.Log(
+                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
                     }
-                    RFspoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels","RealFuels.ModuleEnginesRF","effectiveSpoolUpTime");
+
+                    RFspoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
                     if (RFspoolUpTime == null)
                     {
-                        Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
+                        Debug.Log(
+                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
                     }
                 }
             }
@@ -69,6 +73,7 @@ namespace MuMech
                             temp = 0;
                         }
                     }
+
                     moduleResiduals = temp ?? 0;
 
                     float? temp2 = 0;
@@ -84,32 +89,47 @@ namespace MuMech
                             temp2 = 0;
                         }
                     }
+
                     moduleSpoolupTime = temp2 ?? 0;
                 }
 
                 public EngineInfo(EngineInfo engineInfo)
                 {
-                    engineModule = engineInfo.engineModule;
-                    thrustVector = engineInfo.thrustVector;
-                    moduleResiduals = engineInfo.moduleResiduals;
-                    maxThrust = engineInfo.maxThrust;
+                    engineModule      = engineInfo.engineModule;
+                    thrustVector      = engineInfo.thrustVector;
+                    moduleResiduals   = engineInfo.moduleResiduals;
+                    maxThrust         = engineInfo.maxThrust;
                     moduleSpoolupTime = engineInfo.moduleSpoolupTime;
                 }
             }
 
-            private readonly DefaultableDictionary<int, double> resources = new DefaultableDictionary<int, double>(0); //the resources contained in the part
-            private readonly DefaultableDictionary<int, double> resourcesFull = new DefaultableDictionary<int, double>(0);   //the resources the part has when full
-            private readonly KeyableDictionary<int, double> resourceConsumptions = new KeyableDictionary<int, double>(); //the resources this part consumes per unit time when active at full throttle
-            private readonly DefaultableDictionary<int, double> resourceDrains = new DefaultableDictionary<int, double>(0); //the resources being drained from this part per unit time at the current simulation
-            private readonly DefaultableDictionary<int, double> resourceResidual = new DefaultableDictionary<int, double>(0); // the fraction of the resource which will be residual
-            private readonly DefaultableDictionary<int, bool> freeResources = new DefaultableDictionary<int, bool>(false); //the resources that are "free" and assumed to be infinite like IntakeAir
+            private readonly DefaultableDictionary<int, double>
+                resources = new DefaultableDictionary<int, double>(0); //the resources contained in the part
+
+            private readonly DefaultableDictionary<int, double>
+                resourcesFull = new DefaultableDictionary<int, double>(0); //the resources the part has when full
+
+            private readonly KeyableDictionary<int, double>
+                resourceConsumptions =
+                    new KeyableDictionary<int, double>(); //the resources this part consumes per unit time when active at full throttle
+
+            private readonly DefaultableDictionary<int, double>
+                resourceDrains =
+                    new DefaultableDictionary<int, double>(0); //the resources being drained from this part per unit time at the current simulation
+
+            private readonly DefaultableDictionary<int, double>
+                resourceResidual = new DefaultableDictionary<int, double>(0); // the fraction of the resource which will be residual
+
+            private readonly DefaultableDictionary<int, bool>
+                freeResources = new DefaultableDictionary<int, bool>(false); //the resources that are "free" and assumed to be infinite like IntakeAir
 
             // if a resource amount falls below this amount we say that the resource has been drained
             // set to the smallest amount that the user can see is non-zero in the resource tab or by
             // right-clicking.
             private const double DRAINED = 1E-4;
 
-            private readonly KeyableDictionary<int, ResourceFlowMode> propellantFlows = new KeyableDictionary<int, ResourceFlowMode>(); //flow modes of propellants since the engine can override them
+            private readonly KeyableDictionary<int, ResourceFlowMode>
+                propellantFlows = new KeyableDictionary<int, ResourceFlowMode>(); //flow modes of propellants since the engine can override them
 
             private readonly List<FuelNode> crossfeedSources = new List<FuelNode>();
 
@@ -136,7 +156,7 @@ namespace MuMech
 
             public string partName; //for debugging
 
-            public Part     part;
+            public  Part     part;
             private bool     dVLinearThrust;
             private Vector3d vesselOrientation;
 
@@ -225,37 +245,37 @@ namespace MuMech
                 node.engineInfos.Clear();
 
                 node.resources.Clear();
-                foreach (var key in n.resources.KeysList)
+                foreach (int key in n.resources.KeysList)
                 {
                     node.resources.Add(key, n.resources[key]);
                 }
 
-                foreach (var key in n.resourcesFull.KeysList)
+                foreach (int key in n.resourcesFull.KeysList)
                 {
                     node.resourcesFull.Add(key, n.resourcesFull[key]);
                 }
 
-                foreach (var key in n.resourceConsumptions.KeysList)
+                foreach (int key in n.resourceConsumptions.KeysList)
                 {
                     node.resourceConsumptions.Add(key, n.resourceConsumptions[key]);
                 }
 
-                foreach (var key in n.resourceDrains.KeysList)
+                foreach (int key in n.resourceDrains.KeysList)
                 {
                     node.resourceDrains.Add(key, n.resourceDrains[key]);
                 }
 
-                foreach (var key in n.freeResources.KeysList)
+                foreach (int key in n.freeResources.KeysList)
                 {
                     node.freeResources.Add(key, n.freeResources[key]);
                 }
 
-                foreach (var key in n.resourceResidual.KeysList)
+                foreach (int key in n.resourceResidual.KeysList)
                 {
                     node.resourceResidual.Add(key, n.resourceResidual[key]);
                 }
 
-                foreach (var e in n.engineInfos)
+                foreach (EngineInfo e in n.engineInfos)
                 {
                     node.engineInfos.Add(new EngineInfo(e));
                 }
@@ -324,11 +344,11 @@ namespace MuMech
                             }
                         }
 
-                    modulesUnstagedMass = part.GetModuleMassNoAlloc((float) dryMass, ModifierStagingSituation.UNSTAGED);
+                    modulesUnstagedMass = part.GetModuleMassNoAlloc((float)dryMass, ModifierStagingSituation.UNSTAGED);
 
-                    modulesStagedMass = part.GetModuleMassNoAlloc((float) dryMass, ModifierStagingSituation.STAGED);
+                    modulesStagedMass = part.GetModuleMassNoAlloc((float)dryMass, ModifierStagingSituation.STAGED);
 
-                    float currentModulesMass = part.GetModuleMassNoAlloc((float) dryMass, ModifierStagingSituation.CURRENT);
+                    float currentModulesMass = part.GetModuleMassNoAlloc((float)dryMass, ModifierStagingSituation.CURRENT);
 
                     // if it was manually staged
                     if (currentModulesMass == modulesStagedMass) modulesUnstagedMass = modulesStagedMass;
@@ -394,7 +414,7 @@ namespace MuMech
                 // find our max maxEngineResiduals for this engine part from all the modules
                 foreach (EngineInfo e in engineInfos)
                 {
-                    maxEngineResiduals =  Math.Max(maxEngineResiduals,e.moduleResiduals);
+                    maxEngineResiduals =  Math.Max(maxEngineResiduals, e.moduleResiduals);
                     maxThrust          += e.maxThrust;
                 }
             }
@@ -483,7 +503,9 @@ namespace MuMech
                             AttachNode attach;
                             if (HighLogic.LoadedSceneIsEditor)
                             {
-                                attach = mAnchoredDecoupler.explosiveNodeID != "srf" ? p.FindAttachNode(mAnchoredDecoupler.explosiveNodeID) : p.srfAttachNode;
+                                attach = mAnchoredDecoupler.explosiveNodeID != "srf"
+                                    ? p.FindAttachNode(mAnchoredDecoupler.explosiveNodeID)
+                                    : p.srfAttachNode;
                             }
                             else
                             {
@@ -577,7 +599,7 @@ namespace MuMech
                     propellantFlows.Clear();
 
                     //double sumThrustOverIsp = 0;
-                    partThrust = 0;
+                    partThrust      = 0;
                     partSpoolupTime = 0;
 
                     isDrawingResources = false;
@@ -602,7 +624,7 @@ namespace MuMech
                             dVLinearThrust);
                         //print($"EngineValuesAtConditions thrust:{thrust} isp:{isp}, massFlowRate:{massFlowRate}");
                         double thrMagnitude = thrust.magnitude;
-                        partThrust += thrMagnitude;
+                        partThrust      += thrMagnitude;
                         partSpoolupTime += thrMagnitude * engineInfo.moduleSpoolupTime;
 
                         if (massFlowRate > 0)
@@ -658,6 +680,7 @@ namespace MuMech
                             }
                         }
                     }
+
                     if (partThrust > 0)
                         partSpoolupTime /= partThrust;
 
@@ -732,7 +755,7 @@ namespace MuMech
 
                 foreach (int id in resourceDrains.KeysList)
                     if (!freeResources[id] && resources[id] > ResidualThreshold(id))
-                        minDT = Math.Min(minDT, ( resources[id] - resourceResidual[id] * resourcesFull[id] ) / resourceDrains[id]);
+                        minDT = Math.Min(minDT, (resources[id] - resourceResidual[id] * resourcesFull[id]) / resourceDrains[id]);
 
                 return minDT;
             }
@@ -767,7 +790,7 @@ namespace MuMech
                 // enough intake air, and any other causes.
                 // BIG FIXME: we're doing this in the thread and touching the KSP part object.
 
-                if (part.Modules[0] is ModuleEngines {flameout: true, statusL2: "No propellants"})
+                if (part.Modules[0] is ModuleEngines { flameout: true, statusL2: "No propellants" })
                     return false;
 
                 foreach (int type in resourceConsumptions.KeysList)
@@ -810,18 +833,18 @@ namespace MuMech
                 switch (resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
-                            return node == this;
+                        return node == this;
 
                     case ResourceFlowMode.ALL_VESSEL:
                     case ResourceFlowMode.ALL_VESSEL_BALANCE:
                     case ResourceFlowMode.STAGE_PRIORITY_FLOW:
                     case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                            return true;
+                        return true;
 
                     case ResourceFlowMode.STAGE_STACK_FLOW:
                     case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                            return crossfeedSources.Contains(node);
+                        return crossfeedSources.Contains(node);
 
                     case ResourceFlowMode.NULL:
                     default:

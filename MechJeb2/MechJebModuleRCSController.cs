@@ -9,30 +9,30 @@ namespace MuMech
     {
         public Vector3d targetVelocity = Vector3d.zero;
 
-        public PIDControllerV2 pid;
-        Vector3d lastAct = Vector3d.zero;
-        Vector3d worldVelocityDelta = Vector3d.zero;
-        Vector3d prev_worldVelocityDelta = Vector3d.zero;
+        public  PIDControllerV2 pid;
+        private Vector3d        lastAct                 = Vector3d.zero;
+        private Vector3d        worldVelocityDelta      = Vector3d.zero;
+        private Vector3d        prev_worldVelocityDelta = Vector3d.zero;
 
-        enum ControlType
+        private enum ControlType
         {
             TARGET_VELOCITY,
             VELOCITY_ERROR,
             VELOCITY_TARGET_REL,
             POSITION_TARGET_REL
-        };
+        }
 
-        ControlType controlType;
+        private ControlType controlType;
 
-        [Persistent(pass = (int)(Pass.Global))]
-        [ToggleInfoItem("#MechJeb_conserveFuel", InfoItem.Category.Thrust)]//Conserve RCS fuel
+        [Persistent(pass = (int)Pass.Global)]
+        [ToggleInfoItem("#MechJeb_conserveFuel", InfoItem.Category.Thrust)] //Conserve RCS fuel
         public bool conserveFuel = false;
 
-        [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")]//Conserve RCS fuel threshold
+        [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
         public EditableDouble conserveThreshold = 0.05;
 
-        [Persistent(pass = (int)(Pass.Local| Pass.Type | Pass.Global))]
-        [EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)]//RCS Tf
+        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)] //RCS Tf
         public EditableDouble Tf = 1;
 
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
@@ -44,32 +44,32 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
         public EditableDouble Kd = 0.53;
 
-        [Persistent(pass = (int)(Pass.Global))]
-        public bool rcsManualPID = false;
+        [Persistent(pass = (int)Pass.Global)]
+        public bool rcsManualPID;
 
-        [Persistent(pass = (int)(Pass.Global))]
-        [ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)]//RCS throttle when 0kn thrust
+        [Persistent(pass = (int)Pass.Global)]
+        [ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)] //RCS throttle when 0kn thrust
         public bool rcsThrottle = true;
 
-        [Persistent(pass = (int)(Pass.Global))]
-        [ToggleInfoItem("#MechJeb_rcsForRotation", InfoItem.Category.Thrust)]//Use RCS for rotation
+        [Persistent(pass = (int)Pass.Global)]
+        [ToggleInfoItem("#MechJeb_rcsForRotation", InfoItem.Category.Thrust)] //Use RCS for rotation
         public bool rcsForRotation = true;
 
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
         {
             priority = 600;
-            pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
+            pid      = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
         }
 
         public override void OnModuleEnabled()
         {
             setPIDParameters();
             pid.Reset();
-            lastAct = Vector3d.zero;
-            worldVelocityDelta = Vector3d.zero;
+            lastAct                 = Vector3d.zero;
+            worldVelocityDelta      = Vector3d.zero;
             prev_worldVelocityDelta = Vector3d.zero;
-            controlType = ControlType.VELOCITY_ERROR;
+            controlType             = ControlType.VELOCITY_ERROR;
             base.OnModuleEnabled();
         }
 
@@ -101,7 +101,7 @@ namespace MuMech
             }
         }
 
-        [GeneralInfoItem("#MechJeb_RCSPid", InfoItem.Category.Thrust)]//RCS Pid
+        [GeneralInfoItem("#MechJeb_RCSPid", InfoItem.Category.Thrust)] //RCS Pid
         public void PIDGUI()
         {
             GUILayout.BeginVertical();
@@ -137,10 +137,10 @@ namespace MuMech
                 GUILayout.Label(Kd.val.ToString("F4"), GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
+
             GUILayout.EndVertical();
             setPIDParameters();
         }
-
 
         // When evaluating how fast RCS can accelerate and calculate a speed that available thrust should
         // be multiplied by that since the PID controller actual lower the used acceleration
@@ -158,7 +158,7 @@ namespace MuMech
         public void SetTargetWorldVelocity(Vector3d vel)
         {
             targetVelocity = vel;
-            controlType = ControlType.TARGET_VELOCITY;
+            controlType    = ControlType.TARGET_VELOCITY;
         }
 
         public void SetWorldVelocityError(Vector3d dv)
@@ -167,14 +167,14 @@ namespace MuMech
             if (controlType != ControlType.VELOCITY_ERROR)
             {
                 prev_worldVelocityDelta = worldVelocityDelta;
-                controlType = ControlType.VELOCITY_ERROR;
+                controlType             = ControlType.VELOCITY_ERROR;
             }
         }
 
         public void SetTargetRelative(Vector3d vel)
         {
             targetVelocity = vel;
-            controlType = ControlType.VELOCITY_TARGET_REL;
+            controlType    = ControlType.VELOCITY_TARGET_REL;
         }
 
         public override void Drive(FlightCtrlState s)
@@ -210,21 +210,21 @@ namespace MuMech
             // We work in local vessel coordinate
             Vector3d velocityDelta = Quaternion.Inverse(vessel.GetTransform().rotation) * worldVelocityDelta;
 
-            if (!conserveFuel || (velocityDelta.magnitude > conserveThreshold))
+            if (!conserveFuel || velocityDelta.magnitude > conserveThreshold)
             {
                 if (!vessel.ActionGroups[KSPActionGroup.RCS])
                 {
                     vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 }
 
-                Vector3d rcs = new Vector3d();
+                var rcs = new Vector3d();
 
                 for (int i = 0; i < Vector6.Values.Length; i++)
                 {
                     Vector6.Direction dir = Vector6.Values[i];
                     double dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[(int)dir]);
-                    double dirAvail = vesselState.rcsThrustAvailable[dir]; 
-                    if (dirAvail  > 0 && Math.Abs(dirDv) > 0.001)
+                    double dirAvail = vesselState.rcsThrustAvailable[dir];
+                    if (dirAvail > 0 && Math.Abs(dirDv) > 0.001)
                     {
                         double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / vesselState.mass);
                         if (dirAction > 0)
@@ -233,7 +233,7 @@ namespace MuMech
                         }
                     }
                 }
-                                
+
                 Vector3d omega = Vector3d.zero;
 
                 switch (controlType)
@@ -244,7 +244,7 @@ namespace MuMech
 
                     case ControlType.VELOCITY_TARGET_REL:
                     case ControlType.VELOCITY_ERROR:
-                        omega = (worldVelocityDelta - prev_worldVelocityDelta) / TimeWarp.fixedDeltaTime;
+                        omega                   = (worldVelocityDelta - prev_worldVelocityDelta) / TimeWarp.fixedDeltaTime;
                         prev_worldVelocityDelta = worldVelocityDelta;
                         break;
                 }

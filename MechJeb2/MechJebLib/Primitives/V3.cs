@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
 #nullable enable
@@ -368,11 +367,11 @@ namespace MechJebLib.Primitives
             get
             {
                 double r = magnitude;
-                return new V3(r, SafeAcos(z/r), Clamp2Pi(Math.Atan2(y, x)));
+                return new V3(r, SafeAcos(z / r), Clamp2Pi(Math.Atan2(y, x)));
             }
         }
 
-        public V3 xzy { get => new V3(this[0], this[2], this[1]); }
+        public V3 xzy => new V3(this[0], this[2], this[1]);
 
         public static V3 operator +(V3 a, V3 b)
         {
@@ -448,7 +447,7 @@ namespace MechJebLib.Primitives
 
         public bool IsFinite()
         {
-            return Statics.IsFinite(x) && Statics.IsFinite(y) && Statics.IsFinite(z);
+            return x.IsFinite() && y.IsFinite() && z.IsFinite();
         }
 
         public void CopyFrom(IList<double> other, int index = 0)

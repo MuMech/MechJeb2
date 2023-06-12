@@ -1,7 +1,6 @@
-﻿using System;
-using JetBrains.Annotations;
-using UnityEngine;
+﻿using JetBrains.Annotations;
 using KSP.Localization;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -22,19 +21,19 @@ namespace MuMech
     {
         public MechJebModuleTargetController(MechJebCore core) : base(core) { }
 
-        ITargetable target;
-
         public CelestialBody targetBody;
+
         [Persistent(pass = (int)Pass.Global)]
         public EditableAngle targetLatitude = new EditableAngle(0);
+
         [Persistent(pass = (int)Pass.Global)]
         public EditableAngle targetLongitude = new EditableAngle(0);
 
-        Vector3d targetDirection;
+        private Vector3d targetDirection;
 
-        bool wasActiveVessel = false;
+        private bool wasActiveVessel;
 
-        public bool pickingPositionTarget = false;
+        public bool pickingPositionTarget;
 
         ////////////////////////
         // EXTERNAL INTERFACE //
@@ -42,36 +41,38 @@ namespace MuMech
 
         public void Set(ITargetable t)
         {
-            target = t;
+            Target = t;
             if (vessel != null)
             {
-                vessel.targetObject = target;
+                vessel.targetObject = Target;
             }
         }
 
         public void SetPositionTarget(CelestialBody body, double latitude, double longitude)
         {
-            targetBody = body;
-            targetLatitude = latitude;
+            targetBody      = body;
+            targetLatitude  = latitude;
             targetLongitude = longitude;
 
-            Set(new PositionTarget(String.Format(GetPositionTargetString(), latitude, longitude)));
+            Set(new PositionTarget(string.Format(GetPositionTargetString(), latitude, longitude)));
         }
 
-
-        [ValueInfoItem("#MechJeb_Targetcoordinates", InfoItem.Category.Target)]//Target coordinates
+        [ValueInfoItem("#MechJeb_Targetcoordinates", InfoItem.Category.Target)] //Target coordinates
         public string GetPositionTargetString()
         {
-            if (target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
+            if (Target is PositionTarget) return Coordinates.ToStringDMS(targetLatitude, targetLongitude, true);
 
-            if (NormalTargetExists) return Coordinates.ToStringDMS(TargetOrbit.referenceBody.GetLatitude(Position), TargetOrbit.referenceBody.GetLongitude(Position), true);
+            if (NormalTargetExists)
+                return Coordinates.ToStringDMS(TargetOrbit.referenceBody.GetLatitude(Position), TargetOrbit.referenceBody.GetLongitude(Position),
+                    true);
 
             return "N/A";
         }
 
         public Vector3d GetPositionTargetPosition()
         {
-            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude))-targetBody.position;
+            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude)) -
+                   targetBody.position;
         }
 
         public void SetDirectionTarget(string name)
@@ -79,19 +80,21 @@ namespace MuMech
             Set(new DirectionTarget(name));
         }
 
-        [ActionInfoItem("#MechJeb_Pickpositiontarget", InfoItem.Category.Target)]//Pick position target
+        [ActionInfoItem("#MechJeb_Pickpositiontarget", InfoItem.Category.Target)] //Pick position target
         public void PickPositionTargetOnMap()
         {
             pickingPositionTarget = true;
             MapView.EnterMapView();
-            string message = Localizer.Format("#MechJeb_pickingPositionMsg",mainBody.displayName.LocalizeRemoveGender()); // "Click to select a target on " +  + "'s surface.\n(Leave map view to cancel.)"
+            string message =
+                Localizer.Format("#MechJeb_pickingPositionMsg",
+                    mainBody.displayName.LocalizeRemoveGender()); // "Click to select a target on " +  + "'s surface.\n(Leave map view to cancel.)"
             ScreenMessages.PostScreenMessage(message, 3.0f, ScreenMessageStyle.UPPER_CENTER);
         }
 
         public void StopPickPositionTargetOnMap()
         {
             pickingPositionTarget = false;
-            Cursor.visible = true;
+            Cursor.visible        = true;
         }
 
         public void Unset()
@@ -104,65 +107,33 @@ namespace MuMech
             targetDirection = direction;
         }
 
-        public bool NormalTargetExists
-        {
-            get
-            {
-                return (target != null && (target is Vessel || target is CelestialBody || CanAlign));
-            }
-        }
+        public bool NormalTargetExists => Target != null && (Target is Vessel || Target is CelestialBody || CanAlign);
 
-        public bool PositionTargetExists
-        {
-            get
-            {
-                return (target != null && ((target is PositionTarget) || (target is Vessel)) && !(target is DirectionTarget));
-            }
-        }
+        public bool PositionTargetExists => Target != null && (Target is PositionTarget || Target is Vessel) && !(Target is DirectionTarget);
 
-		public bool CanAlign
-		{
-			get { return target.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation; }
-		}
+        public bool CanAlign => Target.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation;
 
-        public ITargetable Target
-        {
-            get { return target; }
-        }
+        public ITargetable Target { get; private set; }
 
         public Orbit TargetOrbit
         {
-            get {
-                if (target == null)
+            get
+            {
+                if (Target == null)
                     return null;
-                return target.GetOrbit();
+                return Target.GetOrbit();
             }
         }
 
-        public Vector3 Position
-        {
-            get { return Transform.position; }
-        }
+        public Vector3 Position => Transform.position;
 
-        public float Distance
-        {
-            get { return Vector3.Distance(Position, vessel.GetTransform().position); }
-        }
+        public float Distance => Vector3.Distance(Position, vessel.GetTransform().position);
 
-        public Vector3d RelativeVelocity
-        {
-            get { return (vessel.orbit.GetVel() - TargetOrbit.GetVel()); }
-        }
+        public Vector3d RelativeVelocity => vessel.orbit.GetVel() - TargetOrbit.GetVel();
 
-        public Vector3d RelativePosition
-        {
-            get { return (vessel.GetTransform().position - Position); }
-        }
+        public Vector3d RelativePosition => vessel.GetTransform().position - Position;
 
-        public Transform Transform
-        {
-            get { return target.GetTransform(); }
-        }
+        public Transform Transform => Target.GetTransform();
 
         //which way your vessel should be pointing to dock with the target
         public Vector3 DockingAxis
@@ -174,10 +145,7 @@ namespace MuMech
             }
         }
 
-        public string Name
-        {
-            get { return target.GetName(); }
-        }
+        public string Name => Target.GetName();
 
         ////////////////////////
         // Internal functions //
@@ -195,35 +163,36 @@ namespace MuMech
             //Restore the saved target when we are made active vessel
             if (!wasActiveVessel && vessel.isActiveVessel)
             {
-                if (target != null && target.GetVessel() != null)
+                if (Target != null && Target.GetVessel() != null)
                 {
-                    vessel.targetObject = target;
+                    vessel.targetObject = Target;
                 }
             }
 
             //notice when the user switches targets
-            if (target != vessel.targetObject)
+            if (Target != vessel.targetObject)
             {
-                target = vessel.targetObject;
-                if (target is Vessel && ((Vessel)target).LandedOrSplashed && (((Vessel)target).mainBody == vessel.mainBody))
+                Target = vessel.targetObject;
+                if (Target is Vessel && ((Vessel)Target).LandedOrSplashed && ((Vessel)Target).mainBody == vessel.mainBody)
                 {
-                    targetBody = vessel.mainBody;
-                    targetLatitude = vessel.mainBody.GetLatitude(target.GetTransform().position);
-                    targetLongitude = vessel.mainBody.GetLongitude(target.GetTransform().position);
+                    targetBody      = vessel.mainBody;
+                    targetLatitude  = vessel.mainBody.GetLatitude(Target.GetTransform().position);
+                    targetLongitude = vessel.mainBody.GetLongitude(Target.GetTransform().position);
                 }
-                if (target is CelestialBody)
+
+                if (Target is CelestialBody)
                 {
-                    targetBody = (CelestialBody) target;
+                    targetBody = (CelestialBody)Target;
                 }
             }
-            
+
             // .23 temp fix until I understand better what's going on
             if (targetBody == null)
                 targetBody = vessel.mainBody;
-            
+
             //Update targets that need updating:
-            if (target is DirectionTarget) ((DirectionTarget)target).Update(targetDirection);
-            else if (target is PositionTarget) ((PositionTarget)target).Update(targetBody, targetLatitude, targetLongitude);
+            if (Target is DirectionTarget) ((DirectionTarget)Target).Update(targetDirection);
+            else if (Target is PositionTarget) ((PositionTarget)Target).Update(targetBody, targetLatitude, targetLongitude);
 
             wasActiveVessel = vessel.isActiveVessel;
         }
@@ -239,17 +208,17 @@ namespace MuMech
             }
         }
 
-        void DoMapView()
+        private void DoMapView()
         {
             DoCoordinatePicking();
 
             DrawMapViewTarget();
         }
 
-        void DoCoordinatePicking()
+        private void DoCoordinatePicking()
         {
             if (pickingPositionTarget && !MapView.MapIsEnabled)
-                StopPickPositionTargetOnMap();  //stop picking on leaving map view
+                StopPickPositionTargetOnMap(); //stop picking on leaving map view
 
             if (!pickingPositionTarget)
                 return;
@@ -265,7 +234,8 @@ namespace MuMech
                         GLUtils.DrawGroundMarker(mainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
 
                         string biome = mainBody.GetExperimentBiomeSafe(mouseCoords.latitude, mouseCoords.longitude);
-                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50), mouseCoords.ToStringDecimal() + "\n" + biome);
+                        GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50),
+                            mouseCoords.ToStringDecimal() + "\n" + biome);
 
                         if (Input.GetMouseButtonDown(0))
                         {
@@ -277,16 +247,16 @@ namespace MuMech
             }
         }
 
-        void DrawMapViewTarget()
+        private void DrawMapViewTarget()
         {
             if (HighLogic.LoadedSceneIsEditor) return;
             if (!MapView.MapIsEnabled) return;
             if (!vessel.isActiveVessel || vessel.GetMasterMechJeb() != core) return;
 
-            if (target == null) return;
-            if (!(target is PositionTarget) && !(target is Vessel)) return;
-            if ((target is Vessel) && (!((Vessel)target).LandedOrSplashed || (((Vessel)target).mainBody != vessel.mainBody))) return;
-            if (target is DirectionTarget) return;
+            if (Target == null) return;
+            if (!(Target is PositionTarget) && !(Target is Vessel)) return;
+            if (Target is Vessel && (!((Vessel)Target).LandedOrSplashed || ((Vessel)Target).mainBody != vessel.mainBody)) return;
+            if (Target is DirectionTarget) return;
 
             GLUtils.DrawGroundMarker(targetBody, targetLatitude, targetLongitude, Color.red, true);
         }

@@ -1260,7 +1260,7 @@ namespace MuMech
         {
             if (v != vessel || this != vessel.GetMasterMechJeb())
                 return;
-            
+
             const string SAMPLE_NAME = "MechJebCore.OnVesselWasModified";
             Profiler.BeginSample(SAMPLE_NAME);
             foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.enabled))
@@ -1286,7 +1286,7 @@ namespace MuMech
         {
             if (v != vessel || this != vessel.GetMasterMechJeb())
                 return;
-            
+
             const string SAMPLE_NAME = "MechJebCore.OnVesselStandardModification";
             Profiler.BeginSample(SAMPLE_NAME);
             foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.enabled))

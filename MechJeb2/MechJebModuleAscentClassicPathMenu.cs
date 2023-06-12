@@ -1,8 +1,8 @@
 ﻿using System;
 using JetBrains.Annotations;
 using KSP.Localization;
-using static MechJebLib.Utils.Statics;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -15,11 +15,11 @@ namespace MuMech
             hidden = true;
         }
 
-        private                 MechJebModuleAscentSettings _ascentSettings;
-        private                 MechJebModuleAscentClassicAutopilot  _path;
-        private static readonly Texture2D                   _pathTexture = new Texture2D(400, 100);
-        private                 MechJebModuleFlightRecorder _recorder;
-        private                 double                      _lastMaxAtmosphereAltitude = -1;
+        private                 MechJebModuleAscentSettings         _ascentSettings;
+        private                 MechJebModuleAscentClassicAutopilot _path;
+        private static readonly Texture2D                           _pathTexture = new Texture2D(400, 100);
+        private                 MechJebModuleFlightRecorder         _recorder;
+        private                 double                              _lastMaxAtmosphereAltitude = -1;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -67,7 +67,7 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label3"), GUILayout.ExpandWidth(false)); //"Turn start when Altitude is "
                 GUILayout.Label(_ascentSettings.AutoTurnStartAltitude.ToSI(2) + "m ", GUILayout.ExpandWidth(false));
-                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GUILayout.ExpandWidth(false)); //"or Velocity reach "
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GUILayout.ExpandWidth(false));      //"or Velocity reach "
                 GUILayout.Label(_ascentSettings.AutoTurnStartVelocity.ToSI(3) + "m/s", GUILayout.ExpandWidth(false)); //
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();

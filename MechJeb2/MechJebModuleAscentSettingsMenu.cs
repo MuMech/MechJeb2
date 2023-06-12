@@ -11,10 +11,10 @@ namespace MuMech
         {
             hidden = true;
         }
-        
+
         private MechJebModuleAscentSettings      _ascentSettings => core.ascentSettings;
         private MechJebModuleAscentBaseAutopilot _autopilot      => core.ascent;
-        
+
         private readonly string _climbString = $"{CachedLocalizer.Instance.MechJeb_Ascent_label22}: ";
         private readonly string _turnString  = $"{CachedLocalizer.Instance.MechJeb_Ascent_label23}: ";
 
@@ -52,7 +52,8 @@ namespace MuMech
             {
                 GUIStyle s = _ascentSettings.LimitingAoA ? GuiUtils.greenToggle : null;
                 string sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
-                GuiUtils.ToggledTextBox(ref _ascentSettings.LimitAoA, CachedLocalizer.Instance.MechJeb_Ascent_checkbox3, _ascentSettings.MaxAoA, sCurrentMaxAoA, s,
+                GuiUtils.ToggledTextBox(ref _ascentSettings.LimitAoA, CachedLocalizer.Instance.MechJeb_Ascent_checkbox3, _ascentSettings.MaxAoA,
+                    sCurrentMaxAoA, s,
                     30); //Limit AoA to
 
                 if (_ascentSettings.LimitAoA)
@@ -74,7 +75,8 @@ namespace MuMech
             {
                 // corrective steering only applies to Classic
                 GUILayout.BeginHorizontal();
-                _ascentSettings.CorrectiveSteering = GUILayout.Toggle(_ascentSettings.CorrectiveSteering, CachedLocalizer.Instance.MechJeb_Ascent_checkbox4,
+                _ascentSettings.CorrectiveSteering = GUILayout.Toggle(_ascentSettings.CorrectiveSteering,
+                    CachedLocalizer.Instance.MechJeb_Ascent_checkbox4,
                     GuiUtils.ExpandWidth(false)); //Corrective steering
                 if (_ascentSettings.CorrectiveSteering)
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label25, _ascentSettings.CorrectiveSteeringGain, width: 40,
@@ -104,7 +106,7 @@ namespace MuMech
             }
 
             GUILayout.EndHorizontal();
-            
+
             if (_ascentSettings.AscentType == AscentType.PVG)
                 core.settings.rssMode = GUILayout.Toggle(core.settings.rssMode, "Module disabling does not kill throttle");
 
@@ -117,15 +119,15 @@ namespace MuMech
             GUILayout.BeginVertical();
             ShowAscentSettingsGUIElements();
             GUILayout.EndVertical();
-            
+
             base.WindowGUI(windowID);
         }
-        
+
         public override GUILayoutOption[] WindowOptions()
         {
             return new[] { GUILayout.Width(275), GUILayout.Height(30) };
         }
-        
+
         public override string GetName()
         {
             return "Ascent Settings";
