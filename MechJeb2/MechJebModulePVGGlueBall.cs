@@ -140,6 +140,7 @@ namespace MuMech
 
             if (_task is { IsCompleted: false })
             {
+                Debug.Log("active PVG task not completed");
                 return;
             }
 

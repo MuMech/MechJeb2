@@ -118,15 +118,14 @@ namespace MuMech
             double staticPressure = staticPressureKpa * _kpaToAtmospheres;
 
             //print("**************************************************");
-            //print("SimulateAllStages starting from stage " + simStage + " throttle=" + throttle + " staticPressureKpa=" + staticPressureKpa + " atmDensity=" + atmDensity + " machNumber=" + machNumber);
+            //print("SimulateAllStages starting from stage " + _simStage + " throttle=" + throttle + " staticPressureKpa=" + staticPressureKpa + " atmDensity=" + atmDensity + " machNumber=" + machNumber);
 
             while (_simStage >= 0)
             {
-                //print("Simulating stage " + simStage + "(vessel mass = " + VesselMass(simStage) + ")");
+                //print("Simulating stage " + _simStage + "(vessel mass = " + VesselMass(_simStage) + ")");
                 stages[_simStage] = SimulateStage(throttle, staticPressure, atmDensity, machNumber);
                 if (_simStage + 1 < stages.Length)
                     stages[_simStage].StagedMass = stages[_simStage + 1].EndMass - stages[_simStage].StartMass;
-                //print("Staging at t = " + t);
                 SimulateStageActivation();
             }
 
@@ -170,21 +169,29 @@ namespace MuMech
             while (true)
             {
                 //print("Stage " + simStage + " step " + step + " endMass " + fuelStats.endMass.ToString("F3"));
-                if (AllowedToStage()) break;
+                if (AllowedToStage())
+                {
+                    //print("allowed to stage");
+                    break;
+                }
+
+                //print("not allowed to stage");
 
                 fuelStats = fuelStats.Append(SimulateTimeStep(double.MaxValue, throttle, staticPressure, atmDensity, machNumber, out double dt));
-                //print("Stage " + simStage + " step " + step + " dt " + dt);
+                //print("Stage " + _simStage + " dt " + dt);
                 // BS engine detected. Bail out.
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (dt == double.MaxValue || double.IsInfinity(dt))
+                {
                     //print("BS engine detected. Bail out.");
                     break;
+                }
 
                 if (--stepsLeft == 0)
                     throw new Exception("FuelFlowSimulation.SimulateStage reached max step count of " + MAX_STEPS);
             }
 
-            //Debug.Log("thrust = " + fuelStats.startThrust + " ISP = " + fuelStats.isp + " FuelFlow = " + ( fuelStats.startMass - fuelStats.endMass ) / fuelStats.deltaTime * 1000 + " num = " + FindActiveEngines(true).value.Count );
+            //print("thrust = " + fuelStats.StartThrust + " ISP = " + fuelStats.Isp + " FuelFlow = " + ( fuelStats.StartMass - fuelStats.EndMass ) / fuelStats.DeltaTime * 1000 + " num = " + FindActiveEngines().value.Count );
 
             return fuelStats;
         }
@@ -211,6 +218,7 @@ namespace MuMech
 
             using (Disposable<List<FuelNode>> engines = FindActiveEngines())
             {
+                //print("active engines: " + engines.value.Count);
                 if (engines.value.Count > 0)
                 {
                     for (int i = 0; i < engines.value.Count; i++)
@@ -426,9 +434,10 @@ namespace MuMech
             Disposable<List<FuelNode>> activeEngines = ListPool<FuelNode>.Instance.BorrowDisposable();
 
             foreach (FuelNode n in _nodes)
+            {
                 if (n.isEngine && n.inverseStage >= _simStage && n.isDrawingResources && n.CanDrawNeededResources(_nodes))
                     activeEngines.value.Add(n);
-
+            }
             return activeEngines;
         }
     }
