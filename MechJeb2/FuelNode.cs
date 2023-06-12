@@ -192,25 +192,26 @@ namespace MuMech
             public static FuelNode BorrowAndCopyFrom(FuelNode n)
             {
                 FuelNode node = pool.Borrow();
-                node.part = n.part;
-                node.dVLinearThrust = n.dVLinearThrust;
-                node.isEngine = n.isEngine;
-                node.isthrottleLocked = n.isthrottleLocked;
-                node.activatesEvenIfDisconnected = n.activatesEvenIfDisconnected;
-                node.maxThrust = n.maxThrust;
-                node.isLaunchClamp = n.isLaunchClamp;
-                node.dryMass = n.dryMass;
-                node.crewMass = n.crewMass;
-                node.modulesStagedMass = n.modulesStagedMass;
-                node.decoupledInStage = n.decoupledInStage;
-                node.maxEngineResiduals = n.maxEngineResiduals;
-                node.vesselOrientation = n.vesselOrientation;
-                node.modulesUnstagedMass = n.modulesUnstagedMass;
-                node.inverseStage = n.inverseStage;
-                node.partName = n.partName;
+                node.part                              = n.part;
+                node.dVLinearThrust                    = n.dVLinearThrust;
+                node.isEngine                          = n.isEngine;
+                node.isthrottleLocked                  = n.isthrottleLocked;
+                node.activatesEvenIfDisconnected       = n.activatesEvenIfDisconnected;
+                node.maxThrust                         = n.maxThrust;
+                node.isLaunchClamp                     = n.isLaunchClamp;
+                node.isSepratron                       = n.isSepratron;
+                node.dryMass                           = n.dryMass;
+                node.crewMass                          = n.crewMass;
+                node.modulesStagedMass                 = n.modulesStagedMass;
+                node.decoupledInStage                  = n.decoupledInStage;
+                node.maxEngineResiduals                = n.maxEngineResiduals;
+                node.vesselOrientation                 = n.vesselOrientation;
+                node.modulesUnstagedMass               = n.modulesUnstagedMass;
+                node.inverseStage                      = n.inverseStage;
+                node.partName                          = n.partName;
                 node.resourceRequestRemainingThreshold = n.resourceRequestRemainingThreshold;
-                node.resourcePriority = n.resourcePriority;
-                node.hasResources = n.hasResources;
+                node.resourcePriority                  = n.resourcePriority;
+                node.hasResources                      = n.hasResources;
 
                 node.resources.Clear();
                 node.resourcesFull.Clear();
@@ -599,6 +600,7 @@ namespace MuMech
                         double isp, massFlowRate;
                         EngineValuesAtConditions(engineInfo, throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate,
                             dVLinearThrust);
+                        //print($"EngineValuesAtConditions thrust:{thrust} isp:{isp}, massFlowRate:{massFlowRate}");
                         double thrMagnitude = thrust.magnitude;
                         partThrust += thrMagnitude;
                         partSpoolupTime += thrMagnitude * engineInfo.moduleSpoolupTime;
@@ -619,9 +621,13 @@ namespace MuMech
                             // (we keep them out of the propellantFlows dict here so they're just ignored by the sim later).
                             //
                             if (density > 0)
+                            {
                                 // hopefully different EngineModules in the same part don't have different flow modes for the same propellant
                                 if (!propellantFlows.ContainsKey(p.id))
+                                {
                                     propellantFlows.Add(p.id, p.GetFlowMode());
+                                }
+                            }
 
                             // have to ignore ignoreForIsp fuels here since we're dealing with the massflowrate of the other fuels
                             if (!p.ignoreForIsp) totalDensity += p.ratio * density;
@@ -654,7 +660,8 @@ namespace MuMech
                     }
                     if (partThrust > 0)
                         partSpoolupTime /= partThrust;
-                    //FuelFlowSimulation.print("For all engines, found spoolup time " + partSpoolupTime + " (with total thrust " + partThrust);
+
+                    //print("For all engines, found spoolup time " + partSpoolupTime + " (with total thrust " + partThrust);
                 }
             }
 
