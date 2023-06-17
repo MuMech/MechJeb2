@@ -81,7 +81,8 @@ namespace MuMech
             double apR = mainBody.Radius + AscentSettings.DesiredApoapsis;
             if (_ascentSettings.DesiredApoapsis < 0)
                 apR = _ascentSettings.DesiredApoapsis;
-            double attR = mainBody.Radius + AscentSettings.DesiredAttachAlt;
+            double attR = mainBody.Radius +
+                          (AscentSettings.OptimizeStage < 0 ? AscentSettings.DesiredAttachAltFixed : AscentSettings.DesiredAttachAlt);
 
             bool lanflag = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan || _ascentSettings.LaunchingToLan;
             double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan
@@ -89,6 +90,7 @@ namespace MuMech
                 : (double)AscentSettings.DesiredLan;
 
             double inclination = AscentSettings.DesiredInclination;
+            bool attachAltFlag = AscentSettings.OptimizeStage < 0 || AscentSettings.AttachAltFlag;
 
             // if we are launchingToPlane other code in MJ fixes the sign of the inclination to be correct
             // FIXME: can we just use autopilot.desiredInclination here and rely on the other code to update that value?
@@ -96,7 +98,7 @@ namespace MuMech
                 inclination = Math.Sign(inclination) * core.target.TargetOrbit.inclination;
 
             // FIXME: kinda need to break this up it is getting very magical with all the non-obvious ignored combinations of options
-            core.glueball.SetTarget(peR, apR, attR, inclination, lan, AscentSettings.DesiredFPA, AscentSettings.AttachAltFlag, lanflag);
+            core.glueball.SetTarget(peR, apR, attR, inclination, lan, AscentSettings.DesiredFPA, attachAltFlag, lanflag);
         }
 
         private double _pitchStartTime;

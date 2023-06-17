@@ -27,6 +27,9 @@ namespace MuMech
         public readonly EditableDoubleMult DesiredAttachAlt = new EditableDoubleMult(DESIRED_ATTACH_ALT_DEFAULT, 1000);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        public readonly EditableDoubleMult DesiredAttachAltFixed = new EditableDoubleMult(DESIRED_ATTACH_ALT_DEFAULT, 1000);
+
+        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public readonly EditableDoubleMult DesiredFPA = new EditableDoubleMult(DESIRED_FPA_DEFAULT, PI / 180);
 
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
@@ -311,6 +314,7 @@ namespace MuMech
             PitchStartVelocity.val     = PITCH_START_VELOCITY_DEFAULT;
             PitchRate.val              = PITCH_RATE_DEFAULT;
             DesiredAttachAlt.val       = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredAttachAltFixed.val  = DESIRED_ATTACH_ALT_DEFAULT;
             DesiredFPA.val             = DESIRED_FPA_DEFAULT;
             DynamicPressureTrigger.val = DYNAMIC_PRESSURE_TRIGGER_DEFAULT;
             AttachAltFlag              = ATTACH_ALT_FLAG_DEFAULT;
