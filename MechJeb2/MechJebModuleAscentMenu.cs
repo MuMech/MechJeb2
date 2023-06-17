@@ -131,16 +131,16 @@ namespace MuMech
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label1, _ascentSettings.DesiredOrbitAltitude,
                         "km");                                                                                                     //Target Periapsis
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label2, _ascentSettings.DesiredApoapsis, "km"); //Target Apoapsis:
+                    GuiUtils.ToggledTextBox(ref _ascentSettings.AttachAltFlag, CachedLocalizer.Instance.MechJeb_Ascent_attachAlt,
+                        _ascentSettings.DesiredAttachAlt, "km");
                 }
                 else
                 {
                     if (!_launchingWithAnyPlaneControl)
                         GuiUtils.SimpleTextBox("Flight Path Angle", _ascentSettings.DesiredFPA, "°");
-                    _ascentSettings.AttachAltFlag = true;
+                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_attachAlt,
+                        _ascentSettings.DesiredAttachAltFixed, "km");
                 }
-
-                GuiUtils.ToggledTextBox(ref _ascentSettings.AttachAltFlag, CachedLocalizer.Instance.MechJeb_Ascent_attachAlt,
-                    _ascentSettings.DesiredAttachAlt, "km");
 
                 if (_ascentSettings.DesiredApoapsis >= 0 && _ascentSettings.DesiredApoapsis < _ascentSettings.DesiredOrbitAltitude)
                     GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label3, GuiUtils.yellowLabel); //Ap < Pe: circularizing orbit
