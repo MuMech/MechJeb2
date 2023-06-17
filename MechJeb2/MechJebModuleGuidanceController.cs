@@ -294,14 +294,13 @@ namespace MuMech
 
             //Debug.Log($"coast stage: {coastStage} current stage: {vessel.currentStage} will coast: {Solution.WillCoast(vesselState.time)}");
 
+
             // Stop autostaging if we need to do a coast.  Also, we need to affirmatively set the termination
             // of autostaging to the top of the rocket.  If we don't, then when we cut the engines and do the
             // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
             // since the insertion stage may still have RCS which is necessary to complete the mission.
             if (coastStage >= 0 && vessel.currentStage == coastStage && Solution.WillCoast(vesselState.time))
                 core.staging.autostageLimitInternal = coastStage;
-            else
-                core.staging.autostageLimitInternal = Solution.TerminalStage();
 
             if (Solution.Coast(vesselState.time))
             {
@@ -321,6 +320,8 @@ namespace MuMech
                 ThrustOff();
                 return;
             }
+
+            core.staging.autostageLimitInternal = Solution.TerminalStage();
 
             ThrottleOn();
 
