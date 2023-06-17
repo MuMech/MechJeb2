@@ -31,7 +31,11 @@ namespace MechJebLib.PVG
                 _phases = phases;
 
                 double m0 = _phases[0].m0;
-                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody);
+
+                if (_terminal == null)
+                    throw new Exception("Optimizer.Build() called with no terminal conditions");
+
+                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, _terminal);
 
                 var normalizedPhases = new List<Phase>();
 
@@ -39,11 +43,6 @@ namespace MechJebLib.PVG
                 {
                     normalizedPhases.Add(phase.Rescale(problem.Scale));
                 }
-
-                if (_terminal == null)
-                    throw new Exception("Optimizer.Build() called with no terminal conditions");
-
-                problem.Terminal = _terminal.Rescale(problem.Scale);
 
                 var solver = new Optimizer(problem, normalizedPhases);
                 return solver;

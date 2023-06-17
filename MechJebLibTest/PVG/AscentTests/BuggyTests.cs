@@ -41,6 +41,7 @@ namespace MechJebLibTest.PVG
             using Solution solution = pvg.GetSolution();
 
             pvg.Znorm.ShouldBeZero(1e-9);
+            Assert.Equal(8, pvg.LmStatus);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 

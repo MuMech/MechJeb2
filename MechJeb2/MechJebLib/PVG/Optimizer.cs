@@ -52,7 +52,7 @@ namespace MechJebLib.PVG
             while (_terminal.Count < _phases.Count)
                 _terminal.Add(Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN));
             while (_residual.Count < _phases.Count)
-                _residual.Add(Vn.Rent(ResidualWrapper.RESIDUAL_WRAPPER_LEN));
+                _residual.Add(Vn.Rent(ResidualLayout.RESIDUAL_LAYOUT_LEN));
         }
 
         private void CopyToInitial(double[] yin)
@@ -112,14 +112,15 @@ namespace MechJebLib.PVG
         {
             var y0 = InputLayout.CreateFrom(_initial[0]);
             var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
-            using var z = ResidualWrapper.Rent(_residual[0]);
+            var z = ResidualLayout.CreateFrom(_residual[0]);
 
-            z.R        = y0.R - _problem.R0Bar;
-            z.V        = y0.V - _problem.V0Bar;
-            z.M        = y0.M - _problem.M0Bar;
+            z.R        = y0.R - _problem.R0;
+            z.V        = y0.V - _problem.V0;
+            z.M        = y0.M - _problem.M0;
             z.Terminal = _problem.Terminal.TerminalConstraints(yf);
             z.Bt       = CalcBTConstraint(0);
             //z.Pm_transversality = yf_scratch[phases.Count - 1].Pm - 1;
+            z.CopyTo(_residual[0]);
         }
 
         private void ContinuityConditions()
@@ -128,21 +129,21 @@ namespace MechJebLib.PVG
             {
                 var y0 = InputLayout.CreateFrom(_initial[p]);
                 var yf = OutputLayout.CreateFrom(_terminal[p - 1]);
-                using var z = ResidualWrapper.Rent(_residual[p]);
+                var z = ContinuityLayout.CreateFrom(_residual[p]);
 
-                z.RContinuity  = yf.R - y0.R;
-                z.VContinuity  = yf.V - y0.V;
-                z.PvContinuity = yf.PV - y0.PV;
-                z.PrContinuity = yf.PR - y0.PR;
+                z.R  = yf.R - y0.R;
+                z.V  = yf.V - y0.V;
+                z.Pv = yf.PV - y0.PV;
+                z.Pr = yf.PR - y0.PR;
 
                 if (_phases[p].MassContinuity)
-                    z.M_continuity = yf.M - (_phases[p - 1].DropMass + y0.M);
+                    z.M = yf.M - (_phases[p - 1].DropMass + y0.M);
                 else
-                    z.M_continuity = _phases[p].m0 - y0.M;
+                    z.M = _phases[p].m0 - y0.M;
 
                 z.Bt = CalcBTConstraint(p);
 
-                //z.Pm_transversality =
+                z.CopyTo(_residual[p]);
             }
         }
 
@@ -156,7 +157,7 @@ namespace MechJebLib.PVG
         {
             for (int i = 0; i < z.Length; i++)
             {
-                z[i] = _residual[i / ResidualWrapper.RESIDUAL_WRAPPER_LEN][i % ResidualWrapper.RESIDUAL_WRAPPER_LEN];
+                z[i] = _residual[i / ResidualLayout.RESIDUAL_LAYOUT_LEN][i % ResidualLayout.RESIDUAL_LAYOUT_LEN];
             }
         }
 
@@ -220,7 +221,7 @@ namespace MechJebLib.PVG
 
             double[] yGuess = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
             double[] yNew = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
-            double[] z = new double[_phases.Count * ResidualWrapper.RESIDUAL_WRAPPER_LEN];
+            double[] z = new double[_phases.Count * ResidualLayout.RESIDUAL_LAYOUT_LEN];
             double[] bndu = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
             double[] bndl = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
 
@@ -237,7 +238,7 @@ namespace MechJebLib.PVG
                 if (!_phases[i].Coast && !_phases[i].Infinite)
                     bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau * 0.999;
 
-            alglib.minlmcreatev(ResidualWrapper.RESIDUAL_WRAPPER_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
+            alglib.minlmcreatev(ResidualLayout.RESIDUAL_LAYOUT_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
             alglib.minlmsetbc(_state, bndl, bndu);
             alglib.minlmsetcond(_state, LmEpsx, MaxIter);
             alglib.minlmoptimize(_state, _residualHandle, null, null);
@@ -314,9 +315,9 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R = _problem.R0Bar;
-                    y0.V = _problem.V0Bar;
-                    y0.M = _problem.M0Bar;
+                    y0.R = _problem.R0;
+                    y0.V = _problem.V0;
+                    y0.M = _problem.M0;
                 }
 
                 y0.CopyTo(_initial[p]);
@@ -361,8 +362,8 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R  = _problem.R0Bar;
-                    y0.V  = _problem.V0Bar;
+                    y0.R  = _problem.R0;
+                    y0.V  = _problem.V0;
                     y0.M  = phase.m0;
                     y0.PV = pv0;
                     y0.PR = pr0;
@@ -446,9 +447,9 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R  = _problem.R0Bar;
-                    y0.V  = _problem.V0Bar;
-                    y0.M  = _problem.M0Bar;
+                    y0.R  = _problem.R0;
+                    y0.V  = _problem.V0;
+                    y0.M  = _problem.M0;
                     y0.Bt = phase.bt;
                     y0.PV = solution.Pv(_problem.T0);
                     y0.PR = solution.Pr(_problem.T0);
