@@ -410,16 +410,17 @@ namespace MuMech
             ShowTargetingGUIElements();
             ShowGuidanceSettingsGUIElements();
 
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginHorizontal();
+            _settingsMenu.enabled = GUILayout.Toggle(_settingsMenu.enabled, "Ascent Settings");
+
             if (_ascentSettings.AscentType == AscentType.PVG)
             {
                 core.stageStats.RequestUpdate(this);
-                GUILayout.BeginVertical(GUI.skin.box);
-                _pvgSettingsMenu.enabled = GUILayout.Toggle(_pvgSettingsMenu.enabled, "Edit Rocket Staging");
-                GUILayout.EndVertical();
+                _pvgSettingsMenu.enabled = GUILayout.Toggle(_pvgSettingsMenu.enabled, "PVG Settings");
             }
-
-            GUILayout.BeginVertical(GUI.skin.box);
-            _settingsMenu.enabled = GUILayout.Toggle(_settingsMenu.enabled, "Edit Ascent Settings");
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             ShowStatusGUIElements();
