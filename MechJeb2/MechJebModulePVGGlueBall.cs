@@ -174,16 +174,13 @@ namespace MuMech
                     return;
             }
 
-            if (_blockOptimizerUntilTime > vesselState.time)
-                return;
-
             // check for readiness (not terminal guidance and not finished)
             if (!core.guidance.IsReady())
                 return;
 
             if (core.guidance.Solution != null)
             {
-                int solutionIndex = core.guidance.Solution.IndexForKSPStage(vessel.currentStage);
+                int solutionIndex = core.guidance.Solution.IndexForKSPStage(vessel.currentStage, core.guidance.IsCoasting());
 
                 if (solutionIndex >= 0)
                 {
@@ -195,6 +192,9 @@ namespace MuMech
                     }
                 }
             }
+
+            if (_blockOptimizerUntilTime > vesselState.time)
+                return;
 
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                 .Initial(vesselState.orbitalPosition.WorldToV3Rotated(), vesselState.orbitalVelocity.WorldToV3Rotated(),
