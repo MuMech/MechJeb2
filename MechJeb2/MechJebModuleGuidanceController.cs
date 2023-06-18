@@ -169,7 +169,7 @@ namespace MuMech
             // is in the "past" in the Solution but you're burning down residuals and you don't know when
             // the stage will actually run out (assuming it isn't a burn before a coast or an optimized burntime
             // so that we burn past the end of the stage and into whatever residuals are available).
-            int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage, false);
+            int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage, core.guidance.IsCoasting());
             if (solutionIndex < 0)
                 return;
 

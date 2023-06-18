@@ -323,15 +323,17 @@ namespace MechJebLib.PVG
             return _tmax.Count - 1;
         }
 
-        public int IndexForKSPStage(int kspStage, bool includeCoasts = true)
+        public int IndexForKSPStage(int kspStage, bool coasting)
         {
             for (int i = 0; i < Phases.Count; i++)
             {
                 if (Phases[i].KSPStage != kspStage)
                     continue;
 
-                if (!Phases[i].Coast || includeCoasts)
-                    return i;
+                if (Phases[i].Coast != coasting)
+                    continue;
+
+                return i;
             }
 
             return -1;
