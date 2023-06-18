@@ -83,7 +83,7 @@ namespace MuMech
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", 30);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
-            GuiUtils.ToggledTextBox(ref _ascentSettings.OptimizeStageFlag, "Optimize Stage: ", _ascentSettings.OptimizeStageInternal);
+            GuiUtils.ToggledTextBox(ref _ascentSettings.OptimizeStageFlag, "Early Shutoff Stage: ", _ascentSettings.OptimizeStageInternal);
             GuiUtils.ToggledTextBox(ref _ascentSettings.UnguidedStagesFlag, "Unguided Stages: ", _ascentSettings.UnguidedStagesInternal);
             GUILayout.EndVertical();
 
