@@ -5,77 +5,73 @@ namespace MuMech
 {
     public class AutopilotModule : ComputerModule
     {
-        public AutopilotModule(MechJebCore core) : base(core)
+        protected AutopilotModule(MechJebCore core) : base(core)
         {
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            if (CurrentStep != null)
+            if (CurrentStep == null) return;
+
+            try
             {
-                try
-                {
-                    CurrentStep = CurrentStep.Drive(s);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogException(ex);
-                }
+                CurrentStep = CurrentStep.Drive(s);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
         }
 
         public override void OnFixedUpdate()
         {
-            if (CurrentStep != null)
+            if (CurrentStep == null) return;
+
+            try
             {
-                try
-                {
-                    CurrentStep = CurrentStep.OnFixedUpdate();
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogException(ex);
-                }
+                CurrentStep = CurrentStep.OnFixedUpdate();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
         }
 
-        public void setStep(AutopilotStep step)
+        protected void SetStep(AutopilotStep step)
         {
             CurrentStep = step;
         }
 
-        public string status
+        public string Status
         {
             get
             {
-                if (CurrentStep == null)
-                    return "Off";
-                return CurrentStep.status;
+                return CurrentStep == null ? "Off" : CurrentStep.Status;
             }
         }
 
-        public bool active => CurrentStep != null;
+        protected bool Active => CurrentStep != null;
 
         public AutopilotStep CurrentStep { get; private set; }
     }
 
     public class AutopilotStep
     {
-        public MechJebCore core;
+        protected readonly MechJebCore Core;
 
         //conveniences:
-        public VesselState   vesselState => core.vesselState;
-        public Vessel        vessel      => core.part.vessel;
-        public CelestialBody mainBody    => core.part.vessel.mainBody;
-        public Orbit         orbit       => core.part.vessel.orbit;
+        protected VesselState   VesselState => Core.vesselState;
+        protected Vessel        Vessel      => Core.part.vessel;
+        protected CelestialBody MainBody    => Core.part.vessel.mainBody;
+        protected Orbit         Orbit       => Core.part.vessel.orbit;
 
-        public AutopilotStep(MechJebCore core)
+        protected AutopilotStep(MechJebCore core)
         {
-            this.core = core;
+            this.Core = core;
         }
 
         public virtual AutopilotStep Drive(FlightCtrlState s) { return this; }
         public virtual AutopilotStep OnFixedUpdate()          { return this; }
-        public         string        status                   { get; protected set; }
+        public         string        Status                   { get; protected set; }
     }
 }

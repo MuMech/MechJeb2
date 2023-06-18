@@ -6,7 +6,7 @@ namespace MuMech
     {
         public class CourseCorrection : AutopilotStep
         {
-            private bool courseCorrectionBurning;
+            private bool _courseCorrectionBurning;
 
             public CourseCorrection(MechJebCore core) : base(core)
             {
@@ -14,68 +14,68 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (!core.landing.PredictionReady)
+                if (!Core.landing.PredictionReady)
                     return this;
 
                 // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
-                if (core.landing.deployChutes)
+                if (Core.landing.DeployChutes)
                 {
-                    if (core.landing.ParachutesDeployable())
+                    if (Core.landing.ParachutesDeployable())
                     {
-                        core.landing.ControlParachutes();
+                        Core.landing.ControlParachutes();
                     }
                 }
 
-                double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
+                double currentError = Vector3d.Distance(Core.target.GetPositionTargetPosition(), Core.landing.LandingSite);
 
                 if (currentError < 150)
                 {
-                    core.thrust.targetThrottle = 0;
-                    if (core.landing.rcsAdjustment)
-                        core.rcs.enabled = true;
-                    return new CoastToDeceleration(core);
+                    Core.thrust.targetThrottle = 0;
+                    if (Core.landing.RCSAdjustment)
+                        Core.rcs.enabled = true;
+                    return new CoastToDeceleration(Core);
                 }
 
                 // If we're off course, but already too low, skip the course correction
-                if (vesselState.altitudeASL < core.landing.DecelerationEndAltitude() + 5)
+                if (VesselState.altitudeASL < Core.landing.DecelerationEndAltitude() + 5)
                 {
-                    return new DecelerationBurn(core);
+                    return new DecelerationBurn(Core);
                 }
 
 
                 // If a parachute has already been deployed then we will not be able to control attitude anyway, so move back to the coast to deceleration step.
-                if (vesselState.parachuteDeployed)
+                if (VesselState.parachuteDeployed)
                 {
-                    core.thrust.targetThrottle = 0;
-                    return new CoastToDeceleration(core);
+                    Core.thrust.targetThrottle = 0;
+                    return new CoastToDeceleration(Core);
                 }
 
                 // We are not in .90 anymore. Turning while under drag is a bad idea
-                if (vesselState.drag > 0.1)
+                if (VesselState.drag > 0.1)
                 {
-                    return new CoastToDeceleration(core);
+                    return new CoastToDeceleration(Core);
                 }
 
-                Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
+                Vector3d deltaV = Core.landing.ComputeCourseCorrection(true);
 
-                status = Localizer.Format("#MechJeb_LandingGuidance_Status3",
+                Status = Localizer.Format("#MechJeb_LandingGuidance_Status3",
                     deltaV.magnitude.ToString("F1")); //"Performing course correction of about " +  + " m/s"
 
-                core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, core.landing);
+                Core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, Core.landing);
 
-                if (core.attitude.attitudeAngleFromTarget() < 2)
-                    courseCorrectionBurning = true;
-                else if (core.attitude.attitudeAngleFromTarget() > 30)
-                    courseCorrectionBurning = false;
+                if (Core.attitude.attitudeAngleFromTarget() < 2)
+                    _courseCorrectionBurning = true;
+                else if (Core.attitude.attitudeAngleFromTarget() > 30)
+                    _courseCorrectionBurning = false;
 
-                if (courseCorrectionBurning)
+                if (_courseCorrectionBurning)
                 {
-                    const double timeConstant = 2.0;
-                    core.thrust.ThrustForDV(deltaV.magnitude, timeConstant);
+                    const double TIME_CONSTANT = 2.0;
+                    Core.thrust.ThrustForDV(deltaV.magnitude, TIME_CONSTANT);
                 }
                 else
                 {
-                    core.thrust.targetThrottle = 0;
+                    Core.thrust.targetThrottle = 0;
                 }
 
                 return this;

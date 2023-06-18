@@ -12,19 +12,16 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (orbit.PeA < -0.1 * mainBody.Radius)
+                if (Orbit.PeA < -0.1 * MainBody.Radius)
                 {
-                    core.thrust.targetThrottle = 0;
-                    return new FinalDescent(core);
+                    Core.thrust.targetThrottle = 0;
+                    return new FinalDescent(Core);
                 }
 
-                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT_HORIZONTAL, core.landing);
-                if (core.attitude.attitudeAngleFromTarget() < 5)
-                    core.thrust.targetThrottle = 1;
-                else
-                    core.thrust.targetThrottle = 0;
+                Core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT_HORIZONTAL, Core.landing);
+                Core.thrust.targetThrottle = Core.attitude.attitudeAngleFromTarget() < 5 ? 1 : 0;
 
-                status = Localizer.Format("#MechJeb_LandingGuidance_Status16"); //"Doing deorbit burn."
+                Status = Localizer.Format("#MechJeb_LandingGuidance_Status16"); //"Doing deorbit burn."
 
                 return this;
             }

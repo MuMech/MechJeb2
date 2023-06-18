@@ -9,8 +9,8 @@ namespace MuMech
     {
         public class PlaneChange : AutopilotStep
         {
-            private bool   planeChangeTriggered;
-            private double planeChangeDVLeft;
+            private bool   _planeChangeTriggered;
+            private double _planeChangeDVLeft;
 
             public PlaneChange(MechJebCore core) : base(core)
             {
@@ -20,28 +20,28 @@ namespace MuMech
             private Vector3d ComputePlaneChange()
             {
                 Vector3d targetRadialVector =
-                    core.vessel.mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
-                Vector3d currentRadialVector = core.vesselState.CoM - core.vessel.mainBody.position;
+                    Core.vessel.mainBody.GetWorldSurfacePosition(Core.target.targetLatitude, Core.target.targetLongitude, 0) - MainBody.position;
+                Vector3d currentRadialVector = Core.vesselState.CoM - Core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
                 //this calculation seems like it might be be working right:
-                double timeToTarget = orbit.TimeOfTrueAnomaly(core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, vesselState.time) -
-                                      vesselState.time;
-                double planetRotationAngle = 360 * timeToTarget / mainBody.rotationPeriod;
-                var planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, mainBody.angularVelocity);
+                double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, VesselState.time) -
+                                      VesselState.time;
+                double planetRotationAngle = 360 * timeToTarget / MainBody.rotationPeriod;
+                var planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, MainBody.angularVelocity);
                 Vector3d targetRadialVectorOnFlyover = planetRotation * targetRadialVector;
-                Vector3d horizontalToTarget = Vector3d.Exclude(vesselState.up, targetRadialVectorOnFlyover - currentRadialVector).normalized;
+                Vector3d horizontalToTarget = Vector3d.Exclude(VesselState.up, targetRadialVectorOnFlyover - currentRadialVector).normalized;
                 return horizontalToTarget;
             }
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (planeChangeTriggered && core.attitude.attitudeAngleFromTarget() < 2)
+                if (_planeChangeTriggered && Core.attitude.attitudeAngleFromTarget() < 2)
                 {
-                    core.thrust.targetThrottle = Mathf.Clamp01((float)(planeChangeDVLeft / (2 * core.vesselState.maxThrustAccel)));
+                    Core.thrust.targetThrottle = Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.vesselState.maxThrustAccel)));
                 }
                 else
                 {
-                    core.thrust.targetThrottle = 0;
+                    Core.thrust.targetThrottle = 0;
                 }
 
                 return this;
@@ -49,41 +49,41 @@ namespace MuMech
 
             public override AutopilotStep OnFixedUpdate()
             {
-                Vector3d targetRadialVector = mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) -
-                                              mainBody.position;
-                Vector3d currentRadialVector = vesselState.CoM - mainBody.position;
+                Vector3d targetRadialVector = MainBody.GetWorldSurfacePosition(Core.target.targetLatitude, Core.target.targetLongitude, 0) -
+                                              MainBody.position;
+                Vector3d currentRadialVector = VesselState.CoM - MainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
-                bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, vesselState.orbitalVelocity) > 0;
+                bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, VesselState.orbitalVelocity) > 0;
 
-                if (!planeChangeTriggered && approaching && angleToTarget > 80 && angleToTarget < 90)
+                if (!_planeChangeTriggered && approaching && angleToTarget > 80 && angleToTarget < 90)
                 {
-                    if (!MuUtils.PhysicsRunning()) core.warp.MinimumWarp(true);
-                    planeChangeTriggered = true;
+                    if (!MuUtils.PhysicsRunning()) Core.warp.MinimumWarp(true);
+                    _planeChangeTriggered = true;
                 }
 
-                if (planeChangeTriggered)
+                if (_planeChangeTriggered)
                 {
                     Vector3d horizontalToTarget = ComputePlaneChange();
-                    Vector3d finalVelocity = Quaternion.FromToRotation(vesselState.horizontalOrbit, horizontalToTarget) * vesselState.orbitalVelocity;
+                    Vector3d finalVelocity = Quaternion.FromToRotation(VesselState.horizontalOrbit, horizontalToTarget) * VesselState.orbitalVelocity;
 
-                    Vector3d deltaV = finalVelocity - vesselState.orbitalVelocity;
+                    Vector3d deltaV = finalVelocity - VesselState.orbitalVelocity;
                     //burn normal+ or normal- to avoid dropping the Pe:
-                    var burnDir = Vector3d.Exclude(vesselState.up, Vector3d.Exclude(vesselState.orbitalVelocity, deltaV));
-                    planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, vesselState.orbitalVelocity) *
-                                        vesselState.speedOrbitHorizontal;
-                    core.attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, core.landing);
-                    status = Localizer.Format("#MechJeb_LandingGuidance_Status14",
-                        planeChangeDVLeft.ToString("F0")); //"Executing low orbit plane change of about " +  + " m/s"
+                    var burnDir = Vector3d.Exclude(VesselState.up, Vector3d.Exclude(VesselState.orbitalVelocity, deltaV));
+                    _planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, VesselState.orbitalVelocity) *
+                                        VesselState.speedOrbitHorizontal;
+                    Core.attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, Core.landing);
+                    Status = Localizer.Format("#MechJeb_LandingGuidance_Status14",
+                        _planeChangeDVLeft.ToString("F0")); //"Executing low orbit plane change of about " +  + " m/s"
 
-                    if (planeChangeDVLeft < 0.1F)
+                    if (_planeChangeDVLeft < 0.1F)
                     {
-                        return new LowDeorbitBurn(core);
+                        return new LowDeorbitBurn(Core);
                     }
                 }
                 else
                 {
-                    if (core.node.autowarp) core.warp.WarpRegularAtRate((float)(orbit.period / 6));
-                    status = Localizer.Format("#MechJeb_LandingGuidance_Status15"); //"Moving to low orbit plane change burn point"
+                    if (Core.node.autowarp) Core.warp.WarpRegularAtRate((float)(Orbit.period / 6));
+                    Status = Localizer.Format("#MechJeb_LandingGuidance_Status15"); //"Moving to low orbit plane change burn point"
                 }
 
                 return this;
