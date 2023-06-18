@@ -15,116 +15,115 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (!core.landing.PredictionReady)
+                if (!Core.landing.PredictionReady)
                     return this;
 
-                Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
+                Vector3d deltaV = Core.landing.ComputeCourseCorrection(true);
 
-                if (core.landing.rcsAdjustment)
-                {
-                    if (deltaV.magnitude > 3)
-                        core.rcs.enabled = true;
-                    else if (deltaV.magnitude < 0.01)
-                        core.rcs.enabled = false;
+                if (!Core.landing.RCSAdjustment) return this;
 
-                    if (core.rcs.enabled)
-                        core.rcs.SetWorldVelocityError(deltaV);
-                }
+                if (deltaV.magnitude > 3)
+                    Core.rcs.enabled = true;
+                else if (deltaV.magnitude < 0.01)
+                    Core.rcs.enabled = false;
+
+                if (Core.rcs.enabled)
+                    Core.rcs.SetWorldVelocityError(deltaV);
 
                 return this;
             }
 
-            private bool warpReady;
+            private bool _warpReady;
 
             public override AutopilotStep OnFixedUpdate()
             {
-                core.thrust.targetThrottle = 0;
+                Core.thrust.targetThrottle = 0;
 
                 // If the atmospheric drag is has started to act on the vessel then we are in a position to start considering when to deploy the parachutes.
-                if (core.landing.deployChutes)
+                if (Core.landing.DeployChutes)
                 {
-                    if (core.landing.ParachutesDeployable())
+                    if (Core.landing.ParachutesDeployable())
                     {
-                        core.landing.ControlParachutes();
+                        Core.landing.ControlParachutes();
                     }
                 }
 
-                double maxAllowedSpeed = core.landing.MaxAllowedSpeed();
-                if (vesselState.speedSurface > 0.9 * maxAllowedSpeed)
+                double maxAllowedSpeed = Core.landing.MaxAllowedSpeed();
+                if (VesselState.speedSurface > 0.9 * maxAllowedSpeed)
                 {
-                    core.warp.MinimumWarp();
-                    if (core.landing.rcsAdjustment)
-                        core.rcs.enabled = false;
-                    return new DecelerationBurn(core);
+                    Core.warp.MinimumWarp();
+                    if (Core.landing.RCSAdjustment)
+                        Core.rcs.enabled = false;
+                    return new DecelerationBurn(Core);
                 }
 
-                status = Localizer.Format("#MechJeb_LandingGuidance_Status1"); //"Coasting toward deceleration burn"
+                Status = Localizer.Format("#MechJeb_LandingGuidance_Status1"); //"Coasting toward deceleration burn"
 
-                if (core.landing.landAtTarget)
+                if (Core.landing.LandAtTarget)
                 {
-                    double currentError = Vector3d.Distance(core.target.GetPositionTargetPosition(), core.landing.LandingSite);
+                    double currentError = Vector3d.Distance(Core.target.GetPositionTargetPosition(), Core.landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!vesselState.parachuteDeployed &&
-                            vesselState.drag <=
+                        if (!VesselState.parachuteDeployed &&
+                            VesselState.drag <=
                             0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
-                            core.warp.MinimumWarp();
-                            if (core.landing.rcsAdjustment)
-                                core.rcs.enabled = false;
-                            return new CourseCorrection(core);
+                            Core.warp.MinimumWarp();
+                            if (Core.landing.RCSAdjustment)
+                                Core.rcs.enabled = false;
+                            return new CourseCorrection(Core);
                         }
                     }
                     else
                     {
-                        Vector3d deltaV = core.landing.ComputeCourseCorrection(true);
-                        status += "\n" + Localizer.Format("#MechJeb_LandingGuidance_Status2",
+                        Vector3d deltaV = Core.landing.ComputeCourseCorrection(true);
+                        Status += "\n" + Localizer.Format("#MechJeb_LandingGuidance_Status2",
                             deltaV.magnitude.ToString("F3")); //"Course correction DV: " +  + " m/s"
                     }
                 }
 
                 // If we're already low, skip directly to the Deceleration burn
-                if (vesselState.altitudeASL < core.landing.DecelerationEndAltitude() + 5)
+                if (VesselState.altitudeASL < Core.landing.DecelerationEndAltitude() + 5)
                 {
-                    core.warp.MinimumWarp();
-                    if (core.landing.rcsAdjustment)
-                        core.rcs.enabled = false;
-                    return new DecelerationBurn(core);
+                    Core.warp.MinimumWarp();
+                    if (Core.landing.RCSAdjustment)
+                        Core.rcs.enabled = false;
+                    return new DecelerationBurn(Core);
                 }
 
-                if (core.attitude.attitudeAngleFromTarget() < 1) { warpReady = true; } // less warp start warp stop jumping
+                if (Core.attitude.attitudeAngleFromTarget() < 1) { _warpReady = true; } // less warp start warp stop jumping
 
-                if (core.attitude.attitudeAngleFromTarget() > 5) { warpReady = false; } // hopefully
+                if (Core.attitude.attitudeAngleFromTarget() > 5) { _warpReady = false; } // hopefully
 
-                if (core.landing.PredictionReady)
+                if (Core.landing.PredictionReady)
                 {
-                    if (vesselState.drag < 0.01)
+                    if (VesselState.drag < 0.01)
                     {
-                        double decelerationStartTime = core.landing.Prediction.Trajectory.Any()
-                            ? core.landing.Prediction.Trajectory.First().UT
-                            : vesselState.time;
-                        Vector3d decelerationStartAttitude = -orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
-                        decelerationStartAttitude += mainBody.getRFrmVel(orbit.WorldPositionAtUT(decelerationStartTime));
+                        double decelerationStartTime = Core.landing.Prediction.Trajectory.Any()
+                            ? Core.landing.Prediction.Trajectory.First().UT
+                            : VesselState.time;
+                        Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
+                        decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
                         decelerationStartAttitude =  decelerationStartAttitude.normalized;
-                        core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, core.landing);
+                        Core.attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.landing);
                     }
                     else
                     {
-                        core.attitude.attitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, core.landing);
+                        Core.attitude.attitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, Core.landing);
                     }
                 }
 
                 //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
-                if (warpReady && core.node.autowarp)
+                if (_warpReady && Core.node.autowarp)
                 {
                     // Make sure if we're hovering that we don't go straight into too fast of a warp
                     // (g * 5 is average velocity falling for 10 seconds from a hover)
-                    double velocityGuess = Math.Max(Math.Abs(vesselState.speedVertical), vesselState.localg * 5);
-                    core.warp.WarpRegularAtRate((float)(vesselState.altitudeASL / (10 * velocityGuess)));
+                    double velocityGuess = Math.Max(Math.Abs(VesselState.speedVertical), VesselState.localg * 5);
+                    Core.warp.WarpRegularAtRate((float)(VesselState.altitudeASL / (10 * velocityGuess)));
                 }
                 else
                 {
-                    core.warp.MinimumWarp();
+                    Core.warp.MinimumWarp();
                 }
 
                 return this;
