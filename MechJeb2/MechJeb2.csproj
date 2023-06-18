@@ -211,7 +211,6 @@
         <Compile Include="MechJebModuleWarpController.cs" />
         <Compile Include="MechJebModuleWarpHelper.cs" />
         <Compile Include="MechJebModuleWaypointWindow.cs" />
-        <Compile Include="MechJebPod.cs" />
         <Compile Include="MechjebBundlesManager.cs" />
         <Compile Include="MechJebStageStatsHelper.cs" />
         <Compile Include="ModExtensionDemo.cs" />
