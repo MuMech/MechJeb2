@@ -32,7 +32,7 @@ namespace MuMech
                 {
                     Core.Thrust.targetThrottle = 0;
                     if (Core.Landing.RCSAdjustment)
-                        Core.RCS.enabled = true;
+                        Core.RCS.Enabled = true;
                     return new CoastToDeceleration(Core);
                 }
 

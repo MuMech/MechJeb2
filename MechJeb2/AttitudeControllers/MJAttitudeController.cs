@@ -12,37 +12,37 @@ namespace MuMech.AttitudeControllers
         public Vector3d pidAction; //info
         public Vector3d error;     //info
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool Tf_autoTune = true;
 
         public Vector3d TfV = new Vector3d(0.3, 0.3, 0.3);
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private Vector3 TfVec = new Vector3(0.3f, 0.3f, 0.3f); // use the serialize since Vector3d does not
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public double TfMin = 0.1;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public double TfMax = 0.5;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool lowPassFilter = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public double kpFactor = 3;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public double kiFactor = 6;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public double kdFactor = 0.5;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public double deadband = 0.0001;
 
         //Lower value of "kWlimit" reduces maximum angular velocity
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble kWlimit = 0.15;
 
         private readonly Vector3d defaultTfV = new Vector3d(0.3, 0.3, 0.3);
@@ -110,14 +110,14 @@ namespace MuMech.AttitudeControllers
         public void tuneTf(Vector3d torque)
         {
             var ratio = new Vector3d(
-                torque.x != 0 ? ac.vesselState.MoI.x / torque.x : 0,
-                torque.y != 0 ? ac.vesselState.MoI.y / torque.y : 0,
-                torque.z != 0 ? ac.vesselState.MoI.z / torque.z : 0
+                torque.x != 0 ? ac.VesselState.MoI.x / torque.x : 0,
+                torque.y != 0 ? ac.VesselState.MoI.y / torque.y : 0,
+                torque.z != 0 ? ac.VesselState.MoI.z / torque.z : 0
             );
 
             TfV = 0.05 * ratio;
 
-            Vector3d delayFactor = Vector3d.one + 2 * ac.vesselState.torqueReactionSpeed;
+            Vector3d delayFactor = Vector3d.one + 2 * ac.VesselState.torqueReactionSpeed;
 
 
             TfV.Scale(delayFactor);
@@ -149,7 +149,7 @@ namespace MuMech.AttitudeControllers
 
         public override void DrivePre(FlightCtrlState s, out Vector3d act, out Vector3d deltaEuler)
         {
-            Transform vesselTransform = ac.vessel.ReferenceTransform;
+            Transform vesselTransform = ac.Vessel.ReferenceTransform;
 
             // Find out the real shorter way to turn where we wan to.
             // Thanks to HoneyFox
@@ -184,12 +184,12 @@ namespace MuMech.AttitudeControllers
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
 
             // ( MoI / available torque ) factor:
-            var NormFactor = Vector3d.Scale(ac.vesselState.MoI, ac.torque.InvertNoNaN());
+            var NormFactor = Vector3d.Scale(ac.VesselState.MoI, ac.torque.InvertNoNaN());
 
             err.Scale(NormFactor);
 
             // angular velocity:
-            Vector3d omega = ac.vessel.angularVelocity;
+            Vector3d omega = ac.Vessel.angularVelocity;
             //omega.x = vessel.angularVelocity.x;
             //omega.y = vessel.angularVelocity.z; // y <=> z
             //omega.z = vessel.angularVelocity.y; // z <=> y

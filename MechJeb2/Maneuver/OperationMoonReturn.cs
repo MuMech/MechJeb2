@@ -11,7 +11,7 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_return_title"); } //return from a moon
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult MoonReturnAltitude = new EditableDoubleMult(100000, 1000);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)

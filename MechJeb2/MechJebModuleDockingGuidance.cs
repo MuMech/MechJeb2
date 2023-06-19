@@ -14,12 +14,12 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            autopilot = core.GetComputerModule<MechJebModuleDockingAutopilot>();
+            autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
         }
 
         protected override void WindowGUI(int windowID)
         {
-            if (!core.Target.NormalTargetExists)
+            if (!Core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label1")); //"Choose a target to dock with"
                 base.WindowGUI(windowID);
@@ -29,23 +29,23 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             // GetReferenceTransformPart is null after undocking ...
-            if (vessel.GetReferenceTransformPart() == null || !vessel.GetReferenceTransformPart().Modules.Contains("ModuleDockingNode"))
+            if (Vessel.GetReferenceTransformPart() == null || !Vessel.GetReferenceTransformPart().Modules.Contains("ModuleDockingNode"))
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label2"),
                     GuiUtils.yellowLabel); //Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
             }
 
-            if (!(core.Target.Target is ModuleDockingNode))
+            if (!(Core.Target.Target is ModuleDockingNode))
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),
                     GuiUtils.yellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
             }
 
             bool onAxisNodeExists = false;
-            foreach (ITargetable node in vessel.GetTargetables()
+            foreach (ITargetable node in Vessel.GetTargetables()
                          .Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
             {
-                if (Vector3d.Angle(node.GetTransform().forward, vessel.ReferenceTransform.up) < 2)
+                if (Vector3d.Angle(node.GetTransform().forward, Vessel.ReferenceTransform.up) < 2)
                 {
                     onAxisNodeExists = true;
                     break;
@@ -58,7 +58,7 @@ namespace MuMech
                     GuiUtils.yellowLabel); //Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select "Control from here."
             }
 
-            bool active = GUILayout.Toggle(autopilot.enabled, Localizer.Format("#MechJeb_Docking_checkbox1")); // "Autopilot enabled"
+            bool active = GUILayout.Toggle(autopilot.Enabled, Localizer.Format("#MechJeb_Docking_checkbox1")); // "Autopilot enabled"
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_label5"), autopilot.speedLimit, "m/s");  //"Speed limit"
 
             autopilot.overrideSafeDistance =
@@ -82,11 +82,11 @@ namespace MuMech
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Docking_button"))) //"Dump Bounding Box Info"
             {
-                vessel.GetBoundingBox(true);
+                Vessel.GetBoundingBox(true);
 
-                if (core.Target.Target != null)
+                if (Core.Target.Target != null)
                 {
-                    Vessel targetVessel = core.Target.Target.GetVessel();
+                    Vessel targetVessel = Core.Target.Target.GetVessel();
                     targetVessel.GetBoundingBox(true);
                 }
             }
@@ -109,25 +109,25 @@ namespace MuMech
             GUILayout.Label("°", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
-            if (autopilot.enabled != active)
+            if (autopilot.Enabled != active)
             {
                 if (active)
                 {
-                    autopilot.users.Add(this);
+                    autopilot.Users.Add(this);
                 }
                 else
                 {
-                    autopilot.users.Remove(this);
+                    autopilot.Users.Remove(this);
                 }
             }
 
-            if (autopilot.enabled)
+            if (autopilot.Enabled)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label9", autopilot.status)); //"Status: <<1>>"
-                Vector3d error = core.RCS.targetVelocity - vesselState.orbitalVelocity;
-                double error_x = Vector3d.Dot(error, vessel.GetTransform().right);
-                double error_y = Vector3d.Dot(error, vessel.GetTransform().forward);
-                double error_z = Vector3d.Dot(error, vessel.GetTransform().up);
+                Vector3d error = Core.RCS.targetVelocity - VesselState.orbitalVelocity;
+                double error_x = Vector3d.Dot(error, Vessel.GetTransform().right);
+                double error_y = Vector3d.Dot(error, Vessel.GetTransform().forward);
+                double error_z = Vector3d.Dot(error, Vessel.GetTransform().up);
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label10", error_x.ToString("F2")) + " m/s  [L/J]"); //Error X: <<1>>
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label11", error_y.ToString("F2")) + " m/s  [I/K]"); //Error Y: <<1>>
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label12", error_z.ToString("F2")) + " m/s  [H/N]"); //Error Z: <<1>>
@@ -147,9 +147,9 @@ namespace MuMech
             return new[] { GUILayout.Width(300), GUILayout.Height(50) };
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
-            if (autopilot != null) autopilot.users.Remove(this);
+            if (autopilot != null) autopilot.Users.Remove(this);
         }
 
         public override string GetName()

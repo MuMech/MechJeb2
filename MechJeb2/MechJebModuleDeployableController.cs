@@ -7,17 +7,17 @@ namespace MuMech
     {
         public MechJebModuleDeployableController(MechJebCore core) : base(core)
         {
-            priority = 200;
-            enabled  = true;
+            Priority = 200;
+            Enabled  = true;
         }
 
         protected string buttonText;
         protected bool   extended;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDeploy = false;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         protected bool prev_shouldDeploy;
 
         public bool prev_autoDeploy = true;
@@ -29,7 +29,7 @@ namespace MuMech
         protected void DiscoverDeployablePartModules()
         {
             cachedPartModules.Clear();
-            foreach (Part p in vessel.Parts)
+            foreach (Part p in Vessel.Parts)
             foreach (PartModule pm in p.Modules)
                 if (pm != null && pm is ModuleDeployablePart mdp && isModules(mdp))
                     cachedPartModules.Add(mdp);
@@ -64,27 +64,27 @@ namespace MuMech
 
         public bool ShouldDeploy()
         {
-            if (!mainBody.atmosphere)
+            if (!MainBody.atmosphere)
                 return true;
 
-            if (!vessel.LiftedOff())
+            if (!Vessel.LiftedOff())
                 return false;
 
-            if (vessel.LandedOrSplashed)
+            if (Vessel.LandedOrSplashed)
                 return false; // True adds too many complex case
 
             double dt = 10;
             double min_alt; // minimum altitude between now and now+dt seconds
             double t = Planetarium.GetUniversalTime();
 
-            double PeT = orbit.NextPeriapsisTime(t) - t;
+            double PeT = Orbit.NextPeriapsisTime(t) - t;
             if (PeT > 0 && PeT < dt)
-                min_alt = orbit.PeA;
+                min_alt = Orbit.PeA;
             else
-                min_alt = Math.Sqrt(Math.Min(orbit.getRelativePositionAtUT(t).sqrMagnitude, orbit.getRelativePositionAtUT(t + dt).sqrMagnitude)) -
-                          mainBody.Radius;
+                min_alt = Math.Sqrt(Math.Min(Orbit.getRelativePositionAtUT(t).sqrMagnitude, Orbit.getRelativePositionAtUT(t + dt).sqrMagnitude)) -
+                          MainBody.Radius;
 
-            if (min_alt > mainBody.RealMaxAtmosphereAltitude())
+            if (min_alt > MainBody.RealMaxAtmosphereAltitude())
                 return true;
 
             return false;
@@ -93,7 +93,7 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             // Let the ascent guidance handle the solar panels to retract them before launch
-            if (autoDeploy && !core.Ascent.enabled)
+            if (autoDeploy && !Core.Ascent.Enabled)
             {
                 bool tmp = ShouldDeploy();
 

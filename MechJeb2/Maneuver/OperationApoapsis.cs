@@ -10,7 +10,7 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_Ap_title"); } //change apoapsis
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewApA = new EditableDoubleMult(200000, 1000);
 
         private readonly TimeSelector _timeSelector;

@@ -12,14 +12,14 @@ namespace MuMech
 {
     public class MechJebModuleCustomInfoWindow : DisplayModule
     {
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public string title = Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_title"); //Custom Info Window
 
-        [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.Global)]
+        [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.GLOBAL)]
         public List<InfoItem> items = new List<InfoItem>();
 
         [SerializeField]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private bool isCompact;
 
         public bool IsCompact
@@ -27,15 +27,15 @@ namespace MuMech
             get => isCompact;
             set
             {
-                dirty     = isCompact != value;
+                Dirty     = isCompact != value;
                 isCompact = value;
             }
         }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public Color backgroundColor = new Color(0, 0, 0, 1);
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public Color text = new Color(1, 1, 1, 1);
 
         public Texture2D background;
@@ -46,7 +46,7 @@ namespace MuMech
         private DateTime lastRefresh     = DateTime.MinValue;
 
         [SerializeField]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private EditableInt refreshRate = 10;
 
         public void UpdateRefreshRate()
@@ -120,10 +120,10 @@ namespace MuMech
 
             if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
             {
-                MechJebModuleCustomWindowEditor editor = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+                MechJebModuleCustomWindowEditor editor = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
                 if (editor != null)
                 {
-                    editor.enabled      = true;
+                    editor.Enabled      = true;
                     editor.editedWindow = this;
                 }
             }
@@ -225,7 +225,7 @@ namespace MuMech
         public  MechJebModuleCustomInfoWindow editedWindow;
         private int                           selectedItemIndex = -1;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private InfoItem.Category itemCategory = InfoItem.Category.Orbit;
 
         private static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
@@ -241,8 +241,8 @@ namespace MuMech
             registry.Clear();
             editedWindow = null;
 
-            RegisterInfoItems(vesselState);
-            foreach (ComputerModule m in core.GetComputerModules<ComputerModule>())
+            RegisterInfoItems(VesselState);
+            foreach (ComputerModule m in Core.GetComputerModules<ComputerModule>())
             {
                 RegisterInfoItems(m);
             }
@@ -253,7 +253,7 @@ namespace MuMech
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
             foreach (ConfigNode windowNode in windowNodes)
             {
-                var window = new MechJebModuleCustomInfoWindow(core);
+                var window = new MechJebModuleCustomInfoWindow(Core);
 
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
 
@@ -268,7 +268,7 @@ namespace MuMech
                         window.enabledEditor = loadedEnabled;
                         useOldConfig         = false;
                         if (HighLogic.LoadedSceneIsEditor)
-                            window.enabled = loadedEnabled;
+                            window.Enabled = loadedEnabled;
                     }
                 }
 
@@ -280,7 +280,7 @@ namespace MuMech
                         window.enabledFlight = loadedEnabled;
                         useOldConfig         = false;
                         if (HighLogic.LoadedSceneIsFlight)
-                            window.enabled = loadedEnabled;
+                            window.Enabled = loadedEnabled;
                     }
                 }
 
@@ -291,14 +291,14 @@ namespace MuMech
                         bool loadedEnabled;
                         if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled))
                         {
-                            window.enabled       = loadedEnabled;
-                            window.enabledEditor = window.enabled;
-                            window.enabledFlight = window.enabled;
+                            window.Enabled       = loadedEnabled;
+                            window.enabledEditor = window.Enabled;
+                            window.enabledFlight = window.Enabled;
                         }
                     }
 
-                    window.enabledEditor = window.enabled;
-                    window.enabledFlight = window.enabled;
+                    window.enabledEditor = window.Enabled;
+                    window.enabledFlight = window.Enabled;
                 }
 
                 window.items = new List<InfoItem>();
@@ -315,7 +315,7 @@ namespace MuMech
                     }
                 }
 
-                core.AddComputerModuleLater(window);
+                Core.AddComputerModuleLater(window);
             }
         }
 
@@ -326,26 +326,26 @@ namespace MuMech
             //Save custom info windows within our ConfigNode:
             if (global == null) return;
 
-            foreach (MechJebModuleCustomInfoWindow window in core.GetComputerModules<MechJebModuleCustomInfoWindow>())
+            foreach (MechJebModuleCustomInfoWindow window in Core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
                 string name = typeof(MechJebModuleCustomInfoWindow).Name;
-                var windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.Global, null);
+                var windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.GLOBAL, null);
 
                 if (HighLogic.LoadedSceneIsEditor)
-                    window.enabledEditor = window.enabled;
+                    window.enabledEditor = window.Enabled;
                 if (HighLogic.LoadedSceneIsFlight)
-                    window.enabledFlight = window.enabled;
+                    window.enabledFlight = window.Enabled;
 
                 windowNode.AddValue("enabledFlight", window.enabledFlight);
                 windowNode.AddValue("enabledEditor", window.enabledEditor);
                 windowNode.CopyTo(global.AddNode(name));
-                window.dirty = false;
+                window.Dirty = false;
             }
         }
 
         public override void OnStart(PartModule.StartState state)
         {
-            editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
+            editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
 
         private void RegisterInfoItems(object obj)
@@ -369,20 +369,20 @@ namespace MuMech
 
         private void AddNewWindow()
         {
-            editedWindow = new MechJebModuleCustomInfoWindow(core);
+            editedWindow = new MechJebModuleCustomInfoWindow(Core);
             if (HighLogic.LoadedSceneIsEditor) editedWindow.ShowInEditor = true;
             if (HighLogic.LoadedSceneIsFlight) editedWindow.ShowInFlight = true;
-            core.AddComputerModule(editedWindow);
-            editedWindow.enabled = true;
-            editedWindow.dirty   = true;
+            Core.AddComputerModule(editedWindow);
+            editedWindow.Enabled = true;
+            editedWindow.Dirty   = true;
         }
 
         private void RemoveCurrentWindow()
         {
             if (editedWindow == null) return;
 
-            core.RemoveComputerModule(editedWindow);
-            editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
+            Core.RemoveComputerModule(editedWindow);
+            editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
 
         public override void DrawGUI(bool inEditor)
@@ -402,7 +402,7 @@ namespace MuMech
                         editedWindow.backgroundColor = newColor;
                         editedWindow.background.SetPixel(0, 0, editedWindow.backgroundColor);
                         editedWindow.background.Apply();
-                        editedWindow.dirty = true;
+                        editedWindow.Dirty = true;
                     }
                 }
             }
@@ -415,7 +415,7 @@ namespace MuMech
                     if (editedWindow.text != newColor)
                     {
                         editedWindow.text  = newColor;
-                        editedWindow.dirty = true;
+                        editedWindow.Dirty = true;
                     }
                 }
             }
@@ -427,7 +427,7 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            if (editedWindow == null) editedWindow = core.GetComputerModule<MechJebModuleCustomInfoWindow>();
+            if (editedWindow == null) editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
 
             if (editedWindow == null)
             {
@@ -443,7 +443,7 @@ namespace MuMech
 
             if (editedWindow != null)
             {
-                List<ComputerModule> allWindows = core.GetComputerModules<MechJebModuleCustomInfoWindow>();
+                List<ComputerModule> allWindows = Core.GetComputerModules<MechJebModuleCustomInfoWindow>();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_Edtitle"), GUILayout.ExpandWidth(false)); //Title:
@@ -455,7 +455,7 @@ namespace MuMech
                     if (editedWindow.title != newTitle)
                     {
                         editedWindow.title = newTitle;
-                        editedWindow.dirty = true;
+                        editedWindow.Dirty = true;
                     }
                 });
                 editedWindow = (MechJebModuleCustomInfoWindow)allWindows[editedWindowIndex];
@@ -591,15 +591,15 @@ namespace MuMech
 
         public void AddDefaultWindows()
         {
-            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[4].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[5].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[6].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[7].sharingString).enabled  = false;
-            CreateWindowFromSharingString(CustomWindowPresets.presets[10].sharingString).enabled = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[3].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[4].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[5].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[6].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[7].sharingString).Enabled  = false;
+            CreateWindowFromSharingString(CustomWindowPresets.presets[10].sharingString).Enabled = false;
         }
 
         public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
@@ -612,9 +612,9 @@ namespace MuMech
                 return null;
             }
 
-            var window = new MechJebModuleCustomInfoWindow(core);
-            core.AddComputerModule(window);
-            window.enabled = true;
+            var window = new MechJebModuleCustomInfoWindow(Core);
+            Core.AddComputerModule(window);
+            window.Enabled = true;
 
             window.FromSharingString(lines, registry);
 

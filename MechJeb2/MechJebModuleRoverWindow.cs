@@ -14,7 +14,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            autopilot = core.GetComputerModule<MechJebModuleRoverController>();
+            autopilot = Core.GetComputerModule<MechJebModuleRoverController>();
         }
 
         public override string GetName()
@@ -34,14 +34,14 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+            MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
 
             if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
             {
-                MechJebModuleWaypointHelpWindow help = core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
+                MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
                 help.selTopic = ((IList)help.topics).IndexOf("Controller");
-                help.enabled  = help.selTopic > -1 || help.enabled;
+                help.Enabled  = help.selTopic > -1 || help.Enabled;
             }
 
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
@@ -64,7 +64,7 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.StabilityControl").DrawItem();
 
-            if (!core.Settings.hideBrakeOnEject)
+            if (!Core.Settings.hideBrakeOnEject)
             {
                 ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
             }
@@ -90,27 +90,27 @@ namespace MuMech
 //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 
             GUILayout.BeginHorizontal();
-            if (core.Target != null && core.Target.Target != null)
+            if (Core.Target != null && Core.Target.Target != null)
             {
-                Vessel vssl = core.Target.Target.GetVessel();
+                Vessel vssl = Core.Target.Target.GetVessel();
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button1"))) // "To Target"
                 {
-                    core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex = -1;
+                    Core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex = -1;
                     autopilot.WaypointIndex                                        = 0;
                     autopilot.Waypoints.Clear();
                     if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-                    else { autopilot.Waypoints.Add(new MechJebWaypoint(core.Target.GetPositionTargetPosition())); }
+                    else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
 
                     autopilot.ControlHeading = autopilot.ControlSpeed = true;
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
+                    Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
                     autopilot.LoopWaypoints = alt;
                 }
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button2"))) // "Add Target"
                 {
                     if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-                    else { autopilot.Waypoints.Add(new MechJebWaypoint(core.Target.GetPositionTargetPosition())); }
+                    else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
                 }
             }
 
@@ -140,9 +140,9 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button5")))
             {
                 // "Waypoints"
-                MechJebModuleWaypointWindow waypoints = core.GetComputerModule<MechJebModuleWaypointWindow>();
-                waypoints.enabled = !waypoints.enabled;
-                if (waypoints.enabled)
+                MechJebModuleWaypointWindow waypoints = Core.GetComputerModule<MechJebModuleWaypointWindow>();
+                waypoints.Enabled = !waypoints.Enabled;
+                if (waypoints.Enabled)
                 {
                     waypoints.Mode = MechJebModuleWaypointWindow.WaypointMode.Rover;
                 }
@@ -162,19 +162,19 @@ namespace MuMech
                 if (autopilot.ControlHeading || autopilot.ControlSpeed || autopilot.StabilityControl || autopilot.BrakeOnEnergyDepletion ||
                     autopilot.BrakeOnEject)
                 {
-                    autopilot.users.Add(this);
+                    autopilot.Users.Add(this);
                 }
                 else
                 {
-                    autopilot.users.Remove(this);
+                    autopilot.Users.Remove(this);
                 }
             }
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
-            core.GetComputerModule<MechJebModuleWaypointWindow>().enabled     = false;
-            core.GetComputerModule<MechJebModuleWaypointHelpWindow>().enabled = false;
+            Core.GetComputerModule<MechJebModuleWaypointWindow>().Enabled     = false;
+            Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled = false;
             base.OnModuleDisabled();
         }
     }

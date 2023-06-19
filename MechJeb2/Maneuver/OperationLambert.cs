@@ -10,7 +10,7 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_intercept_title"); } //intercept target at chosen time
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime InterceptInterval = 3600;
 
         private readonly TimeSelector _timeSelector;

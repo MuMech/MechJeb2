@@ -294,7 +294,7 @@ namespace MuMech
 
             if (moduleTranslatron is { hidden: false })
             {
-                if (Thrust.users.Count > 1 && !Thrust.users.Contains(moduleTranslatron))
+                if (Thrust.Users.Count > 1 && !Thrust.Users.Contains(moduleTranslatron))
                     return;
 
                 moduleTranslatron.SetMode(mode);
@@ -601,10 +601,10 @@ namespace MuMech
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
-                Profiler.BeginSample(module.profilerName);
+                Profiler.BeginSample(module.ProfilerName);
                 try
                 {
-                    if (module.enabled)
+                    if (module.Enabled)
                     {
                         module.OnFixedUpdate();
                     }
@@ -627,7 +627,7 @@ namespace MuMech
             {
                 //if (module.dirty)
                 //    print(module.profilerName + " is dirty");
-                needToSave |= module.dirty;
+                needToSave |= module.Dirty;
             }
 
             return needToSave;
@@ -666,7 +666,7 @@ namespace MuMech
 
             Profiler.EndSample();
 
-            if (ResearchAndDevelopment.Instance != null && _unorderedComputerModules.Any(a => !a.unlockChecked))
+            if (ResearchAndDevelopment.Instance != null && _unorderedComputerModules.Any(a => !a.UnlockChecked))
             {
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
@@ -693,10 +693,10 @@ namespace MuMech
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
-                Profiler.BeginSample(module.profilerName);
+                Profiler.BeginSample(module.ProfilerName);
                 try
                 {
-                    if (module.enabled) module.OnUpdate();
+                    if (module.Enabled) module.OnUpdate();
                 }
                 catch (Exception e)
                 {
@@ -969,7 +969,7 @@ namespace MuMech
                 Profiler.BeginSample("MechJebCore.OnSave.loop");
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
-                    Profiler.BeginSample(module.profilerName);
+                    Profiler.BeginSample(module.ProfilerName);
                     try
                     {
                         string moduleTypeName = module.GetType().Name;
@@ -1086,10 +1086,10 @@ namespace MuMech
             {
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
-                    Profiler.BeginSample(module.profilerName);
+                    Profiler.BeginSample(module.ProfilerName);
                     try
                     {
-                        if (module.enabled) module.Drive(s);
+                        if (module.Enabled) module.Drive(s);
                     }
                     catch (Exception e)
                     {
@@ -1154,10 +1154,10 @@ namespace MuMech
                 foreach (ComputerModule computerModule in GetComputerModules<DisplayModule>())
                 {
                     var module = (DisplayModule)computerModule;
-                    Profiler.BeginSample(module.profilerName);
+                    Profiler.BeginSample(module.ProfilerName);
                     try
                     {
-                        if (module.enabled) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
+                        if (module.Enabled) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
                     }
                     catch (Exception e)
                     {
@@ -1247,9 +1247,9 @@ namespace MuMech
 
             const string SAMPLE_NAME = "MechJebCore.OnVesselWasModified";
             Profiler.BeginSample(SAMPLE_NAME);
-            foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.enabled))
+            foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.Enabled))
             {
-                Profiler.BeginSample(module.profilerName);
+                Profiler.BeginSample(module.ProfilerName);
                 try
                 {
                     module.OnVesselWasModified(v);
@@ -1273,9 +1273,9 @@ namespace MuMech
 
             const string SAMPLE_NAME = "MechJebCore.OnVesselStandardModification";
             Profiler.BeginSample(SAMPLE_NAME);
-            foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.enabled))
+            foreach (ComputerModule module in GetComputerModules<ComputerModule>().Where(x => x.Enabled))
             {
-                Profiler.BeginSample(module.profilerName);
+                Profiler.BeginSample(module.ProfilerName);
                 try
                 {
                     module.OnVesselStandardModification(v);

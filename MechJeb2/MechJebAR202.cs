@@ -100,7 +100,7 @@ namespace MuMech
                     foreach (DisplayModule display in core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance))
                     {
                         if (display is MechJebModuleMenu) continue;
-                        if (display.enabled && display.showInCurrentScene)
+                        if (display.Enabled && display.showInCurrentScene)
                         {
                             somethingEnabled = true;
                         }

@@ -13,31 +13,31 @@ namespace MuMech
         }
 
         // Kept for old conf compatibility
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool useOldSkin;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int skinId = 2;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble UIScale = 1.0;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool dontUseDropDownMenu;
 
         [ToggleInfoItem("#MechJeb_hideBrakeOnEject", InfoItem.Category.Misc)]
-        [Persistent(pass = (int)Pass.Global)] //Hide 'Brake on Eject' in Rover Controller
+        [Persistent(pass = (int)Pass.GLOBAL)] //Hide 'Brake on Eject' in Rover Controller
         public bool hideBrakeOnEject = false;
 
         [ToggleInfoItem("#MechJeb_useTitlebarDragging", InfoItem.Category.Misc)]
-        [Persistent(pass = (int)Pass.Global)] //Use only the titlebar for window dragging
+        [Persistent(pass = (int)Pass.GLOBAL)] //Use only the titlebar for window dragging
         public bool useTitlebarDragging = false;
 
         [ToggleInfoItem("#MechJeb_rssMode", InfoItem.Category.Misc)]
-        [Persistent(pass = (int)Pass.Global)] //Module disabling does not kill throttle (RSS/RO)
+        [Persistent(pass = (int)Pass.GLOBAL)] //Module disabling does not kill throttle (RSS/RO)
         public bool rssMode = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showAdvancedWindowSettings;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -61,9 +61,9 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button1"))) //"\nRestore factory default settings\n"
             {
                 FileInfo.CreateForType<MechJebCore>("mechjeb_settings_global.cfg").Delete();
-                if (vessel != null && vessel.vesselName != null)
-                    FileInfo.CreateForType<MechJebCore>("mechjeb_settings_type_" + vessel.vesselName + ".cfg").Delete();
-                core.ReloadAllComputerModules();
+                if (Vessel != null && Vessel.vesselName != null)
+                    FileInfo.CreateForType<MechJebCore>("mechjeb_settings_type_" + Vessel.vesselName + ".cfg").Delete();
+                Core.ReloadAllComputerModules();
                 GuiUtils.SetGUIScale(1);
             }
 
@@ -109,21 +109,21 @@ namespace MuMech
             showAdvancedWindowSettings          = GUILayout.Toggle(showAdvancedWindowSettings, "Show Advanced Window Settings");
             GuiUtils.showAdvancedWindowSettings = showAdvancedWindowSettings;
 
-            MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+            MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.useTitlebarDragging").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Menu.useAppLauncher").DrawItem();
-            if (ToolbarManager.ToolbarAvailable || core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
+            if (ToolbarManager.ToolbarAvailable || Core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
 
             ed.registry.Find(i => i.id == "General:Menu.MenuPosition").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.rssMode").DrawItem();
 
-            core.Warp.activateSASOnWarp =
-                GUILayout.Toggle(core.Warp.activateSASOnWarp, Localizer.Format("#MechJeb_Settings_checkbox2")); //"Activate SAS on Warp"
+            Core.Warp.activateSASOnWarp =
+                GUILayout.Toggle(Core.Warp.activateSASOnWarp, Localizer.Format("#MechJeb_Settings_checkbox2")); //"Activate SAS on Warp"
 
             GUILayout.EndVertical();
 

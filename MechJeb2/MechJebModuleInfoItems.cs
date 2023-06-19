@@ -23,32 +23,32 @@ namespace MuMech
         //Provides a unified interface for getting the parts list in the editor or in flight:
         private List<Part> parts =>
             HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts :
-            vessel == null                ? new List<Part>() : vessel.Parts;
+            Vessel == null                ? new List<Part>() : Vessel.Parts;
 
         [ValueInfoItem("#MechJeb_NodeBurnTime", InfoItem.Category.Misc)] //Node burn time
         public string NextManeuverNodeBurnTime()
         {
-            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!Vessel.patchedConicsUnlocked() || !Vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
-            ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.First();
-            double burnTime = node.GetBurnVector(node.patch).magnitude / vesselState.limitedMaxThrustAccel;
+            ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes.First();
+            double burnTime = node.GetBurnVector(node.patch).magnitude / VesselState.limitedMaxThrustAccel;
             return GuiUtils.TimeToDHMS(burnTime);
         }
 
         [ValueInfoItem("#MechJeb_TimeToNode", InfoItem.Category.Misc)] //Time to node
         public string TimeToManeuverNode()
         {
-            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!Vessel.patchedConicsUnlocked() || !Vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
-            return GuiUtils.TimeToDHMS(vessel.patchedConicSolver.maneuverNodes[0].UT - vesselState.time);
+            return GuiUtils.TimeToDHMS(Vessel.patchedConicSolver.maneuverNodes[0].UT - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_NodedV", InfoItem.Category.Misc)] //Node dV
         public string NextManeuverNodeDeltaV()
         {
-            if (!vessel.patchedConicsUnlocked() || !vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
+            if (!Vessel.patchedConicsUnlocked() || !Vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
-            return vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(orbit).magnitude.ToSI() + "m/s";
+            return Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude.ToSI() + "m/s";
         }
 
         [ValueInfoItem("#MechJeb_SurfaceTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)] //Surface TWR
@@ -56,37 +56,37 @@ namespace MuMech
         {
             return HighLogic.LoadedSceneIsEditor
                 ? MaxAcceleration() / 9.81
-                : vesselState.thrustAvailable / (vesselState.mass * mainBody.GeeASL * 9.81);
+                : VesselState.thrustAvailable / (VesselState.mass * MainBody.GeeASL * 9.81);
         }
 
         [ValueInfoItem("#MechJeb_LocalTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)] //Local TWR
         public double LocalTWR()
         {
-            return vesselState.thrustAvailable / (vesselState.mass * vesselState.gravityForce.magnitude);
+            return VesselState.thrustAvailable / (VesselState.mass * VesselState.gravityForce.magnitude);
         }
 
         [ValueInfoItem("#MechJeb_ThrottleTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)] //Throttle TWR
         public double ThrottleTWR()
         {
-            return vesselState.thrustCurrent / (vesselState.mass * vesselState.gravityForce.magnitude);
+            return VesselState.thrustCurrent / (VesselState.mass * VesselState.gravityForce.magnitude);
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericPressurePa", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")] //Atmospheric pressure (Pa)
         public double AtmosphericPressurekPA()
         {
-            return FlightGlobals.getStaticPressure(vesselState.CoM) * 1000;
+            return FlightGlobals.getStaticPressure(VesselState.CoM) * 1000;
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericPressure", InfoItem.Category.Misc, format = "F3", units = "atm")] //Atmospheric pressure
         public double AtmosphericPressure()
         {
-            return FlightGlobals.getStaticPressure(vesselState.CoM) * PhysicsGlobals.KpaToAtmospheres;
+            return FlightGlobals.getStaticPressure(VesselState.CoM) * PhysicsGlobals.KpaToAtmospheres;
         }
 
         [ValueInfoItem("#MechJeb_Coordinates", InfoItem.Category.Surface)] //Coordinates
         public string GetCoordinateString()
         {
-            return Coordinates.ToStringDMS(vesselState.latitude, vesselState.longitude, true);
+            return Coordinates.ToStringDMS(VesselState.latitude, VesselState.longitude, true);
         }
 
         public string OrbitSummary(Orbit o)
@@ -102,71 +102,71 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_MeanAnomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)] //Mean Anomaly
         public double MeanAnomaly()
         {
-            return orbit.meanAnomaly * UtilMath.Rad2Deg;
+            return Orbit.meanAnomaly * UtilMath.Rad2Deg;
         }
 
         [ValueInfoItem("#MechJeb_Orbit", InfoItem.Category.Orbit)] //Orbit
         public string CurrentOrbitSummary()
         {
-            return OrbitSummary(orbit);
+            return OrbitSummary(Orbit);
         }
 
         [ValueInfoItem("#MechJeb_TargetOrbit", InfoItem.Category.Target)] //Target orbit
         public string TargetOrbitSummary()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return OrbitSummary(core.Target.TargetOrbit);
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return OrbitSummary(Core.Target.TargetOrbit);
         }
 
         [ValueInfoItem("#MechJeb_OrbitWithInc", InfoItem.Category.Orbit, description = "#MechJeb_OrbitWithInc_desc")] //Orbit||Orbit shape w/ inc.
         public string CurrentOrbitSummaryWithInclination()
         {
-            return OrbitSummaryWithInclination(orbit);
+            return OrbitSummaryWithInclination(Orbit);
         }
 
         [ValueInfoItem("#MechJeb_TargetOrbitWithInc", InfoItem.Category.Target,
             description = "#MechJeb_TargetOrbitWithInc_desc")] //Target orbit|Target orbit shape w/ inc.
         public string TargetOrbitSummaryWithInclination()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return OrbitSummaryWithInclination(core.Target.TargetOrbit);
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return OrbitSummaryWithInclination(Core.Target.TargetOrbit);
         }
 
         [ValueInfoItem("#MechJeb_OrbitalEnergy", InfoItem.Category.Orbit, description = "#MechJeb_OrbitalEnergy_desc", format = ValueInfoItem.SI,
             units = "J/kg")] //Orbital energy||Specific orbital energy
         public double OrbitalEnergy()
         {
-            return orbit.orbitalEnergy;
+            return Orbit.orbitalEnergy;
         }
 
         [ValueInfoItem("#MechJeb_PotentialEnergy", InfoItem.Category.Orbit, description = "#MechJeb_PotentialEnergy_desc", format = ValueInfoItem.SI,
             units = "J/kg")] //Potential energy||Specific potential energy
         public double PotentialEnergy()
         {
-            return -orbit.referenceBody.gravParameter / orbit.radius;
+            return -Orbit.referenceBody.gravParameter / Orbit.radius;
         }
 
         [ValueInfoItem("#MechJeb_KineticEnergy", InfoItem.Category.Orbit, description = "#MechJeb_KineticEnergy_desc", format = ValueInfoItem.SI,
             units = "J/kg")] //Kinetic energy||Specific kinetic energy
         public double KineticEnergy()
         {
-            return orbit.orbitalEnergy + orbit.referenceBody.gravParameter / orbit.radius;
+            return Orbit.orbitalEnergy + Orbit.referenceBody.gravParameter / Orbit.radius;
         }
 
         //TODO: consider turning this into a binary search
         [ValueInfoItem("#MechJeb_TimeToImpact", InfoItem.Category.Misc)] //Time to impact
         public string TimeToImpact()
         {
-            if (orbit.PeA > 0 || vessel.Landed) return "N/A";
+            if (Orbit.PeA > 0 || Vessel.Landed) return "N/A";
 
-            double impactTime = vesselState.time;
+            double impactTime = VesselState.time;
             try
             {
                 for (int iter = 0; iter < 10; iter++)
                 {
-                    Vector3d impactPosition = orbit.WorldPositionAtUT(impactTime);
-                    double terrainRadius = mainBody.Radius + mainBody.TerrainAltitude(impactPosition);
-                    impactTime = orbit.NextTimeOfRadius(vesselState.time, terrainRadius);
+                    Vector3d impactPosition = Orbit.WorldPositionAtUT(impactTime);
+                    double terrainRadius = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
+                    impactTime = Orbit.NextTimeOfRadius(VesselState.time, terrainRadius);
                 }
             }
             catch (ArgumentException)
@@ -178,7 +178,7 @@ namespace MuMech
                 return GuiUtils.TimeToDHMS(0);
             }
 
-            return GuiUtils.TimeToDHMS(impactTime - vesselState.time);
+            return GuiUtils.TimeToDHMS(impactTime - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_SuicideBurnCountdown", InfoItem.Category.Misc)] //Suicide burn countdown
@@ -186,7 +186,7 @@ namespace MuMech
         {
             try
             {
-                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(orbit, vesselState, vessel), 1);
+                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState, Vessel), 1);
             }
             catch
             {
@@ -208,9 +208,9 @@ namespace MuMech
         {
             double rcsThrust = 0;
 
-            for (int i = 0; i < vessel.parts.Count; i++)
+            for (int i = 0; i < Vessel.parts.Count; i++)
             {
-                Part p = vessel.parts[i];
+                Part p = Vessel.parts[i];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
@@ -247,9 +247,9 @@ namespace MuMech
 
             direction.Normalize();
 
-            for (int index = 0; index < vessel.parts.Count; index++)
+            for (int index = 0; index < Vessel.parts.Count; index++)
             {
-                Part p = vessel.parts[index];
+                Part p = Vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (p.Rigidbody == null || !pm.isEnabled || pm.isJustForShow)
@@ -259,17 +259,17 @@ namespace MuMech
 
                     // Find our distance from the vessel's center of mass, in
                     // world coordinates.
-                    Vector3 pos = p.Rigidbody.worldCenterOfMass - vesselState.CoM;
+                    Vector3 pos = p.Rigidbody.worldCenterOfMass - VesselState.CoM;
 
                     // Translate to the vessel's reference frame.
-                    pos = Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
+                    pos = Quaternion.Inverse(Vessel.GetTransform().rotation) * pos;
 
                     for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
                         float force = pm.thrustForces[i];
                         Transform t = pm.thrusterTransforms[i];
 
-                        Vector3 thrusterDir = Quaternion.Inverse(vessel.GetTransform().rotation) * -t.up;
+                        Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * -t.up;
                         double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
 
                         effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
@@ -289,9 +289,9 @@ namespace MuMech
             int numThrusters = 0;
             double gForRCS = 9.81;
 
-            double monopropMass = vessel.TotalResourceMass("MonoPropellant");
+            double monopropMass = Vessel.TotalResourceMass("MonoPropellant");
 
-            foreach (ModuleRCS pm in vessel.GetModules<ModuleRCS>())
+            foreach (ModuleRCS pm in Vessel.GetModules<ModuleRCS>())
             {
                 totalIsp += pm.atmosphereCurve.Evaluate(0);
                 numThrusters++;
@@ -308,7 +308,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_AngularVelocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)] //Angular Velocity
         public string angularVelocity()
         {
-            return MuUtils.PrettyPrint(vesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg) + "°/s";
+            return MuUtils.PrettyPrint(VesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg) + "°/s";
         }
 
         [ValueInfoItem("#MechJeb_CurrentAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Current acceleration
@@ -320,46 +320,46 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_CurrentThrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N")] //Current thrust
         public double CurrentThrust()
         {
-            return vesselState.thrustCurrent * 1000;
+            return VesselState.thrustCurrent * 1000;
         }
 
         [ValueInfoItem("#MechJeb_TimeToSoIWwitch", InfoItem.Category.Orbit)] //Time to SoI switch
         public string TimeToSOITransition()
         {
-            if (orbit.patchEndTransition == Orbit.PatchTransitionType.FINAL) return "N/A";
+            if (Orbit.patchEndTransition == Orbit.PatchTransitionType.FINAL) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.EndUT - vesselState.time);
+            return GuiUtils.TimeToDHMS(Orbit.EndUT - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_SurfaceGravity", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s²")] //Surface gravity
         public double SurfaceGravity()
         {
-            return mainBody.GeeASL * 9.81;
+            return MainBody.GeeASL * 9.81;
         }
 
         [ValueInfoItem("#MechJeb_EscapeVelocity", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 3, units = "m/s")] //Escape velocity
         public double EscapeVelocity()
         {
-            return Math.Sqrt(2 * mainBody.gravParameter / vesselState.radius);
+            return Math.Sqrt(2 * MainBody.gravParameter / VesselState.radius);
         }
 
         [ValueInfoItem("#MechJeb_VesselName", InfoItem.Category.Vessel, showInEditor = false)] //Vessel name
         public string VesselName()
         {
-            return vessel.vesselName;
+            return Vessel.vesselName;
         }
 
         [ValueInfoItem("#MechJeb_VesselType", InfoItem.Category.Vessel, showInEditor = false)] //Vessel type
         public string VesselType()
         {
-            return vessel != null ? vessel.vesselType.displayDescription() : "-";
+            return Vessel != null ? Vessel.vesselType.displayDescription() : "-";
         }
 
         [ValueInfoItem("#MechJeb_VesselMass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)] //Vessel mass
         public double VesselMass()
         {
             if (HighLogic.LoadedSceneIsEditor) return EditorLogic.fetch.ship.parts.Sum(p => p.mass + p.GetResourceMass());
-            return vesselState.mass;
+            return VesselState.mass;
         }
 
         [ValueInfoItem("#MechJeb_MaxVesselMass", InfoItem.Category.Vessel, showInEditor = true, showInFlight = false)] //Max vessel mass
@@ -384,21 +384,21 @@ namespace MuMech
             units = "t")] //Liquid fuel & oxidizer mass
         public double LiquidFuelAndOxidizerMass()
         {
-            return vessel.TotalResourceMass("LiquidFuel") + vessel.TotalResourceMass("Oxidizer");
+            return Vessel.TotalResourceMass("LiquidFuel") + Vessel.TotalResourceMass("Oxidizer");
         }
 
         [ValueInfoItem("#MechJeb_MonopropellantMass", InfoItem.Category.Vessel, showInEditor = true, format = "F2",
             units = "kg")] //Monopropellant mass
         public double MonoPropellantMass()
         {
-            return vessel.TotalResourceMass("MonoPropellant");
+            return Vessel.TotalResourceMass("MonoPropellant");
         }
 
         [ValueInfoItem("#MechJeb_TotalElectricCharge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI,
             units = "Ah")] //Total electric charge
         public double TotalElectricCharge()
         {
-            return vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
+            return Vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
         }
 
         [ValueInfoItem("#MechJeb_MaxThrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)] //Max thrust
@@ -413,7 +413,7 @@ namespace MuMech
                 return 1000 * engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
             }
 
-            return 1000 * vesselState.thrustAvailable;
+            return 1000 * VesselState.thrustAvailable;
         }
 
         [ValueInfoItem("#MechJeb_MinThrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)] //Min thrust
@@ -429,7 +429,7 @@ namespace MuMech
                     e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust);
             }
 
-            return vesselState.thrustMinimum;
+            return VesselState.thrustMinimum;
         }
 
         [ValueInfoItem("#MechJeb_MaxAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²",
@@ -449,7 +449,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Gforce", InfoItem.Category.Vessel, format = "F4", units = "g", showInEditor = true)] //G force
         public double Acceleration()
         {
-            return vessel != null ? vessel.geeForce : 0;
+            return Vessel != null ? Vessel.geeForce : 0;
         }
 
         [ValueInfoItem("#MechJeb_DragCoefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)] //Drag Coefficient
@@ -479,7 +479,7 @@ namespace MuMech
                 return 0;
             }
 
-            return vesselState.dragCoef;
+            return VesselState.dragCoef;
         }
 
         [ValueInfoItem("#MechJeb_PartCount", InfoItem.Category.Vessel, showInEditor = true)] //Part count
@@ -525,7 +525,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_CrewCount", InfoItem.Category.Vessel)] //Crew count
         public int CrewCount()
         {
-            return vessel.GetCrewCount();
+            return Vessel.GetCrewCount();
         }
 
         [ValueInfoItem("#MechJeb_CrewCapacity", InfoItem.Category.Vessel, showInEditor = true)] //Crew capacity
@@ -537,72 +537,72 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_DistanceToTarget", InfoItem.Category.Target)] //Distance to target
         public string TargetDistance()
         {
-            if (core.Target.Target == null) return "N/A";
-            return core.Target.Distance.ToSI() + "m";
+            if (Core.Target.Target == null) return "N/A";
+            return Core.Target.Distance.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_HeadingToTarget", InfoItem.Category.Target)] //Heading to target
         public string HeadingToTarget()
         {
-            if (core.Target.Target == null) return "N/A";
-            return vesselState.HeadingFromDirection(-core.Target.RelativePosition).ToString("F1") + "º";
+            if (Core.Target.Target == null) return "N/A";
+            return VesselState.HeadingFromDirection(-Core.Target.RelativePosition).ToString("F1") + "º";
         }
 
         [ValueInfoItem("#MechJeb_RelativeVelocity", InfoItem.Category.Target)] //Relative velocity
         public string TargetRelativeVelocity()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.RelativeVelocity.magnitude.ToSI() + "m/s";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.RelativeVelocity.magnitude.ToSI() + "m/s";
         }
 
         [ValueInfoItem("#MechJeb_TimeToClosestApproach", InfoItem.Category.Target)] //Time to closest approach
         public string TargetTimeToClosestApproach()
         {
-            if (core.Target.Target != null && vesselState.altitudeTrue < 1000.0)
+            if (Core.Target.Target != null && VesselState.altitudeTrue < 1000.0)
             {
-                return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(vessel.CoM, core.Target.Transform.position));
+                return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(Vessel.CoM, Core.Target.Transform.position));
             }
 
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
+            if (double.IsNaN(Core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            if (vesselState.altitudeTrue < 1000.0)
+            if (VesselState.altitudeTrue < 1000.0)
             {
-                double a = (vessel.mainBody.transform.position - vessel.transform.position).magnitude;
-                double b = (vessel.mainBody.transform.position - core.Target.Transform.position).magnitude;
-                double c = Vector3d.Distance(vessel.transform.position, core.Target.Position);
+                double a = (Vessel.mainBody.transform.position - Vessel.transform.position).magnitude;
+                double b = (Vessel.mainBody.transform.position - Core.Target.Transform.position).magnitude;
+                double c = Vector3d.Distance(Vessel.transform.position, Core.Target.Position);
                 double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
-                return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
+                return GuiUtils.TimeToDHMS(ang * Vessel.mainBody.Radius / VesselState.speedSurfaceHorizontal);
             }
 
-            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.Target.TargetOrbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.time) - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_ClosestApproachDistance", InfoItem.Category.Target)] //Closest approach distance
         public string TargetClosestApproachDistance()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
+            if (VesselState.altitudeTrue < 1000.0) { return "N/A"; }
 
-            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (double.IsNaN(Core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            return orbit.NextClosestApproachDistance(core.Target.TargetOrbit, vesselState.time).ToSI() + "m";
+            return Orbit.NextClosestApproachDistance(Core.Target.TargetOrbit, VesselState.time).ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_RelativeVelocityAtClosestApproach", InfoItem.Category.Target)] //Rel. vel. at closest approach
         public string TargetClosestApproachRelativeVelocity()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
+            if (VesselState.altitudeTrue < 1000.0) { return "N/A"; }
 
-            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (double.IsNaN(Core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
             try
             {
-                double UT = orbit.NextClosestApproachTime(core.Target.TargetOrbit, vesselState.time);
+                double UT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.time);
 
                 if (double.IsNaN(UT))
                 {
@@ -610,7 +610,7 @@ namespace MuMech
                 }
 
                 double relVel =
-                    (orbit.WorldOrbitalVelocityAtUT(UT) - core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT))
+                    (Orbit.WorldOrbitalVelocityAtUT(UT) - Core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT))
                     .magnitude;
                 return relVel.ToSI() + "m/s";
             }
@@ -623,20 +623,20 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_PeriapsisInTargetSoI", InfoItem.Category.Misc)] //Periapsis in target SoI
         public string PeriapsisInTargetSOI()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
+            if (!Core.Target.NormalTargetExists) return "N/A";
 
             Orbit o;
-            if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
+            if (Vessel.patchedConicsUnlocked() && Vessel.patchedConicSolver.maneuverNodes.Any())
             {
-                ManeuverNode node = vessel.patchedConicSolver.maneuverNodes.Last();
+                ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes.Last();
                 o = node.nextPatch;
             }
             else
             {
-                o = vessel.orbit;
+                o = Vessel.orbit;
             }
 
-            while (o != null && o.referenceBody != (CelestialBody)vessel.targetObject)
+            while (o != null && o.referenceBody != (CelestialBody)Vessel.targetObject)
                 o = o.nextPatch;
 
             if (o == null) return "N/A";
@@ -647,10 +647,10 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TargetCaptureDV", InfoItem.Category.Misc)] //ΔV for capture by target
         public string TargetCaptureDV()
         {
-            if (!core.Target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
+            if (!Core.Target.NormalTargetExists || !(Vessel.targetObject is CelestialBody)) return "N/A";
 
-            Orbit o = vessel.orbit;
-            while (o != null && o.referenceBody != (CelestialBody)vessel.targetObject)
+            Orbit o = Vessel.orbit;
+            while (o != null && o.referenceBody != (CelestialBody)Vessel.targetObject)
                 o = o.nextPatch;
 
             if (o == null) return "N/A";
@@ -665,262 +665,262 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TargetApoapsis", InfoItem.Category.Target)] //Target apoapsis
         public string TargetApoapsis()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.TargetOrbit.ApA.ToSI() + "m";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.TargetOrbit.ApA.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetPeriapsis", InfoItem.Category.Target)] //Target periapsis
         public string TargetPeriapsis()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.TargetOrbit.PeA.ToSI() + "m";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.TargetOrbit.PeA.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetInclination", InfoItem.Category.Target)] //Target inclination
         public string TargetInclination()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.TargetOrbit.inclination.ToString("F2") + "º";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.TargetOrbit.inclination.ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetOrbitPeriod", InfoItem.Category.Target)] //Target orbit period
         public string TargetOrbitPeriod()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.period);
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.period);
         }
 
         [ValueInfoItem("#MechJeb_TargetOrbitSpeed", InfoItem.Category.Target)] //Target orbit speed
         public string TargetOrbitSpeed()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.TargetOrbit.GetVel().magnitude.ToSI() + "m/s";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.TargetOrbit.GetVel().magnitude.ToSI() + "m/s";
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToAp", InfoItem.Category.Target)] //Target time to Ap
         public string TargetOrbitTimeToAp()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.timeToAp);
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.timeToAp);
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToPe", InfoItem.Category.Target)] //Target time to Pe
         public string TargetOrbitTimeToPe()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.timeToPe);
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.timeToPe);
         }
 
         [ValueInfoItem("#MechJeb_TargetLAN", InfoItem.Category.Target)] //Target LAN
         public string TargetLAN()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.TargetOrbit.LAN.ToString("F2") + "º";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.TargetOrbit.LAN.ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetLDN", InfoItem.Category.Target)] //Target LDN
         public string TargetLDN()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return MuUtils.ClampDegrees360(core.Target.TargetOrbit.LAN + 180).ToString("F2") + "º";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return MuUtils.ClampDegrees360(Core.Target.TargetOrbit.LAN + 180).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToAN", InfoItem.Category.Target)] //Target Time to AN
         public string TargetTimeToAscendingNode()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (!core.Target.TargetOrbit.AscendingNodeEquatorialExists()) return "N/A";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (!Core.Target.TargetOrbit.AscendingNodeEquatorialExists()) return "N/A";
 
-            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.TimeOfAscendingNodeEquatorial(VesselState.time) - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToDN", InfoItem.Category.Target)] //Target Time to DN
         public string TargetTimeToDescendingNode()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (!core.Target.TargetOrbit.DescendingNodeEquatorialExists()) return "N/A";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (!Core.Target.TargetOrbit.DescendingNodeEquatorialExists()) return "N/A";
 
-            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.TimeOfDescendingNodeEquatorial(VesselState.time) - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TargetAoP", InfoItem.Category.Target)] //Target AoP
         public string TargetAoP()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.TargetOrbit.argumentOfPeriapsis.ToString("F2") + "º";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.TargetOrbit.argumentOfPeriapsis.ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetEccentricity", InfoItem.Category.Target)] //Target eccentricity
         public string TargetEccentricity()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.eccentricity);
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.eccentricity);
         }
 
         [ValueInfoItem("#MechJeb_TargetSMA", InfoItem.Category.Target)] //Target SMA
         public string TargetSMA()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return core.Target.TargetOrbit.semiMajorAxis.ToSI() + "m";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return Core.Target.TargetOrbit.semiMajorAxis.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetMeanAnomaly", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)] //Target Mean Anomaly
         public string TargetMeanAnomaly()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            return MuUtils.ClampDegrees360(core.Target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            return MuUtils.ClampDegrees360(Core.Target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetTrueLongitude", InfoItem.Category.Target)] //Target Mean Anomaly
         public string TargetTrueLongitude()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            double longitudeOfPeriapsis = core.Target.TargetOrbit.LAN + core.Target.TargetOrbit.argumentOfPeriapsis;
-            return MuUtils.ClampDegrees360(core.Target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis).ToString("F2") + "º";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            double longitudeOfPeriapsis = Core.Target.TargetOrbit.LAN + Core.Target.TargetOrbit.argumentOfPeriapsis;
+            return MuUtils.ClampDegrees360(Core.Target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Atmospheric drag
         public double AtmosphericDrag()
         {
-            return vesselState.drag;
+            return VesselState.drag;
         }
 
         [ValueInfoItem("#MechJeb_SynodicPeriod", InfoItem.Category.Target)] //Synodic period
         public string SynodicPeriod()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.Target.TargetOrbit));
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
+            return GuiUtils.TimeToDHMS(Orbit.SynodicPeriod(Core.Target.TargetOrbit));
         }
 
         [ValueInfoItem("#MechJeb_PhaseAngleToTarget", InfoItem.Category.Target)] //Phase angle to target
         public string PhaseAngle()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
+            if (double.IsNaN(Core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            return orbit.PhaseAngle(core.Target.TargetOrbit, vesselState.time).ToString("F2") + "º";
+            return Orbit.PhaseAngle(Core.Target.TargetOrbit, VesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetPlanetPhaseAngle", InfoItem.Category.Target)] //Target planet phase angle
         public string TargetPlanetPhaseAngle()
         {
-            if (!(core.Target.Target is CelestialBody)) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody.referenceBody) return "N/A";
+            if (!(Core.Target.Target is CelestialBody)) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody.referenceBody) return "N/A";
 
-            return mainBody.orbit.PhaseAngle(core.Target.TargetOrbit, vesselState.time).ToString("F2") + "º";
+            return MainBody.orbit.PhaseAngle(Core.Target.TargetOrbit, VesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_RelativeInclination", InfoItem.Category.Target)] //Relative inclination
         public string RelativeInclinationToTarget()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
 
-            return orbit.RelativeInclination(core.Target.TargetOrbit).ToString("F2") + "º";
+            return Orbit.RelativeInclination(Core.Target.TargetOrbit).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TimeToAN", InfoItem.Category.Target)] //Time to AN
         public string TimeToAscendingNodeWithTarget()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (!orbit.AscendingNodeExists(core.Target.TargetOrbit)) return "N/A";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
+            if (!Orbit.AscendingNodeExists(Core.Target.TargetOrbit)) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNode(core.Target.TargetOrbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(Orbit.TimeOfAscendingNode(Core.Target.TargetOrbit, VesselState.time) - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TimeToDN", InfoItem.Category.Target)] //Time to DN
         public string TimeToDescendingNodeWithTarget()
         {
-            if (!core.Target.NormalTargetExists) return "N/A";
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (!orbit.DescendingNodeExists(core.Target.TargetOrbit)) return "N/A";
+            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
+            if (!Orbit.DescendingNodeExists(Core.Target.TargetOrbit)) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNode(core.Target.TargetOrbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(Orbit.TimeOfDescendingNode(Core.Target.TargetOrbit, VesselState.time) - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TimeToEquatorialAN", InfoItem.Category.Orbit)] //Time to equatorial AN
         public string TimeToEquatorialAscendingNode()
         {
-            if (!orbit.AscendingNodeEquatorialExists()) return "N/A";
+            if (!Orbit.AscendingNodeEquatorialExists()) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(Orbit.TimeOfAscendingNodeEquatorial(VesselState.time) - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TimeToEquatorialDN", InfoItem.Category.Orbit)] //Time to equatorial DN
         public string TimeToEquatorialDescendingNode()
         {
-            if (!orbit.DescendingNodeEquatorialExists()) return "N/A";
+            if (!Orbit.DescendingNodeEquatorialExists()) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(Orbit.TimeOfDescendingNodeEquatorial(VesselState.time) - VesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_CircularOrbitSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Circular orbit speed
         public double CircularOrbitSpeed()
         {
-            return OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
+            return OrbitalManeuverCalculator.CircularOrbitSpeed(MainBody, VesselState.radius);
         }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showStagedMass = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showBurnedMass = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showInitialMass = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showFinalMass = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showMaxThrust = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showVacInitialTWR = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showAtmoInitialTWR = false; // NK
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showAtmoMaxTWR = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showVacMaxTWR = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showVacDeltaV = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showTime = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showAtmoDeltaV = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showISP = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool liveSLT = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public float altSLTScale = 0;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public float machScale = 0;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int TWRBody = 1;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int StageDisplayState = 0;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showEmpty = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool timeSeconds = false;
 
         private MechJebStageStatsHelper stageStatsHelper;
@@ -942,7 +942,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_StageDv_vac", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Stage ΔV (vac)
         public double StageDeltaVVacuum()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
             if (stats.vacStats.Length == 0) return 0;
@@ -953,7 +953,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_StageDV_atmo", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Stage ΔV (atmo)
         public double StageDeltaVAtmosphere()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
             if (stats.atmoStats.Length == 0) return 0;
@@ -964,7 +964,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_StageDV_atmo_vac", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)] //Stage ΔV (atmo, vac)
         public string StageDeltaVAtmosphereAndVac()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
             double atmDv = stats.atmoStats.Length == 0 ? 0 : stats.atmoStats[stats.atmoStats.Length - 1].DeltaV;
@@ -977,7 +977,7 @@ namespace MuMech
             showInEditor = true)] //Stage time (full throttle)
         public float StageTimeLeftFullThrottle()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
             if (stats.vacStats.Length == 0 || stats.atmoStats.Length == 0) return 0;
@@ -995,7 +995,7 @@ namespace MuMech
             float fullThrottleTime = StageTimeLeftFullThrottle();
             if (fullThrottleTime == 0) return 0;
 
-            return fullThrottleTime / vessel.ctrlState.mainThrottle;
+            return fullThrottleTime / Vessel.ctrlState.mainThrottle;
         }
 
         [ValueInfoItem("#MechJeb_StageTimeHover", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)] //Stage time (hover)
@@ -1004,14 +1004,14 @@ namespace MuMech
             float fullThrottleTime = StageTimeLeftFullThrottle();
             if (fullThrottleTime == 0) return 0;
 
-            double hoverThrottle = vesselState.localg / vesselState.maxThrustAccel;
+            double hoverThrottle = VesselState.localg / VesselState.maxThrustAccel;
             return fullThrottleTime / (float)hoverThrottle;
         }
 
         [ValueInfoItem("#MechJeb_TotalDV_vacuum", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Total ΔV (vacuum)
         public double TotalDeltaVVaccum()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
             return stats.vacStats.Sum(s => s.DeltaV);
         }
@@ -1019,7 +1019,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TotalDV_atmo", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Total ΔV (atmo)
         public double TotalDeltaVAtmosphere()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
             return stats.atmoStats.Sum(s => s.DeltaV);
         }
@@ -1027,7 +1027,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TotalDV_atmo_vac", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)] //Total ΔV (atmo, vac)
         public string TotalDeltaVAtmosphereAndVac()
         {
-            MechJebModuleStageStats stats = core.GetComputerModule<MechJebModuleStageStats>();
+            MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
             double atmDv = stats.atmoStats.Sum(s => s.DeltaV);
@@ -1039,16 +1039,16 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DockingGuidance_velocity", InfoItem.Category.Target)] //Docking guidance: velocity
         public void DockingGuidanceVelocity()
         {
-            if (!core.Target.NormalTargetExists)
+            if (!Core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocityNA")); //"Target-relative velocity: (N/A)"
                 return;
             }
 
-            Vector3d relVel = core.Target.RelativeVelocity;
-            double relVelX = Vector3d.Dot(relVel, vessel.GetTransform().right);
-            double relVelY = Vector3d.Dot(relVel, vessel.GetTransform().forward);
-            double relVelZ = Vector3d.Dot(relVel, vessel.GetTransform().up);
+            Vector3d relVel = Core.Target.RelativeVelocity;
+            double relVelX = Vector3d.Dot(relVel, Vessel.GetTransform().right);
+            double relVelY = Vector3d.Dot(relVel, Vessel.GetTransform().forward);
+            double relVelZ = Vector3d.Dot(relVel, Vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocity")); //"Target-relative velocity:"
             GUILayout.Label("X: " + MuUtils.PadPositive(relVelX, "F2") + " m/s  [L/J]");
@@ -1060,14 +1060,14 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DockingGuidanceAngularVelocity", InfoItem.Category.Target)] //Docking guidance: Angular velocity
         public void DockingGuidanceAngularVelocity()
         {
-            if (!(core.Target.Target is Vessel))
+            if (!(Core.Target.Target is Vessel))
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label2")); //"Target-relative Angular velocity: (N/A)"
                 return;
             }
 
-            var target = (Vessel)core.Target.Target;
-            Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.angularVelocity - vessel.angularVelocity) *
+            var target = (Vessel)Core.Target.Target;
+            Vector3d relw = Quaternion.Inverse(Vessel.ReferenceTransform.rotation) * (target.angularVelocity - Vessel.angularVelocity) *
                             Mathf.Rad2Deg;
 
             GUILayout.BeginVertical();
@@ -1081,16 +1081,16 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DockingGuidancePosition", InfoItem.Category.Target)] //Docking guidance: position
         public void DockingGuidancePosition()
         {
-            if (!core.Target.NormalTargetExists)
+            if (!Core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label4")); //"Separation from target: (N/A)"
                 return;
             }
 
-            Vector3d sep = core.Target.RelativePosition;
-            double sepX = Vector3d.Dot(sep, vessel.GetTransform().right);
-            double sepY = Vector3d.Dot(sep, vessel.GetTransform().forward);
-            double sepZ = Vector3d.Dot(sep, vessel.GetTransform().up);
+            Vector3d sep = Core.Target.RelativePosition;
+            double sepX = Vector3d.Dot(sep, Vessel.GetTransform().right);
+            double sepY = Vector3d.Dot(sep, Vessel.GetTransform().forward);
+            double sepZ = Vector3d.Dot(sep, Vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label5")); //"Separation from target:"
             GUILayout.Label("X: " + MuUtils.PadPositive(sepX, "F2") + " m  [L/J]");
@@ -1102,7 +1102,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_AllPlanetPhaseAngles", InfoItem.Category.Orbit)] //All planet phase angles
         public void AllPlanetPhaseAngles()
         {
-            Orbit o = orbit;
+            Orbit o = Orbit;
             while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
             GUILayout.BeginVertical();
@@ -1128,7 +1128,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
-                GUILayout.Label(o.PhaseAngle(body.orbit, vesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
             }
 
@@ -1141,9 +1141,9 @@ namespace MuMech
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label7"), GuiUtils.middleCenterLabel); //"Moon phase angles"
 
-            if (orbit.referenceBody != Planetarium.fetch.Sun)
+            if (Orbit.referenceBody != Planetarium.fetch.Sun)
             {
-                Orbit o = orbit;
+                Orbit o = Orbit;
                 while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
                 for (int i = 0; i < o.referenceBody.orbitingBodies.Count; i++)
@@ -1156,7 +1156,7 @@ namespace MuMech
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
-                    GUILayout.Label(o.PhaseAngle(body.orbit, vesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                    GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
                 }
             }
@@ -1167,49 +1167,49 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_SurfaceBiome", InfoItem.Category.Misc, showInEditor = false)] //Surface Biome
         public string CurrentRawBiome()
         {
-            if (vessel.landedAt != string.Empty)
-                return vessel.landedAt;
-            return mainBody.GetExperimentBiomeSafe(vessel.latitude, vessel.longitude);
+            if (Vessel.landedAt != string.Empty)
+                return Vessel.landedAt;
+            return MainBody.GetExperimentBiomeSafe(Vessel.latitude, Vessel.longitude);
         }
 
         [ValueInfoItem("#MechJeb_CurrentBiome", InfoItem.Category.Misc, showInEditor = false)] //Current Biome
         public string CurrentBiome()
         {
-            if (vessel.landedAt != string.Empty)
-                return vessel.landedAt;
-            if (mainBody.BiomeMap == null)
+            if (Vessel.landedAt != string.Empty)
+                return Vessel.landedAt;
+            if (MainBody.BiomeMap == null)
                 return "N/A";
-            string biome = mainBody.BiomeMap.GetAtt(vessel.latitude * UtilMath.Deg2Rad, vessel.longitude * UtilMath.Deg2Rad).displayname;
+            string biome = MainBody.BiomeMap.GetAtt(Vessel.latitude * UtilMath.Deg2Rad, Vessel.longitude * UtilMath.Deg2Rad).displayname;
             if (biome != "")
                 biome = "'s " + biome;
 
-            switch (vessel.situation)
+            switch (Vessel.situation)
             {
                 //ExperimentSituations.SrfLanded
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
-                    return mainBody.displayName.LocalizeRemoveGender() +
+                    return MainBody.displayName.LocalizeRemoveGender() +
                            (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation5") : biome); //"'s surface"
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
-                    return mainBody.displayName.LocalizeRemoveGender() +
+                    return MainBody.displayName.LocalizeRemoveGender() +
                            (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation6") : biome); //"'s oceans"
                 case Vessel.Situations.FLYING:
-                    if (vessel.altitude < mainBody.scienceValues.flyingAltitudeThreshold)
+                    if (Vessel.altitude < MainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
                         return Localizer.Format("#MechJeb_InfoItems_VesselSituation1",
-                            mainBody.displayName.LocalizeRemoveGender() + biome); //"Flying over <<1>>"
+                            MainBody.displayName.LocalizeRemoveGender() + biome); //"Flying over <<1>>"
                     //ExperimentSituations.FlyingHigh
                     return Localizer.Format("#MechJeb_InfoItems_VesselSituation2",
-                        mainBody.displayName.LocalizeRemoveGender() + biome); //"Upper atmosphere of <<1>>"
+                        MainBody.displayName.LocalizeRemoveGender() + biome); //"Upper atmosphere of <<1>>"
                 default:
-                    if (vessel.altitude < mainBody.scienceValues.spaceAltitudeThreshold)
+                    if (Vessel.altitude < MainBody.scienceValues.spaceAltitudeThreshold)
                         //ExperimentSituations.InSpaceLow
                         return Localizer.Format("#MechJeb_InfoItems_VesselSituation3",
-                            mainBody.displayName.LocalizeRemoveGender() + biome); //"Space just above <<1>>"
+                            MainBody.displayName.LocalizeRemoveGender() + biome); //"Space just above <<1>>"
                     // ExperimentSituations.InSpaceHigh
                     return Localizer.Format("#MechJeb_InfoItems_VesselSituation4",
-                        mainBody.displayName.LocalizeRemoveGender() + biome); //"Space high over <<1>>"
+                        MainBody.displayName.LocalizeRemoveGender() + biome); //"Space high over <<1>>"
             }
         }
 
@@ -1219,8 +1219,8 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_InfoItems_CopytoClipboard"))) //"Copy Lat/Lon/Alt to Clipboard"
             {
                 var te = new TextEditor();
-                string result = "latitude =  " + vesselState.latitude.ToString("F6") + "\nlongitude = " + vesselState.longitude.ToString("F6") +
-                                "\naltitude = " + vessel.altitude.ToString("F2") + "\n";
+                string result = "latitude =  " + VesselState.latitude.ToString("F6") + "\nlongitude = " + VesselState.longitude.ToString("F6") +
+                                "\naltitude = " + Vessel.altitude.ToString("F2") + "\n";
                 te.text = result;
                 te.SelectAll();
                 te.Copy();

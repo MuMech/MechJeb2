@@ -6,13 +6,13 @@ namespace MuMech.AttitudeControllers
 {
     internal class HybridController : BaseAttitudeController
     {
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private bool useControlRange = true;
 
         public TorquePI pitchPI = new TorquePI();
@@ -23,7 +23,7 @@ namespace MuMech.AttitudeControllers
         public KosPIDLoop yawRatePI   = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
         public KosPIDLoop rollRatePI  = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool useInertia = true;
 
         private Vector3d Actuation    = Vector3d.zero;
@@ -59,7 +59,7 @@ namespace MuMech.AttitudeControllers
 
         public void UpdatePhi()
         {
-            Transform vesselTransform = ac.vessel.ReferenceTransform;
+            Transform vesselTransform = ac.Vessel.ReferenceTransform;
 
             // 1. The Euler(-90) here is because the unity transform puts "up" as the pointy end, which is wrong.  The rotation means that
             // "forward" becomes the pointy end, and "up" and "right" correctly define e.g. AoA/pitch and AoS/yaw.  This is just KSP being KSP.
@@ -97,13 +97,13 @@ namespace MuMech.AttitudeControllers
 
         private void UpdatePredictionPI()
         {
-            Omega = -ac.vessel.angularVelocity;
+            Omega = -ac.Vessel.angularVelocity;
 
             UpdatePhi();
 
             for (int i = 0; i < 3; i++)
             {
-                MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
+                MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.VesselState.MoI[i];
             }
 
             TargetOmega[0] = pitchRatePI.Update(phiVector[0], 0, MaxOmega[0]);
@@ -116,9 +116,9 @@ namespace MuMech.AttitudeControllers
                 rollRatePI.ResetI();
             }
 
-            TargetTorque[0] = pitchPI.Update(Omega[0], TargetOmega[0], ac.vesselState.MoI[0], ControlTorque[0]);
-            TargetTorque[1] = rollPI.Update(Omega[1], TargetOmega[1], ac.vesselState.MoI[1], ControlTorque[1]);
-            TargetTorque[2] = yawPI.Update(Omega[2], TargetOmega[2], ac.vesselState.MoI[2], ControlTorque[2]);
+            TargetTorque[0] = pitchPI.Update(Omega[0], TargetOmega[0], ac.VesselState.MoI[0], ControlTorque[0]);
+            TargetTorque[1] = rollPI.Update(Omega[1], TargetOmega[1], ac.VesselState.MoI[1], ControlTorque[1]);
+            TargetTorque[2] = yawPI.Update(Omega[2], TargetOmega[2], ac.VesselState.MoI[2], ControlTorque[2]);
         }
 
         public override void Reset()

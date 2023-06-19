@@ -11,16 +11,16 @@ namespace MuMech
     {
         private static GUIStyle btNormal, btActive, btAuto, btGreen, btWhite;
 
-        public MechJebModuleAirplaneAutopilot autopilot => core.GetComputerModule<MechJebModuleAirplaneAutopilot>();
+        public MechJebModuleAirplaneAutopilot autopilot => Core.GetComputerModule<MechJebModuleAirplaneAutopilot>();
 
         public MechJebModuleAirplaneGuidance(MechJebCore core) : base(core)
         {
         }
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         private bool showpid;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private EditableDouble AltitudeTargettmp = 0,
             HeadingTargettmp                     = 90,
             RollTargettmp                        = 0,
@@ -58,18 +58,18 @@ namespace MuMech
                 btAuto.onActive = btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;
             }
 
-            if (autopilot.enabled)
+            if (autopilot.Enabled)
             {
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Aircraftauto_button1"), btActive))
                 {
                     //Disengage autopilot
-                    autopilot.users.Remove(this);
+                    autopilot.Users.Remove(this);
                 }
             }
-            else if (core.Attitude.enabled && core.Attitude.users.Count(u => !Equals(u)) > 0)
+            else if (Core.Attitude.Enabled && Core.Attitude.Users.Count(u => !Equals(u)) > 0)
             {
-                if (core.Attitude.users.Contains(this))
-                    core.Attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                if (Core.Attitude.Users.Contains(this))
+                    Core.Attitude.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 GUILayout.Button("Auto", btAuto, GUILayout.ExpandWidth(true));
             }
             else
@@ -77,7 +77,7 @@ namespace MuMech
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Aircraftauto_button2")))
                 {
                     //Engage autopilot
-                    autopilot.users.Add(this);
+                    autopilot.Users.Add(this);
                 }
             }
 
@@ -365,7 +365,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 if (autopilot.VertSpeedHoldEnabled)
                     GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.PitchErr.ToString("F2"),
-                        autopilot.RealPitchTarget.ToString("F2"), vesselState.currentPitch.ToString("F2"), autopilot.PitchAct.ToString("F5"),
+                        autopilot.RealPitchTarget.ToString("F2"), VesselState.currentPitch.ToString("F2"), autopilot.PitchAct.ToString("F5"),
                         GUILayout.ExpandWidth(false))); //error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal();
@@ -379,7 +379,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 if (autopilot.RollHoldEnabled)
                     GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.RollErr.ToString("F2"),
-                        autopilot.RealRollTarget.ToString("F2"), (-vesselState.currentRoll).ToString("F2"), autopilot.RollAct.ToString("F5"),
+                        autopilot.RealRollTarget.ToString("F2"), (-VesselState.currentRoll).ToString("F2"), autopilot.RollAct.ToString("F5"),
                         GUILayout.ExpandWidth(false))); //error:" Target:"" Cur:"
 
                 GUILayout.BeginHorizontal();

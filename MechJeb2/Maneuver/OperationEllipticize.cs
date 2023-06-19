@@ -11,11 +11,11 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_both_title"); } //change both Pe and Ap
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewApA = new EditableDoubleMult(200000, 1000);
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewPeA = new EditableDoubleMult(100000, 1000);
 
         private readonly TimeSelector _timeSelector;

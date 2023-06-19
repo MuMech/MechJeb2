@@ -12,11 +12,11 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            balancer = core.GetComputerModule<MechJebModuleRCSBalancer>();
+            balancer = Core.GetComputerModule<MechJebModuleRCSBalancer>();
 
             if (balancer.smartTranslation)
             {
-                balancer.users.Add(this);
+                balancer.Users.Add(this);
             }
 
             base.OnStart(state);
@@ -48,11 +48,11 @@ namespace MuMech
 
                 if (balancer.smartTranslation)
                 {
-                    balancer.users.Add(this);
+                    balancer.Users.Add(this);
                 }
                 else
                 {
-                    balancer.users.Remove(this);
+                    balancer.Users.Remove(this);
                 }
             }
 
@@ -105,11 +105,11 @@ namespace MuMech
 
             if (balancer.smartTranslation)
             {
-                balancer.users.Add(this);
+                balancer.Users.Add(this);
             }
             else
             {
-                balancer.users.Remove(this);
+                balancer.Users.Remove(this);
             }
 
             GUILayout.EndVertical();

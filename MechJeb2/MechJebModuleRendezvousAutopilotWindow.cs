@@ -11,20 +11,20 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (!core.Target.NormalTargetExists)
+            if (!Core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label1")); //"Select a target to rendezvous with."
                 base.WindowGUI(windowID);
                 return;
             }
 
-            MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
+            MechJebModuleRendezvousAutopilot autopilot = Core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
 
-            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody)
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label2")); //"Rendezvous target must be in the same sphere of influence."
-                if (autopilot.enabled)
-                    autopilot.users.Remove(this);
+                if (autopilot.Enabled)
+                    autopilot.Users.Remove(this);
                 base.WindowGUI(windowID);
                 return;
             }
@@ -33,15 +33,15 @@ namespace MuMech
 
             if (autopilot != null)
             {
-                GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZauto_label3"), core.Target.Name); //"Rendezvous target"
+                GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZauto_label3"), Core.Target.Name); //"Rendezvous target"
 
-                if (!autopilot.enabled)
+                if (!autopilot.Enabled)
                 {
-                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button1"))) autopilot.users.Add(this); //"Engage autopilot"
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button1"))) autopilot.Users.Add(this); //"Engage autopilot"
                 }
                 else
                 {
-                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button2"))) autopilot.users.Remove(this); //"Disengage autopilot"
+                    if (GUILayout.Button(Localizer.Format("#MechJeb_RZauto_button2"))) autopilot.Users.Remove(this); //"Disengage autopilot"
                 }
 
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RZauto_label4"), autopilot.desiredDistance, "m");   //"Desired final distance:"
@@ -53,10 +53,10 @@ namespace MuMech
                     GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label6"), GuiUtils.yellowLabel); //"Max # of phasing orbits must be at least 5."
                 }
 
-                if (autopilot.enabled) GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label7", autopilot.status)); //"Status: <<1>>"
+                if (autopilot.Enabled) GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label7", autopilot.status)); //"Status: <<1>>"
             }
 
-            core.Node.autowarp = GUILayout.Toggle(core.Node.autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1")); //"Auto-warp"
+            Core.Node.autowarp = GUILayout.Toggle(Core.Node.autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1")); //"Auto-warp"
 
             GUILayout.EndVertical();
 
@@ -78,9 +78,9 @@ namespace MuMech
             return "Rendezvous Autopilot";
         }
 
-        public override bool IsSpaceCenterUpgradeUnlocked()
+        protected override bool IsSpaceCenterUpgradeUnlocked()
         {
-            return vessel.patchedConicsUnlocked();
+            return Vessel.patchedConicsUnlocked();
         }
     }
 }

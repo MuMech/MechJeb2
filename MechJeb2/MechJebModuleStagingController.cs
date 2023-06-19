@@ -13,41 +13,41 @@ namespace MuMech
         public MechJebModuleStagingController(MechJebCore core)
             : base(core)
         {
-            priority = 1000;
+            Priority = 1000;
         }
 
         //adjustable parameters:
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble autostagePreDelay = 0.0;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble autostagePostDelay = 0.5;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableInt autostageLimit = 0;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDoubleMult fairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDoubleMult fairingMinAltitude = new EditableDoubleMult(50000, 1000);
 
-        [Persistent(pass = (int)Pass.Type)]
+        [Persistent(pass = (int)Pass.TYPE)]
         public EditableDouble clampAutoStageThrustPct = 0.99;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDoubleMult fairingMaxAerothermalFlux = new EditableDoubleMult(1135);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool hotStaging;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble hotStagingLeadTime = 1.0;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool dropSolids;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble dropSolidsLeadTime = 1.0;
 
         public bool autostagingOnce;
@@ -66,7 +66,7 @@ namespace MuMech
         private readonly Dictionary<int, bool>          inverseStageReleasesClampsCache = new Dictionary<int, bool>(16);
         private readonly Dictionary<int, bool>          hasStayingChutesCache           = new Dictionary<int, bool>(16);
         private readonly Dictionary<int, bool>          hasFairingCache                 = new Dictionary<int, bool>(16);
-        private          MechJebModuleStageStats        stats    => core.GetComputerModule<MechJebModuleStageStats>();
+        private          MechJebModuleStageStats        stats    => Core.GetComputerModule<MechJebModuleStageStats>();
         private          FuelFlowSimulation.FuelStats[] vacStats => stats.vacStats;
 
         private enum RemoteStagingState
@@ -80,7 +80,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            if (vessel != null && vessel.situation == Vessel.Situations.PRELAUNCH)
+            if (Vessel != null && Vessel.situation == Vessel.Situations.PRELAUNCH)
                 waitingForFirstStaging = true;
 
             GameEvents.onStageActivate.Add(stageActivate);
@@ -101,13 +101,13 @@ namespace MuMech
 
         private void OnVesselModified(Vessel v)
         {
-            if (vessel == v) RegenerateCaches();
+            if (Vessel == v) RegenerateCaches();
         }
 
         private void BuildEnginesCache(List<ModuleEngines> engines)
         {
             engines.Clear();
-            foreach (Part p in vessel.Parts)
+            foreach (Part p in Vessel.Parts)
                 if (p.IsEngine() && !p.IsSepratron())
                     engines.AddRange(p.FindModulesImplementing<ModuleEngines>());
         }
@@ -115,7 +115,7 @@ namespace MuMech
         private void BuildDecouplersCache(List<PartModule> decouplers)
         {
             decouplers.Clear();
-            foreach (Part p in vessel.Parts)
+            foreach (Part p in Vessel.Parts)
                 if (p.IsDecoupler())
                     foreach (PartModule pm in p.Modules)
                         if (pm is ModuleDecouplerBase || pm is ModuleDockingNode || pm.moduleName == "ProceduralFairingDecoupler")
@@ -154,16 +154,16 @@ namespace MuMech
 
         public void AutostageOnce(object user)
         {
-            users.Add(user);
+            Users.Add(user);
             autostagingOnce = true;
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
             autostageLimitInternal = 0;
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
             autostagingOnce = false;
         }
@@ -220,7 +220,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Autostagingstatus", InfoItem.Category.Misc)] //Autostaging status
         public string AutostageStatus()
         {
-            if (!enabled) return CachedLocalizer.Instance.MechJeb_Ascent_status9;          //"Autostaging off"
+            if (!Enabled) return CachedLocalizer.Instance.MechJeb_Ascent_status9;          //"Autostaging off"
             if (autostagingOnce) return CachedLocalizer.Instance.MechJeb_Ascent_status10;  //"Will autostage next stage only"
             return CachedLocalizer.Instance.MechJeb_Ascent_status11 + (int)autostageLimit; //"Autostaging until stage #"
         }
@@ -228,11 +228,11 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)] //Clamp Autostage Thrust
         public void ClampAutostageThrust()
         {
-            double prev = core.Staging.clampAutoStageThrustPct;
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label44, core.Staging.clampAutoStageThrustPct, "%",
+            double prev = Core.Staging.clampAutoStageThrustPct;
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label44, Core.Staging.clampAutoStageThrustPct, "%",
                 50); //"Clamp AutoStage Thrust "
-            if (prev != core.Staging.clampAutoStageThrustPct)
-                core.Staging.clampAutoStageThrustPct = UtilMath.Clamp(core.Staging.clampAutoStageThrustPct, 0, 100);
+            if (prev != Core.Staging.clampAutoStageThrustPct)
+                Core.Staging.clampAutoStageThrustPct = UtilMath.Clamp(Core.Staging.clampAutoStageThrustPct, 0, 100);
         }
 
         //internal state:
@@ -260,18 +260,18 @@ namespace MuMech
 
             // if autostage enabled, and if we've already staged at least once, and if there are stages left,
             // and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (waitingForFirstStaging || vessel.currentStage <= 0 || vessel.currentStage <= autostageLimit ||
-                vesselState.time - lastStageTime < autostagePostDelay)
+            if (waitingForFirstStaging || Vessel.currentStage <= 0 || Vessel.currentStage <= autostageLimit ||
+                VesselState.time - lastStageTime < autostagePostDelay)
             {
                 return;
             }
 
             // this is for PVG preventing staging doing coasts, possibly it should be more specific of an API
             // (e.g. bool PVGIsCoasting) since it is getting tightly coupled.
-            if (vessel.currentStage <= autostageLimitInternal)
+            if (Vessel.currentStage <= autostageLimitInternal)
             {
                 // force staging once if fairing conditions are met in the next stage
-                if (HasFairing(vessel.currentStage - 1) && !WaitingForFairing())
+                if (HasFairing(Vessel.currentStage - 1) && !WaitingForFairing())
                 {
                     Stage();
                 }
@@ -285,35 +285,35 @@ namespace MuMech
             UpdateBurnedResources();
 
             // don't decouple active or idle engines or tanks
-            if (InverseStageDecouplesActiveOrIdleEngineOrTank(vessel.currentStage - 1, burnedResources, activeModuleEngines) &&
-                !InverseStageReleasesClamps(vessel.currentStage - 1))
+            if (InverseStageDecouplesActiveOrIdleEngineOrTank(Vessel.currentStage - 1, burnedResources, activeModuleEngines) &&
+                !InverseStageReleasesClamps(Vessel.currentStage - 1))
                 return;
 
             // prevent staging if we have unstable ullage and we have RCS
-            if (InverseStageHasUnstableEngines(vessel.currentStage - 1) && core.Thrust.autoRCSUllaging && vessel.hasEnabledRCSModules() &&
-                core.Thrust.LastThrottle > 0)
+            if (InverseStageHasUnstableEngines(Vessel.currentStage - 1) && Core.Thrust.autoRCSUllaging && Vessel.hasEnabledRCSModules() &&
+                Core.Thrust.LastThrottle > 0)
             {
-                if (!vessel.ActionGroups[KSPActionGroup.RCS])
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                if (!Vessel.ActionGroups[KSPActionGroup.RCS])
+                    Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 return;
             }
 
             // always stage if we have no active engines
-            if (!InverseStageHasActiveEngines(vessel.currentStage))
+            if (!InverseStageHasActiveEngines(Vessel.currentStage))
                 Stage();
 
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
-            if (hotStaging && InverseStageHasEngines(vessel.currentStage - 1) &&
-                !InverseStageFiresDecoupler(vessel.currentStage - 1) && !InverseStageReleasesClamps(vessel.currentStage - 1) &&
+            if (hotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
+                !InverseStageFiresDecoupler(Vessel.currentStage - 1) && !InverseStageReleasesClamps(Vessel.currentStage - 1) &&
                 LastNonZeroDVStageBurnTime() > hotStagingLeadTime)
                 return;
 
             // Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
-            if (HasStayingChutes(vessel.currentStage - 1))
+            if (HasStayingChutes(Vessel.currentStage - 1))
                 return;
 
             // Always drop deactivated engines or tanks
-            if (InverseStageDecouplesDeactivatedEngineOrTank(vessel.currentStage - 1))
+            if (InverseStageDecouplesDeactivatedEngineOrTank(Vessel.currentStage - 1))
                 Stage();
 
             // only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
@@ -321,8 +321,8 @@ namespace MuMech
                 return;
 
             // only release launch clamps if we're at nearly full thrust and no failed engines
-            if ((vesselState.thrustCurrent / vesselState.thrustAvailable < clampAutoStageThrustPct || AnyFailedEngines(allModuleEngines)) &&
-                InverseStageReleasesClamps(vessel.currentStage - 1))
+            if ((VesselState.thrustCurrent / VesselState.thrustAvailable < clampAutoStageThrustPct || AnyFailedEngines(allModuleEngines)) &&
+                InverseStageReleasesClamps(Vessel.currentStage - 1))
                 return;
 
             Stage();
@@ -330,16 +330,16 @@ namespace MuMech
 
         private bool WaitingForFairing()
         {
-            if (!HasFairing(vessel.currentStage - 1))
+            if (!HasFairing(Vessel.currentStage - 1))
                 return false;
 
-            if (core.VesselState.dynamicPressure > fairingMaxDynamicPressure)
+            if (Core.VesselState.dynamicPressure > fairingMaxDynamicPressure)
                 return true;
 
-            if (core.VesselState.altitudeASL < fairingMinAltitude)
+            if (Core.VesselState.altitudeASL < fairingMinAltitude)
                 return true;
 
-            if (core.VesselState.freeMolecularAerothermalFlux > fairingMaxAerothermalFlux)
+            if (Core.VesselState.freeMolecularAerothermalFlux > fairingMaxAerothermalFlux)
                 return true;
 
             return false;
@@ -351,21 +351,21 @@ namespace MuMech
             //length given by autostagePreDelay) and only stage once that countdown finishes,
             if (countingDown)
             {
-                if (vesselState.time - stageCountdownStart > autostagePreDelay)
+                if (VesselState.time - stageCountdownStart > autostagePreDelay)
                 {
-                    if (InverseStageFiresDecoupler(vessel.currentStage - 1))
+                    if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
                     {
                         //if we decouple things, delay the next stage a bit to avoid exploding the debris
-                        lastStageTime = vesselState.time;
+                        lastStageTime = VesselState.time;
                     }
 
-                    if (!vessel.isActiveVessel)
+                    if (!Vessel.isActiveVessel)
                     {
                         currentActiveVessel = FlightGlobals.ActiveVessel;
-                        Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {vessel.name} to stage");
+                        Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {Vessel.name} to stage");
 
                         remoteStagingStatus = RemoteStagingState.WaitingFocus;
-                        FlightGlobals.ForceSetActiveVessel(vessel);
+                        FlightGlobals.ForceSetActiveVessel(Vessel);
                     }
                     else
                     {
@@ -387,13 +387,13 @@ namespace MuMech
                     countingDown = false;
 
                     if (autostagingOnce)
-                        users.Clear();
+                        Users.Clear();
                 }
             }
             else
             {
                 countingDown        = true;
-                stageCountdownStart = vesselState.time;
+                stageCountdownStart = VesselState.time;
             }
         }
 
@@ -449,7 +449,7 @@ namespace MuMech
             foreach (ModuleEngines engine in allEngines)
             {
                 Part p = engine.part;
-                if (p.inverseStage >= vessel.currentStage && !p.IsDecoupledInStage(vessel.currentStage - 1) && engine.isEnabled &&
+                if (p.inverseStage >= Vessel.currentStage && !p.IsDecoupledInStage(Vessel.currentStage - 1) && engine.isEnabled &&
                     !engine.EngineIgnited && engine.allowShutdown)
                     return true;
             }
@@ -463,7 +463,7 @@ namespace MuMech
             foreach (ModuleEngines engine in allEngines)
             {
                 Part p = engine.part;
-                if (p.inverseStage >= vessel.currentStage && !p.IsDecoupledInStage(vessel.currentStage - 1) && engine.isEnabled)
+                if (p.inverseStage >= Vessel.currentStage && !p.IsDecoupledInStage(Vessel.currentStage - 1) && engine.isEnabled)
                     activeModuleEngines.Add(engine);
             }
         }
@@ -479,7 +479,7 @@ namespace MuMech
         public bool isBurnedOutSRBDecoupledInNextStage(Part p)
         {
             return dropSolids && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < dropSolidsLeadTime &&
-                   p.IsDecoupledInStage(vessel.currentStage - 1);
+                   p.IsDecoupledInStage(Vessel.currentStage - 1);
         }
 
         //detect if a part is above an active or idle engine in the part tree
@@ -541,7 +541,7 @@ namespace MuMech
         {
             if (inverseStageFiresDecouplerCache.TryGetValue(inverseStage, out bool result))
                 return result;
-            result = vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out Part _)) != null;
+            result = Vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage && p.IsUnfiredDecoupler(out Part _)) != null;
             inverseStageFiresDecouplerCache.Add(inverseStage, result);
             return result;
         }
@@ -551,7 +551,7 @@ namespace MuMech
         {
             if (inverseStageReleasesClampsCache.TryGetValue(inverseStage, out bool result))
                 return result;
-            result = vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage && p.IsLaunchClamp()) != null;
+            result = Vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage && p.IsLaunchClamp()) != null;
             inverseStageReleasesClampsCache.Add(inverseStage, result);
             return result;
         }
@@ -606,7 +606,7 @@ namespace MuMech
         {
             if (hasStayingChutesCache.TryGetValue(inverseStage, out bool result))
                 return result;
-            result = vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage && p.IsParachute() && !p.IsDecoupledInStage(inverseStage)) !=
+            result = Vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage && p.IsParachute() && !p.IsDecoupledInStage(inverseStage)) !=
                      null;
             hasStayingChutesCache.Add(inverseStage, result);
             return result;
@@ -627,7 +627,7 @@ namespace MuMech
         private bool HasFairingUncached(int inverseStage)
         {
             _partsInStage.Clear();
-            vessel.parts.Slinq().Where((p, s) => p.inverseStage == s, inverseStage).AddTo(_partsInStage);
+            Vessel.parts.Slinq().Where((p, s) => p.inverseStage == s, inverseStage).AddTo(_partsInStage);
 
             // proc parts are reasonably easy, but all the parts in the stage must be payload fairings for them to
             // be treated as payload fairings here.  a payload fairing and a stack decoupler will bypass the fairing

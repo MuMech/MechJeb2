@@ -21,7 +21,7 @@ namespace MuMech
 
         private static GUIStyle btNormal, btActive, btAuto;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDisableSmartRCS = true;
 
         [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)] //Disable SmartRcs automatically
@@ -68,18 +68,18 @@ namespace MuMech
             }
 
             // Disable if RCS is used by an other module
-            if (core.RCS.enabled && core.RCS.users.Count(u => !Equals(u)) > 0)
+            if (Core.RCS.Enabled && Core.RCS.Users.Count(u => !Equals(u)) > 0)
             {
                 if (autoDisableSmartRCS)
                 {
                     target = Target.OFF;
-                    if (core.RCS.users.Contains(this))
-                        core.RCS.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    if (Core.RCS.Users.Contains(this))
+                        Core.RCS.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
 
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GUILayout.ExpandWidth(true)); //"AUTO"
             }
-            else if (core.Target.Target == null)
+            else if (Core.Target.Target == null)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_SmartRcs_label1")); //"Choose a target"
             }
@@ -94,10 +94,10 @@ namespace MuMech
                 GUILayout.EndVertical();
             }
 
-            core.RCS.rcsThrottle =
-                GUILayout.Toggle(core.RCS.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2")); //" RCS throttle when engines are offline"
-            core.RCS.rcsForRotation =
-                GUILayout.Toggle(core.RCS.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3")); // " Use RCS for rotation"
+            Core.RCS.rcsThrottle =
+                GUILayout.Toggle(Core.RCS.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2")); //" RCS throttle when engines are offline"
+            Core.RCS.rcsForRotation =
+                GUILayout.Toggle(Core.RCS.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3")); // " Use RCS for rotation"
             base.WindowGUI(windowID);
         }
 
@@ -106,11 +106,11 @@ namespace MuMech
             switch (target)
             {
                 case Target.OFF:
-                    core.RCS.users.Remove(this);
+                    Core.RCS.Users.Remove(this);
                     return;
                 case Target.ZERO_RVEL:
-                    core.RCS.users.Add(this);
-                    core.RCS.SetTargetRelative(Vector3d.zero);
+                    Core.RCS.Users.Add(this);
+                    Core.RCS.SetTargetRelative(Vector3d.zero);
                     break;
             }
         }

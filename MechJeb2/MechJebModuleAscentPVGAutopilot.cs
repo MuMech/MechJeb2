@@ -15,21 +15,21 @@ namespace MuMech
         {
         }
 
-        private MechJebModuleAscentSettings _ascentSettings => core.AscentSettings;
+        private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
             base.OnModuleEnabled();
             _mode                 = AscentMode.VERTICAL_ASCENT;
-            core.Guidance.enabled = true;
-            core.Glueball.enabled = true;
+            Core.Guidance.Enabled = true;
+            Core.Glueball.Enabled = true;
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
             base.OnModuleDisabled();
-            core.Guidance.enabled = false;
-            core.Glueball.enabled = false;
+            Core.Guidance.Enabled = false;
+            Core.Glueball.Enabled = false;
         }
 
         private enum AscentMode
@@ -46,13 +46,13 @@ namespace MuMech
         protected override void TimedLaunchHook()
         {
             // timedLaunch kills the optimizer so re-enable it here
-            core.Guidance.enabled = true;
+            Core.Guidance.Enabled = true;
         }
 
         protected override bool DriveAscent2()
         {
             SetTarget();
-            core.Guidance.AssertStart();
+            Core.Guidance.AssertStart();
             switch (_mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
@@ -77,16 +77,16 @@ namespace MuMech
 
         private void SetTarget()
         {
-            double peR = mainBody.Radius + AscentSettings.DesiredOrbitAltitude;
-            double apR = mainBody.Radius + AscentSettings.DesiredApoapsis;
+            double peR = MainBody.Radius + AscentSettings.DesiredOrbitAltitude;
+            double apR = MainBody.Radius + AscentSettings.DesiredApoapsis;
             if (_ascentSettings.DesiredApoapsis < 0)
                 apR = _ascentSettings.DesiredApoapsis;
-            double attR = mainBody.Radius +
+            double attR = MainBody.Radius +
                           (AscentSettings.OptimizeStage < 0 ? AscentSettings.DesiredAttachAltFixed : AscentSettings.DesiredAttachAlt);
 
             bool lanflag = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan || _ascentSettings.LaunchingToLan;
             double lan = _ascentSettings.LaunchingToPlane || _ascentSettings.LaunchingToMatchLan
-                ? core.Target.TargetOrbit.LAN
+                ? Core.Target.TargetOrbit.LAN
                 : (double)AscentSettings.DesiredLan;
 
             double inclination = AscentSettings.DesiredInclination;
@@ -95,10 +95,10 @@ namespace MuMech
             // if we are launchingToPlane other code in MJ fixes the sign of the inclination to be correct
             // FIXME: can we just use autopilot.desiredInclination here and rely on the other code to update that value?
             if (_ascentSettings.LaunchingToPlane)
-                inclination = Math.Sign(inclination) * core.Target.TargetOrbit.inclination;
+                inclination = Math.Sign(inclination) * Core.Target.TargetOrbit.inclination;
 
             // FIXME: kinda need to break this up it is getting very magical with all the non-obvious ignored combinations of options
-            core.Glueball.SetTarget(peR, apR, attR, inclination, lan, AscentSettings.DesiredFPA, attachAltFlag, lanflag);
+            Core.Glueball.SetTarget(peR, apR, attR, inclination, lan, AscentSettings.DesiredFPA, attachAltFlag, lanflag);
         }
 
         private double _pitchStartTime;
@@ -106,12 +106,12 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
-            AttitudeTo(90, core.Guidance.Heading);
+            AttitudeTo(90, Core.Guidance.Heading);
 
-            bool liftedOff = vessel.LiftedOff() && !vessel.Landed && vesselState.altitudeBottom > 5;
+            bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed && VesselState.altitudeBottom > 5;
 
-            core.Attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
-            core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude);
+            Core.Attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
+            Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && VesselState.altitudeBottom > AscentSettings.RollAltitude);
 
             if (!liftedOff)
             {
@@ -119,14 +119,14 @@ namespace MuMech
             }
             else
             {
-                if (vesselState.surfaceVelocity.magnitude > AscentSettings.PitchStartVelocity)
+                if (VesselState.surfaceVelocity.magnitude > AscentSettings.PitchStartVelocity)
                 {
                     _mode           = AscentMode.PITCHPROGRAM;
                     _pitchStartTime = MET;
                     return;
                 }
 
-                double dv = AscentSettings.PitchStartVelocity - vesselState.surfaceVelocity.magnitude;
+                double dv = AscentSettings.PitchStartVelocity - VesselState.surfaceVelocity.magnitude;
                 Status = Localizer.Format("#MechJeb_Ascent_status13", string.Format("{0:F2}", dv)); //Vertical ascent  <<1>>m/s to go
             }
         }
@@ -138,14 +138,14 @@ namespace MuMech
             double pitch = 90 - theta;
 
             // we need to initiate by at least 3 degrees, then transition to zerolift when srfvel catches up
-            if (vesselState.currentPitch > SrfvelPitch() && vesselState.currentPitch < 87)
+            if (VesselState.currentPitch > SrfvelPitch() && VesselState.currentPitch < 87)
             {
                 _mode = AscentMode.ZEROLIFT;
                 return;
             }
 
             if (!AscentSettings.StagingTriggerFlag)
-                Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
+                Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
             else
                 Status = $"Pitch Program until stage {AscentSettings.StagingTrigger.val}";
 
@@ -155,25 +155,25 @@ namespace MuMech
                 return;
             }
 
-            AttitudeTo(pitch, core.Guidance.Heading);
+            AttitudeTo(pitch, Core.Guidance.Heading);
         }
 
         private bool CheckForGuidanceTransition(double pitch)
         {
-            if (!mainBody.atmosphere) return true;
+            if (!MainBody.atmosphere) return true;
 
             if (!AscentSettings.StagingTriggerFlag)
             {
-                if (pitch <= core.Guidance.Pitch && core.Guidance.IsStable()) return true;
+                if (pitch <= Core.Guidance.Pitch && Core.Guidance.IsStable()) return true;
 
                 // dynamic pressure needs to fall by 10% before we level trigger
-                if (vesselState.maxDynamicPressure > vesselState.dynamicPressure * 1.1)
-                    if (vesselState.dynamicPressure < AscentSettings.DynamicPressureTrigger)
+                if (VesselState.maxDynamicPressure > VesselState.dynamicPressure * 1.1)
+                    if (VesselState.dynamicPressure < AscentSettings.DynamicPressureTrigger)
                         return true;
             }
             else
             {
-                if (core.Guidance.IsStable() && vessel.currentStage <= AscentSettings.StagingTrigger) return true;
+                if (Core.Guidance.IsStable() && Vessel.currentStage <= AscentSettings.StagingTrigger) return true;
             }
 
             return false;
@@ -184,7 +184,7 @@ namespace MuMech
             double pitch = SrfvelPitch();
 
             if (!AscentSettings.StagingTriggerFlag)
-                Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - core.Guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
+                Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - Core.Guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
             else
                 Status = $"Gravity Turn until stage {AscentSettings.StagingTrigger.val}";
 
@@ -194,27 +194,27 @@ namespace MuMech
                 return;
             }
 
-            AttitudeTo(pitch, core.Guidance.Heading);
+            AttitudeTo(pitch, Core.Guidance.Heading);
         }
 
         private void DriveGuidance()
         {
-            if (core.Guidance.Status == PVGStatus.FINISHED)
+            if (Core.Guidance.Status == PVGStatus.FINISHED)
             {
                 _mode = AscentMode.EXIT;
                 return;
             }
 
-            if (!core.Guidance.IsStable())
+            if (!Core.Guidance.IsStable())
             {
-                double pitch = Math.Min(Math.Min(90, SrfvelPitch()), vesselState.vesselPitch);
+                double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.vesselPitch);
                 AttitudeTo(pitch, SrfvelHeading());
                 Status = Localizer.Format("#MechJeb_Ascent_status16"); //"WARNING: Unstable Guidance"
             }
             else
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status17"); //"Stable Guidance"
-                AttitudeTo(core.Guidance.Pitch, core.Guidance.Heading);
+                AttitudeTo(Core.Guidance.Pitch, Core.Guidance.Heading);
             }
         }
     }

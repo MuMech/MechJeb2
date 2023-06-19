@@ -11,7 +11,7 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_Pe_title"); } //change periapsis
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewPeA = new EditableDoubleMult(100000, 1000);
 
         private readonly TimeSelector _timeSelector;

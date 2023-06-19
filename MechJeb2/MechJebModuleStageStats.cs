@@ -31,7 +31,7 @@ namespace MuMech
 
         public void RequestUpdate(object controller, bool wait = false)
         {
-            users.Add(controller);
+            Users.Add(controller);
             updateRequested = true;
 
             IsResultReady();
@@ -101,13 +101,13 @@ namespace MuMech
             needRebuild = 2;
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
             millisecondsBetweenSimulations = 0;
             stopwatch.Start();
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
             stopwatch.Stop();
             stopwatch.Reset();
@@ -144,7 +144,7 @@ namespace MuMech
 
         private bool TryStartSimulation()
         {
-            if (!simulationRunning && ((HighLogic.LoadedSceneIsEditor && editorBody != null) || vessel != null))
+            if (!simulationRunning && ((HighLogic.LoadedSceneIsEditor && editorBody != null) || Vessel != null))
             {
                 //We should be running simulations periodically, but one is not running right now.
                 //Check if enough time has passed since the last one to start a new one:
@@ -161,7 +161,7 @@ namespace MuMech
                         return true;
                     }
 
-                    users.Clear();
+                    Users.Clear();
                 }
             }
 
@@ -178,7 +178,7 @@ namespace MuMech
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
 
                 //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
-                List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts;
+                List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : Vessel.parts;
 
                 if (HighLogic.LoadedSceneIsEditor)
                 {
@@ -190,7 +190,7 @@ namespace MuMech
                 }
                 else
                 {
-                    vessel.UpdateResourceSetsIfDirty();
+                    Vessel.UpdateResourceSetsIfDirty();
                 }
 
                 Profiler.BeginSample("StartSimulation_Init");
@@ -210,7 +210,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                print("Exception in MechJebModuleStageStats.StartSimulation(): " + e + "\n" + e.StackTrace);
+                Print("Exception in MechJebModuleStageStats.StartSimulation(): " + e + "\n" + e.StackTrace);
 
                 // Stop timing the simulation
                 stopwatch.Stop();
@@ -229,15 +229,15 @@ namespace MuMech
         {
             try
             {
-                CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : vessel.mainBody;
+                CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : Vessel.mainBody;
 
                 double staticPressureKpa = HighLogic.LoadedSceneIsEditor || !liveSLT
                     ? simBody.atmosphere ? simBody.GetPressure(altSLT) : 0
-                    : vessel.staticPressurekPa;
+                    : Vessel.staticPressurekPa;
                 double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT
                     ? simBody.GetDensity(simBody.GetPressure(altSLT), simBody.GetTemperature(0))
-                    : vessel.atmDensity) / 1.225;
-                double mach = HighLogic.LoadedSceneIsEditor ? this.mach : vessel.mach;
+                    : Vessel.atmDensity) / 1.225;
+                double mach = HighLogic.LoadedSceneIsEditor ? this.mach : Vessel.mach;
 
                 //Run the simulation
                 newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
@@ -245,7 +245,7 @@ namespace MuMech
             }
             catch (Exception e)
             {
-                Dispatcher.InvokeAsync(() => print("Exception in MechJebModuleStageStats.RunSimulation(): " + e));
+                Dispatcher.InvokeAsync(() => Print("Exception in MechJebModuleStageStats.RunSimulation(): " + e));
             }
 
             //see how long the simulation took

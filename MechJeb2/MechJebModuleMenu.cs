@@ -16,8 +16,8 @@ namespace MuMech
         public MechJebModuleMenu(MechJebCore core)
             : base(core)
         {
-            priority     = -1000;
-            enabled      = true;
+            Priority     = -1000;
+            Enabled      = true;
             hidden       = true;
             ShowInFlight = true;
             ShowInEditor = true;
@@ -53,22 +53,22 @@ namespace MuMech
             public string  texturePathActive;
         }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public WindowStat windowStat = WindowStat.HIDDEN;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public WindowSide windowSide = WindowSide.TOP;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public float windowProgr;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public float windowVPos = -185;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public float windowHPos = 250;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int columns = 2;
 
         private const int colWidth = 200;
@@ -127,11 +127,11 @@ namespace MuMech
         private bool movingButton;
 
         [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc)]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool hideButton = false; //Hide Menu Button
 
         [ToggleInfoItem("#MechJeb_UseAppLauncher", InfoItem.Category.Misc)]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool useAppLauncher = true; //Use AppLauncher
 
         [GeneralInfoItem("#MechJeb_MenuPosition", InfoItem.Category.Misc)] //Menu Position
@@ -208,7 +208,7 @@ namespace MuMech
                 toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
             }
 
-            List<DisplayModule> displayModules = core.GetDisplayModules(DisplayOrder.instance);
+            List<DisplayModule> displayModules = Core.GetDisplayModules(DisplayOrder.instance);
             int i = 0;
             int step = Mathf.CeilToInt((float)(displayModules.Count(d => !d.hidden && d.showInCurrentScene) + 1) / columns);
 
@@ -226,7 +226,7 @@ namespace MuMech
                         i = 0;
                     }
 
-                    module.enabled = GUILayout.Toggle(module.enabled, module.GetName(), module.isActive() ? toggleActive : toggleInactive);
+                    module.Enabled = GUILayout.Toggle(module.Enabled, module.GetName(), module.isActive() ? toggleActive : toggleInactive);
                     i++;
                 }
             }
@@ -239,7 +239,7 @@ namespace MuMech
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            if (core.someModuleAreLocked)
+            if (Core.someModuleAreLocked)
                 GUILayout.Label(
                     Localizer.Format(
                         "#MechJeb_ModuleAreLocked")); //"Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station."
@@ -278,7 +278,7 @@ namespace MuMech
 
             SetupMainToolbarButton();
 
-            foreach (DisplayModule module in core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.hidden))
+            foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.hidden))
             {
                 Button button;
                 if (!toolbarButtons.ContainsKey(module))
@@ -296,7 +296,7 @@ namespace MuMech
                     if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
                     {
                         button.texturePath = Qmark;
-                        print("No icon for " + name);
+                        Print("No icon for " + name);
                     }
                     else
                     {
@@ -322,7 +322,7 @@ namespace MuMech
                             .FirstOrDefault(m => m == module);
                         if (mod != null)
                         {
-                            mod.enabled = !mod.enabled;
+                            mod.Enabled = !mod.Enabled;
                         }
                     };
                 }
@@ -338,22 +338,22 @@ namespace MuMech
             // create toolbar buttons for features
             if (featureButtons.Count == 0)
             {
-                MechJebModuleManeuverPlanner maneuverPlannerModule = core.GetComputerModule<MechJebModuleManeuverPlanner>();
+                MechJebModuleManeuverPlanner maneuverPlannerModule = Core.GetComputerModule<MechJebModuleManeuverPlanner>();
                 if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
                 {
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", b =>
                     {
-                        if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.Node != null)
+                        if (Vessel.patchedConicSolver.maneuverNodes.Count > 0 && Core.Node != null)
                         {
-                            if (core.Node.enabled)
+                            if (Core.Node.Enabled)
                             {
-                                core.Node.Abort();
+                                Core.Node.Abort();
                             }
                             else
                             {
-                                if (vessel.patchedConicSolver.maneuverNodes[0].DeltaV.magnitude > 0.0001)
+                                if (Vessel.patchedConicSolver.maneuverNodes[0].DeltaV.magnitude > 0.0001)
                                 {
-                                    core.Node.ExecuteOneNode(maneuverPlannerModule);
+                                    Core.Node.ExecuteOneNode(maneuverPlannerModule);
                                 }
                                 else
                                 {
@@ -365,30 +365,30 @@ namespace MuMech
                         {
                             ScreenMessages.PostScreenMessage("No maneuver nodes", 2f);
                         }
-                    }, () => vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.Node != null && core.Node.enabled);
+                    }, () => Vessel.patchedConicSolver.maneuverNodes.Count > 0 && Core.Node != null && Core.Node.Enabled);
 
                     CreateFeatureButton(maneuverPlannerModule, "Autostage_Once", "MechJeb Autostage Once", b =>
                     {
-                        MechJebModuleThrustWindow w = core.GetComputerModule<MechJebModuleThrustWindow>();
+                        MechJebModuleThrustWindow w = Core.GetComputerModule<MechJebModuleThrustWindow>();
 
-                        if (core.Staging.enabled && core.Staging.autostagingOnce)
+                        if (Core.Staging.Enabled && Core.Staging.autostagingOnce)
                         {
-                            if (core.Staging.users.Contains(w))
+                            if (Core.Staging.Users.Contains(w))
                             {
-                                core.Staging.users.Remove(w);
+                                Core.Staging.Users.Remove(w);
                                 w.autostageSavedState = false;
                             }
                         }
                         else
                         {
-                            core.Staging.AutostageOnce(w);
+                            Core.Staging.AutostageOnce(w);
                         }
-                    }, () => core.Staging.enabled && core.Staging.autostagingOnce);
+                    }, () => Core.Staging.Enabled && Core.Staging.autostagingOnce);
 
                     CreateFeatureButton(maneuverPlannerModule, "Auto_Warp", "MechJeb Auto-warp", b =>
                     {
-                        core.Node.autowarp = !core.Node.autowarp;
-                    }, () => core.Node.autowarp);
+                        Core.Node.autowarp = !Core.Node.autowarp;
+                    }, () => Core.Node.autowarp);
                 }
             }
         }
@@ -412,7 +412,7 @@ namespace MuMech
             if (GameDatabase.Instance.GetTexture(texturePath, false) == null)
             {
                 button.texturePath = Qmark;
-                print("No icon for " + nameId);
+                Print("No icon for " + nameId);
             }
             else
             {
@@ -569,7 +569,7 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + core.version,
+                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + Core.version,
                     GUILayout.Width(colWidth), GUILayout.Height(20));
             }
             else
@@ -622,7 +622,7 @@ namespace MuMech
                 }
             }
 
-            if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
+            if (HighLogic.LoadedSceneIsEditor || (Vessel != null && Vessel.isActiveVessel))
             {
                 SetupAppLauncher();
                 SetupToolBarButtons();
