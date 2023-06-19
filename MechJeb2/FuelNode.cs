@@ -17,56 +17,55 @@ namespace MuMech
         public class FuelNode
         {
             // RealFuels fields for residuals and engine spoolup time
-            private static FieldInfo RFpredictedMaximumResiduals;
-            private static FieldInfo RFspoolUpTime;
+            private static FieldInfo _rfPredictedMaximumResiduals;
+            private static FieldInfo _rfSpoolUpTime;
 
             public static void DoReflection()
             {
-                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
-                {
-                    RFpredictedMaximumResiduals =
-                        ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
-                    if (RFpredictedMaximumResiduals == null)
-                    {
-                        Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
-                    }
+                if (!ReflectionUtils.isAssemblyLoaded("RealFuels")) return;
 
-                    RFspoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
-                    if (RFspoolUpTime == null)
-                    {
-                        Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
-                    }
+                _rfPredictedMaximumResiduals =
+                    ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
+                if (_rfPredictedMaximumResiduals == null)
+                {
+                    Debug.Log(
+                        "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
+                }
+
+                _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
+                if (_rfSpoolUpTime == null)
+                {
+                    Debug.Log(
+                        "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
                 }
             }
 
             private readonly struct EngineInfo
             {
-                public readonly ModuleEngines engineModule;
-                public readonly Vector3d      thrustVector;
-                public readonly double        moduleResiduals;
-                public readonly double        moduleSpoolupTime;
-                public readonly double        maxThrust;
+                public readonly ModuleEngines EngineModule;
+                public readonly Vector3d      ThrustVector;
+                public readonly double        ModuleResiduals;
+                public readonly double        ModuleSpoolupTime;
+                public readonly double        MaxThrust;
 
                 public EngineInfo(ModuleEngines engineModule)
                 {
-                    this.engineModule = engineModule;
+                    this.EngineModule = engineModule;
 
-                    maxThrust = engineModule.maxThrust;
+                    MaxThrust = engineModule.maxThrust;
 
-                    thrustVector = Vector3d.zero;
+                    ThrustVector = Vector3d.zero;
 
                     for (int i = 0; i < engineModule.thrustTransforms.Count; i++)
-                        thrustVector -= engineModule.thrustTransforms[i].forward * engineModule.thrustTransformMultipliers[i];
+                        ThrustVector -= engineModule.thrustTransforms[i].forward * engineModule.thrustTransformMultipliers[i];
 
                     double? temp = 0;
 
-                    if (RFpredictedMaximumResiduals != null)
+                    if (_rfPredictedMaximumResiduals != null)
                     {
                         try
                         {
-                            temp = RFpredictedMaximumResiduals.GetValue(engineModule) as double?;
+                            temp = _rfPredictedMaximumResiduals.GetValue(engineModule) as double?;
                         }
                         catch (ArgumentException)
                         {
@@ -74,106 +73,98 @@ namespace MuMech
                         }
                     }
 
-                    moduleResiduals = temp ?? 0;
+                    ModuleResiduals = temp ?? 0;
 
                     float? temp2 = 0;
-                    if (RFspoolUpTime != null)
+                    if (_rfSpoolUpTime != null)
                     {
                         try
                         {
-                            temp2 = RFspoolUpTime.GetValue(engineModule) as float?;
+                            temp2 = _rfSpoolUpTime.GetValue(engineModule) as float?;
                         }
                         catch (ArgumentException)
                         {
-                            //FuelFlowSimulation.print("For engine " + engineModule.part.partName + " failed to find spoolup time field!");
+                            //FuelFlowSimulation.Print("For engine " + engineModule.part.partName + " failed to find spoolup time field!");
                             temp2 = 0;
                         }
                     }
 
-                    moduleSpoolupTime = temp2 ?? 0;
+                    ModuleSpoolupTime = temp2 ?? 0;
                 }
 
                 public EngineInfo(EngineInfo engineInfo)
                 {
-                    engineModule      = engineInfo.engineModule;
-                    thrustVector      = engineInfo.thrustVector;
-                    moduleResiduals   = engineInfo.moduleResiduals;
-                    maxThrust         = engineInfo.maxThrust;
-                    moduleSpoolupTime = engineInfo.moduleSpoolupTime;
+                    EngineModule      = engineInfo.EngineModule;
+                    ThrustVector      = engineInfo.ThrustVector;
+                    ModuleResiduals   = engineInfo.ModuleResiduals;
+                    MaxThrust         = engineInfo.MaxThrust;
+                    ModuleSpoolupTime = engineInfo.ModuleSpoolupTime;
                 }
             }
 
-            private readonly DefaultableDictionary<int, double>
-                resources = new DefaultableDictionary<int, double>(0); //the resources contained in the part
-
-            private readonly DefaultableDictionary<int, double>
-                resourcesFull = new DefaultableDictionary<int, double>(0); //the resources the part has when full
-
-            private readonly KeyableDictionary<int, double>
-                resourceConsumptions =
-                    new KeyableDictionary<int, double>(); //the resources this part consumes per unit time when active at full throttle
-
-            private readonly DefaultableDictionary<int, double>
-                resourceDrains =
-                    new DefaultableDictionary<int, double>(0); //the resources being drained from this part per unit time at the current simulation
-
-            private readonly DefaultableDictionary<int, double>
-                resourceResidual = new DefaultableDictionary<int, double>(0); // the fraction of the resource which will be residual
-
-            private readonly DefaultableDictionary<int, bool>
-                freeResources = new DefaultableDictionary<int, bool>(false); //the resources that are "free" and assumed to be infinite like IntakeAir
+            //the resources contained in the part
+            private readonly DefaultableDictionary<int, double> _resources = new DefaultableDictionary<int, double>(0);
+            //the resources the part has when full
+            private readonly DefaultableDictionary<int, double> _resourcesFull = new DefaultableDictionary<int, double>(0);
+            //the resources this part consumes per unit time when active at full throttle
+            private readonly KeyableDictionary<int, double> _resourceConsumptions = new KeyableDictionary<int, double>();
+            //the resources being drained from this part per unit time at the current simulation
+            private readonly DefaultableDictionary<int, double> _resourceDrains = new DefaultableDictionary<int, double>(0);
+            // the fraction of the resource which will be residual
+            private readonly DefaultableDictionary<int, double> _resourceResidual = new DefaultableDictionary<int, double>(0);
+            //the resources that are "free" and assumed to be infinite like IntakeAir
+            private readonly DefaultableDictionary<int, bool> _freeResources = new DefaultableDictionary<int, bool>(false);
 
             // if a resource amount falls below this amount we say that the resource has been drained
             // set to the smallest amount that the user can see is non-zero in the resource tab or by
             // right-clicking.
             private const double DRAINED = 1E-4;
 
-            private readonly KeyableDictionary<int, ResourceFlowMode>
-                propellantFlows = new KeyableDictionary<int, ResourceFlowMode>(); //flow modes of propellants since the engine can override them
+            //flow modes of propellants since the engine can override them
+            private readonly KeyableDictionary<int, ResourceFlowMode> _propellantFlows  = new KeyableDictionary<int, ResourceFlowMode>();
+            private readonly List<FuelNode>                           _crossfeedSources = new List<FuelNode>();
 
-            private readonly List<FuelNode> crossfeedSources = new List<FuelNode>();
+            public int    DecoupledInStage; //the stage in which this part will be decoupled from the rocket
+            public int    InverseStage;     //stage in which this part is activated
+            public bool   IsLaunchClamp;    //whether this part is a launch clamp
+            public bool   IsSepratron;      //whether this part is a sepratron
+            public bool   IsEngine;         //whether this part is an engine
+            public bool   IsThrottleLocked;
+            public bool   ActivatesEvenIfDisconnected;
+            public bool   IsDrawingResources = true; // Is the engine actually using any resources
+            public bool   HasResources;
+            public double MaxThrust;
 
-            public int    decoupledInStage; //the stage in which this part will be decoupled from the rocket
-            public int    inverseStage;     //stage in which this part is activated
-            public bool   isLaunchClamp;    //whether this part is a launch clamp
-            public bool   isSepratron;      //whether this part is a sepratron
-            public bool   isEngine;         //whether this part is an engine
-            public bool   isthrottleLocked;
-            public bool   activatesEvenIfDisconnected;
-            public bool   isDrawingResources = true; // Is the engine actually using any resources
-            public bool   hasResources;
-            public double maxThrust;
+            private double _resourceRequestRemainingThreshold;
+            private int    _resourcePriority;
 
-            private double resourceRequestRemainingThreshold;
-            private int    resourcePriority;
+            private double _dryMass;             //the mass of this part, not counting resource mass
+            private double _crewMass;            //the mass of this part crew
+            private float  _modulesUnstagedMass; // the mass of the modules of this part before staging
+            private float  _modulesStagedMass;   // the mass of the modules of this part after staging
 
-            private double dryMass;             //the mass of this part, not counting resource mass
-            private double crewMass;            //the mass of this part crew
-            private float  modulesUnstagedMass; // the mass of the modules of this part before staging
-            private float  modulesStagedMass;   // the mass of the modules of this part after staging
+            private double _maxEngineResiduals; // fractional amount of residuals from RealFuels/ModuleEnginesRF
 
-            private double maxEngineResiduals; // fractional amount of residuals from RealFuels/ModuleEnginesRF
+            public string PartName; //for debugging
 
-            public string partName; //for debugging
+            public  Part     Part;
+            private bool     _dVLinearThrust;
+            private Vector3d _vesselOrientation;
 
-            public  Part     part;
-            private bool     dVLinearThrust;
-            private Vector3d vesselOrientation;
+            private readonly List<EngineInfo> _engineInfos = new List<EngineInfo>();
 
-            private readonly List<EngineInfo> engineInfos = new List<EngineInfo>();
-
-            private static readonly Pool<FuelNode> pool = new Pool<FuelNode>(Create, Reset);
+            private static readonly Pool<FuelNode> _pool = new Pool<FuelNode>(Create, Reset);
 
             private delegate double CrewMass(ProtoCrewMember crew);
 
-            private static readonly CrewMass CrewMassDelegate;
+            private static readonly CrewMass _crewMassDelegate;
 
             static FuelNode()
             {
                 if (Versioning.version_major == 1 && Versioning.version_minor < 11)
-                    CrewMassDelegate = CrewMassOld;
+                    _crewMassDelegate = CrewMassOld;
                 else
-                    CrewMassDelegate = CrewMassNew;
+                    _crewMassDelegate = CrewMassNew;
             }
 
             private static double CrewMassOld(ProtoCrewMember crew)
@@ -186,7 +177,7 @@ namespace MuMech
                 return PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
             }
 
-            public static int PoolSize => pool.Size;
+            public static int PoolSize => _pool.Size;
 
             private static FuelNode Create()
             {
@@ -195,7 +186,7 @@ namespace MuMech
 
             public void Release()
             {
-                pool.Release(this);
+                _pool.Release(this);
             }
 
             private static void Reset(FuelNode obj)
@@ -204,80 +195,80 @@ namespace MuMech
 
             public static FuelNode Borrow(Part part, bool dVLinearThrust)
             {
-                FuelNode node = pool.Borrow();
+                FuelNode node = _pool.Borrow();
                 node.Init(part, dVLinearThrust);
                 return node;
             }
 
             public static FuelNode BorrowAndCopyFrom(FuelNode n)
             {
-                FuelNode node = pool.Borrow();
-                node.part                              = n.part;
-                node.dVLinearThrust                    = n.dVLinearThrust;
-                node.isEngine                          = n.isEngine;
-                node.isthrottleLocked                  = n.isthrottleLocked;
-                node.activatesEvenIfDisconnected       = n.activatesEvenIfDisconnected;
-                node.maxThrust                         = n.maxThrust;
-                node.isLaunchClamp                     = n.isLaunchClamp;
-                node.isSepratron                       = n.isSepratron;
-                node.dryMass                           = n.dryMass;
-                node.crewMass                          = n.crewMass;
-                node.modulesStagedMass                 = n.modulesStagedMass;
-                node.decoupledInStage                  = n.decoupledInStage;
-                node.maxEngineResiduals                = n.maxEngineResiduals;
-                node.vesselOrientation                 = n.vesselOrientation;
-                node.modulesUnstagedMass               = n.modulesUnstagedMass;
-                node.inverseStage                      = n.inverseStage;
-                node.partName                          = n.partName;
-                node.resourceRequestRemainingThreshold = n.resourceRequestRemainingThreshold;
-                node.resourcePriority                  = n.resourcePriority;
-                node.hasResources                      = n.hasResources;
+                FuelNode node = _pool.Borrow();
+                node.Part                              = n.Part;
+                node._dVLinearThrust                    = n._dVLinearThrust;
+                node.IsEngine                          = n.IsEngine;
+                node.IsThrottleLocked                  = n.IsThrottleLocked;
+                node.ActivatesEvenIfDisconnected       = n.ActivatesEvenIfDisconnected;
+                node.MaxThrust                         = n.MaxThrust;
+                node.IsLaunchClamp                     = n.IsLaunchClamp;
+                node.IsSepratron                       = n.IsSepratron;
+                node._dryMass                           = n._dryMass;
+                node._crewMass                          = n._crewMass;
+                node._modulesStagedMass                 = n._modulesStagedMass;
+                node.DecoupledInStage                  = n.DecoupledInStage;
+                node._maxEngineResiduals                = n._maxEngineResiduals;
+                node._vesselOrientation                 = n._vesselOrientation;
+                node._modulesUnstagedMass               = n._modulesUnstagedMass;
+                node.InverseStage                      = n.InverseStage;
+                node.PartName                          = n.PartName;
+                node._resourceRequestRemainingThreshold = n._resourceRequestRemainingThreshold;
+                node._resourcePriority                  = n._resourcePriority;
+                node.HasResources                      = n.HasResources;
 
-                node.resources.Clear();
-                node.resourcesFull.Clear();
-                node.resourceConsumptions.Clear();
-                node.resourceDrains.Clear();
-                node.freeResources.Clear();
-                node.resourceResidual.Clear();
+                node._resources.Clear();
+                node._resourcesFull.Clear();
+                node._resourceConsumptions.Clear();
+                node._resourceDrains.Clear();
+                node._freeResources.Clear();
+                node._resourceResidual.Clear();
 
-                node.crossfeedSources.Clear();
+                node._crossfeedSources.Clear();
 
-                node.engineInfos.Clear();
+                node._engineInfos.Clear();
 
-                node.resources.Clear();
-                foreach (int key in n.resources.KeysList)
+                node._resources.Clear();
+                foreach (int key in n._resources.KeysList)
                 {
-                    node.resources.Add(key, n.resources[key]);
+                    node._resources.Add(key, n._resources[key]);
                 }
 
-                foreach (int key in n.resourcesFull.KeysList)
+                foreach (int key in n._resourcesFull.KeysList)
                 {
-                    node.resourcesFull.Add(key, n.resourcesFull[key]);
+                    node._resourcesFull.Add(key, n._resourcesFull[key]);
                 }
 
-                foreach (int key in n.resourceConsumptions.KeysList)
+                foreach (int key in n._resourceConsumptions.KeysList)
                 {
-                    node.resourceConsumptions.Add(key, n.resourceConsumptions[key]);
+                    node._resourceConsumptions.Add(key, n._resourceConsumptions[key]);
                 }
 
-                foreach (int key in n.resourceDrains.KeysList)
+                foreach (int key in n._resourceDrains.KeysList)
                 {
-                    node.resourceDrains.Add(key, n.resourceDrains[key]);
+                    node._resourceDrains.Add(key, n._resourceDrains[key]);
                 }
 
-                foreach (int key in n.freeResources.KeysList)
+                foreach (int key in n._freeResources.KeysList)
                 {
-                    node.freeResources.Add(key, n.freeResources[key]);
+                    node._freeResources.Add(key, n._freeResources[key]);
                 }
 
-                foreach (int key in n.resourceResidual.KeysList)
+                foreach (int key in n._resourceResidual.KeysList)
                 {
-                    node.resourceResidual.Add(key, n.resourceResidual[key]);
+                    node._resourceResidual.Add(key, n._resourceResidual[key]);
                 }
 
-                foreach (EngineInfo e in n.engineInfos)
+                foreach (EngineInfo e in n._engineInfos)
                 {
-                    node.engineInfos.Add(new EngineInfo(e));
+                    node._engineInfos.Add(new EngineInfo(e));
                 }
 
                 // Note: Can't copy crossfeedSources yet. This needs to be done in a separate iteration after all the FuelNodes have been collected.
@@ -287,44 +278,44 @@ namespace MuMech
 
             private void Init(Part part, bool dVLinearThrust)
             {
-                this.part           = part;
-                this.dVLinearThrust = dVLinearThrust;
-                resources.Clear();
-                resourcesFull.Clear();
-                resourceConsumptions.Clear();
-                resourceDrains.Clear();
-                freeResources.Clear();
-                resourceResidual.Clear();
+                this.Part           = part;
+                this._dVLinearThrust = dVLinearThrust;
+                _resources.Clear();
+                _resourcesFull.Clear();
+                _resourceConsumptions.Clear();
+                _resourceDrains.Clear();
+                _freeResources.Clear();
+                _resourceResidual.Clear();
 
-                crossfeedSources.Clear();
+                _crossfeedSources.Clear();
 
-                isEngine                    = false;
-                isthrottleLocked            = false;
-                activatesEvenIfDisconnected = part.ActivatesEvenIfDisconnected;
-                isLaunchClamp               = part.IsLaunchClamp();
+                IsEngine                    = false;
+                IsThrottleLocked            = false;
+                ActivatesEvenIfDisconnected = part.ActivatesEvenIfDisconnected;
+                IsLaunchClamp               = part.IsLaunchClamp();
 
-                dryMass           = 0;
-                crewMass          = 0;
-                modulesStagedMass = 0;
+                _dryMass           = 0;
+                _crewMass          = 0;
+                _modulesStagedMass = 0;
 
-                decoupledInStage = int.MinValue;
+                DecoupledInStage = int.MinValue;
 
-                maxEngineResiduals = 0.0;
+                _maxEngineResiduals = 0.0;
 
-                vesselOrientation = HighLogic.LoadedScene == GameScenes.EDITOR
+                _vesselOrientation = HighLogic.LoadedScene == GameScenes.EDITOR
                     ? EditorLogic.VesselRotation * Vector3d.up
                     : part.vessel.GetTransform().up;
 
-                modulesUnstagedMass = 0;
-                if (!isLaunchClamp)
+                _modulesUnstagedMass = 0;
+                if (!IsLaunchClamp)
                 {
-                    dryMass = part.prefabMass; // Intentionally ignore the physic flag.
+                    _dryMass = part.prefabMass; // Intentionally ignore the physic flag.
 
                     if (HighLogic.LoadedSceneIsFlight && part.protoModuleCrew != null)
                         for (int i = 0; i < part.protoModuleCrew.Count; i++)
                         {
                             ProtoCrewMember crewMember = part.protoModuleCrew[i];
-                            crewMass += CrewMassDelegate(crewMember);
+                            _crewMass += _crewMassDelegate(crewMember);
                         }
                     else if (HighLogic.LoadedSceneIsEditor)
                         if (CrewAssignmentDialog.Instance != null && CrewAssignmentDialog.Instance.CurrentManifestUnsafe != null)
@@ -339,28 +330,29 @@ namespace MuMech
                                 {
                                     ProtoCrewMember crewMember = partCrew[i];
                                     if (crewMember == null) continue;
-                                    crewMass += CrewMassDelegate(crewMember);
+                                    _crewMass += _crewMassDelegate(crewMember);
                                 }
                             }
                         }
 
-                    modulesUnstagedMass = part.GetModuleMassNoAlloc((float)dryMass, ModifierStagingSituation.UNSTAGED);
+                    _modulesUnstagedMass = part.GetModuleMassNoAlloc((float)_dryMass, ModifierStagingSituation.UNSTAGED);
 
-                    modulesStagedMass = part.GetModuleMassNoAlloc((float)dryMass, ModifierStagingSituation.STAGED);
+                    _modulesStagedMass = part.GetModuleMassNoAlloc((float)_dryMass, ModifierStagingSituation.STAGED);
 
-                    float currentModulesMass = part.GetModuleMassNoAlloc((float)dryMass, ModifierStagingSituation.CURRENT);
+                    float currentModulesMass = part.GetModuleMassNoAlloc((float)_dryMass, ModifierStagingSituation.CURRENT);
 
                     // if it was manually staged
-                    if (currentModulesMass == modulesStagedMass) modulesUnstagedMass = modulesStagedMass;
+                    // ReSharper disable once CompareOfFloatsByEqualityOperator
+                    if (currentModulesMass == _modulesStagedMass) _modulesUnstagedMass = _modulesStagedMass;
 
-                    //print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + modulesUnstagedMass.ToString("F4") + " " + modulesStagedMass.ToString("F4"));
+                    //Print(part.partInfo.name.PadRight(25) + " " + part.mass.ToString("F4") + " " + part.GetPhysicslessChildMass().ToString("F4") + " " + modulesUnstagedMass.ToString("F4") + " " + modulesStagedMass.ToString("F4"));
                 }
 
-                inverseStage = part.inverseStage;
-                partName     = part.partInfo.name;
+                InverseStage = part.inverseStage;
+                PartName     = part.partInfo.name;
 
-                resourceRequestRemainingThreshold = Math.Max(part.resourceRequestRemainingThreshold, DRAINED);
-                resourcePriority                  = part.GetResourcePriority();
+                _resourceRequestRemainingThreshold = Math.Max(part.resourceRequestRemainingThreshold, DRAINED);
+                _resourcePriority                  = part.GetResourcePriority();
 
                 //note which resources this part has stored
                 for (int i = 0; i < part.Resources.Count; i++)
@@ -370,24 +362,24 @@ namespace MuMech
                     {
                         if (r.flowState)
                         {
-                            resources[r.info.id]     = r.amount;
-                            resourcesFull[r.info.id] = r.maxAmount;
+                            _resources[r.info.id]     = r.amount;
+                            _resourcesFull[r.info.id] = r.maxAmount;
                         }
                         else
-                            dryMass += r.amount * r.info.density; // disabled resources are just dead weight
+                            _dryMass += r.amount * r.info.density; // disabled resources are just dead weight
                     }
                     else
                     {
-                        freeResources[r.info.id] = true;
+                        _freeResources[r.info.id] = true;
                     }
 
                     // Including the ressource in the CRP.
                     if (r.info.name == "IntakeAir" || r.info.name == "IntakeLqd" || r.info.name == "IntakeAtm")
-                        freeResources[r.info.id] = true;
+                        _freeResources[r.info.id] = true;
                 }
 
-                hasResources = resources.Count > 0 || freeResources.Count > 0;
-                engineInfos.Clear();
+                HasResources = _resources.Count > 0 || _freeResources.Count > 0;
+                _engineInfos.Clear();
 
                 // determine if we've got at least one useful ModuleEngine
                 // we only do these test for the first ModuleEngines in the Part, could any other ones actually differ?
@@ -396,26 +388,26 @@ namespace MuMech
                     if (!(part.Modules[i] is ModuleEngines e) || !e.isEnabled) continue;
 
                     // Only count engines that either are ignited or will ignite in the future:
-                    if (!isEngine && (HighLogic.LoadedSceneIsEditor || inverseStage < StageManager.CurrentStage || e.getIgnitionState) &&
+                    if (!IsEngine && (HighLogic.LoadedSceneIsEditor || InverseStage < StageManager.CurrentStage || e.getIgnitionState) &&
                         (e.thrustPercentage > 0 || e.minThrust > 0))
                     {
                         // if an engine has been activated early, pretend it is in the current stage:
-                        if (e.getIgnitionState && inverseStage < StageManager.CurrentStage)
-                            inverseStage = StageManager.CurrentStage;
+                        if (e.getIgnitionState && InverseStage < StageManager.CurrentStage)
+                            InverseStage = StageManager.CurrentStage;
 
-                        isEngine         = true;
-                        isthrottleLocked = e.throttleLocked;
+                        IsEngine         = true;
+                        IsThrottleLocked = e.throttleLocked;
                     }
 
-                    engineInfos.Add(new EngineInfo(e));
+                    _engineInfos.Add(new EngineInfo(e));
                 }
 
-                maxThrust = 0;
+                MaxThrust = 0;
                 // find our max maxEngineResiduals for this engine part from all the modules
-                foreach (EngineInfo e in engineInfos)
+                foreach (EngineInfo e in _engineInfos)
                 {
-                    maxEngineResiduals =  Math.Max(maxEngineResiduals, e.moduleResiduals);
-                    maxThrust          += e.maxThrust;
+                    _maxEngineResiduals =  Math.Max(_maxEngineResiduals, e.ModuleResiduals);
+                    MaxThrust          += e.MaxThrust;
                 }
             }
 
@@ -441,11 +433,11 @@ namespace MuMech
             {
                 // Already processed (this gets used where we assign the attached part, then loop over all the children and expect the
                 // one we already hit to be skipped by this)
-                if (decoupledInStage != int.MinValue)
+                if (DecoupledInStage != int.MinValue)
                     return;
 
                 bool isDecoupler = false;
-                decoupledInStage = parentDecoupledInStage;
+                DecoupledInStage = parentDecoupledInStage;
 
                 for (int i = 0; i < p.Modules.Count; i++)
                 {
@@ -458,8 +450,8 @@ namespace MuMech
                             {
                                 // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                 isDecoupler      = true;
-                                decoupledInStage = p.inverseStage;
-                                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                DecoupledInStage = p.inverseStage;
+                                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                             }
                             else
                             {
@@ -479,16 +471,16 @@ namespace MuMech
                                     {
                                         // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                         isDecoupler      = true;
-                                        decoupledInStage = p.inverseStage;
-                                        AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                        DecoupledInStage = p.inverseStage;
+                                        AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                                     }
                                     else
                                     {
                                         // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.  The part and other children are dropped with the traversalParent.
                                         isDecoupler      = true;
-                                        decoupledInStage = parentDecoupledInStage;
+                                        DecoupledInStage = parentDecoupledInStage;
                                         nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, p, nodeLookup, p.inverseStage);
-                                        AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                        AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                                     }
                                 }
                             }
@@ -518,16 +510,16 @@ namespace MuMech
                                 {
                                     // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                     isDecoupler      = true;
-                                    decoupledInStage = p.inverseStage;
-                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                    DecoupledInStage = p.inverseStage;
+                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                                 }
                                 else
                                 {
                                     // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.  The part and other children are dropped with the traversalParent.
                                     isDecoupler      = true;
-                                    decoupledInStage = parentDecoupledInStage;
+                                    DecoupledInStage = parentDecoupledInStage;
                                     nodeLookup[attach.attachedPart].AssignDecoupledInStage(attach.attachedPart, p, nodeLookup, p.inverseStage);
-                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                                 }
                             }
 
@@ -546,16 +538,16 @@ namespace MuMech
                                 {
                                     // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                     isDecoupler      = true;
-                                    decoupledInStage = p.inverseStage;
-                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                    DecoupledInStage = p.inverseStage;
+                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                                 }
                                 else
                                 {
                                     // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.  The part and other children are dropped with the traversalParent.
                                     isDecoupler      = true;
-                                    decoupledInStage = parentDecoupledInStage;
+                                    DecoupledInStage = parentDecoupledInStage;
                                     nodeLookup[attachedPart].AssignDecoupledInStage(attachedPart, p, nodeLookup, p.inverseStage);
-                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                                    AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                                 }
                             }
                         }
@@ -568,47 +560,46 @@ namespace MuMech
                         {
                             // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                             isDecoupler      = true;
-                            decoupledInStage = p.inverseStage;
-                            AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                            DecoupledInStage = p.inverseStage;
+                            AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
                             break;
                         }
                 }
 
-                if (isLaunchClamp)
-                    decoupledInStage                    = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
-                else if (!isDecoupler) decoupledInStage = parentDecoupledInStage;
+                if (IsLaunchClamp)
+                    DecoupledInStage                    = p.inverseStage > parentDecoupledInStage ? p.inverseStage : parentDecoupledInStage;
+                else if (!isDecoupler) DecoupledInStage = parentDecoupledInStage;
 
-                isSepratron = isEngine && isthrottleLocked && activatesEvenIfDisconnected && inverseStage == decoupledInStage;
+                IsSepratron = IsEngine && IsThrottleLocked && ActivatesEvenIfDisconnected && InverseStage == DecoupledInStage;
 
-                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, decoupledInStage);
+                AssignChildrenDecoupledInStage(p, traversalParent, nodeLookup, DecoupledInStage);
             }
 
-            public static void print(object message)
+            private static void Print(object message)
             {
                 Dispatcher.InvokeAsync(() => MonoBehaviour.print("[MechJeb2] " + message));
             }
 
-            public double partThrust;
-            public double partSpoolupTime;
+            public double PartThrust;
+            public double PartSpoolupTime;
 
             public void SetConsumptionRates(float throttle, double atmospheres, double atmDensity, double machNumber)
             {
-                if (isEngine)
+                if (IsEngine)
                 {
-                    resourceConsumptions.Clear();
-                    propellantFlows.Clear();
+                    _resourceConsumptions.Clear();
+                    _propellantFlows.Clear();
 
                     //double sumThrustOverIsp = 0;
-                    partThrust      = 0;
-                    partSpoolupTime = 0;
+                    PartThrust      = 0;
+                    PartSpoolupTime = 0;
 
-                    isDrawingResources = false;
+                    IsDrawingResources = false;
 
-                    foreach (EngineInfo engineInfo in engineInfos)
+                    foreach (EngineInfo engineInfo in _engineInfos)
                     {
-                        ModuleEngines e = engineInfo.engineModule;
+                        ModuleEngines e = engineInfo.EngineModule;
                         // thrust is correct.
-                        Vector3d thrust;
                         // note that isp and massFlowRate do not include ignoreForIsp fuels like HTP and so need to be fixed for effective isp and the
                         // actual mdot of the rocket needs to be fixed to include HTP.
                         //
@@ -619,16 +610,15 @@ namespace MuMech
                         // the rocket equation just works and HTP should not be "ignored".   keeping it out of the atmosphereCurve just makes this annoying
                         // here and screws up the KSP API display of ISP.
                         //
-                        double isp, massFlowRate;
-                        EngineValuesAtConditions(engineInfo, throttle, atmospheres, atmDensity, machNumber, out thrust, out isp, out massFlowRate,
-                            dVLinearThrust);
-                        //print($"EngineValuesAtConditions thrust:{thrust} isp:{isp}, massFlowRate:{massFlowRate}");
+                        EngineValuesAtConditions(engineInfo, throttle, atmospheres, atmDensity, machNumber, out Vector3d thrust, out double massFlowRate,
+                            _dVLinearThrust);
+                        //Print($"EngineValuesAtConditions thrust:{thrust} isp:{isp}, massFlowRate:{massFlowRate}");
                         double thrMagnitude = thrust.magnitude;
-                        partThrust      += thrMagnitude;
-                        partSpoolupTime += thrMagnitude * engineInfo.moduleSpoolupTime;
+                        PartThrust      += thrMagnitude;
+                        PartSpoolupTime += thrMagnitude * engineInfo.ModuleSpoolupTime;
 
                         if (massFlowRate > 0)
-                            isDrawingResources = true;
+                            IsDrawingResources = true;
 
                         double totalDensity = 0;
 
@@ -645,9 +635,9 @@ namespace MuMech
                             if (density > 0)
                             {
                                 // hopefully different EngineModules in the same part don't have different flow modes for the same propellant
-                                if (!propellantFlows.ContainsKey(p.id))
+                                if (!_propellantFlows.ContainsKey(p.id))
                                 {
-                                    propellantFlows.Add(p.id, p.GetFlowMode());
+                                    _propellantFlows.Add(p.id, p.GetFlowMode());
                                 }
                             }
 
@@ -671,47 +661,44 @@ namespace MuMech
                             double propVolumeRate = p.ratio * volumeFlowRate;
 
                             // same density check here as above to keep massless propellants out of the ResourceConsumptions dict as well
-                            if (density > 0)
-                            {
-                                if (resourceConsumptions.ContainsKey(p.id))
-                                    resourceConsumptions[p.id] += propVolumeRate;
-                                else
-                                    resourceConsumptions.Add(p.id, propVolumeRate);
-                            }
+                            if (density <= 0) continue;
+
+                            if (_resourceConsumptions.ContainsKey(p.id))
+                                _resourceConsumptions[p.id] += propVolumeRate;
+                            else
+                                _resourceConsumptions.Add(p.id, propVolumeRate);
                         }
                     }
 
-                    if (partThrust > 0)
-                        partSpoolupTime /= partThrust;
+                    if (PartThrust > 0)
+                        PartSpoolupTime /= PartThrust;
 
-                    //print("For all engines, found spoolup time " + partSpoolupTime + " (with total thrust " + partThrust);
+                    //Print("For all engines, found spoolup time " + partSpoolupTime + " (with total thrust " + partThrust);
                 }
             }
 
             public void AddCrossfeedSources(HashSet<Part> parts, Dictionary<Part, FuelNode> nodeLookup)
             {
-                using (HashSet<Part>.Enumerator it = parts.GetEnumerator())
+                using HashSet<Part>.Enumerator it = parts.GetEnumerator();
+
+                while (it.MoveNext())
                 {
-                    while (it.MoveNext())
-                    {
-                        FuelNode fuelnode;
-                        if (nodeLookup.TryGetValue(it.Current, out fuelnode) && fuelnode.hasResources)
-                            crossfeedSources.Add(fuelnode);
-                    }
+                    if (nodeLookup.TryGetValue(it.Current!, out FuelNode fuelnode) && fuelnode.HasResources)
+                        _crossfeedSources.Add(fuelnode);
                 }
             }
 
             //call this when a node no longer exists, so that this node knows that it's no longer a valid source
             public void RemoveSourceNode(FuelNode n)
             {
-                crossfeedSources.Remove(n);
+                _crossfeedSources.Remove(n);
             }
 
             //return the mass of the simulated FuelNode. This is not the same as the mass of the Part,
             //because the simulated node may have lost resources, and thus mass, during the simulation.
             public double Mass(int simStage)
             {
-                //print("\n(" + simStage + ") " + partName.PadRight(25) + " dryMass " + dryMass.ToString("F3")
+                //Print("\n(" + simStage + ") " + partName.PadRight(25) + " dryMass " + dryMass.ToString("F3")
                 //          + " ResMass " + (resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id))).ToString("F3")
                 //          + " Fairing Mass " + (inverseStage < simStage ? fairingMass : 0).ToString("F3")
                 //          + " (" + fairingMass.ToString("F3") + ")"
@@ -719,43 +706,43 @@ namespace MuMech
                 //          );
 
                 //return dryMass + resources.Keys.Sum(id => resources[id] * MuUtils.ResourceDensity(id)) +
-                double resMass = resources.KeysList.Slinq().Select((r, rs) => rs[r] * MuUtils.ResourceDensity(r), resources).Sum();
-                return dryMass + crewMass + resMass +
-                       (inverseStage < simStage ? modulesUnstagedMass : modulesStagedMass);
+                double resMass = _resources.KeysList.Slinq().Select((r, rs) => rs[r] * MuUtils.ResourceDensity(r), _resources).Sum();
+                return _dryMass + _crewMass + resMass +
+                       (InverseStage < simStage ? _modulesUnstagedMass : _modulesStagedMass);
             }
 
             public void ResetDrainRates()
             {
-                resourceDrains.Clear();
+                _resourceDrains.Clear();
             }
 
             public void DrainResources(double dt)
             {
-                foreach (int type in resourceDrains.KeysList)
-                    if (!freeResources[type])
-                        resources[type] -= dt * resourceDrains[type];
+                foreach (int type in _resourceDrains.KeysList)
+                    if (!_freeResources[type])
+                        _resources[type] -= dt * _resourceDrains[type];
             }
 
             public void DebugResources()
             {
-                foreach (KeyValuePair<int, double> type in resources)
-                    print(partName + " " + PartResourceLibrary.Instance.GetDefinition(type.Key).name + " is " + type.Value);
+                foreach (KeyValuePair<int, double> type in _resources)
+                    Print(PartName + " " + PartResourceLibrary.Instance.GetDefinition(type.Key).name + " is " + type.Value);
             }
 
             public void DebugDrainRates()
             {
-                foreach (int type in resourceDrains.Keys)
-                    print(partName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + "(" + type + ") is " +
-                          resourceDrains[type] + " free=" + freeResources[type]);
+                foreach (int type in _resourceDrains.Keys)
+                    Print(PartName + "'s drain rate of " + PartResourceLibrary.Instance.GetDefinition(type).name + "(" + type + ") is " +
+                          _resourceDrains[type] + " free=" + _freeResources[type]);
             }
 
             public double MaxTimeStep()
             {
                 double minDT = double.MaxValue;
 
-                foreach (int id in resourceDrains.KeysList)
-                    if (!freeResources[id] && resources[id] > ResidualThreshold(id))
-                        minDT = Math.Min(minDT, (resources[id] - resourceResidual[id] * resourcesFull[id]) / resourceDrains[id]);
+                foreach (int id in _resourceDrains.KeysList)
+                    if (!_freeResources[id] && _resources[id] > ResidualThreshold(id))
+                        minDT = Math.Min(minDT, (_resources[id] - _resourceResidual[id] * _resourcesFull[id]) / _resourceDrains[id]);
 
                 return minDT;
             }
@@ -763,14 +750,14 @@ namespace MuMech
             //Returns an enumeration of the resources this part burns
             public List<int> BurnedResources()
             {
-                return resourceConsumptions.KeysList;
+                return _resourceConsumptions.KeysList;
             }
 
             //returns whether this part contains any of the given resources
             public bool ContainsResources(List<int> whichResources)
             {
                 foreach (int id in whichResources)
-                    if (resources[id] > ResidualThreshold(id))
+                    if (_resources[id] > ResidualThreshold(id))
                         return true;
 
                 return false;
@@ -778,7 +765,7 @@ namespace MuMech
 
             public bool ContainsResource(int id)
             {
-                return resources[id] > ResidualThreshold(id);
+                return _resources[id] > ResidualThreshold(id);
             }
 
             public bool CanDrawNeededResources(List<FuelNode> vessel)
@@ -790,17 +777,17 @@ namespace MuMech
                 // enough intake air, and any other causes.
                 // BIG FIXME: we're doing this in the thread and touching the KSP part object.
 
-                if (part.Modules[0] is ModuleEngines { flameout: true, statusL2: "No propellants" })
+                if (Part.Modules[0] is ModuleEngines { flameout: true, statusL2: "No propellants" })
                     return false;
 
-                foreach (int type in resourceConsumptions.KeysList)
+                foreach (int type in _resourceConsumptions.KeysList)
                 {
-                    ResourceFlowMode resourceFlowMode = propellantFlows[type];
+                    ResourceFlowMode resourceFlowMode = _propellantFlows[type];
                     switch (resourceFlowMode)
                     {
                         case ResourceFlowMode.NO_FLOW:
                             //check if we contain the needed resource:
-                            if (resources[type] <= ResidualThreshold(type)) return false;
+                            if (_resources[type] <= ResidualThreshold(type)) return false;
                             break;
 
                         case ResourceFlowMode.ALL_VESSEL:
@@ -808,17 +795,18 @@ namespace MuMech
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW:
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
                             //check if any part contains the needed resource:
-                            if (!vessel.Slinq().Any((n, t) => n.resources[t] > n.ResidualThreshold(type), type)) return false;
+                            if (!vessel.Slinq().Any((n, t) => n._resources[t] > n.ResidualThreshold(type), type)) return false;
                             break;
 
                         case ResourceFlowMode.STAGE_STACK_FLOW:
                         case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                         case ResourceFlowMode.STACK_PRIORITY_SEARCH:
                             // check if we can get any of the needed resources
-                            if (!crossfeedSources.Slinq().Any((n, t) => n.resources[t] > n.ResidualThreshold(type), type)) return false;
+                            if (!_crossfeedSources.Slinq().Any((n, t) => n._resources[t] > n.ResidualThreshold(type), type)) return false;
                             break;
 
-                        default: // and NULL
+                        case ResourceFlowMode.NULL:
+                        default:
                             return false;
                     }
                 }
@@ -828,7 +816,7 @@ namespace MuMech
 
             public bool CanDrawResourceFrom(int type, FuelNode node)
             {
-                ResourceFlowMode resourceFlowMode = propellantFlows[type];
+                ResourceFlowMode resourceFlowMode = _propellantFlows[type];
 
                 switch (resourceFlowMode)
                 {
@@ -844,7 +832,7 @@ namespace MuMech
                     case ResourceFlowMode.STAGE_STACK_FLOW:
                     case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        return crossfeedSources.Contains(node);
+                        return _crossfeedSources.Contains(node);
 
                     case ResourceFlowMode.NULL:
                     default:
@@ -854,31 +842,31 @@ namespace MuMech
 
             public void AssignResourceDrainRates(List<FuelNode> vessel)
             {
-                foreach (int type in resourceConsumptions.KeysList)
+                foreach (int type in _resourceConsumptions.KeysList)
                 {
-                    if (freeResources[type])
+                    if (_freeResources[type])
                         continue;
 
-                    double amount = resourceConsumptions[type];
+                    double amount = _resourceConsumptions[type];
 
-                    ResourceFlowMode resourceFlowMode = propellantFlows[type];
+                    ResourceFlowMode resourceFlowMode = _propellantFlows[type];
                     switch (resourceFlowMode)
                     {
                         case ResourceFlowMode.NO_FLOW:
-                            //print("NO_FLOW for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name);
-                            resourceResidual[type] =  maxEngineResiduals;
-                            resourceDrains[type]   += amount;
+                            //Print("NO_FLOW for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name);
+                            _resourceResidual[type] =  _maxEngineResiduals;
+                            _resourceDrains[type]   += amount;
                             break;
 
                         case ResourceFlowMode.ALL_VESSEL:
                         case ResourceFlowMode.ALL_VESSEL_BALANCE:
-                            AssignMaxResiduals(type, maxEngineResiduals, vessel);
+                            AssignMaxResiduals(type, _maxEngineResiduals, vessel);
                             AssignFuelDrainRateStagePriorityFlow(type, amount, false, vessel);
                             break;
 
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW:
                         case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                            AssignMaxResiduals(type, maxEngineResiduals, vessel);
+                            AssignMaxResiduals(type, _maxEngineResiduals, vessel);
                             AssignFuelDrainRateStagePriorityFlow(type, amount, true, vessel);
                             break;
 
@@ -886,8 +874,8 @@ namespace MuMech
                         case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
                         case ResourceFlowMode.STACK_PRIORITY_SEARCH:
                             //AssignFuelDrainRateStackPriority(type, true, amount);
-                            AssignMaxResiduals(type, maxEngineResiduals, crossfeedSources);
-                            AssignFuelDrainRateStagePriorityFlow(type, amount, true, crossfeedSources);
+                            AssignMaxResiduals(type, _maxEngineResiduals, _crossfeedSources);
+                            AssignFuelDrainRateStagePriorityFlow(type, amount, true, _crossfeedSources);
                             break;
                     }
                 }
@@ -899,7 +887,7 @@ namespace MuMech
                 for (int i = 0; i < vessel.Count; i++)
                 {
                     FuelNode n = vessel[i];
-                    n.resourceResidual[type] = Math.Max(n.resourceResidual[type], maxEngineResiduals);
+                    n._resourceResidual[type] = Math.Max(n._resourceResidual[type], maxEngineResiduals);
                 }
             }
 
@@ -909,21 +897,21 @@ namespace MuMech
                 using Disposable<List<FuelNode>> dispoSources = ListPool<FuelNode>.Instance.BorrowDisposable();
 
                 List<FuelNode> sources = dispoSources.value;
-                //print("AssignFuelDrainRateStagePriorityFlow for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name + " in " + vessel.Count + " parts ");
+                //Print("AssignFuelDrainRateStagePriorityFlow for " + partName + " searching for " + amount + " of " + PartResourceLibrary.Instance.GetDefinition(type).name + " in " + vessel.Count + " parts ");
                 for (int i = 0; i < vessel.Count; i++)
                 {
                     FuelNode n = vessel[i];
-                    if (n.resources[type] > n.ResidualThreshold(type))
+                    if (n._resources[type] > n.ResidualThreshold(type))
                     {
                         if (usePrio)
                         {
-                            if (n.resourcePriority > maxPrio)
+                            if (n._resourcePriority > maxPrio)
                             {
-                                maxPrio = n.resourcePriority;
+                                maxPrio = n._resourcePriority;
                                 sources.Clear();
                                 sources.Add(n);
                             }
-                            else if (n.resourcePriority == maxPrio)
+                            else if (n._resourcePriority == maxPrio)
                             {
                                 sources.Add(n);
                             }
@@ -935,19 +923,19 @@ namespace MuMech
                     }
                 }
 
-                //print(partName + " drains resource from " + sources.Count + " parts ");
+                //Print(partName + " drains resource from " + sources.Count + " parts ");
                 for (int i = 0; i < sources.Count; i++)
-                    if (!freeResources[type])
-                        sources[i].resourceDrains[type] += amount / sources.Count;
+                    if (!_freeResources[type])
+                        sources[i]._resourceDrains[type] += amount / sources.Count;
             }
 
             // for a single EngineModule, get thrust + isp + massFlowRate
             private void EngineValuesAtConditions(EngineInfo engineInfo, double throttle, double atmPressure, double atmDensity, double machNumber,
-                out Vector3d thrust, out double isp, out double massFlowRate, bool cosLoss = true)
+                out Vector3d thrust, out double massFlowRate, bool cosLoss = true)
             {
-                isp = engineInfo.engineModule.ISPAtConditions(throttle, atmPressure, atmDensity, machNumber);
-                double flowMultiplier = engineInfo.engineModule.FlowMultiplierAtConditions(atmDensity, machNumber);
-                massFlowRate = engineInfo.engineModule.FlowRateAtConditions(throttle, flowMultiplier);
+                double isp = engineInfo.EngineModule.ISPAtConditions(throttle, atmPressure, atmDensity, machNumber);
+                double flowMultiplier = engineInfo.EngineModule.FlowMultiplierAtConditions(atmDensity, machNumber);
+                massFlowRate = engineInfo.EngineModule.FlowRateAtConditions(throttle, flowMultiplier);
                 thrust       = ThrustAtConditions(engineInfo, massFlowRate, isp, cosLoss);
                 //Debug.Log("thrust = " + thrust + " isp = " + isp + " massFlowRate = " + massFlowRate);
             }
@@ -958,16 +946,16 @@ namespace MuMech
                 if (massFlowRate <= 0)
                     return Vector3d.zero;
 
-                Vector3d thrustVector = engineInfo.thrustVector;
+                Vector3d thrustVector = engineInfo.ThrustVector;
 
-                if (cosLoss) thrustVector = Vector3.Dot(vesselOrientation, thrustVector) * thrustVector.normalized;
+                if (cosLoss) thrustVector = Vector3.Dot(_vesselOrientation, thrustVector) * thrustVector.normalized;
 
-                return thrustVector * massFlowRate * engineInfo.engineModule.g * engineInfo.engineModule.multIsp * isp;
+                return thrustVector * massFlowRate * engineInfo.EngineModule.g * engineInfo.EngineModule.multIsp * isp;
             }
 
             private double ResidualThreshold(int resourceId)
             {
-                return Math.Max(resourceRequestRemainingThreshold, resourceResidual[resourceId] * resourcesFull[resourceId]);
+                return Math.Max(_resourceRequestRemainingThreshold, _resourceResidual[resourceId] * _resourcesFull[resourceId]);
             }
         }
     }
