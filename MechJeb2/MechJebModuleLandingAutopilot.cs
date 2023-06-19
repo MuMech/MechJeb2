@@ -154,10 +154,10 @@ namespace MuMech
         public void StopLanding()
         {
             users.Clear();
-            core.thrust.ThrustOff();
-            core.thrust.users.Remove(this);
-            if (core.landing.RCSAdjustment)
-                core.rcs.enabled = false;
+            core.Thrust.ThrustOff();
+            core.Thrust.users.Remove(this);
+            if (core.Landing.RCSAdjustment)
+                core.RCS.enabled = false;
             SetStep(null);
         }
 
@@ -191,19 +191,19 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            core.attitude.users.Add(this);
-            core.thrust.users.Add(this);
+            core.Attitude.users.Add(this);
+            core.Thrust.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.attitudeDeactivate();
+            core.Attitude.attitudeDeactivate();
             _predictor.users.Remove(this);
             _predictor.descentSpeedPolicy = null;
-            core.thrust.ThrustOff();
-            core.thrust.users.Remove(this);
-            if (core.landing.RCSAdjustment)
-                core.rcs.enabled = false;
+            core.Thrust.ThrustOff();
+            core.Thrust.users.Remove(this);
+            if (core.Landing.RCSAdjustment)
+                core.RCS.enabled = false;
             SetStep(null);
         }
 
@@ -272,7 +272,7 @@ namespace MuMech
             // into a position. We can't just get the current position of those coordinates, because the planet will
             // rotate during the descent, so we have to account for that.
             Vector3d desiredLandingPosition =
-                mainBody.GetWorldSurfacePosition(core.target.targetLatitude, core.target.targetLongitude, 0) - mainBody.position;
+                mainBody.GetWorldSurfacePosition(core.Target.targetLatitude, core.Target.targetLongitude, 0) - mainBody.position;
             float bodyRotationAngleDuringDescent = (float)(360 * (Prediction.EndUT - vesselState.time) / mainBody.rotationPeriod);
             var bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;
@@ -556,7 +556,7 @@ namespace MuMech
         public void SetTargetKSC(MechJebCore controller)
         {
             users.Add(controller);
-            core.target.SetPositionTarget(mainBody, MechJebModuleLandingGuidance.LandingSites[0].Latitude,
+            core.Target.SetPositionTarget(mainBody, MechJebModuleLandingGuidance.LandingSites[0].Latitude,
                 MechJebModuleLandingGuidance.LandingSites[0].Longitude);
         }
     }
@@ -727,7 +727,7 @@ namespace MuMech
             }
 
             // What was the overshoot for this new result?
-            double overshoot = newResult.GetOvershoot(_autoPilot.core.target.targetLatitude, _autoPilot.core.target.targetLongitude);
+            double overshoot = newResult.GetOvershoot(_autoPilot.core.Target.targetLatitude, _autoPilot.core.Target.targetLongitude);
 
             //Debug.Log("overshoot: " + overshoot.ToString("F2") + " multiplier: " + newResult.parachuteMultiplier.ToString("F4") + " hasError:" + newResult.multiplierHasError);
 

@@ -60,7 +60,7 @@ namespace MuMech
         protected readonly MechJebCore Core;
 
         //conveniences:
-        protected VesselState   VesselState => Core.vesselState;
+        protected VesselState   VesselState => Core.VesselState;
         protected Vessel        Vessel      => Core.part.vessel;
         protected CelestialBody MainBody    => Core.part.vessel.mainBody;
         protected Orbit         Orbit       => Core.part.vessel.orbit;

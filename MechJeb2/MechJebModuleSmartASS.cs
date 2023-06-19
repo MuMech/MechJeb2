@@ -234,13 +234,13 @@ namespace MuMech
             }
 
             // If any other module use the attitude controler then let them do it
-            if (core.attitude.enabled && core.attitude.users.Count(u => !Equals(u)) > 0)
+            if (core.Attitude.enabled && core.Attitude.users.Count(u => !Equals(u)) > 0)
             {
                 if (autoDisableSmartASS)
                 {
                     target = Target.OFF;
-                    if (core.attitude.users.Contains(this))
-                        core.attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    if (core.Attitude.users.Contains(this))
+                        core.Attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
 
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button57"), btAuto, GUILayout.ExpandWidth(true)); //"AUTO"
@@ -399,7 +399,7 @@ namespace MuMech
                                 Engage(false);
                             }
 
-                            core.attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
+                            core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
                         else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE)
                         {
@@ -498,12 +498,12 @@ namespace MuMech
                                 Engage(false);
                             }
 
-                            core.attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
+                            core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
 
                         break;
                     case Mode.TARGET:
-                        if (core.target.NormalTargetExists)
+                        if (core.Target.NormalTargetExists)
                         {
                             GUILayout.BeginHorizontal();
                             TargetButton(Target.TARGET_PLUS);
@@ -558,10 +558,10 @@ namespace MuMech
             switch (target)
             {
                 case Target.OFF:
-                    core.attitude.attitudeDeactivate();
+                    core.Attitude.attitudeDeactivate();
                     return;
                 case Target.KILLROT:
-                    core.attitude.attitudeKILLROT = true;
+                    core.Attitude.attitudeKILLROT = true;
                     attitude                      = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
                     reference                     = AttitudeReference.INERTIAL;
                     break;
@@ -662,11 +662,11 @@ namespace MuMech
             }
 
             if (direction != Vector3d.zero)
-                core.attitude.attitudeTo(direction, reference, this);
+                core.Attitude.attitudeTo(direction, reference, this);
             else
-                core.attitude.attitudeTo(attitude, reference, this);
+                core.Attitude.attitudeTo(attitude, reference, this);
 
-            if (resetPID) { core.attitude.Controller.Reset(); }
+            if (resetPID) { core.Attitude.Controller.Reset(); }
         }
 
         public override GUILayoutOption[] WindowOptions()

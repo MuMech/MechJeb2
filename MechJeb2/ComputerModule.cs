@@ -72,7 +72,7 @@ namespace MuMech
         {
             this.core    = core;
             part         = core.part;
-            vesselState  = core.vesselState;
+            vesselState  = core.VesselState;
             profilerName = GetType().Name;
 
             users = new UserPool(this);

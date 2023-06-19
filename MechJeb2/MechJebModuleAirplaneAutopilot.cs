@@ -71,7 +71,7 @@ namespace MuMech
         {
             if (SpeedHoldEnabled)
             {
-                core.thrust.users.Remove(this);
+                core.Thrust.users.Remove(this);
             }
         }
 
@@ -98,7 +98,7 @@ namespace MuMech
 
             Spd              = vesselState.speedSurface;
             SpeedHoldEnabled = true;
-            core.thrust.users.Add(this);
+            core.Thrust.users.Add(this);
             AccelerationPIDController.Reset();
         }
 
@@ -108,7 +108,7 @@ namespace MuMech
                 return;
 
             SpeedHoldEnabled = false;
-            core.thrust.users.Remove(this);
+            core.Thrust.users.Remove(this);
         }
 
         public void EnableVertSpeedHold()
@@ -234,11 +234,11 @@ namespace MuMech
                 double tAct = AccelerationPIDController.Compute(AErr);
                 if (!double.IsNaN(tAct))
                 {
-                    core.thrust.targetThrottle = (float)MuUtils.Clamp(tAct, 0, 1);
+                    core.Thrust.targetThrottle = (float)MuUtils.Clamp(tAct, 0, 1);
                 }
                 else
                 {
-                    core.thrust.targetThrottle = 0.0f;
+                    core.Thrust.targetThrottle = 0.0f;
                     AccelerationPIDController.Reset();
                 }
             }

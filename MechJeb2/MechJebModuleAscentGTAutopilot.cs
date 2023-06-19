@@ -79,9 +79,9 @@ namespace MuMech
 
             bool liftedOff = vessel.LiftedOff() && !vessel.Landed;
 
-            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude);
+            core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude);
 
-            core.thrust.targetThrottle = 1.0F;
+            core.Thrust.targetThrottle = 1.0F;
 
             if (!vessel.LiftedOff() || vessel.Landed) Status = Localizer.Format("#MechJeb_Ascent_status6");  //"Awaiting liftoff"
             else Status                                      = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
@@ -118,8 +118,8 @@ namespace MuMech
             AttitudeTo(90 - AscentSettings.TurnStartPitch);
 
 
-            core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
-            if (core.thrust.targetThrottle < 1.0F)
+            core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
+            if (core.Thrust.targetThrottle < 1.0F)
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
                 return;
@@ -162,8 +162,8 @@ namespace MuMech
             // srfvelPitch == zero AoA
             AttitudeTo(SrfvelPitch() * pitchfade);
 
-            core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
-            if (core.thrust.targetThrottle < 1.0F)
+            core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.IntermediateAltitude + mainBody.Radius);
+            if (core.Thrust.targetThrottle < 1.0F)
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
                 return;
@@ -192,19 +192,19 @@ namespace MuMech
 
             AttitudeTo(0); /* FIXME: corrective steering */
 
-            core.thrust.targetThrottle = FixedTimeToAp() < AscentSettings.HoldAPTime ? 1.0F : 0.1F;
+            core.Thrust.targetThrottle = FixedTimeToAp() < AscentSettings.HoldAPTime ? 1.0F : 0.1F;
 
             Status = Localizer.Format("#MechJeb_Ascent_status24"); //"Holding AP"
         }
 
         private void DriveCoastToApoapsis()
         {
-            core.thrust.targetThrottle = 0;
+            core.Thrust.targetThrottle = 0;
 
             if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
             {
                 _mode = AscentMode.EXIT;
-                core.warp.MinimumWarp();
+                core.Warp.MinimumWarp();
                 return;
             }
 
@@ -212,26 +212,26 @@ namespace MuMech
             if (orbit.ApA < AscentSettings.DesiredOrbitAltitude - 1000.0)
             {
                 _mode = AscentMode.HOLD_AP;
-                core.warp.MinimumWarp();
+                core.Warp.MinimumWarp();
                 return;
             }
 
-            core.thrust.targetThrottle = 0;
+            core.Thrust.targetThrottle = 0;
 
             // follow surface velocity to reduce flipping
             AttitudeTo(SrfvelPitch());
 
             if (orbit.ApA < AscentSettings.DesiredOrbitAltitude)
             {
-                core.warp.WarpPhysicsAtRate(1);
-                core.thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.DesiredOrbitAltitude + mainBody.Radius);
+                core.Warp.WarpPhysicsAtRate(1);
+                core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(orbit.ApR, AscentSettings.DesiredOrbitAltitude + mainBody.Radius);
             }
             else
             {
-                if (core.node.autowarp)
+                if (core.Node.autowarp)
                 {
                     //warp at x2 physical warp:
-                    core.warp.WarpPhysicsAtRate(2);
+                    core.Warp.WarpPhysicsAtRate(2);
                 }
             }
 

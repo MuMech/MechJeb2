@@ -93,7 +93,7 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             // Let the ascent guidance handle the solar panels to retract them before launch
-            if (autoDeploy && !core.ascent.enabled)
+            if (autoDeploy && !core.Ascent.enabled)
             {
                 bool tmp = ShouldDeploy();
 

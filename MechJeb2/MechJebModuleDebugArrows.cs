@@ -223,10 +223,10 @@ namespace MuMech
             }
             */
 
-            requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.attitude.enabled && core.ShowGui);
-            if (requestedAttitudeArrowActive && core.attitude.enabled)
+            requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.Attitude.enabled && core.ShowGui);
+            if (requestedAttitudeArrowActive && core.Attitude.enabled)
             {
-                requestedAttitudeArrow.Set(arrowPos, core.attitude.RequestedAttitude);
+                requestedAttitudeArrow.Set(arrowPos, core.Attitude.RequestedAttitude);
                 requestedAttitudeArrow.SetLength((float)arrowsLength.val);
                 requestedAttitudeArrow.SeeThrough(seeThrough);
             }

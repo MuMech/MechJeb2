@@ -18,16 +18,16 @@ namespace MuMech
             {
                 double minalt = Math.Min(VesselState.altitudeBottom, Math.Min(VesselState.altitudeASL, VesselState.altitudeTrue));
 
-                if (!Core.node.autowarp || _aggressivePolicy == null) return this;
+                if (!Core.Node.autowarp || _aggressivePolicy == null) return this;
 
                 double maxVel = 1.02 * _aggressivePolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
 
                 double diffPercent = (maxVel / VesselState.speedSurface - 1) * 100;
 
                 if (minalt > 200 && diffPercent > 0 && Vector3d.Angle(VesselState.forward, -VesselState.surfaceVelocity) < 45)
-                    Core.warp.WarpRegularAtRate((float)(diffPercent * diffPercent * diffPercent));
+                    Core.Warp.WarpRegularAtRate((float)(diffPercent * diffPercent * diffPercent));
                 else
-                    Core.warp.MinimumWarp(true);
+                    Core.Warp.MinimumWarp(true);
 
                 return this;
             }
@@ -36,7 +36,7 @@ namespace MuMech
             {
                 if (Vessel.LandedOrSplashed)
                 {
-                    Core.landing.StopLanding();
+                    Core.Landing.StopLanding();
                     return null;
                 }
 
@@ -48,32 +48,32 @@ namespace MuMech
                 {
                     // if we have TWR < 1, just try as hard as we can to decelerate:
                     // (we need this special case because otherwise the calculations spit out NaN's)
-                    Core.thrust.tmode         = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-                    Core.thrust.trans_kill_h  = true;
-                    Core.thrust.trans_spd_act = 0;
+                    Core.Thrust.tmode         = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
+                    Core.Thrust.trans_kill_h  = true;
+                    Core.Thrust.trans_spd_act = 0;
                 }
                 else if (minalt > 200)
                 {
                     if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.surfaceVelocity, VesselState.up) < 80)
                     {
                         // if we have positive vertical velocity, point up and don't thrust:
-                        Core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
-                        Core.thrust.tmode         = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.thrust.trans_spd_act = 0;
+                        Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
+                        Core.Thrust.tmode         = MechJebModuleThrustController.TMode.DIRECT;
+                        Core.Thrust.trans_spd_act = 0;
                     }
                     else if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.forward, -VesselState.surfaceVelocity) > 45)
                     {
                         // if we're not facing approximately retrograde, turn to point retrograde and don't thrust:
-                        Core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
-                        Core.thrust.tmode         = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.thrust.trans_spd_act = 0;
+                        Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                        Core.Thrust.tmode         = MechJebModuleThrustController.TMode.DIRECT;
+                        Core.Thrust.trans_spd_act = 0;
                     }
                     else
                     {
                         //if we're above 200m, point retrograde and control surface velocity:
-                        Core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                        Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
 
-                        Core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
+                        Core.Thrust.tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
 
                         //core.thrust.trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
                         Vector3d estimatedLandingPosition = VesselState.CoM + VesselState.surfaceVelocity.sqrMagnitude /
@@ -82,18 +82,18 @@ namespace MuMech
                         _aggressivePolicy =
                             new GravityTurnDescentSpeedPolicy(terrainRadius, MainBody.GeeASL * 9.81,
                                 VesselState.limitedMaxThrustAccel); // this constant policy creation is wastefull...
-                        Core.thrust.trans_spd_act =
+                        Core.Thrust.trans_spd_act =
                             (float)_aggressivePolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
                     }
                 }
                 else
                 {
                     // last 200 meters:
-                    Core.thrust.trans_spd_act = -Mathf.Lerp(0,
+                    Core.Thrust.trans_spd_act = -Mathf.Lerp(0,
                         (float)Math.Sqrt((VesselState.limitedMaxThrustAccel - VesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
 
                     // take into account desired landing speed:
-                    Core.thrust.trans_spd_act = (float)Math.Min(-Core.landing.TouchdownSpeed, Core.thrust.trans_spd_act);
+                    Core.Thrust.trans_spd_act = (float)Math.Min(-Core.Landing.TouchdownSpeed, Core.Thrust.trans_spd_act);
 
 //                    core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
 //                    core.thrust.trans_kill_h = true;
@@ -103,17 +103,17 @@ namespace MuMech
                     {
                         // if we're falling more or less straight down, control vertical speed and
                         // kill horizontal velocity
-                        Core.thrust.tmode        = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-                        Core.thrust.trans_kill_h = true;
+                        Core.Thrust.tmode        = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
+                        Core.Thrust.trans_kill_h = true;
                     }
                     else
                     {
                         // if we're falling at a significant angle from vertical, our vertical speed might be
                         // quite small but we might still need to decelerate. Control the total speed instead
                         // by thrusting directly retrograde
-                        Core.attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
-                        Core.thrust.tmode         =  MechJebModuleThrustController.TMode.KEEP_SURFACE;
-                        Core.thrust.trans_spd_act *= -1;
+                        Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                        Core.Thrust.tmode         =  MechJebModuleThrustController.TMode.KEEP_SURFACE;
+                        Core.Thrust.trans_spd_act *= -1;
                     }
                 }
 

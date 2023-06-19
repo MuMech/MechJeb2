@@ -202,11 +202,11 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            if (core.attitude.users.Contains(this))
+            if (core.Attitude.users.Contains(this))
             {
 //				line.enabled = false;
-                core.attitude.attitudeDeactivate();
-                core.attitude.users.Remove(this);
+                core.Attitude.attitudeDeactivate();
+                core.Attitude.users.Remove(this);
             }
 
             base.OnModuleDisabled();
@@ -378,9 +378,9 @@ namespace MuMech
                     1 << 15, QueryTriggerInteraction.Ignore);
                 Vector3 norm = hit.normal;
 
-                if (!core.attitude.users.Contains(this))
+                if (!core.Attitude.users.Contains(this))
                 {
-                    core.attitude.users.Add(this);
+                    core.Attitude.users.Add(this);
                 }
 
                 float fSpeed = (float)curSpeed;
@@ -393,7 +393,7 @@ namespace MuMech
                 var quat = Quaternion.LookRotation(fwd, norm);
 
                 if (vesselState.torqueAvailable.sqrMagnitude > 0)
-                    core.attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+                    core.Attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
             }
 
             if (BrakeOnEnergyDepletion)
@@ -509,11 +509,11 @@ namespace MuMech
                         waitingForDaylight = false;
                     }
 
-                    core.warp.WarpRegularAtRate(energyLeft < 0.9 ? 1000 : 50);
+                    core.Warp.WarpRegularAtRate(energyLeft < 0.9 ? 1000 : 50);
                     if (energyLeft > 0.99)
                     {
                         waitingForDaylight = false;
-                        core.warp.MinimumWarp();
+                        core.Warp.MinimumWarp();
                     }
                 }
             }
@@ -528,10 +528,10 @@ namespace MuMech
                     .OnUpdate(); // update users for Stability Control, Brake on Eject and Brake on Energy Depletion
             }
 
-            if (!StabilityControl && core.attitude.users.Contains(this))
+            if (!StabilityControl && core.Attitude.users.Contains(this))
             {
-                core.attitude.attitudeDeactivate();
-                core.attitude.users.Remove(this);
+                core.Attitude.attitudeDeactivate();
+                core.Attitude.users.Remove(this);
             }
         }
 

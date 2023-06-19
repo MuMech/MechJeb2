@@ -11,7 +11,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (!core.target.NormalTargetExists)
+            if (!core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label1")); //"Select a target to rendezvous with."
                 base.WindowGUI(windowID);
@@ -20,7 +20,7 @@ namespace MuMech
 
             MechJebModuleRendezvousAutopilot autopilot = core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
 
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody)
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label2")); //"Rendezvous target must be in the same sphere of influence."
                 if (autopilot.enabled)
@@ -33,7 +33,7 @@ namespace MuMech
 
             if (autopilot != null)
             {
-                GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZauto_label3"), core.target.Name); //"Rendezvous target"
+                GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZauto_label3"), core.Target.Name); //"Rendezvous target"
 
                 if (!autopilot.enabled)
                 {
@@ -56,7 +56,7 @@ namespace MuMech
                 if (autopilot.enabled) GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label7", autopilot.status)); //"Status: <<1>>"
             }
 
-            core.node.autowarp = GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1")); //"Auto-warp"
+            core.Node.autowarp = GUILayout.Toggle(core.Node.autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1")); //"Auto-warp"
 
             GUILayout.EndVertical();
 

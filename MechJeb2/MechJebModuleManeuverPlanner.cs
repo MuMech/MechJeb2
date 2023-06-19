@@ -76,7 +76,7 @@ namespace MuMech
 
             try
             {
-                operation[operationId].DoParametersGUI(o, UT, core.target);
+                operation[operationId].DoParametersGUI(o, UT, core.Target);
             }
             catch (Exception) { } // TODO: Would be better to fix the problem but this will do for now
 
@@ -92,7 +92,7 @@ namespace MuMech
                 executingNode = false;
             }
 
-            if (core.node != null && GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button2"))) //"Create and execute"
+            if (core.Node != null && GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button2"))) //"Create and execute"
             {
                 makingNode    = true;
                 executingNode = true;
@@ -102,7 +102,7 @@ namespace MuMech
 
             if (makingNode)
             {
-                List<ManeuverParameters> nodeList = operation[operationId].MakeNodes(o, UT, core.target);
+                List<ManeuverParameters> nodeList = operation[operationId].MakeNodes(o, UT, core.Target);
                 if (nodeList != null)
                 {
                     if (!createNode)
@@ -113,8 +113,8 @@ namespace MuMech
                     }
                 }
 
-                if (executingNode && core.node != null)
-                    core.node.ExecuteOneNode(this);
+                if (executingNode && core.Node != null)
+                    core.Node.ExecuteOneNode(this);
             }
 
             if (operation[operationId].GetErrorMessage().Length > 0)
@@ -127,57 +127,57 @@ namespace MuMech
                 vessel.RemoveAllManeuverNodes();
             }
 
-            if (core.node != null)
+            if (core.Node != null)
             {
-                if (anyNodeExists && !core.node.enabled)
+                if (anyNodeExists && !core.Node.enabled)
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button4"))) //Execute next node
                     {
-                        core.node.ExecuteOneNode(this);
+                        core.Node.ExecuteOneNode(this);
                     }
 
                     if (VesselState.isLoadedPrincipia && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7"))) //Execute next Principia node
                     {
-                        core.node.ExecuteOnePNode(this);
+                        core.Node.ExecuteOnePNode(this);
                     }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button5"))) //Execute all nodes
                         {
-                            core.node.ExecuteAllNodes(this);
+                            core.Node.ExecuteAllNodes(this);
                         }
                     }
                 }
-                else if (core.node.enabled)
+                else if (core.Node.enabled)
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button6"))) //Abort node execution
                     {
-                        core.node.Abort();
+                        core.Node.Abort();
                     }
                 }
 
                 GUILayout.BeginHorizontal();
-                core.node.autowarp =
-                    GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                core.Node.autowarp =
+                    GUILayout.Toggle(core.Node.autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
 
                 GUILayout.BeginVertical();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Tolerance"), GUILayout.ExpandWidth(false)); //"Tolerance:"
-                core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                core.Node.tolerance.text = GUILayout.TextField(core.Node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val += 0.1;
+                    core.Node.tolerance.val += 0.1;
                 }
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val -= core.node.tolerance.val > 0.1 ? 0.1 : 0.0;
+                    core.Node.tolerance.val -= core.Node.tolerance.val > 0.1 ? 0.1 : 0.0;
                 }
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val = 0.1;
+                    core.Node.tolerance.val = 0.1;
                 }
 
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
@@ -185,20 +185,20 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Lead_time"), GUILayout.ExpandWidth(false)); //Lead time:
-                core.node.leadTime.text = GUILayout.TextField(core.node.leadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                core.Node.leadTime.text = GUILayout.TextField(core.Node.leadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.leadTime.val += 1;
+                    core.Node.leadTime.val += 1;
                 }
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.leadTime.val -= 1;
+                    core.Node.leadTime.val -= 1;
                 }
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.leadTime.val = 3;
+                    core.Node.leadTime.val = 3;
                 }
 
                 GUILayout.Label("s", GUILayout.ExpandWidth(false));

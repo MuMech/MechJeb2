@@ -766,8 +766,8 @@ namespace MuMech
                         waitingForPick = true;
                         if (MapView.MapIsEnabled)
                         {
-                            core.target.Unset();
-                            core.target.PickPositionTargetOnMap();
+                            core.Target.Unset();
+                            core.Target.PickPositionTargetOnMap();
                         }
                     }
                     else
@@ -1085,28 +1085,28 @@ namespace MuMech
             {
                 if (MapView.MapIsEnabled)
                 {
-                    if (core.target.pickingPositionTarget == false)
+                    if (core.Target.pickingPositionTarget == false)
                     {
-                        if (core.target.PositionTargetExists)
+                        if (core.Target.PositionTargetExists)
                         {
                             if (selIndex > -1 && selIndex < ap.Waypoints.Count)
                             {
-                                ap.Waypoints.Insert(selIndex, new MechJebWaypoint(core.target.GetPositionTargetPosition()));
+                                ap.Waypoints.Insert(selIndex, new MechJebWaypoint(core.Target.GetPositionTargetPosition()));
                                 tmpRadius = ap.Waypoints[selIndex].Radius.ToString();
                                 tmpLat    = LatToString(ap.Waypoints[selIndex].Latitude);
                                 tmpLon    = LonToString(ap.Waypoints[selIndex].Longitude);
                             }
                             else
                             {
-                                ap.Waypoints.Add(new MechJebWaypoint(core.target.GetPositionTargetPosition()));
+                                ap.Waypoints.Add(new MechJebWaypoint(core.Target.GetPositionTargetPosition()));
                             }
 
-                            core.target.Unset();
+                            core.Target.Unset();
                             waitingForPick = alt;
                         }
                         else
                         {
-                            core.target.PickPositionTargetOnMap();
+                            core.Target.PickPositionTargetOnMap();
                         }
                     }
                 }

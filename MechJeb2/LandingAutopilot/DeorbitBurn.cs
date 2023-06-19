@@ -18,10 +18,10 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (_deorbitBurnTriggered && Core.attitude.attitudeAngleFromTarget() < 5)
-                    Core.thrust.targetThrottle = 1.0F;
+                if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
+                    Core.Thrust.targetThrottle = 1.0F;
                 else
-                    Core.thrust.targetThrottle = 0;
+                    Core.Thrust.targetThrottle = 0;
 
                 return this;
             }
@@ -32,7 +32,7 @@ namespace MuMech
                 //in the orbit to deorbt; we already have deorbited.
                 if (Orbit.ApA < MainBody.RealMaxAtmosphereAltitude())
                 {
-                    Core.thrust.targetThrottle = 0;
+                    Core.Thrust.targetThrottle = 0;
                     return new CourseCorrection(Core);
                 }
 
@@ -50,7 +50,7 @@ namespace MuMech
                     VesselState.time; //Find how long that orbit would take to impact the ground
                 double planetRotationDuringFreefall =
                     360 * freefallTime / MainBody.rotationPeriod; //Find how many degrees the planet will rotate during that time
-                Vector3d currentTargetRadialVector = MainBody.GetWorldSurfacePosition(Core.target.targetLatitude, Core.target.targetLongitude, 0) -
+                Vector3d currentTargetRadialVector = MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) -
                                                      MainBody.position; //Find the current vector from the planet center to the target landing site
                 var freefallPlanetRotation =
                     Quaternion.AngleAxis((float)planetRotationDuringFreefall,
@@ -93,10 +93,10 @@ namespace MuMech
 
                 if (_deorbitBurnTriggered)
                 {
-                    if (!MuUtils.PhysicsRunning()) { Core.warp.MinimumWarp(); } //get out of warp
+                    if (!MuUtils.PhysicsRunning()) { Core.Warp.MinimumWarp(); } //get out of warp
 
                     Vector3d deltaV = finalHorizontalVelocity - currentHorizontalVelocity;
-                    Core.attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, Core.landing);
+                    Core.Attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, Core.Landing);
 
                     if (deltaV.magnitude < 2.0)
                     {
@@ -107,8 +107,8 @@ namespace MuMech
                 }
                 else
                 {
-                    Core.attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, Core.landing);
-                    if (Core.node.autowarp) Core.warp.WarpRegularAtRate((float)(Orbit.period / 10));
+                    Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, Core.Landing);
+                    if (Core.Node.autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 10));
 
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status8"); //"Moving to high deorbit burn point"
                 }

@@ -16,36 +16,36 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
-            if (autostageSavedState && !core.staging.users.Contains(this))
+            if (autostageSavedState && !core.Staging.users.Contains(this))
             {
-                core.staging.users.Add(this);
+                core.Staging.users.Add(this);
             }
         }
 
         [GeneralInfoItem("#MechJeb_AutostageOnce", InfoItem.Category.Misc)] //Autostage Once
         public void AutostageOnceItem()
         {
-            if (core.staging.enabled)
+            if (core.Staging.enabled)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label1",
-                    core.staging.autostagingOnce
+                    core.Staging.autostagingOnce
                         ? Localizer.Format("#MechJeb_Utilities_label1_1")
                         : " ")); //"Autostaging"<<1>>"Active" -------<<1>>" once ":""
             }
 
-            if (!core.staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1"))) //"Autostage once"
+            if (!core.Staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1"))) //"Autostage once"
             {
-                core.staging.AutostageOnce(this);
+                core.Staging.AutostageOnce(this);
             }
         }
 
         [GeneralInfoItem("#MechJeb_Autostage", InfoItem.Category.Misc)] //Autostage
         public void Autostage()
         {
-            bool oldAutostage = core.staging.users.Contains(this);
+            bool oldAutostage = core.Staging.users.Contains(this);
             bool newAutostage = GUILayout.Toggle(oldAutostage, Localizer.Format("#MechJeb_Utilities_checkbox1")); //"Autostage"
-            if (newAutostage && !oldAutostage) core.staging.users.Add(this);
-            if (!newAutostage && oldAutostage) core.staging.users.Remove(this);
+            if (newAutostage && !oldAutostage) core.Staging.users.Add(this);
+            if (!newAutostage && oldAutostage) core.Staging.users.Remove(this);
             autostageSavedState = newAutostage;
         }
 
@@ -55,29 +55,29 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             //core.thrust.LimitToTerminalVelocityInfoItem();
-            core.thrust.LimitToMaxDynamicPressureInfoItem();
-            core.thrust.LimitToPreventOverheatsInfoItem();
-            core.thrust.LimitAccelerationInfoItem();
-            core.thrust.LimitThrottleInfoItem();
-            core.thrust.LimiterMinThrottleInfoItem();
-            core.thrust.LimitElectricInfoItem();
-            core.thrust.LimitToPreventFlameoutInfoItem();
+            core.Thrust.LimitToMaxDynamicPressureInfoItem();
+            core.Thrust.LimitToPreventOverheatsInfoItem();
+            core.Thrust.LimitAccelerationInfoItem();
+            core.Thrust.LimitThrottleInfoItem();
+            core.Thrust.LimiterMinThrottleInfoItem();
+            core.Thrust.LimitElectricInfoItem();
+            core.Thrust.LimitToPreventFlameoutInfoItem();
             if (VesselState.isLoadedRealFuels)
             {
                 // does nothing in stock, so we suppress displaying it if RF is not loaded
-                core.thrust.LimitToPreventUnstableIgnitionInfoItem();
-                core.thrust.AutoRCsUllageInfoItem();
+                core.Thrust.LimitToPreventUnstableIgnitionInfoItem();
+                core.Thrust.AutoRCsUllageInfoItem();
             }
 
-            core.thrust.smoothThrottle =
-                GUILayout.Toggle(core.thrust.smoothThrottle, Localizer.Format("#MechJeb_Utilities_checkbox2")); //"Smooth throttle"
-            core.thrust.manageIntakes =
-                GUILayout.Toggle(core.thrust.manageIntakes, Localizer.Format("#MechJeb_Utilities_checkbox3")); //"Manage air intakes"
+            core.Thrust.smoothThrottle =
+                GUILayout.Toggle(core.Thrust.smoothThrottle, Localizer.Format("#MechJeb_Utilities_checkbox2")); //"Smooth throttle"
+            core.Thrust.manageIntakes =
+                GUILayout.Toggle(core.Thrust.manageIntakes, Localizer.Format("#MechJeb_Utilities_checkbox3")); //"Manage air intakes"
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             try
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label2")); //"Jet safety margin"
-                core.thrust.flameoutSafetyPct.text = GUILayout.TextField(core.thrust.flameoutSafetyPct.text, 5);
+                core.Thrust.flameoutSafetyPct.text = GUILayout.TextField(core.Thrust.flameoutSafetyPct.text, 5);
                 GUILayout.Label("%");
             }
             finally
@@ -85,11 +85,11 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            core.thrust.DifferentialThrottle();
+            core.Thrust.DifferentialThrottle();
 
-            if (core.thrust.differentialThrottle && vessel.LiftedOff())
+            if (core.Thrust.differentialThrottle && vessel.LiftedOff())
             {
-                switch (core.thrust.differentialThrottleSuccess)
+                switch (core.Thrust.differentialThrottleSuccess)
                 {
                     case MechJebModuleThrustController.DifferentialThrottleStatus.MoreEnginesRequired:
                         GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label3"),
@@ -108,17 +108,17 @@ namespace MuMech
                 }
             }
 
-            core.solarpanel.SolarPanelDeployButton();
-            core.antennaControl.AntennaDeployButton();
+            core.Solarpanel.SolarPanelDeployButton();
+            core.AntennaControl.AntennaDeployButton();
 
             Autostage();
 
-            if (!core.staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1")))
-                core.staging.AutostageOnce(this); //"Autostage once"
+            if (!core.Staging.enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1")))
+                core.Staging.AutostageOnce(this); //"Autostage once"
 
-            if (core.staging.enabled) core.staging.AutostageSettingsInfoItem();
+            if (core.Staging.enabled) core.Staging.AutostageSettingsInfoItem();
 
-            if (core.staging.enabled) GUILayout.Label(core.staging.AutostageStatus());
+            if (core.Staging.enabled) GUILayout.Label(core.Staging.AutostageStatus());
 
             GUILayout.EndVertical();
 
@@ -132,7 +132,7 @@ namespace MuMech
 
         public override bool isActive()
         {
-            return core.thrust.limiter != MechJebModuleThrustController.LimitMode.None;
+            return core.Thrust.limiter != MechJebModuleThrustController.LimitMode.None;
         }
 
         public override string GetName()

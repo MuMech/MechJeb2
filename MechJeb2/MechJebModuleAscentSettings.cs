@@ -123,11 +123,11 @@ namespace MuMech
                 if (!changed) return;
                 if (_autostage && enabled)
                 {
-                    core.staging.users.Add(this);
+                    core.Staging.users.Add(this);
                 }
                 else if (!_autostage)
                 {
-                    core.staging.users.Remove(this);
+                    core.Staging.users.Remove(this);
                 }
             }
         }
@@ -348,34 +348,34 @@ namespace MuMech
             if (Math.Abs(DesiredInclination.val) > 180 - Math.Abs(vesselState.latitude))
                 DesiredInclination.val = 180 - Math.Round(vesselState.latitude, 3);
 
-            core.guidance.UllageLeadTime.val = 20;
+            core.Guidance.UllageLeadTime.val = 20;
 
-            core.settings.rssMode = true;
+            core.Settings.rssMode = true;
 
             /* set the thrust controller to sane RO/RSS defaults */
-            core.thrust.limitToPreventUnstableIgnition = false;
-            core.thrust.autoRCSUllaging                = true;
-            core.thrust.minThrottle.val                = 0.05;
-            core.thrust.limiterMinThrottle             = true;
-            core.thrust.limitThrottle                  = false;
-            core.thrust.limitAcceleration              = false;
-            core.thrust.limitToPreventOverheats        = false;
-            core.thrust.limitDynamicPressure           = false;
-            core.thrust.maxDynamicPressure.val         = 20000;
+            core.Thrust.limitToPreventUnstableIgnition = false;
+            core.Thrust.autoRCSUllaging                = true;
+            core.Thrust.minThrottle.val                = 0.05;
+            core.Thrust.limiterMinThrottle             = true;
+            core.Thrust.limitThrottle                  = false;
+            core.Thrust.limitAcceleration              = false;
+            core.Thrust.limitToPreventOverheats        = false;
+            core.Thrust.limitDynamicPressure           = false;
+            core.Thrust.maxDynamicPressure.val         = 20000;
 
             /* reset all of the staging controller, and turn on hotstaging and drop solids */
             Autostage                                  = true;
-            core.staging.autostagePreDelay.val         = 0.0;
-            core.staging.autostagePostDelay.val        = 0.5;
-            core.staging.autostageLimit.val            = 0;
-            core.staging.fairingMaxDynamicPressure.val = 5000;
-            core.staging.fairingMinAltitude.val        = 50000;
-            core.staging.clampAutoStageThrustPct.val   = 0.99;
-            core.staging.fairingMaxAerothermalFlux.val = 1135;
-            core.staging.hotStaging                    = true;
-            core.staging.hotStagingLeadTime.val        = 1.0;
-            core.staging.dropSolids                    = true;
-            core.staging.dropSolidsLeadTime.val        = 1.0;
+            core.Staging.autostagePreDelay.val         = 0.0;
+            core.Staging.autostagePostDelay.val        = 0.5;
+            core.Staging.autostageLimit.val            = 0;
+            core.Staging.fairingMaxDynamicPressure.val = 5000;
+            core.Staging.fairingMinAltitude.val        = 50000;
+            core.Staging.clampAutoStageThrustPct.val   = 0.99;
+            core.Staging.fairingMaxAerothermalFlux.val = 1135;
+            core.Staging.hotStaging                    = true;
+            core.Staging.hotStagingLeadTime.val        = 1.0;
+            core.Staging.dropSolids                    = true;
+            core.Staging.dropSolidsLeadTime.val        = 1.0;
         }
 
         private const double LAUNCH_LAN_DIFFERENCE            = 0;

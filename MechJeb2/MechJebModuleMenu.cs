@@ -343,17 +343,17 @@ namespace MuMech
                 {
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", b =>
                     {
-                        if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.node != null)
+                        if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.Node != null)
                         {
-                            if (core.node.enabled)
+                            if (core.Node.enabled)
                             {
-                                core.node.Abort();
+                                core.Node.Abort();
                             }
                             else
                             {
                                 if (vessel.patchedConicSolver.maneuverNodes[0].DeltaV.magnitude > 0.0001)
                                 {
-                                    core.node.ExecuteOneNode(maneuverPlannerModule);
+                                    core.Node.ExecuteOneNode(maneuverPlannerModule);
                                 }
                                 else
                                 {
@@ -365,30 +365,30 @@ namespace MuMech
                         {
                             ScreenMessages.PostScreenMessage("No maneuver nodes", 2f);
                         }
-                    }, () => vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.node != null && core.node.enabled);
+                    }, () => vessel.patchedConicSolver.maneuverNodes.Count > 0 && core.Node != null && core.Node.enabled);
 
                     CreateFeatureButton(maneuverPlannerModule, "Autostage_Once", "MechJeb Autostage Once", b =>
                     {
                         MechJebModuleThrustWindow w = core.GetComputerModule<MechJebModuleThrustWindow>();
 
-                        if (core.staging.enabled && core.staging.autostagingOnce)
+                        if (core.Staging.enabled && core.Staging.autostagingOnce)
                         {
-                            if (core.staging.users.Contains(w))
+                            if (core.Staging.users.Contains(w))
                             {
-                                core.staging.users.Remove(w);
+                                core.Staging.users.Remove(w);
                                 w.autostageSavedState = false;
                             }
                         }
                         else
                         {
-                            core.staging.AutostageOnce(w);
+                            core.Staging.AutostageOnce(w);
                         }
-                    }, () => core.staging.enabled && core.staging.autostagingOnce);
+                    }, () => core.Staging.enabled && core.Staging.autostagingOnce);
 
                     CreateFeatureButton(maneuverPlannerModule, "Auto_Warp", "MechJeb Auto-warp", b =>
                     {
-                        core.node.autowarp = !core.node.autowarp;
-                    }, () => core.node.autowarp);
+                        core.Node.autowarp = !core.Node.autowarp;
+                    }, () => core.Node.autowarp);
                 }
             }
         }

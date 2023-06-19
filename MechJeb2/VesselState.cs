@@ -865,7 +865,7 @@ namespace MuMech
             if (!vessel.ActionGroups[KSPActionGroup.RCS])
                 return;
 
-            MechJebModuleRCSBalancer rcsbal = vessel.GetMasterMechJeb().rcsbal;
+            MechJebModuleRCSBalancer rcsbal = vessel.GetMasterMechJeb().Rcsbal;
             if (rcsbal.enabled)
             {
                 Vector3d rot = Vector3d.zero;

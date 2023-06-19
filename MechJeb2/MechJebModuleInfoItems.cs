@@ -114,8 +114,8 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TargetOrbit", InfoItem.Category.Target)] //Target orbit
         public string TargetOrbitSummary()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return OrbitSummary(core.target.TargetOrbit);
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return OrbitSummary(core.Target.TargetOrbit);
         }
 
         [ValueInfoItem("#MechJeb_OrbitWithInc", InfoItem.Category.Orbit, description = "#MechJeb_OrbitWithInc_desc")] //Orbit||Orbit shape w/ inc.
@@ -128,8 +128,8 @@ namespace MuMech
             description = "#MechJeb_TargetOrbitWithInc_desc")] //Target orbit|Target orbit shape w/ inc.
         public string TargetOrbitSummaryWithInclination()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return OrbitSummaryWithInclination(core.target.TargetOrbit);
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return OrbitSummaryWithInclination(core.Target.TargetOrbit);
         }
 
         [ValueInfoItem("#MechJeb_OrbitalEnergy", InfoItem.Category.Orbit, description = "#MechJeb_OrbitalEnergy_desc", format = ValueInfoItem.SI,
@@ -537,72 +537,72 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_DistanceToTarget", InfoItem.Category.Target)] //Distance to target
         public string TargetDistance()
         {
-            if (core.target.Target == null) return "N/A";
-            return core.target.Distance.ToSI() + "m";
+            if (core.Target.Target == null) return "N/A";
+            return core.Target.Distance.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_HeadingToTarget", InfoItem.Category.Target)] //Heading to target
         public string HeadingToTarget()
         {
-            if (core.target.Target == null) return "N/A";
-            return vesselState.HeadingFromDirection(-core.target.RelativePosition).ToString("F1") + "º";
+            if (core.Target.Target == null) return "N/A";
+            return vesselState.HeadingFromDirection(-core.Target.RelativePosition).ToString("F1") + "º";
         }
 
         [ValueInfoItem("#MechJeb_RelativeVelocity", InfoItem.Category.Target)] //Relative velocity
         public string TargetRelativeVelocity()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.RelativeVelocity.magnitude.ToSI() + "m/s";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.RelativeVelocity.magnitude.ToSI() + "m/s";
         }
 
         [ValueInfoItem("#MechJeb_TimeToClosestApproach", InfoItem.Category.Target)] //Time to closest approach
         public string TargetTimeToClosestApproach()
         {
-            if (core.target.Target != null && vesselState.altitudeTrue < 1000.0)
+            if (core.Target.Target != null && vesselState.altitudeTrue < 1000.0)
             {
-                return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(vessel.CoM, core.target.Transform.position));
+                return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(vessel.CoM, core.Target.Transform.position));
             }
 
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
             if (vesselState.altitudeTrue < 1000.0)
             {
                 double a = (vessel.mainBody.transform.position - vessel.transform.position).magnitude;
-                double b = (vessel.mainBody.transform.position - core.target.Transform.position).magnitude;
-                double c = Vector3d.Distance(vessel.transform.position, core.target.Position);
+                double b = (vessel.mainBody.transform.position - core.Target.Transform.position).magnitude;
+                double c = Vector3d.Distance(vessel.transform.position, core.Target.Position);
                 double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
                 return GuiUtils.TimeToDHMS(ang * vessel.mainBody.Radius / vesselState.speedSurfaceHorizontal);
             }
 
-            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(orbit.NextClosestApproachTime(core.Target.TargetOrbit, vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_ClosestApproachDistance", InfoItem.Category.Target)] //Closest approach distance
         public string TargetClosestApproachDistance()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
 
-            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            return orbit.NextClosestApproachDistance(core.target.TargetOrbit, vesselState.time).ToSI() + "m";
+            return orbit.NextClosestApproachDistance(core.Target.TargetOrbit, vesselState.time).ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_RelativeVelocityAtClosestApproach", InfoItem.Category.Target)] //Rel. vel. at closest approach
         public string TargetClosestApproachRelativeVelocity()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
             if (vesselState.altitudeTrue < 1000.0) { return "N/A"; }
 
-            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
             try
             {
-                double UT = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+                double UT = orbit.NextClosestApproachTime(core.Target.TargetOrbit, vesselState.time);
 
                 if (double.IsNaN(UT))
                 {
@@ -610,7 +610,7 @@ namespace MuMech
                 }
 
                 double relVel =
-                    (orbit.WorldOrbitalVelocityAtUT(UT) - core.target.TargetOrbit.WorldOrbitalVelocityAtUT(UT))
+                    (orbit.WorldOrbitalVelocityAtUT(UT) - core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT))
                     .magnitude;
                 return relVel.ToSI() + "m/s";
             }
@@ -623,7 +623,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_PeriapsisInTargetSoI", InfoItem.Category.Misc)] //Periapsis in target SoI
         public string PeriapsisInTargetSOI()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
 
             Orbit o;
             if (vessel.patchedConicsUnlocked() && vessel.patchedConicSolver.maneuverNodes.Any())
@@ -647,7 +647,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TargetCaptureDV", InfoItem.Category.Misc)] //ΔV for capture by target
         public string TargetCaptureDV()
         {
-            if (!core.target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
+            if (!core.Target.NormalTargetExists || !(vessel.targetObject is CelestialBody)) return "N/A";
 
             Orbit o = vessel.orbit;
             while (o != null && o.referenceBody != (CelestialBody)vessel.targetObject)
@@ -665,118 +665,118 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TargetApoapsis", InfoItem.Category.Target)] //Target apoapsis
         public string TargetApoapsis()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.ApA.ToSI() + "m";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.TargetOrbit.ApA.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetPeriapsis", InfoItem.Category.Target)] //Target periapsis
         public string TargetPeriapsis()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.PeA.ToSI() + "m";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.TargetOrbit.PeA.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetInclination", InfoItem.Category.Target)] //Target inclination
         public string TargetInclination()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.inclination.ToString("F2") + "º";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.TargetOrbit.inclination.ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetOrbitPeriod", InfoItem.Category.Target)] //Target orbit period
         public string TargetOrbitPeriod()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.period);
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.period);
         }
 
         [ValueInfoItem("#MechJeb_TargetOrbitSpeed", InfoItem.Category.Target)] //Target orbit speed
         public string TargetOrbitSpeed()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.GetVel().magnitude.ToSI() + "m/s";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.TargetOrbit.GetVel().magnitude.ToSI() + "m/s";
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToAp", InfoItem.Category.Target)] //Target time to Ap
         public string TargetOrbitTimeToAp()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.timeToAp);
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.timeToAp);
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToPe", InfoItem.Category.Target)] //Target time to Pe
         public string TargetOrbitTimeToPe()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.timeToPe);
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.timeToPe);
         }
 
         [ValueInfoItem("#MechJeb_TargetLAN", InfoItem.Category.Target)] //Target LAN
         public string TargetLAN()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.LAN.ToString("F2") + "º";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.TargetOrbit.LAN.ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetLDN", InfoItem.Category.Target)] //Target LDN
         public string TargetLDN()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return MuUtils.ClampDegrees360(core.target.TargetOrbit.LAN + 180).ToString("F2") + "º";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return MuUtils.ClampDegrees360(core.Target.TargetOrbit.LAN + 180).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToAN", InfoItem.Category.Target)] //Target Time to AN
         public string TargetTimeToAscendingNode()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.TargetOrbit.AscendingNodeEquatorialExists()) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (!core.Target.TargetOrbit.AscendingNodeEquatorialExists()) return "N/A";
 
-            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.TimeOfAscendingNodeEquatorial(vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToDN", InfoItem.Category.Target)] //Target Time to DN
         public string TargetTimeToDescendingNode()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (!core.target.TargetOrbit.DescendingNodeEquatorialExists()) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (!core.Target.TargetOrbit.DescendingNodeEquatorialExists()) return "N/A";
 
-            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.TimeOfDescendingNodeEquatorial(vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TargetAoP", InfoItem.Category.Target)] //Target AoP
         public string TargetAoP()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.argumentOfPeriapsis.ToString("F2") + "º";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.TargetOrbit.argumentOfPeriapsis.ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetEccentricity", InfoItem.Category.Target)] //Target eccentricity
         public string TargetEccentricity()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(core.target.TargetOrbit.eccentricity);
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return GuiUtils.TimeToDHMS(core.Target.TargetOrbit.eccentricity);
         }
 
         [ValueInfoItem("#MechJeb_TargetSMA", InfoItem.Category.Target)] //Target SMA
         public string TargetSMA()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return core.target.TargetOrbit.semiMajorAxis.ToSI() + "m";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return core.Target.TargetOrbit.semiMajorAxis.ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_TargetMeanAnomaly", InfoItem.Category.Target, format = ValueInfoItem.ANGLE)] //Target Mean Anomaly
         public string TargetMeanAnomaly()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            return MuUtils.ClampDegrees360(core.target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            return MuUtils.ClampDegrees360(core.Target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetTrueLongitude", InfoItem.Category.Target)] //Target Mean Anomaly
         public string TargetTrueLongitude()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            double longitudeOfPeriapsis = core.target.TargetOrbit.LAN + core.target.TargetOrbit.argumentOfPeriapsis;
-            return MuUtils.ClampDegrees360(core.target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis).ToString("F2") + "º";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            double longitudeOfPeriapsis = core.Target.TargetOrbit.LAN + core.Target.TargetOrbit.argumentOfPeriapsis;
+            return MuUtils.ClampDegrees360(core.Target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Atmospheric drag
@@ -788,57 +788,57 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_SynodicPeriod", InfoItem.Category.Target)] //Synodic period
         public string SynodicPeriod()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.target.TargetOrbit));
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            return GuiUtils.TimeToDHMS(orbit.SynodicPeriod(core.Target.TargetOrbit));
         }
 
         [ValueInfoItem("#MechJeb_PhaseAngleToTarget", InfoItem.Category.Target)] //Phase angle to target
         public string PhaseAngle()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (double.IsNaN(core.target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (double.IsNaN(core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            return orbit.PhaseAngle(core.target.TargetOrbit, vesselState.time).ToString("F2") + "º";
+            return orbit.PhaseAngle(core.Target.TargetOrbit, vesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetPlanetPhaseAngle", InfoItem.Category.Target)] //Target planet phase angle
         public string TargetPlanetPhaseAngle()
         {
-            if (!(core.target.Target is CelestialBody)) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody.referenceBody) return "N/A";
+            if (!(core.Target.Target is CelestialBody)) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody.referenceBody) return "N/A";
 
-            return mainBody.orbit.PhaseAngle(core.target.TargetOrbit, vesselState.time).ToString("F2") + "º";
+            return mainBody.orbit.PhaseAngle(core.Target.TargetOrbit, vesselState.time).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_RelativeInclination", InfoItem.Category.Target)] //Relative inclination
         public string RelativeInclinationToTarget()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
 
-            return orbit.RelativeInclination(core.target.TargetOrbit).ToString("F2") + "º";
+            return orbit.RelativeInclination(core.Target.TargetOrbit).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TimeToAN", InfoItem.Category.Target)] //Time to AN
         public string TimeToAscendingNodeWithTarget()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (!orbit.AscendingNodeExists(core.target.TargetOrbit)) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.AscendingNodeExists(core.Target.TargetOrbit)) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNode(core.target.TargetOrbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(orbit.TimeOfAscendingNode(core.Target.TargetOrbit, vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TimeToDN", InfoItem.Category.Target)] //Time to DN
         public string TimeToDescendingNodeWithTarget()
         {
-            if (!core.target.NormalTargetExists) return "N/A";
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
-            if (!orbit.DescendingNodeExists(core.target.TargetOrbit)) return "N/A";
+            if (!core.Target.NormalTargetExists) return "N/A";
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody) return "N/A";
+            if (!orbit.DescendingNodeExists(core.Target.TargetOrbit)) return "N/A";
 
-            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNode(core.target.TargetOrbit, vesselState.time) - vesselState.time);
+            return GuiUtils.TimeToDHMS(orbit.TimeOfDescendingNode(core.Target.TargetOrbit, vesselState.time) - vesselState.time);
         }
 
         [ValueInfoItem("#MechJeb_TimeToEquatorialAN", InfoItem.Category.Orbit)] //Time to equatorial AN
@@ -1039,13 +1039,13 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DockingGuidance_velocity", InfoItem.Category.Target)] //Docking guidance: velocity
         public void DockingGuidanceVelocity()
         {
-            if (!core.target.NormalTargetExists)
+            if (!core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocityNA")); //"Target-relative velocity: (N/A)"
                 return;
             }
 
-            Vector3d relVel = core.target.RelativeVelocity;
+            Vector3d relVel = core.Target.RelativeVelocity;
             double relVelX = Vector3d.Dot(relVel, vessel.GetTransform().right);
             double relVelY = Vector3d.Dot(relVel, vessel.GetTransform().forward);
             double relVelZ = Vector3d.Dot(relVel, vessel.GetTransform().up);
@@ -1060,13 +1060,13 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DockingGuidanceAngularVelocity", InfoItem.Category.Target)] //Docking guidance: Angular velocity
         public void DockingGuidanceAngularVelocity()
         {
-            if (!(core.target.Target is Vessel))
+            if (!(core.Target.Target is Vessel))
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label2")); //"Target-relative Angular velocity: (N/A)"
                 return;
             }
 
-            var target = (Vessel)core.target.Target;
+            var target = (Vessel)core.Target.Target;
             Vector3d relw = Quaternion.Inverse(vessel.ReferenceTransform.rotation) * (target.angularVelocity - vessel.angularVelocity) *
                             Mathf.Rad2Deg;
 
@@ -1081,13 +1081,13 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DockingGuidancePosition", InfoItem.Category.Target)] //Docking guidance: position
         public void DockingGuidancePosition()
         {
-            if (!core.target.NormalTargetExists)
+            if (!core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label4")); //"Separation from target: (N/A)"
                 return;
             }
 
-            Vector3d sep = core.target.RelativePosition;
+            Vector3d sep = core.Target.RelativePosition;
             double sepX = Vector3d.Dot(sep, vessel.GetTransform().right);
             double sepY = Vector3d.Dot(sep, vessel.GetTransform().forward);
             double sepZ = Vector3d.Dot(sep, vessel.GetTransform().up);

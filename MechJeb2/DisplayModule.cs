@@ -153,7 +153,7 @@ namespace MuMech
 //            }
 
             bool allowDrag = !locked;
-            if (!locked && !isOverlay && core.settings.useTitlebarDragging)
+            if (!locked && !isOverlay && core.Settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
@@ -284,7 +284,7 @@ namespace MuMech
         public virtual bool isActive()
         {
             if (makesActive == null)
-                makesActive = new ComputerModule[] { core.attitude, core.thrust, core.rover, core.node, core.rcs, core.rcsbal };
+                makesActive = new ComputerModule[] { core.Attitude, core.Thrust, core.Rover, core.Node, core.RCS, core.Rcsbal };
 
             bool active = false;
             for (int i = 0; i < makesActive.Length; i++)

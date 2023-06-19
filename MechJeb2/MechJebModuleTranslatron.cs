@@ -69,7 +69,7 @@ namespace MuMech
 
             GUILayout.BeginVertical();
 
-            if (core.thrust.users.Count > 1 && !core.thrust.users.Contains(this))
+            if (core.Thrust.users.Count > 1 && !core.Thrust.users.Contains(this))
             {
                 if (!autoMode)
                 {
@@ -90,7 +90,7 @@ namespace MuMech
                     autoMode  = false;
                 }
 
-                var newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.thrust.tmode, trans_texts, 2, buttonStyle);
+                var newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)core.Thrust.tmode, trans_texts, 2, buttonStyle);
                 SetMode(newMode);
 
                 float
@@ -98,7 +98,7 @@ namespace MuMech
                         ? 5
                         : 1; // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
 
-                core.thrust.trans_kill_h = GUILayout.Toggle(core.thrust.trans_kill_h, Localizer.Format("#MechJeb_Trans_kill_h"),
+                core.Thrust.trans_kill_h = GUILayout.Toggle(core.Thrust.trans_kill_h, Localizer.Format("#MechJeb_Trans_kill_h"),
                     GUILayout.ExpandWidth(true));
                 GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Trans_spd"), trans_spd, "", 37);
@@ -125,14 +125,14 @@ namespace MuMech
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act") + ":", buttonStyle, GUILayout.ExpandWidth(true)) || change)
                 {
-                    core.thrust.trans_spd_act  = (float)trans_spd.val;
+                    core.Thrust.trans_spd_act  = (float)trans_spd.val;
                     GUIUtility.keyboardControl = 0;
                 }
             }
 
-            if (core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)
+            if (core.Thrust.tmode != MechJebModuleThrustController.TMode.OFF)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + core.thrust.trans_spd_act.ToSI() + "m/s",
+                GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + core.Thrust.trans_spd_act.ToSI() + "m/s",
                     GUILayout.ExpandWidth(true));
             }
 
@@ -157,19 +157,19 @@ namespace MuMech
 
         public void SetMode(MechJebModuleThrustController.TMode newMode)
         {
-            MechJebModuleThrustController.TMode oldMode = core.thrust.tmode;
-            core.thrust.tmode = newMode;
-            if (core.thrust.tmode != oldMode)
+            MechJebModuleThrustController.TMode oldMode = core.Thrust.tmode;
+            core.Thrust.tmode = newMode;
+            if (core.Thrust.tmode != oldMode)
             {
-                core.thrust.trans_spd_act = Convert.ToInt16(trans_spd);
+                core.Thrust.trans_spd_act = Convert.ToInt16(trans_spd);
                 windowPos                 = new Rect(windowPos.x, windowPos.y, 10, 10);
-                if (core.thrust.tmode == MechJebModuleThrustController.TMode.OFF)
+                if (core.Thrust.tmode == MechJebModuleThrustController.TMode.OFF)
                 {
-                    core.thrust.users.Remove(this);
+                    core.Thrust.users.Remove(this);
                 }
                 else
                 {
-                    core.thrust.users.Add(this);
+                    core.Thrust.users.Add(this);
                 }
             }
         }
@@ -184,9 +184,9 @@ namespace MuMech
                 }
                 else
                 {
-                    core.thrust.ThrustOff();
-                    core.thrust.users.Remove(this);
-                    core.attitude.attitudeDeactivate();
+                    core.Thrust.ThrustOff();
+                    core.Thrust.users.Remove(this);
+                    core.Attitude.attitudeDeactivate();
                 }
 
                 abort = AbortStage.OFF;
@@ -194,7 +194,7 @@ namespace MuMech
             else
             {
                 abort = AbortStage.THRUSTOFF;
-                core.thrust.users.Add(this);
+                core.Thrust.users.Add(this);
             }
         }
 
@@ -240,14 +240,14 @@ namespace MuMech
         {
             // Fix the Translatron behavior which kill HS.
             // TODO : proper fix that register the attitude controler outside of Drive
-            if (!core.attitude.users.Contains(this) && core.thrust.trans_kill_h && core.thrust.tmode != MechJebModuleThrustController.TMode.OFF)
+            if (!core.Attitude.users.Contains(this) && core.Thrust.trans_kill_h && core.Thrust.tmode != MechJebModuleThrustController.TMode.OFF)
             {
-                core.attitude.users.Add(this);
+                core.Attitude.users.Add(this);
             }
 
-            if (core.attitude.users.Contains(this) && (!core.thrust.trans_kill_h || core.thrust.tmode == MechJebModuleThrustController.TMode.OFF))
+            if (core.Attitude.users.Contains(this) && (!core.Thrust.trans_kill_h || core.Thrust.tmode == MechJebModuleThrustController.TMode.OFF))
             {
-                core.attitude.users.Remove(this);
+                core.Attitude.users.Remove(this);
             }
 
             if (abort != AbortStage.OFF)
@@ -267,10 +267,10 @@ namespace MuMech
                     case AbortStage.BURNUP:
                         if (Planetarium.GetUniversalTime() - burnUpTime < 2 || vesselState.speedVertical < 10)
                         {
-                            core.thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
-                            core.attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+                            core.Thrust.tmode = MechJebModuleThrustController.TMode.DIRECT;
+                            core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
                             double int_error = Math.Abs(Vector3d.Angle(vesselState.up, vesselState.forward));
-                            core.thrust.trans_spd_act = int_error < 90 ? 100 : 0;
+                            core.Thrust.trans_spd_act = int_error < 90 ? 100 : 0;
                         }
                         else
                         {
@@ -279,7 +279,7 @@ namespace MuMech
 
                         break;
                     case AbortStage.LAND:
-                        core.thrust.users.Remove(this);
+                        core.Thrust.users.Remove(this);
                         core.GetComputerModule<MechJebModuleLandingAutopilot>().LandUntargeted(this);
                         abort = AbortStage.LANDING;
                         break;

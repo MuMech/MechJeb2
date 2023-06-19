@@ -147,7 +147,7 @@ namespace MuMech
             users.Clear();
             Autopilot.users.Remove(this);
             RoverPilot.users.Remove(this);
-            core.attitude.attitudeDeactivate();
+            core.Attitude.attitudeDeactivate();
 
             RoverPilot.ControlHeading = false;
         }
@@ -160,7 +160,7 @@ namespace MuMech
 
         public override void OnModuleDisabled()
         {
-            core.attitude.attitudeDeactivate();
+            core.Attitude.attitudeDeactivate();
         }
 
         public enum AutolandApproachState
@@ -259,7 +259,7 @@ namespace MuMech
                 double desiredAoA = touchdownMomentAoA -
                                     (Math.Exp(exponentPerMeterPerSecond * (touchdownMomentSpeed - vesselState.speedSurfaceHorizontal)) - 1);
                 double currentAoA = vesselState.AoA;
-                core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Min(desiredAoA, currentAoA), 0, this, true, false, false);
+                core.Attitude.attitudeTo(Autopilot.HeadingTarget, Math.Min(desiredAoA, currentAoA), 0, this, true, false, false);
 
                 // Engage reverse thrusters and full throttle
                 SetReverseThrusters(bEngageReverseIfAvailable && vesselState.speedSurfaceHorizontal > 10);
@@ -286,7 +286,7 @@ namespace MuMech
                     AutopilotOff();
                     // disable the autopilot if it was manually engaged by the user
                     Autopilot.enabled = false;
-                    core.thrust.ThrustOff();
+                    core.Thrust.ThrustOff();
                 }
             }
         }

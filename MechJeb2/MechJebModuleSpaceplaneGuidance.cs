@@ -22,8 +22,8 @@ namespace MuMech
             get => _showLandingTarget;
             set
             {
-                if (value && !_showLandingTarget) core.target.SetDirectionTarget("ILS Guidance");
-                if (!value && core.target.Target is DirectionTarget && core.target.Name == "ILS Guidance") core.target.Unset();
+                if (value && !_showLandingTarget) core.Target.SetDirectionTarget("ILS Guidance");
+                if (!value && core.Target.Target is DirectionTarget && core.Target.Name == "ILS Guidance") core.Target.Unset();
                 _showLandingTarget = value;
             }
         }
@@ -95,10 +95,10 @@ namespace MuMech
         {
             if (showLandingTarget && autoland != null)
             {
-                if (!(core.target.Target is DirectionTarget && core.target.Name == "ILS Guidance")) showLandingTarget = false;
+                if (!(core.Target.Target is DirectionTarget && core.Target.Name == "ILS Guidance")) showLandingTarget = false;
                 else
                 {
-                    core.target.UpdateDirectionTarget(autoland.GetAutolandTargetVector());
+                    core.Target.UpdateDirectionTarget(autoland.GetAutolandTargetVector());
                 }
             }
         }

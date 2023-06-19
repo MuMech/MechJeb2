@@ -20,8 +20,8 @@ namespace MuMech
             private Vector3d ComputePlaneChange()
             {
                 Vector3d targetRadialVector =
-                    Core.vessel.mainBody.GetWorldSurfacePosition(Core.target.targetLatitude, Core.target.targetLongitude, 0) - MainBody.position;
-                Vector3d currentRadialVector = Core.vesselState.CoM - Core.vessel.mainBody.position;
+                    Core.vessel.mainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - MainBody.position;
+                Vector3d currentRadialVector = Core.VesselState.CoM - Core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
                 //this calculation seems like it might be be working right:
                 double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, VesselState.time) -
@@ -35,13 +35,13 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (_planeChangeTriggered && Core.attitude.attitudeAngleFromTarget() < 2)
+                if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 2)
                 {
-                    Core.thrust.targetThrottle = Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.vesselState.maxThrustAccel)));
+                    Core.Thrust.targetThrottle = Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.maxThrustAccel)));
                 }
                 else
                 {
-                    Core.thrust.targetThrottle = 0;
+                    Core.Thrust.targetThrottle = 0;
                 }
 
                 return this;
@@ -49,7 +49,7 @@ namespace MuMech
 
             public override AutopilotStep OnFixedUpdate()
             {
-                Vector3d targetRadialVector = MainBody.GetWorldSurfacePosition(Core.target.targetLatitude, Core.target.targetLongitude, 0) -
+                Vector3d targetRadialVector = MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) -
                                               MainBody.position;
                 Vector3d currentRadialVector = VesselState.CoM - MainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
@@ -57,7 +57,7 @@ namespace MuMech
 
                 if (!_planeChangeTriggered && approaching && angleToTarget > 80 && angleToTarget < 90)
                 {
-                    if (!MuUtils.PhysicsRunning()) Core.warp.MinimumWarp(true);
+                    if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp(true);
                     _planeChangeTriggered = true;
                 }
 
@@ -71,7 +71,7 @@ namespace MuMech
                     var burnDir = Vector3d.Exclude(VesselState.up, Vector3d.Exclude(VesselState.orbitalVelocity, deltaV));
                     _planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, VesselState.orbitalVelocity) *
                                         VesselState.speedOrbitHorizontal;
-                    Core.attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, Core.landing);
+                    Core.Attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, Core.Landing);
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status14",
                         _planeChangeDVLeft.ToString("F0")); //"Executing low orbit plane change of about " +  + " m/s"
 
@@ -82,7 +82,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (Core.node.autowarp) Core.warp.WarpRegularAtRate((float)(Orbit.period / 6));
+                    if (Core.Node.autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status15"); //"Moving to low orbit plane change burn point"
                 }
 

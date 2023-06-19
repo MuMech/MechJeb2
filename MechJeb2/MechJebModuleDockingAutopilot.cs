@@ -91,15 +91,15 @@ namespace MuMech
 
         public override void OnModuleEnabled()
         {
-            core.rcs.users.Add(this);
-            core.attitude.users.Add(this);
+            core.RCS.users.Add(this);
+            core.Attitude.users.Add(this);
             dockingStep = DockingStep.INIT;
         }
 
         public override void OnModuleDisabled()
         {
-            core.rcs.users.Remove(this);
-            core.attitude.attitudeDeactivate();
+            core.RCS.users.Remove(this);
+            core.Attitude.attitudeDeactivate();
             dockingStep     = DockingStep.OFF;
             drawBoundingBox = false;
         }
@@ -122,13 +122,13 @@ namespace MuMech
         private double MaxSpeedForDistance(double distance, Vector3d axis)
         {
             Vector3d localAxis = vessel.ReferenceTransform.InverseTransformDirection(axis);
-            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * vesselState.rcsThrustAvailable.GetMagnitude(localAxis) * core.rcs.rcsAccelFactor() /
+            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * vesselState.rcsThrustAvailable.GetMagnitude(localAxis) * core.RCS.rcsAccelFactor() /
                                       vesselState.mass));
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!core.target.NormalTargetExists)
+            if (!core.Target.NormalTargetExists)
             {
                 EndDocking();
                 return;
@@ -137,7 +137,7 @@ namespace MuMech
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
 
-            Vector3d targetVel = core.target.TargetOrbit.GetVel();
+            Vector3d targetVel = core.Target.TargetOrbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
             double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
@@ -216,13 +216,13 @@ namespace MuMech
             }
 
             if (!align)
-                core.attitude.attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward),
+                core.Attitude.attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward),
                     AttitudeReference.INERTIAL, this);
             else if (forceRol)
-                core.attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back),
+                core.Attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back),
                     AttitudeReference.TARGET_ORIENTATION, this);
             else
-                core.attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+                core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
             // Purpose of of this section is to compensate for relative velocities because the docking code does poorly with very low speed limits
             // And can't seem to keep up if relative velocities are greater than the speed limit.
@@ -233,14 +233,14 @@ namespace MuMech
 
 
             Vector3d adjustment = -lateralSep.normalized * latApproachSpeed + zApproachSpeed * zAxis;
-            core.rcs.SetTargetWorldVelocity(targetVel + adjustment);
+            core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
             MechJebModuleDebugArrows.debugVector  = adjustment;
-            MechJebModuleDebugArrows.debugVector2 = -core.target.RelativePosition;
+            MechJebModuleDebugArrows.debugVector2 = -core.Target.RelativePosition;
         }
 
         public override void OnFixedUpdate()
         {
-            if (!core.target.NormalTargetExists)
+            if (!core.Target.NormalTargetExists)
             {
                 EndDocking();
                 return;
@@ -313,17 +313,17 @@ namespace MuMech
 
         private void UpdateDistance()
         {
-            Vector3d separation = core.target.RelativePosition;
-            zAxis           = core.target.DockingAxis.normalized;
+            Vector3d separation = core.Target.RelativePosition;
+            zAxis           = core.Target.DockingAxis.normalized;
             zSep            = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             lateralSep      = Vector3d.Exclude(zAxis, separation);
-            relativeZ       = Vector3d.Dot(core.target.RelativeVelocity, zAxis);
-            relativeLateral = Vector3d.Dot(lateralSep, core.target.RelativeVelocity);
+            relativeZ       = Vector3d.Dot(core.Target.RelativeVelocity, zAxis);
+            relativeLateral = Vector3d.Dot(lateralSep, core.Target.RelativeVelocity);
         }
 
         private void InitDocking()
         {
-            lastTarget = core.target.Target;
+            lastTarget = core.Target.Target;
 
             try
             {
@@ -340,8 +340,8 @@ namespace MuMech
                 else
                     safeDistance = (float)overridenSafeDistance.val;
 
-                if (core.target.Target is ModuleDockingNode)
-                    acquireRange = ((ModuleDockingNode)core.target.Target).acquireRange * 0.5;
+                if (core.Target.Target is ModuleDockingNode)
+                    acquireRange = ((ModuleDockingNode)core.Target.Target).acquireRange * 0.5;
                 else
                     acquireRange = 0.25;
             }
@@ -387,9 +387,9 @@ namespace MuMech
                 vesselBoundingBox = vessel.GetBoundingBox();
                 GLUtils.DrawBoundingBox(vessel.mainBody, vessel, vesselBoundingBox, Color.green);
 
-                if (core.target.Target != null)
+                if (core.Target.Target != null)
                 {
-                    Vessel targetVessel = core.target.Target.GetVessel();
+                    Vessel targetVessel = core.Target.Target.GetVessel();
                     targetBoundingBox = targetVessel.GetBoundingBox();
                     GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetBoundingBox, Color.blue);
                 }

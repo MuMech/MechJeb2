@@ -49,8 +49,8 @@ namespace MuMech
 
         private bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToRendezvous || _launchingToMatchLan || _launchingToLan;
 
-        private MechJebModuleAscentBaseAutopilot   _autopilot      => core.ascent;
-        private MechJebModuleAscentSettings        _ascentSettings => core.ascentSettings;
+        private MechJebModuleAscentBaseAutopilot   _autopilot      => core.Ascent;
+        private MechJebModuleAscentSettings        _ascentSettings => core.AscentSettings;
         private MechJebModuleAscentClassicPathMenu _classicPathMenu;
         private MechJebModuleAscentPVGSettingsMenu _pvgSettingsMenu;
         private MechJebModuleAscentSettingsMenu    _settingsMenu;
@@ -206,9 +206,9 @@ namespace MuMech
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
-                if (core.guidance.Solution != null)
+                if (core.Guidance.Solution != null)
                 {
-                    Solution solution = core.guidance.Solution;
+                    Solution solution = core.Guidance.Solution;
                     for (int i = solution.Segments - 1; i >= 0; i--)
                         GUILayout.Label($"{PhaseString(solution, vesselState.time, i)}");
                     GUILayout.Label(solution.TerminalString());
@@ -224,9 +224,9 @@ namespace MuMech
                 GUILayout.Label(pitch, GuiUtils.LayoutWidth(100));
                 GUILayout.EndHorizontal();
                 GUIStyle si;
-                if (core.guidance.IsStable())
+                if (core.Guidance.IsStable())
                     si = GuiUtils.greenLabel;
-                else if (core.guidance.IsInitializing() || core.guidance.Status == PVGStatus.FINISHED)
+                else if (core.Guidance.IsInitializing() || core.Guidance.Status == PVGStatus.FINISHED)
                     si = GuiUtils.orangeLabel;
                 else
                     si = GuiUtils.redLabel;
@@ -240,7 +240,7 @@ namespace MuMech
                 GUILayout.Label(n, GuiUtils.LayoutWidth(90));
                 GUILayout.Label(znorm);
                 GUILayout.EndHorizontal();
-                if (core.glueball.Exception != null)
+                if (core.Glueball.Exception != null)
                 {
                     GUILayout.Label(label30, GuiUtils.redLabel); //LAST FAILURE:
                 }
@@ -260,10 +260,10 @@ namespace MuMech
             Profiler.BeginSample("MJ.GUIWindow.ShowAutoWarp");
             GUILayout.BeginVertical(GUI.skin.box);
 
-            if (core.node.autowarp)
+            if (core.Node.autowarp)
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label33, _ascentSettings.WarpCountDown, "s", 35); //Launch countdown:
 
-            bool targetExists = core.target.NormalTargetExists;
+            bool targetExists = core.Target.NormalTargetExists;
             if (!_launchingWithAnyPlaneControl && !targetExists)
             {
                 _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = false;
@@ -280,7 +280,7 @@ namespace MuMech
                     _launchingToRendezvous = true;
                     _autopilot.StartCountdown(vesselState.time +
                                               TimeToPhaseAngle(_ascentSettings.LaunchPhaseAngle,
-                                                  mainBody, vesselState.longitude, core.target.TargetOrbit));
+                                                  mainBody, vesselState.longitude, core.Target.TargetOrbit));
                 }
 
                 //Launch into plane of target
@@ -292,8 +292,8 @@ namespace MuMech
                         mainBody.rotationPeriod,
                         vesselState.latitude,
                         vesselState.celestialLongitude,
-                        core.target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
-                        core.target.TargetOrbit.inclination
+                        core.Target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
+                        core.Target.TargetOrbit.inclination
                     );
                     _autopilot.StartCountdown(vesselState.time + timeToPlane);
                     _ascentSettings.DesiredInclination.val = inclination;
@@ -311,7 +311,7 @@ namespace MuMech
                                                   mainBody.rotationPeriod,
                                                   vesselState.latitude,
                                                   vesselState.celestialLongitude,
-                                                  core.target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
+                                                  core.Target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
                                                   _ascentSettings.DesiredInclination
                                               )
                     );
@@ -362,18 +362,18 @@ namespace MuMech
 
             _lastRefresh = now;
             Profiler.BeginSample("MJ.GUIWindow.UpdateStrings.StringOps");
-            vgo     = $"vgo: {core.guidance.VGO:F1}";
-            heading = $"heading: {core.guidance.Heading:F1}";
-            tgo     = $"tgo: {core.guidance.Tgo:F3}";
-            pitch   = $"pitch: {core.guidance.Pitch:F1}";
-            label26 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label26}{core.guidance.Status}";
-            label27 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label27}{core.glueball.SuccessfulConverges}";
-            label28 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label28}{core.glueball.LastLmStatus}";
-            n       = $"n: {core.glueball.LastLmIterations}({core.glueball.MaxLmIterations})";
-            label29 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label29} {GuiUtils.TimeToDHMS(core.glueball.Staleness)}";
-            znorm   = $"znorm: {core.glueball.LastZnorm:G5}";
-            if (core.glueball.Exception != null)
-                label30 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label30}{core.glueball.Exception.Message}";
+            vgo     = $"vgo: {core.Guidance.VGO:F1}";
+            heading = $"heading: {core.Guidance.Heading:F1}";
+            tgo     = $"tgo: {core.Guidance.Tgo:F3}";
+            pitch   = $"pitch: {core.Guidance.Pitch:F1}";
+            label26 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label26}{core.Guidance.Status}";
+            label27 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label27}{core.Glueball.SuccessfulConverges}";
+            label28 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label28}{core.Glueball.LastLmStatus}";
+            n       = $"n: {core.Glueball.LastLmIterations}({core.Glueball.MaxLmIterations})";
+            label29 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label29} {GuiUtils.TimeToDHMS(core.Glueball.Staleness)}";
+            znorm   = $"znorm: {core.Glueball.LastZnorm:G5}";
+            if (core.Glueball.Exception != null)
+                label30 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label30}{core.Glueball.Exception.Message}";
 
             if (_launchingToPlane) launchTimer           = CachedLocalizer.Instance.MechJeb_Ascent_msg2;                 //Launching to target plane
             else if (_launchingToRendezvous) launchTimer = CachedLocalizer.Instance.MechJeb_Ascent_msg3;                 //Launching to rendezvous
@@ -417,7 +417,7 @@ namespace MuMech
 
             if (_ascentSettings.AscentType == AscentType.PVG)
             {
-                core.stageStats.RequestUpdate(this);
+                core.StageStats.RequestUpdate(this);
                 _pvgSettingsMenu.enabled = GUILayout.Toggle(_pvgSettingsMenu.enabled, "PVG Settings");
             }
             GUILayout.EndHorizontal();
@@ -505,8 +505,8 @@ namespace MuMech
 
             int kspStage = solution.KSPStage(n);
 
-            if (kspStage < core.stageStats.vacStats.Length)
-                stageDeltaV = core.stageStats.vacStats[kspStage].DeltaV;
+            if (kspStage < core.StageStats.vacStats.Length)
+                stageDeltaV = core.StageStats.vacStats[kspStage].DeltaV;
 
             double excessDV = stageDeltaV - solution.DV(t, n);
 

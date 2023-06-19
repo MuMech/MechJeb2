@@ -19,7 +19,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (!core.target.NormalTargetExists)
+            if (!core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label1")); //"Choose a target to dock with"
                 base.WindowGUI(windowID);
@@ -35,7 +35,7 @@ namespace MuMech
                     GuiUtils.yellowLabel); //Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
             }
 
-            if (!(core.target.Target is ModuleDockingNode))
+            if (!(core.Target.Target is ModuleDockingNode))
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),
                     GuiUtils.yellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
@@ -84,9 +84,9 @@ namespace MuMech
             {
                 vessel.GetBoundingBox(true);
 
-                if (core.target.Target != null)
+                if (core.Target.Target != null)
                 {
-                    Vessel targetVessel = core.target.Target.GetVessel();
+                    Vessel targetVessel = core.Target.Target.GetVessel();
                     targetVessel.GetBoundingBox(true);
                 }
             }
@@ -124,7 +124,7 @@ namespace MuMech
             if (autopilot.enabled)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label9", autopilot.status)); //"Status: <<1>>"
-                Vector3d error = core.rcs.targetVelocity - vesselState.orbitalVelocity;
+                Vector3d error = core.RCS.targetVelocity - vesselState.orbitalVelocity;
                 double error_x = Vector3d.Dot(error, vessel.GetTransform().right);
                 double error_y = Vector3d.Dot(error, vessel.GetTransform().forward);
                 double error_z = Vector3d.Dot(error, vessel.GetTransform().up);

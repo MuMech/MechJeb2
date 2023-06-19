@@ -35,7 +35,7 @@ namespace MuMech
 
         public MechJebModulePVGGlueBall(MechJebCore core) : base(core) { }
 
-        private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
+        private MechJebModuleAscentSettings _ascentSettings => core.AscentSettings;
 
         private Task? _task;
 
@@ -54,7 +54,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            core.stageStats.RequestUpdate(this);
+            core.StageStats.RequestUpdate(this);
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -95,7 +95,7 @@ namespace MuMech
             {
                 if (pvg.Success())
                 {
-                    core.guidance.SetSolution(pvg.GetSolution());
+                    core.Guidance.SetSolution(pvg.GetSolution());
                     SuccessfulConverges += 1;
                     _lastTime           =  vesselState.time;
                     Staleness           =  0;
@@ -157,9 +157,9 @@ namespace MuMech
             {
                 bool hasGuided = false;
 
-                for (int i = core.stageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
+                for (int i = core.StageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
                 {
-                    double dv = core.stageStats.vacStats[i].DeltaV;
+                    double dv = core.StageStats.vacStats[i].DeltaV;
 
                     // skip the zero length stages
                     if (dv == 0)
@@ -175,17 +175,17 @@ namespace MuMech
             }
 
             // check for readiness (not terminal guidance and not finished)
-            if (!core.guidance.IsReady())
+            if (!core.Guidance.IsReady())
                 return;
 
-            if (core.guidance.Solution != null)
+            if (core.Guidance.Solution != null)
             {
-                int solutionIndex = core.guidance.Solution.IndexForKSPStage(vessel.currentStage, core.guidance.IsCoasting());
+                int solutionIndex = core.Guidance.Solution.IndexForKSPStage(vessel.currentStage, core.Guidance.IsCoasting());
 
                 if (solutionIndex >= 0)
                 {
                     // check for prestaging as the current stage gets low
-                    if (core.guidance.Solution?.Tgo(vesselState.time, solutionIndex) < _ascentSettings.PreStageTime)
+                    if (core.Guidance.Solution?.Tgo(vesselState.time, solutionIndex) < _ascentSettings.PreStageTime)
                     {
                         _blockOptimizerUntilTime = vesselState.time + _ascentSettings.OptimizerPauseTime;
                         return;
@@ -203,16 +203,16 @@ namespace MuMech
                 .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), fpa, attachAltFlag, lanflag)
                 .TerminalConditions(Maths.HmagFromApsides(mainBody.gravParameter, peR, apR));
 
-            if (core.guidance.Solution != null)
-                ascentBuilder.OldSolution(core.guidance.Solution);
+            if (core.Guidance.Solution != null)
+                ascentBuilder.OldSolution(core.Guidance.Solution);
 
             bool optimizedStageFound = false;
 
-            for (int i = core.stageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
+            for (int i = core.StageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
             {
-                FuelFlowSimulation.FuelStats fuelStats = core.stageStats.vacStats[i];
+                FuelFlowSimulation.FuelStats fuelStats = core.StageStats.vacStats[i];
 
-                if (!core.guidance.HasGoodSolutionWithNoFutureCoast())
+                if (!core.Guidance.HasGoodSolutionWithNoFutureCoast())
                 {
                     if ((i == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) ||
                         (i == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
@@ -221,11 +221,11 @@ namespace MuMech
                         double maxt = _ascentSettings.MaxCoast;
                         double mint = _ascentSettings.MinCoast;
 
-                        if (i == vessel.currentStage && core.guidance.IsCoasting())
+                        if (i == vessel.currentStage && core.Guidance.IsCoasting())
                         {
-                            ct   = Math.Max(ct - (vesselState.time - core.guidance.StartCoast), 0);
-                            maxt = Math.Max(maxt - (vesselState.time - core.guidance.StartCoast), 0);
-                            mint = Math.Max(mint - (vesselState.time - core.guidance.StartCoast), 0);
+                            ct   = Math.Max(ct - (vesselState.time - core.Guidance.StartCoast), 0);
+                            maxt = Math.Max(maxt - (vesselState.time - core.Guidance.StartCoast), 0);
+                            mint = Math.Max(mint - (vesselState.time - core.Guidance.StartCoast), 0);
                         }
 
                         if (_ascentSettings.FixedCoast)
