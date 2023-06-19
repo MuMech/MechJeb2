@@ -12,7 +12,7 @@ namespace MuMech
             hidden = true;
         }
 
-        private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
+        private MechJebModuleAscentSettings _ascentSettings => core.AscentSettings;
 
         private static GUIStyle _btNormal;
         private static GUIStyle _btActive;
@@ -47,16 +47,16 @@ namespace MuMech
 
             int topstage = -1;
 
-            if (_ascentSettings.LastStage < core.stageStats.vacStats.Length && core.stageStats.vacStats.Length > 0)
+            if (_ascentSettings.LastStage < core.StageStats.vacStats.Length && core.StageStats.vacStats.Length > 0)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
 
-                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, core.stageStats.vacStats.Length - 1);
+                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, core.StageStats.vacStats.Length - 1);
 
-                for (int i = _ascentSettings.LastStage; i < core.stageStats.vacStats.Length; i++)
+                for (int i = _ascentSettings.LastStage; i < core.StageStats.vacStats.Length; i++)
                 {
-                    FuelFlowSimulation.FuelStats stats = core.stageStats.vacStats[i];
+                    FuelFlowSimulation.FuelStats stats = core.StageStats.vacStats[i];
                     if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
                         continue;
 
@@ -96,7 +96,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
             //GuiUtils.SimpleTextBox("Max Coast: ", _ascentSettings.MaxCoast, "s", width: 60);
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedCoast, "Fixed Coast Length:", _ascentSettings.FixedCoastLength, "s", width: 40);
-            GuiUtils.SimpleTextBox("Ullage lead time: ", core.guidance.UllageLeadTime, "s", 60);
+            GuiUtils.SimpleTextBox("Ullage lead time: ", core.Guidance.UllageLeadTime, "s", 60);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUI.skin.box);
@@ -126,7 +126,7 @@ namespace MuMech
                         GuiUtils.yellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
             }
 
-            core.guidance.ShouldDrawTrajectory = GUILayout.Toggle(core.guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");
+            core.Guidance.ShouldDrawTrajectory = GUILayout.Toggle(core.Guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);

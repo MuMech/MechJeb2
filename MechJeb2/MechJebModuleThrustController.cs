@@ -159,15 +159,15 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DifferentialThrottle", InfoItem.Category.Thrust)] //Differential throttle
         public void DifferentialThrottle()
         {
-            bool oldDifferentialThrottle = core.thrust.differentialThrottle;
+            bool oldDifferentialThrottle = core.Thrust.differentialThrottle;
             GUIStyle s = differentialThrottle && vessel.LiftedOff()
-                ? core.thrust.differentialThrottleSuccess == DifferentialThrottleStatus.Success ? GuiUtils.greenToggle : GuiUtils.yellowToggle
+                ? core.Thrust.differentialThrottleSuccess == DifferentialThrottleStatus.Success ? GuiUtils.greenToggle : GuiUtils.yellowToggle
                 : GuiUtils.skin.toggle;
             differentialThrottle =
                 GUILayout.Toggle(differentialThrottle, CachedLocalizer.Instance.MechJeb_Ascent_checkbox19, s); //"Differential throttle"
 
-            if (oldDifferentialThrottle && !core.thrust.differentialThrottle)
-                core.thrust.DisableDifferentialThrottle();
+            if (oldDifferentialThrottle && !core.Thrust.differentialThrottle)
+                core.Thrust.DisableDifferentialThrottle();
         }
 
         public Vector3d differentialThrottleDemandedTorque;
@@ -381,7 +381,7 @@ namespace MuMech
                                 rot = dir.normalized;
                             }
 
-                            core.attitude.attitudeTo(rot, AttitudeReference.INERTIAL, null);
+                            core.Attitude.attitudeTo(rot, AttitudeReference.INERTIAL, null);
                         }
 
                         break;
@@ -399,8 +399,8 @@ namespace MuMech
 
                 if (tmode != TMode.KEEP_VERTICAL
                     || !trans_kill_h
-                    || core.attitude.attitudeError < 2
-                    || (Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) < 1000 && core.attitude.attitudeError < 90))
+                    || core.Attitude.attitudeError < 2
+                    || (Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue) < 1000 && core.Attitude.attitudeError < 90))
                 {
                     if (tmode == TMode.DIRECT)
                     {
@@ -419,7 +419,7 @@ namespace MuMech
                     bool useDiffThrottle = vesselState.torqueDiffThrottle.x > vesselState.torqueAvailable.x * 10 ||
                                            vesselState.torqueDiffThrottle.z > vesselState.torqueAvailable.z * 10;
 
-                    if (core.attitude.attitudeError >= 2 && (useGimbal || (useDiffThrottle && core.thrust.differentialThrottle)))
+                    if (core.Attitude.attitudeError >= 2 && (useGimbal || (useDiffThrottle && core.Thrust.differentialThrottle)))
                     {
                         trans_prev_thrust = targetThrottle = 0.1F;
                         print(" targetThrottle = 0.1F");
@@ -537,7 +537,7 @@ namespace MuMech
             // we have to force the throttle here so that rssMode can work, otherwise we don't get our last throttle command
             // back on the next tick after disabling.  we save this before applying the throttle limits so that we preserve
             // the requested throttle, and not the limited throttle.
-            if (core.rssMode)
+            if (core.RssMode)
             {
                 SetFlightGlobals(s.mainThrottle);
             }
@@ -567,11 +567,11 @@ namespace MuMech
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
 
 
-            if (s.Z == 0 && core.rcs.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
+            if (s.Z == 0 && core.RCS.rcsThrottle && vesselState.rcsThrust) s.Z = -s.mainThrottle;
 
             LastThrottle = s.mainThrottle;
 
-            if (!core.attitude.enabled)
+            if (!core.Attitude.enabled)
             {
                 var act = new Vector3d(s.pitch, s.yaw, s.roll);
                 differentialThrottleDemandedTorque = -Vector3d.Scale(act.xzy, vesselState.torqueDiffThrottle * s.mainThrottle * 0.5f);
@@ -829,7 +829,7 @@ namespace MuMech
             {
                 if (trans_kill_h && tmode == TMode.OFF)
                 {
-                    core.attitude.attitudeDeactivate();
+                    core.Attitude.attitudeDeactivate();
                 }
 
                 pid.Reset();
@@ -837,7 +837,7 @@ namespace MuMech
                 FlightInputHandler.SetNeutralControls();
             }
 
-            bool disableThrusters = userCommandingRotation && !core.rcs.rcsForRotation;
+            bool disableThrusters = userCommandingRotation && !core.RCS.rcsForRotation;
             if (disableThrusters != lastDisableThrusters)
             {
                 lastDisableThrusters = disableThrusters;

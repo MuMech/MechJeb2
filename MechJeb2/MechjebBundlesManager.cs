@@ -26,9 +26,9 @@ namespace MuMech
         {
             // We do this in MainMenu because something is going on in that scene that kills anything loaded with a bundle
             if (diffuseAmbient)
-                MechJebCore.print("Shaders already loaded");
+                MechJebCore.Print("Shaders already loaded");
 
-            MechJebCore.print("Loading Shaders Bundles");
+            MechJebCore.Print("Loading Shaders Bundles");
 
             // Load the font asset bundle
             AssetBundleCreateRequest bundleLoadRequest = AssetBundle.LoadFromFileAsync(shaderPath);
@@ -37,7 +37,7 @@ namespace MuMech
             AssetBundle assetBundle = bundleLoadRequest.assetBundle;
             if (assetBundle == null)
             {
-                MechJebCore.print("Failed to load AssetBundle " + shaderPath);
+                MechJebCore.Print("Failed to load AssetBundle " + shaderPath);
                 yield break;
             }
 
@@ -50,7 +50,7 @@ namespace MuMech
             diffuseAmbientIgnoreZ = assetLoadRequest.asset as Shader;
 
             assetBundle.Unload(false);
-            MechJebCore.print("Loaded Shaders Bundles");
+            MechJebCore.Print("Loaded Shaders Bundles");
 
             comboBoxBackground          = new Texture2D(16, 16, TextureFormat.RGBA32, false);
             comboBoxBackground.wrapMode = TextureWrapMode.Clamp;

@@ -64,7 +64,7 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.StabilityControl").DrawItem();
 
-            if (!core.settings.hideBrakeOnEject)
+            if (!core.Settings.hideBrakeOnEject)
             {
                 ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
             }
@@ -90,9 +90,9 @@ namespace MuMech
 //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 
             GUILayout.BeginHorizontal();
-            if (core.target != null && core.target.Target != null)
+            if (core.Target != null && core.Target.Target != null)
             {
-                Vessel vssl = core.target.Target.GetVessel();
+                Vessel vssl = core.Target.Target.GetVessel();
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button1"))) // "To Target"
                 {
@@ -100,7 +100,7 @@ namespace MuMech
                     autopilot.WaypointIndex                                        = 0;
                     autopilot.Waypoints.Clear();
                     if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-                    else { autopilot.Waypoints.Add(new MechJebWaypoint(core.target.GetPositionTargetPosition())); }
+                    else { autopilot.Waypoints.Add(new MechJebWaypoint(core.Target.GetPositionTargetPosition())); }
 
                     autopilot.ControlHeading = autopilot.ControlSpeed = true;
                     vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
@@ -110,7 +110,7 @@ namespace MuMech
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button2"))) // "Add Target"
                 {
                     if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-                    else { autopilot.Waypoints.Add(new MechJebWaypoint(core.target.GetPositionTargetPosition())); }
+                    else { autopilot.Waypoints.Add(new MechJebWaypoint(core.Target.GetPositionTargetPosition())); }
                 }
             }
 

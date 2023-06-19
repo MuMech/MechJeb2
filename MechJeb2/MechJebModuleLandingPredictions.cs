@@ -280,7 +280,7 @@ namespace MuMech
             //if (descentSpeedPolicy != null)
             //    print(vesselState.limitedMaxThrustAccel.ToString("F2") + " " + descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity).ToString("F2"));
 
-            var simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, core.landing.enabled && deployChutes ? limitChutesStage : -1);
+            var simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, core.Landing.enabled && deployChutes ? limitChutesStage : -1);
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
                 vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
                 Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);

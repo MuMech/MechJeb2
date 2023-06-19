@@ -14,14 +14,14 @@ namespace MuMech
             // TODO I think that this function could be better rewritten to much more agressively kill the horizontal velocity. At present on low gravity bodies such as Bop, the craft will hover and slowly drift sideways, loosing the prescion of the landing. 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (!Core.landing.PredictionReady)
+                if (!Core.Landing.PredictionReady)
                     return this;
 
                 Vector3d horizontalPointingDirection = Vector3d.Exclude(VesselState.up, VesselState.forward).normalized;
                 if (Vector3d.Dot(horizontalPointingDirection, VesselState.surfaceVelocity) > 0)
                 {
-                    Core.thrust.targetThrottle = 0;
-                    Core.attitude.attitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, Core.landing);
+                    Core.Thrust.targetThrottle = 0;
+                    Core.Attitude.attitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, Core.Landing);
                     return new FinalDescent(Core);
                 }
 
@@ -35,17 +35,17 @@ namespace MuMech
                 double maxAccel = -VesselState.localg + Vector3d.Dot(VesselState.forward, VesselState.up) * VesselState.maxThrustAccel;
                 if (maxAccel - minAccel > 0)
                 {
-                    Core.thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
+                    Core.Thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
                 }
                 else
                 {
-                    Core.thrust.targetThrottle = 0;
+                    Core.Thrust.targetThrottle = 0;
                 }
 
                 //angle up and slightly away from vertical:
                 Vector3d desiredThrustVector = (VesselState.up + 0.2 * horizontalPointingDirection).normalized;
 
-                Core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, Core.landing);
+                Core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, Core.Landing);
 
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status10"); //"Killing horizontal velocity before final descent"
 

@@ -11,7 +11,7 @@ namespace MuMech
 
         public string Status = "";
 
-        protected MechJebModuleAscentSettings AscentSettings => core.ascentSettings;
+        protected MechJebModuleAscentSettings AscentSettings => core.AscentSettings;
 
         public  bool   TimedLaunch;
         private double _launchTime;
@@ -64,22 +64,22 @@ namespace MuMech
 
             _placedCircularizeNode = false;
 
-            core.attitude.users.Add(this);
-            core.thrust.users.Add(this);
-            if (AscentSettings.Autostage) core.staging.users.Add(this);
+            core.Attitude.users.Add(this);
+            core.Thrust.users.Add(this);
+            if (AscentSettings.Autostage) core.Staging.users.Add(this);
 
             Status = Localizer.Format("#MechJeb_Ascent_status1"); //"Pre Launch"
         }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.attitudeDeactivate();
-            if (!core.rssMode)
-                core.thrust.ThrustOff();
-            core.thrust.users.Remove(this);
-            core.staging.users.Remove(this);
+            core.Attitude.attitudeDeactivate();
+            if (!core.RssMode)
+                core.Thrust.ThrustOff();
+            core.Thrust.users.Remove(this);
+            core.Staging.users.Remove(this);
 
-            if (_placedCircularizeNode) core.node.Abort();
+            if (_placedCircularizeNode) core.Node.Abort();
 
             Status = Localizer.Format("#MechJeb_Ascent_status2"); //"Off"
         }
@@ -94,7 +94,7 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             if (AscentSettings.AscentType == AscentType.PVG)
-                core.stageStats.RequestUpdate(this);
+                core.StageStats.RequestUpdate(this);
 
             FixupLaunchStart();
             if (TimedLaunch)
@@ -108,8 +108,8 @@ namespace MuMech
                 }
                 else
                 {
-                    if (core.node.autowarp)
-                        core.warp.WarpToUT(_launchTime - AscentSettings.WarpCountDown);
+                    if (core.Node.autowarp)
+                        core.Warp.WarpToUT(_launchTime - AscentSettings.WarpCountDown);
                 }
 
                 _lastTMinus = TMinus;
@@ -142,20 +142,20 @@ namespace MuMech
             {
                 if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
                 {
-                    core.solarpanel.ExtendAll();
+                    core.Solarpanel.ExtendAll();
                 }
                 else
                 {
-                    core.solarpanel.RetractAll();
+                    core.Solarpanel.RetractAll();
                 }
             }
 
             if (AscentSettings.AutoDeployAntennas)
             {
                 if (vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
-                    core.antennaControl.ExtendAll();
+                    core.AntennaControl.ExtendAll();
                 else
-                    core.antennaControl.RetractAll();
+                    core.AntennaControl.RetractAll();
             }
         }
 
@@ -169,9 +169,9 @@ namespace MuMech
             }
 
             Debug.Log("prelaunch killing throttle");
-            core.thrust.ThrustOff();
+            core.Thrust.ThrustOff();
 
-            core.attitude.SetAxisControl(false, false, false);
+            core.Attitude.SetAxisControl(false, false, false);
 
             if (TimedLaunch && TMinus > 10.0)
             {
@@ -181,8 +181,8 @@ namespace MuMech
 
             if (AscentSettings.AutodeploySolarPanels && mainBody.atmosphere)
             {
-                core.solarpanel.RetractAll();
-                if (core.solarpanel.AllRetracted())
+                core.Solarpanel.RetractAll();
+                if (core.Solarpanel.AllRetracted())
                 {
                     Debug.Log("Prelaunch -> Ascend");
                     _mode = AscentMode.ASCEND;
@@ -205,9 +205,9 @@ namespace MuMech
                 Debug.Log("Awaiting Liftoff");
                 Status = Localizer.Format("#MechJeb_Ascent_status6"); //"Awaiting liftoff"
                 // kill the optimizer if it is running.
-                core.guidance.enabled = false;
+                core.Guidance.enabled = false;
 
-                core.attitude.SetAxisControl(false, false, false);
+                core.Attitude.SetAxisControl(false, false, false);
                 return;
             }
 
@@ -268,10 +268,10 @@ namespace MuMech
                 vessel.PlaceManeuverNode(orbit, dV, ut);
                 _placedCircularizeNode = true;
 
-                core.node.ExecuteOneNode(this);
+                core.Node.ExecuteOneNode(this);
             }
 
-            Status = Localizer.Format(core.node.burnTriggered ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
+            Status = Localizer.Format(core.Node.burnTriggered ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
         }
 
         protected abstract bool DriveAscent2();
@@ -414,15 +414,15 @@ namespace MuMech
             if (AscentSettings.ForceRoll)
             {
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
-                core.attitude.attitudeTo(hdg, pitch, desiredPitch == 90.0 ? AscentSettings.VerticalRoll : AscentSettings.TurnRoll, this,
+                core.Attitude.attitudeTo(hdg, pitch, desiredPitch == 90.0 ? AscentSettings.VerticalRoll : AscentSettings.TurnRoll, this,
                     liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude, true);
             }
             else
             {
-                core.attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
+                core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
             }
 
-            core.attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude);
+            core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && vesselState.altitudeBottom > AscentSettings.RollAltitude);
         }
     }
 }

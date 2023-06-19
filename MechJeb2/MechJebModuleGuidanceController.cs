@@ -30,7 +30,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.Type | Pass.Global))]
         public bool ShouldDrawTrajectory = true;
 
-        private MechJebModuleAscentSettings _ascentSettings => core.ascentSettings;
+        private MechJebModuleAscentSettings _ascentSettings => core.AscentSettings;
 
         public double Pitch;
         public double Heading;
@@ -53,21 +53,21 @@ namespace MuMech
         public override void OnModuleEnabled()
         {
             Status = PVGStatus.ENABLED;
-            core.attitude.users.Add(this);
-            core.thrust.users.Add(this);
-            core.spinup.users.Add(this);
+            core.Attitude.users.Add(this);
+            core.Thrust.users.Add(this);
+            core.Spinup.users.Add(this);
             Solution        = null;
             _allowExecution = false;
         }
 
         public override void OnModuleDisabled()
         {
-            core.attitude.attitudeDeactivate();
-            if (!core.rssMode)
-                core.thrust.ThrustOff();
-            core.thrust.users.Remove(this);
-            core.staging.users.Remove(this);
-            core.spinup.users.Remove(this);
+            core.Attitude.attitudeDeactivate();
+            if (!core.RssMode)
+                core.Thrust.ThrustOff();
+            core.Thrust.users.Remove(this);
+            core.Staging.users.Remove(this);
+            core.Spinup.users.Remove(this);
             Solution = null;
             Status   = PVGStatus.FINISHED;
         }
@@ -169,7 +169,7 @@ namespace MuMech
             // is in the "past" in the Solution but you're burning down residuals and you don't know when
             // the stage will actually run out (assuming it isn't a burn before a coast or an optimized burntime
             // so that we burn past the end of the stage and into whatever residuals are available).
-            int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage, core.guidance.IsCoasting());
+            int solutionIndex = Solution.IndexForKSPStage(vessel.currentStage, core.Guidance.IsCoasting());
             if (solutionIndex < 0)
                 return;
 
@@ -180,7 +180,7 @@ namespace MuMech
             if (Status != PVGStatus.TERMINAL_RCS)
                 Status = PVGStatus.TERMINAL;
 
-            core.warp.MinimumWarp();
+            core.Warp.MinimumWarp();
 
             if (Status == PVGStatus.TERMINAL_RCS && !vessel.ActionGroups[KSPActionGroup.RCS]) // if someone manually disables RCS
             {
@@ -222,8 +222,8 @@ namespace MuMech
             if (vessel.currentStage != _ascentSettings.SpinupStage)
                 return;
 
-            core.spinup.AssertStart();
-            core.spinup.RollAngularVelocity = _ascentSettings.SpinupAngularVelocity;
+            core.Spinup.AssertStart();
+            core.Spinup.RollAngularVelocity = _ascentSettings.SpinupAngularVelocity;
         }
 
         public bool IsTerminal()
@@ -300,7 +300,7 @@ namespace MuMech
             // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
             // since the insertion stage may still have RCS which is necessary to complete the mission.
             if (coastStage >= 0 && vessel.currentStage == coastStage && Solution.WillCoast(vesselState.time))
-                core.staging.autostageLimitInternal = coastStage;
+                core.Staging.autostageLimitInternal = coastStage;
 
             if (Solution.Coast(vesselState.time))
             {
@@ -321,7 +321,7 @@ namespace MuMech
                 return;
             }
 
-            core.staging.autostageLimitInternal = Solution.TerminalStage();
+            core.Staging.autostageLimitInternal = Solution.TerminalStage();
 
             ThrottleOn();
 
@@ -396,18 +396,18 @@ namespace MuMech
 
         private void ThrottleOn()
         {
-            core.thrust.targetThrottle = 1.0F;
+            core.Thrust.targetThrottle = 1.0F;
         }
 
         private void RCSOn()
         {
-            core.thrust.ThrustOff();
+            core.Thrust.ThrustOff();
             vessel.ctrlState.Z = -1.0F;
         }
 
         private void ThrustOff()
         {
-            core.thrust.ThrustOff();
+            core.Thrust.ThrustOff();
         }
 
         private void TerminalDone()
@@ -429,7 +429,7 @@ namespace MuMech
             // if we have more un-optimized upper stages to burn, stage and use the TERMINAL_STAGING state
             if (Solution.TerminalStage() != vessel.currentStage)
             {
-                core.staging.Stage();
+                core.Staging.Stage();
                 Status = PVGStatus.TERMINAL_STAGING;
                 return;
             }

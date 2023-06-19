@@ -52,7 +52,7 @@ namespace MuMech
             else if (warpTarget == WarpTarget.PhaseAngleT)
             {
                 // I wonder if I should check for target that don't make sense
-                if (!core.target.NormalTargetExists)
+                if (!core.Target.NormalTargetExists)
                     GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label3")); //"You need a target"
                 else
                     GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label4"), phaseAngle, "º", 60); //"Phase Angle:"
@@ -67,7 +67,7 @@ namespace MuMech
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button1"))) //"Abort"
                 {
                     warping = false;
-                    core.warp.MinimumWarp(true);
+                    core.Warp.MinimumWarp(true);
                 }
             }
             else
@@ -100,16 +100,16 @@ namespace MuMech
                             break;
 
                         case WarpTarget.PhaseAngleT:
-                            if (core.target.NormalTargetExists)
+                            if (core.Target.NormalTargetExists)
                             {
                                 Orbit reference;
-                                if (core.target.TargetOrbit.referenceBody == orbit.referenceBody)
+                                if (core.Target.TargetOrbit.referenceBody == orbit.referenceBody)
                                     reference = orbit; // we orbit arround the same body
                                 else
                                     reference = orbit.referenceBody.orbit;
                                 // From Kerbal Alarm Clock
-                                double angleChangePerSec = 360 / core.target.TargetOrbit.period - 360 / reference.period;
-                                double currentAngle = reference.PhaseAngle(core.target.TargetOrbit, vesselState.time);
+                                double angleChangePerSec = 360 / core.Target.TargetOrbit.period - 360 / reference.period;
+                                double currentAngle = reference.PhaseAngle(core.Target.TargetOrbit, vesselState.time);
                                 double angleDigff = currentAngle - phaseAngle;
                                 if (angleDigff > 0 && angleChangePerSec > 0)
                                     angleDigff -= 360;
@@ -155,13 +155,13 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
-            core.warp.useQuickWarpInfoItem();
+            core.Warp.useQuickWarpInfoItem();
 
             if (warping)
                 GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") +
                                 warpTargetStrings[(int)warpTarget] + "."); //"Warping to "
 
-            core.warp.ControlWarpButton();
+            core.Warp.ControlWarpButton();
 
             GUILayout.EndVertical();
 
@@ -188,12 +188,12 @@ namespace MuMech
 
             if (target < vesselState.time + 1)
             {
-                core.warp.MinimumWarp(true);
+                core.Warp.MinimumWarp(true);
                 warping = false;
             }
             else
             {
-                core.warp.WarpToUT(target);
+                core.Warp.WarpToUT(target);
             }
         }
 

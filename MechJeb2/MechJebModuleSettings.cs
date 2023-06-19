@@ -122,8 +122,8 @@ namespace MuMech
 
             ed.registry.Find(i => i.id == "Toggle:Settings.rssMode").DrawItem();
 
-            core.warp.activateSASOnWarp =
-                GUILayout.Toggle(core.warp.activateSASOnWarp, Localizer.Format("#MechJeb_Settings_checkbox2")); //"Activate SAS on Warp"
+            core.Warp.activateSASOnWarp =
+                GUILayout.Toggle(core.Warp.activateSASOnWarp, Localizer.Format("#MechJeb_Settings_checkbox2")); //"Activate SAS on Warp"
 
             GUILayout.EndVertical();
 

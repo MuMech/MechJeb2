@@ -170,7 +170,7 @@ namespace MuMech
             Vector3 fwd, up;
             Quaternion rotRef = Quaternion.identity;
 
-            if (core.target.Target == null && (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION ||
+            if (core.Target.Target == null && (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION ||
                                                reference == AttitudeReference.RELATIVE_VELOCITY))
             {
                 attitudeDeactivate();
@@ -187,7 +187,7 @@ namespace MuMech
             Vector3d thrustForward = vesselState.thrustForward;
 
             // the off-axis thrust modifications get into a fight with the differential throttle so do not use them when diffthrottle is used
-            if (core.thrust.differentialThrottle)
+            if (core.Thrust.differentialThrottle)
                 thrustForward = vesselState.forward;
 
             switch (reference)
@@ -212,21 +212,21 @@ namespace MuMech
                     rotRef = Quaternion.LookRotation(vesselState.surfaceVelocity.normalized, vesselState.up);
                     break;
                 case AttitudeReference.TARGET:
-                    fwd = (core.target.Position - vessel.GetTransform().position).normalized;
+                    fwd = (core.Target.Position - vessel.GetTransform().position).normalized;
                     up  = Vector3d.Cross(fwd, vesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.RELATIVE_VELOCITY:
-                    fwd = core.target.RelativeVelocity.normalized;
+                    fwd = core.Target.RelativeVelocity.normalized;
                     up  = Vector3d.Cross(fwd, vesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = Quaternion.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.TARGET_ORIENTATION:
-                    Transform targetTransform = core.target.Transform;
+                    Transform targetTransform = core.Target.Transform;
                     Vector3 targetUp = targetTransform.up;
-                    rotRef = core.target.CanAlign
+                    rotRef = core.Target.CanAlign
                         ? Quaternion.LookRotation(targetTransform.forward, targetUp)
                         : Quaternion.LookRotation(targetUp, targetTransform.right);
                     break;
@@ -331,8 +331,8 @@ namespace MuMech
                 return;
 
             torque = vesselState.torqueAvailable;
-            if (core.thrust.differentialThrottle &&
-                core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+            if (core.Thrust.differentialThrottle &&
+                core.Thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
                 torque += vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle / 2.0;
 
             // Inertia is a bad name. It's the "angular distance to stop"
@@ -386,7 +386,7 @@ namespace MuMech
                     part.vessel.Autopilot.SAS.SetTargetOrientation(RequestedAttitude * Vector3.up, true);
                 }
 
-                core.thrust.differentialThrottleDemandedTorque = Vector3d.zero;
+                core.Thrust.differentialThrottleDemandedTorque = Vector3d.zero;
             }
             else
             {
@@ -401,8 +401,8 @@ namespace MuMech
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
 
                 // Feed the control torque to the differential throttle
-                if (core.thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
-                    core.thrust.differentialThrottleDemandedTorque =
+                if (core.Thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+                    core.Thrust.differentialThrottleDemandedTorque =
                         -Vector3d.Scale(act, vesselState.torqueDiffThrottle * vessel.ctrlState.mainThrottle);
             }
         }
@@ -458,7 +458,7 @@ namespace MuMech
                 else
                 {
                     if (RCS_auto)
-                        if (attitudeRCScontrol && core.rcs.users.Count == 0)
+                        if (attitudeRCScontrol && core.RCS.users.Count == 0)
                             part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
                 }
             }
@@ -466,7 +466,7 @@ namespace MuMech
             {
                 timeCount = 0;
                 if (RCS_auto && (absErr.x > 3.0 || absErr.y > 3.0 || absErr.z > 3.0) &&
-                    core.thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition)
+                    core.Thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition)
                     if (attitudeRCScontrol)
                         part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
             }

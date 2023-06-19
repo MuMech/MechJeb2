@@ -68,18 +68,18 @@ namespace MuMech
             }
 
             // Disable if RCS is used by an other module
-            if (core.rcs.enabled && core.rcs.users.Count(u => !Equals(u)) > 0)
+            if (core.RCS.enabled && core.RCS.users.Count(u => !Equals(u)) > 0)
             {
                 if (autoDisableSmartRCS)
                 {
                     target = Target.OFF;
-                    if (core.rcs.users.Contains(this))
-                        core.rcs.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    if (core.RCS.users.Contains(this))
+                        core.RCS.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
 
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GUILayout.ExpandWidth(true)); //"AUTO"
             }
-            else if (core.target.Target == null)
+            else if (core.Target.Target == null)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_SmartRcs_label1")); //"Choose a target"
             }
@@ -94,10 +94,10 @@ namespace MuMech
                 GUILayout.EndVertical();
             }
 
-            core.rcs.rcsThrottle =
-                GUILayout.Toggle(core.rcs.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2")); //" RCS throttle when engines are offline"
-            core.rcs.rcsForRotation =
-                GUILayout.Toggle(core.rcs.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3")); // " Use RCS for rotation"
+            core.RCS.rcsThrottle =
+                GUILayout.Toggle(core.RCS.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2")); //" RCS throttle when engines are offline"
+            core.RCS.rcsForRotation =
+                GUILayout.Toggle(core.RCS.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3")); // " Use RCS for rotation"
             base.WindowGUI(windowID);
         }
 
@@ -106,11 +106,11 @@ namespace MuMech
             switch (target)
             {
                 case Target.OFF:
-                    core.rcs.users.Remove(this);
+                    core.RCS.users.Remove(this);
                     return;
                 case Target.ZERO_RVEL:
-                    core.rcs.users.Add(this);
-                    core.rcs.SetTargetRelative(Vector3d.zero);
+                    core.RCS.users.Add(this);
+                    core.RCS.SetTargetRelative(Vector3d.zero);
                     break;
             }
         }

@@ -15,14 +15,14 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (!core.target.NormalTargetExists)
+            if (!core.Target.NormalTargetExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_RZplan_label1")); //"Select a target to rendezvous with."
                 base.WindowGUI(windowID);
                 return;
             }
 
-            if (core.target.TargetOrbit.referenceBody != orbit.referenceBody)
+            if (core.Target.TargetOrbit.referenceBody != orbit.referenceBody)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_RZplan_label2")); //"Rendezvous target must be in the same sphere of influence."
                 base.WindowGUI(windowID);
@@ -33,20 +33,20 @@ namespace MuMech
 
             //Information readouts:
 
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label3"), core.target.Name); //"Rendezvous target"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label3"), core.Target.Name); //"Rendezvous target"
 
             const double leadTime = 30;
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label4"),
-                core.target.TargetOrbit.PeA.ToSI(3) + "m x " + core.target.TargetOrbit.ApA.ToSI(3) + "m");                          //"Target orbit"
+                core.Target.TargetOrbit.PeA.ToSI(3) + "m x " + core.Target.TargetOrbit.ApA.ToSI(3) + "m");                          //"Target orbit"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label5"), orbit.PeA.ToSI(3) + "m x " + orbit.ApA.ToSI(3) + "m"); //"Current orbit"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label6"),
-                orbit.RelativeInclination(core.target.TargetOrbit).ToString("F2") + "º"); //"Relative inclination"
+                orbit.RelativeInclination(core.Target.TargetOrbit).ToString("F2") + "º"); //"Relative inclination"
 
-            double closestApproachTime = orbit.NextClosestApproachTime(core.target.TargetOrbit, vesselState.time);
+            double closestApproachTime = orbit.NextClosestApproachTime(core.Target.TargetOrbit, vesselState.time);
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label7"),
                 GuiUtils.TimeToDHMS(closestApproachTime - vesselState.time)); //"Time until closest approach"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label8"),
-                orbit.Separation(core.target.TargetOrbit, closestApproachTime).ToSI() + "m"); //"Separation at closest approach"
+                orbit.Separation(core.Target.TargetOrbit, closestApproachTime).ToSI() + "m"); //"Separation at closest approach"
 
 
             //Maneuver planning buttons:
@@ -55,13 +55,13 @@ namespace MuMech
             {
                 double UT;
                 Vector3d dV;
-                if (orbit.AscendingNodeExists(core.target.TargetOrbit))
+                if (orbit.AscendingNodeExists(core.Target.TargetOrbit))
                 {
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.target.TargetOrbit, vesselState.time, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(orbit, core.Target.TargetOrbit, vesselState.time, out UT);
                 }
                 else
                 {
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(orbit, core.target.TargetOrbit, vesselState.time, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(orbit, core.Target.TargetOrbit, vesselState.time, out UT);
                 }
 
                 vessel.RemoveAllManeuverNodes();
@@ -110,7 +110,7 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button3"))) //"Intercept with Hohmann transfer"
             {
                 double UT;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.target.TargetOrbit, vesselState.time, out UT);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(orbit, core.Target.TargetOrbit, vesselState.time, out UT);
                 vessel.RemoveAllManeuverNodes();
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
@@ -118,7 +118,7 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button4"))) //"Match velocities at closest approach"
             {
                 double UT = closestApproachTime;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.target.TargetOrbit);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(orbit, UT, core.Target.TargetOrbit);
                 vessel.RemoveAllManeuverNodes();
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
@@ -126,7 +126,7 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button5"))) //"Get closer"
             {
                 double UT = vesselState.time;
-                (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.target.TargetOrbit, 100, 10);
+                (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(orbit, UT, core.Target.TargetOrbit, 100, 10);
                 vessel.RemoveAllManeuverNodes();
                 vessel.PlaceManeuverNode(orbit, dV, UT);
             }
@@ -136,49 +136,49 @@ namespace MuMech
                 vessel.RemoveAllManeuverNodes();
             }
 
-            if (core.node != null)
+            if (core.Node != null)
             {
-                if (vessel.patchedConicSolver.maneuverNodes.Any() && !core.node.enabled)
+                if (vessel.patchedConicSolver.maneuverNodes.Any() && !core.Node.enabled)
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button6"))) //"Execute next node"
                     {
-                        core.node.ExecuteOneNode(this);
+                        core.Node.ExecuteOneNode(this);
                     }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button7"))) //"Execute all nodes"
                         {
-                            core.node.ExecuteAllNodes(this);
+                            core.Node.ExecuteAllNodes(this);
                         }
                     }
                 }
-                else if (core.node.enabled)
+                else if (core.Node.enabled)
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button8"))) //"Abort node execution"
                     {
-                        core.node.Abort();
+                        core.Node.Abort();
                     }
                 }
 
                 GUILayout.BeginHorizontal();
-                core.node.autowarp =
-                    GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_RZplan_checkbox"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                core.Node.autowarp =
+                    GUILayout.Toggle(core.Node.autowarp, Localizer.Format("#MechJeb_RZplan_checkbox"), GUILayout.ExpandWidth(true)); //"Auto-warp"
                 GUILayout.Label(Localizer.Format("#MechJeb_RZplan_label9"), GUILayout.ExpandWidth(false));                           //"Tolerance:"
-                core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                core.Node.tolerance.text = GUILayout.TextField(core.Node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val += 0.1;
+                    core.Node.tolerance.val += 0.1;
                 }
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val -= core.node.tolerance.val > 0.1 ? 0.1 : 0.0;
+                    core.Node.tolerance.val -= core.Node.tolerance.val > 0.1 ? 0.1 : 0.0;
                 }
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
                 {
-                    core.node.tolerance.val = 0.1;
+                    core.Node.tolerance.val = 0.1;
                 }
 
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));

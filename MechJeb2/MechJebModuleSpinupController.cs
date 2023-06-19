@@ -29,17 +29,17 @@ namespace MuMech
         {
             _state     = SpinupState.INITIALIZED;
             _startTime = Math.Max(vesselState.time, _startTime);
-            core.attitude.users.Add(this);
+            core.Attitude.users.Add(this);
         }
 
         public override void OnModuleDisabled()
         {
             _state = SpinupState.FINISHED;
-            core.attitude.SetOmegaTarget(roll: double.NaN);
-            core.attitude.SetActuationControl();
+            core.Attitude.SetOmegaTarget(roll: double.NaN);
+            core.Attitude.SetActuationControl();
             // FIXME: this might overwrite someone else, but the only other consumer so far is the GuidanceController
-            core.staging.autostageLimitInternal = 0;
-            core.attitude.users.Remove(this);
+            core.Staging.autostageLimitInternal = 0;
+            core.Attitude.users.Remove(this);
             base.OnModuleDisabled();
         }
 
@@ -65,7 +65,7 @@ namespace MuMech
             if (_state == SpinupState.INITIALIZED)
                 return;
 
-            core.staging.autostageLimitInternal = vessel.currentStage;
+            core.Staging.autostageLimitInternal = vessel.currentStage;
 
             if (vesselState.time < _startTime)
                 return;
@@ -79,13 +79,13 @@ namespace MuMech
             if (!vessel.ActionGroups[KSPActionGroup.RCS])
                 vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
-            if (_state == SpinupState.STABILIZING && (core.attitude.attitudeAngleFromTarget() > 1.0 || core.vessel.angularVelocity.magnitude > 0.001))
+            if (_state == SpinupState.STABILIZING && (core.Attitude.attitudeAngleFromTarget() > 1.0 || core.vessel.angularVelocity.magnitude > 0.001))
                 return;
 
             _state = SpinupState.SPINUP;
 
-            core.attitude.SetOmegaTarget(roll: RollAngularVelocity);
-            core.attitude.SetActuationControl(false, false);
+            core.Attitude.SetOmegaTarget(roll: RollAngularVelocity);
+            core.Attitude.SetActuationControl(false, false);
         }
 
         public void AssertStart()

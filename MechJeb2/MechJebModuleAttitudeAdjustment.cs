@@ -18,9 +18,9 @@ namespace MuMech
 
             //core.GetComputerModule<MechJebModuleCustomWindowEditor>().registry.Find(i => i.id == "Toggle:AttitudeController.useSAS").DrawItem();
 
-            core.attitude.RCS_auto = GUILayout.Toggle(core.attitude.RCS_auto, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox1")); //RCS auto mode
+            core.Attitude.RCS_auto = GUILayout.Toggle(core.Attitude.RCS_auto, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox1")); //RCS auto mode
 
-            int currentController = core.attitude.activeController;
+            int currentController = core.Attitude.activeController;
             if (GUILayout.Toggle(currentController == 0, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox2"))) //MJAttitudeController
             {
                 currentController = 0;
@@ -44,13 +44,13 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
             GUILayout.BeginVertical();
-            core.attitude.Controller.GUI();
+            core.Attitude.Controller.GUI();
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            if (currentController != core.attitude.activeController)
+            if (currentController != core.Attitude.activeController)
             {
-                core.attitude.SetActiveController(currentController);
+                core.Attitude.SetActiveController(currentController);
             }
 
             showInfos = GUILayout.Toggle(showInfos, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox5")); //Show Numbers
@@ -58,12 +58,12 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label1"), GUILayout.ExpandWidth(true)); //Axis Control
-                GUILayout.Label(MuUtils.PrettyPrint(core.attitude.AxisControl, "F0"), GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.PrettyPrint(core.Attitude.AxisControl, "F0"), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label2"), GUILayout.ExpandWidth(true)); //Torque
-                GUILayout.Label("|" + core.attitude.torque.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.attitude.torque),
+                GUILayout.Label("|" + core.Attitude.torque.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(core.Attitude.torque),
                     GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
@@ -74,7 +74,7 @@ namespace MuMech
                     GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
-                var ratio = Vector3d.Scale(vesselState.MoI, core.attitude.torque.InvertNoNaN());
+                var ratio = Vector3d.Scale(vesselState.MoI, core.Attitude.torque.InvertNoNaN());
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label4"), GUILayout.ExpandWidth(true)); //MOI / torque

@@ -66,10 +66,10 @@ namespace MuMech
                     autopilot.users.Remove(this);
                 }
             }
-            else if (core.attitude.enabled && core.attitude.users.Count(u => !Equals(u)) > 0)
+            else if (core.Attitude.enabled && core.Attitude.users.Count(u => !Equals(u)) > 0)
             {
-                if (core.attitude.users.Contains(this))
-                    core.attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                if (core.Attitude.users.Contains(this))
+                    core.Attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 GUILayout.Button("Auto", btAuto, GUILayout.ExpandWidth(true));
             }
             else

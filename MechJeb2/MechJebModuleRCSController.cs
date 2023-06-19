@@ -197,13 +197,13 @@ namespace MuMech
                     break;
 
                 case ControlType.VELOCITY_TARGET_REL:
-                    if (core.target.Target == null)
+                    if (core.Target.Target == null)
                     {
                         rcsDeactivate();
                         return;
                     }
 
-                    worldVelocityDelta = core.target.RelativeVelocity - targetVelocity;
+                    worldVelocityDelta = core.Target.RelativeVelocity - targetVelocity;
                     break;
             }
 

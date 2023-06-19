@@ -222,19 +222,19 @@ namespace MuMech
                         break;
 
                     case Snap.REL_ASCENDING:
-                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
+                        if (core.Target.NormalTargetExists && core.Target.TargetOrbit.referenceBody == o.referenceBody)
                         {
-                            if (o.AscendingNodeExists(core.target.TargetOrbit))
-                                UT = o.TimeOfAscendingNode(core.target.TargetOrbit, UT - o.period / 2);
+                            if (o.AscendingNodeExists(core.Target.TargetOrbit))
+                                UT = o.TimeOfAscendingNode(core.Target.TargetOrbit, UT - o.period / 2);
                         }
 
                         break;
 
                     case Snap.REL_DESCENDING:
-                        if (core.target.NormalTargetExists && core.target.TargetOrbit.referenceBody == o.referenceBody)
+                        if (core.Target.NormalTargetExists && core.Target.TargetOrbit.referenceBody == o.referenceBody)
                         {
-                            if (o.DescendingNodeExists(core.target.TargetOrbit))
-                                UT = o.TimeOfDescendingNode(core.target.TargetOrbit, UT - o.period / 2);
+                            if (o.DescendingNodeExists(core.Target.TargetOrbit))
+                                UT = o.TimeOfDescendingNode(core.Target.TargetOrbit, UT - o.period / 2);
                         }
 
                         break;
@@ -250,41 +250,41 @@ namespace MuMech
             RelativityModeSelectUI();
 
 
-            if (core.node != null)
+            if (core.Node != null)
             {
-                if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && !core.node.enabled)
+                if (vessel.patchedConicSolver.maneuverNodes.Count > 0 && !core.Node.enabled)
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button4"))) //"Execute next node"
                     {
-                        core.node.ExecuteOneNode(this);
+                        core.Node.ExecuteOneNode(this);
                     }
 
                     if (VesselState.isLoadedPrincipia && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button7"))) //Execute next Principia node
                     {
-                        core.node.ExecuteOnePNode(this);
+                        core.Node.ExecuteOnePNode(this);
                     }
 
                     if (vessel.patchedConicSolver.maneuverNodes.Count > 1)
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button5"))) //"Execute all nodes"
                         {
-                            core.node.ExecuteAllNodes(this);
+                            core.Node.ExecuteAllNodes(this);
                         }
                     }
                 }
-                else if (core.node.enabled)
+                else if (core.Node.enabled)
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button6"))) //"Abort node execution"
                     {
-                        core.node.Abort();
+                        core.Node.Abort();
                     }
                 }
 
                 GUILayout.BeginHorizontal();
-                core.node.autowarp =
-                    GUILayout.Toggle(core.node.autowarp, Localizer.Format("#MechJeb_NodeEd_checkbox1"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                core.Node.autowarp =
+                    GUILayout.Toggle(core.Node.autowarp, Localizer.Format("#MechJeb_NodeEd_checkbox1"), GUILayout.ExpandWidth(true)); //"Auto-warp"
                 GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label7"), GUILayout.ExpandWidth(false));                            //"Tolerance:"
-                core.node.tolerance.text = GUILayout.TextField(core.node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                core.Node.tolerance.text = GUILayout.TextField(core.Node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
             }

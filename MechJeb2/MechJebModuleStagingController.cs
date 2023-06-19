@@ -228,11 +228,11 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)] //Clamp Autostage Thrust
         public void ClampAutostageThrust()
         {
-            double prev = core.staging.clampAutoStageThrustPct;
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label44, core.staging.clampAutoStageThrustPct, "%",
+            double prev = core.Staging.clampAutoStageThrustPct;
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label44, core.Staging.clampAutoStageThrustPct, "%",
                 50); //"Clamp AutoStage Thrust "
-            if (prev != core.staging.clampAutoStageThrustPct)
-                core.staging.clampAutoStageThrustPct = UtilMath.Clamp(core.staging.clampAutoStageThrustPct, 0, 100);
+            if (prev != core.Staging.clampAutoStageThrustPct)
+                core.Staging.clampAutoStageThrustPct = UtilMath.Clamp(core.Staging.clampAutoStageThrustPct, 0, 100);
         }
 
         //internal state:
@@ -290,8 +290,8 @@ namespace MuMech
                 return;
 
             // prevent staging if we have unstable ullage and we have RCS
-            if (InverseStageHasUnstableEngines(vessel.currentStage - 1) && core.thrust.autoRCSUllaging && vessel.hasEnabledRCSModules() &&
-                core.thrust.LastThrottle > 0)
+            if (InverseStageHasUnstableEngines(vessel.currentStage - 1) && core.Thrust.autoRCSUllaging && vessel.hasEnabledRCSModules() &&
+                core.Thrust.LastThrottle > 0)
             {
                 if (!vessel.ActionGroups[KSPActionGroup.RCS])
                     vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
@@ -333,13 +333,13 @@ namespace MuMech
             if (!HasFairing(vessel.currentStage - 1))
                 return false;
 
-            if (core.vesselState.dynamicPressure > fairingMaxDynamicPressure)
+            if (core.VesselState.dynamicPressure > fairingMaxDynamicPressure)
                 return true;
 
-            if (core.vesselState.altitudeASL < fairingMinAltitude)
+            if (core.VesselState.altitudeASL < fairingMinAltitude)
                 return true;
 
-            if (core.vesselState.freeMolecularAerothermalFlux > fairingMaxAerothermalFlux)
+            if (core.VesselState.freeMolecularAerothermalFlux > fairingMaxAerothermalFlux)
                 return true;
 
             return false;
