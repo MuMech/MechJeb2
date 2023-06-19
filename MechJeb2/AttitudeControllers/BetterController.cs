@@ -8,67 +8,67 @@ namespace MuMech.AttitudeControllers
     internal class BetterController : BaseAttitudeController
     {
         private static readonly Vector3d _vector3dnan = new Vector3d(double.NaN, double.NaN, double.NaN);
-        private                 Vessel   Vessel => ac.vessel;
+        private                 Vessel   Vessel => ac.Vessel;
 
         /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble PosKp = new EditableDouble(1.98);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble PosDeadband = new EditableDouble(0.002);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelKp = new EditableDouble(10);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelKi = new EditableDouble(20);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelKd = new EditableDouble(0.425);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelN = new EditableDouble(84.1994541201249);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelB = new EditableDouble(0.994);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelC = new EditableDouble(0.0185);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelDeadband = new EditableDouble(0.0001);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private bool VelClegg;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelSmoothIn = new EditableDouble(1);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble VelSmoothOut = new EditableDouble(1);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble PosSmoothIn = new EditableDouble(1);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble minFlipTime = new EditableDouble(120);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private readonly EditableDouble rollControlRange = new EditableDouble(5);
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private bool useControlRange = true;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private bool useFlipTime = true;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private bool useStoppingTime = true;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private int _version = -1;
 
         private void Defaults()
@@ -188,7 +188,7 @@ namespace MuMech.AttitudeControllers
             Vector3d controlTorque = ac.torque;
 
             // needed to stop wiggling at higher phys warp
-            double warpFactor = ac.vesselState.deltaT / 0.02;
+            double warpFactor = ac.VesselState.deltaT / 0.02;
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented so we only
             // have the first two PIDs in the cascade.
@@ -243,7 +243,7 @@ namespace MuMech.AttitudeControllers
                 _pid[i].N         = VelN;
                 _pid[i].B         = VelB;
                 _pid[i].C         = VelC;
-                _pid[i].Ts        = ac.vesselState.deltaT;
+                _pid[i].Ts        = ac.VesselState.deltaT;
                 _pid[i].SmoothIn  = MuUtils.Clamp01(VelSmoothIn);
                 _pid[i].SmoothOut = MuUtils.Clamp01(VelSmoothOut);
                 _pid[i].MinOutput = -1;

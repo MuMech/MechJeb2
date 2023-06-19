@@ -11,7 +11,7 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_Sa_title"); } //change semi-major axis
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewSma = new EditableDoubleMult(800000, 1000);
 
         private readonly TimeSelector _timeSelector;

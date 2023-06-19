@@ -12,9 +12,9 @@ namespace MuMech
     {
         public MechJebModuleSpaceplaneAutopilot(MechJebCore core) : base(core) { }
 
-        public MechJebModuleAirplaneAutopilot Autopilot => core.GetComputerModule<MechJebModuleAirplaneAutopilot>();
+        public MechJebModuleAirplaneAutopilot Autopilot => Core.GetComputerModule<MechJebModuleAirplaneAutopilot>();
 
-        public MechJebModuleRoverController RoverPilot => core.GetComputerModule<MechJebModuleRoverController>();
+        public MechJebModuleRoverController RoverPilot => Core.GetComputerModule<MechJebModuleRoverController>();
 
         /// <summary>
         ///     Set to true if reverse thrusters are engaged.
@@ -26,7 +26,7 @@ namespace MuMech
         /// </summary>
         public bool bEngageReverseIfAvailable = true;
 
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public bool bBreakAsSoonAsLanded = false;
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace MuMech
         /// <summary>
         ///     Glide slope angle for approach (3-5 seems to work best).
         /// </summary>
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public EditableDouble glideslope = 2.5;
 
         /// <summary>
@@ -82,16 +82,16 @@ namespace MuMech
         ///     Minimum approach speed in meters per second. Stall + 10 seems to
         ///     result in a decent approach and landing.
         /// </summary>
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public EditableDouble approachSpeed = 80.0;
 
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public EditableDouble touchdownSpeed = 60.0;
 
         /// <summary>
         ///     Maximum allowed bank angle.
         /// </summary>
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public EditableDouble maximumSafeBankAngle = 25.0;
 
         /// <summary>
@@ -131,9 +131,9 @@ namespace MuMech
 
         public void Autoland(object controller)
         {
-            users.Add(controller);
-            Autopilot.users.Add(this);
-            RoverPilot.users.Add(this);
+            Users.Add(controller);
+            Autopilot.Users.Add(this);
+            RoverPilot.Users.Add(this);
 
             RoverPilot.ControlHeading = false;
             RoverPilot.ControlSpeed   = false;
@@ -144,10 +144,10 @@ namespace MuMech
 
         public void AutopilotOff()
         {
-            users.Clear();
-            Autopilot.users.Remove(this);
-            RoverPilot.users.Remove(this);
-            core.Attitude.attitudeDeactivate();
+            Users.Clear();
+            Autopilot.Users.Remove(this);
+            RoverPilot.Users.Remove(this);
+            Core.Attitude.attitudeDeactivate();
 
             RoverPilot.ControlHeading = false;
         }
@@ -158,9 +158,9 @@ namespace MuMech
                 InitRunwaysList();
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
-            core.Attitude.attitudeDeactivate();
+            Core.Attitude.attitudeDeactivate();
         }
 
         public enum AutolandApproachState
@@ -210,7 +210,7 @@ namespace MuMech
             if (!Autopilot.HeadingHoldEnabled)
             {
                 Autopilot.EnableHeadingHold();
-                Autopilot.HeadingTarget = vesselState.vesselHeading;
+                Autopilot.HeadingTarget = VesselState.vesselHeading;
             }
 
             if (Autopilot.AltitudeHoldEnabled)
@@ -221,13 +221,13 @@ namespace MuMech
             if (!Autopilot.VertSpeedHoldEnabled)
             {
                 Autopilot.EnableVertSpeedHold();
-                Autopilot.VertSpeedTarget = vesselState.speedVertical;
+                Autopilot.VertSpeedTarget = VesselState.speedVertical;
             }
 
             if (!Autopilot.SpeedHoldEnabled)
             {
                 Autopilot.EnableSpeedHold();
-                Autopilot.SpeedTarget = vesselState.speedSurface;
+                Autopilot.SpeedTarget = VesselState.speedSurface;
             }
 
             // Set autopilot target and max values for navigation
@@ -238,7 +238,7 @@ namespace MuMech
             if (approachState == AutolandApproachState.FLARE)
             {
                 double exponentPerMeter = (Math.Log(targetFlareAoA + 1) - Math.Log(1)) / startFlareAtAltitude;
-                double desiredAoA = Math.Exp((startFlareAtAltitude - vesselState.altitudeTrue) * exponentPerMeter) - 1;
+                double desiredAoA = Math.Exp((startFlareAtAltitude - VesselState.altitudeTrue) * exponentPerMeter) - 1;
 
                 //core.attitude.attitudeTo(Autopilot.HeadingTarget, Math.Max(desiredAoA, flareStartAoA), 0, this, true, false, false);
 
@@ -246,7 +246,7 @@ namespace MuMech
             }
             else if (approachState == AutolandApproachState.TOUCHDOWN)
             {
-                vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, true);
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.Gear, true);
             }
             else if (approachState == AutolandApproachState.ROLLOUT)
             {
@@ -257,12 +257,12 @@ namespace MuMech
                 // Smoothen the main gear touchdown
                 double exponentPerMeterPerSecond = (Math.Log(touchdownMomentAoA + 1) - Math.Log(1)) / touchdownMomentSpeed;
                 double desiredAoA = touchdownMomentAoA -
-                                    (Math.Exp(exponentPerMeterPerSecond * (touchdownMomentSpeed - vesselState.speedSurfaceHorizontal)) - 1);
-                double currentAoA = vesselState.AoA;
-                core.Attitude.attitudeTo(Autopilot.HeadingTarget, Math.Min(desiredAoA, currentAoA), 0, this, true, false, false);
+                                    (Math.Exp(exponentPerMeterPerSecond * (touchdownMomentSpeed - VesselState.speedSurfaceHorizontal)) - 1);
+                double currentAoA = VesselState.AoA;
+                Core.Attitude.attitudeTo(Autopilot.HeadingTarget, Math.Min(desiredAoA, currentAoA), 0, this, true, false, false);
 
                 // Engage reverse thrusters and full throttle
-                SetReverseThrusters(bEngageReverseIfAvailable && vesselState.speedSurfaceHorizontal > 10);
+                SetReverseThrusters(bEngageReverseIfAvailable && VesselState.speedSurfaceHorizontal > 10);
 
                 if (bEngagedReverseThrusters)
                     s.mainThrottle = 1;
@@ -271,22 +271,22 @@ namespace MuMech
 
                 if (bBreakAsSoonAsLanded)
                 {
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
+                    Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, true);
                 }
                 else
                 {
                     // Apply brakes under 30 (if there are no reversers) otherwise under 10 m/s.
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes,
-                        bEngagedReverseThrusters ? vesselState.speedSurfaceHorizontal < 10 : vesselState.speedSurfaceHorizontal < 30);
+                    Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes,
+                        bEngagedReverseThrusters ? VesselState.speedSurfaceHorizontal < 10 : VesselState.speedSurfaceHorizontal < 30);
                 }
 
-                if (vesselState.speedSurface < 1.0)
+                if (VesselState.speedSurface < 1.0)
                 {
-                    print("Disengaging autopilot!");
+                    Print("Disengaging autopilot!");
                     AutopilotOff();
                     // disable the autopilot if it was manually engaged by the user
-                    Autopilot.enabled = false;
-                    core.Thrust.ThrustOff();
+                    Autopilot.Enabled = false;
+                    Core.Thrust.ThrustOff();
                 }
             }
         }
@@ -296,7 +296,7 @@ namespace MuMech
             if (bEngage == bEngagedReverseThrusters)
                 return;
 
-            foreach (Part part in vessel.parts)
+            foreach (Part part in Vessel.parts)
             {
                 if (part.IsEngine())
                 {
@@ -321,8 +321,8 @@ namespace MuMech
             if (approachState == AutolandApproachState.FLARE)
                 return -1.5;
 
-            double timeToWaypoint = LateralDistance(vesselState.CoM, vectorToWaypoint) / vesselState.speedSurfaceHorizontal;
-            double deltaAlt = GetAutolandTargetAltitude(vectorToWaypoint) - vesselState.altitudeASL;
+            double timeToWaypoint = LateralDistance(VesselState.CoM, vectorToWaypoint) / VesselState.speedSurfaceHorizontal;
+            double deltaAlt = GetAutolandTargetAltitude(vectorToWaypoint) - VesselState.altitudeASL;
 
             double vertSpeed = deltaAlt / timeToWaypoint;
 
@@ -332,10 +332,10 @@ namespace MuMech
             {
                 Debug.Assert(vertSpeed < 0);
 
-                double latDist = LateralDistance(vesselState.CoM, runway.GetVectorToTouchdown());
+                double latDist = LateralDistance(VesselState.CoM, runway.GetVectorToTouchdown());
                 Vector3d vectorToCorrectPointOnGlideslope = runway.GetPointOnGlideslope(glideslope, latDist);
                 double desiredAlt = GetAutolandTargetAltitude(vectorToCorrectPointOnGlideslope);
-                double deltaToCorrectAlt = desiredAlt - vesselState.altitudeASL;
+                double deltaToCorrectAlt = desiredAlt - VesselState.altitudeASL;
                 double expPerMeter = (Math.Log(maximumVerticalSpeedCorrection + 1) - Math.Log(1)) / desiredAlt;
                 double adjustment = Math.Exp(expPerMeter * Math.Abs(deltaToCorrectAlt)) - 1;
 
@@ -354,7 +354,7 @@ namespace MuMech
 
         public double GetAutolandTargetHeading(Vector3d vectorToWaypoint)
         {
-            double targetHeading = vesselState.HeadingFromDirection(vectorToWaypoint);
+            double targetHeading = VesselState.HeadingFromDirection(vectorToWaypoint);
 
             // If we are on final, align with runway and maintain
             switch (approachState)
@@ -397,14 +397,14 @@ namespace MuMech
         public double GetAutolandTurnRadius()
         {
             // Formula is r = v / (RoT * (pi/180))
-            return vesselState.speedSurfaceHorizontal / (GetAutolandMaxRateOfTurn() * UtilMath.Deg2Rad);
+            return VesselState.speedSurfaceHorizontal / (GetAutolandMaxRateOfTurn() * UtilMath.Deg2Rad);
         }
 
         public double GetAutolandMaxRateOfTurn()
         {
             // Formula is RoT = (g * (180/pi) * tan(Bank)) / v
             return runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg * Math.Tan(GetAutolandTargetBankAngle() * UtilMath.Deg2Rad) /
-                   vesselState.speedSurfaceHorizontal;
+                   VesselState.speedSurfaceHorizontal;
         }
 
         public double GetAutolandTargetBankAngle()
@@ -412,13 +412,13 @@ namespace MuMech
             // TODO: return Autopilot.RollLimit;
             // Formula is Bank = atan((v * t) / (g * (180/pi)))
             return Math.Min(
-                Math.Atan(vesselState.speedSurfaceHorizontal * targetRateOfTurn / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) *
+                Math.Atan(VesselState.speedSurfaceHorizontal * targetRateOfTurn / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) *
                 UtilMath.Rad2Deg, GetAutolandMaxBankAngle());
         }
 
         public double GetAutolandTargetSpeed()
         {
-            if (vessel.Landed)
+            if (Vessel.Landed)
                 return 0;
 
             switch (approachState)
@@ -438,7 +438,7 @@ namespace MuMech
 
         public double GetAutolandLateralDistanceToNextWaypoint()
         {
-            return LateralDistance(vesselState.CoM, GetAutolandTargetVector());
+            return LateralDistance(VesselState.CoM, GetAutolandTargetVector());
         }
 
         /// <summary>
@@ -504,7 +504,7 @@ namespace MuMech
 
                 // Determine whether we should start turning towards FAP.
                 double estimatedTimeToTurn = lateralInterceptAngle / GetAutolandMaxRateOfTurn();
-                double timeToGlideslopeIntercept = LateralDistance(vesselState.CoM, vectorToGlideslopeIntercept) / vesselState.speedSurfaceHorizontal;
+                double timeToGlideslopeIntercept = LateralDistance(VesselState.CoM, vectorToGlideslopeIntercept) / VesselState.speedSurfaceHorizontal;
 
                 if (estimatedTimeToTurn >= timeToGlideslopeIntercept)
                 {
@@ -525,7 +525,7 @@ namespace MuMech
                     return initialApproachVector;
                 }
 
-                double timeToFAP = LateralDistance(vesselState.CoM, finalApproachVector) / vesselState.speedSurfaceHorizontal;
+                double timeToFAP = LateralDistance(VesselState.CoM, finalApproachVector) / VesselState.speedSurfaceHorizontal;
 
                 if (GetAutolandAlignmentError(finalApproachVector) < 3.0 && timeToFAP < secondsThresholdToNextWaypoint)
                 {
@@ -538,7 +538,7 @@ namespace MuMech
 
             if (approachState == AutolandApproachState.TOUCHDOWN)
             {
-                if (vesselState.altitudeASL < runway.start.altitude + startFlareAtAltitude + 5)
+                if (VesselState.altitudeASL < runway.start.altitude + startFlareAtAltitude + 5)
                 {
                     approachState = AutolandApproachState.WAITINGFORFLARE;
                     return runway.End();
@@ -549,10 +549,10 @@ namespace MuMech
 
             if (approachState == AutolandApproachState.WAITINGFORFLARE)
             {
-                if (vesselState.altitudeASL < runway.start.altitude + startFlareAtAltitude)
+                if (VesselState.altitudeASL < runway.start.altitude + startFlareAtAltitude)
                 {
                     approachState = AutolandApproachState.FLARE;
-                    flareStartAoA = vesselState.AoA;
+                    flareStartAoA = VesselState.AoA;
                 }
 
                 return runway.End();
@@ -560,11 +560,11 @@ namespace MuMech
 
             if (approachState == AutolandApproachState.FLARE)
             {
-                if (vessel.Landed)
+                if (Vessel.Landed)
                 {
-                    print("Vessel landed!");
-                    touchdownMomentAoA   = vesselState.AoA;
-                    touchdownMomentSpeed = vesselState.speedSurfaceHorizontal;
+                    Print("Vessel landed!");
+                    touchdownMomentAoA   = VesselState.AoA;
+                    touchdownMomentSpeed = VesselState.speedSurfaceHorizontal;
                     approachState        = AutolandApproachState.ROLLOUT;
                 }
 
@@ -612,10 +612,10 @@ namespace MuMech
         {
             runway.body.GetLatLonAlt(v, out double lat, out double lon, out double alt);
 
-            if (alt <= vesselState.altitudeASL)
+            if (alt <= VesselState.altitudeASL)
                 return v;
 
-            return runway.body.GetWorldSurfacePosition(lat, lon, vesselState.altitudeASL);
+            return runway.body.GetWorldSurfacePosition(lat, lon, VesselState.altitudeASL);
         }
 
         /// <summary>
@@ -650,7 +650,7 @@ namespace MuMech
             // We know the lateral distance to the final approach point, we
             // want to find a point on the glide slope which we can
             // intercept at a given angle.
-            double dist = LateralDistance(vesselState.CoM, finalApproachVector) * Math.Sin(UtilMath.Deg2Rad * omega) /
+            double dist = LateralDistance(VesselState.CoM, finalApproachVector) * Math.Sin(UtilMath.Deg2Rad * omega) /
                           Math.Sin(UtilMath.Deg2Rad * theta);
 
             // If this is a bad intercept, proceed to IAP.

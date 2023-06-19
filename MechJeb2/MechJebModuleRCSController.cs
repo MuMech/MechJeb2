@@ -24,45 +24,45 @@ namespace MuMech
 
         private ControlType controlType;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         [ToggleInfoItem("#MechJeb_conserveFuel", InfoItem.Category.Thrust)] //Conserve RCS fuel
         public bool conserveFuel = false;
 
         [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
         public EditableDouble conserveThreshold = 0.05;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         [EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)] //RCS Tf
         public EditableDouble Tf = 1;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble Kp = 0.125;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble Ki = 0.07;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble Kd = 0.53;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool rcsManualPID;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         [ToggleInfoItem("#MechJeb_RCSThrottle", InfoItem.Category.Thrust)] //RCS throttle when 0kn thrust
         public bool rcsThrottle = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         [ToggleInfoItem("#MechJeb_rcsForRotation", InfoItem.Category.Thrust)] //Use RCS for rotation
         public bool rcsForRotation = true;
 
         public MechJebModuleRCSController(MechJebCore core)
             : base(core)
         {
-            priority = 600;
+            Priority = 600;
             pid      = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
             setPIDParameters();
             pid.Reset();
@@ -75,7 +75,7 @@ namespace MuMech
 
         public bool rcsDeactivate()
         {
-            users.Clear();
+            Users.Clear();
             return true;
         }
 
@@ -149,9 +149,9 @@ namespace MuMech
             return pid.Kp;
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
-            vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+            Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
             base.OnModuleDisabled();
         }
 
@@ -187,7 +187,7 @@ namespace MuMech
                     // Removed the gravity since it also affect the target and we don't know the target pos here.
                     // Since the difference is negligable for docking it's removed
                     // TODO : add it back once we use the RCS Controler for other use than docking. Account for current acceleration beside gravity ?
-                    worldVelocityDelta = vesselState.orbitalVelocity - targetVelocity;
+                    worldVelocityDelta = VesselState.orbitalVelocity - targetVelocity;
                     //worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
                     //worldVelocityDelta -= TimeWarp.fixedDeltaTime * gravityForce = FlightGlobals.getGeeForceAtPosition(  Here be the target position  ); ; //account for one frame's worth of gravity
                     break;
@@ -197,24 +197,24 @@ namespace MuMech
                     break;
 
                 case ControlType.VELOCITY_TARGET_REL:
-                    if (core.Target.Target == null)
+                    if (Core.Target.Target == null)
                     {
                         rcsDeactivate();
                         return;
                     }
 
-                    worldVelocityDelta = core.Target.RelativeVelocity - targetVelocity;
+                    worldVelocityDelta = Core.Target.RelativeVelocity - targetVelocity;
                     break;
             }
 
             // We work in local vessel coordinate
-            Vector3d velocityDelta = Quaternion.Inverse(vessel.GetTransform().rotation) * worldVelocityDelta;
+            Vector3d velocityDelta = Quaternion.Inverse(Vessel.GetTransform().rotation) * worldVelocityDelta;
 
             if (!conserveFuel || velocityDelta.magnitude > conserveThreshold)
             {
-                if (!vessel.ActionGroups[KSPActionGroup.RCS])
+                if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                 {
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                    Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 }
 
                 var rcs = new Vector3d();
@@ -223,10 +223,10 @@ namespace MuMech
                 {
                     Vector6.Direction dir = Vector6.Values[i];
                     double dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[(int)dir]);
-                    double dirAvail = vesselState.rcsThrustAvailable[dir];
+                    double dirAvail = VesselState.rcsThrustAvailable[dir];
                     if (dirAvail > 0 && Math.Abs(dirDv) > 0.001)
                     {
-                        double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / vesselState.mass);
+                        double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / VesselState.mass);
                         if (dirAction > 0)
                         {
                             rcs += Vector6.directions[(int)dir] * dirAction;
@@ -239,7 +239,7 @@ namespace MuMech
                 switch (controlType)
                 {
                     case ControlType.TARGET_VELOCITY:
-                        omega = Quaternion.Inverse(vessel.GetTransform().rotation) * (vessel.acceleration - vesselState.gravityForce);
+                        omega = Quaternion.Inverse(Vessel.GetTransform().rotation) * (Vessel.acceleration - VesselState.gravityForce);
                         break;
 
                     case ControlType.VELOCITY_TARGET_REL:
@@ -261,9 +261,9 @@ namespace MuMech
             }
             else if (conserveFuel)
             {
-                if (vessel.ActionGroups[KSPActionGroup.RCS])
+                if (Vessel.ActionGroups[KSPActionGroup.RCS])
                 {
-                    vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
+                    Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
                 }
             }
 

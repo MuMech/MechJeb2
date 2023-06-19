@@ -10,46 +10,46 @@ namespace MuMech
     [UsedImplicitly]
     internal class MechJebModuleDebugArrows : ComputerModule
     {
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool displayAtCoM;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool seeThrough;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool comSphereActive;
 
         public static DebugIcoSphere comSphere;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool colSphereActive;
 
         public static DebugIcoSphere colSphere;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool cotSphereActive;
 
         public static DebugIcoSphere cotSphere;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble comSphereRadius = new EditableDouble(0.09);
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool srfVelocityArrowActive;
 
         public static DebugArrow srfVelocityArrow;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool obtVelocityArrowActive;
 
         public static DebugArrow obtVelocityArrow;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool dotArrowActive;
 
         public static DebugArrow dotArrow;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool forwardArrowActive;
 
         public static DebugArrow forwardArrow;
@@ -59,17 +59,17 @@ namespace MuMech
         //public bool avgForwardArrowActive;
         //public static DebugArrow avgForwardArrow;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool requestedAttitudeArrowActive;
 
         public static DebugArrow requestedAttitudeArrow;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool debugArrowActive;
 
         public static DebugArrow debugArrow;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool debugArrow2Active;
 
         public static DebugArrow debugArrow2;
@@ -77,12 +77,12 @@ namespace MuMech
         public static Vector3d debugVector  = Vector3d.one;
         public static Vector3d debugVector2 = Vector3d.one;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble arrowsLength = new EditableDouble(4);
 
         public MechJebModuleDebugArrows(MechJebCore core) : base(core)
         {
-            enabled = true;
+            Enabled = true;
         }
 
         public override void OnDestroy()
@@ -126,7 +126,7 @@ namespace MuMech
         // TODO : I should probably use an array and an enum to lower code dup ...
         public override void OnUpdate()
         {
-            if (vessel != FlightGlobals.ActiveVessel)
+            if (Vessel != FlightGlobals.ActiveVessel)
                 return;
 
             if (comSphere == null)
@@ -152,63 +152,63 @@ namespace MuMech
 
 
             Vector3d frameVel =
-                (vesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - vessel.orbit.GetRotFrameVel(vessel.orbit.referenceBody).xzy) *
+                (VesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - Vessel.orbit.GetRotFrameVel(Vessel.orbit.referenceBody).xzy) *
                 Time.fixedDeltaTime;
-            Vector3d instantCoM = vesselState.CoM + frameVel;
+            Vector3d instantCoM = VesselState.CoM + frameVel;
 
             Vector3 arrowPos = displayAtCoM
                 ? instantCoM
-                : (Vector3d)vessel.ReferenceTransform.position;
+                : (Vector3d)Vessel.ReferenceTransform.position;
 
-            comSphere.State(comSphereActive && core.ShowGui);
+            comSphere.State(comSphereActive && Core.ShowGui);
             if (comSphereActive)
             {
                 comSphere.Set(instantCoM);
                 comSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            colSphere.State(colSphereActive && vesselState.CoLScalar > 0 && core.ShowGui);
+            colSphere.State(colSphereActive && VesselState.CoLScalar > 0 && Core.ShowGui);
             if (colSphereActive)
             {
-                colSphere.Set(vesselState.CoL + frameVel);
+                colSphere.Set(VesselState.CoL + frameVel);
                 colSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            cotSphere.State(cotSphereActive && vesselState.CoTScalar > 0 && core.ShowGui);
+            cotSphere.State(cotSphereActive && VesselState.CoTScalar > 0 && Core.ShowGui);
             if (cotSphereActive)
             {
-                cotSphere.Set(vesselState.CoT + frameVel);
+                cotSphere.Set(VesselState.CoT + frameVel);
                 cotSphere.SetRadius((float)comSphereRadius.val);
             }
 
-            srfVelocityArrow.State(srfVelocityArrowActive && core.ShowGui);
+            srfVelocityArrow.State(srfVelocityArrowActive && Core.ShowGui);
             if (srfVelocityArrowActive)
             {
-                srfVelocityArrow.Set(arrowPos, vessel.srf_velocity);
+                srfVelocityArrow.Set(arrowPos, Vessel.srf_velocity);
                 srfVelocityArrow.SetLength((float)arrowsLength.val);
                 srfVelocityArrow.SeeThrough(seeThrough);
             }
 
-            obtVelocityArrow.State(obtVelocityArrowActive && core.ShowGui);
+            obtVelocityArrow.State(obtVelocityArrowActive && Core.ShowGui);
             if (obtVelocityArrowActive)
             {
-                obtVelocityArrow.Set(arrowPos, vessel.obt_velocity);
+                obtVelocityArrow.Set(arrowPos, Vessel.obt_velocity);
                 obtVelocityArrow.SetLength((float)arrowsLength.val);
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
 
-            dotArrow.State(dotArrowActive && vesselState.thrustCurrent > 0 && core.ShowGui);
+            dotArrow.State(dotArrowActive && VesselState.thrustCurrent > 0 && Core.ShowGui);
             if (dotArrowActive)
             {
-                dotArrow.Set(vesselState.CoT + frameVel, vesselState.DoT);
-                dotArrow.SetLength((float)Math.Log10(vesselState.thrustCurrent + 1));
+                dotArrow.Set(VesselState.CoT + frameVel, VesselState.DoT);
+                dotArrow.SetLength((float)Math.Log10(VesselState.thrustCurrent + 1));
                 dotArrow.SeeThrough(seeThrough);
             }
 
-            forwardArrow.State(forwardArrowActive && core.ShowGui);
+            forwardArrow.State(forwardArrowActive && Core.ShowGui);
             if (forwardArrowActive)
             {
-                forwardArrow.Set(arrowPos, vessel.GetTransform().up);
+                forwardArrow.Set(arrowPos, Vessel.GetTransform().up);
                 forwardArrow.SetLength((float)arrowsLength.val);
                 forwardArrow.SeeThrough(seeThrough);
             }
@@ -223,23 +223,23 @@ namespace MuMech
             }
             */
 
-            requestedAttitudeArrow.State(requestedAttitudeArrowActive && core.Attitude.enabled && core.ShowGui);
-            if (requestedAttitudeArrowActive && core.Attitude.enabled)
+            requestedAttitudeArrow.State(requestedAttitudeArrowActive && Core.Attitude.Enabled && Core.ShowGui);
+            if (requestedAttitudeArrowActive && Core.Attitude.Enabled)
             {
-                requestedAttitudeArrow.Set(arrowPos, core.Attitude.RequestedAttitude);
+                requestedAttitudeArrow.Set(arrowPos, Core.Attitude.RequestedAttitude);
                 requestedAttitudeArrow.SetLength((float)arrowsLength.val);
                 requestedAttitudeArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow.State(debugArrowActive && core.ShowGui);
+            debugArrow.State(debugArrowActive && Core.ShowGui);
             if (debugArrowActive)
             {
-                debugArrow.Set(vessel.ReferenceTransform.position, debugVector);
+                debugArrow.Set(Vessel.ReferenceTransform.position, debugVector);
                 debugArrow.SetLength((float)debugVector.magnitude);
                 debugArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow2.State(debugArrow2Active && core.ShowGui);
+            debugArrow2.State(debugArrow2Active && Core.ShowGui);
             if (debugArrow2Active)
             {
                 //debugArrow2.Set(vessel.ReferenceTransform.position, debugVector2);
@@ -247,7 +247,7 @@ namespace MuMech
                 //debugArrow2.SetLength((float)debugVector2.magnitude);
                 //debugArrow2.SeeThrough(seeThrough);
 
-                Vector3d vector3d = vesselState.CoL - instantCoM + frameVel;
+                Vector3d vector3d = VesselState.CoL - instantCoM + frameVel;
                 debugArrow2.Set(instantCoM, vector3d);
 
                 debugArrow2.SetLength((float)vector3d.magnitude);

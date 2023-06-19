@@ -12,8 +12,8 @@ namespace MuMech
             hidden = true;
         }
 
-        private MechJebModuleAscentSettings      _ascentSettings => core.AscentSettings;
-        private MechJebModuleAscentBaseAutopilot _autopilot      => core.Ascent;
+        private MechJebModuleAscentSettings      _ascentSettings => Core.AscentSettings;
+        private MechJebModuleAscentBaseAutopilot _autopilot      => Core.Ascent;
 
         private readonly string _climbString = $"{CachedLocalizer.Instance.MechJeb_Ascent_label22}: ";
         private readonly string _turnString  = $"{CachedLocalizer.Instance.MechJeb_Ascent_label23}: ";
@@ -23,18 +23,18 @@ namespace MuMech
             Profiler.BeginSample("MJ.GUIWindow.AscentItems");
             GUILayout.BeginVertical(GUI.skin.box);
 
-            core.Thrust.LimitToPreventOverheatsInfoItem();
-            core.Thrust.LimitToMaxDynamicPressureInfoItem();
-            core.Thrust.LimitAccelerationInfoItem();
-            if (_ascentSettings.AscentType != AscentType.PVG) core.Thrust.LimitThrottleInfoItem();
-            core.Thrust.LimiterMinThrottleInfoItem();
-            if (_ascentSettings.AscentType != AscentType.PVG) core.Thrust.LimitElectricInfoItem();
+            Core.Thrust.LimitToPreventOverheatsInfoItem();
+            Core.Thrust.LimitToMaxDynamicPressureInfoItem();
+            Core.Thrust.LimitAccelerationInfoItem();
+            if (_ascentSettings.AscentType != AscentType.PVG) Core.Thrust.LimitThrottleInfoItem();
+            Core.Thrust.LimiterMinThrottleInfoItem();
+            if (_ascentSettings.AscentType != AscentType.PVG) Core.Thrust.LimitElectricInfoItem();
 
             if (_ascentSettings.AscentType == AscentType.PVG)
             {
-                core.Thrust.limitThrottle           = false;
-                core.Thrust.limitToTerminalVelocity = false;
-                core.Thrust.electricThrottle        = false;
+                Core.Thrust.limitThrottle           = false;
+                Core.Thrust.limitToTerminalVelocity = false;
+                Core.Thrust.electricThrottle        = false;
             }
 
             _ascentSettings.ForceRoll = GUILayout.Toggle(_ascentSettings.ForceRoll, CachedLocalizer.Instance.MechJeb_Ascent_checkbox2); //Force Roll
@@ -60,7 +60,7 @@ namespace MuMech
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Space(25);
-                    GUIStyle sl = _ascentSettings.LimitingAoA && vesselState.dynamicPressure < _ascentSettings.AOALimitFadeoutPressure
+                    GUIStyle sl = _ascentSettings.LimitingAoA && VesselState.dynamicPressure < _ascentSettings.AOALimitFadeoutPressure
                         ? GuiUtils.greenLabel
                         : GuiUtils.skin.label;
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label24, _ascentSettings.AOALimitFadeoutPressure, "Pa", 50,
@@ -85,7 +85,7 @@ namespace MuMech
             }
 
             _ascentSettings.Autostage = GUILayout.Toggle(_ascentSettings.Autostage, CachedLocalizer.Instance.MechJeb_Ascent_checkbox5); //Autostage
-            if (_ascentSettings.Autostage) core.Staging.AutostageSettingsInfoItem();
+            if (_ascentSettings.Autostage) Core.Staging.AutostageSettingsInfoItem();
 
             _ascentSettings.AutodeploySolarPanels =
                 GUILayout.Toggle(_ascentSettings.AutodeploySolarPanels, CachedLocalizer.Instance.MechJeb_Ascent_checkbox6); //Auto-deploy solar panels
@@ -93,7 +93,7 @@ namespace MuMech
                 GUILayout.Toggle(_ascentSettings.AutoDeployAntennas, CachedLocalizer.Instance.MechJeb_Ascent_checkbox7); //Auto-deploy antennas
 
             GUILayout.BeginHorizontal();
-            core.Node.autowarp = GUILayout.Toggle(core.Node.autowarp, CachedLocalizer.Instance.MechJeb_Ascent_checkbox8); //Auto-warp
+            Core.Node.autowarp = GUILayout.Toggle(Core.Node.autowarp, CachedLocalizer.Instance.MechJeb_Ascent_checkbox8); //Auto-warp
             if (_ascentSettings.AscentType != AscentType.PVG)
             {
                 _ascentSettings.SkipCircularization =
@@ -108,7 +108,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (_ascentSettings.AscentType == AscentType.PVG)
-                core.Settings.rssMode = GUILayout.Toggle(core.Settings.rssMode, "Module disabling does not kill throttle");
+                Core.Settings.rssMode = GUILayout.Toggle(Core.Settings.rssMode, "Module disabling does not kill throttle");
 
             GUILayout.EndVertical();
             Profiler.EndSample();

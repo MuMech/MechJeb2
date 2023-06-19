@@ -91,16 +91,16 @@ namespace MuMech
         public double simSpeedOfSound;
 
         //inputs:
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool makeAerobrakeNodes = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showTrajectory = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool worldTrajectory = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool camTrajectory = false;
 
         public bool deployChutes     = false;
@@ -170,16 +170,16 @@ namespace MuMech
             random = new Random();
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
-                core.AddToPostDrawQueue(DoMapView);
+                Core.AddToPostDrawQueue(DoMapView);
             }
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
             TryStartSimulation(false);
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
             stopwatch.Stop();
             stopwatch.Reset();
@@ -199,7 +199,7 @@ namespace MuMech
         {
             try
             {
-                if (!vessel.LandedOrSplashed)
+                if (!Vessel.LandedOrSplashed)
                 {
                     // We should be running simulations periodically. If one is not running right now,
                     // check if enough time has passed since the last one to start a new one:
@@ -256,7 +256,7 @@ namespace MuMech
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
             }
 
-            Orbit patch = GetReenteringPatch() ?? orbit;
+            Orbit patch = GetReenteringPatch() ?? Orbit;
             // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
             if (result != null)
             {
@@ -280,9 +280,9 @@ namespace MuMech
             //if (descentSpeedPolicy != null)
             //    print(vesselState.limitedMaxThrustAccel.ToString("F2") + " " + descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity).ToString("F2"));
 
-            var simVessel = SimulatedVessel.Borrow(vessel, simCurves, patch.StartUT, core.Landing.enabled && deployChutes ? limitChutesStage : -1);
+            var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, patch.StartUT, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1);
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
-                vesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
+                VesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
                 Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
@@ -397,7 +397,7 @@ namespace MuMech
                     else
                     {
                         if (newResult.Exception != null)
-                            print("Exception in the last simulation\n" + newResult.Exception.Message + "\n" + newResult.Exception.StackTrace);
+                            Print("Exception in the last simulation\n" + newResult.Exception.Message + "\n" + newResult.Exception.StackTrace);
                         newResult.Release();
                     }
                 }
@@ -406,7 +406,7 @@ namespace MuMech
 
         protected Orbit GetReenteringPatch()
         {
-            Orbit patch = orbit;
+            Orbit patch = Orbit;
 
             int i = 0;
 
@@ -414,7 +414,7 @@ namespace MuMech
             {
                 i++;
                 double reentryRadius = patch.referenceBody.Radius + patch.referenceBody.RealMaxAtmosphereAltitude();
-                Orbit nextPatch = vessel.GetNextPatch(patch, aerobrakeNode);
+                Orbit nextPatch = Vessel.GetNextPatch(patch, aerobrakeNode);
                 if (patch.PeR < reentryRadius)
                 {
                     if (patch.Radius(patch.StartUT) < reentryRadius) return patch;
@@ -437,9 +437,9 @@ namespace MuMech
             if (makeAerobrakeNodes)
             {
                 //Remove node after finishing aerobraking:
-                if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
+                if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
-                    if (aerobrakeNode.UT < vesselState.time && vesselState.altitudeASL > mainBody.RealMaxAtmosphereAltitude())
+                    if (aerobrakeNode.UT < VesselState.time && VesselState.altitudeASL > MainBody.RealMaxAtmosphereAltitude())
                     {
                         aerobrakeNode.RemoveSelf();
                         aerobrakeNode = null;
@@ -455,10 +455,10 @@ namespace MuMech
 
                     //Put the node at periapsis, unless we're past periapsis. In that case put the node at the current time.
                     double UT;
-                    if (preAerobrakeOrbit == orbit &&
-                        vesselState.altitudeASL < mainBody.RealMaxAtmosphereAltitude() && vesselState.speedVertical > 0)
+                    if (preAerobrakeOrbit == Orbit &&
+                        VesselState.altitudeASL < MainBody.RealMaxAtmosphereAltitude() && VesselState.speedVertical > 0)
                     {
-                        UT = vesselState.time;
+                        UT = VesselState.time;
                     }
                     else
                     {
@@ -470,7 +470,7 @@ namespace MuMech
 
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(preAerobrakeOrbit, UT, postAerobrakeOrbit.ApR);
 
-                    if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
+                    if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                     {
                         //update the existing node
                         Vector3d nodeDV = preAerobrakeOrbit.DeltaVToManeuverNodeCoordinates(UT, dV);
@@ -479,13 +479,13 @@ namespace MuMech
                     else
                     {
                         //place a new node
-                        aerobrakeNode = vessel.PlaceManeuverNode(preAerobrakeOrbit, dV, UT);
+                        aerobrakeNode = Vessel.PlaceManeuverNode(preAerobrakeOrbit, dV, UT);
                     }
                 }
                 else
                 {
                     //no aerobraking, remove the node:
-                    if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
+                    if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                     {
                         aerobrakeNode.RemoveSelf();
                     }
@@ -494,7 +494,7 @@ namespace MuMech
             else
             {
                 //Remove aerobrake node when it is turned off:
-                if (aerobrakeNode != null && vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
+                if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
                     aerobrakeNode.RemoveSelf();
                 }
@@ -503,7 +503,7 @@ namespace MuMech
 
         private void DoMapView()
         {
-            if ((MapView.MapIsEnabled || camTrajectory) && !vessel.LandedOrSplashed && enabled)
+            if ((MapView.MapIsEnabled || camTrajectory) && !Vessel.LandedOrSplashed && Enabled)
             {
                 ReentrySimulation.Result drawnResult = Result;
                 if (drawnResult != null)
@@ -519,8 +519,8 @@ namespace MuMech
                         //using (var list = drawnResult.WorldTrajectory(interval, worldTrajectory && MapView.MapIsEnabled))
                         using (Disposable<List<Vector3d>> list = drawnResult.WorldTrajectory(interval, worldTrajectory))
                         {
-                            if (!MapView.MapIsEnabled && (noSkipToFreefall || vessel.staticPressurekPa > 0))
-                                list.value[0] = vesselState.CoM;
+                            if (!MapView.MapIsEnabled && (noSkipToFreefall || Vessel.staticPressurekPa > 0))
+                                list.value[0] = VesselState.CoM;
                             GLUtils.DrawPath(drawnResult.Body, list.value, Color.red, MapView.MapIsEnabled);
                         }
                     }

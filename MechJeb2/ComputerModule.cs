@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -8,81 +9,81 @@ namespace MuMech
 {
     public class ComputerModule : IComparable<ComputerModule>
     {
-        public Part        part;
-        public MechJebCore core;
-        public VesselState vesselState;
+        public readonly MechJebCore Core;
 
         //conveniences:
-        public Vessel        vessel   => part.vessel;
-        public CelestialBody mainBody => part.vessel.mainBody;
-        public Orbit         orbit    => part.vessel.orbit;
+        public Vessel        Vessel      => Part.vessel;
+        public CelestialBody MainBody    => Part.vessel.mainBody;
+        public VesselState   VesselState => Core.VesselState;
 
-        public int priority;
+        [UsedImplicitly]
+        public Part Part => Core.part;
 
-        [Persistent(pass = (int)Pass.Local)]
-        public string unlockParts = "";
+        [UsedImplicitly]
+        public Orbit Orbit => Part.vessel.orbit;
 
-        [Persistent(pass = (int)Pass.Local)]
-        public string unlockTechs = "";
+        [UsedImplicitly]
+        public int Priority;
 
-        public bool unlockChecked;
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.LOCAL)]
+        public readonly string UnlockParts = "";
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.LOCAL)]
+        public readonly string UnlockTechs = "";
+
+        public bool UnlockChecked;
 
         public int CompareTo(ComputerModule other)
         {
-            if (other == null) return 1;
-            return priority.CompareTo(other.priority);
+            return other == null ? 1 : Priority.CompareTo(other.Priority);
         }
 
-        protected bool _enabled;
+        private bool _enabled;
 
-        public bool enabled
+        public bool Enabled
         {
             get => _enabled;
             set
             {
-                if (value != _enabled)
-                {
-                    dirty    = true;
-                    _enabled = value;
-                    if (_enabled)
-                    {
-                        OnModuleEnabled();
-                    }
-                    else
-                    {
-                        OnModuleDisabled();
-                    }
-                }
+                if (value == _enabled) return;
+
+                Dirty    = true;
+                _enabled = value;
+
+                if (_enabled)
+                    OnModuleEnabled();
+                else
+                    OnModuleDisabled();
             }
         }
 
-        public string profilerName;
+        public readonly string ProfilerName;
 
         // Has this module config changed and should it be saved
-        public bool dirty;
+        public bool Dirty;
 
         //The UserPool is an alternative way to handle enabling/disabling of a ComputerModule.
         //Users can add and remove themselves from the user pool and the ComputerModule will be
         //enabled if and only if there is at least one user. For consistency, it's probably
         //best that a given ComputerModule be controlled either entirely through enabled, or
         //entirely through users, and that the two not be mixed.
-        public UserPool users;
+        public readonly UserPool Users;
 
-        public ComputerModule(MechJebCore core)
+        protected ComputerModule(MechJebCore core)
         {
-            this.core    = core;
-            part         = core.part;
-            vesselState  = core.VesselState;
-            profilerName = GetType().Name;
+            Core         = core;
+            ProfilerName = GetType().Name;
 
-            users = new UserPool(this);
+            Users = new UserPool(this);
         }
 
-        public virtual void OnModuleEnabled()
+        protected virtual void OnModuleEnabled()
         {
         }
 
-        public virtual void OnModuleDisabled()
+        protected virtual void OnModuleDisabled()
         {
         }
 
@@ -134,9 +135,9 @@ namespace MuMech
         {
             try
             {
-                if (global != null) ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.Global);
-                if (type != null) ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.Type);
-                if (local != null) ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.Local);
+                if (global != null) ConfigNode.LoadObjectFromConfig(this, global, (int)Pass.GLOBAL);
+                if (type != null) ConfigNode.LoadObjectFromConfig(this, type, (int)Pass.TYPE);
+                if (local != null) ConfigNode.LoadObjectFromConfig(this, local, (int)Pass.LOCAL);
             }
             catch (Exception e)
             {
@@ -151,25 +152,25 @@ namespace MuMech
                 if (global != null)
                 {
                     Profiler.BeginSample("ComputerModule.OnSave.global");
-                    ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, global);
+                    ConfigNode.CreateConfigFromObject(this, (int)Pass.GLOBAL, global);
                     Profiler.EndSample();
                 }
 
                 if (type != null)
                 {
                     Profiler.BeginSample("ComputerModule.OnSave.type");
-                    ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, type);
+                    ConfigNode.CreateConfigFromObject(this, (int)Pass.TYPE, type);
                     Profiler.EndSample();
                 }
 
                 if (local != null)
                 {
                     Profiler.BeginSample("ComputerModule.OnSave.local");
-                    ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, local);
+                    ConfigNode.CreateConfigFromObject(this, (int)Pass.LOCAL, local);
                     Profiler.EndSample();
                 }
 
-                dirty = false;
+                Dirty = false;
             }
             catch (Exception e)
             {
@@ -181,65 +182,64 @@ namespace MuMech
         {
         }
 
-        public virtual bool IsSpaceCenterUpgradeUnlocked()
+        protected virtual bool IsSpaceCenterUpgradeUnlocked()
         {
             return true;
         }
 
         public virtual void UnlockCheck()
         {
-            if (!unlockChecked)
-            {
-                bool unlock = true;
+            if (UnlockChecked) return;
 
-                if (ResearchAndDevelopment.Instance != null)
+            bool unlock = true;
+
+            if (ResearchAndDevelopment.Instance != null)
+            {
+                string[] parts = UnlockParts.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
                 {
-                    string[] parts = unlockParts.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length > 0)
+                    unlock = false;
+                    foreach (string p in parts)
+                    {
+                        if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 &&
+                            ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
+                        {
+                            unlock = true;
+                            break;
+                        }
+                    }
+                }
+
+                string[] techs = UnlockTechs.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                if (techs.Length > 0)
+                {
+                    if (parts.Length == 0)
                     {
                         unlock = false;
-                        foreach (string p in parts)
-                        {
-                            if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 &&
-                                ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
-                            {
-                                unlock = true;
-                                break;
-                            }
-                        }
                     }
 
-                    string[] techs = unlockTechs.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (techs.Length > 0)
+                    foreach (string t in techs)
                     {
-                        if (parts.Length == 0)
+                        if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
                         {
-                            unlock = false;
-                        }
-
-                        foreach (string t in techs)
-                        {
-                            if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
-                            {
-                                unlock = true;
-                                break;
-                            }
+                            unlock = true;
+                            break;
                         }
                     }
                 }
+            }
 
-                unlock = unlock && IsSpaceCenterUpgradeUnlocked();
+            unlock = unlock && IsSpaceCenterUpgradeUnlocked();
 
-                unlockChecked = true;
-                if (!unlock)
-                {
-                    enabled                  = false;
-                    core.someModuleAreLocked = true;
-                }
+            UnlockChecked = true;
+            if (!unlock)
+            {
+                Enabled                  = false;
+                Core.someModuleAreLocked = true;
             }
         }
 
-        public static void print(object message)
+        protected static void Print(object message)
         {
             MonoBehaviour.print("[MechJeb2] " + message);
         }
@@ -248,62 +248,56 @@ namespace MuMech
     [Flags]
     public enum Pass
     {
-        Local  = 1,
-        Type   = 2,
-        Global = 4
+        LOCAL  = 1,
+        TYPE   = 2,
+        GLOBAL = 4
     }
 
     //Lets multiple users enable and disable a computer module, such that the
     //module only gets disabled when all of its users have disabled it.
     public class UserPool : List<object>
     {
-        private readonly ComputerModule controlledModule;
+        private readonly ComputerModule _controlledModule;
 
         public UserPool(ComputerModule controlledModule)
         {
-            this.controlledModule = controlledModule;
+            _controlledModule = controlledModule;
         }
 
         public new void Add(object user)
         {
             if (user != null && !Contains(user))
-            {
                 base.Add(user);
-            }
 
-            controlledModule.enabled = true;
+            _controlledModule.Enabled = true;
         }
 
         public new void Remove(object user)
         {
             if (user != null && Contains(user))
-            {
                 base.Remove(user);
-            }
 
-            if (Count == 0) controlledModule.enabled = false;
+            if (Count == 0) _controlledModule.Enabled = false;
         }
 
         public new void Clear()
         {
             base.Clear();
-            controlledModule.enabled = false;
+            _controlledModule.Enabled = false;
         }
 
         public bool RecursiveUser(object user)
         {
             if (Contains(user))
-            {
                 return true;
-            }
 
             foreach (object o in this)
             {
-                var c = o as ComputerModule;
-                if (c != null && c != controlledModule)
-                {
-                    if (c.users.RecursiveUser(user)) return true;
-                }
+                if (!(o is ComputerModule c) || c == _controlledModule)
+                    continue;
+
+                if (c.Users.RecursiveUser(user))
+                    return true;
             }
 
             return false;

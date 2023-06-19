@@ -18,22 +18,22 @@ namespace MuMech
         private bool _deployedGears;
         public  bool LandAtTarget;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble TouchdownSpeed = 0.5;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool DeployGears = true;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableInt LimitGearsStage = 0;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool DeployChutes = true;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableInt LimitChutesStage = 0;
 
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool RCSAdjustment = true;
 
         // This is used to adjust the height at which the parachutes semi deploy as a means of
@@ -96,8 +96,8 @@ namespace MuMech
         }
 
         public Vector3d LandingSite =>
-            mainBody.GetWorldSurfacePosition(Prediction.EndPosition.Latitude,
-                Prediction.EndPosition.Longitude, _landingAltitude) - mainBody.position; // The current position of the landing site
+            MainBody.GetWorldSurfacePosition(Prediction.EndPosition.Latitude,
+                Prediction.EndPosition.Longitude, _landingAltitude) - MainBody.position; // The current position of the landing site
 
         private Vector3d _rotatedLandingSite => Prediction.WorldEndPosition(); // The position where the landing site will be when we land at it
 
@@ -111,17 +111,17 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            _predictor = core.GetComputerModule<MechJebModuleLandingPredictions>();
+            _predictor = Core.GetComputerModule<MechJebModuleLandingPredictions>();
         }
 
         //public interface:
         public void LandAtPositionTarget(object controller)
         {
             LandAtTarget = true;
-            users.Add(controller);
+            Users.Add(controller);
 
-            _predictor.users.Add(this);
-            vessel.RemoveAllManeuverNodes(); // For the benefit of the landing predictions module
+            _predictor.Users.Add(this);
+            Vessel.RemoveAllManeuverNodes(); // For the benefit of the landing predictions module
 
             _deployedGears = false;
 
@@ -129,18 +129,18 @@ namespace MuMech
             _parachutePlan = new ParachutePlan(this);
             _parachutePlan.StartPlanning();
 
-            if (orbit.PeA < 0)
-                SetStep(new CourseCorrection(core));
+            if (Orbit.PeA < 0)
+                SetStep(new CourseCorrection(Core));
             else if (UseLowDeorbitStrategy())
-                SetStep(new PlaneChange(core));
+                SetStep(new PlaneChange(Core));
             else
-                SetStep(new DeorbitBurn(core));
+                SetStep(new DeorbitBurn(Core));
         }
 
         public void LandUntargeted(object controller)
         {
             LandAtTarget = false;
-            users.Add(controller);
+            Users.Add(controller);
 
             _deployedGears = false;
 
@@ -148,16 +148,16 @@ namespace MuMech
             _parachutePlan = new ParachutePlan(this);
             _parachutePlan.StartPlanning();
 
-            SetStep(new UntargetedDeorbit(core));
+            SetStep(new UntargetedDeorbit(Core));
         }
 
         public void StopLanding()
         {
-            users.Clear();
-            core.Thrust.ThrustOff();
-            core.Thrust.users.Remove(this);
-            if (core.Landing.RCSAdjustment)
-                core.RCS.enabled = false;
+            Users.Clear();
+            Core.Thrust.ThrustOff();
+            Core.Thrust.Users.Remove(this);
+            if (Core.Landing.RCSAdjustment)
+                Core.RCS.Enabled = false;
             SetStep(null);
         }
 
@@ -174,7 +174,7 @@ namespace MuMech
 
             // Consider lowering the langing gear
             {
-                double minalt = Math.Min(vesselState.altitudeBottom, Math.Min(vesselState.altitudeASL, vesselState.altitudeTrue));
+                double minalt = Math.Min(VesselState.altitudeBottom, Math.Min(VesselState.altitudeASL, VesselState.altitudeTrue));
                 if (DeployGears && !_deployedGears && minalt < 1000)
                     DeployLandingGears();
             }
@@ -189,21 +189,21 @@ namespace MuMech
             DeployParachutes();
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
-            core.Attitude.users.Add(this);
-            core.Thrust.users.Add(this);
+            Core.Attitude.Users.Add(this);
+            Core.Thrust.Users.Add(this);
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
-            core.Attitude.attitudeDeactivate();
-            _predictor.users.Remove(this);
+            Core.Attitude.attitudeDeactivate();
+            _predictor.Users.Remove(this);
             _predictor.descentSpeedPolicy = null;
-            core.Thrust.ThrustOff();
-            core.Thrust.users.Remove(this);
-            if (core.Landing.RCSAdjustment)
-                core.RCS.enabled = false;
+            Core.Thrust.ThrustOff();
+            Core.Thrust.Users.Remove(this);
+            if (Core.Landing.RCSAdjustment)
+                Core.RCS.Enabled = false;
             SetStep(null);
         }
 
@@ -212,17 +212,17 @@ namespace MuMech
         public Vector3d ComputeCourseCorrection(bool allowPrograde)
         {
             // actualLandingPosition is the predicted actual landing position
-            Vector3d actualLandingPosition = _rotatedLandingSite - mainBody.position;
+            Vector3d actualLandingPosition = _rotatedLandingSite - MainBody.position;
 
             // orbitLandingPosition is the point where our current orbit intersects the planet
-            double endRadius = mainBody.Radius + DecelerationEndAltitude() - 100;
+            double endRadius = MainBody.Radius + DecelerationEndAltitude() - 100;
 
             // Seems we are already landed ?
-            if (endRadius > orbit.ApR || vessel.LandedOrSplashed)
+            if (endRadius > Orbit.ApR || Vessel.LandedOrSplashed)
                 StopLanding();
 
-            Vector3d orbitLandingPosition = orbit.WorldBCIPositionAtUT(
-                orbit.PeR < endRadius ? orbit.NextTimeOfRadius(vesselState.time, endRadius) : orbit.NextPeriapsisTime(vesselState.time)
+            Vector3d orbitLandingPosition = Orbit.WorldBCIPositionAtUT(
+                Orbit.PeR < endRadius ? Orbit.NextTimeOfRadius(VesselState.time, endRadius) : Orbit.NextPeriapsisTime(VesselState.time)
             );
 
             // convertOrbitToActual is a rotation that rotates orbitLandingPosition on actualLandingPosition
@@ -231,7 +231,7 @@ namespace MuMech
             // Consider the effect small changes in the velocity in each of these three directions
             Vector3d[] perturbationDirections =
             {
-                vesselState.surfaceVelocity.normalized, vesselState.radialPlusSurface, vesselState.normalPlusSurface
+                VesselState.surfaceVelocity.normalized, VesselState.radialPlusSurface, VesselState.normalPlusSurface
             };
 
             // Compute the effect burns in these directions would
@@ -244,11 +244,11 @@ namespace MuMech
                 const double PERTURBATION_DELTA_V = 1;
 
                 Orbit perturbedOrbit =
-                    orbit.PerturbedOrbit(vesselState.time, PERTURBATION_DELTA_V * perturbationDirections[i]); //compute the perturbed orbit
+                    Orbit.PerturbedOrbit(VesselState.time, PERTURBATION_DELTA_V * perturbationDirections[i]); //compute the perturbed orbit
 
                 double perturbedLandingTime = perturbedOrbit.PeR < endRadius
-                    ? perturbedOrbit.NextTimeOfRadius(vesselState.time, endRadius)
-                    : perturbedOrbit.NextPeriapsisTime(vesselState.time);
+                    ? perturbedOrbit.NextTimeOfRadius(VesselState.time, endRadius)
+                    : perturbedOrbit.NextPeriapsisTime(VesselState.time);
 
                 Vector3d perturbedLandingPosition = perturbedOrbit.WorldBCIPositionAtUT(perturbedLandingTime); //find where it hits the planet
 
@@ -272,9 +272,9 @@ namespace MuMech
             // into a position. We can't just get the current position of those coordinates, because the planet will
             // rotate during the descent, so we have to account for that.
             Vector3d desiredLandingPosition =
-                mainBody.GetWorldSurfacePosition(core.Target.targetLatitude, core.Target.targetLongitude, 0) - mainBody.position;
-            float bodyRotationAngleDuringDescent = (float)(360 * (Prediction.EndUT - vesselState.time) / mainBody.rotationPeriod);
-            var bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, mainBody.angularVelocity.normalized);
+                MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - MainBody.position;
+            float bodyRotationAngleDuringDescent = (float)(360 * (Prediction.EndUT - VesselState.time) / MainBody.rotationPeriod);
+            var bodyRotationDuringFall = Quaternion.AngleAxis(bodyRotationAngleDuringDescent, MainBody.angularVelocity.normalized);
             desiredLandingPosition = bodyRotationDuringFall * desiredLandingPosition;
 
             Vector3d desiredDelta = desiredLandingPosition - actualLandingPosition;
@@ -352,11 +352,11 @@ namespace MuMech
 
         private void DeployParachutes()
         {
-            if (!(vesselState.mainBody.atmosphere && DeployChutes)) return;
+            if (!(VesselState.mainBody.atmosphere && DeployChutes)) return;
 
-            for (int i = 0; i < vesselState.parachutes.Count; i++)
+            for (int i = 0; i < VesselState.parachutes.Count; i++)
             {
-                ModuleParachute p = vesselState.parachutes[i];
+                ModuleParachute p = VesselState.parachutes[i];
                 // what is the ASL at which we should deploy this parachute? It is the actual deployment height above the surface + the ASL of the predicted landing point.
                 double landingSiteASL = _landingAltitude;
                 double parachuteDeployAboveGroundAtLandingSite = p.deployAltitude * _parachutePlan.Multiplier;
@@ -364,7 +364,7 @@ namespace MuMech
                 double aslDeployAltitude = parachuteDeployAboveGroundAtLandingSite + landingSiteASL;
 
                 if (p.part.inverseStage >= LimitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED &&
-                    aslDeployAltitude > vesselState.altitudeASL && p.deploymentSafeState == ModuleParachute.deploymentSafeStates.SAFE)
+                    aslDeployAltitude > VesselState.altitudeASL && p.deploymentSafeState == ModuleParachute.deploymentSafeStates.SAFE)
                 {
                     p.Deploy();
                     //Debug.Log("Deploying parachute " + p.name + " at " + ASLDeployAltitude + ". (" + LandingSiteASL + " + " + ParachuteDeployAboveGroundAtLandingSite +")");
@@ -375,12 +375,12 @@ namespace MuMech
         // This methods works out if there are any parachutes that are capable of being deployed
         public bool ParachutesDeployable()
         {
-            if (!vesselState.mainBody.atmosphere) return false;
+            if (!VesselState.mainBody.atmosphere) return false;
             if (!DeployChutes) return false;
 
-            for (int i = 0; i < vesselState.parachutes.Count; i++)
+            for (int i = 0; i < VesselState.parachutes.Count; i++)
             {
-                ModuleParachute p = vesselState.parachutes[i];
+                ModuleParachute p = VesselState.parachutes[i];
                 if (Math.Max(p.part.inverseStage, 0) >= LimitChutesStage && p.deploymentState == ModuleParachute.deploymentStates.STOWED)
                 {
                     return true;
@@ -393,14 +393,14 @@ namespace MuMech
         // This methods works out if there are any parachutes that have already been deployed (or semi deployed)
         private bool ParachutesDeployed()
         {
-            return vesselState.parachuteDeployed;
+            return VesselState.parachuteDeployed;
         }
 
         private void DeployLandingGears()
         {
-            for (int i = 0; i < vessel.parts.Count; i++)
+            for (int i = 0; i < Vessel.parts.Count; i++)
             {
-                Part p = vessel.parts[i];
+                Part p = Vessel.parts[i];
                 if (p.HasModule<ModuleWheelDeployment>())
                 {
                     // p.inverseStage is -1 for some configuration ?!?
@@ -422,11 +422,11 @@ namespace MuMech
         {
             if (UseAtmosphereToBrake())
             {
-                return new PoweredCoastDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81,
-                    vesselState.limitedMaxThrustAccel);
+                return new PoweredCoastDescentSpeedPolicy(MainBody.Radius + DecelerationEndAltitude(), MainBody.GeeASL * 9.81,
+                    VesselState.limitedMaxThrustAccel);
             }
 
-            return new SafeDescentSpeedPolicy(mainBody.Radius + DecelerationEndAltitude(), mainBody.GeeASL * 9.81, vesselState.limitedMaxThrustAccel);
+            return new SafeDescentSpeedPolicy(MainBody.Radius + DecelerationEndAltitude(), MainBody.GeeASL * 9.81, VesselState.limitedMaxThrustAccel);
         }
 
         public double DecelerationEndAltitude()
@@ -439,7 +439,7 @@ namespace MuMech
             // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
             // should end a safe height above the landing site in order to allow braking from terminal velocity
             // FIXME: Drag Length is quite large now without parachutes, check this better
-            double landingSiteDragLength = mainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
+            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), VesselState.mass);
 
             //MechJebCore.print("DecelerationEndAltitude Atmo " + (2 * landingSiteDragLength + LandingAltitude).ToString("F2"));
             return 1.1 * landingSiteDragLength + _landingAltitude;
@@ -453,20 +453,20 @@ namespace MuMech
         //expect to get slowed to near terminal velocity before impacting the ground.
         public bool UseAtmosphereToBrake()
         {
-            double landingSiteDragLength = mainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), vesselState.mass);
+            double landingSiteDragLength = MainBody.DragLength(_landingAltitude, _vesselAverageDrag + ParachuteAddedDragCoef(), VesselState.mass);
 
             //if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
-            return mainBody.RealMaxAtmosphereAltitude() > 0 &&
-                   landingSiteDragLength < 0.7 * mainBody.RealMaxAtmosphereAltitude(); // the ratio is totally arbitrary until I get something better
+            return MainBody.RealMaxAtmosphereAltitude() > 0 &&
+                   landingSiteDragLength < 0.7 * MainBody.RealMaxAtmosphereAltitude(); // the ratio is totally arbitrary until I get something better
         }
 
         // Get an average drag for the whole vessel. Far from precise but fast.
         private double VesselAverageDrag()
         {
             float dragCoef = 0;
-            for (int i = 0; i < vessel.parts.Count; i++)
+            for (int i = 0; i < Vessel.parts.Count; i++)
             {
-                Part p = vessel.parts[i];
+                Part p = Vessel.parts[i];
                 if (p.DragCubes.None || p.ShieldedFromAirstream)
                 {
                     continue;
@@ -490,11 +490,11 @@ namespace MuMech
         private double ParachuteAddedDragCoef()
         {
             double addedDragCoef = 0;
-            if (!vesselState.mainBody.atmosphere || !DeployChutes) return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
+            if (!VesselState.mainBody.atmosphere || !DeployChutes) return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
 
-            for (int i = 0; i < vesselState.parachutes.Count; i++)
+            for (int i = 0; i < VesselState.parachutes.Count; i++)
             {
-                ModuleParachute p = vesselState.parachutes[i];
+                ModuleParachute p = VesselState.parachutes[i];
                 if (p.part.inverseStage < LimitChutesStage) continue;
 
                 //addedDragMass += p.part.DragCubes.Cubes.Where(c => c.Name == "DEPLOYED").m
@@ -521,23 +521,23 @@ namespace MuMech
 
         private bool UseLowDeorbitStrategy()
         {
-            if (mainBody.atmosphere) return false;
+            if (MainBody.atmosphere) return false;
 
-            double periapsisSpeed = orbit.WorldOrbitalVelocityAtUT(orbit.NextPeriapsisTime(vesselState.time)).magnitude;
-            double stoppingDistance = Math.Pow(periapsisSpeed, 2) / (2 * vesselState.limitedMaxThrustAccel);
+            double periapsisSpeed = Orbit.WorldOrbitalVelocityAtUT(Orbit.NextPeriapsisTime(VesselState.time)).magnitude;
+            double stoppingDistance = Math.Pow(periapsisSpeed, 2) / (2 * VesselState.limitedMaxThrustAccel);
 
-            return orbit.PeA < 2 * stoppingDistance + mainBody.Radius / 4;
+            return Orbit.PeA < 2 * stoppingDistance + MainBody.Radius / 4;
         }
 
         public double MaxAllowedSpeed()
         {
-            return DescentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity);
+            return DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
         }
 
         public double MaxAllowedSpeedAfterDt(double dt)
         {
-            return DescentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM + vesselState.orbitalVelocity * dt - mainBody.position,
-                vesselState.surfaceVelocity + dt * vesselState.gravityForce);
+            return DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM + VesselState.orbitalVelocity * dt - MainBody.position,
+                VesselState.surfaceVelocity + dt * VesselState.gravityForce);
         }
 
         [ValueInfoItem("#MechJeb_ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)] //ParachuteControlInfo
@@ -555,8 +555,8 @@ namespace MuMech
 
         public void SetTargetKSC(MechJebCore controller)
         {
-            users.Add(controller);
-            core.Target.SetPositionTarget(mainBody, MechJebModuleLandingGuidance.LandingSites[0].Latitude,
+            Users.Add(controller);
+            Core.Target.SetPositionTarget(MainBody, MechJebModuleLandingGuidance.LandingSites[0].Latitude,
                 MechJebModuleLandingGuidance.LandingSites[0].Longitude);
         }
     }
@@ -727,7 +727,7 @@ namespace MuMech
             }
 
             // What was the overshoot for this new result?
-            double overshoot = newResult.GetOvershoot(_autoPilot.core.Target.targetLatitude, _autoPilot.core.Target.targetLongitude);
+            double overshoot = newResult.GetOvershoot(_autoPilot.Core.Target.targetLatitude, _autoPilot.Core.Target.targetLongitude);
 
             //Debug.Log("overshoot: " + overshoot.ToString("F2") + " multiplier: " + newResult.parachuteMultiplier.ToString("F4") + " hasError:" + newResult.multiplierHasError);
 
@@ -789,7 +789,7 @@ namespace MuMech
             _autoPilot = autopliot;
 
             // Take a note of which body this parachute plan is for. If we go to a different body, we will need a new plan!
-            _body = autopliot.vessel.orbit.referenceBody;
+            _body = autopliot.Vessel.orbit.referenceBody;
         }
 
         // Throw away any old data, and create a new empty dataset
@@ -807,9 +807,9 @@ namespace MuMech
             _parachutePresent = false; // First assume that there are no parachutes.
 
             // TODO should we check if each of these parachutes is withing the staging limit?
-            for (int i = 0; i < _autoPilot.vesselState.parachutes.Count; i++)
+            for (int i = 0; i < _autoPilot.VesselState.parachutes.Count; i++)
             {
-                ModuleParachute p = _autoPilot.vesselState.parachutes[i];
+                ModuleParachute p = _autoPilot.VesselState.parachutes[i];
                 if (p.minAirPressureToOpen > minSemiDeployPressure)
                     // Although this is called "minSemiDeployPressure" we want to find the largest value for each of our parachutes. This can be used to calculate the corresponding height, and hence a height at which we can be guarenteed that all our parachutes will deploy if asked to.
                 {

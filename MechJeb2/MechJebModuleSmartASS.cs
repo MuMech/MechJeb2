@@ -109,56 +109,56 @@ namespace MuMech
 
         public static GUIStyle btNormal, btActive, btAuto;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public Mode mode = Mode.ORBITAL;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public Target target = Target.OFF;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble srfHdg = new EditableDouble(90);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble srfPit = new EditableDouble(90);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble srfRol = new EditableDouble(0);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble srfVelYaw = new EditableDouble(0);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble srfVelPit = new EditableDouble(0);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble srfVelRol = new EditableDouble(0);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble rol = new EditableDouble(0);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public AttitudeReference advReference = AttitudeReference.INERTIAL;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public Vector6.Direction advDirection = Vector6.Direction.FORWARD;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public bool forceRol;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public bool forcePitch = true;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public bool forceYaw = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDisableSmartASS = true;
 
         [GeneralInfoItem("#MechJeb_DisableSmartACSAutomatically", InfoItem.Category.Misc)] //Disable SmartACS automatically
         public void AutoDisableSmartASS()
         {
             autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS,
-                core.eduMode
+                Core.eduMode
                     ? Localizer.Format("#MechJeb_SmartASS_checkbox1")
                     : Localizer.Format("#MechJeb_SmartASS_checkbox2")); //"Disable SmartACS automatically":"Disable SmartASS automatically"
         }
@@ -234,13 +234,13 @@ namespace MuMech
             }
 
             // If any other module use the attitude controler then let them do it
-            if (core.Attitude.enabled && core.Attitude.users.Count(u => !Equals(u)) > 0)
+            if (Core.Attitude.Enabled && Core.Attitude.Users.Count(u => !Equals(u)) > 0)
             {
                 if (autoDisableSmartASS)
                 {
                     target = Target.OFF;
-                    if (core.Attitude.users.Contains(this))
-                        core.Attitude.users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+                    if (Core.Attitude.Users.Contains(this))
+                        Core.Attitude.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
 
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button57"), btAuto, GUILayout.ExpandWidth(true)); //"AUTO"
@@ -252,7 +252,7 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 TargetButton(Target.OFF);
                 TargetButton(Target.KILLROT);
-                if (vessel.patchedConicsUnlocked())
+                if (Vessel.patchedConicsUnlocked())
                 {
                     TargetButton(Target.NODE);
                 }
@@ -399,7 +399,7 @@ namespace MuMech
                                 Engage(false);
                             }
 
-                            core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
+                            Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
                         else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE)
                         {
@@ -421,7 +421,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelRol = -vesselState.vesselRoll.value;
+                                srfVelRol = -VesselState.vesselRoll.value;
                                 changed   = true;
                             }
 
@@ -449,7 +449,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelPit = vesselState.AoA.value;
+                                srfVelPit = VesselState.AoA.value;
                                 changed   = true;
                             }
 
@@ -477,7 +477,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelYaw = -vesselState.AoS.value;
+                                srfVelYaw = -VesselState.AoS.value;
                                 changed   = true;
                             }
 
@@ -498,12 +498,12 @@ namespace MuMech
                                 Engage(false);
                             }
 
-                            core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
+                            Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
 
                         break;
                     case Mode.TARGET:
-                        if (core.Target.NormalTargetExists)
+                        if (Core.Target.NormalTargetExists)
                         {
                             GUILayout.BeginHorizontal();
                             TargetButton(Target.TARGET_PLUS);
@@ -558,11 +558,11 @@ namespace MuMech
             switch (target)
             {
                 case Target.OFF:
-                    core.Attitude.attitudeDeactivate();
+                    Core.Attitude.attitudeDeactivate();
                     return;
                 case Target.KILLROT:
-                    core.Attitude.attitudeKILLROT = true;
-                    attitude                      = Quaternion.LookRotation(part.vessel.GetTransform().up, -part.vessel.GetTransform().forward);
+                    Core.Attitude.attitudeKILLROT = true;
+                    attitude                      = Quaternion.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
                     reference                     = AttitudeReference.INERTIAL;
                     break;
                 case Target.NODE:
@@ -662,11 +662,11 @@ namespace MuMech
             }
 
             if (direction != Vector3d.zero)
-                core.Attitude.attitudeTo(direction, reference, this);
+                Core.Attitude.attitudeTo(direction, reference, this);
             else
-                core.Attitude.attitudeTo(attitude, reference, this);
+                Core.Attitude.attitudeTo(attitude, reference, this);
 
-            if (resetPID) { core.Attitude.Controller.Reset(); }
+            if (resetPID) { Core.Attitude.Controller.Reset(); }
         }
 
         public override GUILayoutOption[] WindowOptions()
@@ -676,14 +676,14 @@ namespace MuMech
 
         public override string GetName()
         {
-            return core.eduMode
+            return Core.eduMode
                 ? Localizer.Format("#MechJeb_SmartACS_title")
                 : Localizer.Format("#MechJeb_SmartASS_title"); //"Smart A.C.S.":"Smart A.S.S."
         }
 
         public override string IconName()
         {
-            return core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
+            return Core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
         }
     }
 }

@@ -11,11 +11,11 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_approach_title"); } //fine tune closest approach to target
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult CourseCorrectFinalPeA = new EditableDoubleMult(200000, 1000);
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult InterceptDistance = new EditableDoubleMult(200);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -42,7 +42,7 @@ namespace MuMech
                     break;
                 }
 
-                correctionPatch = target.core.vessel.GetNextPatch(correctionPatch);
+                correctionPatch = target.Core.vessel.GetNextPatch(correctionPatch);
             }
 
             if (correctionPatch == null || correctionPatch.referenceBody != target.TargetOrbit.referenceBody)

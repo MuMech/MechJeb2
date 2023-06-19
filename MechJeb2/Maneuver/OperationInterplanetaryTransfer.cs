@@ -11,7 +11,7 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_transfer_title"); } //transfer to another planet
 
         [UsedImplicitly]
-        [Persistent(pass = (int)(Pass.Local | Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool WaitForPhaseAngle = true;
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)

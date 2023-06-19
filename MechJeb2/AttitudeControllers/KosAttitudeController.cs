@@ -5,10 +5,10 @@ namespace MuMech.AttitudeControllers
 {
     internal class KosAttitudeController : BaseAttitudeController
     {
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
         //public double RollControlRange {
         //    get { return this.rollControlRange; }
@@ -67,7 +67,7 @@ namespace MuMech.AttitudeControllers
         private void UpdateStateVectors()
         {
             /* FIXME: may get called more than once per tick */
-            vesselRotation  = ac.vessel.ReferenceTransform.rotation * Quaternion.Euler(-90, 0, 0);
+            vesselRotation  = ac.Vessel.ReferenceTransform.rotation * Quaternion.Euler(-90, 0, 0);
             vesselForward   = vesselRotation * Vector3d.forward;
             vesselTop       = vesselRotation * Vector3d.up;
             vesselStarboard = vesselRotation * Vector3d.right;
@@ -76,7 +76,7 @@ namespace MuMech.AttitudeControllers
             targetTop     = ac.RequestedAttitude * Vector3d.up;
             /* targetStarboard = target * Vector3d.right; */
 
-            Omega = -ac.vessel.angularVelocity;
+            Omega = -ac.Vessel.angularVelocity;
         }
 
         public double PhiTotal()
@@ -115,7 +115,7 @@ namespace MuMech.AttitudeControllers
 
             for (int i = 0; i < 3; i++)
             {
-                MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.vesselState.MoI[i];
+                MaxOmega[i] = ControlTorque[i] * maxStoppingTime / ac.VesselState.MoI[i];
             }
 
             TargetOmega[0] = pitchRatePI.Update(-phiVector[0], 0, MaxOmega[0]);
@@ -128,9 +128,9 @@ namespace MuMech.AttitudeControllers
                 rollRatePI.ResetI();
             }
 
-            TargetTorque[0] = pitchPI.Update(Omega[0], TargetOmega[0], ac.vesselState.MoI[0], ControlTorque[0]);
-            TargetTorque[1] = rollPI.Update(Omega[1], TargetOmega[1], ac.vesselState.MoI[1], ControlTorque[1]);
-            TargetTorque[2] = yawPI.Update(Omega[2], TargetOmega[2], ac.vesselState.MoI[2], ControlTorque[2]);
+            TargetTorque[0] = pitchPI.Update(Omega[0], TargetOmega[0], ac.VesselState.MoI[0], ControlTorque[0]);
+            TargetTorque[1] = rollPI.Update(Omega[1], TargetOmega[1], ac.VesselState.MoI[1], ControlTorque[1]);
+            TargetTorque[2] = yawPI.Update(Omega[2], TargetOmega[2], ac.VesselState.MoI[2], ControlTorque[2]);
         }
 
         public override void Reset()

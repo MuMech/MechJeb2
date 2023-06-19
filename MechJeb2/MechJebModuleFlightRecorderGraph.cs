@@ -30,31 +30,31 @@ namespace MuMech
             }
         }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool downrange = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool realAtmo;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool stages;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int hSize = 4;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int vSize = 2;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoScale = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int timeScale;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int downrangeScale;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int scaleIdx;
 
         public bool ascentPath = false;
@@ -81,7 +81,7 @@ namespace MuMech
         public MechJebModuleFlightRecorderGraph(MechJebCore core)
             : base(core)
         {
-            priority    = 2000;
+            Priority    = 2000;
             graphStates = new graphState[typeCount];
         }
 
@@ -92,7 +92,7 @@ namespace MuMech
 
             width    = 128 * hSize;
             height   = 128 * vSize;
-            recorder = core.GetComputerModule<MechJebModuleFlightRecorder>();
+            recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
             ResetScale();
         }
 
@@ -100,7 +100,7 @@ namespace MuMech
         {
             //DefaultAscentPath path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentAutopilot>().ascentPath;
 
-            if (oldMainBody != mainBody || lastMaximumAltitude != graphStates[(int)MechJebModuleFlightRecorder.recordType.AltitudeASL].maximum ||
+            if (oldMainBody != MainBody || lastMaximumAltitude != graphStates[(int)MechJebModuleFlightRecorder.recordType.AltitudeASL].maximum ||
                 height != backgroundTexture.height)
             {
                 UpdateScale();
@@ -112,8 +112,8 @@ namespace MuMech
                     backgroundTexture = new Texture2D(1, height);
                 }
 
-                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
-                oldMainBody = mainBody;
+                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, Vessel.mainBody, lastMaximumAltitude, realAtmo);
+                oldMainBody = MainBody;
             }
 
             GUILayout.BeginVertical();
@@ -226,7 +226,7 @@ namespace MuMech
             realAtmo = GUILayout.Toggle(realAtmo, Localizer.Format("#MechJeb_Flightrecord_checkbox2"), GUILayout.ExpandWidth(false)); //Real Atmo
 
             if (oldRealAtmo != realAtmo)
-                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, vessel.mainBody, lastMaximumAltitude, realAtmo);
+                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, Vessel.mainBody, lastMaximumAltitude, realAtmo);
 
             //GUILayout.Label("", GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
@@ -745,7 +745,7 @@ namespace MuMech
             graphStates[(int)MechJebModuleFlightRecorder.recordType.SteeringLosses].minimum = 0;
 
             graphStates[(int)MechJebModuleFlightRecorder.recordType.AltitudeASL].maximum =
-                mainBody != null && mainBody.atmosphere ? mainBody.RealMaxAtmosphereAltitude() : 10000.0;
+                MainBody != null && MainBody.atmosphere ? MainBody.RealMaxAtmosphereAltitude() : 10000.0;
             graphStates[(int)MechJebModuleFlightRecorder.recordType.DownRange].maximum      = 500;
             graphStates[(int)MechJebModuleFlightRecorder.recordType.Acceleration].maximum   = 2;
             graphStates[(int)MechJebModuleFlightRecorder.recordType.SpeedSurface].maximum   = 300;

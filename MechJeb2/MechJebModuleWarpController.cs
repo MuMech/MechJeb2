@@ -12,8 +12,8 @@ namespace MuMech
             : base(core)
         {
             WarpPaused = false;
-            priority   = 100;
-            enabled    = true;
+            Priority   = 100;
+            Enabled    = true;
         }
 
         private double warpIncreaseAttemptTime;
@@ -23,10 +23,10 @@ namespace MuMech
         public double warpToUT   { get; private set; }
         public bool   WarpPaused { get; private set; }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool activateSASOnWarp = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool useQuickWarp;
 
         public void useQuickWarpInfoItem()
@@ -53,8 +53,8 @@ namespace MuMech
             if (!WarpPaused && lastAskedIndex > 0 && lastAskedIndex != TimeWarp.CurrentRateIndex)
             {
                 // Rate limited by the altitude so we should not care
-                if (!vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH &&
-                    TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody))
+                if (!Vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH &&
+                    TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(Vessel.altitude, Vessel.mainBody))
                     return;
 
                 //print("Warppause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex + " WarpMode=" + TimeWarp.WarpMode + " MaxCurrentRate=" + TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody));
@@ -76,7 +76,7 @@ namespace MuMech
             WarpPaused = true;
 
             if (activateSASOnWarp && TimeWarp.CurrentRateIndex == 0)
-                part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
         }
 
         private void ResumeWarp()
@@ -94,7 +94,7 @@ namespace MuMech
             if (rateIndex != TimeWarp.CurrentRateIndex)
             {
                 if (activateSASOnWarp && TimeWarp.WarpMode == TimeWarp.Modes.HIGH && TimeWarp.CurrentRateIndex == 0)
-                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
+                    Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
                 lastAskedIndex = rateIndex;
                 if (WarpPaused)
@@ -108,13 +108,13 @@ namespace MuMech
                 }
 
                 if (activateSASOnWarp && rateIndex == 0)
-                    part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
+                    Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
             }
         }
 
         public void WarpToUT(double UT, double maxRate = -1)
         {
-            if (UT <= vesselState.time)
+            if (UT <= VesselState.time)
             {
                 warpToUT = 0.0;
                 return;
@@ -127,11 +127,11 @@ namespace MuMech
             if (useQuickWarp)
             {
                 desiredRate = 1;
-                if (orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL && orbit.EndUT < UT)
+                if (Orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL && Orbit.EndUT < UT)
                 {
                     for (int i = 0; i < TimeWarp.fetch.warpRates.Length; i++)
                     {
-                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= orbit.EndUT - vesselState.time)
+                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= Orbit.EndUT - VesselState.time)
                             desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
                         else break;
                     }
@@ -140,18 +140,18 @@ namespace MuMech
                 {
                     for (int i = 0; i < TimeWarp.fetch.warpRates.Length; i++)
                     {
-                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= UT - vesselState.time)
+                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= UT - VesselState.time)
                             desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
                         else break;
                     }
                 }
             }
-            else desiredRate = 1.0 * (UT - (vesselState.time + Time.fixedDeltaTime * TimeWarp.CurrentRateIndex));
+            else desiredRate = 1.0 * (UT - (VesselState.time + Time.fixedDeltaTime * TimeWarp.CurrentRateIndex));
 
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
-            if (!vessel.LandedOrSplashed &&
-                vesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, mainBody))
+            if (!Vessel.LandedOrSplashed &&
+                VesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, MainBody))
             {
                 //too low to use any regular warp rates. Use physics warp at a max of x2:
                 WarpPhysicsAtRate((float)Math.Min(desiredRate, 2));
@@ -202,8 +202,8 @@ namespace MuMech
         {
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
             {
-                double instantAltitudeASL = (vesselState.CoM - mainBody.position).magnitude - mainBody.Radius;
-                if (instantAltitudeASL > mainBody.RealMaxAtmosphereAltitude())
+                double instantAltitudeASL = (VesselState.CoM - MainBody.position).magnitude - MainBody.Radius;
+                if (instantAltitudeASL > MainBody.RealMaxAtmosphereAltitude())
                 {
                     TimeWarp.fetch.Mode = TimeWarp.Modes.HIGH;
                     SetTimeWarpRate(0, true);
@@ -235,18 +235,18 @@ namespace MuMech
 
             //do a bunch of checks to see if we can increase the warp rate:
             if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.warpRates.Length) return false; //already at max warp
-            if (!vessel.LandedOrSplashed)
+            if (!Vessel.LandedOrSplashed)
             {
-                double instantAltitudeASL = (vesselState.CoM - mainBody.position).magnitude - mainBody.Radius;
-                if (TimeWarp.fetch.GetAltitudeLimit(TimeWarp.CurrentRateIndex + 1, mainBody) > instantAltitudeASL) return false;
+                double instantAltitudeASL = (VesselState.CoM - MainBody.position).magnitude - MainBody.Radius;
+                if (TimeWarp.fetch.GetAltitudeLimit(TimeWarp.CurrentRateIndex + 1, MainBody) > instantAltitudeASL) return false;
                 //altitude too low to increase warp
             }
 
             if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
                 return false;                                                 //most recent warp change is not yet complete
-            if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
+            if (VesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
-            warpIncreaseAttemptTime = vesselState.time;
+            warpIncreaseAttemptTime = VesselState.time;
             SetTimeWarpRate(TimeWarp.CurrentRateIndex + 1, instant);
             return true;
         }
@@ -259,9 +259,9 @@ namespace MuMech
             if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.physicsWarpRates.Length) return false; //already at max warp
             if (TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
                 return false;                                                 //most recent warp change is not yet complete
-            if (vesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
+            if (VesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
-            warpIncreaseAttemptTime = vesselState.time;
+            warpIncreaseAttemptTime = VesselState.time;
             SetTimeWarpRate(TimeWarp.CurrentRateIndex + 1, instant);
             return true;
         }

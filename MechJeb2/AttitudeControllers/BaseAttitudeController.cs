@@ -24,16 +24,16 @@
         public virtual void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             if (global != null && global.HasNode(GetType().Name))
-                ConfigNode.LoadObjectFromConfig(this, global.GetNode(GetType().Name), (int)Pass.Global);
-            if (type != null && type.HasNode(GetType().Name)) ConfigNode.LoadObjectFromConfig(this, type.GetNode(GetType().Name), (int)Pass.Type);
-            if (local != null && local.HasNode(GetType().Name)) ConfigNode.LoadObjectFromConfig(this, local.GetNode(GetType().Name), (int)Pass.Local);
+                ConfigNode.LoadObjectFromConfig(this, global.GetNode(GetType().Name), (int)Pass.GLOBAL);
+            if (type != null && type.HasNode(GetType().Name)) ConfigNode.LoadObjectFromConfig(this, type.GetNode(GetType().Name), (int)Pass.TYPE);
+            if (local != null && local.HasNode(GetType().Name)) ConfigNode.LoadObjectFromConfig(this, local.GetNode(GetType().Name), (int)Pass.LOCAL);
         }
 
         public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Global, null).CopyTo(global.AddNode(GetType().Name));
-            if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Type, null).CopyTo(type.AddNode(GetType().Name));
-            if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.Local, null).CopyTo(local.AddNode(GetType().Name));
+            if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.GLOBAL, null).CopyTo(global.AddNode(GetType().Name));
+            if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.TYPE, null).CopyTo(type.AddNode(GetType().Name));
+            if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.LOCAL, null).CopyTo(local.AddNode(GetType().Name));
         }
 
         public virtual void ResetConfig()

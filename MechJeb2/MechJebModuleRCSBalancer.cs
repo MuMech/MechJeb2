@@ -10,34 +10,34 @@ namespace MuMech
     [UsedImplicitly]
     public class MechJebModuleRCSBalancer : ComputerModule
     {
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)] //Smart RCS translation
         public bool smartTranslation = false;
 
         // Overdrive
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         [EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")] //RCS balancer overdrive
         public EditableDoubleMult overdrive = new EditableDoubleMult(1, 0.01);
 
         // Advanced options
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool advancedOptions = false;
 
         // Advanced: overdrive scale. While 'overdrive' will range from 0..1,
         // we should reduce it slightly before using it to control the 'waste
         // threshold' tuning parameter, because waste thresholds of 1 or above
         // cause problems by allowing unhelpful thrusters to fire.
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble overdriveScale = 0.9;
 
         // Advanced: tuning parameters
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble tuningParamFactorTorque = 1;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble tuningParamFactorTranslate = 0.005;
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public EditableDouble tuningParamFactorWaste = 1;
 
         // Variables for RCS solving.
@@ -83,9 +83,9 @@ namespace MuMech
 
             bool firstRcsModule = true;
             string thrusterStates = "";
-            for (int index = 0; index < vessel.parts.Count; index++)
+            for (int index = 0; index < Vessel.parts.Count; index++)
             {
-                Part p = vessel.parts[index];
+                Part p = Vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (!firstRcsModule)
@@ -121,9 +121,9 @@ namespace MuMech
             bool firstRcsModule = true;
             string thrusterStates = "";
 
-            for (int index = 0; index < vessel.parts.Count; index++)
+            for (int index = 0; index < Vessel.parts.Count; index++)
             {
-                Part p = vessel.parts[index];
+                Part p = Vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (!firstRcsModule)
@@ -156,10 +156,10 @@ namespace MuMech
         public MechJebModuleRCSBalancer(MechJebCore core)
             : base(core)
         {
-            priority = 700;
+            Priority = 700;
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
             UpdateTuningParameters();
             solverThread.start();
@@ -167,7 +167,7 @@ namespace MuMech
             base.OnModuleEnabled();
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
             solverThread.stop();
 
@@ -181,7 +181,7 @@ namespace MuMech
 
         public void GetThrottles(Vector3 direction, out double[] throttles, out List<RCSSolver.Thruster> thrusters)
         {
-            solverThread.GetThrottles(vessel, vesselState, direction, out throttles, out thrusters);
+            solverThread.GetThrottles(Vessel, VesselState, direction, out throttles, out thrusters);
         }
 
         // Throttles RCS thrusters to keep a vessel balanced during translation.

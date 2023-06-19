@@ -106,25 +106,25 @@ namespace MuMech
 
         public int historyIdx = -1;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int historySize = 3000;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public double precision = 0.2;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool downrange = true;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool realAtmo = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool stages = false;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int hSize = 4;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public int vSize = 2;
 
         private static readonly int typeCount = Enum.GetValues(typeof(recordType)).Length;
@@ -134,49 +134,49 @@ namespace MuMech
 
         private readonly bool paused = false;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_MarkUT", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)] //Mark UT
         public double markUT;
 
         [ValueInfoItem("#MechJeb_TimeSinceMark", InfoItem.Category.Recorder, format = ValueInfoItem.TIME)] //Time since mark
         public double timeSinceMark;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_DVExpended", InfoItem.Category.Recorder, format = "F1", units = "m/s")] //ΔV expended
         public double deltaVExpended;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_DragLosses", InfoItem.Category.Recorder, format = "F1", units = "m/s")] //Drag losses
         public double dragLosses;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_GravityLosses", InfoItem.Category.Recorder, format = "F1", units = "m/s")] //Gravity losses
         public double gravityLosses;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_SteeringLosses", InfoItem.Category.Recorder, format = "F1", units = "m/s")] //Steering losses
         public double steeringLosses;
 
         [ValueInfoItem("#MechJeb_PhaseAngleFromMark", InfoItem.Category.Recorder, format = "F2", units = "º")] //Phase angle from mark
         public double phaseAngleFromMark;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_MarkLAN", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)] //Mark LAN
         public double markLAN;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_MarkLatitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_NS)] //Mark latitude
         public double markLatitude;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_MarkLongitude", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)] //Mark longitude
         public double markLongitude;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_MarkAltitudeASL", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")] //Mark altitude ASL
         public double markAltitude;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public int markBodyIndex = 1;
 
         [ValueInfoItem("#MechJeb_MarkBody", InfoItem.Category.Recorder)] //Mark body
@@ -185,7 +185,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_DistanceFromMark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")] //Distance from mark
         public double DistanceFromMark()
         {
-            return Vector3d.Distance(vesselState.CoM,
+            return Vector3d.Distance(VesselState.CoM,
                 FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude) -
                 FlightGlobals.Bodies[markBodyIndex].position);
         }
@@ -195,25 +195,25 @@ namespace MuMech
         {
             CelestialBody markBody = FlightGlobals.Bodies[markBodyIndex];
             Vector3d markVector = markBody.GetSurfaceNVector(markLatitude, markLongitude);
-            Vector3d vesselVector = vesselState.CoM - markBody.transform.position;
+            Vector3d vesselVector = VesselState.CoM - markBody.transform.position;
             return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * UtilMath.Deg2Rad;
         }
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_MaxDragGees", InfoItem.Category.Recorder, format = "F2")] //Max drag gees
         public double maxDragGees;
 
         [ActionInfoItem("MARK", InfoItem.Category.Recorder)]
         public void Mark()
         {
-            markUT             = vesselState.time;
+            markUT             = VesselState.time;
             deltaVExpended     = dragLosses = gravityLosses = steeringLosses = 0;
             phaseAngleFromMark = 0;
-            markLatitude       = vesselState.latitude;
-            markLongitude      = vesselState.longitude;
-            markLAN            = vesselState.orbitLAN;
-            markAltitude       = vesselState.altitudeASL;
-            markBodyIndex      = FlightGlobals.Bodies.IndexOf(mainBody);
+            markLatitude       = VesselState.latitude;
+            markLongitude      = VesselState.longitude;
+            markLAN            = VesselState.orbitLAN;
+            markAltitude       = VesselState.altitudeASL;
+            markBodyIndex      = FlightGlobals.Bodies.IndexOf(MainBody);
             maxDragGees        = 0;
             timeSinceMark      = 0;
             for (int t = 0; t < maximums.Length; t++)
@@ -229,7 +229,7 @@ namespace MuMech
         public MechJebModuleFlightRecorder(MechJebCore core)
             : base(core)
         {
-            priority = 2000;
+            Priority = 2000;
             maximums = new double[typeCount];
             minimums = new double[typeCount];
         }
@@ -238,7 +238,7 @@ namespace MuMech
         {
             if (history.Length != historySize)
                 history = new record[historySize];
-            users.Add(this); //flight recorder should always run.
+            Users.Add(this); //flight recorder should always run.
         }
 
         private double lastRecordTime;
@@ -247,29 +247,29 @@ namespace MuMech
         {
             if (markUT == 0) Mark();
 
-            timeSinceMark = vesselState.time - markUT;
+            timeSinceMark = VesselState.time - markUT;
 
-            if (vessel.situation == Vessel.Situations.PRELAUNCH)
+            if (Vessel.situation == Vessel.Situations.PRELAUNCH)
             {
                 Mark(); //keep resetting stats until we launch
                 return;
             }
 
-            if (vesselState.currentThrustAccel > 0)
+            if (VesselState.currentThrustAccel > 0)
             {
-                gravityLosses += vesselState.deltaT * Vector3d.Dot(-vesselState.orbitalVelocity.normalized, vesselState.gravityForce);
+                gravityLosses += VesselState.deltaT * Vector3d.Dot(-VesselState.orbitalVelocity.normalized, VesselState.gravityForce);
             }
 
-            dragLosses     += vesselState.deltaT * vesselState.drag;
-            deltaVExpended += vesselState.deltaT * vesselState.currentThrustAccel;
-            steeringLosses += vesselState.deltaT * vesselState.currentThrustAccel *
-                              (1 - Vector3d.Dot(vesselState.orbitalVelocity.normalized, vesselState.forward));
+            dragLosses     += VesselState.deltaT * VesselState.drag;
+            deltaVExpended += VesselState.deltaT * VesselState.currentThrustAccel;
+            steeringLosses += VesselState.deltaT * VesselState.currentThrustAccel *
+                              (1 - Vector3d.Dot(VesselState.orbitalVelocity.normalized, VesselState.forward));
 
-            maxDragGees = Math.Max(maxDragGees, vesselState.drag / 9.81);
+            maxDragGees = Math.Max(maxDragGees, VesselState.drag / 9.81);
 
-            double circularPeriod = 2 * Math.PI * vesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(mainBody, vesselState.radius);
-            double angleTraversed = vesselState.longitude - markLongitude + 360 * (vesselState.time - markUT) / part.vessel.mainBody.rotationPeriod;
-            phaseAngleFromMark = MuUtils.ClampDegrees360(360 * (vesselState.time - markUT) / circularPeriod - angleTraversed);
+            double circularPeriod = 2 * Math.PI * VesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(MainBody, VesselState.radius);
+            double angleTraversed = VesselState.longitude - markLongitude + 360 * (VesselState.time - markUT) / Part.vessel.mainBody.rotationPeriod;
+            phaseAngleFromMark = MuUtils.ClampDegrees360(360 * (VesselState.time - markUT) / circularPeriod - angleTraversed);
 
             if (paused)
                 return;
@@ -278,9 +278,9 @@ namespace MuMech
 
             //historyIdx = Mathf.Min(Mathf.FloorToInt((float)(timeSinceMark / precision)), history.Length - 1);
 
-            if (vesselState.time >= lastRecordTime + precision && historyIdx < history.Length - 1)
+            if (VesselState.time >= lastRecordTime + precision && historyIdx < history.Length - 1)
             {
-                lastRecordTime = vesselState.time;
+                lastRecordTime = VesselState.time;
                 historyIdx++;
                 Record(historyIdx);
                 //if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH)
@@ -295,15 +295,15 @@ namespace MuMech
         private void Record(int idx)
         {
             history[idx].timeSinceMark  = timeSinceMark;
-            history[idx].altitudeASL    = vesselState.altitudeASL;
+            history[idx].altitudeASL    = VesselState.altitudeASL;
             history[idx].downRange      = GroundDistanceFromMark();
-            history[idx].speedSurface   = vesselState.speedSurface;
-            history[idx].speedOrbital   = vesselState.speedOrbital;
-            history[idx].acceleration   = vessel.geeForce;
-            history[idx].Q              = vesselState.dynamicPressure;
-            history[idx].altitudeTrue   = vesselState.altitudeTrue;
-            history[idx].pitch          = vesselState.vesselPitch;
-            history[idx].mass           = vesselState.mass;
+            history[idx].speedSurface   = VesselState.speedSurface;
+            history[idx].speedOrbital   = VesselState.speedOrbital;
+            history[idx].acceleration   = Vessel.geeForce;
+            history[idx].Q              = VesselState.dynamicPressure;
+            history[idx].altitudeTrue   = VesselState.altitudeTrue;
+            history[idx].pitch          = VesselState.vesselPitch;
+            history[idx].mass           = VesselState.mass;
             history[idx].gravityLosses  = gravityLosses;
             history[idx].dragLosses     = dragLosses;
             history[idx].steeringLosses = steeringLosses;
@@ -311,16 +311,16 @@ namespace MuMech
 
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH)
             {
-                history[idx].currentStage = vessel.currentStage;
+                history[idx].currentStage = Vessel.currentStage;
             }
             else
             {
-                history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : vessel.currentStage;
+                history[idx].currentStage = idx > 0 ? history[idx - 1].currentStage : Vessel.currentStage;
             }
 
-            history[idx].AoA = vesselState.AoA;
-            history[idx].AoS = vesselState.AoS;
-            history[idx].AoD = vesselState.displacementAngle;
+            history[idx].AoA = VesselState.AoA;
+            history[idx].AoS = VesselState.AoS;
+            history[idx].AoD = VesselState.displacementAngle;
             for (int t = 0; t < typeCount; t++)
             {
                 double current = history[idx][(recordType)t];
@@ -336,7 +336,7 @@ namespace MuMech
             if (!Directory.Exists(exportPath))
                 Directory.CreateDirectory(exportPath);
 
-            string vesselName = vessel != null ? string.Join("_", vessel.vesselName.Split(Path.GetInvalidFileNameChars())) : "";
+            string vesselName = Vessel != null ? string.Join("_", Vessel.vesselName.Split(Path.GetInvalidFileNameChars())) : "";
 
             string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 

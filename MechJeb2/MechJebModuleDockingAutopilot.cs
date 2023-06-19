@@ -10,23 +10,23 @@ namespace MuMech
     {
         public string status = "";
 
-        [Persistent(pass = (int)(Pass.Type | Pass.Global))]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")] //Docking speed limit
         public EditableDouble speedLimit = 1;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble rol = new EditableDouble(0);
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public bool forceRol = false;
 
         [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")] //Docking speed limit
         public EditableDouble overridenSafeDistance = 5;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public bool overrideSafeDistance = false;
 
-        [Persistent(pass = (int)Pass.Local)]
+        [Persistent(pass = (int)Pass.LOCAL)]
         public bool overrideTargetSize = false;
 
         [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")] //Docking speed limit
@@ -73,14 +73,14 @@ namespace MuMech
         {
             if (state != PartModule.StartState.None && state != PartModule.StartState.Editor)
             {
-                core.AddToPostDrawQueue(DrawBoundingBox);
+                Core.AddToPostDrawQueue(DrawBoundingBox);
 
                 // Turn off docking AP on successful docking (in case other checks for successful docking fail)
                 GameEvents.onPartCouple.Add(ev =>
                 {
                     if (dockingStep != DockingStep.OFF)
                     {
-                        if (ev.from.vessel == vessel || ev.to.vessel == vessel)
+                        if (ev.from.vessel == Vessel || ev.to.vessel == Vessel)
                         {
                             EndDocking();
                         }
@@ -89,17 +89,17 @@ namespace MuMech
             }
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
-            core.RCS.users.Add(this);
-            core.Attitude.users.Add(this);
+            Core.RCS.Users.Add(this);
+            Core.Attitude.Users.Add(this);
             dockingStep = DockingStep.INIT;
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
-            core.RCS.users.Remove(this);
-            core.Attitude.attitudeDeactivate();
+            Core.RCS.Users.Remove(this);
+            Core.Attitude.attitudeDeactivate();
             dockingStep     = DockingStep.OFF;
             drawBoundingBox = false;
         }
@@ -121,14 +121,14 @@ namespace MuMech
         // Maximum speed to brake in time = sqrt( 2 * a * d )
         private double MaxSpeedForDistance(double distance, Vector3d axis)
         {
-            Vector3d localAxis = vessel.ReferenceTransform.InverseTransformDirection(axis);
-            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * vesselState.rcsThrustAvailable.GetMagnitude(localAxis) * core.RCS.rcsAccelFactor() /
-                                      vesselState.mass));
+            Vector3d localAxis = Vessel.ReferenceTransform.InverseTransformDirection(axis);
+            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * VesselState.rcsThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() /
+                                      VesselState.mass));
         }
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!core.Target.NormalTargetExists)
+            if (!Core.Target.NormalTargetExists)
             {
                 EndDocking();
                 return;
@@ -137,7 +137,7 @@ namespace MuMech
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
 
-            Vector3d targetVel = core.Target.TargetOrbit.GetVel();
+            Vector3d targetVel = Core.Target.TargetOrbit.GetVel();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
             double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
@@ -216,13 +216,13 @@ namespace MuMech
             }
 
             if (!align)
-                core.Attitude.attitudeTo(Quaternion.LookRotation(vessel.GetTransform().up, -vessel.GetTransform().forward),
+                Core.Attitude.attitudeTo(Quaternion.LookRotation(Vessel.GetTransform().up, -Vessel.GetTransform().forward),
                     AttitudeReference.INERTIAL, this);
             else if (forceRol)
-                core.Attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back),
+                Core.Attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back),
                     AttitudeReference.TARGET_ORIENTATION, this);
             else
-                core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+                Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
             // Purpose of of this section is to compensate for relative velocities because the docking code does poorly with very low speed limits
             // And can't seem to keep up if relative velocities are greater than the speed limit.
@@ -233,14 +233,14 @@ namespace MuMech
 
 
             Vector3d adjustment = -lateralSep.normalized * latApproachSpeed + zApproachSpeed * zAxis;
-            core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
+            Core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
             MechJebModuleDebugArrows.debugVector  = adjustment;
-            MechJebModuleDebugArrows.debugVector2 = -core.Target.RelativePosition;
+            MechJebModuleDebugArrows.debugVector2 = -Core.Target.RelativePosition;
         }
 
         public override void OnFixedUpdate()
         {
-            if (!core.Target.NormalTargetExists)
+            if (!Core.Target.NormalTargetExists)
             {
                 EndDocking();
                 return;
@@ -313,21 +313,21 @@ namespace MuMech
 
         private void UpdateDistance()
         {
-            Vector3d separation = core.Target.RelativePosition;
-            zAxis           = core.Target.DockingAxis.normalized;
+            Vector3d separation = Core.Target.RelativePosition;
+            zAxis           = Core.Target.DockingAxis.normalized;
             zSep            = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             lateralSep      = Vector3d.Exclude(zAxis, separation);
-            relativeZ       = Vector3d.Dot(core.Target.RelativeVelocity, zAxis);
-            relativeLateral = Vector3d.Dot(lateralSep, core.Target.RelativeVelocity);
+            relativeZ       = Vector3d.Dot(Core.Target.RelativeVelocity, zAxis);
+            relativeLateral = Vector3d.Dot(lateralSep, Core.Target.RelativeVelocity);
         }
 
         private void InitDocking()
         {
-            lastTarget = core.Target.Target;
+            lastTarget = Core.Target.Target;
 
             try
             {
-                vesselBoundingBox = vessel.GetBoundingBox();
+                vesselBoundingBox = Vessel.GetBoundingBox();
                 targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
 
                 if (!overrideTargetSize)
@@ -340,14 +340,14 @@ namespace MuMech
                 else
                     safeDistance = (float)overridenSafeDistance.val;
 
-                if (core.Target.Target is ModuleDockingNode)
-                    acquireRange = ((ModuleDockingNode)core.Target.Target).acquireRange * 0.5;
+                if (Core.Target.Target is ModuleDockingNode)
+                    acquireRange = ((ModuleDockingNode)Core.Target.Target).acquireRange * 0.5;
                 else
                     acquireRange = 0.25;
             }
             catch (Exception e)
             {
-                print(e);
+                Print(e);
             }
 
             if (zSep < 0) //we're behind the target
@@ -376,20 +376,20 @@ namespace MuMech
         private void EndDocking()
         {
             dockingStep = DockingStep.OFF;
-            users.Clear();
-            enabled = false;
+            Users.Clear();
+            Enabled = false;
         }
 
         private void DrawBoundingBox()
         {
-            if (drawBoundingBox && vessel == FlightGlobals.ActiveVessel)
+            if (drawBoundingBox && Vessel == FlightGlobals.ActiveVessel)
             {
-                vesselBoundingBox = vessel.GetBoundingBox();
-                GLUtils.DrawBoundingBox(vessel.mainBody, vessel, vesselBoundingBox, Color.green);
+                vesselBoundingBox = Vessel.GetBoundingBox();
+                GLUtils.DrawBoundingBox(Vessel.mainBody, Vessel, vesselBoundingBox, Color.green);
 
-                if (core.Target.Target != null)
+                if (Core.Target.Target != null)
                 {
-                    Vessel targetVessel = core.Target.Target.GetVessel();
+                    Vessel targetVessel = Core.Target.Target.GetVessel();
                     targetBoundingBox = targetVessel.GetBoundingBox();
                     GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetBoundingBox, Color.blue);
                 }

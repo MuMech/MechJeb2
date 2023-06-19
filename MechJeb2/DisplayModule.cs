@@ -30,7 +30,7 @@ namespace MuMech
                 {
                     if (windowVector != newPos)
                     {
-                        dirty        = true;
+                        Dirty        = true;
                         windowVector = newPos;
                     }
                 }
@@ -38,7 +38,7 @@ namespace MuMech
                 {
                     if (windowVectorEditor != newPos)
                     {
-                        dirty              = true;
+                        Dirty              = true;
                         windowVectorEditor = newPos;
                     }
                 }
@@ -47,14 +47,14 @@ namespace MuMech
 
         // Those field should be private but Persistent has a bug that prevent it to work properly on parent class private fields
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public Vector4
             windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showInFlight = true;
 
         public bool ShowInFlight
@@ -65,12 +65,12 @@ namespace MuMech
                 if (showInFlight != value)
                 {
                     showInFlight = value;
-                    dirty        = true;
+                    Dirty        = true;
                 }
             }
         }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showInEditor;
 
         public bool ShowInEditor
@@ -81,12 +81,12 @@ namespace MuMech
                 if (showInEditor != value)
                 {
                     showInEditor = value;
-                    dirty        = true;
+                    Dirty        = true;
                 }
             }
         }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool isOverlay;
 
         public bool IsOverlay
@@ -97,12 +97,12 @@ namespace MuMech
                 if (isOverlay != value)
                 {
                     isOverlay = value;
-                    dirty     = true;
+                    Dirty     = true;
                 }
             }
         }
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool locked;
 
         public bool Locked
@@ -113,7 +113,7 @@ namespace MuMech
                 if (locked != value)
                 {
                     locked = value;
-                    dirty  = true;
+                    Dirty  = true;
                 }
             }
         }
@@ -144,7 +144,7 @@ namespace MuMech
         {
             if (!isOverlay && GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
             {
-                enabled = false;
+                Enabled = false;
             }
 
 //            if (GUI.Button(new Rect(windowPos.width - 40, 2, 20, 16), (locked ? "X" : "O"))) // lock button needs an icon, letters look crap
@@ -153,7 +153,7 @@ namespace MuMech
 //            }
 
             bool allowDrag = !locked;
-            if (!locked && !isOverlay && core.Settings.useTitlebarDragging)
+            if (!locked && !isOverlay && Core.Settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
@@ -218,9 +218,9 @@ namespace MuMech
             if (global != null)
             {
                 if (HighLogic.LoadedSceneIsEditor)
-                    enabledEditor = enabled;
+                    enabledEditor = Enabled;
                 if (HighLogic.LoadedSceneIsFlight)
-                    enabledFlight = enabled;
+                    enabledFlight = Enabled;
 
                 global.AddValue("enabledEditor", enabledEditor);
                 global.AddValue("enabledFlight", enabledFlight);
@@ -241,7 +241,7 @@ namespace MuMech
                     enabledEditor = loadedEnabled;
                     useOldConfig  = false;
                     if (HighLogic.LoadedSceneIsEditor)
-                        enabled = loadedEnabled;
+                        Enabled = loadedEnabled;
                 }
             }
 
@@ -253,7 +253,7 @@ namespace MuMech
                     enabledFlight = loadedEnabled;
                     useOldConfig  = false;
                     if (HighLogic.LoadedSceneIsFlight)
-                        enabled = loadedEnabled;
+                        Enabled = loadedEnabled;
                 }
             }
 
@@ -264,12 +264,12 @@ namespace MuMech
                     bool loadedEnabled;
                     if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled))
                     {
-                        enabled = loadedEnabled;
+                        Enabled = loadedEnabled;
                     }
                 }
 
-                enabledEditor = enabled;
-                enabledFlight = enabled;
+                enabledEditor = Enabled;
+                enabledFlight = Enabled;
             }
 
             //            if (global != null && global.HasValue("locked"))
@@ -284,7 +284,7 @@ namespace MuMech
         public virtual bool isActive()
         {
             if (makesActive == null)
-                makesActive = new ComputerModule[] { core.Attitude, core.Thrust, core.Rover, core.Node, core.RCS, core.Rcsbal };
+                makesActive = new ComputerModule[] { Core.Attitude, Core.Thrust, Core.Rover, Core.Node, Core.RCS, Core.Rcsbal };
 
             bool active = false;
             for (int i = 0; i < makesActive.Length; i++)
@@ -292,7 +292,7 @@ namespace MuMech
                 ComputerModule m = makesActive[i];
                 if (m != null)
                 {
-                    if (active |= m.users.RecursiveUser(this))
+                    if (active |= m.Users.RecursiveUser(this))
                         break;
                 }
             }
@@ -302,21 +302,21 @@ namespace MuMech
 
         public override void UnlockCheck()
         {
-            if (!unlockChecked)
+            if (!UnlockChecked)
             {
-                bool prevEn = enabled;
-                enabled = true;
+                bool prevEn = Enabled;
+                Enabled = true;
                 base.UnlockCheck();
-                if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
+                if (UnlockParts.Trim().Length > 0 || UnlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
                 {
-                    hidden = !enabled;
+                    hidden = !Enabled;
                     if (hidden)
                     {
                         prevEn = false;
                     }
                 }
 
-                enabled = prevEn;
+                Enabled = prevEn;
             }
         }
 

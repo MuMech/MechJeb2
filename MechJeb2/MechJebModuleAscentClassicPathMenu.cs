@@ -23,9 +23,9 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            _recorder       = core.GetComputerModule<MechJebModuleFlightRecorder>();
-            _ascentSettings = core.GetComputerModule<MechJebModuleAscentSettings>();
-            _path           = core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
+            _recorder       = Core.GetComputerModule<MechJebModuleFlightRecorder>();
+            _ascentSettings = Core.GetComputerModule<MechJebModuleAscentSettings>();
+            _path           = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
         public override GUILayoutOption[] WindowOptions()
@@ -36,10 +36,10 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (_lastMaxAtmosphereAltitude != mainBody.RealMaxAtmosphereAltitude())
+            if (_lastMaxAtmosphereAltitude != MainBody.RealMaxAtmosphereAltitude())
             {
-                _lastMaxAtmosphereAltitude = mainBody.RealMaxAtmosphereAltitude();
-                UpdateAtmoTexture(_pathTexture, mainBody,
+                _lastMaxAtmosphereAltitude = MainBody.RealMaxAtmosphereAltitude();
+                UpdateAtmoTexture(_pathTexture, MainBody,
                     _ascentSettings.AutoPath ? _ascentSettings.AutoTurnEndAltitude : _ascentSettings.TurnEndAltitude);
             }
 

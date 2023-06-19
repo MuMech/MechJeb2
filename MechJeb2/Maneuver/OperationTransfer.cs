@@ -14,17 +14,17 @@ namespace MuMech
         public bool InterceptOnly;
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble PeriodOffset = 0;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime MinDepartureUT = 0;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime MaxDepartureUT = 0;
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool SimpleTransfer;
 
         private readonly TimeSelector _timeSelector;

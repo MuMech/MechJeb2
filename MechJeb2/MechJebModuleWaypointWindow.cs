@@ -219,67 +219,67 @@ namespace MuMech
         public static List<MechJebWaypointRoute>   Routes = new List<MechJebWaypointRoute>();
 
         [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Moho Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Moho Mapdist
         public EditableDouble MohoMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_EveMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Eve Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Eve Mapdist
         public EditableDouble EveMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_GillyMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Gilly Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Gilly Mapdist
         public EditableDouble GillyMapdist = -500;
 
         [EditableInfoItem("#MechJeb_KerbinMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Kerbin Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Kerbin Mapdist
         public EditableDouble KerbinMapdist = 500;
 
         [EditableInfoItem("#MechJeb_MunMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Mun Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Mun Mapdist
         public EditableDouble MunMapdist = 4000;
 
         [EditableInfoItem("#MechJeb_MinmusMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Minmus Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Minmus Mapdist
         public EditableDouble MinmusMapdist = 3500;
 
         [EditableInfoItem("#MechJeb_DunaMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Duna Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Duna Mapdist
         public EditableDouble DunaMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_IkeMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Ike Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Ike Mapdist
         public EditableDouble IkeMapdist = 4000;
 
         [EditableInfoItem("#MechJeb_DresMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Dres Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Dres Mapdist
         public EditableDouble DresMapdist = 1500;
 
         [EditableInfoItem("#MechJeb_EelooMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Eeloo Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Eeloo Mapdist
         public EditableDouble EelooMapdist = 2000;
 
         [EditableInfoItem("#MechJeb_JoolMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Jool Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Jool Mapdist
         public EditableDouble JoolMapdist = 30000;
 
         [EditableInfoItem("#MechJeb_TyloMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Tylo Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Tylo Mapdist
         public EditableDouble TyloMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_LaytheMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Laythe Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Laythe Mapdist
         public EditableDouble LaytheMapdist = 1000;
 
         [EditableInfoItem("#MechJeb_PolMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Pol Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Pol Mapdist
         public EditableDouble PolMapdist = 500;
 
         [EditableInfoItem("#MechJeb_BopMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Bop Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Bop Mapdist
         public EditableDouble BopMapdist = 1000;
 
         [EditableInfoItem("#MechJeb_VallMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Vall Mapdist
+        [Persistent(pass = (int)Pass.GLOBAL)] // Vall Mapdist
         public EditableDouble VallMapdist = 5000;
 
         internal int    selIndex    = -1;
@@ -318,11 +318,11 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             hidden = true;
-            ap     = core.GetComputerModule<MechJebModuleRoverController>();
-            if (HighLogic.LoadedSceneIsFlight && vessel.isActiveVessel)
+            ap     = Core.GetComputerModule<MechJebModuleRoverController>();
+            if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
-                renderer         = MechJebRouteRenderer.AttachToMapView(core);
-                renderer.enabled = enabled;
+                renderer         = MechJebRouteRenderer.AttachToMapView(Core);
+                renderer.enabled = Enabled;
             }
 
 //			GameObject obj = new GameObject("LineRenderer");
@@ -343,14 +343,14 @@ namespace MuMech
             base.OnStart(state);
         }
 
-        public override void OnModuleEnabled()
+        protected override void OnModuleEnabled()
         {
             if (renderer != null) { renderer.enabled = true; }
 
             base.OnModuleEnabled();
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
             if (renderer != null) { renderer.enabled = false; }
 
@@ -627,20 +627,20 @@ namespace MuMech
                     float minSpeed = wp.MinSpeed > 0 ? wp.MinSpeed : 0;
                     if (MapView.MapIsEnabled && i == selIndex)
                     {
-                        GLUtils.DrawGroundMarker(mainBody, wp.Latitude, wp.Longitude, Color.red, true,
-                            (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, mainBody.Radius / 100);
+                        GLUtils.DrawGroundMarker(MainBody, wp.Latitude, wp.Longitude, Color.red, true,
+                            (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, MainBody.Radius / 100);
                     }
 
                     if (i >= ap.WaypointIndex)
                     {
                         if (ap.WaypointIndex > -1)
                         {
-                            eta += GuiUtils.FromToETA(i == ap.WaypointIndex ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position, wp.Position,
+                            eta += GuiUtils.FromToETA(i == ap.WaypointIndex ? Vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position, wp.Position,
                                 ap.etaSpeed > 0.1 && ap.etaSpeed < maxSpeed ? (float)Math.Round(ap.etaSpeed, 1) : maxSpeed);
                         }
 
                         dist += Vector3.Distance(
-                            i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position,
+                            i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? Vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position,
                             wp.Position);
                     }
 
@@ -766,8 +766,8 @@ namespace MuMech
                         waitingForPick = true;
                         if (MapView.MapIsEnabled)
                         {
-                            core.Target.Unset();
-                            core.Target.PickPositionTargetOnMap();
+                            Core.Target.Unset();
+                            Core.Target.PickPositionTargetOnMap();
                         }
                     }
                     else
@@ -854,8 +854,8 @@ namespace MuMech
         {
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
             titleAdd = "Settings";
-            MechJebModuleCustomWindowEditor ed = core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-            if (!ap.enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
+            MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
+            if (!ap.Enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
 
             scroll = GUILayout.BeginScrollView(scroll);
 
@@ -934,8 +934,8 @@ namespace MuMech
 
             if (GUILayout.Button("Help"))
             {
-                core.GetComputerModule<MechJebModuleWaypointHelpWindow>().enabled =
-                    !core.GetComputerModule<MechJebModuleWaypointHelpWindow>().enabled;
+                Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled =
+                    !Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled;
             }
 
             GUILayout.EndHorizontal();
@@ -944,10 +944,10 @@ namespace MuMech
         public void DrawPageRoutes()
         {
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
-            titleAdd = "Routes for " + vessel.mainBody.bodyName;
+            titleAdd = "Routes for " + Vessel.mainBody.bodyName;
 
             scroll = GUILayout.BeginScrollView(scroll);
-            List<MechJebWaypointRoute> bodyWPs = Routes.FindAll(r => r.Body == vessel.mainBody && r.Mode == Mode.ToString());
+            List<MechJebWaypointRoute> bodyWPs = Routes.FindAll(r => r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
             for (int i = 0; i < bodyWPs.Count; i++)
             {
                 GUILayout.BeginHorizontal();
@@ -961,7 +961,7 @@ namespace MuMech
                 {
                     if (GUILayout.Button("Delete", GUILayout.Width(70)))
                     {
-                        Routes.RemoveAll(r => r.Name == bodyWPs[i].Name && r.Body == vessel.mainBody && r.Mode == Mode.ToString());
+                        Routes.RemoveAll(r => r.Name == bodyWPs[i].Name && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
                         SaveRoutes();
                         saveIndex = -1;
                     }
@@ -978,8 +978,8 @@ namespace MuMech
             {
                 if (saveName != "" && ap.Waypoints.Count > 0)
                 {
-                    MechJebWaypointRoute old = Routes.Find(r => r.Name == saveName && r.Body == vessel.mainBody && r.Mode == Mode.ToString());
-                    var wps = new MechJebWaypointRoute(saveName, vessel.mainBody);
+                    MechJebWaypointRoute old = Routes.Find(r => r.Name == saveName && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+                    var wps = new MechJebWaypointRoute(saveName, Vessel.mainBody);
                     ap.Waypoints.ForEach(wp => wps.Add(wp));
                     if (old == null)
                     {
@@ -1029,7 +1029,7 @@ namespace MuMech
         {
             if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
             {
-                MechJebModuleWaypointHelpWindow help = core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
+                MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
                 switch (showPage)
                 {
                     case pages.waypoints:
@@ -1043,7 +1043,7 @@ namespace MuMech
                         break;
                 }
 
-                help.enabled = help.selTopic > -1 || help.enabled;
+                help.Enabled = help.selTopic > -1 || help.Enabled;
             }
 
             if (styleInactive == null)
@@ -1081,38 +1081,38 @@ namespace MuMech
                     break;
             }
 
-            if (waitingForPick && vessel.isActiveVessel && Event.current.type == EventType.Repaint)
+            if (waitingForPick && Vessel.isActiveVessel && Event.current.type == EventType.Repaint)
             {
                 if (MapView.MapIsEnabled)
                 {
-                    if (core.Target.pickingPositionTarget == false)
+                    if (Core.Target.pickingPositionTarget == false)
                     {
-                        if (core.Target.PositionTargetExists)
+                        if (Core.Target.PositionTargetExists)
                         {
                             if (selIndex > -1 && selIndex < ap.Waypoints.Count)
                             {
-                                ap.Waypoints.Insert(selIndex, new MechJebWaypoint(core.Target.GetPositionTargetPosition()));
+                                ap.Waypoints.Insert(selIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
                                 tmpRadius = ap.Waypoints[selIndex].Radius.ToString();
                                 tmpLat    = LatToString(ap.Waypoints[selIndex].Latitude);
                                 tmpLon    = LonToString(ap.Waypoints[selIndex].Longitude);
                             }
                             else
                             {
-                                ap.Waypoints.Add(new MechJebWaypoint(core.Target.GetPositionTargetPosition()));
+                                ap.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
                             }
 
-                            core.Target.Unset();
+                            Core.Target.Unset();
                             waitingForPick = alt;
                         }
                         else
                         {
-                            core.Target.PickPositionTargetOnMap();
+                            Core.Target.PickPositionTargetOnMap();
                         }
                     }
                 }
                 else
                 {
-                    if (!GuiUtils.MouseIsOverWindow(core))
+                    if (!GuiUtils.MouseIsOverWindow(Core))
                     {
                         Coordinates mouseCoords = GetMouseFlightCoordinates();
                         if (mouseCoords != null)
@@ -1143,7 +1143,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRouteRenderer.AttachToMapView(core); }
+            if (Vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
 
             ap.Waypoints.ForEach(wp => wp.Update());
 //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
@@ -1394,8 +1394,8 @@ namespace MuMech
             }
 
             //Debug.Log(ap.vessel.vesselName);
-            MechJebModuleWaypointWindow window = ap.core.GetComputerModule<MechJebModuleWaypointWindow>();
-            switch (ap.vessel.mainBody.bodyName)
+            MechJebModuleWaypointWindow window = ap.Core.GetComputerModule<MechJebModuleWaypointWindow>();
+            switch (ap.Vessel.mainBody.bodyName)
             {
                 case "Moho":
                     addHeight = window.MohoMapdist;
@@ -1450,10 +1450,10 @@ namespace MuMech
                     break;
             }
 
-            if (ap != null && ap.Waypoints.Count > 0 && ap.vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)
+            if (ap != null && ap.Waypoints.Count > 0 && ap.Vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)
             {
                 float targetHeight = MapView.MapIsEnabled ? (float)addHeight : 3f;
-                float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.vessel.CoM) / 700f;
+                float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Vessel.CoM) / 700f;
                 float width = MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : scale + 0.1f;
                 //float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 
@@ -1466,7 +1466,7 @@ namespace MuMech
                 selWP.gameObject.layer = pastPath.gameObject.layer =
                     currPath.gameObject.layer = nextPath.gameObject.layer = MapView.MapIsEnabled ? 9 : 0;
 
-                int sel = ap.core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex;
+                int sel = ap.Core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex;
                 selWP.enabled = sel > -1 && !MapView.MapIsEnabled;
                 if (selWP.enabled)
                 {
@@ -1488,7 +1488,7 @@ namespace MuMech
                         pastPath.SetPosition(i, RaisePositionOverTerrain(ap.Waypoints[i].Position, targetHeight));
                     }
 
-                    pastPath.SetPosition(ap.WaypointIndex, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
+                    pastPath.SetPosition(ap.WaypointIndex, RaisePositionOverTerrain(ap.Vessel.CoM, targetHeight));
 //					Debug.Log("pastPath drawn");
                 }
                 else
@@ -1501,7 +1501,7 @@ namespace MuMech
                 {
 //					Debug.Log("drawing currPath");
                     currPath.enabled = true;
-                    currPath.SetPosition(0, RaisePositionOverTerrain(ap.vessel.CoM, targetHeight));
+                    currPath.SetPosition(0, RaisePositionOverTerrain(ap.Vessel.CoM, targetHeight));
                     currPath.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex].Position, targetHeight));
 //					Debug.Log("currPath drawn");
                 }
@@ -1518,7 +1518,7 @@ namespace MuMech
                     nextPath.enabled       = true;
                     nextPath.positionCount = nextCount;
                     nextPath.SetPosition(0,
-                        RaisePositionOverTerrain(ap.WaypointIndex == -1 ? ap.vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position,
+                        RaisePositionOverTerrain(ap.WaypointIndex == -1 ? ap.Vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position,
                             targetHeight));
                     for (int i = 0; i < nextCount - 1; i++)
                     {

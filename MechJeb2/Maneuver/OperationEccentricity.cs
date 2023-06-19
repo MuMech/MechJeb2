@@ -8,7 +8,7 @@ namespace MuMech
         public override string GetName() { return "change eccentricity"; }
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewEcc = new EditableDouble(0);
 
         private readonly TimeSelector _timeSelector;

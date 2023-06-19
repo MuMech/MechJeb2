@@ -20,18 +20,18 @@ namespace MuMech
 
         private readonly TimeReference[] allowedTimeRef;
 
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         private int _currentTimeRef;
 
         public TimeReference TimeReference => allowedTimeRef[_currentTimeRef];
 
         // Input parameters
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime LeadTime = 0;
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult CircularizeAltitude = new EditableDoubleMult(150000, 1000);
 
         public TimeSelector(TimeReference[] allowedTimeRef)

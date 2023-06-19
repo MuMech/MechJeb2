@@ -866,7 +866,7 @@ namespace MuMech
                 return;
 
             MechJebModuleRCSBalancer rcsbal = vessel.GetMasterMechJeb().Rcsbal;
-            if (rcsbal.enabled)
+            if (rcsbal.Enabled)
             {
                 Vector3d rot = Vector3d.zero;
                 for (int i = 0; i < Vector6.Values.Length; i++)
@@ -955,7 +955,7 @@ namespace MuMech
                             Vector3d thrusterThrust = thrustDirection * power;
 
                             // This is a cheap hack to get rcsTorque with the RCS balancer active.
-                            if (!rcsbal.enabled)
+                            if (!rcsbal.Enabled)
                             {
                                 rcsThrustAvailable.Add(Vector3.Scale(vessel.GetTransform().InverseTransformDirection(thrusterThrust),
                                     translationControl));

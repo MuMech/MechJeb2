@@ -28,7 +28,7 @@ namespace MuMech
         public MechJebStageStatsHelper(MechJebModuleInfoItems items)
         {
             infoItems          = items;
-            core               = items.core;
+            core               = items.Core;
             stats              = core.GetComputerModule<MechJebModuleStageStats>();
             showStagedMass     = items.showStagedMass;
             showBurnedMass     = items.showBurnedMass;
@@ -170,7 +170,7 @@ namespace MuMech
         // This should only be called before Layout phase, and never in Repaint phase
         public void UpdateStageStats()
         {
-            double geeASL = HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.mainBody.GeeASL;
+            double geeASL = HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.MainBody.GeeASL;
             stats.RequestUpdate(this);
             GatherStages(stages);
             UpdateStageDisplayInfo(stages, geeASL);
@@ -249,7 +249,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
             else
-                stats.editorBody = stats.mainBody;
+                stats.editorBody = stats.MainBody;
 
             Profiler.EndSample();
 

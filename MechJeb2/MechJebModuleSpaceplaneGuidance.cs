@@ -14,7 +14,7 @@ namespace MuMech
 
         protected bool _showLandingTarget;
 
-        [Persistent(pass = (int)(Pass.Global | Pass.Local))]
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public int runwayIndex;
 
         public bool showLandingTarget
@@ -22,8 +22,8 @@ namespace MuMech
             get => _showLandingTarget;
             set
             {
-                if (value && !_showLandingTarget) core.Target.SetDirectionTarget("ILS Guidance");
-                if (!value && core.Target.Target is DirectionTarget && core.Target.Name == "ILS Guidance") core.Target.Unset();
+                if (value && !_showLandingTarget) Core.Target.SetDirectionTarget("ILS Guidance");
+                if (!value && Core.Target.Target is DirectionTarget && Core.Target.Name == "ILS Guidance") Core.Target.Unset();
                 _showLandingTarget = value;
             }
         }
@@ -32,7 +32,7 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
 
-            var availableRunways = MechJebModuleSpaceplaneAutopilot.runways.Where(p => p.body == mainBody).ToList();
+            var availableRunways = MechJebModuleSpaceplaneAutopilot.runways.Where(p => p.body == MainBody).ToList();
             if (runwayIndex > availableRunways.Count)
                 runwayIndex = 0;
 
@@ -44,14 +44,14 @@ namespace MuMech
                 autoland.runway = availableRunways[runwayIndex];
 
                 GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label2") +
-                                Vector3d.Distance(vesselState.CoM, autoland.runway.Start()).ToSI() + "m"); //Distance to runway:
+                                Vector3d.Distance(VesselState.CoM, autoland.runway.Start()).ToSI() + "m"); //Distance to runway:
 
                 showLandingTarget =
                     GUILayout.Toggle(showLandingTarget, Localizer.Format("#MechJeb_ApproAndLand_label3")); //Show landing navball guidance
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button1"))) //Autoland
                     autoland.Autoland(this);
-                if (autoland.enabled && GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button2"))) //Abort
+                if (autoland.Enabled && GUILayout.Button(Localizer.Format("#MechJeb_ApproAndLan_button2"))) //Abort
                     autoland.AutopilotOff();
 
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_ApproAndLand_label14"), autoland.glideslope, "°");      //Autoland glideslope:
@@ -64,7 +64,7 @@ namespace MuMech
                 autoland.bBreakAsSoonAsLanded =
                     GUILayout.Toggle(autoland.bBreakAsSoonAsLanded, Localizer.Format("#MechJeb_ApproAndLand_label7")); //Brake as soon as landed
 
-                if (autoland.enabled)
+                if (autoland.Enabled)
                 {
                     GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label8") +
                                     autoland.AutolandApproachStateToHumanReadableDescription()); //State:
@@ -95,17 +95,17 @@ namespace MuMech
         {
             if (showLandingTarget && autoland != null)
             {
-                if (!(core.Target.Target is DirectionTarget && core.Target.Name == "ILS Guidance")) showLandingTarget = false;
+                if (!(Core.Target.Target is DirectionTarget && Core.Target.Name == "ILS Guidance")) showLandingTarget = false;
                 else
                 {
-                    core.Target.UpdateDirectionTarget(autoland.GetAutolandTargetVector());
+                    Core.Target.UpdateDirectionTarget(autoland.GetAutolandTargetVector());
                 }
             }
         }
 
         public override void OnStart(PartModule.StartState state)
         {
-            autoland = core.GetComputerModule<MechJebModuleSpaceplaneAutopilot>();
+            autoland = Core.GetComputerModule<MechJebModuleSpaceplaneAutopilot>();
         }
 
         public MechJebModuleSpaceplaneGuidance(MechJebCore core) : base(core) { }

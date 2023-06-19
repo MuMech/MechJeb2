@@ -23,11 +23,11 @@ namespace MuMech
                 if (!Core.Landing.RCSAdjustment) return this;
 
                 if (deltaV.magnitude > 3)
-                    Core.RCS.enabled = true;
+                    Core.RCS.Enabled = true;
                 else if (deltaV.magnitude < 0.01)
-                    Core.RCS.enabled = false;
+                    Core.RCS.Enabled = false;
 
-                if (Core.RCS.enabled)
+                if (Core.RCS.Enabled)
                     Core.RCS.SetWorldVelocityError(deltaV);
 
                 return this;
@@ -53,7 +53,7 @@ namespace MuMech
                 {
                     Core.Warp.MinimumWarp();
                     if (Core.Landing.RCSAdjustment)
-                        Core.RCS.enabled = false;
+                        Core.RCS.Enabled = false;
                     return new DecelerationBurn(Core);
                 }
 
@@ -70,7 +70,7 @@ namespace MuMech
                         {
                             Core.Warp.MinimumWarp();
                             if (Core.Landing.RCSAdjustment)
-                                Core.RCS.enabled = false;
+                                Core.RCS.Enabled = false;
                             return new CourseCorrection(Core);
                         }
                     }
@@ -87,7 +87,7 @@ namespace MuMech
                 {
                     Core.Warp.MinimumWarp();
                     if (Core.Landing.RCSAdjustment)
-                        Core.RCS.enabled = false;
+                        Core.RCS.Enabled = false;
                     return new DecelerationBurn(Core);
                 }
 

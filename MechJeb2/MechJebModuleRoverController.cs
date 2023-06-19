@@ -15,41 +15,41 @@ namespace MuMech
         public  bool                  LoopWaypoints = false;
 
         [ToggleInfoItem("#MechJeb_ControlHeading", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Local)] // Heading control
+        [Persistent(pass = (int)Pass.LOCAL)] // Heading control
         public bool ControlHeading;
 
         [EditableInfoItem("#MechJeb_Heading", InfoItem.Category.Rover, width = 40)]
-        [Persistent(pass = (int)Pass.Local)] // Heading
+        [Persistent(pass = (int)Pass.LOCAL)] // Heading
         public EditableDouble heading = 0;
 
         [ToggleInfoItem("#MechJeb_ControlSpeed", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Local)] // Speed control
+        [Persistent(pass = (int)Pass.LOCAL)] // Speed control
         public bool ControlSpeed;
 
         [EditableInfoItem("#MechJeb_Speed", InfoItem.Category.Rover, width = 40)]
-        [Persistent(pass = (int)Pass.Local)] // Speed
+        [Persistent(pass = (int)Pass.LOCAL)] // Speed
         public EditableDouble speed = 10;
 
         [ToggleInfoItem("#MechJeb_BrakeOnEject", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Local)] // Brake on Pilot Eject
+        [Persistent(pass = (int)Pass.LOCAL)] // Brake on Pilot Eject
         public bool BrakeOnEject = false;
 
         [ToggleInfoItem("#MechJeb_BrakeOnEnergyDepletion", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Local)] // Brake on Energy Depletion
+        [Persistent(pass = (int)Pass.LOCAL)] // Brake on Energy Depletion
         public bool BrakeOnEnergyDepletion = false;
 
         [ToggleInfoItem("#MechJeb_WarpToDaylight", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Local)] // Warp until Day if Depleted
+        [Persistent(pass = (int)Pass.LOCAL)] // Warp until Day if Depleted
         public bool WarpToDaylight = false;
 
         public bool waitingForDaylight;
 
         [ToggleInfoItem("#MechJeb_StabilityControl", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Local)] // Stability Control
+        [Persistent(pass = (int)Pass.LOCAL)] // Stability Control
         public bool StabilityControl = false;
 
         [ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Local | (int)Pass.Type)] // Limit Acceleration
+        [Persistent(pass = (int)Pass.LOCAL | (int)Pass.TYPE)] // Limit Acceleration
         public bool LimitAcceleration = false;
 
         public PIDController headingPID;
@@ -58,39 +58,39 @@ namespace MuMech
 //		private LineRenderer line;
 
         [EditableInfoItem("#MechJeb_SafeTurnspeed", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Type)] // Safe turnspeed
+        [Persistent(pass = (int)Pass.TYPE)] // Safe turnspeed
         public EditableDouble turnSpeed = 3;
 
         [EditableInfoItem("#MechJeb_TerrainLookAhead", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Terrain Look Ahead
+        [Persistent(pass = (int)Pass.GLOBAL)] // Terrain Look Ahead
         public EditableDouble terrainLookAhead = 1.0;
 
         [EditableInfoItem("#MechJeb_BrakeSpeedLimit", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Type)] // Brake Speed Limit
+        [Persistent(pass = (int)Pass.TYPE)] // Brake Speed Limit
         public EditableDouble brakeSpeedLimit = 0.7;
 
         [EditableInfoItem("#MechJeb_HeadingPIDP", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Heading PID P
+        [Persistent(pass = (int)Pass.GLOBAL)] // Heading PID P
         public EditableDouble hPIDp = 0.03;   // 0.01
 
         [EditableInfoItem("#MechJeb_HeadingPIDI", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Heading PID I
+        [Persistent(pass = (int)Pass.GLOBAL)] // Heading PID I
         public EditableDouble hPIDi = 0.002;  // 0.001
 
         [EditableInfoItem("#MechJeb_HeadingPIDD", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Heading PID D
+        [Persistent(pass = (int)Pass.GLOBAL)] // Heading PID D
         public EditableDouble hPIDd = 0.005;
 
         [EditableInfoItem("#MechJeb_SpeedPIDP", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Speed PID P
+        [Persistent(pass = (int)Pass.GLOBAL)] // Speed PID P
         public EditableDouble sPIDp = 2.0;
 
         [EditableInfoItem("#MechJeb_SpeedPIDI", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Speed PID I
+        [Persistent(pass = (int)Pass.GLOBAL)] // Speed PID I
         public EditableDouble sPIDi = 0.1;
 
         [EditableInfoItem("#MechJeb_SpeedPIDD", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Global)] // Speed PID D
+        [Persistent(pass = (int)Pass.GLOBAL)] // Speed PID D
         public EditableDouble sPIDd = 0.001;
 
         [ValueInfoItem("#MechJeb_SpeedIntAcc", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed Int Acc
@@ -100,7 +100,7 @@ namespace MuMech
         public float traction;
 
         [EditableInfoItem("#MechJeb_TractionBrakeLimit", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.Type)] // Traction Brake Limit
+        [Persistent(pass = (int)Pass.TYPE)] // Traction Brake Limit
         public EditableDouble tractionLimit = 75;
 
         public List<(PartModule, BaseField)> wheelbases = new List<(PartModule, BaseField)>();
@@ -110,9 +110,9 @@ namespace MuMech
             headingPID = new PIDController(hPIDp, hPIDi, hPIDd);
             speedPID   = new PIDController(sPIDp, sPIDi, sPIDd);
 
-            if (HighLogic.LoadedSceneIsFlight && orbit != null)
+            if (HighLogic.LoadedSceneIsFlight && Orbit != null)
             {
-                lastBody = orbit.referenceBody;
+                lastBody = Orbit.referenceBody;
             }
 
 //			MechJebRouteRenderer.NewLineRenderer(ref line);
@@ -130,7 +130,7 @@ namespace MuMech
             try
             {
                 wheelbases.Clear();
-                wheelbases.AddRange(vessel.Parts.Where(
+                wheelbases.AddRange(Vessel.Parts.Where(
                     p => p.HasModule<ModuleWheelBase>()
                          && p.GetModule<ModuleWheelBase>().wheelType != WheelType.LEG
                 ).Select(p =>
@@ -138,7 +138,7 @@ namespace MuMech
                     PartModule pm = p.Modules.GetModule("ModuleWheelBase");
                     return (pm, pm.Fields["isGrounded"]);
                 }));
-                wheelbases.AddRange(vessel.Parts.Where(
+                wheelbases.AddRange(Vessel.Parts.Where(
                     p => p.Modules.Contains("KSPWheelBase") &&
                          p.Modules.Contains("KSPWheelRotation")
                 ).Select(p =>
@@ -164,7 +164,7 @@ namespace MuMech
 
         public double HeadingToPos(Vector3 fromPos, Vector3 toPos)
         {
-            Transform origin = mainBody.transform;
+            Transform origin = MainBody.transform;
 
             // thanks to Cilph who did most of this since I don't understand anything ~ BR2k
             Vector3 up = fromPos - origin.position; // position relative to origin, "up" vector
@@ -185,7 +185,7 @@ namespace MuMech
 
         public void CalculateTraction()
         {
-            if (wheelbases.Count == 0) { OnVesselModified(vessel); }
+            if (wheelbases.Count == 0) { OnVesselModified(Vessel); }
 
             traction = 0;
 
@@ -200,13 +200,13 @@ namespace MuMech
             traction /= wheelbases.Count;
         }
 
-        public override void OnModuleDisabled()
+        protected override void OnModuleDisabled()
         {
-            if (core.Attitude.users.Contains(this))
+            if (Core.Attitude.Users.Contains(this))
             {
 //				line.enabled = false;
-                core.Attitude.attitudeDeactivate();
-                core.Attitude.users.Remove(this);
+                Core.Attitude.attitudeDeactivate();
+                Core.Attitude.Users.Remove(this);
             }
 
             base.OnModuleDisabled();
@@ -219,7 +219,7 @@ namespace MuMech
             Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
         {
             // TODO make distance calculation for 'reached' determination consider the rover and waypoint on sealevel to prevent height differences from messing it up -- should be done now?
-            if (orbit.referenceBody != lastBody)
+            if (Orbit.referenceBody != lastBody)
             {
                 WaypointIndex = -1;
                 Waypoints.Clear();
@@ -227,17 +227,17 @@ namespace MuMech
 
             MechJebWaypoint wp = WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null;
 
-            bool brake = vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
-            curSpeed = Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
+            bool brake = Vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
+            curSpeed = Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
 
             CalculateTraction();
             speedIntAcc = speedPID.intAccum;
 
-            if (wp != null && wp.Body == orbit.referenceBody)
+            if (wp != null && wp.Body == Orbit.referenceBody)
             {
                 if (ControlHeading)
                 {
-                    double newHeading = Math.Round(HeadingToPos(vessel.CoM, wp.Position), 1);
+                    double newHeading = Math.Round(HeadingToPos(Vessel.CoM, wp.Position), 1);
 
                     // update GUI text only if the value changed
                     if (newHeading != heading)
@@ -247,7 +247,7 @@ namespace MuMech
                 if (ControlSpeed)
                 {
                     MechJebWaypoint nextWP = WaypointIndex < Waypoints.Count - 1 ? Waypoints[WaypointIndex + 1] : LoopWaypoints ? Waypoints[0] : null;
-                    float distance = Vector3.Distance(vessel.CoM, wp.Position);
+                    float distance = Vector3.Distance(Vessel.CoM, wp.Position);
                     if (wp.Target != null) { distance += (float)(wp.Target.srfSpeed * curSpeed) / 2; }
 
                     // var maxSpeed = (wp.MaxSpeed > 0 ? Math.Min((float)speed, wp.MaxSpeed) : speed); // use waypoints maxSpeed if set and smaller than set the speed or just stick with the set speed
@@ -318,7 +318,7 @@ namespace MuMech
                         }
                     }
 
-                    brake = brake || ((s.wheelThrottle == 0 || !vessel.isActiveVessel) && curSpeed < brakeSpeedLimit && newSpeed < brakeSpeedLimit);
+                    brake = brake || ((s.wheelThrottle == 0 || !Vessel.isActiveVessel) && curSpeed < brakeSpeedLimit && newSpeed < brakeSpeedLimit);
                     // ^ brake if needed to prevent rolling, hopefully
                     tgtSpeed = newSpeed >= 0 ? newSpeed : 0;
                 }
@@ -328,9 +328,9 @@ namespace MuMech
             {
                 headingPID.intAccum = Mathf.Clamp((float)headingPID.intAccum, -1, 1);
 
-                double instantaneousHeading = vesselState.rotationVesselSurface.eulerAngles.y;
+                double instantaneousHeading = VesselState.rotationVesselSurface.eulerAngles.y;
                 headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
-                if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != vessel)
+                if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != Vessel)
                 {
                     float limit = Math.Abs(curSpeed) > turnSpeed ? Mathf.Clamp((float)((turnSpeed + 6) / Square(curSpeed)), 0.1f, 1f) : 1f;
                     // turnSpeed needs to be higher than curSpeed or it will never steer as much as it could even at 0.2m/s above it
@@ -344,7 +344,7 @@ namespace MuMech
             }
 
             // Brake if there is no controler (Pilot eject from seat)
-            if (BrakeOnEject && vessel.GetReferenceTransformPart() == null)
+            if (BrakeOnEject && Vessel.GetReferenceTransformPart() == null)
             {
                 s.wheelThrottle = 0;
                 brake           = true;
@@ -353,8 +353,8 @@ namespace MuMech
             {
                 speedPID.intAccum = Mathf.Clamp((float)speedPID.intAccum, -5, 5);
 
-                speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(vesselState.surfaceVelocity, vesselState.forward);
-                if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != vessel)
+                speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
+                if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != Vessel)
                 {
                     float act = (float)speedPID.Compute(speedErr);
                     s.wheelThrottle = Mathf.Clamp(act, -1f, 1f);
@@ -374,44 +374,44 @@ namespace MuMech
             if (StabilityControl)
             {
                 RaycastHit hit;
-                Physics.Raycast(vessel.CoM + vesselState.surfaceVelocity * terrainLookAhead + vesselState.up * 100, -vesselState.up, out hit, 500,
+                Physics.Raycast(Vessel.CoM + VesselState.surfaceVelocity * terrainLookAhead + VesselState.up * 100, -VesselState.up, out hit, 500,
                     1 << 15, QueryTriggerInteraction.Ignore);
                 Vector3 norm = hit.normal;
 
-                if (!core.Attitude.users.Contains(this))
+                if (!Core.Attitude.Users.Contains(this))
                 {
-                    core.Attitude.users.Add(this);
+                    Core.Attitude.Users.Add(this);
                 }
 
                 float fSpeed = (float)curSpeed;
                 Vector3 fwd = traction > 0
                     ? // V when the speed is low go for the vessels forward, else with a bit of velocity
-                    vesselState.forward * 4 - vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed)
+                    VesselState.forward * 4 - Vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed)
                     :                            // and then add the steering
-                    vesselState.surfaceVelocity; // in the air so follow velocity
+                    VesselState.surfaceVelocity; // in the air so follow velocity
                 Vector3.OrthoNormalize(ref norm, ref fwd);
                 var quat = Quaternion.LookRotation(fwd, norm);
 
-                if (vesselState.torqueAvailable.sqrMagnitude > 0)
-                    core.Attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+                if (VesselState.torqueAvailable.sqrMagnitude > 0)
+                    Core.Attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
             }
 
             if (BrakeOnEnergyDepletion)
             {
-                List<Part> batteries = vessel.Parts.FindAll(p =>
+                List<Part> batteries = Vessel.Parts.FindAll(p =>
                     p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) &&
                     p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
                 double energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) /
                                     batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).maxAmount);
                 bool openSolars =
-                    vessel.mainBody.atmosphere && // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
-                    vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p =>
+                    Vessel.mainBody.atmosphere && // true if in atmosphere and there are breakable solarpanels that aren't broken nor retracted
+                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p =>
                         p.isBreakable && p.deployState != ModuleDeployablePart.DeployState.BROKEN &&
                         p.deployState != ModuleDeployablePart.DeployState.RETRACTED).Count > 0;
 
                 if (openSolars && energyLeft > 0.99)
                 {
-                    vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
+                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>().FindAll(p => p.isBreakable &&
                                                                                                   p.deployState == ModuleDeployablePart.DeployState
                                                                                                       .EXTENDED).ForEach(p => p.Retract());
                 }
@@ -429,7 +429,7 @@ namespace MuMech
                 }
 
                 if (curSpeed < 0.1 && energyLeft < 0.05 && !waitingForDaylight &&
-                    vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
+                    Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
                         .FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count > 0)
                 {
                     waitingForDaylight = true;
@@ -441,7 +441,7 @@ namespace MuMech
                 brake = false; // the AP or user want to drive into the direction of momentum so release the brake
             }
 
-            if (vessel.isActiveVessel)
+            if (Vessel.isActiveVessel)
             {
                 if (GameSettings.BRAKES.GetKeyUp())
                 {
@@ -455,7 +455,7 @@ namespace MuMech
             }
 
             tractionLimit = (double)Mathf.Clamp((float)tractionLimit, 0, 100);
-            vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes,
+            Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes,
                 brake && (StabilityControl && (ControlHeading || ControlSpeed) ? traction >= tractionLimit : true));
             // only let go of the brake when losing traction if the AP is driving, otherwise assume the player knows when to let go of it
             // also to not constantly turn off the parking brake from going over a small bump
@@ -464,12 +464,12 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (!core.GetComputerModule<MechJebModuleWaypointWindow>().enabled)
+            if (!Core.GetComputerModule<MechJebModuleWaypointWindow>().Enabled)
             {
                 Waypoints.ForEach(wp => wp.Update()); // update waypoints unless the waypoint window is (hopefully) doing that already
             }
 
-            if (orbit != null && lastBody != orbit.referenceBody) { lastBody = orbit.referenceBody; }
+            if (Orbit != null && lastBody != Orbit.referenceBody) { lastBody = Orbit.referenceBody; }
 
             headingPID.Kp = hPIDp;
             headingPID.Ki = hPIDi;
@@ -484,18 +484,18 @@ namespace MuMech
                 lastETA        = DateTime.Now.TimeOfDay.TotalSeconds;
             }
 
-            if (!core.GetComputerModule<MechJebModuleRoverWindow>().enabled)
+            if (!Core.GetComputerModule<MechJebModuleRoverWindow>().Enabled)
             {
-                core.GetComputerModule<MechJebModuleRoverWindow>()
+                Core.GetComputerModule<MechJebModuleRoverWindow>()
                     .OnUpdate(); // update users for Stability Control, Brake on Eject and Brake on Energy Depletion
             }
         }
 
         public override void OnUpdate()
         {
-            if (WarpToDaylight && waitingForDaylight && vessel.isActiveVessel)
+            if (WarpToDaylight && waitingForDaylight && Vessel.isActiveVessel)
             {
-                List<Part> batteries = vessel.Parts.FindAll(p =>
+                List<Part> batteries = Vessel.Parts.FindAll(p =>
                     p.Resources.Contains(PartResourceLibrary.ElectricityHashcode) &&
                     p.Resources.Get(PartResourceLibrary.ElectricityHashcode).flowState);
                 double energyLeft = batteries.Sum(p => p.Resources.Get(PartResourceLibrary.ElectricityHashcode).amount) /
@@ -503,17 +503,17 @@ namespace MuMech
 
                 if (waitingForDaylight)
                 {
-                    if (vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
+                    if (Vessel.FindPartModulesImplementing<ModuleDeployableSolarPanel>()
                             .FindAll(p => p.deployState == ModuleDeployablePart.DeployState.EXTENDED).Count == 0)
                     {
                         waitingForDaylight = false;
                     }
 
-                    core.Warp.WarpRegularAtRate(energyLeft < 0.9 ? 1000 : 50);
+                    Core.Warp.WarpRegularAtRate(energyLeft < 0.9 ? 1000 : 50);
                     if (energyLeft > 0.99)
                     {
                         waitingForDaylight = false;
-                        core.Warp.MinimumWarp();
+                        Core.Warp.MinimumWarp();
                     }
                 }
             }
@@ -522,16 +522,16 @@ namespace MuMech
                 waitingForDaylight = false;
             }
 
-            if (!core.GetComputerModule<MechJebModuleRoverWindow>().enabled)
+            if (!Core.GetComputerModule<MechJebModuleRoverWindow>().Enabled)
             {
-                core.GetComputerModule<MechJebModuleRoverWindow>()
+                Core.GetComputerModule<MechJebModuleRoverWindow>()
                     .OnUpdate(); // update users for Stability Control, Brake on Eject and Brake on Energy Depletion
             }
 
-            if (!StabilityControl && core.Attitude.users.Contains(this))
+            if (!StabilityControl && Core.Attitude.Users.Contains(this))
             {
-                core.Attitude.attitudeDeactivate();
-                core.Attitude.users.Remove(this);
+                Core.Attitude.attitudeDeactivate();
+                Core.Attitude.Users.Remove(this);
             }
         }
 

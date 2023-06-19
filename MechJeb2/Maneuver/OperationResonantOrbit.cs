@@ -11,11 +11,11 @@ namespace MuMech
         public override string GetName() { return Localizer.Format("#MechJeb_resonant_title"); } //resonant orbit
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt ResonanceNumerator = 2;
 
         [UsedImplicitly]
-        [Persistent(pass = (int)Pass.Global)]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt ResonanceDenominator = 3;
 
         private readonly TimeSelector _timeSelector;
