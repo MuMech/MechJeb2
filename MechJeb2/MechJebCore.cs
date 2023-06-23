@@ -292,7 +292,7 @@ namespace MuMech
                 return;
 
             if (autopilot.Enabled)
-                autopilot.aUsers.Remove(ascentMenu);
+                autopilot.Users.Remove(ascentMenu);
             else
                 autopilot.Users.Add(ascentMenu);
         }
