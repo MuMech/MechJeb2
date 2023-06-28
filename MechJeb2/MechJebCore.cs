@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using KSP.Localization;
+using MechJebLib.Simulations;
 using UnityEngine;
 using UnityEngine.Profiling;
 using UnityToolbag;
@@ -551,6 +552,8 @@ namespace MuMech
         public override void OnAwake()
         {
             FuelFlowSimulation.FuelNode.DoReflection();
+            Builder.Bootstrap();
+
             CachedLocalizer.Bootstrap();
 
             Dispatcher.CreateDispatcher();

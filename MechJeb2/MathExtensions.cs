@@ -177,6 +177,16 @@ namespace MuMech
             return Planetarium.fetch.rotation * vector.ToVector3d().xzy;
         }
 
+        public static void LoadH1(this H1 h, FloatCurve f)
+        {
+            h.Clear();
+
+            if (f == null) return;
+
+            foreach (Keyframe frame in f.Curve.keys)
+                h.Add(frame.time, frame.value, frame.inTangent, frame.outTangent);
+        }
+
         public static Q3 ToQ3(this QuaternionD q)
         {
             return new Q3(q.z, q.y, q.x, -q.w);
