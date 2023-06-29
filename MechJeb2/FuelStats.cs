@@ -15,7 +15,6 @@ namespace MuMech
             public double DeltaTime;
             public double DeltaV;
             public double SpoolUpTime;
-
             public double ResourceMass;
             public double Isp;
             public double StagedMass;

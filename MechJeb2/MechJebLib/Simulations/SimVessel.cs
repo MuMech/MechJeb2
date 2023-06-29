@@ -24,6 +24,9 @@ namespace MechJebLib.Simulations
         public double MainThrottle = 1.0;
         public double Mass;
         public V3     ThrustCurrent;
+        public double ThrustMagnitude;
+        public double ThrustNoCosLoss;
+        public double SpoolupCurrent;
         public double ATMPressure;
         public double ATMDensity;
         public double MachNumber;
@@ -89,21 +92,29 @@ namespace MechJebLib.Simulations
 
             Log($"found {ActiveEngines.Count} active engines");
 
-            ComputeThrust();
+            ComputeThrustAndSpoolup();
         }
 
-        private void ComputeThrust()
+        private void ComputeThrustAndSpoolup()
         {
-            ThrustCurrent = V3.zero;
+            ThrustCurrent   = V3.zero;
+            ThrustMagnitude = 0;
+            ThrustNoCosLoss = 0;
 
             for (int i = 0; i < ActiveEngines.Count; i++)
             {
                 SimModuleEngines e = ActiveEngines[i];
                 if (!e.IsOperational) continue;
 
+                SpoolupCurrent += e.ThrustCurrent.magnitude * e.ModuleSpoolupTime;
+
                 e.Update();
-                ThrustCurrent += e.ThrustCurrent;
+                ThrustCurrent   += e.ThrustCurrent;
+                ThrustNoCosLoss += e.ThrustCurrent.magnitude;
             }
+
+            ThrustMagnitude =  ThrustCurrent.magnitude;
+            SpoolupCurrent  /= ThrustCurrent.magnitude;
         }
 
         public double ResourceMaxTime()

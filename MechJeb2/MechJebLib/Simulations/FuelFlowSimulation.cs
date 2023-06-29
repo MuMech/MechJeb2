@@ -8,17 +8,13 @@ using static MechJebLib.Utils.Statics;
 namespace MechJebLib.Simulations
 {
     // TODO:
-    //   - residuals
-    //   - spoolup time
-    //   - the NO_FLOW ablator fix
-    //   - the srb residual fuel issue
-    //   - isSepratron check in AllowedToStage()
-    //   - crew mass
-    //   - cosLoss
-    //   - "free" resources like air intake
     //   - git rid of the annoying extra stage
-    //   - use objectpooling
-    //   - use vessel modification callbacks
+    //   - isn't running in the VAB
+    //
+    //   - actually use the objectpooling
+    //   - use vessel modification callbacks and write thin Refresh() API
+    //   - add threading
+    //   - make it compatible with the old simulation and wire it up to a button in the UI
     public class FuelFlowSimulation
     {
         private const int MAXSTEPS = 100;
@@ -59,7 +55,7 @@ namespace MechJebLib.Simulations
             UpdateActiveEngines();
             UpdateResourceDrainsAndResiduals();
             GetNextSegment();
-            double currentThrust = _vessel.ThrustCurrent.magnitude;
+            double currentThrust = _vessel.ThrustMagnitude;
 
             Log("starting stage");
 
@@ -73,11 +69,11 @@ namespace MechJebLib.Simulations
 
                 double dt = MinimumTimeStep();
 
-                if (Math.Abs(_vessel.ThrustCurrent.magnitude - currentThrust) / currentThrust > 1e-4 && dt > 0.1)
+                if (Math.Abs(_vessel.ThrustMagnitude - currentThrust) > 1e-12)
                 {
                     FinishSegment();
                     GetNextSegment();
-                    currentThrust = _vessel.ThrustCurrent.magnitude;
+                    currentThrust = _vessel.ThrustMagnitude;
                 }
 
                 _time += dt;
@@ -167,7 +163,8 @@ namespace MechJebLib.Simulations
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount < p.ResourceRequestRemainingThreshold) continue;
+                if (resource.Amount <= p.Resources[resourceId].ResidualThreshold)
+                    continue;
 
                 if (usePriority)
                 {
@@ -219,6 +216,7 @@ namespace MechJebLib.Simulations
 
             _currentSegment.DeltaTime = _time - _currentSegment.StartTime;
             _currentSegment.EndMass   = _vessel.Mass;
+            _currentSegment.EndThrust = _vessel.ThrustMagnitude; // FIXME: compat for old code, can probably remove
 
             _currentSegment.ComputeStats();
 
@@ -233,7 +231,12 @@ namespace MechJebLib.Simulations
 
             _currentSegment = new FuelStats
             {
-                KSPStage = _vessel.CurrentStage, Thrust = _vessel.ThrustCurrent.magnitude, StartTime = _time, StartMass = _vessel.Mass
+                KSPStage    = _vessel.CurrentStage,
+                Thrust      = _vessel.ThrustMagnitude,
+                ThrustNoCosLoss = _vessel.ThrustNoCosLoss,
+                StartTime   = _time,
+                StartMass   = _vessel.Mass,
+                SpoolUpTime = _vessel.SpoolupCurrent
             };
         }
 
@@ -241,20 +244,30 @@ namespace MechJebLib.Simulations
         private bool AllowedToStage()
         {
             // always stage if all the engines are burned out
-            if (_vessel.ActiveEngines.Count == 0) return true;
+            if (_vessel.ActiveEngines.Count == 0)
+            {
+                Log("staging because engines are burned out");
+                return true;
+            }
 
             for (int i = 0; i < _vessel.ActiveEngines.Count; i++)
             {
                 SimModuleEngines e = _vessel.ActiveEngines[i];
 
+                if (e.Part.IsSepratron)
+                    continue;
+
                 // never stage an active engine
                 if (e.Part.DecoupledInStage >= _vessel.CurrentStage - 1)
                 {
+                    Log("not staging because of active engines");
                     return false;
                 }
 
+                // never drop fuel that could be used
                 if (e.WouldDropAccessibleFuelTank(_vessel.CurrentStage - 1))
                 {
+                    Log("not staging because would drop fuel tank");
                     return false;
                 }
             }

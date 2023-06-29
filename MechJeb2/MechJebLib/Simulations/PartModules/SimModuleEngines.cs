@@ -57,6 +57,7 @@ namespace MechJebLib.Simulations.PartModules
         public bool   UseVelCurveIsp;
         public double ModuleResiduals;
         public double ModuleSpoolupTime;
+        public bool   NoPropellants;
 
         public readonly H1 ThrustCurve                 = H1.Get();
         public readonly H1 ThrottleIspCurve            = H1.Get();
@@ -91,24 +92,40 @@ namespace MechJebLib.Simulations.PartModules
 
         private bool CanDrawResources()
         {
+            if (NoPropellants)
+            {
+                Log("  no propellants");
+                return false;
+            }
+
             foreach (int resourceId in ResourceConsumptions.Keys)
                 switch (PropellantFlowModes[resourceId])
                 {
                     case SimFlowMode.NO_FLOW:
                         if (!PartHasResource(Part, resourceId))
+                        {
+                            Log($"  cannot draw resources NO_FLOW on {resourceId} ");
                             return false;
+                        }
                         break;
                     case SimFlowMode.ALL_VESSEL:
                     case SimFlowMode.ALL_VESSEL_BALANCE:
                     case SimFlowMode.STAGE_PRIORITY_FLOW:
                     case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
                         if (!PartsHaveResource(Part.Vessel.Parts, resourceId))
+                        {
+                            Log($"  cannot draw resources ALL_VESSEL on {resourceId} ");
                             return false;
+                        }
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
                     case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case SimFlowMode.STACK_PRIORITY_SEARCH:
-                        if (!PartsHaveResource(Part.CrossFeedPartSet, resourceId)) return false;
+                        if (!PartsHaveResource(Part.CrossFeedPartSet, resourceId))
+                        {
+                            Log($"  cannot draw resources STACK_FLOW on {resourceId} ");
+                            return false;
+                        }
                         break;
                     case SimFlowMode.NULL:
                         return false;
@@ -123,7 +140,7 @@ namespace MechJebLib.Simulations.PartModules
         {
             SimResource? resource = part.GetResource(resourceId);
             if (resource != null && resource.Amount > part.ResidualThreshold(resourceId))
-                Log($"amount: {resource.Amount} threshold: {part.ResidualThreshold(resourceId)}");
+                Log($"  id: {resource.Id} amount: {resource.Amount} threshold: {part.ResidualThreshold(resourceId)}");
             return resource != null && resource.Amount > part.ResidualThreshold(resourceId);
         }
 
@@ -190,20 +207,29 @@ namespace MechJebLib.Simulations.PartModules
                 {
                     case SimFlowMode.NO_FLOW:
                         if (DrawingFuelFromPartDroppedInStage(Part, resourceId, stageNum))
+                        {
+                            Log("NO_FLOW returning true");
                             return true;
+                        }
                         break;
                     case SimFlowMode.ALL_VESSEL:
                     case SimFlowMode.ALL_VESSEL_BALANCE:
                     case SimFlowMode.STAGE_PRIORITY_FLOW:
                     case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
                         if (DrawingFuelFromPartsDroppedInStage(Part.Vessel.Parts, resourceId, stageNum))
+                        {
+                            Log("ALL_VESSEL returning true");
                             return true;
+                        }
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
                     case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case SimFlowMode.STACK_PRIORITY_SEARCH:
                         if (DrawingFuelFromPartsDroppedInStage(Part.CrossFeedPartSet, resourceId, stageNum))
+                        {
+                            Log("STACK_FLOW returning true");
                             return true;
+                        }
                         break;
                 }
 

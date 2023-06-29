@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using KSP.UI;
 using KSP.UI.Screens;
 using MechJebLib.Simulations.PartModules;
 using MuMech;
@@ -13,6 +14,45 @@ namespace MechJebLib.Simulations
     public class Builder
     {
         private readonly Dictionary<Part, SimPart> _partMapping = new Dictionary<Part, SimPart>();
+
+        private delegate double CrewMass(ProtoCrewMember crew);
+
+        private static readonly CrewMass _crewMassDelegate;
+
+        static Builder()
+        {
+            if (Versioning.version_major == 1 && Versioning.version_minor < 11)
+                _crewMassDelegate = CrewMassOld;
+            else
+                _crewMassDelegate = CrewMassNew;
+
+            if (!ReflectionUtils.isAssemblyLoaded("RealFuels")) return;
+
+            _rfPredictedMaximumResiduals =
+                ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
+            if (_rfPredictedMaximumResiduals == null)
+            {
+                Debug.Log(
+                    "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
+            }
+
+            _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
+            if (_rfSpoolUpTime == null)
+            {
+                Debug.Log(
+                    "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
+            }
+        }
+
+        private static double CrewMassOld(ProtoCrewMember crew)
+        {
+            return PhysicsGlobals.KerbalCrewMass;
+        }
+
+        private static double CrewMassNew(ProtoCrewMember crew)
+        {
+            return PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
+        }
 
         public SimVessel Build(IShipconstruct kspVessel)
         {
@@ -100,11 +140,42 @@ namespace MechJebLib.Simulations
             part.StagingOn                         = kspPart.stagingOn;
             part.EngineResiduals                   = 0;
 
+            HandleCrewMass(part, kspPart);
+
             BuildModules(vessel, part, kspPart);
 
             BuildResources(part, kspPart);
 
             return part;
+        }
+
+        private void HandleCrewMass(SimPart part, Part kspPart)
+        {
+            part.CrewMass = 0;
+
+            if (HighLogic.LoadedSceneIsFlight && kspPart.protoModuleCrew != null)
+                for (int i = 0; i < kspPart.protoModuleCrew.Count; i++)
+                {
+                    ProtoCrewMember crewMember = kspPart.protoModuleCrew[i];
+                    part.CrewMass += _crewMassDelegate(crewMember);
+                }
+            else if (HighLogic.LoadedSceneIsEditor)
+                if (!(CrewAssignmentDialog.Instance is null) && CrewAssignmentDialog.Instance.CurrentManifestUnsafe != null)
+                {
+                    PartCrewManifest partCrewManifest = CrewAssignmentDialog.Instance.CurrentManifestUnsafe.GetPartCrewManifest(kspPart.craftID);
+                    if (partCrewManifest != null)
+                    {
+                        ProtoCrewMember?[]? partCrew = null;
+                        partCrewManifest.GetPartCrew(ref partCrew);
+
+                        for (int i = 0; i < partCrew.Length; i++)
+                        {
+                            ProtoCrewMember? crewMember = partCrew[i];
+                            if (crewMember == null) continue;
+                            part.CrewMass += _crewMassDelegate(crewMember);
+                        }
+                    }
+                }
         }
 
         private void BuildResources(SimPart part, Part kspPart)
@@ -115,7 +186,7 @@ namespace MechJebLib.Simulations
 
                 if (!kspResource.flowState)
                 {
-                    // disabled resources are dead weight
+                    // disabled resources are dead weight and cannot be enabled by staging
                     part.DryMass += kspResource.amount + kspResource.info.density;
                     continue;
                 }
@@ -126,7 +197,6 @@ namespace MechJebLib.Simulations
                     MaxAmount   = kspResource.maxAmount,
                     Id          = kspResource.info.id,
                     Free        = kspResource.info.density == 0,
-                    Electricity = kspResource.info.id == PartResourceLibrary.ElectricityHashcode,
                     Density     = kspResource.info.density,
                     Residual = 0,
                 };
@@ -154,6 +224,7 @@ namespace MechJebLib.Simulations
                 ModuleAnchoredDecoupler kspAnchoredDecoupler => BuildModuleAnchoredDecoupler(part, kspAnchoredDecoupler),
                 ModuleDecouple kspModuleDecouple             => BuildModuleDecouple(part, kspModuleDecouple),
                 ModuleDockingNode kspModuleDockingNode       => BuildDockingNode(part, kspModuleDockingNode),
+                ModuleRCS kspModuleRCS => BuildModuleRCS(part, kspModuleRCS),
                 _                                            => null
             };
 
@@ -167,6 +238,7 @@ namespace MechJebLib.Simulations
                 _                            => null
             };
         }
+
 
         private SimPartModule BuildDockingNode(SimPart part, ModuleDockingNode kspModuleDockingNode)
         {
@@ -277,6 +349,8 @@ namespace MechJebLib.Simulations
             engine.ATMCurveIsp.LoadH1(kspEngine.atmCurveIsp);
             engine.AtmosphereCurve.LoadH1(kspEngine.atmosphereCurve);
 
+            engine.NoPropellants = kspEngine.flameout && kspEngine.statusL2 == "No propellants";
+
             foreach (double multiplier in kspEngine.thrustTransformMultipliers)
                 engine.ThrustTransformMultipliers.Add(multiplier);
 
@@ -327,6 +401,20 @@ namespace MechJebLib.Simulations
             return engine;
         }
 
+        private SimPartModule BuildModuleRCS(SimPart part, ModuleRCS kspModuleRCS)
+        {
+            var rcs = SimModuleRCS.Borrow(part);
+            rcs.Isp    = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
+            rcs.G      = kspModuleRCS.G;
+            rcs.Thrust = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
+
+            foreach (Propellant p in kspModuleRCS.propellants)
+                rcs.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
+                    PartResourceLibrary.Instance.GetDefinition(p.id).density));
+
+            return rcs;
+        }
+
         private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part, PartModule kspPartModule)
         {
             var decoupler = SimProceduralFairingDecoupler.Borrow(part);
@@ -346,27 +434,7 @@ namespace MechJebLib.Simulations
             return mass;
         }
 
-        private static FieldInfo? _rfPredictedMaximumResiduals;
-        private static FieldInfo? _rfSpoolUpTime;
-
-        public static void Bootstrap()
-        {
-            if (!ReflectionUtils.isAssemblyLoaded("RealFuels")) return;
-
-            _rfPredictedMaximumResiduals =
-                ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
-            if (_rfPredictedMaximumResiduals == null)
-            {
-                Debug.Log(
-                    "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
-            }
-
-            _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
-            if (_rfSpoolUpTime == null)
-            {
-                Debug.Log(
-                    "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
-            }
-        }
+        private static readonly FieldInfo? _rfPredictedMaximumResiduals;
+        private static readonly FieldInfo? _rfSpoolUpTime;
     }
 }

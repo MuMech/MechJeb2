@@ -4,7 +4,6 @@ namespace MechJebLib.Simulations
 {
     public class SimResource
     {
-        public bool   Electricity;
         public bool   Free;
         public double MaxAmount;
         public double Amount;
