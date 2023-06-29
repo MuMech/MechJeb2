@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations.PartModules
 {
@@ -15,6 +16,7 @@ namespace MechJebLib.Simulations.PartModules
         public double G;
         public double Isp;
         public double Thrust;
+        public bool   rcsEnabled;
 
         public override void Dispose()
         {
@@ -31,6 +33,14 @@ namespace MechJebLib.Simulations.PartModules
         private static SimModuleRCS New()
         {
             return new SimModuleRCS();
+        }
+
+        public void Activate()
+        {
+            if (StagingEnabled && ModuleIsEnabled)
+            {
+                rcsEnabled = true;
+            }
         }
 
         private static void Clear(SimModuleRCS m)

@@ -27,6 +27,7 @@ namespace MechJebLib.Simulations
         public bool      IsThrottleLocked;
         public int       ResourcePriority;
         public double    ResourceRequestRemainingThreshold;
+        public bool      IsEnabled;
 
         public double Mass;
         public double DryMass;

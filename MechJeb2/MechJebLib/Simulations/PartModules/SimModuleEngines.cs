@@ -73,7 +73,7 @@ namespace MechJebLib.Simulations.PartModules
         private double _atmDensity  => Part.Vessel.ATMDensity;
         private double _machNumber  => Part.Vessel.MachNumber;
 
-        public void Ignite()
+        public void Activate()
         {
             Log("igniting engine");
             IsOperational    = true;

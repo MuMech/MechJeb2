@@ -224,26 +224,27 @@ namespace MechJebLib.Simulations
                 ModuleAnchoredDecoupler kspAnchoredDecoupler => BuildModuleAnchoredDecoupler(part, kspAnchoredDecoupler),
                 ModuleDecouple kspModuleDecouple             => BuildModuleDecouple(part, kspModuleDecouple),
                 ModuleDockingNode kspModuleDockingNode       => BuildDockingNode(part, kspModuleDockingNode),
-                ModuleRCS kspModuleRCS => BuildModuleRCS(part, kspModuleRCS),
+                ModuleRCS kspModuleRCS                       => BuildModuleRCS(vessel, part, kspModuleRCS),
                 _                                            => null
-            };
-
-
-            if (m != null)
-                return m;
-
-            return kspModule.moduleName switch
+            } ?? kspModule.moduleName switch
             {
                 "ProceduralFairingDecoupler" => BuildProceduralFairingDecoupler(part, kspModule),
                 _                            => null
             };
+
+            if (m == null)
+                return null;
+
+            m.ModuleIsEnabled = kspModule.moduleIsEnabled;
+            m.StagingEnabled = kspModule.stagingEnabled;
+
+            return m;
         }
 
 
         private SimPartModule BuildDockingNode(SimPart part, ModuleDockingNode kspModuleDockingNode)
         {
             var decoupler = SimModuleDockingNode.Borrow(part);
-            decoupler.StagingEnabled = kspModuleDockingNode.stagingEnabled;
             decoupler.Staged         = kspModuleDockingNode.staged;
 
             if (!(kspModuleDockingNode.referenceNode.attachedPart is null))
@@ -255,7 +256,6 @@ namespace MechJebLib.Simulations
         {
             var decoupler = SimModuleDecouple.Borrow(part);
             decoupler.IsDecoupled     = kspModuleDecouple.isDecoupled;
-            decoupler.StagingEnabled  = kspModuleDecouple.stagingEnabled;
             decoupler.IsOmniDecoupler = kspModuleDecouple.isOmniDecoupler;
             decoupler.Staged          = kspModuleDecouple.staged;
 
@@ -283,7 +283,6 @@ namespace MechJebLib.Simulations
         {
             var decoupler = SimModuleAnchoredDecoupler.Borrow(part);
             decoupler.IsDecoupled    = kspAnchoredDecoupler.isDecoupled;
-            decoupler.StagingEnabled = kspAnchoredDecoupler.stagingEnabled;
             decoupler.Staged         = kspAnchoredDecoupler.staged;
 
             Part kspPart = kspAnchoredDecoupler.part;
@@ -401,16 +400,19 @@ namespace MechJebLib.Simulations
             return engine;
         }
 
-        private SimPartModule BuildModuleRCS(SimPart part, ModuleRCS kspModuleRCS)
+        private SimPartModule BuildModuleRCS(SimVessel vessel, SimPart part, ModuleRCS kspModuleRCS)
         {
             var rcs = SimModuleRCS.Borrow(part);
-            rcs.Isp    = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
-            rcs.G      = kspModuleRCS.G;
-            rcs.Thrust = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
+            rcs.Isp        = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
+            rcs.G          = kspModuleRCS.G;
+            rcs.Thrust     = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
+            rcs.rcsEnabled = kspModuleRCS.rcsEnabled;
 
             foreach (Propellant p in kspModuleRCS.propellants)
                 rcs.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
                     PartResourceLibrary.Instance.GetDefinition(p.id).density));
+
+            vessel.RCSActivatedInStage[kspModuleRCS.part.inverseStage].Add(rcs);
 
             return rcs;
         }
@@ -418,7 +420,6 @@ namespace MechJebLib.Simulations
         private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part, PartModule kspPartModule)
         {
             var decoupler = SimProceduralFairingDecoupler.Borrow(part);
-            decoupler.StagingEnabled = kspPartModule.stagingEnabled;
             decoupler.IsDecoupled    = kspPartModule.Fields["decoupled"].GetValue<bool>(kspPartModule);
             return decoupler;
         }

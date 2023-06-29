@@ -8,6 +8,8 @@ namespace MechJebLib.Simulations
     {
         public bool    IsEnabled;
         public SimPart Part = null!;
+        public bool    ModuleIsEnabled;
+        public bool    StagingEnabled;
 
         public abstract void Dispose();
     }

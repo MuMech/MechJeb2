@@ -9,7 +9,6 @@ namespace MechJebLib.Simulations.PartModules
         private static readonly ObjectPool<SimProceduralFairingDecoupler> _pool = new ObjectPool<SimProceduralFairingDecoupler>(New, Clear);
 
         public bool IsDecoupled;
-        public bool StagingEnabled;
 
         public override void Dispose()
         {

@@ -8,7 +8,6 @@ namespace MechJebLib.Simulations.PartModules
     {
         private static readonly ObjectPool<SimModuleDockingNode> _pool = new ObjectPool<SimModuleDockingNode>(New, Clear);
 
-        public bool     StagingEnabled;
         public bool     Staged;
         public SimPart? AttachedPart;
 

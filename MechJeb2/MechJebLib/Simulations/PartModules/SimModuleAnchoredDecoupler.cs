@@ -9,7 +9,6 @@ namespace MechJebLib.Simulations.PartModules
         private static readonly ObjectPool<SimModuleAnchoredDecoupler> _pool = new ObjectPool<SimModuleAnchoredDecoupler>(New, Clear);
 
         public bool     IsDecoupled;
-        public bool     StagingEnabled;
         public bool     Staged;
         public SimPart? AttachedPart;
 

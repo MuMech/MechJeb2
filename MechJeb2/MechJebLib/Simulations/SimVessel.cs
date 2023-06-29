@@ -18,6 +18,7 @@ namespace MechJebLib.Simulations
         public readonly DictOfLists<int, SimPart>          PartsDroppedInStage     = new DictOfLists<int, SimPart>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesDroppedInStage   = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesActivatedInStage = new DictOfLists<int, SimModuleEngines>(10);
+        public readonly DictOfLists<int, SimModuleRCS> RCSActivatedInStage     = new DictOfLists<int, SimModuleRCS>(10);
         public readonly List<SimModuleEngines>             ActiveEngines           = new List<SimModuleEngines>(10);
 
         public int    CurrentStage; // FIXME: restorable
@@ -62,7 +63,11 @@ namespace MechJebLib.Simulations
 
             foreach (SimModuleEngines e in EnginesActivatedInStage[CurrentStage])
                 if (e.IsEnabled)
-                    e.Ignite();
+                    e.Activate();
+
+            foreach (SimModuleRCS r in RCSActivatedInStage[CurrentStage])
+                if (r.IsEnabled)
+                    r.Activate();
 
             UpdateMass();
         }
@@ -149,6 +154,7 @@ namespace MechJebLib.Simulations
             v.Parts.Clear();
             v.PartsDroppedInStage.Clear();
             v.EnginesActivatedInStage.Clear();
+            v.RCSActivatedInStage.Clear();
             v.ActiveEngines.Clear();
         }
 
