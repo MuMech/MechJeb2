@@ -622,7 +622,7 @@ namespace MuMech
 
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
-                MechJebModuleFlightRecorder.record rec = recorder.history[t];
+                MechJebModuleFlightRecorder.RecordStruct rec = recorder.history[t];
                 p2.x = xBase + (float)((downRange ? rec.downRange : rec.timeSinceMark) * invScaleX);
                 p2.y = yBase - (float)(rec[type] * invScaleY);
 
@@ -651,7 +651,7 @@ namespace MuMech
             int t = 1;
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
-                MechJebModuleFlightRecorder.record rec = recorder.history[t];
+                MechJebModuleFlightRecorder.RecordStruct rec = recorder.history[t];
                 if (rec.currentStage != lastStage)
                 {
                     lastStage = rec.currentStage;

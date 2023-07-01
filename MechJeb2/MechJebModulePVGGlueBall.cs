@@ -72,12 +72,6 @@ namespace MuMech
             _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
         }
 
-        private bool VesselOffGround()
-        {
-            return Vessel.situation != Vessel.Situations.LANDED && Vessel.situation != Vessel.Situations.PRELAUNCH &&
-                   Vessel.situation != Vessel.Situations.SPLASHED;
-        }
-
         private bool IsUnguided(int s)
         {
             return _ascentSettings.UnguidedStages.Contains(s);
@@ -153,7 +147,7 @@ namespace MuMech
                     attR = apR;
             }
 
-            if (VesselOffGround())
+            if (Vessel.VesselOffGround())
             {
                 bool hasGuided = false;
 

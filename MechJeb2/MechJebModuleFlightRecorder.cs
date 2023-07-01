@@ -10,7 +10,7 @@ namespace MuMech
     public class MechJebModuleFlightRecorder : ComputerModule
     {
         // TODO : this is already nearly an array so use a list and allow to add any generic ValueInfoItem
-        public struct record
+        public struct RecordStruct
         {
             public double timeSinceMark;
             public int    currentStage;
@@ -102,7 +102,7 @@ namespace MuMech
             DeltaVExpended
         }
 
-        public record[] history = new record[1];
+        public RecordStruct[] history = new RecordStruct[1];
 
         public int historyIdx = -1;
 
@@ -237,7 +237,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             if (history.Length != historySize)
-                history = new record[historySize];
+                history = new RecordStruct[historySize];
             Users.Add(this); //flight recorder should always run.
         }
 
@@ -347,8 +347,8 @@ namespace MuMech
 
                 for (int idx = 0; idx <= historyIdx; idx++)
                 {
-                    record r = history[idx];
-                    writer.Write(r[0]);
+                    RecordStruct r = history[idx];
+                    writer.Write(r[(recordType)0]);
                     for (int i = 1; i < typeCount; i++)
                     {
                         writer.Write(',');
