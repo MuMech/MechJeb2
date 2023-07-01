@@ -22,7 +22,7 @@ namespace MechJebLib.Utils
 
         public bool IsRunning()
         {
-            return _task is not { IsCompleted: true };
+            return !(_task is { IsCompleted: true });
         }
 
         protected virtual void OnTaskCompleted(Task<T> task)
