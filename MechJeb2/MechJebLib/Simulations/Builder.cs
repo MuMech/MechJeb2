@@ -21,10 +21,7 @@ namespace MechJebLib.Simulations
 
         static Builder()
         {
-            if (Versioning.version_major == 1 && Versioning.version_minor < 11)
-                _crewMassDelegate = CrewMassOld;
-            else
-                _crewMassDelegate = CrewMassNew;
+            _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
 
             if (!ReflectionUtils.isAssemblyLoaded("RealFuels")) return;
 
@@ -193,12 +190,12 @@ namespace MechJebLib.Simulations
 
                 var resource = new SimResource
                 {
-                    Amount      = kspResource.amount,
-                    MaxAmount   = kspResource.maxAmount,
-                    Id          = kspResource.info.id,
-                    Free        = kspResource.info.density == 0,
-                    Density     = kspResource.info.density,
-                    Residual = 0,
+                    Amount    = kspResource.amount,
+                    MaxAmount = kspResource.maxAmount,
+                    Id        = kspResource.info.id,
+                    Free      = kspResource.info.density == 0,
+                    Density   = kspResource.info.density,
+                    Residual  = 0
                 };
 
                 part.Resources[resource.Id] = resource;
@@ -209,15 +206,15 @@ namespace MechJebLib.Simulations
         {
             foreach (PartModule kspModule in kspPart.Modules)
             {
-                SimPartModule? m = BuildModule(vessel, part, kspModule);
-                if (m != null)
-                    part.Modules.Add(m);
+                if (TryBuildModule(vessel, part, kspModule, out SimPartModule? m))
+                    part.Modules.Add(m!);
             }
         }
 
-        private SimPartModule? BuildModule(SimVessel vessel, SimPart part, PartModule kspModule)
+        // FIXME: needs [NotNullWhen(returnValue: true)]
+        private bool TryBuildModule(SimVessel vessel, SimPart part, PartModule kspModule, out SimPartModule? m)
         {
-            SimPartModule? m = kspModule switch
+            m = kspModule switch
             {
                 ModuleEngines kspEngine                      => BuildModuleEngines(vessel, part, kspEngine),
                 LaunchClamp _                                => BuildLaunchClamp(part),
@@ -233,19 +230,18 @@ namespace MechJebLib.Simulations
             };
 
             if (m == null)
-                return null;
+                return false;
 
             m.ModuleIsEnabled = kspModule.moduleIsEnabled;
-            m.StagingEnabled = kspModule.stagingEnabled;
+            m.StagingEnabled  = kspModule.stagingEnabled;
 
-            return m;
+            return true;
         }
-
 
         private SimPartModule BuildDockingNode(SimPart part, ModuleDockingNode kspModuleDockingNode)
         {
             var decoupler = SimModuleDockingNode.Borrow(part);
-            decoupler.Staged         = kspModuleDockingNode.staged;
+            decoupler.Staged = kspModuleDockingNode.staged;
 
             if (!(kspModuleDockingNode.referenceNode.attachedPart is null))
                 decoupler.AttachedPart = _partMapping[kspModuleDockingNode.referenceNode.attachedPart];
@@ -282,8 +278,8 @@ namespace MechJebLib.Simulations
         private SimPartModule BuildModuleAnchoredDecoupler(SimPart part, ModuleAnchoredDecoupler kspAnchoredDecoupler)
         {
             var decoupler = SimModuleAnchoredDecoupler.Borrow(part);
-            decoupler.IsDecoupled    = kspAnchoredDecoupler.isDecoupled;
-            decoupler.Staged         = kspAnchoredDecoupler.staged;
+            decoupler.IsDecoupled = kspAnchoredDecoupler.isDecoupled;
+            decoupler.Staged      = kspAnchoredDecoupler.staged;
 
             Part kspPart = kspAnchoredDecoupler.part;
 
@@ -420,7 +416,7 @@ namespace MechJebLib.Simulations
         private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part, PartModule kspPartModule)
         {
             var decoupler = SimProceduralFairingDecoupler.Borrow(part);
-            decoupler.IsDecoupled    = kspPartModule.Fields["decoupled"].GetValue<bool>(kspPartModule);
+            decoupler.IsDecoupled = kspPartModule.Fields["decoupled"].GetValue<bool>(kspPartModule);
             return decoupler;
         }
 
