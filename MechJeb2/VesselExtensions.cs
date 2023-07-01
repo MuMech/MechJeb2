@@ -82,7 +82,7 @@ namespace MuMech
         }
 
         private static          float                         lastFixedTime;
-        private static readonly Dictionary<Guid, MechJebCore> masterMechJeb = new();
+        private static readonly Dictionary<Guid, MechJebCore> masterMechJeb = new Dictionary<Guid, MechJebCore>();
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {
