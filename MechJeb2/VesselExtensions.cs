@@ -11,8 +11,8 @@ namespace MuMech
     {
         public static bool VesselOffGround(this Vessel vessel)
         {
-            return vessel.situation is Vessel.Situations.FLYING or Vessel.Situations.ESCAPING
-                or Vessel.Situations.ORBITING or Vessel.Situations.SUB_ORBITAL;
+            return vessel.situation == Vessel.Situations.FLYING || vessel.situation == Vessel.Situations.ESCAPING ||
+                   vessel.situation == Vessel.Situations.ORBITING || vessel.situation == Vessel.Situations.SUB_ORBITAL;
         }
 
         public static List<ITargetable> GetTargetables(this Vessel vessel)
