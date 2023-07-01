@@ -9,6 +9,12 @@ namespace MuMech
 {
     public static class VesselExtensions
     {
+        public static bool VesselOffGround(this Vessel vessel)
+        {
+            return vessel.situation is Vessel.Situations.FLYING or Vessel.Situations.ESCAPING
+                or Vessel.Situations.ORBITING or Vessel.Situations.SUB_ORBITAL;
+        }
+
         public static List<ITargetable> GetTargetables(this Vessel vessel)
         {
             List<Part> parts;
@@ -76,7 +82,7 @@ namespace MuMech
         }
 
         private static          float                         lastFixedTime;
-        private static readonly Dictionary<Guid, MechJebCore> masterMechJeb = new Dictionary<Guid, MechJebCore>();
+        private static readonly Dictionary<Guid, MechJebCore> masterMechJeb = new();
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
         {

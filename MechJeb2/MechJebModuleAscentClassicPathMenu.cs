@@ -198,7 +198,7 @@ namespace MuMech
 
             while (t <= recorder.historyIdx && t < recorder.history.Length)
             {
-                MechJebModuleFlightRecorder.record rec = recorder.history[t];
+                MechJebModuleFlightRecorder.RecordStruct rec = recorder.history[t];
                 p2.x = r.xMin + (float)(rec.downRange / scale);
                 p2.y = r.yMax - (float)(rec.altitudeASL / scale);
 
