@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
@@ -12,22 +13,23 @@ namespace MechJebLib.Simulations
     {
         private static readonly ObjectPool<SimPart> _pool = new ObjectPool<SimPart>(New, Clear);
 
-        public readonly  List<SimPartModule>          Modules            = new List<SimPartModule>();
-        public readonly  List<SimPart>                CrossFeedPartSet   = new List<SimPart>();
-        public readonly  List<SimPart>                Links              = new List<SimPart>();
-        public readonly  Dictionary<int, SimResource> Resources          = new Dictionary<int, SimResource>();
-        private readonly Dictionary<int, double>      _resourceDrains    = new Dictionary<int, double>();
+        public readonly  List<SimPartModule>          Modules          = new List<SimPartModule>();
+        public readonly  List<SimPart>                CrossFeedPartSet = new List<SimPart>();
+        public readonly  List<SimPart>                Links            = new List<SimPart>();
+        public readonly  Dictionary<int, SimResource> Resources        = new Dictionary<int, SimResource>();
+        private readonly Dictionary<int, double>      _resourceDrains  = new Dictionary<int, double>();
 
-        public SimVessel Vessel;
-        public string    Name;
-        public int       InverseStage;
         public int       DecoupledInStage;
         public bool      StagingOn;
-        public bool      ActivatesEvenIfDisconnected;
-        public bool      IsThrottleLocked;
-        public int       ResourcePriority;
-        public double    ResourceRequestRemainingThreshold;
-        public bool      IsEnabled;
+        public int       InverseStage;
+        public SimVessel Vessel;
+        public string    Name;
+
+        public bool   ActivatesEvenIfDisconnected;
+        public bool   IsThrottleLocked;
+        public int    ResourcePriority;
+        public double ResourceRequestRemainingThreshold;
+        public bool   IsEnabled;
 
         public double Mass;
         public double DryMass;
@@ -95,24 +97,24 @@ namespace MechJebLib.Simulations
             p.IsThrottleLocked = false;
         }
 
-        // FIXME: TryGetResource() instead
-        public SimResource? GetResource(int resourceId)
+        public bool TryGetResource(int resourceId, out SimResource resource)
         {
-            return Resources.TryGetValue(resourceId, out SimResource resource) ? resource : null;
+            return Resources.TryGetValue(resourceId, out resource);
         }
 
         public void ApplyResourceDrains(double dt)
         {
-            foreach (SimResource resource in Resources.Values)
-            {
-                if (_resourceDrains.TryGetValue(resource.Id, out double resourceDrain)) resource.Drain(dt * resourceDrain);
-            }
+            foreach (int id in _resourceDrains.Keys)
+                Resources[id] = Resources[id].Drain(dt * _resourceDrains[id]);
         }
 
         public void UpdateResourceResidual(double residual, int resourceId)
         {
-            if (Resources.TryGetValue(resourceId, out SimResource resource))
-                resource.Residual = Math.Max(resource.Residual, residual);
+            if (!Resources.TryGetValue(resourceId, out SimResource resource))
+                return;
+
+            resource.Residual     = Math.Max(resource.Residual, residual);
+            Resources[resourceId] = resource;
         }
 
         public double ResidualThreshold(int resourceId)
@@ -148,7 +150,7 @@ namespace MechJebLib.Simulations
                 if (!_resourceDrains.TryGetValue(resource.Id, out double resourceDrain))
                     continue;
 
-                Log($"    id: {resource.Id} drain: {resourceDrain} excess: {(resource.Amount - resource.ResidualThreshold)}");
+                Log($"    id: {resource.Id} drain: {resourceDrain} excess: {resource.Amount - resource.ResidualThreshold}");
 
                 double dt = (resource.Amount - resource.ResidualThreshold) / resourceDrain;
 

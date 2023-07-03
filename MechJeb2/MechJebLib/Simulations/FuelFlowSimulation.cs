@@ -19,68 +19,61 @@ namespace MechJebLib.Simulations
     {
         private const int MAXSTEPS = 100;
 
-        public readonly List<FuelStats> Segments = new List<FuelStats>();
+        public readonly  List<FuelStats> Segments = new List<FuelStats>();
+        private readonly List<SimPart>   _sources = new List<SimPart>();
+        private          FuelStats?      _currentSegment;
+        private          double          _time;
 
-        private readonly SimVessel     _vessel;
-        private readonly List<SimPart> _sources = new List<SimPart>();
-        private          FuelStats?    _currentSegment;
-        private          double        _time;
-
-        public FuelFlowSimulation(SimVessel vessel)
-        {
-            _vessel = vessel;
-        }
-
-        public void Run()
+        public void Run(SimVessel vessel)
         {
             _time           = 0;
             _currentSegment = null;
             Segments.Clear();
-            _vessel.MainThrottle = 1.0;
+            vessel.MainThrottle = 1.0;
 
-            Log($"starting stage: {_vessel.CurrentStage}");
+            Log($"starting stage: {vessel.CurrentStage}");
 
-            while (_vessel.CurrentStage >= 0)
+            while (vessel.CurrentStage >= 0)
             {
-                Log($"current stage: {_vessel.CurrentStage}");
-                SimulateStage();
-                FinishSegment();
-                _vessel.Stage();
+                Log($"current stage: {vessel.CurrentStage}");
+                SimulateStage(vessel);
+                FinishSegment(vessel);
+                vessel.Stage();
             }
         }
 
-        private void SimulateStage()
+        private void SimulateStage(SimVessel vessel)
         {
-            UpdateEngineStats();
-            UpdateActiveEngines();
-            UpdateResourceDrainsAndResiduals();
-            GetNextSegment();
-            double currentThrust = _vessel.ThrustMagnitude;
+            UpdateEngineStats(vessel);
+            UpdateActiveEngines(vessel);
+            UpdateResourceDrainsAndResiduals(vessel);
+            GetNextSegment(vessel);
+            double currentThrust = vessel.ThrustMagnitude;
 
             Log("starting stage");
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
-                if (AllowedToStage())
+                if (AllowedToStage(vessel))
                 {
                     Log("allowed to stage");
                     return;
                 }
 
-                double dt = MinimumTimeStep();
+                double dt = MinimumTimeStep(vessel);
 
-                if (Math.Abs(_vessel.ThrustMagnitude - currentThrust) > 1e-12)
+                if (Math.Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
                 {
-                    FinishSegment();
-                    GetNextSegment();
-                    currentThrust = _vessel.ThrustMagnitude;
+                    FinishSegment(vessel);
+                    GetNextSegment(vessel);
+                    currentThrust = vessel.ThrustMagnitude;
                 }
 
                 _time += dt;
-                ApplyResourceDrains(dt);
-                UpdateEngineStats();
-                UpdateActiveEngines();
-                UpdateResourceDrainsAndResiduals();
+                ApplyResourceDrains(vessel, dt);
+                UpdateEngineStats(vessel);
+                UpdateActiveEngines(vessel);
+                UpdateResourceDrainsAndResiduals(vessel);
 
                 Log($"took timestep of {dt}");
             }
@@ -88,33 +81,33 @@ namespace MechJebLib.Simulations
             throw new Exception("FuelFlowSimulation hit max steps of " + MAXSTEPS + " steps");
         }
 
-        private void UpdateEngineStats()
+        private void UpdateEngineStats(SimVessel vessel)
         {
-            _vessel.UpdateEngineStats();
+            vessel.UpdateEngineStats();
         }
 
-        private void ApplyResourceDrains(double dt)
+        private void ApplyResourceDrains(SimVessel vessel, double dt)
         {
-            for (int i = 0; i < _vessel.Parts.Count; i++)
+            for (int i = 0; i < vessel.Parts.Count; i++)
             {
-                SimPart p = _vessel.Parts[i];
+                SimPart p = vessel.Parts[i];
                 p.ApplyResourceDrains(dt);
             }
 
-            _vessel.UpdateMass();
+            vessel.UpdateMass();
         }
 
-        private void UpdateResourceDrainsAndResiduals()
+        private void UpdateResourceDrainsAndResiduals(SimVessel vessel)
         {
-            for (int i = 0; i < _vessel.Parts.Count; i++)
+            for (int i = 0; i < vessel.Parts.Count; i++)
             {
-                SimPart p = _vessel.Parts[i];
+                SimPart p = vessel.Parts[i];
                 p.ClearResourceDrains();
             }
 
-            for (int i = 0; i < _vessel.ActiveEngines.Count; i++)
+            for (int i = 0; i < vessel.ActiveEngines.Count; i++)
             {
-                SimModuleEngines e = _vessel.ActiveEngines[i];
+                SimModuleEngines e = vessel.ActiveEngines[i];
                 foreach (int resourceId in e.PropellantFlowModes.Keys)
                     switch (e.PropellantFlowModes[resourceId])
                     {
@@ -124,13 +117,13 @@ namespace MechJebLib.Simulations
                             break;
                         case SimFlowMode.ALL_VESSEL:
                         case SimFlowMode.ALL_VESSEL_BALANCE:
-                            UpdateResourceDrainsInParts(_vessel.Parts, e.ResourceConsumptions[resourceId], resourceId, false);
-                            UpdateResourceResidualsInParts(_vessel.Parts, e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsInParts(vessel.Parts, e.ResourceConsumptions[resourceId], resourceId, false);
+                            UpdateResourceResidualsInParts(vessel.Parts, e.ModuleResiduals, resourceId);
                             break;
                         case SimFlowMode.STAGE_PRIORITY_FLOW:
                         case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                            UpdateResourceDrainsInParts(_vessel.Parts, e.ResourceConsumptions[resourceId], resourceId, true);
-                            UpdateResourceResidualsInParts(_vessel.Parts, e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsInParts(vessel.Parts, e.ResourceConsumptions[resourceId], resourceId, true);
+                            UpdateResourceResidualsInParts(vessel.Parts, e.ModuleResiduals, resourceId);
                             break;
                         case SimFlowMode.STAGE_STACK_FLOW:
                         case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
@@ -155,9 +148,8 @@ namespace MechJebLib.Simulations
             for (int i = 0; i < parts.Count; i++)
             {
                 SimPart p = parts[i];
-                SimResource? resource = p.GetResource(resourceId);
 
-                if (resource == null)
+                if (!p.TryGetResource(resourceId, out SimResource resource))
                     continue;
 
                 if (resource.Free)
@@ -196,76 +188,77 @@ namespace MechJebLib.Simulations
                 part.UpdateResourceResidual(residual, resourceId);
         }
 
-        private double MinimumTimeStep()
+        private double MinimumTimeStep(SimVessel vessel)
         {
-            double maxTime = _vessel.ResourceMaxTime();
+            double maxTime = vessel.ResourceMaxTime();
 
             return maxTime < double.MaxValue ? maxTime : 0;
         }
 
-        private void UpdateActiveEngines()
+        private void UpdateActiveEngines(SimVessel vessel)
         {
-            _vessel.UpdateActiveEngines();
+            vessel.UpdateActiveEngines();
         }
 
-        private void FinishSegment()
+        private void FinishSegment(SimVessel vessel)
         {
             Log("FinishSegment() called");
             if (_currentSegment is null)
                 return;
 
             _currentSegment.DeltaTime = _time - _currentSegment.StartTime;
-            _currentSegment.EndMass   = _vessel.Mass;
-            _currentSegment.EndThrust = _vessel.ThrustMagnitude; // FIXME: compat for old code, can probably remove
+            _currentSegment.EndMass   = vessel.Mass;
+            _currentSegment.EndThrust = vessel.ThrustMagnitude; // FIXME: compat for old code, can probably remove
 
             _currentSegment.ComputeStats();
 
             Segments.Add(_currentSegment);
         }
 
-        private void GetNextSegment()
+        private void GetNextSegment(SimVessel vessel)
         {
             Log("GetNextSegment() called");
             if (!(_currentSegment is null))
-                _currentSegment.StagedMass = _currentSegment.EndMass - _vessel.Mass;
+                _currentSegment.StagedMass = _currentSegment.EndMass - vessel.Mass;
 
             _currentSegment = new FuelStats
             {
-                KSPStage    = _vessel.CurrentStage,
-                Thrust      = _vessel.ThrustMagnitude,
-                ThrustNoCosLoss = _vessel.ThrustNoCosLoss,
-                StartTime   = _time,
-                StartMass   = _vessel.Mass,
-                SpoolUpTime = _vessel.SpoolupCurrent
+                KSPStage        = vessel.CurrentStage,
+                Thrust          = vessel.ThrustMagnitude,
+                ThrustNoCosLoss = vessel.ThrustNoCosLoss,
+                StartTime       = _time,
+                StartMass       = vessel.Mass,
+                SpoolUpTime     = vessel.SpoolupCurrent
             };
         }
 
-        // FIXME: This needs to check isSepratron, which is not implemented
-        private bool AllowedToStage()
+        private bool AllowedToStage(SimVessel vessel)
         {
             // always stage if all the engines are burned out
-            if (_vessel.ActiveEngines.Count == 0)
+            if (vessel.ActiveEngines.Count == 0)
             {
                 Log("staging because engines are burned out");
                 return true;
             }
 
-            for (int i = 0; i < _vessel.ActiveEngines.Count; i++)
+            for (int i = 0; i < vessel.ActiveEngines.Count; i++)
             {
-                SimModuleEngines e = _vessel.ActiveEngines[i];
+                SimModuleEngines e = vessel.ActiveEngines[i];
 
                 if (e.Part.IsSepratron)
                     continue;
 
+                Log($"found an active engine DecoupledInStage {e.Part.DecoupledInStage}");
+
                 // never stage an active engine
-                if (e.Part.DecoupledInStage >= _vessel.CurrentStage - 1)
+                if (e.Part.DecoupledInStage >= vessel.CurrentStage - 1)
                 {
                     Log("not staging because of active engines");
                     return false;
                 }
 
                 // never drop fuel that could be used
-                if (e.WouldDropAccessibleFuelTank(_vessel.CurrentStage - 1))
+                if (e.WouldDropAccessibleFuelTank(vessel.CurrentStage - 1))
                 {
                     Log("not staging because would drop fuel tank");
                     return false;
@@ -273,19 +266,17 @@ namespace MechJebLib.Simulations
             }
 
             // do not trigger a stage that doesn't decouple anything until the engines burn out
-            bool dropsParts = false;
-
-            for (int i = 0; i < _vessel.Parts.Count; i++)
+            if (vessel.PartsDroppedInStage.Count(vessel.CurrentStage - 1) == 0)
             {
-                SimPart p = _vessel.Parts[i];
-                if (p.DecoupledInStage >= _vessel.CurrentStage - 1)
-                    dropsParts = true;
+                Log("not staging because no parts would drop");
+                return false;
             }
 
-            if (!dropsParts) return false;
-
             // we always stage at this point, except for the stage zero which we burn down until the engines go out
-            return _vessel.CurrentStage > 0;
+            if (vessel.CurrentStage > 0)
+                Log("staging because we have parts to drop that aren't engines or fuel");
+
+            return vessel.CurrentStage > 0;
         }
     }
 }

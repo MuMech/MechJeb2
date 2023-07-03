@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using UnityEngine;
@@ -20,14 +21,16 @@ namespace MuMech
         {
         }
 
+        private readonly SimVesselManager _vesselManager = new SimVesselManager();
+
         public override void OnFixedUpdate()
         {
-            SimVessel vessel = new Builder().Build(Vessel);
-            Debug.Log($"{vessel}");
-            vessel.SetConditions(0, 0, 0);
-            var sim = new MechJebLib.Simulations.FuelFlowSimulation(vessel);
-            sim.Run();
-            foreach (FuelStats segment in sim.Segments)
+            _vesselManager.Build(Vessel);
+            _vesselManager.Update();
+            _vesselManager.SetConditions(0, 0, 0);
+            _vesselManager.RunFuelFlowSimulation();
+            List<FuelStats> segments = _vesselManager.GetFuelFlowResults();
+            foreach (FuelStats segment in segments)
                 Debug.Log($"{segment}");
         }
 

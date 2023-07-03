@@ -30,7 +30,7 @@ namespace MechJebLib.Simulations.PartModules
         public readonly List<double>                 ThrustTransformMultipliers = new List<double>();
         public readonly List<V3>                     ThrustDirectionVectors     = new List<V3>();
 
-        public bool   IsOperational; // FIXME: resettable
+        public bool   IsOperational;
         public double FlowMultiplier;
         public V3     ThrustCurrent;
         public V3     ThrustMax;
@@ -47,7 +47,7 @@ namespace MechJebLib.Simulations.PartModules
         public float  FlowMultCap;
         public float  FlowMultCapSharpness;
         public bool   ThrottleLocked;
-        public float  ThrustPercentage; // FIXME: resettable
+        public float  ThrustPercentage;
         public bool   AtmChangeFlow;
         public bool   UseAtmCurve;
         public bool   UseAtmCurveIsp;
@@ -107,6 +107,7 @@ namespace MechJebLib.Simulations.PartModules
                             Log($"  cannot draw resources NO_FLOW on {resourceId} ");
                             return false;
                         }
+
                         break;
                     case SimFlowMode.ALL_VESSEL:
                     case SimFlowMode.ALL_VESSEL_BALANCE:
@@ -117,6 +118,7 @@ namespace MechJebLib.Simulations.PartModules
                             Log($"  cannot draw resources ALL_VESSEL on {resourceId} ");
                             return false;
                         }
+
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
                     case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
@@ -126,6 +128,7 @@ namespace MechJebLib.Simulations.PartModules
                             Log($"  cannot draw resources STACK_FLOW on {resourceId} ");
                             return false;
                         }
+
                         break;
                     case SimFlowMode.NULL:
                         return false;
@@ -138,10 +141,9 @@ namespace MechJebLib.Simulations.PartModules
 
         private bool PartHasResource(SimPart part, int resourceId)
         {
-            SimResource? resource = part.GetResource(resourceId);
-            if (resource != null && resource.Amount > part.ResidualThreshold(resourceId))
-                Log($"  id: {resource.Id} amount: {resource.Amount} threshold: {part.ResidualThreshold(resourceId)}");
-            return resource != null && resource.Amount > part.ResidualThreshold(resourceId);
+            if (part.TryGetResource(resourceId, out SimResource resource))
+                return resource.Amount > part.ResidualThreshold(resourceId);
+            return false;
         }
 
         private bool PartsHaveResource(IReadOnlyList<SimPart> parts, int resourceId)
@@ -211,6 +213,7 @@ namespace MechJebLib.Simulations.PartModules
                             Log("NO_FLOW returning true");
                             return true;
                         }
+
                         break;
                     case SimFlowMode.ALL_VESSEL:
                     case SimFlowMode.ALL_VESSEL_BALANCE:
@@ -221,6 +224,7 @@ namespace MechJebLib.Simulations.PartModules
                             Log("ALL_VESSEL returning true");
                             return true;
                         }
+
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
                     case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
@@ -230,6 +234,7 @@ namespace MechJebLib.Simulations.PartModules
                             Log("STACK_FLOW returning true");
                             return true;
                         }
+
                         break;
                 }
 

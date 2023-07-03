@@ -2,7 +2,7 @@
 
 namespace MechJebLib.Simulations
 {
-    public class SimResource
+    public struct SimResource
     {
         public bool   Free;
         public double MaxAmount;
@@ -13,10 +13,11 @@ namespace MechJebLib.Simulations
 
         public double ResidualThreshold => Residual * MaxAmount;
 
-        public void Drain(double resourceDrain)
+        public SimResource Drain(double resourceDrain)
         {
             Amount -= resourceDrain;
             if (Amount < 0) Amount = 0;
+            return this;
         }
     }
 }
