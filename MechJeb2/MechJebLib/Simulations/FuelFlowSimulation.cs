@@ -11,8 +11,7 @@ namespace MechJebLib.Simulations
     //   - git rid of the annoying extra stage
     //   - isn't running in the VAB
     //
-    //   - actually use the objectpooling
-    //   - use vessel modification callbacks and write thin Refresh() API
+    //   - compute both atmo + vac delta-V
     //   - add threading
     //   - make it compatible with the old simulation and wire it up to a button in the UI
     public class FuelFlowSimulation
@@ -30,6 +29,7 @@ namespace MechJebLib.Simulations
             _currentSegment = null;
             Segments.Clear();
             vessel.MainThrottle = 1.0;
+            vessel.UpdateMass();
 
             Log($"starting stage: {vessel.CurrentStage}");
 
@@ -192,7 +192,7 @@ namespace MechJebLib.Simulations
         {
             double maxTime = vessel.ResourceMaxTime();
 
-            return maxTime < double.MaxValue ? maxTime : 0;
+            return maxTime < double.MaxValue && maxTime >= 0 ? maxTime : 0;
         }
 
         private void UpdateActiveEngines(SimVessel vessel)

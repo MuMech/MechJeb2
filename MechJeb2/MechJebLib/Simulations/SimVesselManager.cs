@@ -62,5 +62,11 @@ namespace MechJebLib.Simulations
             _inversePartMapping.Clear();
             _inversePartModuleMapping.Clear();
         }
+
+        public void Release()
+        {
+            Clear();
+            _vessel.Dispose();
+        }
     }
 }

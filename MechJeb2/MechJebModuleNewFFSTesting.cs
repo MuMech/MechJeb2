@@ -13,20 +13,26 @@ namespace MuMech
             Enabled = true;
         }
 
+        private bool _needsRebuild;
+
         protected override void OnModuleEnabled()
         {
+            _needsRebuild = true;
         }
 
         protected override void OnModuleDisabled()
         {
+            _vesselManager.Release();
         }
 
         private readonly SimVesselManager _vesselManager = new SimVesselManager();
 
         public override void OnFixedUpdate()
         {
-            _vesselManager.Build(Vessel);
-            _vesselManager.Update();
+            if (_needsRebuild)
+                _vesselManager.Build(Vessel);
+            else
+                _vesselManager.Update();
             _vesselManager.SetConditions(0, 0, 0);
             _vesselManager.RunFuelFlowSimulation();
             List<FuelStats> segments = _vesselManager.GetFuelFlowResults();
@@ -36,16 +42,24 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            GameEvents.onStageActivate.Add(HandleStageEvent);
+            GameEvents.onVesselStandardModification.Add(RebuildOnModification);
+            GameEvents.StageManager.OnGUIStageSequenceModified.Add(Rebuild);
         }
 
         public override void OnDestroy()
         {
-            GameEvents.onStageActivate.Remove(HandleStageEvent);
+            GameEvents.onVesselStandardModification.Remove(RebuildOnModification);
+            GameEvents.StageManager.OnGUIStageSequenceModified.Remove(Rebuild);
         }
 
-        private void HandleStageEvent(int data)
+        private void Rebuild()
         {
+            _needsRebuild = true;
+        }
+
+        private void RebuildOnModification(Vessel data)
+        {
+            Rebuild();
         }
     }
 }

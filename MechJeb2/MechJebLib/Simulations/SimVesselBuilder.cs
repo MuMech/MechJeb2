@@ -80,7 +80,7 @@ namespace MechJebLib.Simulations
 
             internal void BuildParts()
             {
-                _vessel.CurrentStage = StageManager.CurrentStage + 1;
+                _vessel.CurrentStage = StageManager.CurrentStage;
 
                 foreach (Part kspPart in _kspVessel.Parts)
                 {
