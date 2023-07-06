@@ -6,6 +6,8 @@ namespace MechJebLib.Simulations
 {
     public partial class SimVesselManager
     {
+        public List<FuelStats> Segments => _fuelFlowSimulation.Segments;
+
         private readonly SimVesselBuilder   _builder;
         private readonly SimVesselUpdater   _updater;
         private          SimVessel          _vessel;
@@ -49,11 +51,6 @@ namespace MechJebLib.Simulations
         public void RunFuelFlowSimulation()
         {
             _fuelFlowSimulation.Run(_vessel);
-        }
-
-        public List<FuelStats> GetFuelFlowResults()
-        {
-            return _fuelFlowSimulation.Segments;
         }
 
         private void Clear()

@@ -42,14 +42,18 @@ namespace MechJebLib.Simulations
         public void UpdateMass()
         {
             Mass = 0;
+            int num = 0;
             for (int i = -1; i < CurrentStage; i++)
             {
                 foreach (SimPart part in PartsDroppedInStage[i])
                 {
+                    num++;
                     part.UpdateMass();
                     Mass += part.Mass;
                 }
             }
+
+            Log($"vessel mass updated to {Mass} in {num} parts");
         }
 
         public void Stage()
@@ -85,13 +89,13 @@ namespace MechJebLib.Simulations
 
                     Log("mass flow was not zero");
 
-                    e.UpdateFlameout();
+                    e.UpdateEngineStatus();
 
-                    if (e.IsOperational)
-                    {
-                        Log("engine is operational");
-                        ActiveEngines.Add(e);
-                    }
+                    if (!e.IsOperational)
+                        continue;
+
+                    Log("engine is operational");
+                    ActiveEngines.Add(e);
                 }
             }
 

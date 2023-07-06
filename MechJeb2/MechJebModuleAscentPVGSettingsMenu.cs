@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using MechJebLib.Simulations;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
@@ -47,16 +48,16 @@ namespace MuMech
 
             int topstage = -1;
 
-            if (_ascentSettings.LastStage < Core.StageStats.vacStats.Length && Core.StageStats.vacStats.Length > 0)
+            if (_ascentSettings.LastStage < Core.StageStats.vacStats.Count && Core.StageStats.vacStats.Count > 0)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
 
-                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, Core.StageStats.vacStats.Length - 1);
+                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, Core.StageStats.vacStats.Count - 1);
 
-                for (int i = _ascentSettings.LastStage; i < Core.StageStats.vacStats.Length; i++)
+                for (int i = _ascentSettings.LastStage; i < Core.StageStats.vacStats.Count; i++)
                 {
-                    FuelFlowSimulation.FuelStats stats = Core.StageStats.vacStats[i];
+                    FuelStats stats = Core.StageStats.vacStats[i];
                     if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
                         continue;
 

@@ -22,9 +22,9 @@ namespace MuMech.MechJebLib
                 return this;
             }
 
-            public SuicideBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage)
+            public SuicideBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase)
             {
-                _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage));
+                _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, mjPhase));
 
                 return this;
             }

@@ -22,7 +22,7 @@ namespace MechJebLib.Simulations
             // the root part requirement from the algorithm entirely.
             SimPart rootPart = FindRootPart(v.Parts);
 
-            CalculateDecoupledInStageRecursively(v, rootPart, null, rootPart.InverseStage);
+            CalculateDecoupledInStageRecursively(v, rootPart, null, -1);
         }
 
         // BUG: This should at least be fixed to not pick the payload fairings if they are left in stage 0

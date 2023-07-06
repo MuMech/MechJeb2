@@ -80,7 +80,7 @@ namespace MechJebLib.Simulations.PartModules
             ThrustPercentage = 100f;
         }
 
-        public void UpdateFlameout()
+        public void UpdateEngineStatus()
         {
             if (CanDrawResources())
                 return;

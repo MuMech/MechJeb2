@@ -204,7 +204,7 @@
         <Compile Include="MechJebModuleLandingPredictions.cs"/>
         <Compile Include="MechJebModuleManeuverPlanner.cs"/>
         <Compile Include="MechJebModuleMenu.cs"/>
-        <Compile Include="MechJebModuleNewFFSTesting.cs"/>
+        <Compile Include="MechJebModuleStageStats.cs"/>
         <Compile Include="MechJebModuleNodeEditor.cs"/>
         <Compile Include="MechJebModuleNodeExecutor.cs"/>
         <Compile Include="MechJebModuleGuidanceController.cs"/>
@@ -223,7 +223,7 @@
         <Compile Include="MechJebModuleSpaceplaneAutopilot.cs"/>
         <Compile Include="MechJebModuleSpaceplaneGuidance.cs"/>
         <Compile Include="MechJebModuleSpinupController.cs"/>
-        <Compile Include="MechJebModuleStageStats.cs"/>
+        <Compile Include="MechJebModuleOldStageStats.cs"/>
         <Compile Include="MechJebModuleStagingController.cs"/>
         <Compile Include="MechJebModuleSuicideTimer.cs"/>
         <Compile Include="MechJebModuleTargetController.cs"/>

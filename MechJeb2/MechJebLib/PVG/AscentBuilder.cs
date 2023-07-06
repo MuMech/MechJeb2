@@ -38,46 +38,48 @@ namespace MechJebLib.PVG
             public int       _optimizedCoastPhase { get; private set; } = -1;
             public Solution? _solution            { get; private set; }
 
-            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false,
+            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase,
+                bool optimizeTime = false,
                 bool unguided = false)
             {
                 Log(
                     $"[MechJebLib.AscentBuilder] AddStageUsingFinalMass({m0}, {mf}, {isp}, {bt}, {kspStage}, {(optimizeTime ? "true" : "false")}, {(unguided ? "true" : "false")})");
 
-                _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, optimizeTime, unguided));
+                _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, mjPhase, optimizeTime, unguided));
                 if (optimizeTime)
                     _optimizedPhase = _phases.Count - 1;
 
                 return this;
             }
 
-            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false,
+            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, int mjPhase,
+                bool optimizeTime = false,
                 bool unguided = false)
             {
                 Log(
                     $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {thrust}, {isp}, {bt}, {kspStage}, {(optimizeTime ? "true" : "false")}, {(unguided ? "true" : "false")})");
 
-                _phases.Add(Phase.NewStageUsingThrust(m0, thrust, isp, bt, kspStage, optimizeTime, unguided));
+                _phases.Add(Phase.NewStageUsingThrust(m0, thrust, isp, bt, kspStage, mjPhase, optimizeTime, unguided));
                 if (optimizeTime)
                     _optimizedPhase = _phases.Count - 1;
 
                 return this;
             }
 
-            public AscentBuilder AddFixedCoast(double m0, double ct, int kspStage)
+            public AscentBuilder AddFixedCoast(double m0, double ct, int kspStage, int mjPhase)
             {
                 Log($"[MechJebLib.AscentBuilder] AddFixedCoast({m0}, {ct}, {kspStage})");
 
-                _phases.Add(Phase.NewFixedCoast(m0, ct, kspStage));
+                _phases.Add(Phase.NewFixedCoast(m0, ct, kspStage, mjPhase));
 
                 return this;
             }
 
-            public AscentBuilder AddOptimizedCoast(double m0, double mint, double maxt, int kspStage)
+            public AscentBuilder AddOptimizedCoast(double m0, double mint, double maxt, int kspStage, int mjPhase)
             {
                 Log($"[MechJebLib.AscentBuilder] AddOptimizedCoast({m0}, {mint}, {maxt}, {kspStage})");
 
-                _phases.Add(Phase.NewOptimizedCoast(m0, mint, maxt, kspStage));
+                _phases.Add(Phase.NewOptimizedCoast(m0, mint, maxt, kspStage, mjPhase));
                 _optimizedCoastPhase = _phases.Count - 1;
 
                 return this;

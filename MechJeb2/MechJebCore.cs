@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using KSP.Localization;
-using MechJebLib.Simulations;
 using UnityEngine;
 using UnityEngine.Profiling;
 using UnityToolbag;

@@ -209,8 +209,8 @@ namespace MuMech
                 if (Core.Guidance.Solution != null)
                 {
                     Solution solution = Core.Guidance.Solution;
-                    for (int i = solution.Segments - 1; i >= 0; i--)
-                        GUILayout.Label($"{PhaseString(solution, VesselState.time, i)}");
+                    for (int pvgPhase = solution.Segments - 1; pvgPhase >= 0; pvgPhase--)
+                        GUILayout.Label($"{PhaseString(solution, VesselState.time, pvgPhase)}");
                     GUILayout.Label(solution.TerminalString());
                 }
 
@@ -497,24 +497,25 @@ namespace MuMech
             return phaseAngleDifference / phaseAngleRate;
         }
 
-        private string PhaseString(Solution solution, double t, int n)
+        private string PhaseString(Solution solution, double t, int pvgPhase)
         {
-            if (solution.CoastPhase(n))
-                return $"coast: {solution.Tgo(t, n):F1}s";
+            if (solution.CoastPhase(pvgPhase))
+                return $"coast: {solution.Tgo(t, pvgPhase):F1}s";
 
             double stageDeltaV = 0;
 
-            int kspStage = solution.KSPStage(n);
+            int mjPhase = solution.MJPhase(pvgPhase);
+            int kspStage = solution.KSPStage(pvgPhase);
 
-            if (kspStage < Core.StageStats.vacStats.Length)
-                stageDeltaV = Core.StageStats.vacStats[kspStage].DeltaV;
+            if (mjPhase < Core.StageStats.vacStats.Count)
+                stageDeltaV = Core.StageStats.vacStats[mjPhase].DeltaV;
 
-            double excessDV = stageDeltaV - solution.DV(t, n);
+            double excessDV = stageDeltaV - solution.DV(t, pvgPhase);
 
             // eliminate some of the noise
             if (Math.Abs(excessDV) < 2.5) excessDV = 0;
 
-            return $"burn: {kspStage} {solution.Tgo(t, n):F1}s {solution.DV(t, n):F1}m/s ({excessDV:F1}m/s)";
+            return $"burn: {kspStage} {solution.Tgo(t, pvgPhase):F1}s {solution.DV(t, pvgPhase):F1}m/s ({excessDV:F1}m/s)";
         }
 
         public override GUILayoutOption[] WindowOptions()

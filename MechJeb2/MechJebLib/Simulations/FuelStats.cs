@@ -18,12 +18,8 @@ namespace MechJebLib.Simulations
         public double Thrust;
         public double ThrustNoCosLoss;
         public double SpoolUpTime;
-        public double EndThrust;
-
-        // TODO:
-        public double MaxAccel;
-        public double ResourceMass;
-        public double MaxThrust;
+        public double MaxAccel     => EndMass > 0 ? Thrust / EndMass : 0;
+        public double ResourceMass => StartMass - EndMass;
 
         public double StartTWR(double geeASL)
         {

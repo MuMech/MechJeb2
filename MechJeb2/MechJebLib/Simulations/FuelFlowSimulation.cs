@@ -8,12 +8,12 @@ using static MechJebLib.Utils.Statics;
 namespace MechJebLib.Simulations
 {
     // TODO:
-    //   - git rid of the annoying extra stage
     //   - isn't running in the VAB
-    //
-    //   - compute both atmo + vac delta-V
     //   - add threading
-    //   - make it compatible with the old simulation and wire it up to a button in the UI
+    //   - debug remaining uses of vacStats and mjPhase vs kspStage issues
+    //   - fix stage display to show kspStages again
+    //   - wire up cosLoss properly in the GUI
+    //   - the tiny-partial-stage FIXME below
     public class FuelFlowSimulation
     {
         private const int MAXSTEPS = 100;
@@ -29,17 +29,19 @@ namespace MechJebLib.Simulations
             _currentSegment = null;
             Segments.Clear();
             vessel.MainThrottle = 1.0;
-            vessel.UpdateMass();
 
             Log($"starting stage: {vessel.CurrentStage}");
 
             while (vessel.CurrentStage >= 0)
             {
+                vessel.UpdateMass();
                 Log($"current stage: {vessel.CurrentStage}");
                 SimulateStage(vessel);
                 FinishSegment(vessel);
                 vessel.Stage();
             }
+
+            Segments.Reverse();
         }
 
         private void SimulateStage(SimVessel vessel)
@@ -62,6 +64,8 @@ namespace MechJebLib.Simulations
 
                 double dt = MinimumTimeStep(vessel);
 
+                // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
+                // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
                 if (Math.Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
                 {
                     FinishSegment(vessel);
@@ -71,6 +75,7 @@ namespace MechJebLib.Simulations
 
                 _time += dt;
                 ApplyResourceDrains(vessel, dt);
+                vessel.UpdateMass();
                 UpdateEngineStats(vessel);
                 UpdateActiveEngines(vessel);
                 UpdateResourceDrainsAndResiduals(vessel);
@@ -93,8 +98,6 @@ namespace MechJebLib.Simulations
                 SimPart p = vessel.Parts[i];
                 p.ApplyResourceDrains(dt);
             }
-
-            vessel.UpdateMass();
         }
 
         private void UpdateResourceDrainsAndResiduals(SimVessel vessel)
@@ -208,7 +211,6 @@ namespace MechJebLib.Simulations
 
             _currentSegment.DeltaTime = _time - _currentSegment.StartTime;
             _currentSegment.EndMass   = vessel.Mass;
-            _currentSegment.EndThrust = vessel.ThrustMagnitude; // FIXME: compat for old code, can probably remove
 
             _currentSegment.ComputeStats();
 
@@ -218,8 +220,9 @@ namespace MechJebLib.Simulations
         private void GetNextSegment(SimVessel vessel)
         {
             Log("GetNextSegment() called");
+            double stagedMass = 0;
             if (!(_currentSegment is null))
-                _currentSegment.StagedMass = _currentSegment.EndMass - vessel.Mass;
+                stagedMass = _currentSegment.EndMass - vessel.Mass;
 
             _currentSegment = new FuelStats
             {
@@ -228,7 +231,8 @@ namespace MechJebLib.Simulations
                 ThrustNoCosLoss = vessel.ThrustNoCosLoss,
                 StartTime       = _time,
                 StartMass       = vessel.Mass,
-                SpoolUpTime     = vessel.SpoolupCurrent
+                SpoolUpTime     = vessel.SpoolupCurrent,
+                StagedMass      = stagedMass
             };
         }
 

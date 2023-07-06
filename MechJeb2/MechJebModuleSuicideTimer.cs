@@ -1,8 +1,8 @@
 ﻿#nullable enable
 
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MechJebLib.Primitives;
+using MechJebLib.Simulations;
 using MuMech.MechJebLib;
 
 namespace MuMech
@@ -36,7 +36,6 @@ namespace MuMech
             _suicide = null;
         }
 
-
         private double GetGroundHeight()
         {
             if (Rf == Vector3d.zero)
@@ -55,7 +54,7 @@ namespace MuMech
 
             Core.StageStats.RequestUpdate(this);
 
-            if (Core.StageStats.vacStats.Length <= 0)
+            if (Core.StageStats.vacStats.Count <= 0)
                 return;
 
             if (_suicide != null)
@@ -71,11 +70,13 @@ namespace MuMech
                     VesselState.forward.WorldToV3Rotated(), VesselState.time, MainBody.gravParameter, MainBody.Radius)
                 .SetGround(GetGroundHeight());
 
-            for (int i = Core.StageStats.vacStats.Length - 1; i >= 0; i--)
+            for (int mjPhase = Core.StageStats.vacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
-                FuelFlowSimulation.FuelStats fuelStats = Core.StageStats.vacStats[i];
+                FuelStats fuelStats = Core.StageStats.vacStats[mjPhase];
+                int kspStage = Core.StageStats.vacStats[mjPhase].KSPStage;
 
-                suicideBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime, i);
+                suicideBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
+                    kspStage, mjPhase);
             }
 
             _suicide = suicideBuilder.Build();

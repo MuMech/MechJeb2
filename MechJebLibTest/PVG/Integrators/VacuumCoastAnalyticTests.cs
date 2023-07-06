@@ -51,7 +51,7 @@ namespace MechJebLibTest.PVG
 
                 y0.CopyTo(yin);
 
-                var phase = Phase.NewFixedCoast(1.0, dt, 1);
+                var phase = Phase.NewFixedCoast(1.0, dt, 1, 1);
                 phase.Normalized = true;
 
                 try
