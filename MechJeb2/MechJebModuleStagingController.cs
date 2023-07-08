@@ -68,7 +68,7 @@ namespace MuMech
         private readonly Dictionary<int, bool>   hasStayingChutesCache           = new Dictionary<int, bool>(16);
         private readonly Dictionary<int, bool>   hasFairingCache                 = new Dictionary<int, bool>(16);
         private          MechJebModuleStageStats stats    => Core.GetComputerModule<MechJebModuleStageStats>();
-        private          List<FuelStats>         vacStats => stats.vacStats;
+        private          List<FuelStats>         vacStats => stats.VacStats;
 
         private enum RemoteStagingState
         {
@@ -411,9 +411,9 @@ namespace MuMech
 
         public double LastNonZeroDVStageBurnTime()
         {
-            for (int i = vacStats.Count - 1; i >= 0; i--)
-                if (vacStats[i].DeltaTime > 0)
-                    return vacStats[i].DeltaTime;
+            for (int mjPhase = vacStats.Count - 1; mjPhase >= 0; mjPhase--)
+                if (vacStats[mjPhase].DeltaTime > 0)
+                    return vacStats[mjPhase].DeltaTime;
             return 0;
         }
 

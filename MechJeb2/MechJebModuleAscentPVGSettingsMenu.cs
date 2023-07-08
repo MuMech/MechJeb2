@@ -48,27 +48,28 @@ namespace MuMech
 
             int topstage = -1;
 
-            if (_ascentSettings.LastStage < Core.StageStats.vacStats.Count && Core.StageStats.vacStats.Count > 0)
+            var vacStats = Core.StageStats.VacStats;
+
+            if (vacStats.Count > 0 && _ascentSettings.LastStage < vacStats[vacStats.Count-1].KSPStage)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
+                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, Core.StageStats.VacStats.Count - 1);
 
-                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, Core.StageStats.vacStats.Count - 1);
-
-                for (int i = _ascentSettings.LastStage; i < Core.StageStats.vacStats.Count; i++)
+                for (int mjPhase = _ascentSettings.LastStage; mjPhase < Core.StageStats.VacStats.Count; mjPhase++)
                 {
-                    FuelStats stats = Core.StageStats.vacStats[i];
+                    FuelStats stats = Core.StageStats.VacStats[mjPhase];
                     if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
                         continue;
 
                     if (topstage < 0)
-                        topstage = i;
+                        topstage = stats.KSPStage;
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label($"{i,3} {stats.DeltaV:##,###0} m/s");
-                    if (_ascentSettings.UnguidedStages.Contains(i))
+                    GUILayout.Label($"{mjPhase,3} {stats.DeltaV:##,###0} m/s");
+                    if (_ascentSettings.UnguidedStages.Contains(mjPhase))
                         GUILayout.Label(" (unguided)");
-                    if (_ascentSettings.OptimizeStage == i)
+                    if (_ascentSettings.OptimizeStage == mjPhase)
                         GUILayout.Label(" (optimize)");
                     GUILayout.EndHorizontal();
                 }

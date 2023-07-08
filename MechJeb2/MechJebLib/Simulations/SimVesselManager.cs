@@ -13,6 +13,7 @@ namespace MechJebLib.Simulations
         private          SimVessel          _vessel;
         private          IShipconstruct     _kspVessel;
         private readonly FuelFlowSimulation _fuelFlowSimulation = new FuelFlowSimulation();
+        public           bool               DVLinearThrust      = true; // include cos losses
 
         private readonly Dictionary<Part, SimPart>             _partMapping              = new Dictionary<Part, SimPart>();
         private readonly Dictionary<SimPart, Part>             _inversePartMapping       = new Dictionary<SimPart, Part>();
@@ -50,6 +51,7 @@ namespace MechJebLib.Simulations
 
         public void RunFuelFlowSimulation()
         {
+            _fuelFlowSimulation.DVLinearThrust = DVLinearThrust;
             _fuelFlowSimulation.Run(_vessel);
         }
 

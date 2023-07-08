@@ -8,12 +8,10 @@ using static MechJebLib.Utils.Statics;
 namespace MechJebLib.Simulations
 {
     // TODO:
-    //   - isn't running in the VAB
     //   - add threading
-    //   - debug remaining uses of vacStats and mjPhase vs kspStage issues
-    //   - fix stage display to show kspStages again
     //   - wire up cosLoss properly in the GUI
-    //   - the tiny-partial-stage FIXME below
+    //   - remove all the logging
+    //   - do some perf testing
     public class FuelFlowSimulation
     {
         private const int MAXSTEPS = 100;
@@ -22,6 +20,7 @@ namespace MechJebLib.Simulations
         private readonly List<SimPart>   _sources = new List<SimPart>();
         private          FuelStats?      _currentSegment;
         private          double          _time;
+        public           bool            DVLinearThrust = true; // include cos losses
 
         public void Run(SimVessel vessel)
         {
@@ -31,10 +30,10 @@ namespace MechJebLib.Simulations
             vessel.MainThrottle = 1.0;
 
             Log($"starting stage: {vessel.CurrentStage}");
+            vessel.ActivateEngines();
 
             while (vessel.CurrentStage >= 0)
             {
-                vessel.UpdateMass();
                 Log($"current stage: {vessel.CurrentStage}");
                 SimulateStage(vessel);
                 FinishSegment(vessel);
@@ -46,9 +45,11 @@ namespace MechJebLib.Simulations
 
         private void SimulateStage(SimVessel vessel)
         {
+            vessel.UpdateMass();
             UpdateEngineStats(vessel);
             UpdateActiveEngines(vessel);
             UpdateResourceDrainsAndResiduals(vessel);
+
             GetNextSegment(vessel);
             double currentThrust = vessel.ThrustMagnitude;
 
@@ -75,6 +76,7 @@ namespace MechJebLib.Simulations
 
                 _time += dt;
                 ApplyResourceDrains(vessel, dt);
+
                 vessel.UpdateMass();
                 UpdateEngineStats(vessel);
                 UpdateActiveEngines(vessel);
@@ -227,8 +229,7 @@ namespace MechJebLib.Simulations
             _currentSegment = new FuelStats
             {
                 KSPStage        = vessel.CurrentStage,
-                Thrust          = vessel.ThrustMagnitude,
-                ThrustNoCosLoss = vessel.ThrustNoCosLoss,
+                Thrust          = DVLinearThrust ? vessel.ThrustMagnitude : vessel.ThrustNoCosLoss,
                 StartTime       = _time,
                 StartMass       = vessel.Mass,
                 SpoolUpTime     = vessel.SpoolupCurrent,

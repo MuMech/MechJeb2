@@ -59,14 +59,14 @@ namespace MechJebLib.Simulations.PartModules
         public double ModuleSpoolupTime;
         public bool   NoPropellants;
 
-        public readonly H1 ThrustCurve                 = H1.Get();
-        public readonly H1 ThrottleIspCurve            = H1.Get();
-        public readonly H1 ThrottleIspCurveAtmStrength = H1.Get();
-        public readonly H1 VelCurve                    = H1.Get();
-        public readonly H1 VelCurveIsp                 = H1.Get();
-        public readonly H1 ATMCurve                    = H1.Get();
-        public readonly H1 ATMCurveIsp                 = H1.Get();
-        public readonly H1 AtmosphereCurve             = H1.Get();
+        public readonly H1 ThrustCurve                 = H1.Get(true);
+        public readonly H1 ThrottleIspCurve            = H1.Get(true);
+        public readonly H1 ThrottleIspCurveAtmStrength = H1.Get(true);
+        public readonly H1 VelCurve                    = H1.Get(true);
+        public readonly H1 VelCurveIsp                 = H1.Get(true);
+        public readonly H1 ATMCurve                    = H1.Get(true);
+        public readonly H1 ATMCurveIsp                 = H1.Get(true);
+        public readonly H1 AtmosphereCurve             = H1.Get(true);
 
         private double _throttle    => Part.Vessel.MainThrottle;
         private double _atmPressure => Part.Vessel.ATMPressure;
@@ -178,7 +178,6 @@ namespace MechJebLib.Simulations.PartModules
             m.ResourceConsumptions.Clear();
             m.Propellants.Clear();
             m.ThrustTransformMultipliers.Clear();
-
             m.ThrustCurve.Clear();
             m.ThrottleIspCurve.Clear();
             m.ThrottleIspCurveAtmStrength.Clear();
@@ -325,7 +324,6 @@ namespace MechJebLib.Simulations.PartModules
         private double ISPAtConditions()
         {
             double isp = AtmosphereCurve.Evaluate(_atmPressure);
-
             if (UseThrottleIspCurve)
                 isp *= Lerp(1f, ThrottleIspCurve.Evaluate(_throttle), ThrottleIspCurveAtmStrength.Evaluate(_atmPressure));
             if (UseAtmCurveIsp)

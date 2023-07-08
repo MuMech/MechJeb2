@@ -152,10 +152,10 @@ namespace MuMech
             {
                 bool hasGuided = false;
 
-                for (int mjPhase = Core.StageStats.vacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
+                for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
                 {
-                    double dv = Core.StageStats.vacStats[mjPhase].DeltaV;
-                    int kspStage = Core.StageStats.vacStats[mjPhase].KSPStage;
+                    double dv = Core.StageStats.VacStats[mjPhase].DeltaV;
+                    int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
                     // skip the zero length stages
                     if (dv == 0)
@@ -204,10 +204,10 @@ namespace MuMech
 
             bool optimizedStageFound = false;
 
-            for (int mjPhase = Core.StageStats.vacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
+            for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
             {
-                FuelStats fuelStats = Core.StageStats.vacStats[mjPhase];
-                int kspStage = Core.StageStats.vacStats[mjPhase].KSPStage;
+                FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
+                int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
                 if (!Core.Guidance.HasGoodSolutionWithNoFutureCoast())
                 {

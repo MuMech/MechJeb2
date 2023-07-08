@@ -945,9 +945,9 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            if (stats.vacStats.Count == 0) return 0;
+            if (stats.VacStats.Count == 0) return 0;
 
-            return stats.vacStats[stats.vacStats.Count - 1].DeltaV;
+            return stats.VacStats[stats.VacStats.Count - 1].DeltaV;
         }
 
         [ValueInfoItem("#MechJeb_StageDV_atmo", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Stage ΔV (atmo)
@@ -956,9 +956,9 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            if (stats.atmoStats.Count == 0) return 0;
+            if (stats.AtmoStats.Count == 0) return 0;
 
-            return stats.atmoStats[stats.atmoStats.Count - 1].DeltaV;
+            return stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaV;
         }
 
         [ValueInfoItem("#MechJeb_StageDV_atmo_vac", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)] //Stage ΔV (atmo, vac)
@@ -967,8 +967,8 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            double atmDv = stats.atmoStats.Count == 0 ? 0 : stats.atmoStats[stats.atmoStats.Count - 1].DeltaV;
-            double vacDv = stats.vacStats.Count == 0 ? 0 : stats.vacStats[stats.vacStats.Count - 1].DeltaV;
+            double atmDv = stats.AtmoStats.Count == 0 ? 0 : stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaV;
+            double vacDv = stats.VacStats.Count == 0 ? 0 : stats.VacStats[stats.VacStats.Count - 1].DeltaV;
 
             return string.Format("{0:F0}, {1:F0}", atmDv, vacDv);
         }
@@ -980,10 +980,10 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            if (stats.vacStats.Count == 0 || stats.atmoStats.Count == 0) return 0;
+            if (stats.VacStats.Count == 0 || stats.AtmoStats.Count == 0) return 0;
 
-            float vacTimeLeft = (float)stats.vacStats[stats.vacStats.Count - 1].DeltaTime;
-            float atmoTimeLeft = (float)stats.atmoStats[stats.atmoStats.Count - 1].DeltaTime;
+            float vacTimeLeft = (float)stats.VacStats[stats.VacStats.Count - 1].DeltaTime;
+            float atmoTimeLeft = (float)stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaTime;
             float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
 
             return timeLeft;
@@ -1013,7 +1013,7 @@ namespace MuMech
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
-            return stats.vacStats.Sum(s => s.DeltaV);
+            return stats.VacStats.Sum(s => s.DeltaV);
         }
 
         [ValueInfoItem("#MechJeb_TotalDV_atmo", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Total ΔV (atmo)
@@ -1021,7 +1021,7 @@ namespace MuMech
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
-            return stats.atmoStats.Sum(s => s.DeltaV);
+            return stats.AtmoStats.Sum(s => s.DeltaV);
         }
 
         [ValueInfoItem("#MechJeb_TotalDV_atmo_vac", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)] //Total ΔV (atmo, vac)
@@ -1030,8 +1030,8 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate(this);
 
-            double atmDv = stats.atmoStats.Sum(s => s.DeltaV);
-            double vacDv = stats.vacStats.Sum(s => s.DeltaV);
+            double atmDv = stats.AtmoStats.Sum(s => s.DeltaV);
+            double vacDv = stats.VacStats.Sum(s => s.DeltaV);
 
             return string.Format("{0:F0}, {1:F0}", atmDv, vacDv);
         }

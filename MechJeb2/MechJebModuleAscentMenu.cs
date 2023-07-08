@@ -507,8 +507,8 @@ namespace MuMech
             int mjPhase = solution.MJPhase(pvgPhase);
             int kspStage = solution.KSPStage(pvgPhase);
 
-            if (mjPhase < Core.StageStats.vacStats.Count)
-                stageDeltaV = Core.StageStats.vacStats[mjPhase].DeltaV;
+            if (mjPhase < Core.StageStats.VacStats.Count)
+                stageDeltaV = Core.StageStats.VacStats[mjPhase].DeltaV;
 
             double excessDV = stageDeltaV - solution.DV(t, pvgPhase);
 

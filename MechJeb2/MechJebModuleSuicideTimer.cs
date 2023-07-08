@@ -54,7 +54,7 @@ namespace MuMech
 
             Core.StageStats.RequestUpdate(this);
 
-            if (Core.StageStats.vacStats.Count <= 0)
+            if (Core.StageStats.VacStats.Count <= 0)
                 return;
 
             if (_suicide != null)
@@ -70,10 +70,10 @@ namespace MuMech
                     VesselState.forward.WorldToV3Rotated(), VesselState.time, MainBody.gravParameter, MainBody.Radius)
                 .SetGround(GetGroundHeight());
 
-            for (int mjPhase = Core.StageStats.vacStats.Count - 1; mjPhase >= 0; mjPhase--)
+            for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
-                FuelStats fuelStats = Core.StageStats.vacStats[mjPhase];
-                int kspStage = Core.StageStats.vacStats[mjPhase].KSPStage;
+                FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
+                int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
                 suicideBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
                     kspStage, mjPhase);

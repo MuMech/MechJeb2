@@ -355,16 +355,16 @@ namespace MuMech
             stats.RequestUpdate(this);
 
             double lastStageBurnTime = 0;
-            for (int i = stats.vacStats.Count - 1; i >= 0 && dvLeft > 0; i--)
+            for (int mjPhase = stats.VacStats.Count - 1; mjPhase >= 0 && dvLeft > 0; mjPhase--)
             {
-                FuelStats s = stats.vacStats[i];
+                FuelStats s = stats.VacStats[mjPhase];
                 if (s.DeltaV <= 0 || s.Thrust <= 0)
                 {
                     if (Core.Staging.Enabled)
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
-                        if (burnTime - lastStageBurnTime < Core.Staging.autostagePreDelay && i != stats.vacStats.Count - 1)
+                        if (burnTime - lastStageBurnTime < Core.Staging.autostagePreDelay && mjPhase != stats.VacStats.Count - 1)
                             burnTime += Core.Staging.autostagePreDelay - (burnTime - lastStageBurnTime);
                         burnTime          += Core.Staging.autostagePreDelay;
                         lastStageBurnTime =  burnTime;
@@ -391,7 +391,7 @@ namespace MuMech
                 // all but the current stage. This is wrong, but hopefully it's
                 // close enough for now.
                 // TODO: Be smarter about throttle limits on future stages.
-                if (i == stats.vacStats.Count - 1)
+                if (mjPhase == stats.VacStats.Count - 1)
                 {
                     stageAvgAccel *= VesselState.throttleFixedLimit;
                 }

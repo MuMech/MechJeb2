@@ -23,9 +23,10 @@ namespace MechJebLib.Primitives
             return new H1();
         }
 
-        public static H1 Get()
+        public static H1 Get(bool unityCompat = false)
         {
             H1 h = _pool.Borrow();
+            h.UnityCompat = unityCompat;
             return h;
         }
 

@@ -65,6 +65,13 @@ namespace MechJebLib.Simulations
 
             Log($"{EnginesActivatedInStage[CurrentStage].Count} engines activated in stage");
 
+            ActivateEngines();
+
+            UpdateMass();
+        }
+
+        public void ActivateEngines()
+        {
             foreach (SimModuleEngines e in EnginesActivatedInStage[CurrentStage])
                 if (e.IsEnabled)
                     e.Activate();
@@ -72,8 +79,6 @@ namespace MechJebLib.Simulations
             foreach (SimModuleRCS r in RCSActivatedInStage[CurrentStage])
                 if (r.IsEnabled)
                     r.Activate();
-
-            UpdateMass();
         }
 
         public void UpdateActiveEngines()

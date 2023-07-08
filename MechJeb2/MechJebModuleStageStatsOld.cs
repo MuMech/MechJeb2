@@ -13,12 +13,9 @@ namespace MuMech
     //the publicly available atmoStats and vacStats. Then it will disable itself unless
     //it got another RequestUpdate in the meantime.
     [UsedImplicitly]
-    public class MechJebModuleOldStageStats : ComputerModule
+    public class MechJebModuleStageStatsOld : ComputerModule
     {
-        public MechJebModuleOldStageStats(MechJebCore core) : base(core) { }
-
-        [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)] //ΔV include cosine losses
-        public bool dVLinearThrust = true;
+        public MechJebModuleStageStatsOld(MechJebCore core) : base(core) { }
 
         public FuelFlowSimulation.FuelStats[] atmoStats = { };
         public FuelFlowSimulation.FuelStats[] vacStats  = { };
@@ -121,12 +118,6 @@ namespace MuMech
             TryStartSimulation();
         }
 
-        public override void OnWaitForFixedUpdate()
-        {
-            // Check if we managed to get a result while the physic frame was running
-            IsResultReady();
-        }
-
         public override void OnUpdate()
         {
             IsResultReady();
@@ -197,7 +188,7 @@ namespace MuMech
 
                 FuelFlowSimulation first = sims[0];
                 FuelFlowSimulation second = sims[1];
-                first.Init(parts, dVLinearThrust);
+                first.Init(parts, Core.StageStats.DVLinearThrust);
                 second.CopyFrom(first);
 
                 Profiler.EndSample();
