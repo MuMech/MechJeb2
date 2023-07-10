@@ -223,11 +223,9 @@ namespace MechJebLib.Simulations
             {
                 if (_pfDecoupled == null) return;
 
-                object obj;
-                if ((obj = _pfDecoupled.GetValue(kspPartModule)) == null)
-                    decoupler.IsDecoupled = false;
-                else
-                    decoupler.IsDecoupled = (bool)obj;
+                object fieldVal = _pfDecoupled.GetValue(kspPartModule);
+                if (fieldVal != null && fieldVal is bool)
+                    decoupler.IsDecoupled = (bool)fieldVal;
             }
         }
     }
