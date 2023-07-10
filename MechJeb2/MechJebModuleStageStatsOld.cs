@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using JetBrains.Annotations;
 using UnityEngine.Profiling;
 using UnityToolbag;
@@ -26,6 +25,7 @@ namespace MuMech
         private FuelFlowSimulation.FuelStats[] newVacStats;
         private bool                           resultReady;
 
+        /*
         public void RequestUpdate(object controller, bool wait = false)
         {
             Users.Add(controller);
@@ -50,6 +50,13 @@ namespace MuMech
 
                 IsResultReady();
             }
+        }
+        */
+
+        public void RequestUpdate(object controller, bool wait = false)
+        {
+            StartSimulation();
+            IsResultReady();
         }
 
         public CelestialBody editorBody;
@@ -110,6 +117,7 @@ namespace MuMech
             stopwatch.Reset();
         }
 
+        /*
         public override void OnFixedUpdate()
         {
             // Check if we have a result ready from the previous physic frame
@@ -122,6 +130,7 @@ namespace MuMech
         {
             IsResultReady();
         }
+        */
 
         private void IsResultReady()
         {
@@ -194,7 +203,8 @@ namespace MuMech
                 Profiler.EndSample();
 
                 //Run the simulation in a separate thread
-                ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+                //ThreadPool.QueueUserWorkItem(RunSimulation, sims);
+                RunSimulation(sims);
                 //Profiler.BeginSample("StartSimulation_Run");
                 //RunSimulation(sims);
                 //Profiler.EndSample();

@@ -1,46 +1,45 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using MechJebLib.Simulations.PartModules;
-using static MechJebLib.Utils.Statics;
-
-#nullable enable
 
 namespace MechJebLib.Simulations
 {
     // TODO:
     //   - add threading
-    //   - wire up cosLoss properly in the GUI
-    //   - remove all the logging
-    //   - do some perf testing
+    //   - throttle running in VAB
     public class FuelFlowSimulation
     {
         private const int MAXSTEPS = 100;
 
-        public readonly  List<FuelStats> Segments = new List<FuelStats>();
-        private readonly List<SimPart>   _sources = new List<SimPart>();
-        private          FuelStats?      _currentSegment;
-        private          double          _time;
-        public           bool            DVLinearThrust = true; // include cos losses
+        public readonly  List<FuelStats>  Segments = new List<FuelStats>();
+        private          FuelStats        _currentSegment;
+        private          double           _time;
+        public           bool             DVLinearThrust           = true; // include cos losses
+        private readonly HashSet<SimPart> _partsWithResourceDrains = new HashSet<SimPart>();
+        private          bool             _allocatedFirstSegment;
 
         public void Run(SimVessel vessel)
         {
-            _time           = 0;
-            _currentSegment = null;
+            _allocatedFirstSegment = false;
+            _time                  = 0;
             Segments.Clear();
             vessel.MainThrottle = 1.0;
 
-            Log($"starting stage: {vessel.CurrentStage}");
             vessel.ActivateEngines();
 
-            while (vessel.CurrentStage >= 0)
+            while (vessel.CurrentStage >= 0) // FIXME: should stop mutating vessel.CurrentStage
             {
-                Log($"current stage: {vessel.CurrentStage}");
                 SimulateStage(vessel);
                 FinishSegment(vessel);
                 vessel.Stage();
             }
 
             Segments.Reverse();
+
+            _partsWithResourceDrains.Clear();
         }
 
         private void SimulateStage(SimVessel vessel)
@@ -53,17 +52,12 @@ namespace MechJebLib.Simulations
             GetNextSegment(vessel);
             double currentThrust = vessel.ThrustMagnitude;
 
-            Log("starting stage");
-
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
                 if (AllowedToStage(vessel))
-                {
-                    Log("allowed to stage");
                     return;
-                }
 
-                double dt = MinimumTimeStep(vessel);
+                double dt = MinimumTimeStep();
 
                 // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
                 // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
@@ -75,40 +69,36 @@ namespace MechJebLib.Simulations
                 }
 
                 _time += dt;
-                ApplyResourceDrains(vessel, dt);
+                ApplyResourceDrains(dt);
 
                 vessel.UpdateMass();
                 UpdateEngineStats(vessel);
                 UpdateActiveEngines(vessel);
                 UpdateResourceDrainsAndResiduals(vessel);
-
-                Log($"took timestep of {dt}");
             }
 
             throw new Exception("FuelFlowSimulation hit max steps of " + MAXSTEPS + " steps");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateEngineStats(SimVessel vessel)
         {
             vessel.UpdateEngineStats();
         }
 
-        private void ApplyResourceDrains(SimVessel vessel, double dt)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ApplyResourceDrains(double dt)
         {
-            for (int i = 0; i < vessel.Parts.Count; i++)
-            {
-                SimPart p = vessel.Parts[i];
-                p.ApplyResourceDrains(dt);
-            }
+            foreach (SimPart part in _partsWithResourceDrains)
+                part.ApplyResourceDrains(dt);
         }
 
         private void UpdateResourceDrainsAndResiduals(SimVessel vessel)
         {
-            for (int i = 0; i < vessel.Parts.Count; i++)
-            {
-                SimPart p = vessel.Parts[i];
-                p.ClearResourceDrains();
-            }
+            foreach (SimPart part in _partsWithResourceDrains)
+                part.ClearResourceDrains();
+
+            _partsWithResourceDrains.Clear();
 
             for (int i = 0; i < vessel.ActiveEngines.Count; i++)
             {
@@ -122,13 +112,15 @@ namespace MechJebLib.Simulations
                             break;
                         case SimFlowMode.ALL_VESSEL:
                         case SimFlowMode.ALL_VESSEL_BALANCE:
-                            UpdateResourceDrainsInParts(vessel.Parts, e.ResourceConsumptions[resourceId], resourceId, false);
-                            UpdateResourceResidualsInParts(vessel.Parts, e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                                resourceId, false);
+                            UpdateResourceResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ModuleResiduals, resourceId);
                             break;
                         case SimFlowMode.STAGE_PRIORITY_FLOW:
                         case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                            UpdateResourceDrainsInParts(vessel.Parts, e.ResourceConsumptions[resourceId], resourceId, true);
-                            UpdateResourceResidualsInParts(vessel.Parts, e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                                resourceId, true);
+                            UpdateResourceResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ModuleResiduals, resourceId);
                             break;
                         case SimFlowMode.STAGE_STACK_FLOW:
                         case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
@@ -143,6 +135,8 @@ namespace MechJebLib.Simulations
                     }
             }
         }
+
+        private readonly List<SimPart> _sources = new List<SimPart>();
 
         private void UpdateResourceDrainsInParts(IList<SimPart> parts, double resourceConsumption, int resourceId, bool usePriority)
         {
@@ -182,33 +176,49 @@ namespace MechJebLib.Simulations
                 UpdateResourceDrainsInPart(_sources[i], resourceConsumption / _sources.Count, resourceId);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateResourceDrainsInPart(SimPart p, double resourceConsumption, int resourceId)
         {
+            _partsWithResourceDrains.Add(p);
             p.AddResourceDrain(resourceId, resourceConsumption);
         }
 
-        private void UpdateResourceResidualsInParts(IList<SimPart> parts, double residual, int resourceId)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void UpdateResourceResidualsInParts(IList<SimPart> parts, double residual, int resourceId)
         {
-            foreach (SimPart part in parts)
-                part.UpdateResourceResidual(residual, resourceId);
+            for (int i = 0; i < parts.Count; i++)
+                parts[i].UpdateResourceResidual(residual, resourceId);
         }
 
-        private double MinimumTimeStep(SimVessel vessel)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double MinimumTimeStep()
         {
-            double maxTime = vessel.ResourceMaxTime();
+            double maxTime = ResourceMaxTime();
 
             return maxTime < double.MaxValue && maxTime >= 0 ? maxTime : 0;
         }
 
-        private void UpdateActiveEngines(SimVessel vessel)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ResourceMaxTime()
+        {
+            double maxTime = double.MaxValue;
+
+            foreach (SimPart part in _partsWithResourceDrains)
+                maxTime = Math.Min(part.ResourceMaxTime(), maxTime);
+
+            return maxTime;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void UpdateActiveEngines(SimVessel vessel)
         {
             vessel.UpdateActiveEngines();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishSegment(SimVessel vessel)
         {
-            Log("FinishSegment() called");
-            if (_currentSegment is null)
+            if (!_allocatedFirstSegment)
                 return;
 
             _currentSegment.DeltaTime = _time - _currentSegment.StartTime;
@@ -219,32 +229,32 @@ namespace MechJebLib.Simulations
             Segments.Add(_currentSegment);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void GetNextSegment(SimVessel vessel)
         {
-            Log("GetNextSegment() called");
             double stagedMass = 0;
-            if (!(_currentSegment is null))
+            if (_allocatedFirstSegment)
                 stagedMass = _currentSegment.EndMass - vessel.Mass;
+            else
+                _allocatedFirstSegment = true;
 
             _currentSegment = new FuelStats
             {
-                KSPStage        = vessel.CurrentStage,
-                Thrust          = DVLinearThrust ? vessel.ThrustMagnitude : vessel.ThrustNoCosLoss,
-                StartTime       = _time,
-                StartMass       = vessel.Mass,
-                SpoolUpTime     = vessel.SpoolupCurrent,
-                StagedMass      = stagedMass
+                KSPStage    = vessel.CurrentStage,
+                Thrust      = DVLinearThrust ? vessel.ThrustMagnitude : vessel.ThrustNoCosLoss,
+                StartTime   = _time,
+                StartMass   = vessel.Mass,
+                SpoolUpTime = vessel.SpoolupCurrent,
+                StagedMass  = stagedMass
             };
         }
 
-        private bool AllowedToStage(SimVessel vessel)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool AllowedToStage(SimVessel vessel)
         {
             // always stage if all the engines are burned out
             if (vessel.ActiveEngines.Count == 0)
-            {
-                Log("staging because engines are burned out");
                 return true;
-            }
 
             for (int i = 0; i < vessel.ActiveEngines.Count; i++)
             {
@@ -253,33 +263,18 @@ namespace MechJebLib.Simulations
                 if (e.Part.IsSepratron)
                     continue;
 
-                Log($"found an active engine DecoupledInStage {e.Part.DecoupledInStage}");
-
                 // never stage an active engine
                 if (e.Part.DecoupledInStage >= vessel.CurrentStage - 1)
-                {
-                    Log("not staging because of active engines");
                     return false;
-                }
 
                 // never drop fuel that could be used
                 if (e.WouldDropAccessibleFuelTank(vessel.CurrentStage - 1))
-                {
-                    Log("not staging because would drop fuel tank");
                     return false;
-                }
             }
 
-            // do not trigger a stage that doesn't decouple anything until the engines burn out
-            if (vessel.PartsDroppedInStage.Count(vessel.CurrentStage - 1) == 0)
-            {
-                Log("not staging because no parts would drop");
+            // do not trigger a stage that doesn't decouple anything -- until the engines burn out
+            if (vessel.PartsRemainingInStage[vessel.CurrentStage - 1].Count == vessel.PartsRemainingInStage[vessel.CurrentStage].Count)
                 return false;
-            }
-
-            // we always stage at this point, except for the stage zero which we burn down until the engines go out
-            if (vessel.CurrentStage > 0)
-                Log("staging because we have parts to drop that aren't engines or fuel");
 
             return vessel.CurrentStage > 0;
         }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
@@ -73,62 +74,47 @@ namespace MechJebLib.Simulations.PartModules
         private double _atmDensity  => Part.Vessel.ATMDensity;
         private double _machNumber  => Part.Vessel.MachNumber;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Activate()
         {
-            Log("igniting engine");
             IsOperational    = true;
             ThrustPercentage = 100f;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateEngineStatus()
         {
             if (CanDrawResources())
                 return;
 
-            Log("engine cannot draw resources");
-
             IsOperational = false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool CanDrawResources()
         {
             if (NoPropellants)
-            {
-                Log("  no propellants");
                 return false;
-            }
 
             foreach (int resourceId in ResourceConsumptions.Keys)
                 switch (PropellantFlowModes[resourceId])
                 {
                     case SimFlowMode.NO_FLOW:
                         if (!PartHasResource(Part, resourceId))
-                        {
-                            Log($"  cannot draw resources NO_FLOW on {resourceId} ");
                             return false;
-                        }
-
                         break;
                     case SimFlowMode.ALL_VESSEL:
                     case SimFlowMode.ALL_VESSEL_BALANCE:
                     case SimFlowMode.STAGE_PRIORITY_FLOW:
                     case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
                         if (!PartsHaveResource(Part.Vessel.Parts, resourceId))
-                        {
-                            Log($"  cannot draw resources ALL_VESSEL on {resourceId} ");
                             return false;
-                        }
-
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
                     case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case SimFlowMode.STACK_PRIORITY_SEARCH:
                         if (!PartsHaveResource(Part.CrossFeedPartSet, resourceId))
-                        {
-                            Log($"  cannot draw resources STACK_FLOW on {resourceId} ");
                             return false;
-                        }
-
                         break;
                     case SimFlowMode.NULL:
                         return false;
@@ -139,6 +125,7 @@ namespace MechJebLib.Simulations.PartModules
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool PartHasResource(SimPart part, int resourceId)
         {
             if (part.TryGetResource(resourceId, out SimResource resource))
@@ -146,6 +133,7 @@ namespace MechJebLib.Simulations.PartModules
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool PartsHaveResource(IReadOnlyList<SimPart> parts, int resourceId)
         {
             for (int i = 0; i < parts.Count; i++)
@@ -154,11 +142,13 @@ namespace MechJebLib.Simulations.PartModules
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Dispose()
         {
             _pool.Release(this);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SimModuleEngines Borrow(SimPart part)
         {
             SimModuleEngines engine = _pool.Borrow();
@@ -166,6 +156,7 @@ namespace MechJebLib.Simulations.PartModules
             return engine;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static SimModuleEngines New()
         {
             return new SimModuleEngines();
@@ -188,11 +179,13 @@ namespace MechJebLib.Simulations.PartModules
             m.AtmosphereCurve.Clear();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool DrawingFuelFromPartDroppedInStage(SimPart p, int resourceId, int stageNum)
         {
             return PartHasResource(p, resourceId) && p.DecoupledInStage == stageNum;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool DrawingFuelFromPartsDroppedInStage(IList<SimPart> parts, int resourceId, int stageNum)
         {
             for (int i = 0; i < parts.Count; i++)
@@ -201,6 +194,7 @@ namespace MechJebLib.Simulations.PartModules
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool WouldDropAccessibleFuelTank(int stageNum)
         {
             foreach (int resourceId in ResourceConsumptions.Keys)
@@ -208,38 +202,27 @@ namespace MechJebLib.Simulations.PartModules
                 {
                     case SimFlowMode.NO_FLOW:
                         if (DrawingFuelFromPartDroppedInStage(Part, resourceId, stageNum))
-                        {
-                            Log("NO_FLOW returning true");
                             return true;
-                        }
-
                         break;
                     case SimFlowMode.ALL_VESSEL:
                     case SimFlowMode.ALL_VESSEL_BALANCE:
                     case SimFlowMode.STAGE_PRIORITY_FLOW:
                     case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
                         if (DrawingFuelFromPartsDroppedInStage(Part.Vessel.Parts, resourceId, stageNum))
-                        {
-                            Log("ALL_VESSEL returning true");
                             return true;
-                        }
-
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
                     case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
                     case SimFlowMode.STACK_PRIORITY_SEARCH:
                         if (DrawingFuelFromPartsDroppedInStage(Part.CrossFeedPartSet, resourceId, stageNum))
-                        {
-                            Log("STACK_FLOW returning true");
                             return true;
-                        }
-
                         break;
                 }
 
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update()
         {
             ISP            = ISPAtConditions();
@@ -249,6 +232,7 @@ namespace MechJebLib.Simulations.PartModules
             SetConsumptionRates();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double FlowRateAtConditions()
         {
             double minFuelFlow = MinFuelFlow;
@@ -260,6 +244,7 @@ namespace MechJebLib.Simulations.PartModules
             return Lerp(minFuelFlow, maxFuelFlow, _throttle * 0.01f * ThrustPercentage) * FlowMultiplier;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RefreshThrust()
         {
             ThrustCurrent = V3.zero;
@@ -289,6 +274,7 @@ namespace MechJebLib.Simulations.PartModules
         }
 
         // for a single EngineModule, determine its flowMultiplier, subject to atmDensity + machNumber
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double FlowMultiplierAtConditions()
         {
             double flowMultiplier = 1;
@@ -321,6 +307,7 @@ namespace MechJebLib.Simulations.PartModules
         }
 
         // for a single EngineModule, evaluate its ISP, subject to all the different possible curves
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double ISPAtConditions()
         {
             double isp = AtmosphereCurve.Evaluate(_atmPressure);
@@ -333,6 +320,7 @@ namespace MechJebLib.Simulations.PartModules
             return isp;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetConsumptionRates()
         {
             ResourceConsumptions.Clear();

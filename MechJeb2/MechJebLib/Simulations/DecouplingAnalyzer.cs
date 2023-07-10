@@ -83,7 +83,7 @@ namespace MechJebLib.Simulations
                             {
                                 // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                 p.DecoupledInStage = p.InverseStage;
-                                v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+                                TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                                 return p.DecoupledInStage;
                             }
 
@@ -93,14 +93,14 @@ namespace MechJebLib.Simulations
                                 {
                                     // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                     p.DecoupledInStage = p.InverseStage;
-                                    v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                                     return p.DecoupledInStage;
                                 }
 
                                 // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
                                 // The part and other children are dropped with the traversalParent.
                                 p.DecoupledInStage = parentDecoupledInStage;
-                                v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+                                TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                                 CalculateDecoupledInStageRecursively(v, decouple.AttachedPart, p, p.InverseStage);
                                 return p.DecoupledInStage;
                             }
@@ -115,14 +115,14 @@ namespace MechJebLib.Simulations
                                 {
                                     // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                     p.DecoupledInStage = p.InverseStage;
-                                    v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                                     return p.DecoupledInStage;
                                 }
 
                                 // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
                                 // The part and other children are dropped with the traversalParent.
                                 p.DecoupledInStage = parentDecoupledInStage;
-                                v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+                                TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                                 CalculateDecoupledInStageRecursively(v, dockingNode.AttachedPart, p, p.InverseStage);
                                 return p.DecoupledInStage;
                             }
@@ -133,7 +133,7 @@ namespace MechJebLib.Simulations
                         {
                             // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                             p.DecoupledInStage = p.InverseStage;
-                            v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+                            TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                             return p.DecoupledInStage;
                         }
 
@@ -142,15 +142,21 @@ namespace MechJebLib.Simulations
                         p.DecoupledInStage = p.InverseStage > parentDecoupledInStage
                             ? p.InverseStage
                             : parentDecoupledInStage;
-                        v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+                        TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                         return p.DecoupledInStage;
                 }
             }
 
             // not decoupling this part
             p.DecoupledInStage = parentDecoupledInStage;
-            v.PartsDroppedInStage[p.DecoupledInStage].Add(p);
+            TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
             return p.DecoupledInStage;
+        }
+
+        private static void TrackPartDecoupledInStage(SimVessel v, SimPart part, int stage)
+        {
+            for (int i = stage + 1; i <= v.CurrentStage; i++)
+                v.PartsRemainingInStage[i].Add(part);
         }
     }
 }

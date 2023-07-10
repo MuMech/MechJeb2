@@ -2,10 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -36,6 +34,7 @@ namespace MechJebLib.Simulations
         public double CrewMass;
         public double ModulesStagedMass;
         public double ModulesUnstagedMass;
+        public double DisabledResourcesMass;
         public double EngineResiduals;
 
         public bool IsLaunchClamp;
@@ -57,7 +56,7 @@ namespace MechJebLib.Simulations
                 return;
             }
 
-            Mass =  DryMass + CrewMass;
+            Mass =  DryMass + CrewMass + DisabledResourcesMass;
             Mass += Vessel.CurrentStage <= InverseStage ? ModulesStagedMass : ModulesUnstagedMass;
             //ModulesCurrentMass =  Mass;
             foreach (SimResource resource in Resources.Values)
@@ -149,8 +148,6 @@ namespace MechJebLib.Simulations
 
                 if (!_resourceDrains.TryGetValue(resource.Id, out double resourceDrain))
                     continue;
-
-                Log($"    id: {resource.Id} drain: {resourceDrain} excess: {resource.Amount - resource.ResidualThreshold}");
 
                 double dt = (resource.Amount - resource.ResidualThreshold) / resourceDrain;
 

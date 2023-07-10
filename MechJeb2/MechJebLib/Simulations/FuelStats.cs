@@ -5,7 +5,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
-    public class FuelStats
+    public struct FuelStats
     {
         public double DeltaTime;
         public double DeltaV;

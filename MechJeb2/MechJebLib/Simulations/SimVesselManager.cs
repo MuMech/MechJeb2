@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 namespace MechJebLib.Simulations
 {
+    // FIXME: the SimVesselManager needs to be broken out of MechJebLib eventually to isolate the parts that
+    // need to link against KSP GameObjects (MechJebLibBindings.dll or something like that)
     public partial class SimVesselManager
     {
         public List<FuelStats> Segments => _fuelFlowSimulation.Segments;

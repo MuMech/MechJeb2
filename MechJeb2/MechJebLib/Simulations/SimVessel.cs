@@ -1,12 +1,12 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.Simulations.PartModules;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
-
-#nullable enable
 
 namespace MechJebLib.Simulations
 {
@@ -15,7 +15,7 @@ namespace MechJebLib.Simulations
         private static readonly ObjectPool<SimVessel> _pool = new ObjectPool<SimVessel>(New, Clear);
 
         public readonly List<SimPart>                      Parts                   = new List<SimPart>(30);
-        public readonly DictOfLists<int, SimPart>          PartsDroppedInStage     = new DictOfLists<int, SimPart>(10);
+        public readonly DictOfLists<int, SimPart>          PartsRemainingInStage   = new DictOfLists<int, SimPart>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesDroppedInStage   = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesActivatedInStage = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleRCS>     RCSActivatedInStage     = new DictOfLists<int, SimModuleRCS>(10);
@@ -32,6 +32,7 @@ namespace MechJebLib.Simulations
         public double ATMDensity;
         public double MachNumber;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetConditions(double atmDensity, double atmPressure, double machNumber)
         {
             ATMDensity  = atmDensity;
@@ -39,23 +40,19 @@ namespace MechJebLib.Simulations
             MachNumber  = machNumber;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateMass()
         {
             Mass = 0;
-            int num = 0;
-            for (int i = -1; i < CurrentStage; i++)
-            {
-                foreach (SimPart part in PartsDroppedInStage[i])
-                {
-                    num++;
-                    part.UpdateMass();
-                    Mass += part.Mass;
-                }
-            }
 
-            Log($"vessel mass updated to {Mass} in {num} parts");
+            foreach (SimPart part in PartsRemainingInStage[CurrentStage])
+            {
+                part.UpdateMass();
+                Mass += part.Mass;
+            }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Stage()
         {
             if (CurrentStage < 0)
@@ -63,13 +60,12 @@ namespace MechJebLib.Simulations
 
             CurrentStage--;
 
-            Log($"{EnginesActivatedInStage[CurrentStage].Count} engines activated in stage");
-
             ActivateEngines();
 
             UpdateMass();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ActivateEngines()
         {
             foreach (SimModuleEngines e in EnginesActivatedInStage[CurrentStage])
@@ -81,34 +77,30 @@ namespace MechJebLib.Simulations
                     r.Activate();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateActiveEngines()
         {
             ActiveEngines.Clear();
 
             for (int i = -1; i < CurrentStage; i++)
             {
-                Log($"found {EnginesDroppedInStage[i].Count} engines in stage");
                 foreach (SimModuleEngines e in EnginesDroppedInStage[i])
                 {
                     if (e.MassFlowRate <= 0) continue;
-
-                    Log("mass flow was not zero");
 
                     e.UpdateEngineStatus();
 
                     if (!e.IsOperational)
                         continue;
 
-                    Log("engine is operational");
                     ActiveEngines.Add(e);
                 }
             }
 
-            Log($"found {ActiveEngines.Count} active engines");
-
             ComputeThrustAndSpoolup();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputeThrustAndSpoolup()
         {
             ThrustCurrent   = V3.zero;
@@ -131,16 +123,7 @@ namespace MechJebLib.Simulations
             SpoolupCurrent  /= ThrustCurrent.magnitude;
         }
 
-        public double ResourceMaxTime()
-        {
-            double maxTime = double.MaxValue;
-
-            for (int i = 0; i < Parts.Count; i++)
-                maxTime = Math.Min(Parts[i].ResourceMaxTime(), maxTime);
-
-            return maxTime;
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             foreach (SimPart p in Parts)
@@ -148,26 +131,30 @@ namespace MechJebLib.Simulations
             _pool.Release(this);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SimVessel Borrow()
         {
             return _pool.Borrow();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static SimVessel New()
         {
             return new SimVessel();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Clear(SimVessel v)
         {
             v.Parts.Clear();
-            v.PartsDroppedInStage.Clear();
+            v.PartsRemainingInStage.Clear();
             v.EnginesDroppedInStage.Clear();
             v.EnginesActivatedInStage.Clear();
             v.RCSActivatedInStage.Clear();
             v.ActiveEngines.Clear();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateEngineStats()
         {
             for (int i = -1; i < CurrentStage; i++)
@@ -181,13 +168,12 @@ namespace MechJebLib.Simulations
             for (int i = 0; i < Parts.Count; i++)
                 sb.Append(Parts[i]);
 
-            for (int i = -1; i <= CurrentStage; i++)
-            {
-                sb.Append($"Stage {i}: ");
-                foreach (SimPart part in PartsDroppedInStage[i])
-                    sb.Append($" {part.Name}");
-                sb.AppendLine();
-            }
+
+            sb.Append("Parts: ");
+            foreach (SimPart part in PartsRemainingInStage[CurrentStage])
+                sb.Append($" {part.Name}");
+            sb.AppendLine();
+
 
             return sb.ToString();
         }

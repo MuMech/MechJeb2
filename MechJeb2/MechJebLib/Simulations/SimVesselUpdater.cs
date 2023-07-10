@@ -1,9 +1,9 @@
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Reflection;
-using KSP.UI;
+using System.Runtime.CompilerServices;
+using KSP.UI.Screens;
 using MechJebLib.Simulations.PartModules;
 using MuMech;
 using UnityEngine;
@@ -22,119 +22,61 @@ namespace MechJebLib.Simulations
             private Dictionary<SimPartModule, PartModule> _inversePartModuleMapping => _manager._inversePartModuleMapping;
             private SimVessel                             _vessel                   => _manager._vessel;
 
-            private delegate double CrewMass(ProtoCrewMember crew);
+            private static readonly FieldInfo? _pfDecoupled;
 
-            private static readonly CrewMass _crewMassDelegate;
+            static SimVesselUpdater()
+            {
+                if (!ReflectionUtils.isAssemblyLoaded("ProceduralFairings")) return;
 
-            private static readonly FieldInfo? _rfPredictedMaximumResiduals;
-            private static readonly FieldInfo? _rfSpoolUpTime;
+                _pfDecoupled =
+                    ReflectionUtils.getFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler", "decoupled");
+                if (_pfDecoupled == null)
+                {
+                    Debug.Log(
+                        "MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
+                }
+            }
 
             public SimVesselUpdater(SimVesselManager manager)
             {
                 _manager = manager;
             }
 
-            static SimVesselUpdater()
-            {
-                _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
-
-                if (!ReflectionUtils.isAssemblyLoaded("RealFuels")) return;
-
-                _rfPredictedMaximumResiduals =
-                    ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
-                if (_rfPredictedMaximumResiduals == null)
-                {
-                    Debug.Log(
-                        "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
-                }
-
-                _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
-                if (_rfSpoolUpTime == null)
-                {
-                    Debug.Log(
-                        "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
-                }
-            }
-
-            private static double CrewMassOld(ProtoCrewMember crew)
-            {
-                return PhysicsGlobals.KerbalCrewMass;
-            }
-
-            private static double CrewMassNew(ProtoCrewMember crew)
-            {
-                return PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
-            }
-
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void Update()
             {
                 UpdateParts();
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateParts()
             {
+                _vessel.CurrentStage = StageManager.CurrentStage;
+
+                // FIXME: could track only parts that matter to the sim (engines+tanks) and only loop over them here
                 foreach (SimPart part in _vessel.Parts)
                 {
                     UpdatePart(part);
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdatePart(SimPart part)
             {
                 Part kspPart = _inversePartMapping[part];
 
-                part.InverseStage                      = kspPart.inverseStage;
-                part.ActivatesEvenIfDisconnected       = kspPart.ActivatesEvenIfDisconnected;
-                part.StagingOn                         = kspPart.stagingOn;
-                part.ResourcePriority                  = kspPart.GetResourcePriority();
-                part.ResourceRequestRemainingThreshold = kspPart.resourceRequestRemainingThreshold;
-                part.Mass                              = kspPart.mass;
-                part.Name                              = kspPart.name;
-                part.DryMass                           = kspPart.prefabMass;
-                part.ModulesStagedMass                 = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.STAGED);
-                part.ModulesUnstagedMass               = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.UNSTAGED);
-                part.StagingOn                         = kspPart.stagingOn;
-                part.EngineResiduals                   = 0;
-
-                HandleCrewMass(part, kspPart);
+                part.EngineResiduals = 0;
 
                 UpdateResources(part, kspPart);
 
                 UpdateModules(part);
             }
 
-            private void HandleCrewMass(SimPart part, Part kspPart)
-            {
-                part.CrewMass = 0;
-
-                if (HighLogic.LoadedSceneIsFlight && kspPart.protoModuleCrew != null)
-                    for (int i = 0; i < kspPart.protoModuleCrew.Count; i++)
-                    {
-                        ProtoCrewMember crewMember = kspPart.protoModuleCrew[i];
-                        part.CrewMass += _crewMassDelegate(crewMember);
-                    }
-                else if (HighLogic.LoadedSceneIsEditor)
-                    if (!(CrewAssignmentDialog.Instance is null) && CrewAssignmentDialog.Instance.CurrentManifestUnsafe != null)
-                    {
-                        PartCrewManifest partCrewManifest = CrewAssignmentDialog.Instance.CurrentManifestUnsafe.GetPartCrewManifest(kspPart.craftID);
-                        if (partCrewManifest != null)
-                        {
-                            ProtoCrewMember?[]? partCrew = null;
-                            partCrewManifest.GetPartCrew(ref partCrew);
-
-                            for (int i = 0; i < partCrew.Length; i++)
-                            {
-                                ProtoCrewMember? crewMember = partCrew[i];
-                                if (crewMember == null) continue;
-                                part.CrewMass += _crewMassDelegate(crewMember);
-                            }
-                        }
-                    }
-            }
-
-            private void UpdateResources(SimPart part, Part kspPart)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void UpdateResources(SimPart part, Part kspPart)
             {
                 part.Resources.Clear();
+                part.DisabledResourcesMass = 0;
 
                 for (int i = 0; i < kspPart.Resources.Count; i++)
                 {
@@ -143,7 +85,7 @@ namespace MechJebLib.Simulations
                     if (!kspResource.flowState)
                     {
                         // disabled resources are dead weight and cannot be enabled by staging
-                        part.DryMass += kspResource.amount + kspResource.info.density;
+                        part.DisabledResourcesMass += kspResource.amount * kspResource.info.density;
                         continue;
                     }
 
@@ -161,6 +103,7 @@ namespace MechJebLib.Simulations
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateModules(SimPart part)
             {
                 foreach (SimPartModule module in part.Modules)
@@ -169,6 +112,7 @@ namespace MechJebLib.Simulations
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateModule(SimPart part, SimPartModule m)
             {
                 PartModule kspModule = _inversePartModuleMapping[m];
@@ -179,7 +123,7 @@ namespace MechJebLib.Simulations
                 switch (m)
                 {
                     case SimModuleEngines engine:
-                        UpdateModuleEngines(part, engine, kspModule as ModuleEngines);
+                        UpdateModuleEngines(engine, kspModule as ModuleEngines);
                         break;
                     case SimLaunchClamp _:
                         // intentionally left blank
@@ -199,7 +143,8 @@ namespace MechJebLib.Simulations
                 }
             }
 
-            private void UpdateModuleEngines(SimPart part, SimModuleEngines engine, ModuleEngines? kspEngine)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void UpdateModuleEngines(SimModuleEngines engine, ModuleEngines? kspEngine)
             {
                 if (kspEngine is null)
                 {
@@ -207,90 +152,14 @@ namespace MechJebLib.Simulations
                     return;
                 }
 
-                engine.IsEnabled = kspEngine.isEnabled;
-
-                engine.ThrottleLocked       = kspEngine.throttleLocked;
-                engine.IsOperational        = kspEngine.isOperational;
-                engine.ThrustPercentage     = kspEngine.thrustPercentage;
-                engine.MaxFuelFlow          = kspEngine.maxFuelFlow;
-                engine.MinFuelFlow          = kspEngine.minFuelFlow;
-                engine.FlowMultiplier       = kspEngine.flowMultiplier;
-                engine.G                    = kspEngine.g;
-                engine.MaxThrust            = kspEngine.maxThrust;
-                engine.MinThrust            = kspEngine.minThrust;
-                engine.MultIsp              = kspEngine.multIsp;
-                engine.Clamp                = kspEngine.CLAMP;
-                engine.FlowMultCap          = kspEngine.flowMultCap;
-                engine.FlowMultCapSharpness = kspEngine.flowMultCapSharpness;
-                engine.AtmChangeFlow        = kspEngine.atmChangeFlow;
-                engine.UseAtmCurve          = kspEngine.useAtmCurve;
-                engine.UseAtmCurveIsp       = kspEngine.useAtmCurveIsp;
-                engine.UseThrottleIspCurve  = kspEngine.useThrottleIspCurve;
-                engine.UseThrustCurve       = kspEngine.useThrustCurve;
-                engine.UseVelCurve          = kspEngine.useVelCurve;
-                engine.UseVelCurveIsp       = kspEngine.useVelCurveIsp;
-
-                engine.ThrustCurve.LoadH1(kspEngine.thrustCurve);
-                engine.ThrottleIspCurve.LoadH1(kspEngine.throttleIspCurve);
-                engine.ThrottleIspCurveAtmStrength.LoadH1(kspEngine.throttleIspCurveAtmStrength);
-                engine.VelCurve.LoadH1(kspEngine.velCurve);
-                engine.VelCurveIsp.LoadH1(kspEngine.velCurveIsp);
-                engine.ATMCurve.LoadH1(kspEngine.atmCurve);
-                engine.ATMCurveIsp.LoadH1(kspEngine.atmCurveIsp);
-                engine.AtmosphereCurve.LoadH1(kspEngine.atmosphereCurve);
-
-                engine.NoPropellants = kspEngine is { flameout: true, statusL2: "No propellants" };
-
-                engine.ThrustTransformMultipliers.Clear();
-                foreach (double multiplier in kspEngine.thrustTransformMultipliers)
-                    engine.ThrustTransformMultipliers.Add(multiplier);
-
-                engine.ThrustDirectionVectors.Clear();
-                foreach (Transform transform in kspEngine.thrustTransforms)
-                    // thrust transforms point at the flamey end and we want to point at the pointy end
-                    engine.ThrustDirectionVectors.Add(MathExtensions.WorldToV3Rotated(-transform.forward));
-
-                engine.Propellants.Clear();
-                foreach (Propellant p in kspEngine.propellants)
-                    engine.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
-                        PartResourceLibrary.Instance.GetDefinition(p.id).density));
-
-                double? temp = 0;
-
-                if (_rfPredictedMaximumResiduals != null)
-                {
-                    try
-                    {
-                        temp = _rfPredictedMaximumResiduals.GetValue(kspEngine) as double?;
-                    }
-                    catch (ArgumentException)
-                    {
-                        temp = 0;
-                    }
-                }
-
-                engine.ModuleResiduals = temp ?? 0;
-
-                part.EngineResiduals = Math.Max(part.EngineResiduals, engine.ModuleResiduals);
-
-                float? temp2 = 0;
-                if (_rfSpoolUpTime != null)
-                {
-                    try
-                    {
-                        temp2 = _rfSpoolUpTime.GetValue(kspEngine) as float?;
-                    }
-                    catch (ArgumentException)
-                    {
-                        temp2 = 0;
-                    }
-                }
-
-                engine.ModuleSpoolupTime = temp2 ?? 0;
-
-                part.IsThrottleLocked = kspEngine.throttleLocked;
+                engine.IsEnabled        = kspEngine.isEnabled;
+                engine.IsOperational    = kspEngine.isOperational;
+                engine.ThrustPercentage = kspEngine.thrustPercentage;
+                engine.MultIsp          = kspEngine.multIsp;
+                engine.NoPropellants    = kspEngine is { flameout: true, statusL2: "No propellants" };
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateDockingNode(SimModuleDockingNode decoupler, ModuleDockingNode? kspModuleDockingNode)
             {
                 if (kspModuleDockingNode is null)
@@ -305,6 +174,7 @@ namespace MechJebLib.Simulations
                     decoupler.AttachedPart = _partMapping[kspModuleDockingNode.referenceNode.attachedPart];
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateModuleDecouplerBase(SimModuleDecouple decoupler, ModuleDecouplerBase? kspModuleDecouple)
             {
                 if (kspModuleDecouple is null)
@@ -313,9 +183,8 @@ namespace MechJebLib.Simulations
                     return;
                 }
 
-                decoupler.IsDecoupled     = kspModuleDecouple.isDecoupled;
-                decoupler.IsOmniDecoupler = kspModuleDecouple.isOmniDecoupler;
-                decoupler.Staged          = kspModuleDecouple.staged;
+                decoupler.IsDecoupled = kspModuleDecouple.isDecoupled;
+                decoupler.Staged      = kspModuleDecouple.staged;
 
                 Part kspPart = kspModuleDecouple.part;
 
@@ -335,7 +204,8 @@ namespace MechJebLib.Simulations
                     decoupler.AttachedPart = _partMapping[attach.attachedPart];
             }
 
-            private void UpdateModuleRCS(SimModuleRCS rcs, ModuleRCS? kspModuleRCS)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void UpdateModuleRCS(SimModuleRCS rcs, ModuleRCS? kspModuleRCS)
             {
                 if (kspModuleRCS is null)
                 {
@@ -344,31 +214,20 @@ namespace MechJebLib.Simulations
                 }
 
                 rcs.Isp        = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
-                rcs.G          = kspModuleRCS.G;
                 rcs.Thrust     = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
                 rcs.RcsEnabled = kspModuleRCS.rcsEnabled;
-
-                rcs.Propellants.Clear();
-
-                foreach (Propellant p in kspModuleRCS.propellants)
-                    rcs.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
-                        PartResourceLibrary.Instance.GetDefinition(p.id).density));
             }
 
-            private void UpdateProceduralFairingDecoupler(SimProceduralFairingDecoupler decoupler, PartModule kspPartModule)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void UpdateProceduralFairingDecoupler(SimProceduralFairingDecoupler decoupler, PartModule kspPartModule)
             {
-                decoupler.IsDecoupled = kspPartModule.Fields["decoupled"].GetValue<bool>(kspPartModule);
-            }
+                if (_pfDecoupled == null) return;
 
-            private static double GetModuleMass(Part kspPart, float defaultMass, ModifierStagingSituation sit)
-            {
-                double mass = 0;
-
-                for (int i = 0; i < kspPart.Modules.Count; i++)
-                    if (kspPart.Modules[i] is IPartMassModifier m)
-                        mass += m.GetModuleMass(defaultMass, sit);
-
-                return mass;
+                object obj;
+                if ((obj = _pfDecoupled.GetValue(kspPartModule)) == null)
+                    decoupler.IsDecoupled = false;
+                else
+                    decoupler.IsDecoupled = (bool)obj;
             }
         }
     }

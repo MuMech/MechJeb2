@@ -993,7 +993,7 @@ Value:InfoItems.CrewCapacity
                     @"--- MechJeb Custom Window ---
 Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname4") + @"
 Show in: flight editor
-Toggle:StageStats.dVLinearThrust
+Toggle:StageStats.DVLinearThrust
 Value:InfoItems.StageDeltaVAtmosphereAndVac
 Value:InfoItems.TotalDeltaVAtmosphereAndVac
 General:InfoItems.AllStageStats
