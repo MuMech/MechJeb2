@@ -8,6 +8,7 @@ using System;
 using System.Threading.Tasks;
 using MechJebLib.Core;
 using MechJebLib.PVG;
+using MechJebLib.Simulations;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
@@ -54,7 +55,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            Core.StageStats.RequestUpdate(this);
+            Core.StageStats.RequestUpdate();
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -151,15 +152,16 @@ namespace MuMech
             {
                 bool hasGuided = false;
 
-                for (int i = Core.StageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
+                for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
                 {
-                    double dv = Core.StageStats.vacStats[i].DeltaV;
+                    double dv = Core.StageStats.VacStats[mjPhase].DeltaV;
+                    int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
                     // skip the zero length stages
                     if (dv == 0)
                         continue;
 
-                    if (!IsUnguided(i))
+                    if (!IsUnguided(kspStage))
                         hasGuided = true;
                 }
 
@@ -202,20 +204,21 @@ namespace MuMech
 
             bool optimizedStageFound = false;
 
-            for (int i = Core.StageStats.vacStats.Length - 1; i >= _ascentSettings.LastStage; i--)
+            for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
             {
-                FuelFlowSimulation.FuelStats fuelStats = Core.StageStats.vacStats[i];
+                FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
+                int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
                 if (!Core.Guidance.HasGoodSolutionWithNoFutureCoast())
                 {
-                    if ((i == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) ||
-                        (i == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
+                    if ((kspStage == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) ||
+                        (kspStage == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
                     {
                         double ct = _ascentSettings.FixedCoastLength;
                         double maxt = _ascentSettings.MaxCoast;
                         double mint = _ascentSettings.MinCoast;
 
-                        if (i == Vessel.currentStage && Core.Guidance.IsCoasting())
+                        if (kspStage == Vessel.currentStage && Core.Guidance.IsCoasting())
                         {
                             ct   = Math.Max(ct - (VesselState.time - Core.Guidance.StartCoast), 0);
                             maxt = Math.Max(maxt - (VesselState.time - Core.Guidance.StartCoast), 0);
@@ -224,11 +227,11 @@ namespace MuMech
 
                         if (_ascentSettings.FixedCoast)
                         {
-                            ascentBuilder.AddFixedCoast(fuelStats.StartMass * 1000, ct, _ascentSettings.CoastStage);
+                            ascentBuilder.AddFixedCoast(fuelStats.StartMass * 1000, ct, _ascentSettings.CoastStage, mjPhase);
                         }
                         else
                         {
-                            ascentBuilder.AddOptimizedCoast(fuelStats.StartMass * 1000, mint, maxt, _ascentSettings.CoastStage);
+                            ascentBuilder.AddOptimizedCoast(fuelStats.StartMass * 1000, mint, maxt, _ascentSettings.CoastStage, mjPhase);
                         }
                     }
                 }
@@ -237,14 +240,15 @@ namespace MuMech
                 if (fuelStats.DeltaV < _ascentSettings.MinDeltaV)
                     continue;
 
-                bool optimizeTime = _ascentSettings.OptimizeStage == i;
+                bool optimizeTime = _ascentSettings.OptimizeStage == kspStage;
 
                 if (optimizeTime)
                     optimizedStageFound = true;
 
-                bool unguided = IsUnguided(i);
+                bool unguided = IsUnguided(kspStage);
 
-                ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime, i,
+                ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
+                    kspStage, mjPhase,
                     optimizeTime, unguided);
             }
 

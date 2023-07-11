@@ -27,10 +27,10 @@ namespace MechJebLibTest.PVG
             Ascent ascent = Ascent.Builder()
                 .Initial(r0, v0, u0, t0, mu, rbody)
                 .SetTarget(PeR, ApR, PeR, incT, 0, 0, false, false)
-                .AddStageUsingFinalMass(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726, 3)
-                .AddStageUsingFinalMass(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409, 1, true)
-                .AddOptimizedCoast(678.290157913434, 0, 450, 1)
-                .AddStageUsingFinalMass(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005, 0, false, true)
+                .AddStageUsingFinalMass(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726, 3, 3)
+                .AddStageUsingFinalMass(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409, 1, 1, true)
+                .AddOptimizedCoast(678.290157913434, 0, 450, 1, 1)
+                .AddStageUsingFinalMass(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005, 0, 0, false, true)
                 .Build();
 
             ascent.Run();
@@ -68,10 +68,10 @@ namespace MechJebLibTest.PVG
             Ascent ascent2 = Ascent.Builder()
                 .Initial(r0, v0, u0, t0, mu, rbody)
                 .SetTarget(PeR, ApR, PeR, incT, 0, 0, false, false)
-                .AddStageUsingFinalMass(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726, 3)
-                .AddStageUsingFinalMass(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409, 1, true)
-                .AddOptimizedCoast(678.290157913434, 0, 450, 1)
-                .AddStageUsingFinalMass(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005, 0, false, true)
+                .AddStageUsingFinalMass(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726, 3, 3)
+                .AddStageUsingFinalMass(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409, 1, 1, true)
+                .AddOptimizedCoast(678.290157913434, 0, 450, 1, 1)
+                .AddStageUsingFinalMass(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005, 0, 0, false, true)
                 .OldSolution(solution)
                 .Build();
 

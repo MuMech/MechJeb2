@@ -86,6 +86,19 @@ namespace MechJebLib.Utils
         }
 
         /// <summary>
+        ///     Linear interpolation.
+        /// </summary>
+        /// <param name="a">starting value</param>
+        /// <param name="b">ending value</param>
+        /// <param name="t">fraction between start and end</param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Lerp(double a, double b, double t)
+        {
+            return a + (b - a) * Clamp01(t);
+        }
+
+        /// <summary>
         ///     Convert Radians to Degrees.
         /// </summary>
         /// <param name="rad">Radians</param>

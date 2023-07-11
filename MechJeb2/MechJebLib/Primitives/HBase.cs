@@ -12,6 +12,9 @@ namespace MechJebLib.Primitives
 {
     public abstract class HBase<T> : IDisposable
     {
+        // UnityCompat does no extrapolation outside of MinTime/MaxTime
+        public bool UnityCompat = false;
+
         protected double MinTime = double.MaxValue;
         protected double MaxTime = double.MinValue;
 
@@ -205,6 +208,9 @@ namespace MechJebLib.Primitives
 
             if (t <= MinTime)
             {
+                if (UnityCompat)
+                    return Allocate(_list.Values[0].Value);
+
                 T ret = Allocate();
                 Multiply(_list.Values[0].InTangent, MinTime - t, ref ret);
                 Subtract(_list.Values[0].Value, ret, ref ret);
@@ -213,6 +219,9 @@ namespace MechJebLib.Primitives
 
             if (t >= MaxTime)
             {
+                if (UnityCompat)
+                    return Allocate(_list.Values[_list.Count - 1].Value);
+
                 T ret = Allocate();
                 Multiply(_list.Values[_list.Count - 1].OutTangent, t - MaxTime, ref ret);
                 Addition(_list.Values[_list.Count - 1].Value, ret, ref ret);
@@ -246,6 +255,7 @@ namespace MechJebLib.Primitives
 
         public virtual void Dispose()
         {
+            UnityCompat = false;
             Clear();
         }
     }

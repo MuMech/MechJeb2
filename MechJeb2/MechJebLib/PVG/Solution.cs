@@ -244,6 +244,11 @@ namespace MechJebLib.PVG
             return Phases[phase].KSPStage;
         }
 
+        public int MJPhase(int phase)
+        {
+            return Phases[phase].MJPhase;
+        }
+
         public double StageTimeLeft(double t)
         {
             double tbar = (t - T0) / _timeScale;

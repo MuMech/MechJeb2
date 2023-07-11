@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using KSP.Localization;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -16,8 +15,9 @@ namespace MuMech
     // Eventually, we should figure out how to not need that store at all.
     public class MechJebStageStatsHelper
     {
-        private          bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showMaxThrust, showVacInitialTWR, showAtmoInitialTWR;
+        private          bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showThrust, showVacInitialTWR, showAtmoInitialTWR;
         private          bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, timeSeconds, liveSLT;
+        private          bool oldFFS;
         private          int TWRBody;
         private          float altSLTScale, machScale;
         private          int StageDisplayState { get => infoItems.StageDisplayState; set => infoItems.StageDisplayState = value; }
@@ -42,7 +42,7 @@ namespace MuMech
             showVacDeltaV      = items.showVacDeltaV;
             showTime           = items.showTime;
             showISP            = items.showISP;
-            showMaxThrust      = items.showMaxThrust;
+            showThrust         = items.showThrust;
             showEmpty          = items.showEmpty;
             timeSeconds        = items.timeSeconds;
             liveSLT            = items.liveSLT;
@@ -59,17 +59,18 @@ namespace MuMech
 
         private enum StageData
         {
-            InitialMass, FinalMass, StagedMass, BurnedMass, MaxThrust, VacInitialTWR, VacMaxTWR, AtmoInitialTWR, AtmoMaxTWR, Isp, AtmoDeltaV,
+            KSPStage, InitialMass, FinalMass, StagedMass, BurnedMass, Thrust, VacInitialTWR, VacMaxTWR, AtmoInitialTWR, AtmoMaxTWR, Isp, AtmoDeltaV,
             VacDeltaV, Time
         }
 
         private static readonly List<StageData> AllStages = new List<StageData>
         {
+            StageData.KSPStage,
             StageData.InitialMass,
             StageData.FinalMass,
             StageData.StagedMass,
             StageData.BurnedMass,
-            StageData.MaxThrust,
+            StageData.Thrust,
             StageData.VacInitialTWR,
             StageData.VacMaxTWR,
             StageData.AtmoInitialTWR,
@@ -108,11 +109,12 @@ namespace MuMech
             }
 
             stageHeaderData.Clear();
+            stageHeaderData.Add(StageData.KSPStage, "Stage" + SPACING);
             stageHeaderData.Add(StageData.InitialMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn1 + SPACING);
             stageHeaderData.Add(StageData.FinalMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn2 + SPACING);
             stageHeaderData.Add(StageData.StagedMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn3 + SPACING);
             stageHeaderData.Add(StageData.BurnedMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn4 + SPACING);
-            stageHeaderData.Add(StageData.MaxThrust, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn13 + SPACING);
+            stageHeaderData.Add(StageData.Thrust, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn13 + SPACING);
             stageHeaderData.Add(StageData.VacInitialTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn5 + SPACING);
             stageHeaderData.Add(StageData.VacMaxTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn6 + SPACING);
             stageHeaderData.Add(StageData.AtmoInitialTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn7 + SPACING);
@@ -126,8 +128,8 @@ namespace MuMech
         private void GatherStages(List<int> stages)
         {
             stages.Clear();
-            for (int i = 0; i < stats.atmoStats.Length; i++)
-                if (infoItems.showEmpty || stats.atmoStats[i].DeltaV > 0)
+            for (int i = 0; i < stats.AtmoStats.Count; i++)
+                if (infoItems.showEmpty || stats.AtmoStats[i].DeltaV > 0)
                     stages.Add(i);
         }
 
@@ -137,27 +139,28 @@ namespace MuMech
                 kvp.Value.Clear();
             foreach (int index in stages)
             {
+                stageDisplayInfo[StageData.KSPStage].Add($"{stats.AtmoStats[index].KSPStage}   ");
                 if (stageVisibility[StageData.InitialMass])
-                    stageDisplayInfo[StageData.InitialMass].Add($"{stats.atmoStats[index].StartMass:F3} t   ");
-                if (stageVisibility[StageData.FinalMass]) stageDisplayInfo[StageData.FinalMass].Add($"{stats.atmoStats[index].EndMass:F3} t   ");
-                if (stageVisibility[StageData.StagedMass]) stageDisplayInfo[StageData.StagedMass].Add($"{stats.atmoStats[index].StagedMass:F3} t   ");
+                    stageDisplayInfo[StageData.InitialMass].Add($"{stats.AtmoStats[index].StartMass:F3} t   ");
+                if (stageVisibility[StageData.FinalMass]) stageDisplayInfo[StageData.FinalMass].Add($"{stats.AtmoStats[index].EndMass:F3} t   ");
+                if (stageVisibility[StageData.StagedMass]) stageDisplayInfo[StageData.StagedMass].Add($"{stats.AtmoStats[index].StagedMass:F3} t   ");
                 if (stageVisibility[StageData.BurnedMass])
-                    stageDisplayInfo[StageData.BurnedMass].Add($"{stats.atmoStats[index].ResourceMass:F3} t   ");
-                if (stageVisibility[StageData.MaxThrust]) stageDisplayInfo[StageData.MaxThrust].Add($"{stats.atmoStats[index].MaxThrust:F3} kN   ");
+                    stageDisplayInfo[StageData.BurnedMass].Add($"{stats.AtmoStats[index].ResourceMass:F3} t   ");
+                if (stageVisibility[StageData.Thrust]) stageDisplayInfo[StageData.Thrust].Add($"{stats.AtmoStats[index].Thrust:F3} kN   ");
                 if (stageVisibility[StageData.VacInitialTWR])
-                    stageDisplayInfo[StageData.VacInitialTWR].Add($"{stats.vacStats[index].StartTWR(geeASL):F2}   ");
-                if (stageVisibility[StageData.VacMaxTWR]) stageDisplayInfo[StageData.VacMaxTWR].Add($"{stats.vacStats[index].MaxTWR(geeASL):F2}   ");
+                    stageDisplayInfo[StageData.VacInitialTWR].Add($"{stats.VacStats[index].StartTWR(geeASL):F2}   ");
+                if (stageVisibility[StageData.VacMaxTWR]) stageDisplayInfo[StageData.VacMaxTWR].Add($"{stats.VacStats[index].MaxTWR(geeASL):F2}   ");
                 if (stageVisibility[StageData.AtmoInitialTWR])
-                    stageDisplayInfo[StageData.AtmoInitialTWR].Add($"{stats.atmoStats[index].StartTWR(geeASL):F2}   ");
+                    stageDisplayInfo[StageData.AtmoInitialTWR].Add($"{stats.AtmoStats[index].StartTWR(geeASL):F2}   ");
                 if (stageVisibility[StageData.AtmoMaxTWR])
-                    stageDisplayInfo[StageData.AtmoMaxTWR].Add($"{stats.atmoStats[index].MaxTWR(geeASL):F2}   ");
-                if (stageVisibility[StageData.Isp]) stageDisplayInfo[StageData.Isp].Add($"{stats.atmoStats[index].Isp:F2}   ");
-                if (stageVisibility[StageData.AtmoDeltaV]) stageDisplayInfo[StageData.AtmoDeltaV].Add($"{stats.atmoStats[index].DeltaV:F0} m/s   ");
-                if (stageVisibility[StageData.VacDeltaV]) stageDisplayInfo[StageData.VacDeltaV].Add($"{stats.vacStats[index].DeltaV:F0} m/s   ");
+                    stageDisplayInfo[StageData.AtmoMaxTWR].Add($"{stats.AtmoStats[index].MaxTWR(geeASL):F2}   ");
+                if (stageVisibility[StageData.Isp]) stageDisplayInfo[StageData.Isp].Add($"{stats.AtmoStats[index].Isp:F2}   ");
+                if (stageVisibility[StageData.AtmoDeltaV]) stageDisplayInfo[StageData.AtmoDeltaV].Add($"{stats.AtmoStats[index].DeltaV:F0} m/s   ");
+                if (stageVisibility[StageData.VacDeltaV]) stageDisplayInfo[StageData.VacDeltaV].Add($"{stats.VacStats[index].DeltaV:F0} m/s   ");
                 if (stageVisibility[StageData.Time])
                     stageDisplayInfo[StageData.Time].Add(timeSeconds
-                        ? $"{stats.atmoStats[index].DeltaTime:F2}s   "
-                        : $"{GuiUtils.TimeToDHMS(stats.atmoStats[index].DeltaTime, 1)}   ");
+                        ? $"{stats.AtmoStats[index].DeltaTime:F2}s   "
+                        : $"{GuiUtils.TimeToDHMS(stats.AtmoStats[index].DeltaTime, 1)}   ");
             }
         }
 
@@ -171,7 +174,7 @@ namespace MuMech
         public void UpdateStageStats()
         {
             double geeASL = HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.MainBody.GeeASL;
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
             GatherStages(stages);
             UpdateStageDisplayInfo(stages, geeASL);
         }
@@ -184,6 +187,14 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(CachedLocalizer.Instance.MechJeb_InfoItems_label1); //"Stage stats"
+
+            if (GUILayout.Button(
+                    oldFFS ? "Old" : "New",
+                    GUILayout.ExpandWidth(false)))
+            {
+                oldFFS       = !oldFFS;
+                stats.OldFFS = oldFFS;
+            }
 
             if (GUILayout.Button(timeSeconds ? "s" : "dhms", GUILayout.ExpandWidth(false)))
             {
@@ -215,7 +226,7 @@ namespace MuMech
                     infoItems.liveSLT = liveSLT;
                 }
 
-                stats.liveSLT = liveSLT;
+                stats.LiveSLT = liveSLT;
             }
 
             GUILayout.EndHorizontal();
@@ -226,22 +237,22 @@ namespace MuMech
 
                 TWRBody           = GuiUtils.ComboBox.Box(TWRBody, bodies, this, false);
                 infoItems.TWRBody = TWRBody;
-                stats.editorBody  = FlightGlobals.Bodies[TWRBody];
+                stats.EditorBody  = FlightGlobals.Bodies[TWRBody];
 
                 GUILayout.BeginVertical();
 
                 GUILayout.BeginHorizontal();
                 altSLTScale           = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GUILayout.ExpandWidth(true));
                 infoItems.altSLTScale = altSLTScale;
-                stats.altSLT          = Math.Pow(altSLTScale, 2) * stats.editorBody.atmosphereDepth;
-                GUILayout.Label(stats.altSLT.ToSI() + "m", GUILayout.Width(80));
+                stats.AltSLT          = Math.Pow(altSLTScale, 2) * stats.EditorBody.atmosphereDepth;
+                GUILayout.Label(stats.AltSLT.ToSI() + "m", GUILayout.Width(80));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 machScale           = GUILayout.HorizontalSlider(machScale, 0, 1, GUILayout.ExpandWidth(true));
                 infoItems.machScale = machScale;
-                stats.mach          = Math.Pow(machScale * 2, 3);
-                GUILayout.Label(stats.mach.ToString("F1") + " M", GUILayout.Width(80));
+                stats.Mach          = Math.Pow(machScale * 2, 3);
+                GUILayout.Label(stats.Mach.ToString("F1") + " M", GUILayout.Width(80));
                 GUILayout.EndHorizontal();
 
                 GUILayout.EndVertical();
@@ -249,14 +260,14 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
             else
-                stats.editorBody = stats.MainBody;
+                stats.EditorBody = stats.MainBody;
 
             Profiler.EndSample();
 
             Profiler.BeginSample("AllStageStats.DrawColumns");
 
             GUILayout.BeginHorizontal();
-            DrawStageStatsColumn(CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn0, stages.Select(s => s.ToString()).ToList());
+            //DrawStageStatsColumn(CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn0, stages.Select(s => s.ToString()).ToList());
 
             bool buttonNotPressed = true;
             foreach (StageData info in AllStages)
@@ -300,7 +311,7 @@ namespace MuMech
             stageVisibility[StageData.BurnedMass]     = showBurnedMass;
             stageVisibility[StageData.InitialMass]    = showInitialMass;
             stageVisibility[StageData.FinalMass]      = showFinalMass;
-            stageVisibility[StageData.MaxThrust]      = showMaxThrust;
+            stageVisibility[StageData.Thrust]         = showThrust;
             stageVisibility[StageData.VacInitialTWR]  = showVacInitialTWR;
             stageVisibility[StageData.AtmoInitialTWR] = showAtmoInitialTWR;
             stageVisibility[StageData.AtmoMaxTWR]     = showAtmoMaxTWR;
@@ -317,7 +328,7 @@ namespace MuMech
             showBurnedMass     = infoItems.showBurnedMass     = stageVisibility[StageData.BurnedMass];
             showInitialMass    = infoItems.showInitialMass    = stageVisibility[StageData.InitialMass];
             showFinalMass      = infoItems.showFinalMass      = stageVisibility[StageData.FinalMass];
-            showMaxThrust      = infoItems.showMaxThrust      = stageVisibility[StageData.MaxThrust];
+            showThrust         = infoItems.showThrust         = stageVisibility[StageData.Thrust];
             showVacInitialTWR  = infoItems.showVacInitialTWR  = stageVisibility[StageData.VacInitialTWR];
             showAtmoInitialTWR = infoItems.showAtmoInitialTWR = stageVisibility[StageData.AtmoInitialTWR];
             showAtmoMaxTWR     = infoItems.showAtmoMaxTWR     = stageVisibility[StageData.AtmoMaxTWR];
@@ -334,7 +345,7 @@ namespace MuMech
             {
                 case 0:
                     SetAllStageVisibility(false);
-                    stageVisibility[StageData.MaxThrust]      = false;
+                    stageVisibility[StageData.Thrust]         = false;
                     stageVisibility[StageData.VacInitialTWR]  = true;
                     stageVisibility[StageData.AtmoInitialTWR] = true;
                     stageVisibility[StageData.VacDeltaV]      = true;
@@ -343,7 +354,7 @@ namespace MuMech
                     break;
                 case 1:
                     SetAllStageVisibility(true);
-                    stageVisibility[StageData.MaxThrust]  = false;
+                    stageVisibility[StageData.Thrust]     = false;
                     stageVisibility[StageData.StagedMass] = false;
                     stageVisibility[StageData.BurnedMass] = false;
                     stageVisibility[StageData.Isp]        = false;

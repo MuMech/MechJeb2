@@ -49,6 +49,7 @@ namespace MechJebLib.PVG
         public bool LastFreeBurn   = false;
         public bool Normalized;
         public int  KSPStage;
+        public int  MJPhase;
 
         private IPVGIntegrator? _ipvgIntegrator;
 
@@ -72,9 +73,10 @@ namespace MechJebLib.PVG
             return newphase;
         }
 
-        private Phase(double m0, double thrust, double isp, double mf, double bt, int kspStage)
+        private Phase(double m0, double thrust, double isp, double mf, double bt, int kspStage, int mjPhase)
         {
             KSPStage     = kspStage;
+            MJPhase      = mjPhase;
             this.m0      = m0;
             this.thrust  = thrust;
             this.isp     = isp;
@@ -119,7 +121,7 @@ namespace MechJebLib.PVG
             _integrator.Integrate(y0, yf, this, t0, tf, solution);
         }
 
-        public static Phase NewStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, bool optimizeTime = false,
+        public static Phase NewStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase, bool optimizeTime = false,
             bool unguided = false)
         {
             Check.PositiveFinite(m0);
@@ -133,12 +135,12 @@ namespace MechJebLib.PVG
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(thrust);
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime, Unguided = unguided };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase) { OptimizeTime = optimizeTime, Unguided = unguided };
 
             return phase;
         }
 
-        public static Phase NewStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, bool optimizeTime = false,
+        public static Phase NewStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, int mjPhase, bool optimizeTime = false,
             bool unguided = false)
         {
             Check.PositiveFinite(m0);
@@ -152,19 +154,19 @@ namespace MechJebLib.PVG
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(mf);
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage) { OptimizeTime = optimizeTime, Unguided = unguided };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase) { OptimizeTime = optimizeTime, Unguided = unguided };
 
             return phase;
         }
 
-        public static Phase NewFixedCoast(double m0, double ct, int kspStage)
+        public static Phase NewFixedCoast(double m0, double ct, int kspStage, int mjPhase)
         {
-            return new Phase(m0, 0, 0, m0, ct, kspStage);
+            return new Phase(m0, 0, 0, m0, ct, kspStage, mjPhase);
         }
 
-        public static Phase NewOptimizedCoast(double m0, double mint, double maxt, int kspStage)
+        public static Phase NewOptimizedCoast(double m0, double mint, double maxt, int kspStage, int mjPhase)
         {
-            var phase = new Phase(m0, 0, 0, m0, mint, kspStage) { OptimizeTime = true, mint = mint, maxt = maxt };
+            var phase = new Phase(m0, 0, 0, m0, mint, kspStage, mjPhase) { OptimizeTime = true, mint = mint, maxt = maxt };
             return phase;
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using MechJebLib.Simulations;
 using UnityEngine;
 
 namespace MuMech
@@ -351,19 +352,19 @@ namespace MuMech
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
 
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this, true);
+            stats.RequestUpdate();
 
             double lastStageBurnTime = 0;
-            for (int i = stats.vacStats.Length - 1; i >= 0 && dvLeft > 0; i--)
+            for (int mjPhase = stats.VacStats.Count - 1; mjPhase >= 0 && dvLeft > 0; mjPhase--)
             {
-                FuelFlowSimulation.FuelStats s = stats.vacStats[i];
-                if (s.DeltaV <= 0 || s.StartThrust <= 0)
+                FuelStats s = stats.VacStats[mjPhase];
+                if (s.DeltaV <= 0 || s.Thrust <= 0)
                 {
                     if (Core.Staging.Enabled)
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
-                        if (burnTime - lastStageBurnTime < Core.Staging.autostagePreDelay && i != stats.vacStats.Length - 1)
+                        if (burnTime - lastStageBurnTime < Core.Staging.autostagePreDelay && mjPhase != stats.VacStats.Count - 1)
                             burnTime += Core.Staging.autostagePreDelay - (burnTime - lastStageBurnTime);
                         burnTime          += Core.Staging.autostagePreDelay;
                         lastStageBurnTime =  burnTime;
@@ -384,13 +385,13 @@ namespace MuMech
                 //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
                 //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
                 double stageBurnFinalMass = s.StartMass / Math.Exp(Math.Log(s.StartMass / s.EndMass) * stageBurnFraction);
-                double stageAvgAccel = s.StartThrust / ((s.StartMass + stageBurnFinalMass) / 2d);
+                double stageAvgAccel = s.Thrust / ((s.StartMass + stageBurnFinalMass) / 2d);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
                 // all but the current stage. This is wrong, but hopefully it's
                 // close enough for now.
                 // TODO: Be smarter about throttle limits on future stages.
-                if (i == stats.vacStats.Length - 1)
+                if (mjPhase == stats.VacStats.Count - 1)
                 {
                     stageAvgAccel *= VesselState.throttleFixedLimit;
                 }

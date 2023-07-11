@@ -94,7 +94,7 @@ namespace MuMech
         public override void OnFixedUpdate()
         {
             if (AscentSettings.AscentType == AscentType.PVG)
-                Core.StageStats.RequestUpdate(this);
+                Core.StageStats.RequestUpdate();
 
             FixupLaunchStart();
             if (TimedLaunch)

@@ -1,265 +1,282 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using JetBrains.Annotations;
-using UnityEngine.Profiling;
-using UnityToolbag;
+using MechJebLib.Simulations;
+using Unity.Profiling;
+using Debug = UnityEngine.Debug;
 
 namespace MuMech
 {
-    //Other modules can request that the stage stats be computed by calling RequestUpdate
-    //This module will then run the stage stats computation in a separate thread, update
-    //the publicly available atmoStats and vacStats. Then it will disable itself unless
-    //it got another RequestUpdate in the meantime.
     [UsedImplicitly]
     public class MechJebModuleStageStats : ComputerModule
     {
-        public MechJebModuleStageStats(MechJebCore core) : base(core) { }
-
         [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)] //ΔV include cosine losses
-        public bool dVLinearThrust = true;
+        public bool DVLinearThrust = true;
 
-        public FuelFlowSimulation.FuelStats[] atmoStats = { };
-        public FuelFlowSimulation.FuelStats[] vacStats  = { };
+        public CelestialBody EditorBody;
+        public bool          LiveSLT = true;
+        public double        AltSLT  = 0;
+        public double        Mach    = 0;
+        public bool          OldFFS;
 
-        // Those are used to store the next result from the thread since we must move result 
-        // to atmoStats/vacStats only in the main thread.
-        private FuelFlowSimulation.FuelStats[] newAtmoStats;
-        private FuelFlowSimulation.FuelStats[] newVacStats;
-        private bool                           resultReady;
+        private int _vabRebuildTimer = 1;
 
-        public void RequestUpdate(object controller, bool wait = false)
+        public readonly List<FuelStats> AtmoStats = new List<FuelStats>();
+        public readonly List<FuelStats> VacStats  = new List<FuelStats>();
+
+        public MechJebModuleStageStats(MechJebCore core) : base(core)
         {
-            Users.Add(controller);
-            updateRequested = true;
+            Enabled = true;
+        }
 
-            IsResultReady();
+        private bool _vesselModified = true;
 
-            // In the editor this is our only entry point
-            if (HighLogic.LoadedSceneIsEditor)
+        protected override void OnModuleEnabled()
+        {
+            _vesselModified = true;
+        }
+
+        protected override void OnModuleDisabled()
+        {
+            _vesselManagerAtmo.Release();
+            _vesselManagerVac.Release();
+        }
+
+        private readonly SimVesselManager _vesselManagerAtmo = new SimVesselManager();
+        private readonly SimVesselManager _vesselManagerVac  = new SimVesselManager();
+
+        public override void OnFixedUpdate()
+        {
+            GetResults();
+        }
+
+        public override void OnUpdate()
+        {
+            GetResults();
+        }
+
+        private double _lastRebuild;
+
+        private static ProfilerMarker _newRunSimulationProfile = new ProfilerMarker("RunSimulation");
+        private static ProfilerMarker _newBuildProfile         = new ProfilerMarker("Build");
+        private static ProfilerMarker _newUpdateProfile        = new ProfilerMarker("Update");
+        private static ProfilerMarker _newVacProfile           = new ProfilerMarker("Vac");
+        private static ProfilerMarker _newAtmoProfile          = new ProfilerMarker("Atmo");
+
+        private void GetResults()
+        {
+            if (_vesselManagerAtmo.FuelFlowSimulation.ResultReady)
             {
-                TryStartSimulation();
+                AtmoStats.Clear();
+                foreach (FuelStats item in _vesselManagerAtmo.FuelFlowSimulation.Segments)
+                    AtmoStats.Add(item);
+                _vesselManagerAtmo.FuelFlowSimulation.ResultReady = false;
             }
 
-            // wait means the code needs some result to run so we wait if we do not have any result yet
-            if (wait && atmoStats.Length == 0 && (simulationRunning || TryStartSimulation()))
+            if (_vesselManagerVac.FuelFlowSimulation.ResultReady)
             {
-                while (simulationRunning)
-                {
-                    // wait for a sim to be ready. Risked ?
-                    Thread.Sleep(1);
-                }
-
-                IsResultReady();
+                VacStats.Clear();
+                foreach (FuelStats item in _vesselManagerVac.FuelFlowSimulation.Segments)
+                    VacStats.Add(item);
+                _vesselManagerVac.FuelFlowSimulation.ResultReady = false;
             }
         }
 
-        public CelestialBody editorBody;
-        public bool          liveSLT = true;
-        public double        altSLT  = 0;
-        public double        mach    = 0;
+        private void RunSimulation()
+        {
+            if (OldFFS)
+            {
+                RunOldFFS();
 
-        protected bool      updateRequested;
-        protected bool      simulationRunning;
-        protected Stopwatch stopwatch = new Stopwatch();
+                return;
+            }
 
-        private int needRebuild = 1;
+            using ProfilerMarker.AutoScope auto = _newRunSimulationProfile.Auto();
 
-        private readonly FuelFlowSimulation[] sims = { new FuelFlowSimulation(), new FuelFlowSimulation() };
+            CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? EditorBody : Vessel.mainBody;
 
-        private long millisecondsBetweenSimulations;
+            double staticPressureKpa = HighLogic.LoadedSceneIsEditor || !LiveSLT
+                ? simBody.atmosphere ? simBody.GetPressure(AltSLT) : 0
+                : Vessel.staticPressurekPa;
+            double atmDensity = (HighLogic.LoadedSceneIsEditor || !LiveSLT
+                ? simBody.GetDensity(simBody.GetPressure(AltSLT), simBody.GetTemperature(0))
+                : Vessel.atmDensity) / 1.225;
+            double mach = HighLogic.LoadedSceneIsEditor ? Mach : Vessel.mach;
 
-        public override void OnStart(PartModule.StartState state)
+            // XXX: we do a rebuild every time in the editor because apparently I don't know the right callbacks/magic to
+            // make rebuilding only on reconfiguration work.
+            if (_vesselModified || HighLogic.LoadedSceneIsEditor)
+            {
+                using ProfilerMarker.AutoScope auto2 = _newBuildProfile.Auto();
+
+                IShipconstruct v = HighLogic.LoadedSceneIsEditor ? (IShipconstruct)EditorLogic.fetch.ship : Vessel;
+                _vesselManagerAtmo.Build(v);
+                _vesselManagerVac.Build(v);
+                _vesselModified = false;
+                _lastRebuild    = Planetarium.GetUniversalTime();
+            }
+            else
+            {
+                using ProfilerMarker.AutoScope auto2 = _newUpdateProfile.Auto();
+
+                _vesselManagerAtmo.Update();
+                _vesselManagerVac.Update();
+            }
+
+            using (_newVacProfile.Auto())
+            {
+                _vesselManagerVac.DVLinearThrust = DVLinearThrust;
+                _vesselManagerVac.SetConditions(0, 0, 0);
+                _vesselManagerVac.StartFuelFlowSimulationJob();
+            }
+
+            using (_newAtmoProfile.Auto())
+            {
+                _vesselManagerAtmo.DVLinearThrust = DVLinearThrust;
+                _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
+                _vesselManagerAtmo.StartFuelFlowSimulationJob();
+            }
+        }
+
+        private void StartSimulation()
         {
             if (HighLogic.LoadedSceneIsEditor)
             {
-                GameEvents.onEditorShipModified.Add(onEditorShipModified);
-                GameEvents.onPartCrossfeedStateChange.Add(onPartCrossfeedStateChange);
+                if (_vabRebuildTimer > 0)
+                {
+                    PartSet.BuildPartSets(EditorLogic.fetch.ship.parts, null);
+                    _vabRebuildTimer--;
+                    _vesselModified = true;
+                }
+            }
+            else
+                Vessel.UpdateResourceSetsIfDirty();
+
+            RunSimulation();
+        }
+
+        private bool SimulationIsRunning()
+        {
+            return _vesselManagerAtmo.FuelFlowSimulation.IsRunning() || _vesselManagerVac.FuelFlowSimulation.IsRunning();
+        }
+
+        private readonly Stopwatch _stopwatch = new Stopwatch();
+
+        private void TryStartSimulation()
+        {
+            if (SimulationIsRunning())
+                return;
+
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                if (EditorBody is null) return;
+            }
+            else
+            {
+                if (Vessel is null) return;
+            }
+
+            if (_stopwatch.IsRunning && _stopwatch.ElapsedMilliseconds < 500)
+                return;
+
+            _stopwatch.Restart();
+
+            StartSimulation();
+        }
+
+        public override void OnStart(PartModule.StartState state)
+        {
+            GameEvents.onVesselStandardModification.Add(onVesselStandardModification);
+            GameEvents.StageManager.OnGUIStageSequenceModified.Add(OnGUIStageSequenceModified);
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GameEvents.onEditorShipModified.Add(OnEditorShipModified);
+                GameEvents.onPartCrossfeedStateChange.Add(OnPartCrossfeedStateChange);
             }
         }
 
         public override void OnDestroy()
         {
-            GameEvents.onEditorShipModified.Remove(onEditorShipModified);
-            GameEvents.onPartCrossfeedStateChange.Remove(onPartCrossfeedStateChange);
+            GameEvents.onVesselStandardModification.Remove(onVesselStandardModification);
+            GameEvents.StageManager.OnGUIStageSequenceModified.Remove(OnGUIStageSequenceModified);
+            GameEvents.onEditorShipModified.Remove(OnEditorShipModified);
+            GameEvents.onPartCrossfeedStateChange.Remove(OnPartCrossfeedStateChange);
         }
 
-        private void onPartCrossfeedStateChange(Part data)
+        private void OnPartCrossfeedStateChange(Part data)
         {
-            setDirty();
+            _vesselModified  = true;
+            _vabRebuildTimer = 2;
         }
 
-        private void onEditorShipModified(ShipConstruct data)
+        private void OnEditorShipModified(ShipConstruct data)
         {
-            setDirty();
+            _vesselModified  = true;
+            _vabRebuildTimer = 2;
         }
 
-        private void setDirty()
+        private void OnGUIStageSequenceModified()
         {
-            // The ship is not really ready in the first frame following the event so we wait 2
-            needRebuild = 2;
+            _vesselModified = true;
         }
 
-        protected override void OnModuleEnabled()
+        private void onVesselStandardModification(Vessel data)
         {
-            millisecondsBetweenSimulations = 0;
-            stopwatch.Start();
+            _vesselModified = true;
         }
 
-        protected override void OnModuleDisabled()
+        public void RequestUpdate()
         {
-            stopwatch.Stop();
-            stopwatch.Reset();
-        }
-
-        public override void OnFixedUpdate()
-        {
-            // Check if we have a result ready from the previous physic frame
-            IsResultReady();
+            GetResults();
 
             TryStartSimulation();
         }
 
-        public override void OnWaitForFixedUpdate()
+        private void RunOldFFS()
         {
-            // Check if we managed to get a result while the physic frame was running
-            IsResultReady();
-        }
-
-        public override void OnUpdate()
-        {
-            IsResultReady();
-        }
-
-        private void IsResultReady()
-        {
-            if (resultReady)
+            MechJebModuleStageStatsOld oldstats = Core.GetComputerModule<MechJebModuleStageStatsOld>();
+            oldstats.editorBody = EditorBody;
+            oldstats.liveSLT    = LiveSLT;
+            oldstats.altSLT     = AltSLT;
+            oldstats.mach       = Mach;
+            oldstats.RequestUpdate(this, true);
+            AtmoStats.Clear();
+            VacStats.Clear();
+            for (int i = 0; i < oldstats.vacStats.Length; i++)
             {
-                atmoStats   = newAtmoStats;
-                vacStats    = newVacStats;
-                resultReady = false;
-            }
-        }
-
-        private bool TryStartSimulation()
-        {
-            if (!simulationRunning && ((HighLogic.LoadedSceneIsEditor && editorBody != null) || Vessel != null))
-            {
-                //We should be running simulations periodically, but one is not running right now.
-                //Check if enough time has passed since the last one to start a new one:
-                if (stopwatch.ElapsedMilliseconds > millisecondsBetweenSimulations)
+                FuelFlowSimulation.FuelStats item = oldstats.vacStats[i];
+                var newItem = new FuelStats
                 {
-                    if (updateRequested)
-                    {
-                        updateRequested = false;
-
-                        stopwatch.Stop();
-                        stopwatch.Reset();
-
-                        StartSimulation();
-                        return true;
-                    }
-
-                    Users.Clear();
-                }
+                    StartMass   = item.StartMass,
+                    EndMass     = item.EndMass,
+                    DeltaTime   = item.DeltaTime,
+                    DeltaV      = item.DeltaV,
+                    SpoolUpTime = item.SpoolUpTime,
+                    Isp         = item.Isp,
+                    StagedMass  = item.StagedMass,
+                    Thrust      = item.EndThrust,
+                    KSPStage    = i
+                };
+                VacStats.Add(newItem);
             }
 
-            return false;
-        }
-
-        protected void StartSimulation()
-        {
-            Profiler.BeginSample("StartSimulation");
-            try
+            for (int i = 0; i < oldstats.atmoStats.Length; i++)
             {
-                simulationRunning = true;
-                resultReady       = false;
-                stopwatch.Start(); //starts a timer that times how long the simulation takes
-
-                //Create two FuelFlowSimulations, one for vacuum and one for atmosphere
-                List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : Vessel.parts;
-
-                if (HighLogic.LoadedSceneIsEditor)
+                FuelFlowSimulation.FuelStats item = oldstats.atmoStats[i];
+                var newItem = new FuelStats
                 {
-                    if (needRebuild > 0)
-                    {
-                        PartSet.BuildPartSets(parts, null);
-                        needRebuild--;
-                    }
-                }
-                else
-                {
-                    Vessel.UpdateResourceSetsIfDirty();
-                }
-
-                Profiler.BeginSample("StartSimulation_Init");
-
-                FuelFlowSimulation first = sims[0];
-                FuelFlowSimulation second = sims[1];
-                first.Init(parts, dVLinearThrust);
-                second.CopyFrom(first);
-
-                Profiler.EndSample();
-
-                //Run the simulation in a separate thread
-                ThreadPool.QueueUserWorkItem(RunSimulation, sims);
-                //Profiler.BeginSample("StartSimulation_Run");
-                //RunSimulation(sims);
-                //Profiler.EndSample();
+                    StartMass   = item.StartMass,
+                    EndMass     = item.EndMass,
+                    DeltaTime   = item.DeltaTime,
+                    DeltaV      = item.DeltaV,
+                    SpoolUpTime = item.SpoolUpTime,
+                    Isp         = item.Isp,
+                    StagedMass  = item.StagedMass,
+                    Thrust      = item.EndThrust,
+                    KSPStage    = i
+                };
+                AtmoStats.Add(newItem);
             }
-            catch (Exception e)
-            {
-                Print("Exception in MechJebModuleStageStats.StartSimulation(): " + e + "\n" + e.StackTrace);
-
-                // Stop timing the simulation
-                stopwatch.Stop();
-                millisecondsBetweenSimulations = 500;
-                stopwatch.Reset();
-
-                // Start counting down the time to the next simulation
-                stopwatch.Start();
-                simulationRunning = false;
-            }
-
-            Profiler.EndSample();
-        }
-
-        protected void RunSimulation(object o)
-        {
-            try
-            {
-                CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? editorBody : Vessel.mainBody;
-
-                double staticPressureKpa = HighLogic.LoadedSceneIsEditor || !liveSLT
-                    ? simBody.atmosphere ? simBody.GetPressure(altSLT) : 0
-                    : Vessel.staticPressurekPa;
-                double atmDensity = (HighLogic.LoadedSceneIsEditor || !liveSLT
-                    ? simBody.GetDensity(simBody.GetPressure(altSLT), simBody.GetTemperature(0))
-                    : Vessel.atmDensity) / 1.225;
-                double mach = HighLogic.LoadedSceneIsEditor ? this.mach : Vessel.mach;
-
-                //Run the simulation
-                newAtmoStats = sims[0].SimulateAllStages(1.0f, staticPressureKpa, atmDensity, mach);
-                newVacStats  = sims[1].SimulateAllStages(1.0f, 0.0, 0.0, mach);
-            }
-            catch (Exception e)
-            {
-                Dispatcher.InvokeAsync(() => Print("Exception in MechJebModuleStageStats.RunSimulation(): " + e));
-            }
-
-            //see how long the simulation took
-            stopwatch.Stop();
-            long millisecondsToCompletion = stopwatch.ElapsedMilliseconds;
-            stopwatch.Reset();
-
-            //set the delay before the next simulation
-            millisecondsBetweenSimulations = 2 * millisecondsToCompletion;
-
-            //start the stopwatch that will count off this delay
-            stopwatch.Start();
-            resultReady       = true;
-            simulationRunning = false;
         }
     }
 }

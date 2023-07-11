@@ -1,4 +1,6 @@
+
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 #nullable enable
@@ -11,9 +13,18 @@ namespace MechJebLib.Utils
     public abstract class BackgroundJob<T>
     {
         private Task<T>? _task;
-        public T        Result = default!;
+        public  T        Result = default!;
+        public  bool     ResultReady;
 
-        protected abstract T Execute();
+        protected abstract T Run(object? o);
+
+        public BackgroundJob()
+        {
+            _executeDelegate         = Run;
+            _onTaskCompletedDelegate = OnTaskCompleted;
+            _onTaskFaultedDelegate   = OnTaskFaulted;
+            _onTaskCancelledDelegate = OnTaskCancelled;
+        }
 
         public void Cancel()
         {
@@ -22,13 +33,17 @@ namespace MechJebLib.Utils
 
         public bool IsRunning()
         {
-            return !(_task is { IsCompleted: true });
+            if (_task is null)
+                return false;
+
+            return _task.IsCompleted == false;
         }
 
         protected virtual void OnTaskCompleted(Task<T> task)
         {
-            Result = task.Result;
-            _task   = null;
+            Result      = task.Result;
+            ResultReady = true;
+            _task       = null;
         }
 
         protected virtual void OnTaskFaulted(Task<T> task)
@@ -41,12 +56,18 @@ namespace MechJebLib.Utils
             _task = null;
         }
 
-        public void Run()
+        private readonly Func<object?, T> _executeDelegate;
+        private readonly Action<Task<T>>  _onTaskCompletedDelegate;
+        private readonly Action<Task<T>>  _onTaskFaultedDelegate;
+        private readonly Action<Task<T>>  _onTaskCancelledDelegate;
+
+        public void StartJob(object? o)
         {
-            _task = Task.Run(Execute);
-            _task.ContinueWith(OnTaskCompleted, TaskContinuationOptions.OnlyOnRanToCompletion);
-            _task.ContinueWith(OnTaskFaulted, TaskContinuationOptions.OnlyOnFaulted);
-            _task.ContinueWith(OnTaskCancelled, TaskContinuationOptions.OnlyOnCanceled);
+            ResultReady = false;
+            _task = Task.Factory.StartNew(_executeDelegate, o, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+            _task.ContinueWith(_onTaskCompletedDelegate, TaskContinuationOptions.OnlyOnRanToCompletion);
+            _task.ContinueWith(_onTaskFaultedDelegate, TaskContinuationOptions.OnlyOnFaulted);
+            _task.ContinueWith(_onTaskCancelledDelegate, TaskContinuationOptions.OnlyOnCanceled);
         }
     }
 }
