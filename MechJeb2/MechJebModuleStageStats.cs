@@ -3,7 +3,6 @@ using System.Diagnostics;
 using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using Unity.Profiling;
-using Debug = UnityEngine.Debug;
 
 namespace MuMech
 {
@@ -176,7 +175,9 @@ namespace MuMech
                 if (Vessel is null) return;
             }
 
-            if (_stopwatch.IsRunning && _stopwatch.ElapsedMilliseconds < 500)
+            double refreshInterval = HighLogic.LoadedSceneIsEditor ? 500 : 100;
+
+            if (_stopwatch.IsRunning && _stopwatch.ElapsedMilliseconds < refreshInterval)
                 return;
 
             _stopwatch.Restart();
