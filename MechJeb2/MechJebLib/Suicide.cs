@@ -1,4 +1,5 @@
-﻿using MechJebLib.Primitives;
+﻿using System;
+using MechJebLib.Primitives;
 using MechJebLib.Utils;
 
 namespace MuMech.MechJebLib
@@ -16,9 +17,9 @@ namespace MuMech.MechJebLib
             return new SuicideBuilder();
         }
 
-        protected override SuicideResult Execute()
+        protected override SuicideResult Run(object o)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

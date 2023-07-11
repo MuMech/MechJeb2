@@ -352,7 +352,7 @@ namespace MuMech
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
 
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
 
             double lastStageBurnTime = 0;
             for (int mjPhase = stats.VacStats.Count - 1; mjPhase >= 0 && dvLeft > 0; mjPhase--)

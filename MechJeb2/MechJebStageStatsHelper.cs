@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using KSP.Localization;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -175,7 +174,7 @@ namespace MuMech
         public void UpdateStageStats()
         {
             double geeASL = HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.MainBody.GeeASL;
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
             GatherStages(stages);
             UpdateStageDisplayInfo(stages, geeASL);
         }

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using Unity.Profiling;
+using Debug = UnityEngine.Debug;
 
 namespace MuMech
 {
@@ -20,9 +21,8 @@ namespace MuMech
 
         private int _vabRebuildTimer = 1;
 
-        // FIXME: this has to be broken apart if they're getting updated asynchronously
-        public List<FuelStats> AtmoStats => _vesselManagerAtmo.Segments;
-        public List<FuelStats> VacStats  => _vesselManagerVac.Segments;
+        public readonly List<FuelStats> AtmoStats = new List<FuelStats>();
+        public readonly List<FuelStats> VacStats  = new List<FuelStats>();
 
         public MechJebModuleStageStats(MechJebCore core) : base(core)
         {
@@ -47,13 +47,12 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            // check for done.
-            // TryStartSimulation();
+            GetResults();
         }
 
         public override void OnUpdate()
         {
-            // check for done.
+            GetResults();
         }
 
         private double _lastRebuild;
@@ -64,8 +63,34 @@ namespace MuMech
         private static ProfilerMarker _newVacProfile           = new ProfilerMarker("Vac");
         private static ProfilerMarker _newAtmoProfile          = new ProfilerMarker("Atmo");
 
+        private void GetResults()
+        {
+            if (_vesselManagerAtmo.FuelFlowSimulation.ResultReady)
+            {
+                AtmoStats.Clear();
+                foreach (FuelStats item in _vesselManagerAtmo.FuelFlowSimulation.Segments)
+                    AtmoStats.Add(item);
+                _vesselManagerAtmo.FuelFlowSimulation.ResultReady = false;
+            }
+
+            if (_vesselManagerVac.FuelFlowSimulation.ResultReady)
+            {
+                VacStats.Clear();
+                foreach (FuelStats item in _vesselManagerVac.FuelFlowSimulation.Segments)
+                    VacStats.Add(item);
+                _vesselManagerVac.FuelFlowSimulation.ResultReady = false;
+            }
+        }
+
         private void RunSimulation()
         {
+            if (OldFFS)
+            {
+                RunOldFFS();
+
+                return;
+            }
+
             using ProfilerMarker.AutoScope auto = _newRunSimulationProfile.Auto();
 
             CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? EditorBody : Vessel.mainBody;
@@ -78,7 +103,9 @@ namespace MuMech
                 : Vessel.atmDensity) / 1.225;
             double mach = HighLogic.LoadedSceneIsEditor ? Mach : Vessel.mach;
 
-            if (_vesselModified || Planetarium.GetUniversalTime() - _lastRebuild > 3)
+            // XXX: we do a rebuild every time in the editor because apparently I don't know the right callbacks/magic to
+            // make rebuilding only on reconfiguration work.
+            if (_vesselModified || HighLogic.LoadedSceneIsEditor)
             {
                 using ProfilerMarker.AutoScope auto2 = _newBuildProfile.Auto();
 
@@ -100,14 +127,14 @@ namespace MuMech
             {
                 _vesselManagerVac.DVLinearThrust = DVLinearThrust;
                 _vesselManagerVac.SetConditions(0, 0, 0);
-                _vesselManagerVac.RunFuelFlowSimulation();
+                _vesselManagerVac.StartFuelFlowSimulationJob();
             }
 
             using (_newAtmoProfile.Auto())
             {
                 _vesselManagerAtmo.DVLinearThrust = DVLinearThrust;
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
-                _vesselManagerAtmo.RunFuelFlowSimulation();
+                _vesselManagerAtmo.StartFuelFlowSimulationJob();
             }
         }
 
@@ -128,12 +155,33 @@ namespace MuMech
             RunSimulation();
         }
 
+        private bool SimulationIsRunning()
+        {
+            return _vesselManagerAtmo.FuelFlowSimulation.IsRunning() || _vesselManagerVac.FuelFlowSimulation.IsRunning();
+        }
+
+        private readonly Stopwatch _stopwatch = new Stopwatch();
+
         private void TryStartSimulation()
         {
-            if ((HighLogic.LoadedSceneIsEditor && EditorBody != null) || Vessel != null)
+            if (SimulationIsRunning())
+                return;
+
+            if (HighLogic.LoadedSceneIsEditor)
             {
-                StartSimulation();
+                if (EditorBody is null) return;
             }
+            else
+            {
+                if (Vessel is null) return;
+            }
+
+            if (_stopwatch.IsRunning && _stopwatch.ElapsedMilliseconds < 500)
+                return;
+
+            _stopwatch.Restart();
+
+            StartSimulation();
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -157,11 +205,13 @@ namespace MuMech
 
         private void OnPartCrossfeedStateChange(Part data)
         {
+            _vesselModified  = true;
             _vabRebuildTimer = 2;
         }
 
         private void OnEditorShipModified(ShipConstruct data)
         {
+            _vesselModified  = true;
             _vabRebuildTimer = 2;
         }
 
@@ -175,52 +225,58 @@ namespace MuMech
             _vesselModified = true;
         }
 
-        private Stopwatch _timer = new Stopwatch();
-
-        public void RequestUpdate(object controller)
+        public void RequestUpdate()
         {
-            if (OldFFS)
-            {
-                MechJebModuleStageStatsOld oldstats = Core.GetComputerModule<MechJebModuleStageStatsOld>();
-                oldstats.editorBody = EditorBody;
-                oldstats.liveSLT    = LiveSLT;
-                oldstats.altSLT     = AltSLT;
-                oldstats.mach       = Mach;
-                oldstats.RequestUpdate(this, true);
-                AtmoStats.Clear();
-                VacStats.Clear();
-                foreach (FuelFlowSimulation.FuelStats item in oldstats.vacStats)
-                {
-                    var newItem = new FuelStats();
-                    newItem.StartMass   = item.StartMass;
-                    newItem.EndMass     = item.EndMass;
-                    newItem.DeltaTime   = item.DeltaTime;
-                    newItem.DeltaV      = item.DeltaV;
-                    newItem.SpoolUpTime = item.SpoolUpTime;
-                    newItem.Isp         = item.Isp;
-                    newItem.StagedMass  = item.StagedMass;
-                    newItem.Thrust      = item.EndThrust;
-                    VacStats.Add(newItem);
-                }
-
-                foreach (FuelFlowSimulation.FuelStats item in oldstats.atmoStats)
-                {
-                    var newItem = new FuelStats();
-                    newItem.StartMass   = item.StartMass;
-                    newItem.EndMass     = item.EndMass;
-                    newItem.DeltaTime   = item.DeltaTime;
-                    newItem.DeltaV      = item.DeltaV;
-                    newItem.SpoolUpTime = item.SpoolUpTime;
-                    newItem.Isp         = item.Isp;
-                    newItem.StagedMass  = item.StagedMass;
-                    newItem.Thrust      = item.EndThrust;
-                    AtmoStats.Add(newItem);
-                }
-
-                return;
-            }
+            GetResults();
 
             TryStartSimulation();
+        }
+
+        private void RunOldFFS()
+        {
+            MechJebModuleStageStatsOld oldstats = Core.GetComputerModule<MechJebModuleStageStatsOld>();
+            oldstats.editorBody = EditorBody;
+            oldstats.liveSLT    = LiveSLT;
+            oldstats.altSLT     = AltSLT;
+            oldstats.mach       = Mach;
+            oldstats.RequestUpdate(this, true);
+            AtmoStats.Clear();
+            VacStats.Clear();
+            for (int i = 0; i < oldstats.vacStats.Length; i++)
+            {
+                FuelFlowSimulation.FuelStats item = oldstats.vacStats[i];
+                var newItem = new FuelStats
+                {
+                    StartMass   = item.StartMass,
+                    EndMass     = item.EndMass,
+                    DeltaTime   = item.DeltaTime,
+                    DeltaV      = item.DeltaV,
+                    SpoolUpTime = item.SpoolUpTime,
+                    Isp         = item.Isp,
+                    StagedMass  = item.StagedMass,
+                    Thrust      = item.EndThrust,
+                    KSPStage    = i
+                };
+                VacStats.Add(newItem);
+            }
+
+            for (int i = 0; i < oldstats.atmoStats.Length; i++)
+            {
+                FuelFlowSimulation.FuelStats item = oldstats.atmoStats[i];
+                var newItem = new FuelStats
+                {
+                    StartMass   = item.StartMass,
+                    EndMass     = item.EndMass,
+                    DeltaTime   = item.DeltaTime,
+                    DeltaV      = item.DeltaV,
+                    SpoolUpTime = item.SpoolUpTime,
+                    Isp         = item.Isp,
+                    StagedMass  = item.StagedMass,
+                    Thrust      = item.EndThrust,
+                    KSPStage    = i
+                };
+                AtmoStats.Add(newItem);
+            }
         }
     }
 }

@@ -52,7 +52,7 @@ namespace MuMech
 
             // make sure our orbit at least dips into the atmosphere, or bodyRadius plus some maximum height of mountains
 
-            Core.StageStats.RequestUpdate(this);
+            Core.StageStats.RequestUpdate();
 
             if (Core.StageStats.VacStats.Count <= 0)
                 return;
@@ -80,7 +80,7 @@ namespace MuMech
             }
 
             _suicide = suicideBuilder.Build();
-            _suicide.Run();
+            _suicide.StartJob(null);
         }
     }
 }

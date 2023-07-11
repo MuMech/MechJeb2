@@ -8,14 +8,14 @@ namespace MechJebLib.Simulations
     // need to link against KSP GameObjects (MechJebLibBindings.dll or something like that)
     public partial class SimVesselManager
     {
-        public List<FuelStats> Segments => _fuelFlowSimulation.Segments;
+        public List<FuelStats> Segments => FuelFlowSimulation.Segments;
 
         private readonly SimVesselBuilder   _builder;
         private readonly SimVesselUpdater   _updater;
         private          SimVessel          _vessel;
         private          IShipconstruct     _kspVessel;
-        private readonly FuelFlowSimulation _fuelFlowSimulation = new FuelFlowSimulation();
-        public           bool               DVLinearThrust      = true; // include cos losses
+        public readonly  FuelFlowSimulation FuelFlowSimulation = new FuelFlowSimulation();
+        public           bool               DVLinearThrust     = true; // include cos losses
 
         private readonly Dictionary<Part, SimPart>             _partMapping              = new Dictionary<Part, SimPart>();
         private readonly Dictionary<SimPart, Part>             _inversePartMapping       = new Dictionary<SimPart, Part>();
@@ -51,10 +51,10 @@ namespace MechJebLib.Simulations
             _vessel.SetConditions(atmDensity, atmPressure, machNumber);
         }
 
-        public void RunFuelFlowSimulation()
+        public void StartFuelFlowSimulationJob()
         {
-            _fuelFlowSimulation.DVLinearThrust = DVLinearThrust;
-            _fuelFlowSimulation.Run(_vessel);
+            FuelFlowSimulation.DVLinearThrust = DVLinearThrust;
+            FuelFlowSimulation.StartJob(_vessel);
         }
 
         private void Clear()

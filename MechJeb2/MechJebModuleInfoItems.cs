@@ -943,7 +943,7 @@ namespace MuMech
         public double StageDeltaVVacuum()
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
 
             if (stats.VacStats.Count == 0) return 0;
 
@@ -954,7 +954,7 @@ namespace MuMech
         public double StageDeltaVAtmosphere()
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
 
             if (stats.AtmoStats.Count == 0) return 0;
 
@@ -965,7 +965,7 @@ namespace MuMech
         public string StageDeltaVAtmosphereAndVac()
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
 
             double atmDv = stats.AtmoStats.Count == 0 ? 0 : stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaV;
             double vacDv = stats.VacStats.Count == 0 ? 0 : stats.VacStats[stats.VacStats.Count - 1].DeltaV;
@@ -978,7 +978,7 @@ namespace MuMech
         public float StageTimeLeftFullThrottle()
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
 
             if (stats.VacStats.Count == 0 || stats.AtmoStats.Count == 0) return 0;
 
@@ -1012,7 +1012,7 @@ namespace MuMech
         public double TotalDeltaVVaccum()
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
             return stats.VacStats.Sum(s => s.DeltaV);
         }
 
@@ -1020,7 +1020,7 @@ namespace MuMech
         public double TotalDeltaVAtmosphere()
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
             return stats.AtmoStats.Sum(s => s.DeltaV);
         }
 
@@ -1028,7 +1028,7 @@ namespace MuMech
         public string TotalDeltaVAtmosphereAndVac()
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
-            stats.RequestUpdate(this);
+            stats.RequestUpdate();
 
             double atmDv = stats.AtmoStats.Sum(s => s.DeltaV);
             double vacDv = stats.VacStats.Sum(s => s.DeltaV);

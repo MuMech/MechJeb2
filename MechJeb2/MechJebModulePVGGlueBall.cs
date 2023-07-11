@@ -55,7 +55,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            Core.StageStats.RequestUpdate(this);
+            Core.StageStats.RequestUpdate();
         }
 
         public override void OnStart(PartModule.StartState state)

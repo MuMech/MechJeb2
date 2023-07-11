@@ -4,13 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MechJebLib.Simulations.PartModules;
+using MechJebLib.Utils;
 
 namespace MechJebLib.Simulations
 {
-    // TODO:
-    //   - add threading
-    //   - throttle running in VAB
-    public class FuelFlowSimulation
+    public class FuelFlowSimulation : BackgroundJob<bool>
     {
         private const int MAXSTEPS = 100;
 
@@ -21,8 +19,10 @@ namespace MechJebLib.Simulations
         private readonly HashSet<SimPart> _partsWithResourceDrains = new HashSet<SimPart>();
         private          bool             _allocatedFirstSegment;
 
-        public void Run(SimVessel vessel)
+        protected override bool Run(object? o)
         {
+            var vessel = (SimVessel)o!;
+
             _allocatedFirstSegment = false;
             _time                  = 0;
             Segments.Clear();
@@ -40,6 +40,8 @@ namespace MechJebLib.Simulations
             Segments.Reverse();
 
             _partsWithResourceDrains.Clear();
+
+            return true; // we pull results off the object not off the return value
         }
 
         private void SimulateStage(SimVessel vessel)

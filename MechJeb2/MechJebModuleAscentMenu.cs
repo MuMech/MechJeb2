@@ -417,7 +417,7 @@ namespace MuMech
 
             if (_ascentSettings.AscentType == AscentType.PVG)
             {
-                Core.StageStats.RequestUpdate(this);
+                Core.StageStats.RequestUpdate();
                 _pvgSettingsMenu.Enabled = GUILayout.Toggle(_pvgSettingsMenu.Enabled, "PVG Settings");
             }
 
