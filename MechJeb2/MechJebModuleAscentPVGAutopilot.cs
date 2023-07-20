@@ -21,15 +21,16 @@ namespace MuMech
         {
             base.OnModuleEnabled();
             _mode                 = AscentMode.VERTICAL_ASCENT;
-            Core.Guidance.Enabled = true;
-            Core.Glueball.Enabled = true;
+            Core.Guidance.Users.Add(this);
+            Core.Guidance.CascadeDisable(this);
+            Core.Glueball.Users.Add(this);
         }
 
         protected override void OnModuleDisabled()
         {
             base.OnModuleDisabled();
-            Core.Guidance.Enabled = false;
-            Core.Glueball.Enabled = false;
+            Core.Guidance.Users.Remove(this);
+            Core.Glueball.Users.Remove(this);
         }
 
         private enum AscentMode
