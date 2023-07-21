@@ -123,11 +123,11 @@ namespace MuMech
                 if (!changed) return;
                 if (_autostage && Enabled)
                 {
-                    Core.Staging.Users.Add(this);
+                    Core.Staging.Users.Add(AscentAutopilot);
                 }
                 else if (!_autostage)
                 {
-                    Core.Staging.Users.Remove(this);
+                    Core.Staging.Users.Remove(AscentAutopilot);
                 }
             }
         }

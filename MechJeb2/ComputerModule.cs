@@ -55,9 +55,16 @@ namespace MuMech
                 if (_enabled)
                     OnModuleEnabled();
                 else
+                {
                     OnModuleDisabled();
+                    ModuleDisabledEvents.Fire(true);
+                    ModuleDisabledEvents.Clear();
+                }
             }
         }
+
+        [UsedImplicitly]
+        public readonly ModuleEvent ModuleDisabledEvents = new ModuleEvent();
 
         public readonly string ProfilerName;
 
@@ -239,6 +246,23 @@ namespace MuMech
         {
             MonoBehaviour.print("[MechJeb2] " + message);
         }
+
+        [UsedImplicitly]
+        public void Disable()
+        {
+            Enabled = false;
+        }
+
+        [UsedImplicitly]
+        public void Enable()
+        {
+            Enabled = true;
+        }
+
+        public void CascadeDisable(ComputerModule m)
+        {
+            ModuleDisabledEvents.Add(m.Disable);
+        }
     }
 
     [Flags]
@@ -247,6 +271,54 @@ namespace MuMech
         LOCAL  = 1,
         TYPE   = 2,
         GLOBAL = 4
+    }
+
+    public class ModuleEvent
+    {
+        public delegate void              OnEvent();
+
+        private readonly List<OnEvent> _events = new List<OnEvent>();
+        private readonly Dictionary<OnEvent, int> _eventIndex = new Dictionary<OnEvent, int>();
+
+        public void Add(OnEvent evt)
+        {
+            if (_eventIndex.ContainsKey(evt))
+                return;
+
+            _events.Add(evt);
+            _eventIndex.Add(evt, _events.Count - 1);
+        }
+
+        [UsedImplicitly]
+        public void Remove(OnEvent evt)
+        {
+            if (!_eventIndex.ContainsKey(evt))
+                return;
+
+            _events.RemoveAt(_eventIndex[evt]);
+            _eventIndex.Remove(evt);
+        }
+
+        public void Clear()
+        {
+            _events.Clear();
+            _eventIndex.Clear();
+        }
+
+        public void Fire(bool reverse)
+        {
+
+            if (reverse)
+            {
+                for (int i = _events.Count - 1; i >= 0; i--)
+                    _events[i]();
+            }
+            else
+            {
+                for (int i = 0; i < _events.Count; i++)
+                    _events[i]();
+            }
+        }
     }
 
     //Lets multiple users enable and disable a computer module, such that the
