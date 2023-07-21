@@ -300,7 +300,7 @@ namespace MuMech
             // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
             // since the insertion stage may still have RCS which is necessary to complete the mission.
             if (coastStage >= 0 && Vessel.currentStage == coastStage && Solution.WillCoast(VesselState.time))
-                Core.Staging.autostageLimitInternal = coastStage;
+                Core.Staging.AutoStageLimitRequest(coastStage, this);
 
             if (Solution.Coast(VesselState.time))
             {
@@ -321,7 +321,7 @@ namespace MuMech
                 return;
             }
 
-            Core.Staging.autostageLimitInternal = Solution.TerminalStage();
+            Core.Staging.AutoStageLimitRequest(Solution.TerminalStage(), this);
 
             ThrottleOn();
 
