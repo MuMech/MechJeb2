@@ -37,8 +37,7 @@ namespace MuMech
             _state = SpinupState.FINISHED;
             Core.Attitude.SetOmegaTarget(roll: double.NaN);
             Core.Attitude.SetActuationControl();
-            // FIXME: this might overwrite someone else, but the only other consumer so far is the GuidanceController
-            Core.Staging.autostageLimitInternal = 0;
+            Core.Staging.AutoStageLimitRemove( this);
             Core.Attitude.Users.Remove(this);
             base.OnModuleDisabled();
         }
@@ -65,7 +64,7 @@ namespace MuMech
             if (_state == SpinupState.INITIALIZED)
                 return;
 
-            Core.Staging.autostageLimitInternal = Vessel.currentStage;
+            Core.Staging.AutoStageLimitRequest(Vessel.currentStage, this);
 
             if (VesselState.time < _startTime)
                 return;

@@ -55,8 +55,27 @@ namespace MuMech
 
         public bool waitingForFirstStaging;
 
-        // this is for other modules to temporarily disable autostaging (e.g. PVG coast phases)
-        public int autostageLimitInternal;
+        private readonly Dictionary<object, int> _autoStageModuleLimit = new Dictionary<object, int>();
+
+        public void AutoStageLimitRequest(int stage, object user)
+        {
+            _autoStageModuleLimit.TryAdd(user, stage);
+        }
+
+        public void AutoStageLimitRemove(object user)
+        {
+            if (_autoStageModuleLimit.ContainsKey(user))
+                _autoStageModuleLimit.Remove(user);
+        }
+
+        private int ActiveAutoStageModuleLimit()
+        {
+            int limit = 0;
+            foreach(int key in _autoStageModuleLimit.Values)
+                if (key > limit)
+                    limit = key;
+            return limit;
+        }
 
         private readonly List<ModuleEngines>     activeModuleEngines             = new List<ModuleEngines>(16);
         private readonly List<ModuleEngines>     allModuleEngines                = new List<ModuleEngines>(16);
@@ -161,7 +180,7 @@ namespace MuMech
 
         protected override void OnModuleEnabled()
         {
-            autostageLimitInternal = 0;
+            _autoStageModuleLimit.Clear();
         }
 
         protected override void OnModuleDisabled()
@@ -269,7 +288,7 @@ namespace MuMech
 
             // this is for PVG preventing staging doing coasts, possibly it should be more specific of an API
             // (e.g. bool PVGIsCoasting) since it is getting tightly coupled.
-            if (Vessel.currentStage <= autostageLimitInternal)
+            if (Vessel.currentStage <= ActiveAutoStageModuleLimit())
             {
                 // force staging once if fairing conditions are met in the next stage
                 if (HasFairing(Vessel.currentStage - 1) && !WaitingForFairing())
