@@ -37,11 +37,11 @@ namespace MuMech
             {
                 if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 2)
                 {
-                    Core.Thrust.targetThrottle = Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.maxThrustAccel)));
+                    Core.Thrust.TargetThrottle = Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.maxThrustAccel)));
                 }
                 else
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                 }
 
                 return this;
@@ -70,7 +70,7 @@ namespace MuMech
                     //burn normal+ or normal- to avoid dropping the Pe:
                     var burnDir = Vector3d.Exclude(VesselState.up, Vector3d.Exclude(VesselState.orbitalVelocity, deltaV));
                     _planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, VesselState.orbitalVelocity) *
-                                        VesselState.speedOrbitHorizontal;
+                                         VesselState.speedOrbitHorizontal;
                     Core.Attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, Core.Landing);
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status14",
                         _planeChangeDVLeft.ToString("F0")); //"Executing low orbit plane change of about " +  + " m/s"

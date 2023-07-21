@@ -98,7 +98,7 @@ namespace MuMech
 
             Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && VesselState.altitudeBottom > AscentSettings.RollAltitude);
 
-            Core.Thrust.targetThrottle = 1.0F;
+            Core.Thrust.TargetThrottle = 1.0F;
 
             if (!Vessel.LiftedOff() || Vessel.Landed) Status = Localizer.Format("#MechJeb_Ascent_status6");  //"Awaiting liftoff"
             else Status                                      = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
@@ -121,8 +121,8 @@ namespace MuMech
             }
 
 
-            Core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
-            if (Core.Thrust.targetThrottle < 1.0F)
+            Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
+            if (Core.Thrust.TargetThrottle < 1.0F)
             {
                 // follow surface velocity to reduce flipping
                 AttitudeTo(SrfvelPitch());
@@ -139,7 +139,7 @@ namespace MuMech
                 /* form an isosceles triangle with unit vectors pointing in the desired and actual flight path angle directions and find the length of the base */
                 double velocityError = 2 * Math.Sin((desiredFlightPathAngle - actualFlightPathAngle) / 2);
 
-                double difficulty = VesselState.surfaceVelocity.magnitude * 0.02 / VesselState.ThrustAccel(Core.Thrust.targetThrottle);
+                double difficulty = VesselState.surfaceVelocity.magnitude * 0.02 / VesselState.ThrustAccel(Core.Thrust.TargetThrottle);
                 difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
                 double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * velocityError;
 
@@ -155,7 +155,7 @@ namespace MuMech
 
         private void DriveCoastToApoapsis()
         {
-            Core.Thrust.targetThrottle = 0;
+            Core.Thrust.TargetThrottle = 0;
 
             if (VesselState.altitudeASL > MainBody.RealMaxAtmosphereAltitude())
             {
@@ -172,14 +172,14 @@ namespace MuMech
                 return;
             }
 
-            Core.Thrust.targetThrottle = 0;
+            Core.Thrust.TargetThrottle = 0;
 
             // follow surface velocity to reduce flipping
             AttitudeTo(SrfvelPitch());
 
             if (Orbit.ApA < AscentSettings.DesiredOrbitAltitude)
             {
-                Core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
+                Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
             }
 
             if (Core.Node.autowarp)

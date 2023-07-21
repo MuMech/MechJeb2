@@ -187,7 +187,7 @@ namespace MuMech
             Vector3d thrustForward = VesselState.thrustForward;
 
             // the off-axis thrust modifications get into a fight with the differential throttle so do not use them when diffthrottle is used
-            if (Core.Thrust.differentialThrottle)
+            if (Core.Thrust.DifferentialThrottle)
                 thrustForward = VesselState.forward;
 
             switch (reference)
@@ -331,8 +331,8 @@ namespace MuMech
                 return;
 
             torque = VesselState.torqueAvailable;
-            if (Core.Thrust.differentialThrottle &&
-                Core.Thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
+            if (Core.Thrust.DifferentialThrottle &&
+                Core.Thrust.DifferentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.SUCCESS)
                 torque += VesselState.torqueDiffThrottle * Vessel.ctrlState.mainThrottle / 2.0;
 
             // Inertia is a bad name. It's the "angular distance to stop"
@@ -386,7 +386,7 @@ namespace MuMech
                     Part.vessel.Autopilot.SAS.SetTargetOrientation(RequestedAttitude * Vector3.up, true);
                 }
 
-                Core.Thrust.differentialThrottleDemandedTorque = Vector3d.zero;
+                Core.Thrust.DifferentialThrottleDemandedTorque = Vector3d.zero;
             }
             else
             {
@@ -401,8 +401,8 @@ namespace MuMech
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
 
                 // Feed the control torque to the differential throttle
-                if (Core.Thrust.differentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.Success)
-                    Core.Thrust.differentialThrottleDemandedTorque =
+                if (Core.Thrust.DifferentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.SUCCESS)
+                    Core.Thrust.DifferentialThrottleDemandedTorque =
                         -Vector3d.Scale(act, VesselState.torqueDiffThrottle * Vessel.ctrlState.mainThrottle);
             }
         }
@@ -466,7 +466,7 @@ namespace MuMech
             {
                 timeCount = 0;
                 if (RCS_auto && (absErr.x > 3.0 || absErr.y > 3.0 || absErr.z > 3.0) &&
-                    Core.Thrust.limiter != MechJebModuleThrustController.LimitMode.UnstableIgnition)
+                    Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.UNSTABLE_IGNITION)
                     if (attitudeRCScontrol)
                         Part.vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
             }

@@ -32,9 +32,9 @@ namespace MuMech
 
             if (_ascentSettings.AscentType == AscentType.PVG)
             {
-                Core.Thrust.limitThrottle           = false;
-                Core.Thrust.limitToTerminalVelocity = false;
-                Core.Thrust.electricThrottle        = false;
+                Core.Thrust.LimitThrottle           = false;
+                Core.Thrust.LimitToTerminalVelocity = false;
+                Core.Thrust.ElectricThrottle        = false;
             }
 
             _ascentSettings.ForceRoll = GUILayout.Toggle(_ascentSettings.ForceRoll, CachedLocalizer.Instance.MechJeb_Ascent_checkbox2); //Force Roll

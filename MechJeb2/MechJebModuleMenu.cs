@@ -371,7 +371,7 @@ namespace MuMech
                     {
                         MechJebModuleThrustWindow w = Core.GetComputerModule<MechJebModuleThrustWindow>();
 
-                        if (Core.Staging.Enabled && Core.Staging.autostagingOnce)
+                        if (Core.Staging.Enabled && Core.Staging.AutostagingOnce)
                         {
                             if (Core.Staging.Users.Contains(w))
                             {
@@ -383,7 +383,7 @@ namespace MuMech
                         {
                             Core.Staging.AutostageOnce(w);
                         }
-                    }, () => Core.Staging.Enabled && Core.Staging.autostagingOnce);
+                    }, () => Core.Staging.Enabled && Core.Staging.AutostagingOnce);
 
                     CreateFeatureButton(maneuverPlannerModule, "Auto_Warp", "MechJeb Auto-warp", b =>
                     {

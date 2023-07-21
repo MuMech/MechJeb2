@@ -19,9 +19,9 @@ namespace MuMech
             public override AutopilotStep Drive(FlightCtrlState s)
             {
                 if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
-                    Core.Thrust.targetThrottle = 1.0F;
+                    Core.Thrust.TargetThrottle = 1.0F;
                 else
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
 
                 return this;
             }
@@ -32,7 +32,7 @@ namespace MuMech
                 //in the orbit to deorbt; we already have deorbited.
                 if (Orbit.ApA < MainBody.RealMaxAtmosphereAltitude())
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                     return new CourseCorrection(Core);
                 }
 

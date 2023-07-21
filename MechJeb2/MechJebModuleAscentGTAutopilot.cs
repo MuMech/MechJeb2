@@ -81,7 +81,7 @@ namespace MuMech
 
             Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && VesselState.altitudeBottom > AscentSettings.RollAltitude);
 
-            Core.Thrust.targetThrottle = 1.0F;
+            Core.Thrust.TargetThrottle = 1.0F;
 
             if (!Vessel.LiftedOff() || Vessel.Landed) Status = Localizer.Format("#MechJeb_Ascent_status6");  //"Awaiting liftoff"
             else Status                                      = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
@@ -118,8 +118,8 @@ namespace MuMech
             AttitudeTo(90 - AscentSettings.TurnStartPitch);
 
 
-            Core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.IntermediateAltitude + MainBody.Radius);
-            if (Core.Thrust.targetThrottle < 1.0F)
+            Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.IntermediateAltitude + MainBody.Radius);
+            if (Core.Thrust.TargetThrottle < 1.0F)
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
                 return;
@@ -162,8 +162,8 @@ namespace MuMech
             // srfvelPitch == zero AoA
             AttitudeTo(SrfvelPitch() * pitchfade);
 
-            Core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.IntermediateAltitude + MainBody.Radius);
-            if (Core.Thrust.targetThrottle < 1.0F)
+            Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.IntermediateAltitude + MainBody.Radius);
+            if (Core.Thrust.TargetThrottle < 1.0F)
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status19"); //"Fine tuning intermediate altitude"
                 return;
@@ -192,14 +192,14 @@ namespace MuMech
 
             AttitudeTo(0); /* FIXME: corrective steering */
 
-            Core.Thrust.targetThrottle = FixedTimeToAp() < AscentSettings.HoldAPTime ? 1.0F : 0.1F;
+            Core.Thrust.TargetThrottle = FixedTimeToAp() < AscentSettings.HoldAPTime ? 1.0F : 0.1F;
 
             Status = Localizer.Format("#MechJeb_Ascent_status24"); //"Holding AP"
         }
 
         private void DriveCoastToApoapsis()
         {
-            Core.Thrust.targetThrottle = 0;
+            Core.Thrust.TargetThrottle = 0;
 
             if (VesselState.altitudeASL > MainBody.RealMaxAtmosphereAltitude())
             {
@@ -216,7 +216,7 @@ namespace MuMech
                 return;
             }
 
-            Core.Thrust.targetThrottle = 0;
+            Core.Thrust.TargetThrottle = 0;
 
             // follow surface velocity to reduce flipping
             AttitudeTo(SrfvelPitch());
@@ -224,7 +224,7 @@ namespace MuMech
             if (Orbit.ApA < AscentSettings.DesiredOrbitAltitude)
             {
                 Core.Warp.WarpPhysicsAtRate(1);
-                Core.Thrust.targetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
+                Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
             }
             else
             {

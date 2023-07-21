@@ -265,7 +265,7 @@ namespace MuMech
 
                 if (moduleTranslatron is { hidden: false })
                 {
-                    Thrust.trans_kill_h = !Thrust.trans_kill_h;
+                    Thrust.TransKillH = !Thrust.TransKillH;
                 }
                 else
                 {
@@ -335,7 +335,7 @@ namespace MuMech
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
             if (moduleTranslatron is { hidden: false })
-                Thrust.trans_spd_act = (relative ? Thrust.trans_spd_act : 0) + speed;
+                Thrust.TransSpdAct = (relative ? Thrust.TransSpdAct : 0) + speed;
             else
                 Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
         }
