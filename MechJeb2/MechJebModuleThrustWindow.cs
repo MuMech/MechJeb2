@@ -28,7 +28,7 @@ namespace MuMech
             if (Core.Staging.Enabled)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label1",
-                    Core.Staging.autostagingOnce
+                    Core.Staging.AutostagingOnce
                         ? Localizer.Format("#MechJeb_Utilities_label1_1")
                         : " ")); //"Autostaging"<<1>>"Active" -------<<1>>" once ":""
             }
@@ -69,15 +69,15 @@ namespace MuMech
                 Core.Thrust.AutoRCsUllageInfoItem();
             }
 
-            Core.Thrust.smoothThrottle =
-                GUILayout.Toggle(Core.Thrust.smoothThrottle, Localizer.Format("#MechJeb_Utilities_checkbox2")); //"Smooth throttle"
-            Core.Thrust.manageIntakes =
-                GUILayout.Toggle(Core.Thrust.manageIntakes, Localizer.Format("#MechJeb_Utilities_checkbox3")); //"Manage air intakes"
+            Core.Thrust.SmoothThrottle =
+                GUILayout.Toggle(Core.Thrust.SmoothThrottle, Localizer.Format("#MechJeb_Utilities_checkbox2")); //"Smooth throttle"
+            Core.Thrust.ManageIntakes =
+                GUILayout.Toggle(Core.Thrust.ManageIntakes, Localizer.Format("#MechJeb_Utilities_checkbox3")); //"Manage air intakes"
             GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
             try
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label2")); //"Jet safety margin"
-                Core.Thrust.flameoutSafetyPct.text = GUILayout.TextField(Core.Thrust.flameoutSafetyPct.text, 5);
+                Core.Thrust.FlameoutSafetyPct.text = GUILayout.TextField(Core.Thrust.FlameoutSafetyPct.text, 5);
                 GUILayout.Label("%");
             }
             finally
@@ -85,25 +85,25 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            Core.Thrust.DifferentialThrottle();
+            Core.Thrust.DifferentialThrottleMenu();
 
-            if (Core.Thrust.differentialThrottle && Vessel.LiftedOff())
+            if (Core.Thrust.DifferentialThrottle && Vessel.LiftedOff())
             {
-                switch (Core.Thrust.differentialThrottleSuccess)
+                switch (Core.Thrust.DifferentialThrottleSuccess)
                 {
-                    case MechJebModuleThrustController.DifferentialThrottleStatus.MoreEnginesRequired:
+                    case MechJebModuleThrustController.DifferentialThrottleStatus.MORE_ENGINES_REQUIRED:
                         GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label3"),
                             GuiUtils.yellowLabel); //"Differential throttle failed\nMore engines required"
                         break;
-                    case MechJebModuleThrustController.DifferentialThrottleStatus.AllEnginesOff:
+                    case MechJebModuleThrustController.DifferentialThrottleStatus.ALL_ENGINES_OFF:
                         GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label4"),
                             GuiUtils.yellowLabel); //"Differential throttle failed\nNo active engine"
                         break;
-                    case MechJebModuleThrustController.DifferentialThrottleStatus.SolverFailed:
+                    case MechJebModuleThrustController.DifferentialThrottleStatus.SOLVER_FAILED:
                         GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label5"),
                             GuiUtils.yellowLabel); //"Differential throttle failed\nCannot find solution"
                         break;
-                    case MechJebModuleThrustController.DifferentialThrottleStatus.Success:
+                    case MechJebModuleThrustController.DifferentialThrottleStatus.SUCCESS:
                         break;
                 }
             }
@@ -132,7 +132,7 @@ namespace MuMech
 
         public override bool isActive()
         {
-            return Core.Thrust.limiter != MechJebModuleThrustController.LimitMode.None;
+            return Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
         }
 
         public override string GetName()

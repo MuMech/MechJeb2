@@ -234,11 +234,11 @@ namespace MuMech
                 double tAct = AccelerationPIDController.Compute(AErr);
                 if (!double.IsNaN(tAct))
                 {
-                    Core.Thrust.targetThrottle = (float)MuUtils.Clamp(tAct, 0, 1);
+                    Core.Thrust.TargetThrottle = (float)MuUtils.Clamp(tAct, 0, 1);
                 }
                 else
                 {
-                    Core.Thrust.targetThrottle = 0.0f;
+                    Core.Thrust.TargetThrottle = 0.0f;
                     AccelerationPIDController.Reset();
                 }
             }

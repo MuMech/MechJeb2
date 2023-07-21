@@ -37,7 +37,7 @@ namespace MuMech
 
             public override AutopilotStep OnFixedUpdate()
             {
-                Core.Thrust.targetThrottle = 0;
+                Core.Thrust.TargetThrottle = 0;
 
                 // If the atmospheric drag is has started to act on the vessel then we are in a position to start considering when to deploy the parachutes.
                 if (Core.Landing.DeployChutes)

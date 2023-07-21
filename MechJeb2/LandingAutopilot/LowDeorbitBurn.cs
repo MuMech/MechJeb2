@@ -26,11 +26,11 @@ namespace MuMech
             {
                 if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
                 {
-                    Core.Thrust.targetThrottle = Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle);
+                    Core.Thrust.TargetThrottle = Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle);
                 }
                 else
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                 }
 
                 return this;
@@ -56,8 +56,10 @@ namespace MuMech
                     _deorbitBurnTriggered = true;
                 }
 
-                Status = Localizer.Format(_deorbitBurnTriggered ? "#MechJeb_LandingGuidance_Status11" : //"Executing low deorbit burn"
-                    "#MechJeb_LandingGuidance_Status12");                                               //"Moving to low deorbit burn point"
+                Status = Localizer.Format(_deorbitBurnTriggered
+                    ? "#MechJeb_LandingGuidance_Status11"
+                    :                                     //"Executing low deorbit burn"
+                    "#MechJeb_LandingGuidance_Status12"); //"Moving to low deorbit burn point"
 
                 //Warp toward deorbit burn if it hasn't been triggerd yet:
                 if (!_deorbitBurnTriggered && Core.Node.autowarp && rangeToTarget > 2 * triggerDistance)
@@ -100,7 +102,7 @@ namespace MuMech
                         {
                             if (_lowDeorbitEndConditionSet && !_lowDeorbitEndOnLandingSiteNearer)
                             {
-                                Core.Thrust.targetThrottle = 0;
+                                Core.Thrust.TargetThrottle = 0;
                                 return new DecelerationBurn(Core);
                             }
 
@@ -119,7 +121,7 @@ namespace MuMech
                         {
                             if (_lowDeorbitEndConditionSet && _lowDeorbitEndOnLandingSiteNearer)
                             {
-                                Core.Thrust.targetThrottle = 0;
+                                Core.Thrust.TargetThrottle = 0;
                                 return new DecelerationBurn(Core);
                             }
 

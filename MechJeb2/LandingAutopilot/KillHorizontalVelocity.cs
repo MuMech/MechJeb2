@@ -20,7 +20,7 @@ namespace MuMech
                 Vector3d horizontalPointingDirection = Vector3d.Exclude(VesselState.up, VesselState.forward).normalized;
                 if (Vector3d.Dot(horizontalPointingDirection, VesselState.surfaceVelocity) > 0)
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                     Core.Attitude.attitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, Core.Landing);
                     return new FinalDescent(Core);
                 }
@@ -35,11 +35,11 @@ namespace MuMech
                 double maxAccel = -VesselState.localg + Vector3d.Dot(VesselState.forward, VesselState.up) * VesselState.maxThrustAccel;
                 if (maxAccel - minAccel > 0)
                 {
-                    Core.Thrust.targetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
+                    Core.Thrust.TargetThrottle = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
                 }
                 else
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                 }
 
                 //angle up and slightly away from vertical:

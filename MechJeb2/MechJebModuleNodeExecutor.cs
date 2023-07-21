@@ -130,7 +130,7 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!burnTriggered && nearingBurn && Core.Thrust.limitToPreventUnstableIgnition &&
+            if (!burnTriggered && nearingBurn && Core.Thrust.LimitToPreventUnstableIgnition &&
                 VesselState.lowestUllage != VesselState.UllageState.VeryStable)
             {
                 if (Vessel.hasEnabledRCSModules())
@@ -212,7 +212,7 @@ namespace MuMech
 
                 nearingBurn = timeToNode - spool - leadTime <= 0;
 
-                Core.Thrust.targetThrottle = 0;
+                Core.Thrust.TargetThrottle = 0;
 
                 if (burnTriggered)
                 {
@@ -312,7 +312,7 @@ namespace MuMech
 
                 nearingBurn = timeToNode - halfBurnTime - leadTime <= 0;
 
-                Core.Thrust.targetThrottle = 0;
+                Core.Thrust.TargetThrottle = 0;
 
                 if (burnTriggered)
                 {
@@ -364,9 +364,9 @@ namespace MuMech
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
-                        if (burnTime - lastStageBurnTime < Core.Staging.autostagePreDelay && mjPhase != stats.VacStats.Count - 1)
-                            burnTime += Core.Staging.autostagePreDelay - (burnTime - lastStageBurnTime);
-                        burnTime          += Core.Staging.autostagePreDelay;
+                        if (burnTime - lastStageBurnTime < Core.Staging.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
+                            burnTime += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
+                        burnTime          += Core.Staging.AutostagePreDelay;
                         lastStageBurnTime =  burnTime;
                     }
 

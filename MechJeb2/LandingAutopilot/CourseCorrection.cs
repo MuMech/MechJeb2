@@ -30,7 +30,7 @@ namespace MuMech
 
                 if (currentError < 150)
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                     if (Core.Landing.RCSAdjustment)
                         Core.RCS.Enabled = true;
                     return new CoastToDeceleration(Core);
@@ -46,7 +46,7 @@ namespace MuMech
                 // If a parachute has already been deployed then we will not be able to control attitude anyway, so move back to the coast to deceleration step.
                 if (VesselState.parachuteDeployed)
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                     return new CoastToDeceleration(Core);
                 }
 
@@ -75,7 +75,7 @@ namespace MuMech
                 }
                 else
                 {
-                    Core.Thrust.targetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0;
                 }
 
                 return this;

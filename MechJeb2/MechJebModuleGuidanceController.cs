@@ -396,7 +396,7 @@ namespace MuMech
 
         private void ThrottleOn()
         {
-            Core.Thrust.targetThrottle = 1.0F;
+            Core.Thrust.TargetThrottle = 1.0F;
         }
 
         private void RCSOn()

@@ -353,29 +353,29 @@ namespace MuMech
             Core.Settings.rssMode = true;
 
             /* set the thrust controller to sane RO/RSS defaults */
-            Core.Thrust.limitToPreventUnstableIgnition = false;
-            Core.Thrust.autoRCSUllaging                = true;
-            Core.Thrust.minThrottle.val                = 0.05;
-            Core.Thrust.limiterMinThrottle             = true;
-            Core.Thrust.limitThrottle                  = false;
-            Core.Thrust.limitAcceleration              = false;
-            Core.Thrust.limitToPreventOverheats        = false;
-            Core.Thrust.limitDynamicPressure           = false;
-            Core.Thrust.maxDynamicPressure.val         = 20000;
+            Core.Thrust.LimitToPreventUnstableIgnition = false;
+            Core.Thrust.AutoRCSUllaging                = true;
+            Core.Thrust.MinThrottle.val                = 0.05;
+            Core.Thrust.LimiterMinThrottle             = true;
+            Core.Thrust.LimitThrottle                  = false;
+            Core.Thrust.LimitAcceleration              = false;
+            Core.Thrust.LimitToPreventOverheats        = false;
+            Core.Thrust.LimitDynamicPressure           = false;
+            Core.Thrust.MaxDynamicPressure.val         = 20000;
 
             /* reset all of the staging controller, and turn on hotstaging and drop solids */
             Autostage                                  = true;
-            Core.Staging.autostagePreDelay.val         = 0.0;
-            Core.Staging.autostagePostDelay.val        = 0.5;
-            Core.Staging.autostageLimit.val            = 0;
-            Core.Staging.fairingMaxDynamicPressure.val = 5000;
-            Core.Staging.fairingMinAltitude.val        = 50000;
-            Core.Staging.clampAutoStageThrustPct.val   = 0.99;
-            Core.Staging.fairingMaxAerothermalFlux.val = 1135;
-            Core.Staging.hotStaging                    = true;
-            Core.Staging.hotStagingLeadTime.val        = 1.0;
-            Core.Staging.dropSolids                    = true;
-            Core.Staging.dropSolidsLeadTime.val        = 1.0;
+            Core.Staging.AutostagePreDelay.val         = 0.0;
+            Core.Staging.AutostagePostDelay.val        = 0.5;
+            Core.Staging.AutostageLimit.val            = 0;
+            Core.Staging.FairingMaxDynamicPressure.val = 5000;
+            Core.Staging.FairingMinAltitude.val        = 50000;
+            Core.Staging.ClampAutoStageThrustPct.val   = 0.99;
+            Core.Staging.FairingMaxAerothermalFlux.val = 1135;
+            Core.Staging.HotStaging                    = true;
+            Core.Staging.HotStagingLeadTime.val        = 1.0;
+            Core.Staging.DropSolids                    = true;
+            Core.Staging.DropSolidsLeadTime.val        = 1.0;
         }
 
         private const double LAUNCH_LAN_DIFFERENCE            = 0;
