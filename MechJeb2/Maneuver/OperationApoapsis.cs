@@ -13,15 +13,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewApA = new EditableDoubleMult(200000, 1000);
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationApoapsis()
+        private readonly TimeSelector _timeSelector = new TimeSelector(new[]
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING
-            });
-        }
+            TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING,
+            TimeReference.EQ_ASCENDING
+        });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -37,11 +33,6 @@ namespace MuMech
             {
                 new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, ut, NewApA + o.referenceBody.Radius), ut)
             };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

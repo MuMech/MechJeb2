@@ -18,13 +18,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt ResonanceDenominator = 3;
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationResonantOrbit()
-        {
-            _timeSelector =
-                new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
-        }
+        private readonly TimeSelector _timeSelector =
+            new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -45,11 +40,6 @@ namespace MuMech
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, ut, (double)ResonanceNumerator.val / ResonanceDenominator.val);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

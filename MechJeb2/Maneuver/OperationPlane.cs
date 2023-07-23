@@ -9,15 +9,10 @@ namespace MuMech
     {
         public override string GetName() { return Localizer.Format("#MechJeb_match_planes_title"); } //match planes with target
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationPlane()
+        private readonly TimeSelector _timeSelector = new TimeSelector(new[]
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
-            });
-        }
+            TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
+        });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -116,11 +111,6 @@ namespace MuMech
             }
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

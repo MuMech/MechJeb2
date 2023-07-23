@@ -13,12 +13,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime InterceptInterval = 3600;
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationLambert()
-        {
-            _timeSelector = new TimeSelector(new[] { TimeReference.X_FROM_NOW });
-        }
+        private readonly TimeSelector _timeSelector = new TimeSelector(new[] { TimeReference.X_FROM_NOW });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -38,11 +33,6 @@ namespace MuMech
             (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, ut, target.TargetOrbit, ut + InterceptInterval);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

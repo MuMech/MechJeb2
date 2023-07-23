@@ -13,16 +13,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble NewInc = 0;
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationInclination()
+        private readonly TimeSelector _timeSelector = new TimeSelector(new[]
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.EQ_HIGHEST_AD, TimeReference.EQ_NEAREST_AD, TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING,
-                TimeReference.X_FROM_NOW
-            });
-        }
+            TimeReference.EQ_HIGHEST_AD, TimeReference.EQ_NEAREST_AD, TimeReference.EQ_ASCENDING, TimeReference.EQ_DESCENDING,
+            TimeReference.X_FROM_NOW
+        });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -35,11 +30,6 @@ namespace MuMech
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeInclination(o, ut, NewInc), ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

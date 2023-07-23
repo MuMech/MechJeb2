@@ -18,12 +18,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewPeA = new EditableDoubleMult(100000, 1000);
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationEllipticize()
-        {
-            _timeSelector = new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
-        }
+        private readonly TimeSelector _timeSelector =
+            new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -60,11 +56,6 @@ namespace MuMech
                 new ManeuverParameters(
                     OrbitalManeuverCalculator.DeltaVToEllipticize(o, ut, NewPeA + o.referenceBody.Radius, NewApA + o.referenceBody.Radius), ut)
             };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

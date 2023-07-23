@@ -9,15 +9,10 @@ namespace MuMech
     {
         public override string GetName() { return Localizer.Format("#MechJeb_Maneu_circularize_title"); } //"circularize"
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationCircularize()
+        private readonly TimeSelector _timeSelector = new TimeSelector(new[]
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
-            });
-        }
+            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
+        });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -28,11 +23,6 @@ namespace MuMech
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
             return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, ut), ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

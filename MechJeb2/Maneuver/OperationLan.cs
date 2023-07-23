@@ -10,12 +10,8 @@ namespace MuMech
     {
         public override string GetName() { return Localizer.Format("#MechJeb_AN_title"); } //change longitude of ascending node
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationLan()
-        {
-            _timeSelector = new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW });
-        }
+        private readonly TimeSelector _timeSelector =
+            new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -35,11 +31,6 @@ namespace MuMech
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToShiftLAN(o, ut, target.targetLongitude);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

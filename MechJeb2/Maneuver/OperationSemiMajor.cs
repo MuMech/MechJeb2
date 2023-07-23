@@ -14,13 +14,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewSma = new EditableDoubleMult(800000, 1000);
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationSemiMajor()
-        {
-            _timeSelector =
-                new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
-        }
+        private readonly TimeSelector _timeSelector =
+            new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -46,11 +41,6 @@ namespace MuMech
             }
 
             return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(o, ut, NewSma), ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }
