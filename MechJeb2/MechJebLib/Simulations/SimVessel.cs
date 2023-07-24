@@ -106,6 +106,7 @@ namespace MechJebLib.Simulations
             ThrustCurrent   = V3.zero;
             ThrustMagnitude = 0;
             ThrustNoCosLoss = 0;
+            SpoolupCurrent  = 0;
 
             for (int i = 0; i < ActiveEngines.Count; i++)
             {
