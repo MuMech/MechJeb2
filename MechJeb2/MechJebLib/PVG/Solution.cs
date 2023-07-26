@@ -178,10 +178,7 @@ namespace MechJebLib.PVG
             return _tmax[n] - _tmin[n];
         }
 
-        public double Vgo(double t)
-        {
-            return DV(Tf) - DV(t);
-        }
+        public double Vgo(double t) => DV(Tf) - DV(t);
 
         public bool Coast(double t)
         {
@@ -202,7 +199,7 @@ namespace MechJebLib.PVG
             return false;
         }
 
-        public int CoastStage()
+        public int CoastKSPStage()
         {
             for (int i = 0; i < Phases.Count; i++)
             {
@@ -212,10 +209,7 @@ namespace MechJebLib.PVG
             return -1;
         }
 
-        public int TerminalStage()
-        {
-            return Phases[Phases.Count - 1].KSPStage;
-        }
+        public int TerminalStage() => Phases[Phases.Count - 1].KSPStage;
 
         public bool Unguided(double t)
         {
@@ -223,15 +217,9 @@ namespace MechJebLib.PVG
             return Phases[IndexForTbar(tbar)].Unguided;
         }
 
-        public bool CoastPhase(int phase)
-        {
-            return Phases[phase].Coast;
-        }
+        public bool CoastPhase(int phase) => Phases[phase].Coast;
 
-        public bool OptimizeTime(int phase)
-        {
-            return Phases[phase].OptimizeTime;
-        }
+        public bool OptimizeTime(int phase) => Phases[phase].OptimizeTime;
 
         public V3 U0(double t)
         {
@@ -239,15 +227,9 @@ namespace MechJebLib.PVG
             return Phases[IndexForTbar(tbar)].u0;
         }
 
-        public int KSPStage(int phase)
-        {
-            return Phases[phase].KSPStage;
-        }
+        public int KSPStage(int phase) => Phases[phase].KSPStage;
 
-        public int MJPhase(int phase)
-        {
-            return Phases[phase].MJPhase;
-        }
+        public int MJPhase(int phase) => Phases[phase].MJPhase;
 
         public double StageTimeLeft(double t)
         {
@@ -284,10 +266,7 @@ namespace MechJebLib.PVG
             return (pitch, heading);
         }
 
-        public (V3 r, V3 v) TerminalStateVectors()
-        {
-            return StateVectors(tmax);
-        }
+        public (V3 r, V3 v) TerminalStateVectors() => StateVectors(tmax);
 
         public (V3 r, V3 v) StateVectors(double tbar)
         {
@@ -344,15 +323,9 @@ namespace MechJebLib.PVG
             return -1;
         }
 
-        private Vn Interpolate(double tbar)
-        {
-            return _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
-        }
+        private Vn Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
 
-        private Vn Interpolate(int segment, double tbar)
-        {
-            return _interpolants[segment].Evaluate(tbar);
-        }
+        private Vn Interpolate(int segment, double tbar) => _interpolants[segment].Evaluate(tbar);
 
         // this is for terminal guidance.
         public bool TerminalGuidanceSatisfied(V3 pos, V3 vel, int index)

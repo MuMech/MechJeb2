@@ -57,7 +57,7 @@ namespace MuMech
 
         private readonly Dictionary<object, int> _autoStageModuleLimit = new Dictionary<object, int>();
 
-        public void AutoStageLimitRequest(int stage, object user) => _autoStageModuleLimit.TryAdd(user, stage);
+        public void AutoStageLimitRequest(int stage, object user) => _autoStageModuleLimit[user] = stage;
 
         public void AutoStageLimitRemove(object user)
         {
@@ -69,8 +69,11 @@ namespace MuMech
         {
             int limit = 0;
             foreach (int value in _autoStageModuleLimit.Values)
-                if (value > limit)
+            {
+               if (value > limit)
                     limit = value;
+            }
+
             return limit;
         }
 
@@ -304,7 +307,9 @@ namespace MuMech
 
             // always stage if we have no active engines
             if (!InverseStageHasActiveEngines(Vessel.currentStage))
+            {
                 Stage();
+            }
 
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
             if (HotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
@@ -318,7 +323,9 @@ namespace MuMech
 
             // Always drop deactivated engines or tanks
             if (InverseStageDecouplesDeactivatedEngineOrTank(Vessel.currentStage - 1))
+            {
                 Stage();
+            }
 
             // only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
             if (WaitingForFairing())

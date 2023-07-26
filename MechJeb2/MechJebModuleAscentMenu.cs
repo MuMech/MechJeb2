@@ -499,13 +499,13 @@ namespace MuMech
 
         private string PhaseString(Solution solution, double t, int pvgPhase)
         {
-            if (solution.CoastPhase(pvgPhase))
-                return $"coast: {solution.Tgo(t, pvgPhase):F1}s";
-
-            double stageDeltaV = 0;
-
             int mjPhase = solution.MJPhase(pvgPhase);
             int kspStage = solution.KSPStage(pvgPhase);
+
+            if (solution.CoastPhase(pvgPhase))
+                return $"coast: {kspStage} {solution.Tgo(t, pvgPhase):F1}s";
+
+            double stageDeltaV = 0;
 
             if (mjPhase < Core.StageStats.VacStats.Count)
                 stageDeltaV = Core.StageStats.VacStats[mjPhase].DeltaV;
@@ -518,19 +518,10 @@ namespace MuMech
             return $"burn: {kspStage} {solution.Tgo(t, pvgPhase):F1}s {solution.DV(t, pvgPhase):F1}m/s ({excessDV:F1}m/s)";
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(275), GUILayout.Height(30) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
 
-        public override string GetName()
-        {
-            return CachedLocalizer.Instance.MechJeb_Ascent_title; //"Ascent Guidance"
-        }
+        public override string GetName() => CachedLocalizer.Instance.MechJeb_Ascent_title; //"Ascent Guidance"
 
-        public override string IconName()
-        {
-            return "Ascent Guidance";
-        }
+        public override string IconName() => "Ascent Guidance";
     }
 }
