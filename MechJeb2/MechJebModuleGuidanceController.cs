@@ -75,10 +75,7 @@ namespace MuMech
         private bool _allowExecution;
 
         // we wait until we get a signal to allow execution to start
-        public void AssertStart(bool allow_execution = true)
-        {
-            _allowExecution = allow_execution;
-        }
+        public void AssertStart(bool allow_execution = true) => _allowExecution = allow_execution;
 
         public override void OnFixedUpdate()
         {
@@ -226,49 +223,25 @@ namespace MuMech
             Core.Spinup.RollAngularVelocity = _ascentSettings.SpinupAngularVelocity;
         }
 
-        public bool IsTerminal()
-        {
-            return Status == PVGStatus.TERMINAL_RCS || Status == PVGStatus.TERMINAL_STAGING || Status == PVGStatus.TERMINAL;
-        }
+        public bool IsTerminal() => Status == PVGStatus.TERMINAL_RCS || Status == PVGStatus.TERMINAL_STAGING || Status == PVGStatus.TERMINAL;
 
         /* is guidance usable? */
-        public bool IsStable()
-        {
-            return IsNormal() || IsTerminal();
-        }
+        public bool IsStable() => IsNormal() || IsTerminal();
 
         // either ENABLED and waiting for a Solution, or executing a solution "normally" (not terminal, not failed)
-        public bool IsReady()
-        {
-            return Status == PVGStatus.ENABLED || IsNormal();
-        }
+        public bool IsReady() => Status == PVGStatus.ENABLED || IsNormal();
 
         // not TERMINAL guidance or TERMINAL_RCS -- when we should be running the optimizer
-        public bool IsNormal()
-        {
-            return Status == PVGStatus.INITIALIZED || Status == PVGStatus.BURNING || Status == PVGStatus.COASTING;
-        }
+        public bool IsNormal() => Status == PVGStatus.INITIALIZED || Status == PVGStatus.BURNING || Status == PVGStatus.COASTING;
 
-        public bool IsCoasting()
-        {
-            return Status == PVGStatus.COASTING;
-        }
+        public bool IsCoasting() => Status == PVGStatus.COASTING;
 
-        private bool IsThrustOn()
-        {
-            return IsBurning() || IsTerminal();
-        }
+        private bool IsThrustOn() => IsBurning() || IsTerminal();
 
-        private bool IsBurning()
-        {
-            return Status == PVGStatus.BURNING;
-        }
+        private bool IsBurning() => Status == PVGStatus.BURNING;
 
         /* normal pre-states but not usefully converged */
-        public bool IsInitializing()
-        {
-            return Status == PVGStatus.ENABLED || Status == PVGStatus.INITIALIZED;
-        }
+        public bool IsInitializing() => Status == PVGStatus.ENABLED || Status == PVGStatus.INITIALIZED;
 
         private void HandleThrottle()
         {
@@ -290,17 +263,19 @@ namespace MuMech
                 return;
             }
 
-            int coastStage = Solution.CoastStage();
+            int coastStage = Solution.CoastKSPStage();
 
-            //Debug.Log($"coast stage: {coastStage} current stage: {vessel.currentStage} will coast: {Solution.WillCoast(vesselState.time)}");
+            //Debug.Log($"coast stage: {coastStage} current stage: {Vessel.currentStage} will coast: {Solution.WillCoast(VesselState.time)}");
 
 
             // Stop autostaging if we need to do a coast.  Also, we need to affirmatively set the termination
             // of autostaging to the top of the rocket.  If we don't, then when we cut the engines and do the
             // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
             // since the insertion stage may still have RCS which is necessary to complete the mission.
-            if (coastStage >= 0 && Vessel.currentStage == coastStage && Solution.WillCoast(VesselState.time))
+            if (coastStage >= 0 && Vessel.currentStage >= coastStage && Solution.WillCoast(VesselState.time))
                 Core.Staging.AutoStageLimitRequest(coastStage, this);
+            else
+                Core.Staging.AutoStageLimitRequest(Solution.TerminalStage(), this);
 
             if (Solution.Coast(VesselState.time))
             {
@@ -318,22 +293,19 @@ namespace MuMech
                     RCSOn();
 
                 ThrustOff();
-                return;
             }
+            else
+            {
+                ThrottleOn();
 
-            Core.Staging.AutoStageLimitRequest(Solution.TerminalStage(), this);
-
-            ThrottleOn();
-
-            Status = PVGStatus.BURNING;
+                Status = PVGStatus.BURNING;
+            }
         }
 
-        private bool IsGrounded()
-        {
-            return Vessel.situation == Vessel.Situations.LANDED ||
-                   Vessel.situation == Vessel.Situations.PRELAUNCH ||
-                   Vessel.situation == Vessel.Situations.SPLASHED;
-        }
+        private bool IsGrounded() =>
+            Vessel.situation == Vessel.Situations.LANDED ||
+            Vessel.situation == Vessel.Situations.PRELAUNCH ||
+            Vessel.situation == Vessel.Situations.SPLASHED;
 
         private void UpdatePitchAndHeading()
         {
@@ -394,10 +366,7 @@ namespace MuMech
             GLUtils.DrawOrbit(_finalOrbit, Color.yellow);
         }
 
-        private void ThrottleOn()
-        {
-            Core.Thrust.TargetThrottle = 1.0F;
-        }
+        private void ThrottleOn() => Core.Thrust.TargetThrottle = 1.0F;
 
         private void RCSOn()
         {
@@ -405,10 +374,7 @@ namespace MuMech
             Vessel.ctrlState.Z = -1.0F;
         }
 
-        private void ThrustOff()
-        {
-            Core.Thrust.ThrustOff();
-        }
+        private void ThrustOff() => Core.Thrust.ThrustOff();
 
         private void TerminalDone()
         {
@@ -419,7 +385,7 @@ namespace MuMech
             }
 
             // if we still have a coast to do in this stage, start the coast
-            if (Vessel.currentStage == Solution.CoastStage() && Solution.WillCoast(VesselState.time))
+            if (Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.time))
             {
                 ThrustOff();
                 Status = PVGStatus.COASTING;

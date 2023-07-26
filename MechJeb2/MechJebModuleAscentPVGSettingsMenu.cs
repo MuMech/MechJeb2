@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -18,10 +19,7 @@ namespace MuMech
         private static GUIStyle _btNormal;
         private static GUIStyle _btActive;
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(100) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
 
         private void SetupButtonStyles()
         {
@@ -48,9 +46,9 @@ namespace MuMech
 
             int topstage = -1;
 
-            var vacStats = Core.StageStats.VacStats;
+            List<FuelStats> vacStats = Core.StageStats.VacStats;
 
-            if (vacStats.Count > 0 && _ascentSettings.LastStage < vacStats[vacStats.Count-1].KSPStage)
+            if (vacStats.Count > 0 && _ascentSettings.LastStage < vacStats[vacStats.Count - 1].KSPStage)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
@@ -66,7 +64,7 @@ namespace MuMech
                         topstage = stats.KSPStage;
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label($"{mjPhase,3} {stats.DeltaV:##,###0} m/s");
+                    GUILayout.Label($"{stats.KSPStage,3} {stats.DeltaV:##,###0} m/s");
                     if (_ascentSettings.UnguidedStages.Contains(mjPhase))
                         GUILayout.Label(" (unguided)");
                     if (_ascentSettings.OptimizeStage == mjPhase)
@@ -134,14 +132,8 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override string GetName()
-        {
-            return "PVG Settings";
-        }
+        public override string GetName() => "PVG Settings";
 
-        public override string IconName()
-        {
-            return "PVGSettings";
-        }
+        public override string IconName() => "PVGSettings";
     }
 }
