@@ -8,7 +8,8 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationCourseCorrection : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_approach_title"); } //fine tune closest approach to target
+        private static readonly string _name = Localizer.Format("#MechJeb_approach_title");
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]

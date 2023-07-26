@@ -7,19 +7,14 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationKillRelVel : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_match_v_title"); } //match velocities with target
+        private static readonly string _name = Localizer.Format("#MechJeb_match_v_title");
+        public override         string GetName() => _name;
 
-        private readonly TimeSelector _timeSelector;
+        private static readonly TimeReference[] _timeReferences = { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
 
-        public OperationKillRelVel()
-        {
-            _timeSelector = new TimeSelector(new[] { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW });
-        }
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            _timeSelector.DoChooseTimeGUI();
-        }
+        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target) => _timeSelector.DoChooseTimeGUI();
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -33,11 +28,6 @@ namespace MuMech
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(o, ut, target.TargetOrbit);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

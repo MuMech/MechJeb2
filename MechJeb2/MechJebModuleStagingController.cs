@@ -57,10 +57,7 @@ namespace MuMech
 
         private readonly Dictionary<object, int> _autoStageModuleLimit = new Dictionary<object, int>();
 
-        public void AutoStageLimitRequest(int stage, object user)
-        {
-            _autoStageModuleLimit.TryAdd(user, stage);
-        }
+        public void AutoStageLimitRequest(int stage, object user) => _autoStageModuleLimit.TryAdd(user, stage);
 
         public void AutoStageLimitRemove(object user)
         {
@@ -71,9 +68,9 @@ namespace MuMech
         private int ActiveAutoStageModuleLimit()
         {
             int limit = 0;
-            foreach (int key in _autoStageModuleLimit.Values)
-                if (key > limit)
-                    limit = key;
+            foreach (int value in _autoStageModuleLimit.Values)
+                if (value > limit)
+                    limit = value;
             return limit;
         }
 
@@ -114,10 +111,7 @@ namespace MuMech
             BuildDecouplersCache(_allDecouplers);
         }
 
-        private void OnGUIStageSequenceModified()
-        {
-            RegenerateCaches();
-        }
+        private void OnGUIStageSequenceModified() => RegenerateCaches();
 
         private void OnVesselModified(Vessel v)
         {
@@ -167,10 +161,7 @@ namespace MuMech
             GameEvents.StageManager.OnGUIStageSequenceModified.Remove(OnGUIStageSequenceModified);
         }
 
-        private void StageActivate(int data)
-        {
-            _waitingForFirstStaging = false;
-        }
+        private void StageActivate(int data) => _waitingForFirstStaging = false;
 
         public void AutostageOnce(object user)
         {
@@ -178,15 +169,9 @@ namespace MuMech
             AutostagingOnce = true;
         }
 
-        protected override void OnModuleEnabled()
-        {
-            _autoStageModuleLimit.Clear();
-        }
+        protected override void OnModuleEnabled() => _autoStageModuleLimit.Clear();
 
-        protected override void OnModuleDisabled()
-        {
-            AutostagingOnce = false;
-        }
+        protected override void OnModuleDisabled() => AutostagingOnce = false;
 
         private readonly string _sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label39} <";
         private readonly string _sFairingMinAltitude        = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label40} >";
@@ -495,11 +480,9 @@ namespace MuMech
         }
 
         // detect if this part is an SRB, will be dropped in the next stage, and we are below the enabled dropSolidsLeadTime
-        private bool IsBurnedOutSrbDecoupledInNextStage(Part p)
-        {
-            return DropSolids && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < DropSolidsLeadTime &&
-                   p.IsDecoupledInStage(Vessel.currentStage - 1);
-        }
+        private bool IsBurnedOutSrbDecoupledInNextStage(Part p) =>
+            DropSolids && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < DropSolidsLeadTime &&
+            p.IsDecoupledInStage(Vessel.currentStage - 1);
 
         //detect if a part is above an active or idle engine in the part tree
         private bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)

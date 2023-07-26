@@ -8,7 +8,8 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationResonantOrbit : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_resonant_title"); } //resonant orbit
+        private static readonly string _name = Localizer.Format("#MechJeb_resonant_title");
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -18,13 +19,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt ResonanceDenominator = 3;
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationResonantOrbit()
-        {
-            _timeSelector =
-                new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
-        }
+        private readonly TimeSelector _timeSelector =
+            new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -45,11 +41,6 @@ namespace MuMech
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, ut, (double)ResonanceNumerator.val / ResonanceDenominator.val);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }
