@@ -8,7 +8,8 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationInterplanetaryTransfer : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_transfer_title"); } //transfer to another planet
+        private static readonly string _name = Localizer.Format("#MechJeb_transfer_title");
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]

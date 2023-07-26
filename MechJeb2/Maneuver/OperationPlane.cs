@@ -7,22 +7,17 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationPlane : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_match_planes_title"); } //match planes with target
+        private static readonly string _name = Localizer.Format("#MechJeb_match_planes_title");
+        public override         string GetName() => _name;
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationPlane()
+        private static readonly TimeReference[] _timeReferences =
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
-            });
-        }
+            TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
+        };
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            _timeSelector.DoChooseTimeGUI();
-        }
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+
+        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target) => _timeSelector.DoChooseTimeGUI();
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -116,11 +111,6 @@ namespace MuMech
             }
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

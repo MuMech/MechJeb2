@@ -13,17 +13,18 @@ namespace MuMech
     {
         private enum Mode
         {
-            LimitedTime,
-            Porkchop
+            LIMITED_TIME,
+            PORKCHOP
         }
+
+        private static readonly string _name = Localizer.Format("#MechJeb_AdvancedTransfer_title");
+        public override         string GetName() => _name;
 
         private static readonly string[]
             modeNames =
             {
                 Localizer.Format("#MechJeb_adv_modeName1"), Localizer.Format("#MechJeb_adv_modeName2")
             }; //"Limited time","Porkchop selection"
-
-        public override string GetName() { return Localizer.Format("#MechJeb_AdvancedTransfer_title"); } //"advanced transfer to another planet"
 
         private double minDepartureTime;
         private double minTransferTime;
@@ -38,7 +39,7 @@ namespace MuMech
 
         private const double minSamplingStep = 12 * 3600;
 
-        private Mode selectionMode = Mode.Porkchop;
+        private Mode selectionMode = Mode.PORKCHOP;
         private int  windowWidth;
 
         private CelestialBody lastTargetCelestial;
@@ -114,10 +115,10 @@ namespace MuMech
 
             switch (selectionMode)
             {
-                case Mode.LimitedTime:
+                case Mode.LIMITED_TIME:
                     worker = new TransferCalculator(o, target.TargetOrbit, universalTime, maxArrivalTime, minSamplingStep, includeCaptureBurn);
                     break;
-                case Mode.Porkchop:
+                case Mode.PORKCHOP:
                     worker = new AllGraphTransferCalculator(o, target.TargetOrbit, minDepartureTime, maxDepartureTime, minTransferTime,
                         maxTransferTime, windowWidth, porkchop_Height, includeCaptureBurn);
                     break;
@@ -307,12 +308,12 @@ namespace MuMech
 
             switch (selectionMode)
             {
-                case Mode.LimitedTime:
+                case Mode.LIMITED_TIME:
                     GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_adv_label5"), maxArrivalTime); //Max arrival time
                     if (worker != null && !worker.Finished)
                         GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%");
                     break;
-                case Mode.Porkchop:
+                case Mode.PORKCHOP:
                     DoPorkchopGui(o, universalTime, target);
                     break;
             }
@@ -347,7 +348,7 @@ namespace MuMech
 
             double target_PeR = lastTargetCelestial.Radius + periapsisHeight * 1000;
 
-            if (selectionMode == Mode.Porkchop)
+            if (selectionMode == Mode.PORKCHOP)
             {
                 if (plot == null || plot.SelectedPoint == null)
                     throw new OperationException(Localizer.Format("#MechJeb_adv_Exception4")); //Invalid point selected.

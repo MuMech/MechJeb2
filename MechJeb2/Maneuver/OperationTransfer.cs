@@ -8,7 +8,8 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationGeneric : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_Hohm_title"); } //bi-impulsive (Hohmann) transfer to target
+        private static readonly string _name = Localizer.Format("#MechJeb_Hohm_title");
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         public bool InterceptOnly;
@@ -27,17 +28,14 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool SimpleTransfer;
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationGeneric()
+        private static readonly TimeReference[] _timeReferences =
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.COMPUTED, TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE,
-                TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING,
-                TimeReference.REL_DESCENDING, TimeReference.CLOSEST_APPROACH
-            });
-        }
+            TimeReference.COMPUTED, TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE,
+            TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING,
+            TimeReference.REL_DESCENDING, TimeReference.CLOSEST_APPROACH
+        };
+
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -116,11 +114,6 @@ namespace MuMech
             }
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

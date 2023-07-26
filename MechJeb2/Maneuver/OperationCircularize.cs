@@ -7,32 +7,24 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationCircularize : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_Maneu_circularize_title"); } //"circularize"
+        private static readonly string _name = Localizer.Format("#MechJeb_Maneu_circularize_title");
+        public override         string GetName() => _name;
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationCircularize()
+        private static readonly TimeReference[] _timeReferences =
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
-            });
-        }
+            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
+        };
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            _timeSelector.DoChooseTimeGUI();
-        }
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+
+        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target) => _timeSelector.DoChooseTimeGUI();
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-            return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToCircularize(o, ut), ut) };
-        }
+            Vector3d deltaV = OrbitalManeuverCalculator.DeltaVToCircularize(o, ut);
 
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
+            return new List<ManeuverParameters> { new ManeuverParameters(deltaV, ut) };
         }
     }
 }

@@ -8,14 +8,12 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationLongitude : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_la_title"); } //change surface longitude of apsis
+        private static readonly string _name = Localizer.Format("#MechJeb_la_title");
+        public override         string GetName() => _name;
 
-        private readonly TimeSelector _timeSelector;
+        private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
 
-        public OperationLongitude()
-        {
-            _timeSelector = new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS });
-        }
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -30,11 +28,6 @@ namespace MuMech
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToShiftNodeLongitude(o, ut, target.targetLongitude);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

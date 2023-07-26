@@ -5,21 +5,19 @@ namespace MuMech
 {
     public class OperationEccentricity : Operation
     {
-        public override string GetName() { return "change eccentricity"; }
+        private static readonly string _name = "change eccentricity";
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewEcc = new EditableDouble(0);
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationEccentricity()
+        private static readonly TimeReference[] _timeReferences =
         {
-            _timeSelector = new TimeSelector(new[]
-            {
-                TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
-            });
-        }
+            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
+        };
+
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -30,13 +28,9 @@ namespace MuMech
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+            Vector3d deltaV = OrbitalManeuverCalculator.DeltaVToChangeEccentricity(o, ut, NewEcc);
 
-            return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangeEccentricity(o, ut, NewEcc), ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
+            return new List<ManeuverParameters> { new ManeuverParameters(deltaV, ut) };
         }
     }
 }

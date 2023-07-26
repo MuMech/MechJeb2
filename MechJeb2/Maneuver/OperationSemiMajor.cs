@@ -8,19 +8,19 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationSemiMajor : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_Sa_title"); } //change semi-major axis
+        private static readonly string _name = Localizer.Format("#MechJeb_Sa_title");
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewSma = new EditableDoubleMult(800000, 1000);
 
-        private readonly TimeSelector _timeSelector;
-
-        public OperationSemiMajor()
+        private static readonly TimeReference[] _timeReferences =
         {
-            _timeSelector =
-                new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
-        }
+            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
+        };
+
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -46,11 +46,6 @@ namespace MuMech
             }
 
             return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(o, ut, NewSma), ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

@@ -7,18 +7,16 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationLambert : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_intercept_title"); } //intercept target at chosen time
+        private static readonly string _name = Localizer.Format("#MechJeb_intercept_title");
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime InterceptInterval = 3600;
 
-        private readonly TimeSelector _timeSelector;
+        private static readonly TimeReference[] _timeReferences = { TimeReference.X_FROM_NOW };
 
-        public OperationLambert()
-        {
-            _timeSelector = new TimeSelector(new[] { TimeReference.X_FROM_NOW });
-        }
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -38,11 +36,6 @@ namespace MuMech
             (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(o, ut, target.TargetOrbit, ut + InterceptInterval);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
-        }
-
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
         }
     }
 }

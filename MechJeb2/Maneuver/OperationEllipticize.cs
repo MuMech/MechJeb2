@@ -8,8 +8,10 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationEllipticize : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_both_title"); } //change both Pe and Ap
+        private static readonly string _name = Localizer.Format("#MechJeb_both_title");
+        public override         string GetName() => _name;
 
+        //change both Pe and Ap
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewApA = new EditableDoubleMult(200000, 1000);
@@ -18,12 +20,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewPeA = new EditableDoubleMult(100000, 1000);
 
-        private readonly TimeSelector _timeSelector;
+        private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE };
 
-        public OperationEllipticize()
-        {
-            _timeSelector = new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
-        }
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -55,16 +54,11 @@ namespace MuMech
                                              o.referenceBody.Radius.ToSI(3) + "m)"); //"new periapsis cannot be lower than minus the radius of <<1>>"
             }
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(
-                    OrbitalManeuverCalculator.DeltaVToEllipticize(o, ut, NewPeA + o.referenceBody.Radius, NewApA + o.referenceBody.Radius), ut)
-            };
-        }
+            double newPeR = NewPeA + o.referenceBody.Radius;
+            double newApR = NewApA + o.referenceBody.Radius;
+            Vector3d deltaV = OrbitalManeuverCalculator.DeltaVToEllipticize(o, ut, newPeR, newApR);
 
-        public TimeSelector GetTimeSelector() //Required for scripts to save configuration
-        {
-            return _timeSelector;
+            return new List<ManeuverParameters> { new ManeuverParameters(deltaV, ut)};
         }
     }
 }

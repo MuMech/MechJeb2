@@ -10,24 +10,23 @@ namespace MuMech
     [UsedImplicitly]
     public class MechJebModuleManeuverPlanner : DisplayModule
     {
-        public MechJebModuleManeuverPlanner(MechJebCore core) : base(core)
-        {
-            operationNames = new List<Operation>(operation).ConvertAll(x => x.GetName()).ToArray();
-        }
+        public MechJebModuleManeuverPlanner(MechJebCore core) : base(core) { }
 
         // Keep all Operation objects so parameters are saved
-        private readonly Operation[] operation = Operation.GetAvailableOperations();
-        private readonly string[]    operationNames;
+        private static readonly Operation[] _operation = Operation.GetAvailableOperations();
+
+        private readonly string[] _operationNames =
+            new List<Operation>(_operation).ConvertAll(x => x.GetName()).ToArray();
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private int operationId;
+        private int _operationId;
 
         // Creation or replacement mode
-        private bool createNode = true;
+        private bool _createNode = true;
 
         protected override void WindowGUI(int windowID)
         {
-            operationId = Mathf.Clamp(operationId, 0, operation.Length - 1);
+            _operationId = Mathf.Clamp(_operationId, 0, _operation.Length - 1);
 
             GUILayout.BeginVertical();
 
@@ -37,11 +36,11 @@ namespace MuMech
             if (anyNodeExists)
             {
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(createNode
+                if (GUILayout.Button(_createNode
                         ? Localizer.Format("#MechJeb_Maneu_createNodeBtn01")
                         : Localizer.Format("#MechJeb_Maneu_createNodeBtn02"))) //"Create a new":"Change the last"
                 {
-                    createNode = !createNode;
+                    _createNode = !_createNode;
                 }
 
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_createlab1")); //"maneuver node to:"
@@ -50,17 +49,17 @@ namespace MuMech
             else
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_createlab2")); //"Create a new maneuver node to:"
-                createNode = true;
+                _createNode = true;
             }
 
-            operationId = GuiUtils.ComboBox.Box(operationId, operationNames, this);
+            _operationId = GuiUtils.ComboBox.Box(_operationId, _operationNames, this);
 
             // Compute orbit and universal time parameters for next maneuver
             double UT = VesselState.time;
             Orbit o = Orbit;
             if (anyNodeExists)
             {
-                if (createNode)
+                if (_createNode)
                 {
                     ManeuverNode last = maneuverNodes.Last();
                     UT = last.UT;
@@ -76,7 +75,7 @@ namespace MuMech
 
             try
             {
-                operation[operationId].DoParametersGUI(o, UT, Core.Target);
+                _operation[_operationId].DoParametersGUI(o, UT, Core.Target);
             }
             catch (Exception) { } // TODO: Would be better to fix the problem but this will do for now
 
@@ -89,7 +88,6 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button1"))) //"Create node"
             {
                 makingNode    = true;
-                executingNode = false;
             }
 
             if (Core.Node != null && GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button2"))) //"Create and execute"
@@ -102,10 +100,10 @@ namespace MuMech
 
             if (makingNode)
             {
-                List<ManeuverParameters> nodeList = operation[operationId].MakeNodes(o, UT, Core.Target);
+                List<ManeuverParameters> nodeList = _operation[_operationId].MakeNodes(o, UT, Core.Target);
                 if (nodeList != null)
                 {
-                    if (!createNode)
+                    if (!_createNode)
                         maneuverNodes.Last().RemoveSelf();
                     for (int i = 0; i < nodeList.Count; i++)
                     {
@@ -117,9 +115,9 @@ namespace MuMech
                     Core.Node.ExecuteOneNode(this);
             }
 
-            if (operation[operationId].GetErrorMessage().Length > 0)
+            if (_operation[_operationId].GetErrorMessage().Length > 0)
             {
-                GUILayout.Label(operation[operationId].GetErrorMessage(), GuiUtils.yellowLabel);
+                GUILayout.Label(_operation[_operationId].GetErrorMessage(), GuiUtils.yellowLabel);
             }
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button3"))) //Remove ALL nodes
@@ -210,7 +208,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            base.WindowGUI(windowID, operation[operationId].Draggable);
+            base.WindowGUI(windowID, _operation[_operationId].Draggable);
         }
 
         public List<ManeuverNode> GetManeuverNodes()
@@ -220,24 +218,12 @@ namespace MuMech
             return Vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(150) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(150) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Maneuver_Planner_title"); //Maneuver Planner
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Maneuver_Planner_title"); //Maneuver Planner
 
-        public override string IconName()
-        {
-            return "Maneuver Planner";
-        }
+        public override string IconName() => "Maneuver Planner";
 
-        protected override bool IsSpaceCenterUpgradeUnlocked()
-        {
-            return Vessel.patchedConicsUnlocked();
-        }
+        protected override bool IsSpaceCenterUpgradeUnlocked() => Vessel.patchedConicsUnlocked();
     }
 }

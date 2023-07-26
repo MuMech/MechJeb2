@@ -8,7 +8,8 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationMoonReturn : Operation
     {
-        public override string GetName() { return Localizer.Format("#MechJeb_return_title"); } //return from a moon
+        private static readonly string _name = Localizer.Format("#MechJeb_return_title");
+        public override         string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
