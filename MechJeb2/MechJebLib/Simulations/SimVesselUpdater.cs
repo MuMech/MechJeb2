@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -23,17 +24,31 @@ namespace MechJebLib.Simulations
             private SimVessel                             _vessel                   => _manager._vessel;
 
             private static readonly FieldInfo? _pfDecoupled;
+            private static readonly FieldInfo? _rfPredictedMaximumResiduals;
 
             static SimVesselUpdater()
             {
-                if (!ReflectionUtils.isAssemblyLoaded("ProceduralFairings")) return;
+                if (ReflectionUtils.isAssemblyLoaded("ProceduralFairings"))
 
-                _pfDecoupled =
-                    ReflectionUtils.getFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler", "decoupled");
-                if (_pfDecoupled == null)
                 {
-                    Debug.Log(
-                        "MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
+                    _pfDecoupled =
+                        ReflectionUtils.getFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler", "decoupled");
+                    if (_pfDecoupled == null)
+                    {
+                        Debug.Log(
+                            "MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
+                    }
+                }
+
+                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
+                {
+                    _rfPredictedMaximumResiduals =
+                        ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
+                    if (_rfPredictedMaximumResiduals == null)
+                    {
+                        Debug.Log(
+                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
+                    }
                 }
             }
 
@@ -43,10 +58,7 @@ namespace MechJebLib.Simulations
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void Update()
-            {
-                UpdateParts();
-            }
+            internal void Update() => UpdateParts();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateParts()
@@ -123,7 +135,7 @@ namespace MechJebLib.Simulations
                 switch (m)
                 {
                     case SimModuleEngines engine:
-                        UpdateModuleEngines(engine, kspModule as ModuleEngines);
+                        UpdateModuleEngines(part, engine, kspModule as ModuleEngines);
                         break;
                     case SimLaunchClamp _:
                         // intentionally left blank
@@ -144,7 +156,7 @@ namespace MechJebLib.Simulations
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void UpdateModuleEngines(SimModuleEngines engine, ModuleEngines? kspEngine)
+            private static void UpdateModuleEngines(SimPart part, SimModuleEngines engine, ModuleEngines? kspEngine)
             {
                 if (kspEngine is null)
                 {
@@ -157,6 +169,12 @@ namespace MechJebLib.Simulations
                 engine.ThrustPercentage = kspEngine.thrustPercentage;
                 engine.MultIsp          = kspEngine.multIsp;
                 engine.NoPropellants    = kspEngine is { flameout: true, statusL2: "No propellants" };
+                engine.ModuleResiduals  = 0;
+
+                if (_rfPredictedMaximumResiduals != null && _rfPredictedMaximumResiduals.GetValue(kspEngine) is double doubleVal)
+                    engine.ModuleResiduals = doubleVal;
+
+                part.EngineResiduals = Math.Max(part.EngineResiduals, engine.ModuleResiduals);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

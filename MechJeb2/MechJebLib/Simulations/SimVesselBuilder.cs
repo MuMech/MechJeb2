@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using KSP.UI;
@@ -19,7 +18,6 @@ namespace MechJebLib.Simulations
             private Dictionary<SimPart, Part>             _inversePartMapping       => _manager._inversePartMapping;
             private Dictionary<SimPartModule, PartModule> _inversePartModuleMapping => _manager._inversePartModuleMapping;
 
-            private static readonly FieldInfo? _rfPredictedMaximumResiduals;
             private static readonly FieldInfo? _rfSpoolUpTime;
 
             private delegate double CrewMass(ProtoCrewMember crew);
@@ -44,33 +42,20 @@ namespace MechJebLib.Simulations
             {
                 _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
 
-                if (!ReflectionUtils.isAssemblyLoaded("RealFuels")) return;
-
-                _rfPredictedMaximumResiduals =
-                    ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
-                if (_rfPredictedMaximumResiduals == null)
+                if (!ReflectionUtils.isAssemblyLoaded("RealFuels"))
                 {
-                    Debug.Log(
-                        "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
-                }
-
-                _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
-                if (_rfSpoolUpTime == null)
-                {
-                    Debug.Log(
-                        "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
+                    _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
+                    if (_rfSpoolUpTime == null)
+                    {
+                        Debug.Log(
+                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
+                    }
                 }
             }
 
-            private static double CrewMassOld(ProtoCrewMember crew)
-            {
-                return PhysicsGlobals.KerbalCrewMass;
-            }
+            private static double CrewMassOld(ProtoCrewMember crew) => PhysicsGlobals.KerbalCrewMass;
 
-            private static double CrewMassNew(ProtoCrewMember crew)
-            {
-                return PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
-            }
+            private static double CrewMassNew(ProtoCrewMember crew) => PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
 
             public SimVesselBuilder(SimVesselManager manager)
             {
@@ -243,7 +228,6 @@ namespace MechJebLib.Simulations
                 engine.ATMCurveIsp.LoadH1(kspEngine.atmCurveIsp);
                 engine.AtmosphereCurve.LoadH1(kspEngine.atmosphereCurve);
 
-
                 engine.ThrustTransformMultipliers.Clear();
                 foreach (double multiplier in kspEngine.thrustTransformMultipliers)
                     engine.ThrustTransformMultipliers.Add(multiplier);
@@ -258,43 +242,15 @@ namespace MechJebLib.Simulations
                     engine.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
                         PartResourceLibrary.Instance.GetDefinition(p.id).density));
 
-                double? temp = 0;
-
-                if (_rfPredictedMaximumResiduals != null)
-                {
-                    try
-                    {
-                        temp = _rfPredictedMaximumResiduals.GetValue(kspEngine) as double?;
-                    }
-                    catch (ArgumentException)
-                    {
-                        temp = 0;
-                    }
-                }
-
-                engine.ModuleResiduals = temp ?? 0;
-
-                part.EngineResiduals = Math.Max(part.EngineResiduals, engine.ModuleResiduals);
-
-                float? temp2 = 0;
-                if (_rfSpoolUpTime != null)
-                {
-                    try
-                    {
-                        temp2 = _rfSpoolUpTime.GetValue(kspEngine) as float?;
-                    }
-                    catch (ArgumentException)
-                    {
-                        temp2 = 0;
-                    }
-                }
-
-                engine.ModuleSpoolupTime = temp2 ?? 0;
-
                 _vessel.EnginesActivatedInStage[kspEngine.part.inverseStage].Add(engine);
 
                 part.IsThrottleLocked = kspEngine.throttleLocked;
                 part.IsEngine         = true;
+
+                engine.ModuleSpoolupTime = 0;
+
+                if (_rfSpoolUpTime != null && _rfSpoolUpTime.GetValue(kspEngine) is float floatVal)
+                    engine.ModuleSpoolupTime = floatVal;
 
                 return engine;
             }
@@ -316,10 +272,7 @@ namespace MechJebLib.Simulations
                 return rcs;
             }
 
-            private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part)
-            {
-                return SimProceduralFairingDecoupler.Borrow(part);
-            }
+            private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part) => SimProceduralFairingDecoupler.Borrow(part);
 
             private static double GetModuleMass(Part kspPart, float defaultMass, ModifierStagingSituation sit)
             {
@@ -337,12 +290,15 @@ namespace MechJebLib.Simulations
                 part.CrewMass = 0;
 
                 if (HighLogic.LoadedSceneIsFlight && kspPart.protoModuleCrew != null)
+                {
                     for (int i = 0; i < kspPart.protoModuleCrew.Count; i++)
                     {
                         ProtoCrewMember crewMember = kspPart.protoModuleCrew[i];
                         part.CrewMass += _crewMassDelegate(crewMember);
                     }
+                }
                 else if (HighLogic.LoadedSceneIsEditor)
+                {
                     if (!(CrewAssignmentDialog.Instance is null) && CrewAssignmentDialog.Instance.CurrentManifestUnsafe != null)
                     {
                         PartCrewManifest partCrewManifest = CrewAssignmentDialog.Instance.CurrentManifestUnsafe.GetPartCrewManifest(kspPart.craftID);
@@ -359,6 +315,7 @@ namespace MechJebLib.Simulations
                             }
                         }
                     }
+                }
             }
         }
     }
