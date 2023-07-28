@@ -168,6 +168,8 @@ namespace MuMech
         {
             foreach (StageData data in AllStages)
                 stageVisibility[data] = state;
+
+            stageVisibility[StageData.KSPStage] = true;
         }
 
         // This should only be called before Layout phase, and never in Repaint phase
@@ -276,6 +278,8 @@ namespace MuMech
                     buttonNotPressed &= stageVisibility[info] = !DrawStageStatsColumn(stageHeaderData[info], stageDisplayInfo[info]);
             }
 
+            stageVisibility[StageData.KSPStage] = true;
+
             if (!buttonNotPressed)
             {
                 StageDisplayState = 3;
@@ -345,7 +349,6 @@ namespace MuMech
             {
                 case 0:
                     SetAllStageVisibility(false);
-                    stageVisibility[StageData.Thrust]         = false;
                     stageVisibility[StageData.VacInitialTWR]  = true;
                     stageVisibility[StageData.AtmoInitialTWR] = true;
                     stageVisibility[StageData.VacDeltaV]      = true;
