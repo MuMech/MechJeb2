@@ -71,6 +71,8 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         private int _version = -1;
 
+        private const int SETTINGS_VERSION = 5;
+
         private void Defaults()
         {
             PosKp.val            = 1.98;
@@ -89,7 +91,7 @@ namespace MuMech.AttitudeControllers
             maxStoppingTime.val  = 2;
             minFlipTime.val      = 120;
             rollControlRange.val = 5;
-            _version             = 5;
+            _version             = SETTINGS_VERSION;
         }
 
         private readonly PIDLoop[] _pid = { new PIDLoop(), new PIDLoop(), new PIDLoop() };
@@ -117,7 +119,7 @@ namespace MuMech.AttitudeControllers
 
         public override void OnModuleEnabled()
         {
-            if (_version < 2)
+            if (_version < SETTINGS_VERSION)
                 Defaults();
             Reset();
         }
