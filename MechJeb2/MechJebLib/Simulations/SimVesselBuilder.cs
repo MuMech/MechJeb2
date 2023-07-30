@@ -7,6 +7,7 @@ using KSP.UI.Screens;
 using MechJebLib.Simulations.PartModules;
 using MuMech;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -70,6 +71,8 @@ namespace MechJebLib.Simulations
                     {
                         if (m is SimModuleEngines e)
                             _vessel.EnginesDroppedInStage[part.DecoupledInStage].Add(e);
+                        if (m is SimModuleRCS r)
+                            _vessel.RCSDroppedInStage[part.DecoupledInStage].Add(r);
                     }
                 }
             }
@@ -259,7 +262,12 @@ namespace MechJebLib.Simulations
             {
                 var rcs = SimModuleRCS.Borrow(part);
 
-                rcs.G = kspModuleRCS.G;
+                rcs.G                = kspModuleRCS.G;
+                rcs.ISPMult          = kspModuleRCS.ispMult;
+                rcs.ThrustPercentage = kspModuleRCS.thrustPercentage;
+                rcs.MaxFuelFlow      = kspModuleRCS.maxFuelFlow;
+
+                rcs.AtmosphereCurve.LoadH1(kspModuleRCS.atmosphereCurve);
 
                 rcs.Propellants.Clear();
 

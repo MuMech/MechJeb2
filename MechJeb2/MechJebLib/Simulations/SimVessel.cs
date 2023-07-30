@@ -7,6 +7,7 @@ using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.Simulations.PartModules;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -19,7 +20,9 @@ namespace MechJebLib.Simulations
         public readonly DictOfLists<int, SimModuleEngines> EnginesDroppedInStage   = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesActivatedInStage = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleRCS>     RCSActivatedInStage     = new DictOfLists<int, SimModuleRCS>(10);
+        public readonly DictOfLists<int, SimModuleRCS>     RCSDroppedInStage       = new DictOfLists<int, SimModuleRCS>(10);
         public readonly List<SimModuleEngines>             ActiveEngines           = new List<SimModuleEngines>(10);
+        public readonly List<SimModuleRCS>                 ActiveRCS               = new List<SimModuleRCS>(10);
 
         public int    CurrentStage;
         public double MainThrottle = 1.0;
@@ -60,13 +63,13 @@ namespace MechJebLib.Simulations
 
             CurrentStage--;
 
-            ActivateEngines();
+            ActivateEnginesAndRCS();
 
             UpdateMass();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ActivateEngines()
+        public void ActivateEnginesAndRCS()
         {
             foreach (SimModuleEngines e in EnginesActivatedInStage[CurrentStage])
                 if (e.IsEnabled)
@@ -94,6 +97,29 @@ namespace MechJebLib.Simulations
                         continue;
 
                     ActiveEngines.Add(e);
+                }
+            }
+
+            ComputeThrustAndSpoolup();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void UpdateActiveRCS()
+        {
+            ActiveRCS.Clear();
+
+            for (int i = -1; i < CurrentStage; i++)
+            {
+                foreach (SimModuleRCS r in RCSDroppedInStage[i])
+                {
+                    if (r.MassFlowRate <= 0) continue;
+
+                    r.UpdateRCSStatus();
+
+                    if (!r.RcsEnabled)
+                        continue;
+
+                    ActiveRCS.Add(r);
                 }
             }
 
@@ -133,16 +159,10 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SimVessel Borrow()
-        {
-            return _pool.Borrow();
-        }
+        public static SimVessel Borrow() => _pool.Borrow();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static SimVessel New()
-        {
-            return new SimVessel();
-        }
+        private static SimVessel New() => new SimVessel();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Clear(SimVessel v)
@@ -152,7 +172,16 @@ namespace MechJebLib.Simulations
             v.EnginesDroppedInStage.Clear();
             v.EnginesActivatedInStage.Clear();
             v.RCSActivatedInStage.Clear();
+            v.RCSDroppedInStage.Clear();
             v.ActiveEngines.Clear();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void UpdateRCSStats()
+        {
+            for (int i = -1; i < CurrentStage; i++)
+                foreach (SimModuleRCS e in RCSDroppedInStage[i])
+                    e.Update();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

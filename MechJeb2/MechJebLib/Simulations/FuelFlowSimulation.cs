@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MechJebLib.Simulations.PartModules;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -17,6 +18,7 @@ namespace MechJebLib.Simulations
         private          double           _time;
         public           bool             DVLinearThrust           = true; // include cos losses
         private readonly HashSet<SimPart> _partsWithResourceDrains = new HashSet<SimPart>();
+        private readonly HashSet<SimPart> _partsWithRCSDrains      = new HashSet<SimPart>();
         private          bool             _allocatedFirstSegment;
 
         protected override bool Run(object? o)
@@ -28,11 +30,13 @@ namespace MechJebLib.Simulations
             Segments.Clear();
             vessel.MainThrottle = 1.0;
 
-            vessel.ActivateEngines();
+            vessel.ActivateEnginesAndRCS();
 
             while (vessel.CurrentStage >= 0) // FIXME: should stop mutating vessel.CurrentStage
             {
+                ComputeRCSMinValues(vessel);
                 SimulateStage(vessel);
+                ComputeRCSMaxValues(vessel);
                 FinishSegment(vessel);
                 vessel.Stage();
             }
@@ -44,11 +48,27 @@ namespace MechJebLib.Simulations
             return true; // we pull results off the object not off the return value
         }
 
+        private void ComputeRCSMinValues(SimVessel vessel)
+        {
+            vessel.UpdateRCSStats();
+            vessel.UpdateActiveRCS();
+            UpdateRCSDrains(vessel);
+            double dt = MinimumRCSTimeStep();
+        }
+
+        private void ComputeRCSMaxValues(SimVessel vessel)
+        {
+            vessel.UpdateRCSStats();
+            vessel.UpdateActiveRCS();
+            UpdateRCSDrains(vessel);
+            double dt = MinimumRCSTimeStep();
+        }
+
         private void SimulateStage(SimVessel vessel)
         {
             vessel.UpdateMass();
-            UpdateEngineStats(vessel);
-            UpdateActiveEngines(vessel);
+            vessel.UpdateEngineStats();
+            vessel.UpdateActiveEngines();
             UpdateResourceDrainsAndResiduals(vessel);
 
             GetNextSegment(vessel);
@@ -74,8 +94,8 @@ namespace MechJebLib.Simulations
                 ApplyResourceDrains(dt);
 
                 vessel.UpdateMass();
-                UpdateEngineStats(vessel);
-                UpdateActiveEngines(vessel);
+                vessel.UpdateEngineStats();
+                vessel.UpdateActiveEngines();
                 UpdateResourceDrainsAndResiduals(vessel);
             }
 
@@ -83,16 +103,98 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateEngineStats(SimVessel vessel)
-        {
-            vessel.UpdateEngineStats();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ApplyResourceDrains(double dt)
         {
             foreach (SimPart part in _partsWithResourceDrains)
                 part.ApplyResourceDrains(dt);
+        }
+
+        private void UpdateRCSDrains(SimVessel vessel)
+        {
+            foreach (SimPart part in _partsWithRCSDrains)
+                part.ClearRCSDrains();
+
+            _partsWithRCSDrains.Clear();
+
+            for (int i = 0; i < vessel.ActiveRCS.Count; i++)
+            {
+                SimModuleRCS e = vessel.ActiveRCS[i];
+                foreach (int resourceId in e.PropellantFlowModes.Keys)
+                {
+                    switch (e.PropellantFlowModes[resourceId])
+                    {
+                        case SimFlowMode.NO_FLOW:
+                            UpdateRCSDrainsInPart(e.Part, e.ResourceConsumptions[resourceId], resourceId);
+                            break;
+                        case SimFlowMode.ALL_VESSEL:
+                        case SimFlowMode.ALL_VESSEL_BALANCE:
+                            UpdateRCSDrainsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                                resourceId, false);
+                            break;
+                        case SimFlowMode.STAGE_PRIORITY_FLOW:
+                        case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
+                            UpdateRCSDrainsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                                resourceId, true);
+                            break;
+                        case SimFlowMode.STAGE_STACK_FLOW:
+                        case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
+                        case SimFlowMode.STACK_PRIORITY_SEARCH:
+                            UpdateRCSDrainsInParts(e.Part.CrossFeedPartSet, e.ResourceConsumptions[resourceId], resourceId, true);
+                            break;
+                        case SimFlowMode.NULL:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+        }
+
+        private readonly List<SimPart> _sourcesRCS = new List<SimPart>();
+
+        private void UpdateRCSDrainsInParts(IList<SimPart> parts, double resourceConsumption, int resourceId, bool usePriority)
+        {
+            int maxPriority = int.MinValue;
+
+            _sourcesRCS.Clear();
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                SimPart p = parts[i];
+
+                if (!p.TryGetResource(resourceId, out SimResource resource))
+                    continue;
+
+                if (resource.Free)
+                    continue;
+
+                if (resource.Amount <= p.Resources[resourceId].ResidualThreshold)
+                    continue;
+
+                if (usePriority)
+                {
+                    if (p.ResourcePriority < maxPriority)
+                        continue;
+
+                    if (p.ResourcePriority > maxPriority)
+                    {
+                        _sourcesRCS.Clear();
+                        maxPriority = p.ResourcePriority;
+                    }
+                }
+
+                _sourcesRCS.Add(p);
+            }
+
+            for (int i = 0; i < _sourcesRCS.Count; i++)
+                UpdateRCSDrainsInPart(_sourcesRCS[i], resourceConsumption / _sourcesRCS.Count, resourceId);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateRCSDrainsInPart(SimPart p, double resourceConsumption, int resourceId)
+        {
+            _partsWithRCSDrains.Add(p);
+            p.AddRCSDrain(resourceId, resourceConsumption);
         }
 
         private void UpdateResourceDrainsAndResiduals(SimVessel vessel)
@@ -193,6 +295,25 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double MinimumRCSTimeStep()
+        {
+            double maxTime = RCSMaxTime();
+
+            return maxTime < double.MaxValue && maxTime >= 0 ? maxTime : 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double RCSMaxTime()
+        {
+            double maxTime = double.MaxValue;
+
+            foreach (SimPart part in _partsWithRCSDrains)
+                maxTime = Math.Min(part.RCSMaxTime(), maxTime);
+
+            return maxTime;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double MinimumTimeStep()
         {
             double maxTime = ResourceMaxTime();
@@ -209,12 +330,6 @@ namespace MechJebLib.Simulations
                 maxTime = Math.Min(part.ResourceMaxTime(), maxTime);
 
             return maxTime;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void UpdateActiveEngines(SimVessel vessel)
-        {
-            vessel.UpdateActiveEngines();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
