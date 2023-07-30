@@ -16,6 +16,7 @@ namespace MechJebLib.Simulations
         public readonly  List<SimPart>                Links            = new List<SimPart>();
         public readonly  Dictionary<int, SimResource> Resources        = new Dictionary<int, SimResource>();
         private readonly Dictionary<int, double>      _resourceDrains  = new Dictionary<int, double>();
+        private readonly Dictionary<int, double>      _rcsDrains       = new Dictionary<int, double>();
 
         public int       DecoupledInStage;
         public bool      StagingOn;
@@ -78,10 +79,7 @@ namespace MechJebLib.Simulations
             return part;
         }
 
-        private static SimPart New()
-        {
-            return new SimPart();
-        }
+        private static SimPart New() => new SimPart();
 
         private static void Clear(SimPart p)
         {
@@ -90,16 +88,15 @@ namespace MechJebLib.Simulations
             p.CrossFeedPartSet.Clear();
             p.Resources.Clear();
             p._resourceDrains.Clear();
+            p._rcsDrains.Clear();
+
             p.Vessel           = null!;
             p.IsLaunchClamp    = false;
             p.IsEngine         = false;
             p.IsThrottleLocked = false;
         }
 
-        public bool TryGetResource(int resourceId, out SimResource resource)
-        {
-            return Resources.TryGetValue(resourceId, out resource);
-        }
+        public bool TryGetResource(int resourceId, out SimResource resource) => Resources.TryGetValue(resourceId, out resource);
 
         public void ApplyResourceDrains(double dt)
         {
@@ -116,15 +113,11 @@ namespace MechJebLib.Simulations
             Resources[resourceId] = resource;
         }
 
-        public double ResidualThreshold(int resourceId)
-        {
-            return Resources[resourceId].ResidualThreshold + ResourceRequestRemainingThreshold;
-        }
+        public double ResidualThreshold(int resourceId) => Resources[resourceId].ResidualThreshold + ResourceRequestRemainingThreshold;
 
-        public void ClearResourceDrains()
-        {
-            _resourceDrains.Clear();
-        }
+        public void ClearResourceDrains() => _resourceDrains.Clear();
+
+        public void ClearRCSDrains() => _rcsDrains.Clear();
 
         public void AddResourceDrain(int resourceId, double resourceConsumption)
         {
@@ -132,6 +125,14 @@ namespace MechJebLib.Simulations
                 _resourceDrains[resourceId] = resourceDrain + resourceConsumption;
             else
                 _resourceDrains.Add(resourceId, resourceConsumption);
+        }
+
+        public void AddRCSDrain(int resourceId, double resourceConsumption)
+        {
+            if (_rcsDrains.TryGetValue(resourceId, out double resourceDrain))
+                _rcsDrains[resourceId] = resourceDrain + resourceConsumption;
+            else
+                _rcsDrains.Add(resourceId, resourceConsumption);
         }
 
         public double ResourceMaxTime()
@@ -147,6 +148,29 @@ namespace MechJebLib.Simulations
                     continue;
 
                 if (!_resourceDrains.TryGetValue(resource.Id, out double resourceDrain))
+                    continue;
+
+                double dt = (resource.Amount - resource.ResidualThreshold) / resourceDrain;
+
+                maxTime = Math.Min(maxTime, dt);
+            }
+
+            return maxTime;
+        }
+
+        public double RCSMaxTime()
+        {
+            double maxTime = double.MaxValue;
+
+            foreach (SimResource resource in Resources.Values)
+            {
+                if (resource.Free)
+                    continue;
+
+                if (resource.Amount <= ResourceRequestRemainingThreshold)
+                    continue;
+
+                if (!_rcsDrains.TryGetValue(resource.Id, out double resourceDrain))
                     continue;
 
                 double dt = (resource.Amount - resource.ResidualThreshold) / resourceDrain;

@@ -231,9 +231,10 @@ namespace MechJebLib.Simulations
                     return;
                 }
 
-                rcs.Isp        = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
-                rcs.Thrust     = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
-                rcs.RcsEnabled = kspModuleRCS.rcsEnabled;
+                rcs.IsEnabled    = kspModuleRCS.isEnabled;
+                rcs.Isp          = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
+                rcs.Thrust       = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
+                rcs.RcsEnabled   = kspModuleRCS.rcsEnabled;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
