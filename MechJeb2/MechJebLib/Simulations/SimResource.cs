@@ -34,7 +34,6 @@ namespace MechJebLib.Simulations
         {
             _rcsAmount -= rcsDrain;
             if (Amount < 0) _rcsAmount = _amount;
-            Log($"RCSDrain: {rcsDrain} _amount: {_amount} _rcsAmount: {_rcsAmount}");
 
             return this;
         }

@@ -67,14 +67,8 @@ namespace MechJebLib.Simulations
                 if (vessel.ActiveRcs.Count == 0)
                     break;
 
-                if (max)
-                    Log("we've found some active engines in max");
-
                 UpdateRcsDrains(vessel);
                 double dt = MinimumRcsTimeStep();
-
-                if (max)
-                    Log($"dt is {dt} in max");
 
                 ApplyRcsDrains(dt);
                 vessel.UpdateMass();
@@ -378,12 +372,8 @@ namespace MechJebLib.Simulations
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
         {
-            Log($"deltatime: {deltaTime} startmass: {startMass} endmass: {endMass} rcsthrust: {rcsThrust}");
-
             double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Math.Log(startMass / endMass);
             double rcsISP = rcsDeltaV / (G0 * Math.Log(startMass / endMass));
-
-            Log($"deltav: {rcsDeltaV} isp: {rcsISP}");
 
             if (_currentSegment.RcsISP == 0)
                 _currentSegment.RcsISP = rcsISP;
@@ -395,15 +385,15 @@ namespace MechJebLib.Simulations
                 _currentSegment.MaxRcsDeltaV += rcsDeltaV;
                 if (_currentSegment.RcsStartTMR == 0)
                     _currentSegment.RcsStartTMR = rcsThrust / startMass;
+
+                _currentSegment.RcsMass      += startMass - endMass;
+                _currentSegment.RcsDeltaTime += deltaTime;
             }
             else
             {
                 _currentSegment.MinRcsDeltaV += rcsDeltaV;
                 _currentSegment.RcsEndTMR    =  _currentSegment.RcsThrust / endMass;
             }
-
-            _currentSegment.RcsMass      += startMass - endMass;
-            _currentSegment.RcsDeltaTime += deltaTime;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
