@@ -15,12 +15,12 @@ namespace MuMech
     // Eventually, we should figure out how to not need that store at all.
     public class MechJebStageStatsHelper
     {
-        private          bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showThrust, showVacInitialTWR, showAtmoInitialTWR;
-        private          bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, timeSeconds, liveSLT;
-        private          bool oldFFS;
-        private          int TWRBody;
-        private          float altSLTScale, machScale;
-        private          int StageDisplayState { get => infoItems.StageDisplayState; set => infoItems.StageDisplayState = value; }
+        private bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showThrust, showVacInitialTWR, showAtmoInitialTWR;
+        private bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, showRcs, timeSeconds, liveSLT;
+        private bool oldFFS;
+        private int TWRBody;
+        private float altSLTScale, machScale;
+        private int StageDisplayState { get => infoItems.StageDisplayState; set => infoItems.StageDisplayState = value; }
         private readonly MechJebModuleInfoItems infoItems;
         private readonly MechJebCore core;
         private readonly MechJebModuleStageStats stats;
@@ -43,6 +43,7 @@ namespace MuMech
             showTime           = items.showTime;
             showISP            = items.showISP;
             showThrust         = items.showThrust;
+            showRcs            = items.showRcs;
             showEmpty          = items.showEmpty;
             timeSeconds        = items.timeSeconds;
             liveSLT            = items.liveSLT;
@@ -59,8 +60,8 @@ namespace MuMech
 
         private enum StageData
         {
-            KSPStage, InitialMass, FinalMass, StagedMass, BurnedMass, Thrust, VacInitialTWR, VacMaxTWR, AtmoInitialTWR, AtmoMaxTWR, Isp, AtmoDeltaV,
-            VacDeltaV, Time
+            KSPStage, InitialMass, FinalMass, StagedMass, BurnedMass, Thrust, VacInitialTWR, VacMaxTWR, AtmoInitialTWR, AtmoMaxTWR,
+            Isp, AtmoDeltaV, VacDeltaV, Time
         }
 
         private static readonly List<StageData> AllStages = new List<StageData>
@@ -99,7 +100,6 @@ namespace MuMech
 
         private void InitializeStageInfo()
         {
-            const string SPACING = "   ";
             stageVisibility.Clear();
             stageDisplayInfo.Clear();
             foreach (StageData ident in AllStages)
@@ -107,6 +107,13 @@ namespace MuMech
                 stageVisibility.Add(ident, false);
                 stageDisplayInfo.Add(ident, new List<string>(16));
             }
+
+            InitalizeStageHeaderData();
+        }
+
+        private void InitalizeStageHeaderData()
+        {
+            const string SPACING = "   ";
 
             stageHeaderData.Clear();
             stageHeaderData.Add(StageData.KSPStage, "Stage" + SPACING);
@@ -120,8 +127,8 @@ namespace MuMech
             stageHeaderData.Add(StageData.AtmoInitialTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn7 + SPACING);
             stageHeaderData.Add(StageData.AtmoMaxTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn8 + SPACING);
             stageHeaderData.Add(StageData.Isp, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn9 + SPACING);
-            stageHeaderData.Add(StageData.AtmoDeltaV, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn10 + SPACING);
-            stageHeaderData.Add(StageData.VacDeltaV, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn11 + SPACING);
+            stageHeaderData.Add(StageData.AtmoDeltaV, (showRcs ? "RCS ∆Vmin" : CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn10) + SPACING);
+            stageHeaderData.Add(StageData.VacDeltaV, (showRcs ? "RCS ∆Vmax" : CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn11) + SPACING);
             stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn12 + SPACING);
         }
 
@@ -129,9 +136,32 @@ namespace MuMech
         {
             stages.Clear();
             for (int i = 0; i < stats.AtmoStats.Count; i++)
-                if (infoItems.showEmpty || stats.AtmoStats[i].DeltaV > 0)
+                if (infoItems.showEmpty)
+                    stages.Add(i);
+                else if (infoItems.showRcs && stats.AtmoStats[i].MaxRcsDeltaV > 0)
+                    stages.Add(i);
+                else if (!infoItems.showRcs && stats.AtmoStats[i].DeltaV > 0)
                     stages.Add(i);
         }
+
+        private double _isp(int index)        => showRcs ? stats.VacStats[index].RcsISP : stats.VacStats[index].Isp;
+        private double _thrust(int index)     => showRcs ? stats.VacStats[index].RcsThrust : stats.VacStats[index].Thrust;
+        private double _burnedMass(int index) => showRcs ? stats.VacStats[index].RcsMass : stats.VacStats[index].ResourceMass;
+        private double _deltaTime(int index)  => showRcs ? stats.VacStats[index].RcsDeltaTime : stats.VacStats[index].DeltaTime;
+        private double _atmoDv(int index)     => showRcs ? stats.VacStats[index].MinRcsDeltaV : stats.AtmoStats[index].DeltaV;
+        private double _vacDv(int index)      => showRcs ? stats.VacStats[index].MaxRcsDeltaV : stats.VacStats[index].DeltaV;
+
+        private double _vacStartTWR(int index, double geeASL) =>
+            showRcs ? stats.VacStats[index].RcsStartTWR(geeASL) : stats.VacStats[index].StartTWR(geeASL);
+
+        private double _vacEndTWR(int index, double geeASL) =>
+            showRcs ? stats.VacStats[index].RcsMaxTWR(geeASL) : stats.VacStats[index].MaxTWR(geeASL);
+
+        private double _atmoStartTWR(int index, double geeASL) =>
+            showRcs ? stats.AtmoStats[index].RcsStartTWR(geeASL) : stats.AtmoStats[index].StartTWR(geeASL);
+
+        private double _atmoEndTWR(int index, double geeASL) =>
+            showRcs ? stats.AtmoStats[index].RcsMaxTWR(geeASL) : stats.AtmoStats[index].MaxTWR(geeASL);
 
         private void UpdateStageDisplayInfo(List<int> stages, double geeASL)
         {
@@ -145,22 +175,22 @@ namespace MuMech
                 if (stageVisibility[StageData.FinalMass]) stageDisplayInfo[StageData.FinalMass].Add($"{stats.AtmoStats[index].EndMass:F3} t   ");
                 if (stageVisibility[StageData.StagedMass]) stageDisplayInfo[StageData.StagedMass].Add($"{stats.AtmoStats[index].StagedMass:F3} t   ");
                 if (stageVisibility[StageData.BurnedMass])
-                    stageDisplayInfo[StageData.BurnedMass].Add($"{stats.AtmoStats[index].ResourceMass:F3} t   ");
-                if (stageVisibility[StageData.Thrust]) stageDisplayInfo[StageData.Thrust].Add($"{stats.AtmoStats[index].Thrust:F3} kN   ");
+                    stageDisplayInfo[StageData.BurnedMass].Add($"{_burnedMass(index):F3} t   ");
+                if (stageVisibility[StageData.Thrust]) stageDisplayInfo[StageData.Thrust].Add($"{_thrust(index):F3} kN   ");
                 if (stageVisibility[StageData.VacInitialTWR])
-                    stageDisplayInfo[StageData.VacInitialTWR].Add($"{stats.VacStats[index].StartTWR(geeASL):F2}   ");
-                if (stageVisibility[StageData.VacMaxTWR]) stageDisplayInfo[StageData.VacMaxTWR].Add($"{stats.VacStats[index].MaxTWR(geeASL):F2}   ");
+                    stageDisplayInfo[StageData.VacInitialTWR].Add($"{_vacStartTWR(index, geeASL):F2}   ");
+                if (stageVisibility[StageData.VacMaxTWR]) stageDisplayInfo[StageData.VacMaxTWR].Add($"{_vacEndTWR(index, geeASL):F2}   ");
                 if (stageVisibility[StageData.AtmoInitialTWR])
-                    stageDisplayInfo[StageData.AtmoInitialTWR].Add($"{stats.AtmoStats[index].StartTWR(geeASL):F2}   ");
+                    stageDisplayInfo[StageData.AtmoInitialTWR].Add($"{_atmoStartTWR(index, geeASL):F2}   ");
                 if (stageVisibility[StageData.AtmoMaxTWR])
-                    stageDisplayInfo[StageData.AtmoMaxTWR].Add($"{stats.AtmoStats[index].MaxTWR(geeASL):F2}   ");
-                if (stageVisibility[StageData.Isp]) stageDisplayInfo[StageData.Isp].Add($"{stats.AtmoStats[index].Isp:F2}   ");
-                if (stageVisibility[StageData.AtmoDeltaV]) stageDisplayInfo[StageData.AtmoDeltaV].Add($"{stats.AtmoStats[index].DeltaV:F0} m/s   ");
-                if (stageVisibility[StageData.VacDeltaV]) stageDisplayInfo[StageData.VacDeltaV].Add($"{stats.VacStats[index].DeltaV:F0} m/s   ");
+                    stageDisplayInfo[StageData.AtmoMaxTWR].Add($"{_atmoEndTWR(index, geeASL):F2}   ");
+                if (stageVisibility[StageData.Isp]) stageDisplayInfo[StageData.Isp].Add($"{_isp(index):F2}   ");
+                if (stageVisibility[StageData.AtmoDeltaV]) stageDisplayInfo[StageData.AtmoDeltaV].Add($"{_atmoDv(index):F0} m/s   ");
+                if (stageVisibility[StageData.VacDeltaV]) stageDisplayInfo[StageData.VacDeltaV].Add($"{_vacDv(index):F0} m/s   ");
                 if (stageVisibility[StageData.Time])
                     stageDisplayInfo[StageData.Time].Add(timeSeconds
-                        ? $"{stats.AtmoStats[index].DeltaTime:F2}s   "
-                        : $"{GuiUtils.TimeToDHMS(stats.AtmoStats[index].DeltaTime, 1)}   ");
+                        ? $"{_deltaTime(index):F2}s   "
+                        : $"{GuiUtils.TimeToDHMS(_deltaTime(index), 1)}   ");
             }
         }
 
@@ -190,9 +220,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label(CachedLocalizer.Instance.MechJeb_InfoItems_label1); //"Stage stats"
 
-            if (GUILayout.Button(
-                    oldFFS ? "Old" : "New",
-                    GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(oldFFS ? "Old" : "New", GUILayout.ExpandWidth(false)))
             {
                 oldFFS       = !oldFFS;
                 stats.OldFFS = oldFFS;
@@ -216,6 +244,13 @@ namespace MuMech
             {
                 StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
                 SetVisibility(StageDisplayState);
+            }
+
+            if (GUILayout.Button(showRcs ? "RCS" : "Engine", GUILayout.ExpandWidth(false)))
+            {
+                showRcs           = !showRcs;
+                infoItems.showRcs = showRcs;
+                InitalizeStageHeaderData();
             }
 
             if (!HighLogic.LoadedSceneIsEditor)
@@ -357,6 +392,7 @@ namespace MuMech
                     break;
                 case 1:
                     SetAllStageVisibility(true);
+                    stageVisibility[StageData.AtmoMaxTWR] = false;
                     stageVisibility[StageData.Thrust]     = false;
                     stageVisibility[StageData.StagedMass] = false;
                     stageVisibility[StageData.BurnedMass] = false;

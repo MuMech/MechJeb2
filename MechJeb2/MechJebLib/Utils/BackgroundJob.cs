@@ -3,6 +3,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Utils
 {
@@ -25,10 +26,7 @@ namespace MechJebLib.Utils
             _onTaskCancelledDelegate = OnTaskCancelled;
         }
 
-        public void Cancel()
-        {
-            throw new NotImplementedException();
-        }
+        public void Cancel() => throw new NotImplementedException();
 
         public bool IsRunning()
         {
@@ -47,13 +45,13 @@ namespace MechJebLib.Utils
 
         protected virtual void OnTaskFaulted(Task<T> task)
         {
-            _task = null;
+            Result      = default!;
+            ResultReady = false;
+            _task       = null;
+            Log($"Exception in {GetType()}: {task.Exception}");
         }
 
-        protected virtual void OnTaskCancelled(Task<T> task)
-        {
-            _task = null;
-        }
+        protected virtual void OnTaskCancelled(Task<T> task) => _task = null;
 
         private readonly Func<object?, T> _executeDelegate;
         private readonly Action<Task<T>>  _onTaskCompletedDelegate;

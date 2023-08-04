@@ -19,6 +19,7 @@ namespace MechJebLib.Simulations
         public           bool             DVLinearThrust           = true; // include cos losses
         private readonly HashSet<SimPart> _partsWithResourceDrains = new HashSet<SimPart>();
         private readonly HashSet<SimPart> _partsWithRCSDrains      = new HashSet<SimPart>();
+        private readonly HashSet<SimPart> _partsWithRCSDrains2     = new HashSet<SimPart>();
         private          bool             _allocatedFirstSegment;
 
         protected override bool Run(object? o)
@@ -34,9 +35,8 @@ namespace MechJebLib.Simulations
 
             while (vessel.CurrentStage >= 0) // FIXME: should stop mutating vessel.CurrentStage
             {
-                ComputeRCSMinValues(vessel);
                 SimulateStage(vessel);
-                ComputeRCSMaxValues(vessel);
+                ComputeRcsMaxValues(vessel);
                 FinishSegment(vessel);
                 vessel.Stage();
             }
@@ -48,21 +48,54 @@ namespace MechJebLib.Simulations
             return true; // we pull results off the object not off the return value
         }
 
-        private void ComputeRCSMinValues(SimVessel vessel)
+        private void SimulateRCS(SimVessel vessel, bool max)
         {
-            vessel.UpdateRCSStats();
-            vessel.UpdateActiveRCS();
-            UpdateRCSDrains(vessel);
-            double dt = MinimumRCSTimeStep();
+            vessel.SaveRcsStatus();
+            _partsWithRCSDrains2.Clear();
+
+            double lastmass = vessel.Mass;
+
+            int steps = MAXSTEPS;
+
+            while (true)
+            {
+                if (steps-- == 0)
+                    throw new Exception("FuelFlowSimulation hit max steps of " + MAXSTEPS + " steps in rcs calculations");
+
+                vessel.UpdateRcsStats();
+                vessel.UpdateActiveRcs();
+                if (vessel.ActiveRcs.Count == 0)
+                    break;
+
+                if (max)
+                    Log("we've found some active engines in max");
+
+                UpdateRcsDrains(vessel);
+                double dt = MinimumRcsTimeStep();
+
+                if (max)
+                    Log($"dt is {dt} in max");
+
+                ApplyRcsDrains(dt);
+                vessel.UpdateMass();
+                FinishRcsSegment(max, dt, lastmass, vessel.Mass, vessel.RcsThrust);
+                lastmass = vessel.Mass;
+            }
+
+            UnapplyRcsDrains();
+            vessel.ResetRcsStatus();
+            vessel.UpdateMass();
         }
 
-        private void ComputeRCSMaxValues(SimVessel vessel)
+        private void UnapplyRcsDrains()
         {
-            vessel.UpdateRCSStats();
-            vessel.UpdateActiveRCS();
-            UpdateRCSDrains(vessel);
-            double dt = MinimumRCSTimeStep();
+            foreach (SimPart p in _partsWithRCSDrains2)
+                p.UnapplyRCSDrains();
         }
+
+        private void ComputeRcsMinValues(SimVessel vessel) => SimulateRCS(vessel, false);
+
+        private void ComputeRcsMaxValues(SimVessel vessel) => SimulateRCS(vessel, true);
 
         private void SimulateStage(SimVessel vessel)
         {
@@ -72,6 +105,7 @@ namespace MechJebLib.Simulations
             UpdateResourceDrainsAndResiduals(vessel);
 
             GetNextSegment(vessel);
+            ComputeRcsMinValues(vessel);
             double currentThrust = vessel.ThrustMagnitude;
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
@@ -85,6 +119,7 @@ namespace MechJebLib.Simulations
                 // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
                 if (Math.Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
                 {
+                    ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
                     currentThrust = vessel.ThrustMagnitude;
@@ -103,22 +138,29 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ApplyRcsDrains(double dt)
+        {
+            foreach (SimPart part in _partsWithRCSDrains)
+                part.ApplyRCSDrains(dt);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ApplyResourceDrains(double dt)
         {
             foreach (SimPart part in _partsWithResourceDrains)
                 part.ApplyResourceDrains(dt);
         }
 
-        private void UpdateRCSDrains(SimVessel vessel)
+        private void UpdateRcsDrains(SimVessel vessel)
         {
             foreach (SimPart part in _partsWithRCSDrains)
                 part.ClearRCSDrains();
 
             _partsWithRCSDrains.Clear();
 
-            for (int i = 0; i < vessel.ActiveRCS.Count; i++)
+            for (int i = 0; i < vessel.ActiveRcs.Count; i++)
             {
-                SimModuleRCS e = vessel.ActiveRCS[i];
+                SimModuleRCS e = vessel.ActiveRcs[i];
                 foreach (int resourceId in e.PropellantFlowModes.Keys)
                 {
                     switch (e.PropellantFlowModes[resourceId])
@@ -194,6 +236,7 @@ namespace MechJebLib.Simulations
         private void UpdateRCSDrainsInPart(SimPart p, double resourceConsumption, int resourceId)
         {
             _partsWithRCSDrains.Add(p);
+            _partsWithRCSDrains2.Add(p);
             p.AddRCSDrain(resourceId, resourceConsumption);
         }
 
@@ -295,7 +338,7 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double MinimumRCSTimeStep()
+        private double MinimumRcsTimeStep()
         {
             double maxTime = RCSMaxTime();
 
@@ -333,15 +376,53 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
+        {
+            Log($"deltatime: {deltaTime} startmass: {startMass} endmass: {endMass} rcsthrust: {rcsThrust}");
+
+            double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Math.Log(startMass / endMass);
+            double rcsISP = rcsDeltaV / (G0 * Math.Log(startMass / endMass));
+
+            Log($"deltav: {rcsDeltaV} isp: {rcsISP}");
+
+            if (_currentSegment.RcsISP == 0)
+                _currentSegment.RcsISP = rcsISP;
+            if (_currentSegment.RcsThrust == 0)
+                _currentSegment.RcsThrust = rcsThrust;
+
+            if (max)
+            {
+                _currentSegment.MaxRcsDeltaV += rcsDeltaV;
+                if (_currentSegment.RcsStartTMR == 0)
+                    _currentSegment.RcsStartTMR = rcsThrust / startMass;
+            }
+            else
+            {
+                _currentSegment.MinRcsDeltaV += rcsDeltaV;
+                _currentSegment.RcsEndTMR    =  _currentSegment.RcsThrust / endMass;
+            }
+
+            _currentSegment.RcsMass      += startMass - endMass;
+            _currentSegment.RcsDeltaTime += deltaTime;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishSegment(SimVessel vessel)
         {
             if (!_allocatedFirstSegment)
                 return;
 
-            _currentSegment.DeltaTime = _time - _currentSegment.StartTime;
-            _currentSegment.EndMass   = vessel.Mass;
+            double startMass = _currentSegment.StartMass;
+            double thrust = _currentSegment.Thrust;
+            double endMass = vessel.Mass;
+            double deltaTime = _time - _currentSegment.StartTime;
+            double deltaV = startMass > endMass ? thrust * deltaTime / (startMass - endMass) * Math.Log(startMass / endMass) : 0;
+            double isp = startMass > endMass ? deltaV / (G0 * Math.Log(startMass / endMass)) : 0;
 
-            _currentSegment.ComputeStats();
+            _currentSegment.DeltaTime = deltaTime;
+            _currentSegment.EndMass   = endMass;
+            _currentSegment.DeltaV    = deltaV;
+            _currentSegment.Isp       = isp;
 
             Segments.Add(_currentSegment);
         }
