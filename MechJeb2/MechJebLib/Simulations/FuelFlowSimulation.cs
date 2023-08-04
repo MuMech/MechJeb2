@@ -36,6 +36,7 @@ namespace MechJebLib.Simulations
             while (vessel.CurrentStage >= 0) // FIXME: should stop mutating vessel.CurrentStage
             {
                 SimulateStage(vessel);
+                ClearResiduals(vessel);
                 ComputeRcsMaxValues(vessel);
                 FinishSegment(vessel);
                 vessel.Stage();
@@ -96,10 +97,11 @@ namespace MechJebLib.Simulations
             vessel.UpdateMass();
             vessel.UpdateEngineStats();
             vessel.UpdateActiveEngines();
-            UpdateResourceDrainsAndResiduals(vessel);
 
             GetNextSegment(vessel);
             ComputeRcsMinValues(vessel);
+
+            UpdateResourceDrainsAndResiduals(vessel);
             double currentThrust = vessel.ThrustMagnitude;
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
@@ -113,6 +115,7 @@ namespace MechJebLib.Simulations
                 // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
                 if (Math.Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
                 {
+                    ClearResiduals(vessel);
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
@@ -232,6 +235,12 @@ namespace MechJebLib.Simulations
             _partsWithRCSDrains.Add(p);
             _partsWithRCSDrains2.Add(p);
             p.AddRCSDrain(resourceId, resourceConsumption);
+        }
+
+        private void ClearResiduals(SimVessel vessel)
+        {
+            foreach (SimPart part in _partsWithResourceDrains)
+                part.ClearResiduals();
         }
 
         private void UpdateResourceDrainsAndResiduals(SimVessel vessel)
