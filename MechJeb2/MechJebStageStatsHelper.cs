@@ -138,7 +138,7 @@ namespace MuMech
             for (int i = 0; i < stats.AtmoStats.Count; i++)
                 if (infoItems.showEmpty)
                     stages.Add(i);
-                else if (infoItems.showRcs && stats.AtmoStats[i].MaxRcsDeltaV > 0)
+                else if (infoItems.showRcs && stats.AtmoStats[i].MinRcsDeltaV > 0)
                     stages.Add(i);
                 else if (!infoItems.showRcs && stats.AtmoStats[i].DeltaV > 0)
                     stages.Add(i);

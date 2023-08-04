@@ -394,14 +394,13 @@ namespace MechJebLib.Simulations
                 _currentSegment.MaxRcsDeltaV += rcsDeltaV;
                 if (_currentSegment.RcsStartTMR == 0)
                     _currentSegment.RcsStartTMR = rcsThrust / startMass;
-
-                _currentSegment.RcsMass      += startMass - endMass;
-                _currentSegment.RcsDeltaTime += deltaTime;
             }
             else
             {
                 _currentSegment.MinRcsDeltaV += rcsDeltaV;
                 _currentSegment.RcsEndTMR    =  _currentSegment.RcsThrust / endMass;
+                _currentSegment.RcsMass      += startMass - endMass;
+                _currentSegment.RcsDeltaTime += deltaTime;
             }
         }
 
