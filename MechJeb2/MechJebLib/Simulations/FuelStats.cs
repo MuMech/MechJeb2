@@ -1,6 +1,3 @@
-using System;
-using static MechJebLib.Utils.Statics;
-
 #nullable enable
 
 namespace MechJebLib.Simulations
@@ -17,29 +14,26 @@ namespace MechJebLib.Simulations
         public double StartTime;
         public double Thrust;
         public double SpoolUpTime;
+        public double MaxRcsDeltaV;
+        public double MinRcsDeltaV;
+        public double RcsISP;
+        public double RcsDeltaTime;
+        public double RcsThrust;
+        public double RcsMass;
+        public double RcsStartTMR;
+        public double RcsEndTMR;
+
         public double MaxAccel     => EndMass > 0 ? Thrust / EndMass : 0;
         public double ResourceMass => StartMass - EndMass;
 
-        public double StartTWR(double geeASL)
-        {
-            return StartMass > 0 ? Thrust / (9.80665 * geeASL * StartMass) : 0;
-        }
+        public double RcsStartTWR(double geeASL) => RcsStartTMR / (9.80665 * geeASL);
+        public double RcsMaxTWR(double geeASL)   => RcsEndTMR / (9.80665 * geeASL);
 
-        public double MaxTWR(double geeASL)
-        {
-            return MaxAccel / (9.80665 * geeASL);
-        }
+        public double StartTWR(double geeASL) => StartMass > 0 ? Thrust / (9.80665 * geeASL * StartMass) : 0;
 
-        public void ComputeStats()
-        {
-            DeltaV = StartMass > EndMass ? Thrust * DeltaTime / (StartMass - EndMass) * Math.Log(StartMass / EndMass) : 0;
-            Isp    = StartMass > EndMass ? DeltaV / (G0 * Math.Log(StartMass / EndMass)) : 0;
-        }
+        public double MaxTWR(double geeASL) => MaxAccel / (9.80665 * geeASL);
 
-        public override string ToString()
-        {
-            return
-                $"KSP Stage: {KSPStage.ToString()} Thrust: {Thrust.ToString()} Time: {DeltaTime.ToString()} StartMass: {StartMass.ToString()} EndMass: {EndMass.ToString()} DeltaV: {DeltaV.ToString()} ISP: {Isp.ToString()}";
-        }
+        public override string ToString() =>
+            $"KSP Stage: {KSPStage.ToString()} Thrust: {Thrust.ToString()} Time: {DeltaTime.ToString()} StartMass: {StartMass.ToString()} EndMass: {EndMass.ToString()} DeltaV: {DeltaV.ToString()} ISP: {Isp.ToString()}";
     }
 }

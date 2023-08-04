@@ -104,6 +104,24 @@ namespace MechJebLib.Simulations
                 Resources[id] = Resources[id].Drain(dt * _resourceDrains[id]);
         }
 
+        public void ApplyRCSDrains(double dt)
+        {
+            foreach (int id in _rcsDrains.Keys)
+                Resources[id] = Resources[id].RCSDrain(dt * _rcsDrains[id]);
+        }
+
+        private readonly List<int> _resourceKeys = new List<int>();
+
+        public void UnapplyRCSDrains()
+        {
+            _resourceKeys.Clear();
+            foreach (int id in Resources.Keys)
+                _resourceKeys.Add(id);
+
+            foreach (int id in _resourceKeys)
+                Resources[id] = Resources[id].ResetRCS();
+        }
+
         public void UpdateResourceResidual(double residual, int resourceId)
         {
             if (!Resources.TryGetValue(resourceId, out SimResource resource))

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations.PartModules
 {
@@ -17,14 +16,15 @@ namespace MechJebLib.Simulations.PartModules
 
         public readonly H1 AtmosphereCurve = H1.Get(true);
 
-        public double G;
-        public double Isp;
-        public double Thrust;
-        public bool   RcsEnabled;
-        public double ISPMult;
-        public double ThrustPercentage;
-        public double MaxFuelFlow;
-        public double MassFlowRate;
+        public  double G;
+        public  double Isp;
+        public  double Thrust;
+        public  bool   RcsEnabled;
+        private bool   _savedRcsEnabled;
+        public  double ISPMult;
+        public  double ThrustPercentage;
+        public  double MaxFuelFlow;
+        public  double MassFlowRate;
 
         private double _atmPressure => Part.Vessel.ATMPressure;
 
@@ -47,6 +47,10 @@ namespace MechJebLib.Simulations.PartModules
 
             RcsEnabled = false;
         }
+
+        public void SaveStatus() => _savedRcsEnabled = RcsEnabled;
+
+        public void ResetStatus() => RcsEnabled = _savedRcsEnabled;
 
         // FIXME: aggressively duplicates ModuleEngines code and should be moved to SimPart
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -110,10 +114,7 @@ namespace MechJebLib.Simulations.PartModules
             SetConsumptionRates();
         }
 
-        public void Activate()
-        {
-            RcsEnabled = true;
-        }
+        public void Activate() => RcsEnabled = true;
 
         private static void Clear(SimModuleRCS m)
         {

@@ -7,7 +7,6 @@ using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.Simulations.PartModules;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -22,12 +21,13 @@ namespace MechJebLib.Simulations
         public readonly DictOfLists<int, SimModuleRCS>     RCSActivatedInStage     = new DictOfLists<int, SimModuleRCS>(10);
         public readonly DictOfLists<int, SimModuleRCS>     RCSDroppedInStage       = new DictOfLists<int, SimModuleRCS>(10);
         public readonly List<SimModuleEngines>             ActiveEngines           = new List<SimModuleEngines>(10);
-        public readonly List<SimModuleRCS>                 ActiveRCS               = new List<SimModuleRCS>(10);
+        public readonly List<SimModuleRCS>                 ActiveRcs               = new List<SimModuleRCS>(10);
 
         public int    CurrentStage;
         public double MainThrottle = 1.0;
         public double Mass;
         public V3     ThrustCurrent;
+        public double RcsThrust;
         public double ThrustMagnitude;
         public double ThrustNoCosLoss;
         public double SpoolupCurrent;
@@ -104,9 +104,9 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UpdateActiveRCS()
+        public void UpdateActiveRcs()
         {
-            ActiveRCS.Clear();
+            ActiveRcs.Clear();
 
             for (int i = -1; i < CurrentStage; i++)
             {
@@ -119,11 +119,25 @@ namespace MechJebLib.Simulations
                     if (!r.RcsEnabled)
                         continue;
 
-                    ActiveRCS.Add(r);
+                    ActiveRcs.Add(r);
                 }
             }
 
-            ComputeThrustAndSpoolup();
+            ComputeRcsThrust();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ComputeRcsThrust()
+        {
+            RcsThrust = 0;
+
+            for (int i = 0; i < ActiveRcs.Count; i++)
+            {
+                SimModuleRCS r = ActiveRcs[i];
+
+                r.Update();
+                RcsThrust += r.Thrust;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -177,7 +191,7 @@ namespace MechJebLib.Simulations
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UpdateRCSStats()
+        public void UpdateRcsStats()
         {
             for (int i = -1; i < CurrentStage; i++)
                 foreach (SimModuleRCS e in RCSDroppedInStage[i])
@@ -190,6 +204,22 @@ namespace MechJebLib.Simulations
             for (int i = -1; i < CurrentStage; i++)
                 foreach (SimModuleEngines e in EnginesDroppedInStage[i])
                     e.Update();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SaveRcsStatus()
+        {
+            for (int i = -1; i < CurrentStage; i++)
+                foreach (SimModuleRCS r in RCSDroppedInStage[i])
+                    r.SaveStatus();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ResetRcsStatus()
+        {
+            for (int i = -1; i < CurrentStage; i++)
+                foreach (SimModuleRCS r in RCSDroppedInStage[i])
+                    r.ResetStatus();
         }
 
         public override string ToString()

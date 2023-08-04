@@ -1,22 +1,47 @@
+using static MechJebLib.Utils.Statics;
+
 #nullable enable
 
 namespace MechJebLib.Simulations
 {
     public struct SimResource
     {
-        public bool   Free;
-        public double MaxAmount;
-        public double Amount;
-        public int    Id;
-        public double Density;
-        public double Residual;
+        public  bool   Free;
+        public  double MaxAmount;
+        private double _amount;
+
+        public double Amount
+        {
+            get => _amount + _rcsAmount;
+            set => _amount = value;
+        }
+
+        private double _rcsAmount;
+        public  int    Id;
+        public  double Density;
+        public  double Residual;
 
         public double ResidualThreshold => Residual * MaxAmount;
 
         public SimResource Drain(double resourceDrain)
         {
-            Amount -= resourceDrain;
-            if (Amount < 0) Amount = 0;
+            _amount -= resourceDrain;
+            if (_amount < 0) _amount = 0;
+            return this;
+        }
+
+        public SimResource RCSDrain(double rcsDrain)
+        {
+            _rcsAmount -= rcsDrain;
+            if (Amount < 0) _rcsAmount = _amount;
+            Log($"RCSDrain: {rcsDrain} _amount: {_amount} _rcsAmount: {_rcsAmount}");
+
+            return this;
+        }
+
+        public SimResource ResetRCS()
+        {
+            _rcsAmount = 0;
             return this;
         }
     }

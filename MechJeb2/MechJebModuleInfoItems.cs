@@ -52,64 +52,35 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_SurfaceTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = true)] //Surface TWR
-        public double SurfaceTWR()
-        {
-            return HighLogic.LoadedSceneIsEditor
+        public double SurfaceTWR() =>
+            HighLogic.LoadedSceneIsEditor
                 ? MaxAcceleration() / 9.81
                 : VesselState.thrustAvailable / (VesselState.mass * MainBody.GeeASL * 9.81);
-        }
 
         [ValueInfoItem("#MechJeb_LocalTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)] //Local TWR
-        public double LocalTWR()
-        {
-            return VesselState.thrustAvailable / (VesselState.mass * VesselState.gravityForce.magnitude);
-        }
+        public double LocalTWR() => VesselState.thrustAvailable / (VesselState.mass * VesselState.gravityForce.magnitude);
 
         [ValueInfoItem("#MechJeb_ThrottleTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)] //Throttle TWR
-        public double ThrottleTWR()
-        {
-            return VesselState.thrustCurrent / (VesselState.mass * VesselState.gravityForce.magnitude);
-        }
+        public double ThrottleTWR() => VesselState.thrustCurrent / (VesselState.mass * VesselState.gravityForce.magnitude);
 
         [ValueInfoItem("#MechJeb_AtmosphericPressurePa", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")] //Atmospheric pressure (Pa)
-        public double AtmosphericPressurekPA()
-        {
-            return FlightGlobals.getStaticPressure(VesselState.CoM) * 1000;
-        }
+        public double AtmosphericPressurekPA() => FlightGlobals.getStaticPressure(VesselState.CoM) * 1000;
 
         [ValueInfoItem("#MechJeb_AtmosphericPressure", InfoItem.Category.Misc, format = "F3", units = "atm")] //Atmospheric pressure
-        public double AtmosphericPressure()
-        {
-            return FlightGlobals.getStaticPressure(VesselState.CoM) * PhysicsGlobals.KpaToAtmospheres;
-        }
+        public double AtmosphericPressure() => FlightGlobals.getStaticPressure(VesselState.CoM) * PhysicsGlobals.KpaToAtmospheres;
 
         [ValueInfoItem("#MechJeb_Coordinates", InfoItem.Category.Surface)] //Coordinates
-        public string GetCoordinateString()
-        {
-            return Coordinates.ToStringDMS(VesselState.latitude, VesselState.longitude, true);
-        }
+        public string GetCoordinateString() => Coordinates.ToStringDMS(VesselState.latitude, VesselState.longitude, true);
 
-        public string OrbitSummary(Orbit o)
-        {
-            return o.eccentricity > 1 ? $"hyperbolic, Pe = {o.PeA.ToSI()}m" : $"{o.PeA.ToSI()}m x {o.ApA.ToSI()}m";
-        }
+        public string OrbitSummary(Orbit o) => o.eccentricity > 1 ? $"hyperbolic, Pe = {o.PeA.ToSI()}m" : $"{o.PeA.ToSI()}m x {o.ApA.ToSI()}m";
 
-        public string OrbitSummaryWithInclination(Orbit o)
-        {
-            return OrbitSummary(o) + ", inc. " + o.inclination.ToString("F1") + "º";
-        }
+        public string OrbitSummaryWithInclination(Orbit o) => OrbitSummary(o) + ", inc. " + o.inclination.ToString("F1") + "º";
 
         [ValueInfoItem("#MechJeb_MeanAnomaly", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)] //Mean Anomaly
-        public double MeanAnomaly()
-        {
-            return Orbit.meanAnomaly * UtilMath.Rad2Deg;
-        }
+        public double MeanAnomaly() => Orbit.meanAnomaly * UtilMath.Rad2Deg;
 
         [ValueInfoItem("#MechJeb_Orbit", InfoItem.Category.Orbit)] //Orbit
-        public string CurrentOrbitSummary()
-        {
-            return OrbitSummary(Orbit);
-        }
+        public string CurrentOrbitSummary() => OrbitSummary(Orbit);
 
         [ValueInfoItem("#MechJeb_TargetOrbit", InfoItem.Category.Target)] //Target orbit
         public string TargetOrbitSummary()
@@ -119,10 +90,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_OrbitWithInc", InfoItem.Category.Orbit, description = "#MechJeb_OrbitWithInc_desc")] //Orbit||Orbit shape w/ inc.
-        public string CurrentOrbitSummaryWithInclination()
-        {
-            return OrbitSummaryWithInclination(Orbit);
-        }
+        public string CurrentOrbitSummaryWithInclination() => OrbitSummaryWithInclination(Orbit);
 
         [ValueInfoItem("#MechJeb_TargetOrbitWithInc", InfoItem.Category.Target,
             description = "#MechJeb_TargetOrbitWithInc_desc")] //Target orbit|Target orbit shape w/ inc.
@@ -134,24 +102,15 @@ namespace MuMech
 
         [ValueInfoItem("#MechJeb_OrbitalEnergy", InfoItem.Category.Orbit, description = "#MechJeb_OrbitalEnergy_desc", format = ValueInfoItem.SI,
             units = "J/kg")] //Orbital energy||Specific orbital energy
-        public double OrbitalEnergy()
-        {
-            return Orbit.orbitalEnergy;
-        }
+        public double OrbitalEnergy() => Orbit.orbitalEnergy;
 
         [ValueInfoItem("#MechJeb_PotentialEnergy", InfoItem.Category.Orbit, description = "#MechJeb_PotentialEnergy_desc", format = ValueInfoItem.SI,
             units = "J/kg")] //Potential energy||Specific potential energy
-        public double PotentialEnergy()
-        {
-            return -Orbit.referenceBody.gravParameter / Orbit.radius;
-        }
+        public double PotentialEnergy() => -Orbit.referenceBody.gravParameter / Orbit.radius;
 
         [ValueInfoItem("#MechJeb_KineticEnergy", InfoItem.Category.Orbit, description = "#MechJeb_KineticEnergy_desc", format = ValueInfoItem.SI,
             units = "J/kg")] //Kinetic energy||Specific kinetic energy
-        public double KineticEnergy()
-        {
-            return Orbit.orbitalEnergy + Orbit.referenceBody.gravParameter / Orbit.radius;
-        }
+        public double KineticEnergy() => Orbit.orbitalEnergy + Orbit.referenceBody.gravParameter / Orbit.radius;
 
         //TODO: consider turning this into a binary search
         [ValueInfoItem("#MechJeb_TimeToImpact", InfoItem.Category.Misc)] //Time to impact
@@ -306,22 +265,13 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_AngularVelocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)] //Angular Velocity
-        public string angularVelocity()
-        {
-            return MuUtils.PrettyPrint(VesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg) + "°/s";
-        }
+        public string angularVelocity() => MuUtils.PrettyPrint(VesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg) + "°/s";
 
         [ValueInfoItem("#MechJeb_CurrentAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Current acceleration
-        public double CurrentAcceleration()
-        {
-            return CurrentThrust() / (1000 * VesselMass());
-        }
+        public double CurrentAcceleration() => CurrentThrust() / (1000 * VesselMass());
 
         [ValueInfoItem("#MechJeb_CurrentThrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N")] //Current thrust
-        public double CurrentThrust()
-        {
-            return VesselState.thrustCurrent * 1000;
-        }
+        public double CurrentThrust() => VesselState.thrustCurrent * 1000;
 
         [ValueInfoItem("#MechJeb_TimeToSoIWwitch", InfoItem.Category.Orbit)] //Time to SoI switch
         public string TimeToSOITransition()
@@ -332,28 +282,16 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_SurfaceGravity", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s²")] //Surface gravity
-        public double SurfaceGravity()
-        {
-            return MainBody.GeeASL * 9.81;
-        }
+        public double SurfaceGravity() => MainBody.GeeASL * 9.81;
 
         [ValueInfoItem("#MechJeb_EscapeVelocity", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 3, units = "m/s")] //Escape velocity
-        public double EscapeVelocity()
-        {
-            return Math.Sqrt(2 * MainBody.gravParameter / VesselState.radius);
-        }
+        public double EscapeVelocity() => Math.Sqrt(2 * MainBody.gravParameter / VesselState.radius);
 
         [ValueInfoItem("#MechJeb_VesselName", InfoItem.Category.Vessel, showInEditor = false)] //Vessel name
-        public string VesselName()
-        {
-            return Vessel.vesselName;
-        }
+        public string VesselName() => Vessel.vesselName;
 
         [ValueInfoItem("#MechJeb_VesselType", InfoItem.Category.Vessel, showInEditor = false)] //Vessel type
-        public string VesselType()
-        {
-            return Vessel != null ? Vessel.vesselType.displayDescription() : "-";
-        }
+        public string VesselType() => Vessel != null ? Vessel.vesselType.displayDescription() : "-";
 
         [ValueInfoItem("#MechJeb_VesselMass", InfoItem.Category.Vessel, format = "F3", units = "t", showInEditor = true)] //Vessel mass
         public double VesselMass()
@@ -375,31 +313,19 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_DryMass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")] //Dry mass
-        public double DryMass()
-        {
-            return parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass + p.GetPhysicslessChildMass());
-        }
+        public double DryMass() => parts.Where(p => p.IsPhysicallySignificant()).Sum(p => p.mass + p.GetPhysicslessChildMass());
 
         [ValueInfoItem("#MechJeb_LiquidFuelandOxidizerMass", InfoItem.Category.Vessel, showInEditor = true, format = "F2",
             units = "t")] //Liquid fuel & oxidizer mass
-        public double LiquidFuelAndOxidizerMass()
-        {
-            return Vessel.TotalResourceMass("LiquidFuel") + Vessel.TotalResourceMass("Oxidizer");
-        }
+        public double LiquidFuelAndOxidizerMass() => Vessel.TotalResourceMass("LiquidFuel") + Vessel.TotalResourceMass("Oxidizer");
 
         [ValueInfoItem("#MechJeb_MonopropellantMass", InfoItem.Category.Vessel, showInEditor = true, format = "F2",
             units = "kg")] //Monopropellant mass
-        public double MonoPropellantMass()
-        {
-            return Vessel.TotalResourceMass("MonoPropellant");
-        }
+        public double MonoPropellantMass() => Vessel.TotalResourceMass("MonoPropellant");
 
         [ValueInfoItem("#MechJeb_TotalElectricCharge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI,
             units = "Ah")] //Total electric charge
-        public double TotalElectricCharge()
-        {
-            return Vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
-        }
+        public double TotalElectricCharge() => Vessel.TotalResourceAmount(PartResourceLibrary.ElectricityHashcode);
 
         [ValueInfoItem("#MechJeb_MaxThrust", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", showInEditor = true)] //Max thrust
         public double MaxThrust()
@@ -434,23 +360,14 @@ namespace MuMech
 
         [ValueInfoItem("#MechJeb_MaxAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²",
             showInEditor = true)] //Max acceleration
-        public double MaxAcceleration()
-        {
-            return MaxThrust() / (1000 * VesselMass());
-        }
+        public double MaxAcceleration() => MaxThrust() / (1000 * VesselMass());
 
         [ValueInfoItem("#MechJeb_MinAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²",
             showInEditor = true)] //Min acceleration
-        public double MinAcceleration()
-        {
-            return MinThrust() / (1000 * VesselMass());
-        }
+        public double MinAcceleration() => MinThrust() / (1000 * VesselMass());
 
         [ValueInfoItem("#MechJeb_Gforce", InfoItem.Category.Vessel, format = "F4", units = "g", showInEditor = true)] //G force
-        public double Acceleration()
-        {
-            return Vessel != null ? Vessel.geeForce : 0;
-        }
+        public double Acceleration() => Vessel != null ? Vessel.geeForce : 0;
 
         [ValueInfoItem("#MechJeb_DragCoefficient", InfoItem.Category.Vessel, format = "F3", showInEditor = true)] //Drag Coefficient
         public double DragCoefficient()
@@ -483,10 +400,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_PartCount", InfoItem.Category.Vessel, showInEditor = true)] //Part count
-        public int PartCount()
-        {
-            return parts.Count;
-        }
+        public int PartCount() => parts.Count;
 
         [ValueInfoItem("#MechJeb_MaxPartCount", InfoItem.Category.Vessel, showInEditor = true)] //Max part count
         public string MaxPartCount()
@@ -499,40 +413,22 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_PartCountDivideMaxParts", InfoItem.Category.Vessel, showInEditor = true)] //Part count / Max parts
-        public string PartCountAndMaxPartCount()
-        {
-            return string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
-        }
+        public string PartCountAndMaxPartCount() => string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
 
         [ValueInfoItem("#MechJeb_StrutCount", InfoItem.Category.Vessel, showInEditor = true)] //Strut count
-        public int StrutCount()
-        {
-            return parts.Count(p => p is CompoundPart && p.Modules.GetModule<CModuleStrut>());
-        }
+        public int StrutCount() => parts.Count(p => p is CompoundPart && p.Modules.GetModule<CModuleStrut>());
 
         [ValueInfoItem("#MechJeb_FuelLinesCount", InfoItem.Category.Vessel, showInEditor = true)] //Fuel Lines count
-        public int FuelLinesCount()
-        {
-            return parts.Count(p => p is CompoundPart && p.Modules.GetModule<CModuleFuelLine>());
-        }
+        public int FuelLinesCount() => parts.Count(p => p is CompoundPart && p.Modules.GetModule<CModuleFuelLine>());
 
         [ValueInfoItem("#MechJeb_VesselCost", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI, units = "$")] //Vessel cost
-        public double VesselCost()
-        {
-            return parts.Sum(p => p.partInfo.cost) * 1000;
-        }
+        public double VesselCost() => parts.Sum(p => p.partInfo.cost) * 1000;
 
         [ValueInfoItem("#MechJeb_CrewCount", InfoItem.Category.Vessel)] //Crew count
-        public int CrewCount()
-        {
-            return Vessel.GetCrewCount();
-        }
+        public int CrewCount() => Vessel.GetCrewCount();
 
         [ValueInfoItem("#MechJeb_CrewCapacity", InfoItem.Category.Vessel, showInEditor = true)] //Crew capacity
-        public int CrewCapacity()
-        {
-            return parts.Sum(p => p.CrewCapacity);
-        }
+        public int CrewCapacity() => parts.Sum(p => p.CrewCapacity);
 
         [ValueInfoItem("#MechJeb_DistanceToTarget", InfoItem.Category.Target)] //Distance to target
         public string TargetDistance()
@@ -780,10 +676,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_AtmosphericDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Atmospheric drag
-        public double AtmosphericDrag()
-        {
-            return VesselState.drag;
-        }
+        public double AtmosphericDrag() => VesselState.drag;
 
         [ValueInfoItem("#MechJeb_SynodicPeriod", InfoItem.Category.Target)] //Synodic period
         public string SynodicPeriod()
@@ -858,10 +751,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_CircularOrbitSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Circular orbit speed
-        public double CircularOrbitSpeed()
-        {
-            return OrbitalManeuverCalculator.CircularOrbitSpeed(MainBody, VesselState.radius);
-        }
+        public double CircularOrbitSpeed() => OrbitalManeuverCalculator.CircularOrbitSpeed(MainBody, VesselState.radius);
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showStagedMass = false;
@@ -877,6 +767,9 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showThrust = false;
+
+        // don't persist this so it defaults to off on scene-change
+        public bool showRcs = false;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showVacInitialTWR = true;
@@ -934,10 +827,7 @@ namespace MuMech
             stageStatsHelper.AllStageStats();
         }
 
-        public void UpdateItems()
-        {
-            stageStatsHelper?.UpdateStageStats();
-        }
+        public void UpdateItems() => stageStatsHelper?.UpdateStageStats();
 
         [ValueInfoItem("#MechJeb_StageDv_vac", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Stage ΔV (vac)
         public double StageDeltaVVacuum()
@@ -1273,9 +1163,6 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_Separator", InfoItem.Category.Misc, showInEditor = true)] //Separator
-        public void HorizontalSeparator()
-        {
-            GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
-        }
+        public void HorizontalSeparator() => GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
     }
 }
