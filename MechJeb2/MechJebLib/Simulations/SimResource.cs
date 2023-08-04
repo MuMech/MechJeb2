@@ -26,14 +26,17 @@ namespace MechJebLib.Simulations
         public SimResource Drain(double resourceDrain)
         {
             _amount -= resourceDrain;
-            if (_amount < 0) _amount = 0;
+            if (_amount < 0)
+                _amount = 0;
+
             return this;
         }
 
         public SimResource RCSDrain(double rcsDrain)
         {
             _rcsAmount -= rcsDrain;
-            if (Amount < 0) _rcsAmount = _amount;
+            if (Amount < 0)
+                _rcsAmount = _amount;
 
             return this;
         }

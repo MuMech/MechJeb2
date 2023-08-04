@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -129,6 +130,20 @@ namespace MechJebLib.Simulations
 
             resource.Residual     = Math.Max(resource.Residual, residual);
             Resources[resourceId] = resource;
+        }
+
+        public void ClearResiduals()
+        {
+            _resourceKeys.Clear();
+            foreach (int id in Resources.Keys)
+                _resourceKeys.Add(id);
+
+            foreach (int id in _resourceKeys)
+            {
+                SimResource resource = Resources[id];
+                resource.Residual = 0;
+                Resources[id] = resource;
+            }
         }
 
         public double ResidualThreshold(int resourceId) => Resources[resourceId].ResidualThreshold + ResourceRequestRemainingThreshold;
