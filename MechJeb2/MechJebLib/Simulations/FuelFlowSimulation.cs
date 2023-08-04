@@ -207,7 +207,7 @@ namespace MechJebLib.Simulations
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount <= p.Resources[resourceId].ResidualThreshold)
+                if (resource.Amount <= p.ResidualThreshold(resource.Id))
                     continue;
 
                 if (usePriority)
@@ -304,7 +304,7 @@ namespace MechJebLib.Simulations
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount <= p.Resources[resourceId].ResidualThreshold)
+                if (resource.Amount <= p.ResidualThreshold(resource.Id))
                     continue;
 
                 if (usePriority)
