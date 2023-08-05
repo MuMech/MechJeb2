@@ -225,15 +225,13 @@ namespace MechJebLib.Simulations
         public override string ToString()
         {
             var sb = new StringBuilder();
-            for (int i = 0; i < Parts.Count; i++)
-                sb.Append(Parts[i]);
 
-
-            sb.Append("Parts: ");
-            foreach (SimPart part in PartsRemainingInStage[CurrentStage])
-                sb.Append($" {part.Name}");
-            sb.AppendLine();
-
+            for(int i = 0; i <= CurrentStage; i++)
+            {
+                foreach (SimPart part in PartsRemainingInStage[CurrentStage])
+                    sb.Append(part);
+                sb.AppendLine();
+            }
 
             return sb.ToString();
         }

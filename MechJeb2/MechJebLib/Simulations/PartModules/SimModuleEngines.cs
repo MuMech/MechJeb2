@@ -129,7 +129,7 @@ namespace MechJebLib.Simulations.PartModules
         private bool PartHasResource(SimPart part, int resourceId)
         {
             if (part.TryGetResource(resourceId, out SimResource resource))
-                return resource.Amount > part.ResidualThreshold(resourceId);
+                return resource.Amount > part.Resources[resourceId].MaxAmount * ModuleResiduals + part.ResourceRequestRemainingThreshold;
             return false;
         }
 

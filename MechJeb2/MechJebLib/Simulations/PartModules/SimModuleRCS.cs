@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations.PartModules
 {
@@ -87,16 +88,16 @@ namespace MechJebLib.Simulations.PartModules
 
         // FIXME: aggressively duplicates ModuleEngines code and should be moved to SimPart
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool PartHasResource(SimPart part, int resourceId)
+        private static bool PartHasResource(SimPart part, int resourceId)
         {
             if (part.TryGetResource(resourceId, out SimResource resource))
-                return resource.Amount > part.ResidualThreshold(resourceId);
+                return resource.Amount > part.ResourceRequestRemainingThreshold;
             return false;
         }
 
         // FIXME: aggressively duplicates ModuleEngines code and should be moved to SimPart
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool PartsHaveResource(IReadOnlyList<SimPart> parts, int resourceId)
+        private static bool PartsHaveResource(IReadOnlyList<SimPart> parts, int resourceId)
         {
             for (int i = 0; i < parts.Count; i++)
                 if (PartHasResource(parts[i], resourceId))
