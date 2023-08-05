@@ -36,7 +36,7 @@ namespace MechJebLib.Simulations
             while (vessel.CurrentStage >= 0) // FIXME: should stop mutating vessel.CurrentStage
             {
                 SimulateStage(vessel);
-                ClearResiduals(vessel);
+                ClearResiduals();
                 ComputeRcsMaxValues(vessel);
                 FinishSegment(vessel);
                 vessel.Stage();
@@ -115,7 +115,7 @@ namespace MechJebLib.Simulations
                 // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
                 if (Math.Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
                 {
-                    ClearResiduals(vessel);
+                    ClearResiduals();
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
@@ -207,7 +207,7 @@ namespace MechJebLib.Simulations
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount <= p.ResidualThreshold(resource.Id))
+                if (resource.Amount <= p.ResourceRequestRemainingThreshold)
                     continue;
 
                 if (usePriority)
@@ -237,7 +237,7 @@ namespace MechJebLib.Simulations
             p.AddRCSDrain(resourceId, resourceConsumption);
         }
 
-        private void ClearResiduals(SimVessel vessel)
+        private void ClearResiduals()
         {
             foreach (SimPart part in _partsWithResourceDrains)
                 part.ClearResiduals();
@@ -246,7 +246,10 @@ namespace MechJebLib.Simulations
         private void UpdateResourceDrainsAndResiduals(SimVessel vessel)
         {
             foreach (SimPart part in _partsWithResourceDrains)
+            {
                 part.ClearResourceDrains();
+                part.ClearResiduals();
+            }
 
             _partsWithResourceDrains.Clear();
 
@@ -257,26 +260,22 @@ namespace MechJebLib.Simulations
                     switch (e.PropellantFlowModes[resourceId])
                     {
                         case SimFlowMode.NO_FLOW:
-                            UpdateResourceDrainsInPart(e.Part, e.ResourceConsumptions[resourceId], resourceId);
-                            e.Part.UpdateResourceResidual(e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsAndResidualsInPart(e.Part, e.ResourceConsumptions[resourceId], resourceId, e.ModuleResiduals);
                             break;
                         case SimFlowMode.ALL_VESSEL:
                         case SimFlowMode.ALL_VESSEL_BALANCE:
-                            UpdateResourceDrainsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
-                                resourceId, false);
-                            UpdateResourceResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsAndResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                                resourceId, false, e.ModuleResiduals);
                             break;
                         case SimFlowMode.STAGE_PRIORITY_FLOW:
                         case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                            UpdateResourceDrainsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
-                                resourceId, true);
-                            UpdateResourceResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsAndResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                                resourceId, true, e.ModuleResiduals);
                             break;
                         case SimFlowMode.STAGE_STACK_FLOW:
                         case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
                         case SimFlowMode.STACK_PRIORITY_SEARCH:
-                            UpdateResourceDrainsInParts(e.Part.CrossFeedPartSet, e.ResourceConsumptions[resourceId], resourceId, true);
-                            UpdateResourceResidualsInParts(e.Part.CrossFeedPartSet, e.ModuleResiduals, resourceId);
+                            UpdateResourceDrainsAndResidualsInParts(e.Part.CrossFeedPartSet, e.ResourceConsumptions[resourceId], resourceId, true, e.ModuleResiduals);
                             break;
                         case SimFlowMode.NULL:
                             break;
@@ -288,7 +287,7 @@ namespace MechJebLib.Simulations
 
         private readonly List<SimPart> _sources = new List<SimPart>();
 
-        private void UpdateResourceDrainsInParts(IList<SimPart> parts, double resourceConsumption, int resourceId, bool usePriority)
+        private void UpdateResourceDrainsAndResidualsInParts(IList<SimPart> parts, double resourceConsumption, int resourceId, bool usePriority, double residual)
         {
             int maxPriority = int.MinValue;
 
@@ -304,7 +303,7 @@ namespace MechJebLib.Simulations
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount <= p.ResidualThreshold(resource.Id))
+                if (resource.Amount <= residual * resource.MaxAmount + p.ResourceRequestRemainingThreshold )
                     continue;
 
                 if (usePriority)
@@ -323,21 +322,15 @@ namespace MechJebLib.Simulations
             }
 
             for (int i = 0; i < _sources.Count; i++)
-                UpdateResourceDrainsInPart(_sources[i], resourceConsumption / _sources.Count, resourceId);
+                UpdateResourceDrainsAndResidualsInPart(_sources[i], resourceConsumption / _sources.Count, resourceId, residual);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateResourceDrainsInPart(SimPart p, double resourceConsumption, int resourceId)
+        private void UpdateResourceDrainsAndResidualsInPart(SimPart p, double resourceConsumption, int resourceId, double residual)
         {
             _partsWithResourceDrains.Add(p);
             p.AddResourceDrain(resourceId, resourceConsumption);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void UpdateResourceResidualsInParts(IList<SimPart> parts, double residual, int resourceId)
-        {
-            for (int i = 0; i < parts.Count; i++)
-                parts[i].UpdateResourceResidual(residual, resourceId);
+            p.UpdateResourceResidual(residual, resourceId);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
