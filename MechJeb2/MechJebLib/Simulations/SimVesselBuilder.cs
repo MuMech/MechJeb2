@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using KSP.UI;
@@ -251,9 +252,15 @@ namespace MechJebLib.Simulations
                 part.IsEngine         = true;
 
                 engine.ModuleSpoolupTime = 0;
+                engine.isModuleEnginesRF = false;
 
-                if (_rfSpoolUpTime != null && _rfSpoolUpTime.GetValue(kspEngine) is float floatVal)
-                    engine.ModuleSpoolupTime = floatVal;
+                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
+                {
+                    engine.isModuleEnginesRF = Type.GetType("RealFuels.ModuleEnginesRF, RealFuels") == engine.GetType();
+
+                    if(engine.isModuleEnginesRF && _rfSpoolUpTime!.GetValue(kspEngine) is float floatVal)
+                        engine.ModuleSpoolupTime = floatVal;
+                }
 
                 return engine;
             }

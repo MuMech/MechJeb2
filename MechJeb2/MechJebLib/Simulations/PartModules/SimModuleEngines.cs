@@ -59,6 +59,7 @@ namespace MechJebLib.Simulations.PartModules
         public double ModuleResiduals;
         public double ModuleSpoolupTime;
         public bool   NoPropellants;
+        public bool   isModuleEnginesRF;
 
         public readonly H1 ThrustCurve                 = H1.Get(true);
         public readonly H1 ThrottleIspCurve            = H1.Get(true);

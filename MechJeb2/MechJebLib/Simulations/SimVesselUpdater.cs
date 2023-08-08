@@ -171,7 +171,7 @@ namespace MechJebLib.Simulations
                 engine.NoPropellants    = kspEngine is { flameout: true, statusL2: "No propellants" };
                 engine.ModuleResiduals  = 0;
 
-                if (_rfPredictedMaximumResiduals != null && _rfPredictedMaximumResiduals.GetValue(kspEngine) is double doubleVal)
+                if (engine.isModuleEnginesRF && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
                     engine.ModuleResiduals = doubleVal;
 
                 part.EngineResiduals = Math.Max(part.EngineResiduals, engine.ModuleResiduals);
