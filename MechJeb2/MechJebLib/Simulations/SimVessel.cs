@@ -85,6 +85,7 @@ namespace MechJebLib.Simulations
         {
             ActiveEngines.Clear();
 
+            // FIXME: why am i not iterating over the last ActiveEngines?
             for (int i = -1; i < CurrentStage; i++)
             {
                 foreach (SimModuleEngines e in EnginesDroppedInStage[i])
@@ -108,6 +109,7 @@ namespace MechJebLib.Simulations
         {
             ActiveRcs.Clear();
 
+            // FIXME: why am i not iterating over the last ActiveRcs?
             for (int i = -1; i < CurrentStage; i++)
             {
                 foreach (SimModuleRCS r in RCSDroppedInStage[i])
