@@ -38,20 +38,21 @@ namespace MechJebLib.Simulations
                 set => _manager._kspVessel = value;
             }
 
-            private readonly SimVesselManager _manager;
+            private readonly        SimVesselManager _manager;
+            private static readonly Type?            _rfType;
 
             static SimVesselBuilder()
             {
                 _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
 
-                if (!ReflectionUtils.isAssemblyLoaded("RealFuels"))
+                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
                 {
                     _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
                     if (_rfSpoolUpTime == null)
-                    {
                         Debug.Log(
                             "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
-                    }
+
+                    _rfType = Type.GetType("RealFuels.ModuleEnginesRF, RealFuels");
                 }
             }
 
@@ -256,9 +257,9 @@ namespace MechJebLib.Simulations
 
                 if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
                 {
-                    engine.isModuleEnginesRF = Type.GetType("RealFuels.ModuleEnginesRF, RealFuels") == engine.GetType();
+                    engine.isModuleEnginesRF = _rfType!.IsInstanceOfType(kspEngine);
 
-                    if(engine.isModuleEnginesRF && _rfSpoolUpTime!.GetValue(kspEngine) is float floatVal)
+                    if (engine.isModuleEnginesRF && _rfSpoolUpTime!.GetValue(kspEngine) is float floatVal)
                         engine.ModuleSpoolupTime = floatVal;
                 }
 
