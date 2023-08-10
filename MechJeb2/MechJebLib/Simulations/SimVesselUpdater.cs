@@ -29,15 +29,11 @@ namespace MechJebLib.Simulations
             static SimVesselUpdater()
             {
                 if (ReflectionUtils.isAssemblyLoaded("ProceduralFairings"))
-
                 {
-                    _pfDecoupled =
-                        ReflectionUtils.getFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler", "decoupled");
+                    _pfDecoupled = ReflectionUtils.getFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler",
+                        "decoupled");
                     if (_pfDecoupled == null)
-                    {
-                        Debug.Log(
-                            "MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
-                    }
+                        Debug.Log("MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
                 }
 
                 if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
@@ -45,10 +41,8 @@ namespace MechJebLib.Simulations
                     _rfPredictedMaximumResiduals =
                         ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
                     if (_rfPredictedMaximumResiduals == null)
-                    {
                         Debug.Log(
                             "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
-                    }
                 }
             }
 
@@ -231,10 +225,10 @@ namespace MechJebLib.Simulations
                     return;
                 }
 
-                rcs.IsEnabled    = kspModuleRCS.isEnabled;
-                rcs.Isp          = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
-                rcs.Thrust       = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
-                rcs.RcsEnabled   = kspModuleRCS.rcsEnabled;
+                rcs.IsEnabled  = kspModuleRCS.isEnabled;
+                rcs.Isp        = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
+                rcs.Thrust     = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
+                rcs.RcsEnabled = kspModuleRCS.rcsEnabled;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
