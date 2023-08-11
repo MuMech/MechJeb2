@@ -103,10 +103,7 @@ namespace MechJebLib.PVG
             return y0p.Bt - _phases[p].bt;
         }
 
-        private double H(OutputLayout y, int p)
-        {
-            return y.H0 + _phases[p].thrust * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot;
-        }
+        private double H(OutputLayout y, int p) => y.H0 + _phases[p].thrust * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot;
 
         private void BaseResiduals()
         {
@@ -235,8 +232,12 @@ namespace MechJebLib.PVG
                 yGuess[i] = _initial[i / InputLayout.INPUT_LAYOUT_LEN][i % InputLayout.INPUT_LAYOUT_LEN];
 
             for (int i = 0; i < _phases.Count; i++)
+            {
                 if (!_phases[i].Coast && !_phases[i].Infinite)
                     bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau * 0.999;
+                bndl[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.M_INDEX] = _phases[i].m0;
+                bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.M_INDEX] = _phases[i].m0;
+            }
 
             alglib.minlmcreatev(ResidualLayout.RESIDUAL_LAYOUT_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
             alglib.minlmsetbc(_state, bndl, bndu);
@@ -536,16 +537,11 @@ namespace MechJebLib.PVG
             return solution;
         }
 
-        public bool Success()
-        {
+        public bool Success() =>
             // even if we didn't terminate successfully, we're close enough to a zero to use the solution
-            return Znorm < 1e-5;
-        }
+            Znorm < 1e-5;
 
-        public static OptimizerBuilder Builder()
-        {
-            return new OptimizerBuilder();
-        }
+        public static OptimizerBuilder Builder() => new OptimizerBuilder();
 
         public void Dispose()
         {

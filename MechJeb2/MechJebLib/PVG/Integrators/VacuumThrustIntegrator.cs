@@ -60,8 +60,8 @@ namespace MechJebLib.PVG.Integrators
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
         {
-            _solver.ThrowOnMaxIter = true;
-            _solver.Maxiter        = 20000;
+            _solver.ThrowOnMaxIter = false;
+            _solver.Maxiter        = 2000;
             _solver.Rtol           = 1e-9;
             _solver.Atol           = 1e-9;
             _ode.Phase             = phase;
@@ -70,7 +70,7 @@ namespace MechJebLib.PVG.Integrators
 
         public void Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf, Solution solution)
         {
-            _solver.ThrowOnMaxIter = true;
+            _solver.ThrowOnMaxIter = false;
             _solver.Maxiter        = 2000;
             _solver.Rtol           = 1e-9;
             _solver.Atol           = 1e-9;
