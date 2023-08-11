@@ -53,30 +53,15 @@ namespace MuMech
         {
         }
 
-        public override void OnFixedUpdate()
-        {
-            Core.StageStats.RequestUpdate();
-        }
+        public override void OnFixedUpdate() => Core.StageStats.RequestUpdate();
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            GameEvents.onStageActivate.Add(HandleStageEvent);
-        }
+        public override void OnStart(PartModule.StartState state) => GameEvents.onStageActivate.Add(HandleStageEvent);
 
-        public override void OnDestroy()
-        {
-            GameEvents.onStageActivate.Remove(HandleStageEvent);
-        }
+        public override void OnDestroy() => GameEvents.onStageActivate.Remove(HandleStageEvent);
 
-        private void HandleStageEvent(int data)
-        {
-            _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
-        }
+        private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
 
-        private bool IsUnguided(int s)
-        {
-            return _ascentSettings.UnguidedStages.Contains(s);
-        }
+        private bool IsUnguided(int s) => _ascentSettings.UnguidedStages.Contains(s);
 
         // FIXME: maybe this could be a callback to the Task?
         private void HandleDoneTask()
@@ -134,10 +119,7 @@ namespace MuMech
             HandleDoneTask();
 
             if (_task is { IsCompleted: false })
-            {
-                Debug.Log("active PVG task not completed");
                 return;
-            }
 
             if (_ascentSettings.OptimizeStageFlag)
             {
