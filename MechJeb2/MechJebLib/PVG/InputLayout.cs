@@ -13,9 +13,15 @@ namespace MechJebLib.PVG
 {
     public struct InputLayout
     {
-        public const int INPUT_LAYOUT_LEN = 15;
-        public const int BT_INDEX         = 14;
+        public const int RX_INDEX         = 0;
+        public const int RY_INDEX         = 1;
+        public const int RZ_INDEX         = 2;
+        public const int VX_INDEX         = 3;
+        public const int VY_INDEX         = 4;
+        public const int VZ_INDEX         = 5;
         public const int M_INDEX          = 12;
+        public const int BT_INDEX         = 14;
+        public const int INPUT_LAYOUT_LEN = 15;
 
         public V3 R;
 

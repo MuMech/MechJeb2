@@ -233,11 +233,28 @@ namespace MechJebLib.PVG
 
             for (int i = 0; i < _phases.Count; i++)
             {
-                if (!_phases[i].Coast && !_phases[i].Infinite)
+                // pin the maximum time of any finite burn phase to below the tau value of the stage
+                if (!_phases[i].Coast && !_phases[i].Infinite && _phases[i].OptimizeTime)
                     bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau * 0.999;
+
+                // pin the time of any phase which isn't allowed to be optimized
+                if (!_phases[i].OptimizeTime)
+                    bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] =
+                        bndl[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].bt;
+
+                // pin the m0 of the stage based on the value computed for the phase
+                // FIXME: stage and a half or coasts-within-stages would require dropping this.
                 bndl[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.M_INDEX] = _phases[i].m0;
                 bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.M_INDEX] = _phases[i].m0;
             }
+
+            // pin r0 and v0 by box equality constraints in the optimizer
+            bndl[InputLayout.RX_INDEX] = bndu[InputLayout.RX_INDEX] = _problem.R0.x;
+            bndl[InputLayout.RY_INDEX] = bndu[InputLayout.RY_INDEX] = _problem.R0.y;
+            bndl[InputLayout.RZ_INDEX] = bndu[InputLayout.RZ_INDEX] = _problem.R0.z;
+            bndl[InputLayout.VX_INDEX] = bndu[InputLayout.VX_INDEX] = _problem.V0.x;
+            bndl[InputLayout.VY_INDEX] = bndu[InputLayout.VY_INDEX] = _problem.V0.y;
+            bndl[InputLayout.VZ_INDEX] = bndu[InputLayout.VZ_INDEX] = _problem.V0.z;
 
             alglib.minlmcreatev(ResidualLayout.RESIDUAL_LAYOUT_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
             alglib.minlmsetbc(_state, bndl, bndu);
@@ -318,8 +335,9 @@ namespace MechJebLib.PVG
                 {
                     y0.R = _problem.R0;
                     y0.V = _problem.V0;
-                    y0.M = _problem.M0;
                 }
+
+                y0.M = phase.m0;
 
                 y0.CopyTo(_initial[p]);
 
@@ -365,7 +383,6 @@ namespace MechJebLib.PVG
                 {
                     y0.R  = _problem.R0;
                     y0.V  = _problem.V0;
-                    y0.M  = phase.m0;
                     y0.PV = pv0;
                     y0.PR = pr0;
                     y0.Bt = phase.bt;
@@ -375,8 +392,9 @@ namespace MechJebLib.PVG
                     _terminal[p - 1].CopyTo(_initial[p]);
                     y0.CopyFrom(_initial[p]);
                     y0.Bt = phase.bt;
-                    y0.M  = phase.m0;
                 }
+
+                y0.M = phase.m0;
 
                 y0.CopyTo(_initial[p]);
 
@@ -450,7 +468,6 @@ namespace MechJebLib.PVG
                 {
                     y0.R  = _problem.R0;
                     y0.V  = _problem.V0;
-                    y0.M  = _problem.M0;
                     y0.Bt = phase.bt;
                     y0.PV = solution.Pv(_problem.T0);
                     y0.PR = solution.Pr(_problem.T0);
@@ -460,8 +477,9 @@ namespace MechJebLib.PVG
                     _terminal[p - 1].CopyTo(_initial[p]);
                     y0.CopyFrom(_initial[p]);
                     y0.Bt = phase.bt;
-                    y0.M  = phase.m0;
                 }
+
+                y0.M = phase.m0;
 
                 y0.CopyTo(_initial[p]);
 
