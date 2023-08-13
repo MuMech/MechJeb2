@@ -34,6 +34,8 @@ namespace MechJebLib.Simulations
         public double ATMPressure;
         public double ATMDensity;
         public double MachNumber;
+        public double T;
+        public V3     R, V, U;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetConditions(double atmDensity, double atmPressure, double machNumber)
@@ -41,6 +43,15 @@ namespace MechJebLib.Simulations
             ATMDensity  = atmDensity;
             ATMPressure = atmPressure;
             MachNumber  = machNumber;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetInitial(double t, V3 r, V3 v, V3 u)
+        {
+            T = t;
+            R = r;
+            V = v;
+            U = u;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -228,7 +239,7 @@ namespace MechJebLib.Simulations
         {
             var sb = new StringBuilder();
 
-            for(int i = 0; i <= CurrentStage; i++)
+            for (int i = 0; i <= CurrentStage; i++)
             {
                 foreach (SimPart part in PartsRemainingInStage[CurrentStage])
                     sb.Append(part);

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using JetBrains.Annotations;
+using MechJebLib.Primitives;
 using MechJebLib.Simulations;
 using Unity.Profiling;
 
@@ -22,6 +23,10 @@ namespace MuMech
 
         public readonly List<FuelStats> AtmoStats = new List<FuelStats>();
         public readonly List<FuelStats> VacStats  = new List<FuelStats>();
+        public          double          AtmoT, VacT;
+        public          V3              AtmoR, VacR;
+        public          V3              AtmoV, VacV;
+        public          V3              AtmoU, VacU;
 
         public MechJebModuleStageStats(MechJebCore core) : base(core)
         {
@@ -30,10 +35,7 @@ namespace MuMech
 
         private bool _vesselModified = true;
 
-        protected override void OnModuleEnabled()
-        {
-            _vesselModified = true;
-        }
+        protected override void OnModuleEnabled() => _vesselModified = true;
 
         protected override void OnModuleDisabled()
         {
@@ -44,17 +46,9 @@ namespace MuMech
         private readonly SimVesselManager _vesselManagerAtmo = new SimVesselManager();
         private readonly SimVesselManager _vesselManagerVac  = new SimVesselManager();
 
-        public override void OnFixedUpdate()
-        {
-            GetResults();
-        }
+        public override void OnFixedUpdate() => GetResults();
 
-        public override void OnUpdate()
-        {
-            GetResults();
-        }
-
-        private double _lastRebuild;
+        public override void OnUpdate() => GetResults();
 
         private static ProfilerMarker _newRunSimulationProfile = new ProfilerMarker("RunSimulation");
         private static ProfilerMarker _newBuildProfile         = new ProfilerMarker("Build");
@@ -69,6 +63,11 @@ namespace MuMech
                 AtmoStats.Clear();
                 foreach (FuelStats item in _vesselManagerAtmo.FuelFlowSimulation.Segments)
                     AtmoStats.Add(item);
+                AtmoT = _vesselManagerAtmo.T;
+                AtmoR = _vesselManagerAtmo.R;
+                AtmoV = _vesselManagerAtmo.V;
+                AtmoU = _vesselManagerAtmo.U;
+
                 _vesselManagerAtmo.FuelFlowSimulation.ResultReady = false;
             }
 
@@ -77,6 +76,11 @@ namespace MuMech
                 VacStats.Clear();
                 foreach (FuelStats item in _vesselManagerVac.FuelFlowSimulation.Segments)
                     VacStats.Add(item);
+                VacT                                            = _vesselManagerVac.T;
+                VacR                                            = _vesselManagerVac.R;
+                VacV                                            = _vesselManagerVac.V;
+                VacU                                            = _vesselManagerVac.U;
+
                 _vesselManagerVac.FuelFlowSimulation.ResultReady = false;
             }
         }
@@ -112,7 +116,6 @@ namespace MuMech
                 _vesselManagerAtmo.Build(v);
                 _vesselManagerVac.Build(v);
                 _vesselModified = false;
-                _lastRebuild    = Planetarium.GetUniversalTime();
             }
             else
             {
@@ -126,6 +129,8 @@ namespace MuMech
             {
                 _vesselManagerVac.DVLinearThrust = DVLinearThrust;
                 _vesselManagerVac.SetConditions(0, 0, 0);
+                _vesselManagerVac.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
+                    VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
                 _vesselManagerVac.StartFuelFlowSimulationJob();
             }
 
@@ -133,6 +138,8 @@ namespace MuMech
             {
                 _vesselManagerAtmo.DVLinearThrust = DVLinearThrust;
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
+                _vesselManagerAtmo.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
+                    VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
                 _vesselManagerAtmo.StartFuelFlowSimulationJob();
             }
         }
@@ -154,10 +161,7 @@ namespace MuMech
             RunSimulation();
         }
 
-        private bool SimulationIsRunning()
-        {
-            return _vesselManagerAtmo.FuelFlowSimulation.IsRunning() || _vesselManagerVac.FuelFlowSimulation.IsRunning();
-        }
+        private bool SimulationIsRunning() => _vesselManagerAtmo.FuelFlowSimulation.IsRunning() || _vesselManagerVac.FuelFlowSimulation.IsRunning();
 
         private readonly Stopwatch _stopwatch = new Stopwatch();
 
@@ -216,15 +220,9 @@ namespace MuMech
             _vabRebuildTimer = 2;
         }
 
-        private void OnGUIStageSequenceModified()
-        {
-            _vesselModified = true;
-        }
+        private void OnGUIStageSequenceModified() => _vesselModified = true;
 
-        private void onVesselStandardModification(Vessel data)
-        {
-            _vesselModified = true;
-        }
+        private void onVesselStandardModification(Vessel data) => _vesselModified = true;
 
         public void RequestUpdate()
         {

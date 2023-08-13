@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using MechJebLib.Primitives;
 
 namespace MechJebLib.Simulations
 {
@@ -20,6 +21,11 @@ namespace MechJebLib.Simulations
         private readonly Dictionary<Part, SimPart>             _partMapping              = new Dictionary<Part, SimPart>();
         private readonly Dictionary<SimPart, Part>             _inversePartMapping       = new Dictionary<SimPart, Part>();
         private readonly Dictionary<SimPartModule, PartModule> _inversePartModuleMapping = new Dictionary<SimPartModule, PartModule>();
+
+        public double T => _vessel.T;
+        public V3     R => _vessel.R;
+        public V3     V => _vessel.V;
+        public V3     U => _vessel.U;
 
         public SimVesselManager()
         {
@@ -41,15 +47,12 @@ namespace MechJebLib.Simulations
             _builder.UpdateEngineSet();
         }
 
-        public void Update()
-        {
-            _updater.Update();
-        }
+        public void Update() => _updater.Update();
 
-        public void SetConditions(double atmDensity, double atmPressure, double machNumber)
-        {
+        public void SetConditions(double atmDensity, double atmPressure, double machNumber) =>
             _vessel.SetConditions(atmDensity, atmPressure, machNumber);
-        }
+
+        public void SetInitial(double t, V3 r, V3 v, V3 u) => _vessel.SetInitial(t, r, v, u);
 
         public void StartFuelFlowSimulationJob()
         {
