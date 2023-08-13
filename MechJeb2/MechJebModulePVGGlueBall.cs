@@ -175,9 +175,8 @@ namespace MuMech
                 return;
 
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
-                .Initial(VesselState.orbitalPosition.WorldToV3Rotated(), VesselState.orbitalVelocity.WorldToV3Rotated(),
-                    VesselState.forward.WorldToV3Rotated(),
-                    VesselState.time, MainBody.gravParameter, MainBody.Radius)
+                .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
+                    , MainBody.gravParameter, MainBody.Radius)
                 .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), fpa, attachAltFlag, lanflag)
                 .TerminalConditions(Maths.HmagFromApsides(MainBody.gravParameter, peR, apR));
 
