@@ -275,6 +275,7 @@ namespace MuMech
         public bool LaunchingToRendezvous;
         public bool LaunchingToMatchLan;
         public bool LaunchingToLan;
+        public bool OverrideWarpToPlane;
 
         /*
          * Helpers for dealing with switching between modules
@@ -304,10 +305,7 @@ namespace MuMech
                     GetAscentModule(type).Enabled = false;
         }
 
-        public override void OnFixedUpdate()
-        {
-            DisableAscentModules();
-        }
+        public override void OnFixedUpdate() => DisableAscentModules();
 
         public void ApplyRODefaults()
         {
