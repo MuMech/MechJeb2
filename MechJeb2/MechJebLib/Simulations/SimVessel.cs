@@ -241,9 +241,10 @@ namespace MechJebLib.Simulations
 
             for (int i = 0; i <= CurrentStage; i++)
             {
-                foreach (SimPart part in PartsRemainingInStage[CurrentStage])
+                sb.AppendLine($"stage {i}:");
+                foreach (SimPart part in PartsRemainingInStage[i])
                     sb.Append(part);
-                sb.AppendLine();
+                sb.AppendLine("------------------------");
             }
 
             return sb.ToString();

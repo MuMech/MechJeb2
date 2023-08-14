@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using MechJebLib.Simulations.PartModules;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -29,10 +30,9 @@ namespace MechJebLib.Simulations
         // BUG: Does this even do anything?  What part has a inverseStage of -1?
         // BUG: Even if we change this to p.InverseStage <= 0 below what happens with the last decoupler when
         //      it should detatch the payload and so the part decoupled from it should be the root, not the part itself?
-        private static SimPart FindRootPart(IReadOnlyList<SimPart> parts)
-        {
-            return parts[0];
-            /*
+        private static SimPart FindRootPart(IReadOnlyList<SimPart> parts) => parts[0];
+
+        /*
             SimPart? rootPart = null;
 
             for (int i = 0; i < parts.Count; i++)
@@ -49,8 +49,6 @@ namespace MechJebLib.Simulations
 
             return rootPart;
             */
-        }
-
         private static void CalculateDecoupledInStageRecursively(SimVessel v, SimPart p, SimPart? parent, int inheritedDecoupledInStage)
         {
             int childDecoupledInStage = CalculateDecoupledInStage(v, p, parent, inheritedDecoupledInStage);
@@ -70,16 +68,66 @@ namespace MechJebLib.Simulations
             if (p.DecoupledInStage != int.MinValue)
                 return p.DecoupledInStage;
 
-            for (int i = 0; i < p.Modules.Count; i++)
+            if (p.InverseStage >= parentDecoupledInStage)
             {
-                SimPartModule m = p.Modules[i];
-
-                switch (m)
+                for (int i = 0; i < p.Modules.Count; i++)
                 {
-                    case SimModuleDecouple decouple:
-                        if (decouple is { IsDecoupled: false, StagingEnabled: true } && p.StagingOn)
-                        {
-                            if (decouple.IsOmniDecoupler)
+                    SimPartModule m = p.Modules[i];
+
+                    switch (m)
+                    {
+                        case SimModuleDecouple decouple:
+                            if (decouple is { IsDecoupled: false, StagingEnabled: true } && p.StagingOn)
+                            {
+                                if (decouple.IsOmniDecoupler)
+                                {
+                                    // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
+                                    p.DecoupledInStage = p.InverseStage;
+                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                    return p.DecoupledInStage;
+                                }
+
+                                if (decouple.AttachedPart != null)
+                                {
+                                    if (decouple.AttachedPart == parent && decouple.Staged)
+                                    {
+                                        // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
+                                        p.DecoupledInStage = p.InverseStage;
+                                        TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                        return p.DecoupledInStage;
+                                    }
+                                    // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
+                                    // The part and other children are dropped with the traversalParent.
+                                    p.DecoupledInStage = parentDecoupledInStage;
+                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                    CalculateDecoupledInStageRecursively(v, decouple.AttachedPart, p, p.InverseStage);
+                                    return p.DecoupledInStage;
+                                }
+                            }
+
+                            break;
+                        case SimModuleDockingNode dockingNode:
+                            if (dockingNode.StagingEnabled && p.StagingOn)
+                                if (dockingNode.AttachedPart != null)
+                                {
+                                    if (dockingNode.AttachedPart == parent && dockingNode.Staged)
+                                    {
+                                        // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
+                                        p.DecoupledInStage = p.InverseStage;
+                                        TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                        return p.DecoupledInStage;
+                                    }
+                                    // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
+                                    // The part and other children are dropped with the traversalParent.
+                                    p.DecoupledInStage = parentDecoupledInStage;
+                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
+                                    CalculateDecoupledInStageRecursively(v, dockingNode.AttachedPart, p, p.InverseStage);
+                                    return p.DecoupledInStage;
+                                }
+
+                            break;
+                        case SimProceduralFairingDecoupler procFairingDecoupler:
+                            if (procFairingDecoupler is { IsDecoupled: false, StagingEnabled: true } && p.StagingOn)
                             {
                                 // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
                                 p.DecoupledInStage = p.InverseStage;
@@ -87,63 +135,14 @@ namespace MechJebLib.Simulations
                                 return p.DecoupledInStage;
                             }
 
-                            if (decouple.AttachedPart != null)
-                            {
-                                if (decouple.AttachedPart == parent && decouple.Staged)
-                                {
-                                    // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
-                                    p.DecoupledInStage = p.InverseStage;
-                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
-                                    return p.DecoupledInStage;
-                                }
-
-                                // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
-                                // The part and other children are dropped with the traversalParent.
-                                p.DecoupledInStage = parentDecoupledInStage;
-                                TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
-                                CalculateDecoupledInStageRecursively(v, decouple.AttachedPart, p, p.InverseStage);
-                                return p.DecoupledInStage;
-                            }
-                        }
-
-                        break;
-                    case SimModuleDockingNode dockingNode:
-                        if (dockingNode.StagingEnabled && p.StagingOn)
-                            if (dockingNode.AttachedPart != null)
-                            {
-                                if (dockingNode.AttachedPart == parent && dockingNode.Staged)
-                                {
-                                    // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
-                                    p.DecoupledInStage = p.InverseStage;
-                                    TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
-                                    return p.DecoupledInStage;
-                                }
-
-                                // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
-                                // The part and other children are dropped with the traversalParent.
-                                p.DecoupledInStage = parentDecoupledInStage;
-                                TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
-                                CalculateDecoupledInStageRecursively(v, dockingNode.AttachedPart, p, p.InverseStage);
-                                return p.DecoupledInStage;
-                            }
-
-                        break;
-                    case SimProceduralFairingDecoupler procFairingDecoupler:
-                        if (procFairingDecoupler is { IsDecoupled: false, StagingEnabled: true } && p.StagingOn)
-                        {
-                            // We are decoupling our traversalParent. The part and its children are not part of the ship when we decouple
-                            p.DecoupledInStage = p.InverseStage;
+                            break;
+                        case SimLaunchClamp _:
+                            p.DecoupledInStage = p.InverseStage > parentDecoupledInStage
+                                ? p.InverseStage
+                                : parentDecoupledInStage;
                             TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                             return p.DecoupledInStage;
-                        }
-
-                        break;
-                    case SimLaunchClamp _:
-                        p.DecoupledInStage = p.InverseStage > parentDecoupledInStage
-                            ? p.InverseStage
-                            : parentDecoupledInStage;
-                        TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
-                        return p.DecoupledInStage;
+                    }
                 }
             }
 
