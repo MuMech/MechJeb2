@@ -344,6 +344,8 @@ namespace MuMech
                     _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = _launchingToLan = _autopilot.TimedLaunch = false;
             }
 
+            _ascentSettings.OverrideWarpToPlane = GUILayout.Toggle(_ascentSettings.OverrideWarpToPlane, "Override Warp to Plane");
+
             GUILayout.EndVertical();
             Profiler.EndSample();
         }

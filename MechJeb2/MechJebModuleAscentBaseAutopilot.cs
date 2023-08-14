@@ -86,9 +86,18 @@ namespace MuMech
 
         public void StartCountdown(double time)
         {
-            TimedLaunch = true;
-            _launchTime = time;
-            _lastTMinus = 999;
+            if (AscentSettings.OverrideWarpToPlane)
+            {
+                TimedLaunch = false;
+                _launchTime = VesselState.time;
+                _lastTMinus = 0;
+            }
+            else
+            {
+                TimedLaunch = true;
+                _launchTime = time;
+                _lastTMinus = 999;
+            }
         }
 
         public override void OnFixedUpdate()
@@ -320,15 +329,9 @@ namespace MuMech
             return desiredThrottle;
         }
 
-        protected double SrfvelPitch()
-        {
-            return 90.0 - Vector3d.Angle(VesselState.surfaceVelocity, VesselState.up);
-        }
+        protected double SrfvelPitch() => 90.0 - Vector3d.Angle(VesselState.surfaceVelocity, VesselState.up);
 
-        protected double SrfvelHeading()
-        {
-            return VesselState.HeadingFromDirection(VesselState.surfaceVelocity.ProjectOnPlane(VesselState.up));
-        }
+        protected double SrfvelHeading() => VesselState.HeadingFromDirection(VesselState.surfaceVelocity.ProjectOnPlane(VesselState.up));
 
         // this provides ground track heading based on desired inclination and is what most consumers should call
         protected void AttitudeTo(double desiredPitch)
