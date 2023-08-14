@@ -6,6 +6,7 @@
 
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MechJebLib.Core;
 using MechJebLib.PVG;
 using MechJebLib.Simulations;
@@ -20,6 +21,7 @@ namespace MuMech
     ///     This class isolates a bunch of glue between MJ and the PVG optimizer that I don't
     ///     yet understand how to write correctly.
     /// </summary>
+    [UsedImplicitly]
     public class MechJebModulePVGGlueBall : ComputerModule
     {
         private double _blockOptimizerUntilTime;
@@ -229,8 +231,7 @@ namespace MuMech
                 bool unguided = IsUnguided(kspStage);
 
                 ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
-                    kspStage, mjPhase,
-                    optimizeTime, unguided);
+                    kspStage, mjPhase, optimizeTime, unguided);
             }
 
             ascentBuilder.FixedBurnTime(!optimizedStageFound); // FIXME: can ascentbuilder just figure this out?

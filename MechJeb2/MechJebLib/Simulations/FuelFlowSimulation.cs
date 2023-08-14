@@ -264,18 +264,21 @@ namespace MechJebLib.Simulations
                             break;
                         case SimFlowMode.ALL_VESSEL:
                         case SimFlowMode.ALL_VESSEL_BALANCE:
-                            UpdateResourceDrainsAndResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                            UpdateResourceDrainsAndResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage],
+                                e.ResourceConsumptions[resourceId],
                                 resourceId, false, e.ModuleResiduals);
                             break;
                         case SimFlowMode.STAGE_PRIORITY_FLOW:
                         case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                            UpdateResourceDrainsAndResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage], e.ResourceConsumptions[resourceId],
+                            UpdateResourceDrainsAndResidualsInParts(vessel.PartsRemainingInStage[vessel.CurrentStage],
+                                e.ResourceConsumptions[resourceId],
                                 resourceId, true, e.ModuleResiduals);
                             break;
                         case SimFlowMode.STAGE_STACK_FLOW:
                         case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
                         case SimFlowMode.STACK_PRIORITY_SEARCH:
-                            UpdateResourceDrainsAndResidualsInParts(e.Part.CrossFeedPartSet, e.ResourceConsumptions[resourceId], resourceId, true, e.ModuleResiduals);
+                            UpdateResourceDrainsAndResidualsInParts(e.Part.CrossFeedPartSet, e.ResourceConsumptions[resourceId], resourceId, true,
+                                e.ModuleResiduals);
                             break;
                         case SimFlowMode.NULL:
                             break;
@@ -287,7 +290,8 @@ namespace MechJebLib.Simulations
 
         private readonly List<SimPart> _sources = new List<SimPart>();
 
-        private void UpdateResourceDrainsAndResidualsInParts(IList<SimPart> parts, double resourceConsumption, int resourceId, bool usePriority, double residual)
+        private void UpdateResourceDrainsAndResidualsInParts(IList<SimPart> parts, double resourceConsumption, int resourceId, bool usePriority,
+            double residual)
         {
             int maxPriority = int.MinValue;
 
@@ -303,7 +307,7 @@ namespace MechJebLib.Simulations
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount <= residual * resource.MaxAmount + p.ResourceRequestRemainingThreshold )
+                if (resource.Amount <= residual * resource.MaxAmount + p.ResourceRequestRemainingThreshold)
                     continue;
 
                 if (usePriority)
