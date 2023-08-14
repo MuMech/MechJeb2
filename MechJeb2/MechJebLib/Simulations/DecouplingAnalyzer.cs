@@ -68,6 +68,7 @@ namespace MechJebLib.Simulations
             if (p.DecoupledInStage != int.MinValue)
                 return p.DecoupledInStage;
 
+            // don't decouple already decoupled decouplers
             if (p.InverseStage >= parentDecoupledInStage)
             {
                 for (int i = 0; i < p.Modules.Count; i++)
