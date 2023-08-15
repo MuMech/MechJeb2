@@ -13,6 +13,9 @@ namespace MechJebLib.PVG
 {
     public struct OutputLayout
     {
+        public const int M_INDEX           = 12;
+        public const int PM_INDEX          = 13;
+        public const int DV_INDEX          = 14;
         public const int OUTPUT_LAYOUT_LEN = 15;
 
         public V3 R;
@@ -58,9 +61,9 @@ namespace MechJebLib.PVG
             V.CopyTo(other, 3);
             PV.CopyTo(other, 6);
             PR.CopyTo(other, 9);
-            other[12] = M;
-            other[13] = Pm;
-            other[14] = DV;
+            other[M_INDEX]  = M;
+            other[PM_INDEX] = Pm;
+            other[DV_INDEX] = DV;
         }
 
         public void CopyFrom(IList<double> other)
@@ -69,9 +72,9 @@ namespace MechJebLib.PVG
             V.CopyFrom(other, 3);
             PV.CopyFrom(other, 6);
             PR.CopyFrom(other, 9);
-            M  = other[12];
-            Pm = other[13];
-            DV = other[14];
+            M  = other[M_INDEX];
+            Pm = other[PM_INDEX];
+            DV = other[DV_INDEX];
         }
 
         public static OutputLayout CreateFrom(IList<double> other)

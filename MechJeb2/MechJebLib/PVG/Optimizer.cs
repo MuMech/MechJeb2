@@ -316,6 +316,30 @@ namespace MechJebLib.PVG
             return this;
         }
 
+        private void IntegrateMassCostate()
+        {
+            double pm = 1;
+
+            for (int p = lastPhase; p >= 0; p--)
+            {
+                _terminal[p][OutputLayout.PM_INDEX] = pm;
+
+                // FIXME: okay this is harder than I thought, so here's what needs to get done I think:
+                // - need dense output high fidelity interpolant from the integrator for just the Pv 3-vector.
+                // - need to write a real simple 1-dimensional integration kernel for Pm that uses that
+                //   interpolant to integrate the Pm backwards.
+                // - then need to figure out the jump condition due to mass loss between stages.
+                // - alternatively it might be possible to use analyic expressions for Pv to integrate backwards
+                //   in closed-form without any interpolant or using RK here.
+                // - obviously, when using analytic thrust integrals it makes sense to do exactly that, so maybe
+                //   that is really the first step?
+
+                _initial[p][InputLayout.PM_INDEX] = pm;
+
+                pm += 0; // replace with jump condition between stages
+            }
+        }
+
         private void Shooting(Solution? solution = null)
         {
             using var integArray = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
@@ -359,6 +383,8 @@ namespace MechJebLib.PVG
 
                 t0 += bt;
             }
+
+            IntegrateMassCostate();
         }
 
         public Optimizer Bootstrap(V3 pv0, V3 pr0)
@@ -412,6 +438,10 @@ namespace MechJebLib.PVG
 
                 t0 += tf;
             }
+
+            IntegrateMassCostate();
+
+            CalculateResiduals();
 
             for (int p = 0; p <= lastPhase; p++)
             {
@@ -498,6 +528,8 @@ namespace MechJebLib.PVG
 
                 t0 += tf;
             }
+
+            IntegrateMassCostate();
 
             CalculateResiduals();
 
