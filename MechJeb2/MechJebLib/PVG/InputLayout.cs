@@ -20,6 +20,7 @@ namespace MechJebLib.PVG
         public const int VY_INDEX         = 4;
         public const int VZ_INDEX         = 5;
         public const int M_INDEX          = 12;
+        public const int PM_INDEX         = 13;
         public const int BT_INDEX         = 14;
         public const int INPUT_LAYOUT_LEN = 15;
 
@@ -56,7 +57,7 @@ namespace MechJebLib.PVG
             PV.CopyTo(other, 6);
             PR.CopyTo(other, 9);
             other[M_INDEX]  = M;
-            other[13]       = Pm;
+            other[PM_INDEX] = Pm;
             other[BT_INDEX] = Bt;
         }
 
@@ -67,7 +68,7 @@ namespace MechJebLib.PVG
             PV.CopyFrom(other, 6);
             PR.CopyFrom(other, 9);
             M  = other[M_INDEX];
-            Pm = other[13];
+            Pm = other[PM_INDEX];
             Bt = other[BT_INDEX];
         }
 
