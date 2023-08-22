@@ -5,6 +5,7 @@
 
 using System;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 #nullable enable
 
@@ -29,10 +30,10 @@ namespace MechJebLib.Core
         public static (double x, double fx) Solve(Func<double, object?, double> f, double xmin, double xmax, object? o = null, double rtol = 1e-9,
             int maxiter = 50)
         {
-            double c = 0.5 * (3.0 - Math.Sqrt(5.0)); //  C is the square of the inverse of the golden ratio.
+            double c = 0.5 * (3.0 - Sqrt(5.0)); //  C is the square of the inverse of the golden ratio.
             double d = 0;
             double e = 0.0;
-            double eps = Math.Sqrt(EPS);
+            double eps = Sqrt(EPS);
             double sa = xmin;
             double sb = xmax;
 
@@ -49,12 +50,12 @@ namespace MechJebLib.Core
             while (true)
             {
                 double m = 0.5 * (sa + sb);
-                double t = eps * Math.Abs(x) + rtol;
+                double t = eps * Abs(x) + rtol;
                 double t2 = 2.0 * t;
                 //
                 //  Check the stopping criterion.
                 //
-                if (Math.Abs(x - m) <= t2 - 0.5 * (sb - sa)) break;
+                if (Abs(x - m) <= t2 - 0.5 * (sb - sa)) break;
                 //
                 //  Fit a parabola.
                 //
@@ -62,21 +63,21 @@ namespace MechJebLib.Core
                 double q = r;
                 double p = q;
 
-                if (t < Math.Abs(e))
+                if (t < Abs(e))
                 {
                     r = (x - w) * (fx - fv);
                     q = (x - v) * (fx - fw);
                     p = (x - v) * q - (x - w) * r;
                     q = 2.0 * (q - r);
                     if (0.0 < q) p = -p;
-                    q = Math.Abs(q);
+                    q = Abs(q);
                     r = e;
                     e = d;
                 }
 
                 double u;
 
-                if (Math.Abs(p) < Math.Abs(0.5 * q * r) &&
+                if (Abs(p) < Abs(0.5 * q * r) &&
                     q * (sa - x) < p &&
                     p < q * (sb - x))
                 {
@@ -111,7 +112,7 @@ namespace MechJebLib.Core
                 //
                 //  F must not be evaluated too close to X.
                 //
-                if (t <= Math.Abs(d))
+                if (t <= Abs(d))
                     u = x + d;
                 else if (0.0 < d)
                     u = x + t;

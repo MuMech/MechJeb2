@@ -7,13 +7,14 @@
 
 using System;
 using System.Collections.Generic;
+using static System.Math;
 
 namespace MechJebLib.Primitives
 {
     public abstract class HBase<T> : IDisposable
     {
         // UnityCompat does no extrapolation outside of MinTime/MaxTime
-        public bool UnityCompat = false;
+        public bool UnityCompat;
 
         protected double MinTime = double.MaxValue;
         protected double MaxTime = double.MinValue;
@@ -25,8 +26,8 @@ namespace MechJebLib.Primitives
         public void Add(double time, T value)
         {
             _list[time] = new HFrame<T>(time, Allocate(value), Allocate(), Allocate(), true);
-            MinTime     = Math.Min(MinTime, time);
-            MaxTime     = Math.Max(MaxTime, time);
+            MinTime     = Min(MinTime, time);
+            MaxTime     = Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
             LastLo = -1;
         }
@@ -34,8 +35,8 @@ namespace MechJebLib.Primitives
         public void Add(double time, T value, T inTangent, T outTangent)
         {
             _list[time] = new HFrame<T>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
-            MinTime     = Math.Min(MinTime, time);
-            MaxTime     = Math.Max(MaxTime, time);
+            MinTime     = Min(MinTime, time);
+            MaxTime     = Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
             LastLo = -1;
         }

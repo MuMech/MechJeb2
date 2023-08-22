@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Threading;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.PVG
 {
@@ -166,7 +167,7 @@ namespace MechJebLib.PVG
                 Znorm += z[i] * z[i];
             }
 
-            Znorm = Math.Sqrt(Znorm);
+            Znorm = Sqrt(Znorm);
         }
 
         private bool _terminating;
@@ -287,28 +288,28 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(_phases[p].ToString());
+                Print(_phases[p].ToString());
             }
 
-            Log("solved initial: ");
+            Print("solved initial: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_initial[p]));
+                Print(DoubleArrayString(_initial[p]));
             }
 
-            Log("solved terminal: ");
+            Print("solved terminal: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_terminal[p]));
+                Print(DoubleArrayString(_terminal[p]));
             }
 
-            Log("solved residuals: ");
+            Print("solved residuals: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_residual[p]));
+                Print(DoubleArrayString(_residual[p]));
             }
 
             Status = Success() ? OptimStatus.SUCCESS : OptimStatus.FAILED;
@@ -445,28 +446,28 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(_phases[p].ToString());
+                Print(_phases[p].ToString());
             }
 
-            Log("bootstrap1 initial: ");
+            Print("bootstrap1 initial: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_initial[p]));
+                Print(DoubleArrayString(_initial[p]));
             }
 
-            Log("bootstrap1 terminal: ");
+            Print("bootstrap1 terminal: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_terminal[p]));
+                Print(DoubleArrayString(_terminal[p]));
             }
 
-            Log("bootstrap1 residuals: ");
+            Print("bootstrap1 residuals: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_residual[p]));
+                Print(DoubleArrayString(_residual[p]));
             }
 
             Status = OptimStatus.BOOTSTRAPPED;
@@ -535,28 +536,28 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(_phases[p].ToString());
+                Print(_phases[p].ToString());
             }
 
-            Log("bootstrap2 initial: ");
+            Print("bootstrap2 initial: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_initial[p]));
+                Print(DoubleArrayString(_initial[p]));
             }
 
-            Log("bootstrap2 terminal: ");
+            Print("bootstrap2 terminal: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_terminal[p]));
+                Print(DoubleArrayString(_terminal[p]));
             }
 
-            Log("bootstrap2 residuals: ");
+            Print("bootstrap2 residuals: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Log(DoubleArrayString(_residual[p]));
+                Print(DoubleArrayString(_residual[p]));
             }
 
             Status = OptimStatus.BOOTSTRAPPED;

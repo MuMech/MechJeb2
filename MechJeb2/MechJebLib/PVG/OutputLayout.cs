@@ -5,9 +5,9 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using MechJebLib.Primitives;
+using static System.Math;
 
 namespace MechJebLib.PVG
 {
@@ -26,7 +26,7 @@ namespace MechJebLib.PVG
 
         public V3 PR;
 
-        public double CostateMagnitude => Math.Sqrt(PR.sqrMagnitude + PV.sqrMagnitude);
+        public double CostateMagnitude => Sqrt(PR.sqrMagnitude + PV.sqrMagnitude);
 
         public double M;
 

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 #nullable enable
 
@@ -43,10 +43,10 @@ namespace MechJebLib.Control
 
             double delta = reference - measured;
 
-            if (Math.Abs(delta) < Deadband)
+            if (Abs(delta) < Deadband)
                 delta = 0;
             else
-                delta -= Math.Sign(delta) * Deadband;
+                delta -= Sign(delta) * Deadband;
 
             // clegg filtering on zero-crossing to remove integral windup
             if (_delta1.IsFinite() && Clegg && ((delta < 0 && _delta1 > 0) || (delta > 0 && _delta1 < 0)))

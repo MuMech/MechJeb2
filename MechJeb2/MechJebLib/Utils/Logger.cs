@@ -22,19 +22,10 @@ namespace MechJebLib.Utils
 
         private Action<object> _logger = o => { };
 
-        private void LogImpl(string message)
-        {
-            _logger(message);
-        }
+        private void PrintImpl(string message) => _logger(message);
 
-        public static void Register(Action<object> logger)
-        {
-            _instance._logger = logger;
-        }
+        public static void Register(Action<object> logger) => _instance._logger = logger;
 
-        public static void Log(string message)
-        {
-            _instance.LogImpl(message);
-        }
+        public static void Print(string message) => _instance.PrintImpl(message);
     }
 }

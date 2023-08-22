@@ -9,6 +9,7 @@ using MechJebLib.Core;
 using MechJebLib.Utils;
 using Xunit;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLibTest.Maths
 {
@@ -28,7 +29,7 @@ namespace MechJebLibTest.Maths
         public void Test(double a0)
         {
             double ans = BrentRoot.Solve((t, o) => t * t * t - a0, 0.0, 2.0, null);
-            ans.ShouldEqual(Math.Pow(a0, 1.0 / 3.0), 10 * EPS);
+            ans.ShouldEqual(Pow(a0, 1.0 / 3.0), 10 * EPS);
         }
 
         [Fact]
@@ -59,7 +60,7 @@ namespace MechJebLibTest.Maths
         public void TestGuess()
         {
             // this works normally
-            double ans = BrentRoot.Solve((t, o) => Math.Sin(t), 3, null);
+            double ans = BrentRoot.Solve((t, o) => Sin(t), 3, null);
             ans.ShouldEqual(PI, EPS2);
 
             // this throws due to not being able to precisely find the root
@@ -70,7 +71,7 @@ namespace MechJebLibTest.Maths
 
             // no root at all
             ex = Assert.Throws<Check.FailedCheck>(() =>
-                BrentRoot.Solve((t, o) => Math.Abs(t) + 1, 1, null)
+                BrentRoot.Solve((t, o) => Abs(t) + 1, 1, null)
             );
             Assert.Contains("check failed", ex.Message);
 
@@ -81,7 +82,7 @@ namespace MechJebLibTest.Maths
             Assert.Contains("check failed", ex.Message);
 
             // finds a root even though it shouldn't
-            ans = BrentRoot.Solve((t, o) => Math.Tan(t), 2, null);
+            ans = BrentRoot.Solve((t, o) => Tan(t), 2, null);
             ans.ShouldEqual(PI / 2, 21 * EPS);
         }
     }

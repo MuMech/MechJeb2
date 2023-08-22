@@ -2,7 +2,7 @@ using System;
 using AssertExtensions;
 using MechJebLib.Primitives;
 using Xunit;
-using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLibTest.Structs
 {
@@ -67,7 +67,7 @@ namespace MechJebLibTest.Structs
             double large = 1e+190;
 
             var largeV = new V3(large, large, large);
-            Assert.Equal(Math.Sqrt(3) * large, largeV.magnitude);
+            Assert.Equal(Sqrt(3) * large, largeV.magnitude);
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace MechJebLibTest.Structs
             double small = 1e-190;
             var smallV = new V3(small, small, small);
 
-            Assert.Equal(Math.Sqrt(3) * small, smallV.magnitude);
+            Assert.Equal(Sqrt(3) * small, smallV.magnitude);
         }
 
         [Fact]
@@ -85,9 +85,9 @@ namespace MechJebLibTest.Structs
             double large = 1e+190;
             var largeV = new V3(large, large, large);
 
-            Assert.Equal(1.0 / Math.Sqrt(3), largeV.normalized[0]);
-            Assert.Equal(1.0 / Math.Sqrt(3), largeV.normalized[1]);
-            Assert.Equal(1.0 / Math.Sqrt(3), largeV.normalized[2]);
+            Assert.Equal(1.0 / Sqrt(3), largeV.normalized[0]);
+            Assert.Equal(1.0 / Sqrt(3), largeV.normalized[1]);
+            Assert.Equal(1.0 / Sqrt(3), largeV.normalized[2]);
         }
 
         [Fact]
@@ -96,9 +96,9 @@ namespace MechJebLibTest.Structs
             double small = 1e-190;
             var smallV = new V3(small, small, small);
 
-            Assert.Equal(1.0 / Math.Sqrt(3), smallV.normalized[0]);
-            Assert.Equal(1.0 / Math.Sqrt(3), smallV.normalized[1]);
-            Assert.Equal(1.0 / Math.Sqrt(3), smallV.normalized[2]);
+            Assert.Equal(1.0 / Sqrt(3), smallV.normalized[0]);
+            Assert.Equal(1.0 / Sqrt(3), smallV.normalized[1]);
+            Assert.Equal(1.0 / Sqrt(3), smallV.normalized[2]);
         }
 
         [Fact]
@@ -127,14 +127,14 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void CartesianToSpherical()
         {
-            new V3(1, 1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1 / Math.Sqrt(3)), PI / 4));
-            new V3(1, 1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1 / Math.Sqrt(3)), PI / 4));
-            new V3(1, -1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1 / Math.Sqrt(3)), 7 * PI / 4));
-            new V3(1, -1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1 / Math.Sqrt(3)), 7 * PI / 4));
-            new V3(-1, 1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1 / Math.Sqrt(3)), 3 * PI / 4));
-            new V3(-1, 1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1 / Math.Sqrt(3)), 3 * PI / 4));
-            new V3(-1, -1, 1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(1 / Math.Sqrt(3)), 5 * PI / 4));
-            new V3(-1, -1, -1).cart2sph.ShouldEqual(new V3(Math.Sqrt(3), Math.Acos(-1 / Math.Sqrt(3)), 5 * PI / 4));
+            new V3(1, 1, 1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(1 / Sqrt(3)), PI / 4));
+            new V3(1, 1, -1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(-1 / Sqrt(3)), PI / 4));
+            new V3(1, -1, 1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(1 / Sqrt(3)), 7 * PI / 4));
+            new V3(1, -1, -1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(-1 / Sqrt(3)), 7 * PI / 4));
+            new V3(-1, 1, 1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(1 / Sqrt(3)), 3 * PI / 4));
+            new V3(-1, 1, -1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(-1 / Sqrt(3)), 3 * PI / 4));
+            new V3(-1, -1, 1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(1 / Sqrt(3)), 5 * PI / 4));
+            new V3(-1, -1, -1).cart2sph.ShouldEqual(new V3(Sqrt(3), Acos(-1 / Sqrt(3)), 5 * PI / 4));
         }
     }
 }

@@ -48,7 +48,7 @@ namespace MechJebLib.Utils
             Result      = default!;
             ResultReady = false;
             _task       = null;
-            Log($"Exception in {GetType()}: {task.Exception}");
+            Print($"Exception in {GetType()}: {task.Exception}");
         }
 
         protected virtual void OnTaskCancelled(Task<T> task) => _task = null;

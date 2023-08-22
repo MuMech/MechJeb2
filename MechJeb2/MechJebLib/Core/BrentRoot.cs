@@ -8,6 +8,7 @@
 using System;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.Core
@@ -49,7 +50,7 @@ namespace MechJebLib.Core
             if (fa * fb > 0)
                 throw new ArgumentException("Brent's rootfinding method: guess does not bracket the root");
 
-            if (Math.Abs(fa) < Math.Abs(fb))
+            if (Abs(fa) < Abs(fb))
             {
                 (a, b)   = (b, a);
                 (fa, fb) = (fb, fa);
@@ -82,14 +83,14 @@ namespace MechJebLib.Core
                 return a;
 
             // initial guess to expand search for the zero
-            double dx = Math.Abs(x / 50);
+            double dx = Abs(x / 50);
 
             // if x is zero use a larger expansion
             if (dx <= 2.24e-15)
                 dx = 1 / 50d;
 
             // expand by sqrt(2) each iteration
-            double sqrt2 = Math.Sqrt(2);
+            double sqrt2 = Sqrt(2);
 
             // iterate until we find a range that brackets the root
             while (fa > 0 == fb > 0)
@@ -145,7 +146,7 @@ namespace MechJebLib.Core
                     e  = d;
                 }
 
-                if (Math.Abs(fc) < Math.Abs(fb))
+                if (Abs(fc) < Abs(fb))
                 {
                     a  = b;
                     b  = c;
@@ -156,17 +157,17 @@ namespace MechJebLib.Core
                 }
 
                 double m = 0.5 * (c - b);
-                double toler = 2.0 * rtol * Math.Max(Math.Abs(b), 1.0);
-                if (Math.Abs(m) <= toler || fb == 0.0)
+                double toler = 2.0 * rtol * Max(Abs(b), 1.0);
+                if (Abs(m) <= toler || fb == 0.0)
                 {
                     // try one more round to improve fc if fb does not match the sign
-                    if (maybeOneMore && Math.Sign(fb) != sign)
+                    if (maybeOneMore && Sign(fb) != sign)
                         maybeOneMore = false;
                     else
                         break;
                 }
 
-                if (Math.Abs(e) < toler || Math.Abs(fa) <= Math.Abs(fb))
+                if (Abs(e) < toler || Abs(fa) <= Abs(fb))
                 {
                     // Bisection
                     d = m;
@@ -200,7 +201,7 @@ namespace MechJebLib.Core
                         p = -p;
 
                     // Acceptibility check
-                    if (2.0 * p < 3.0 * m * q - Math.Abs(toler * q) && p < Math.Abs(0.5 * e * q))
+                    if (2.0 * p < 3.0 * m * q - Abs(toler * q) && p < Abs(0.5 * e * q))
                     {
                         e = d;
                         d = p / q;
@@ -215,7 +216,7 @@ namespace MechJebLib.Core
                 a  = b;
                 fa = fb;
 
-                if (Math.Abs(d) > toler)
+                if (Abs(d) > toler)
                     b += d;
                 else if (b > c)
                     b -= toler;
@@ -228,10 +229,10 @@ namespace MechJebLib.Core
                 Check.Finite(fa);
 
                 if (i++ >= maxiter && maxiter > 0)
-                    throw new TimeoutException("Brent's rootfinding method: maximum iterations exceeded: " + Math.Abs(a - c));
+                    throw new TimeoutException("Brent's rootfinding method: maximum iterations exceeded: " + Abs(a - c));
             }
 
-            if (sign != 0 && Math.Sign(fb) != sign)
+            if (sign != 0 && Sign(fb) != sign)
                 return c;
 
             return b;

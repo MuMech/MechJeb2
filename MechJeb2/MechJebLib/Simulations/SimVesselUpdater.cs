@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -9,6 +8,7 @@ using MechJebLib.Simulations.PartModules;
 using MuMech;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.Simulations
 {
@@ -154,7 +154,7 @@ namespace MechJebLib.Simulations
             {
                 if (kspEngine is null)
                 {
-                    Log("Internal FuelFlowSimluation Error: SimModuleEngines mapped to wrong type");
+                    Print("Internal FuelFlowSimluation Error: SimModuleEngines mapped to wrong type");
                     return;
                 }
 
@@ -168,7 +168,7 @@ namespace MechJebLib.Simulations
                 if (engine.isModuleEnginesRF && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
                     engine.ModuleResiduals = doubleVal;
 
-                part.EngineResiduals = Math.Max(part.EngineResiduals, engine.ModuleResiduals);
+                part.EngineResiduals = Max(part.EngineResiduals, engine.ModuleResiduals);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -176,7 +176,7 @@ namespace MechJebLib.Simulations
             {
                 if (kspModuleDockingNode is null)
                 {
-                    Log("Internal FuelFlowSimluation Error: SimModuleDockingNode mapped to wrong type");
+                    Print("Internal FuelFlowSimluation Error: SimModuleDockingNode mapped to wrong type");
                     return;
                 }
 
@@ -191,7 +191,7 @@ namespace MechJebLib.Simulations
             {
                 if (kspModuleDecouple is null)
                 {
-                    Log("Internal FuelFlowSimluation Error: SimModuleDecouple mapped to wrong type");
+                    Print("Internal FuelFlowSimluation Error: SimModuleDecouple mapped to wrong type");
                     return;
                 }
 
@@ -221,7 +221,7 @@ namespace MechJebLib.Simulations
             {
                 if (kspModuleRCS is null)
                 {
-                    Log("Internal FuelFlowSimluation Error: SimModuleRCS mapped to wrong type");
+                    Print("Internal FuelFlowSimluation Error: SimModuleRCS mapped to wrong type");
                     return;
                 }
 

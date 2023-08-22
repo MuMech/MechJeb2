@@ -5,10 +5,10 @@
 
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using MechJebLib.Core.Functions;
 using MechJebLib.Utils;
+using static System.Math;
 
 namespace MechJebLib.Primitives
 {
@@ -18,16 +18,13 @@ namespace MechJebLib.Primitives
 
         private static readonly ObjectPool<Hn> _pool = new ObjectPool<Hn>(New, Clear);
 
-        private static Hn New()
-        {
-            return new Hn();
-        }
+        private static Hn New() => new Hn();
 
         public void Add(double time, double[] value, double[] inTangent, double[] outTangent)
         {
             _list[time] = new HFrame<Vn>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
-            MinTime     = Math.Min(MinTime, time);
-            MaxTime     = Math.Max(MaxTime, time);
+            MinTime     = Min(MinTime, time);
+            MaxTime     = Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
             LastLo = -1;
         }
@@ -61,10 +58,7 @@ namespace MechJebLib.Primitives
             _pool.Release(this);
         }
 
-        protected override Vn Allocate()
-        {
-            return Vn.Rent(N);
-        }
+        protected override Vn Allocate() => Vn.Rent(N);
 
         private Vn Allocate(IReadOnlyList<double> value)
         {
@@ -120,10 +114,7 @@ namespace MechJebLib.Primitives
             Vn.Return(frame.OutTangent);
         }
 
-        private static void Clear(Hn h)
-        {
-            h.Clear();
-        }
+        private static void Clear(Hn h) => h.Clear();
 
         public override void Clear()
         {

@@ -5,7 +5,7 @@
 
 #nullable enable
 
-using System;
+using static System.Math;
 
 namespace MechJebLib.Primitives
 {
@@ -35,17 +35,15 @@ namespace MechJebLib.Primitives
         {
             double massScale = m0;
             double lengthScale = r0;
-            double velocityScale = Math.Sqrt(mu / lengthScale);
+            double velocityScale = Sqrt(mu / lengthScale);
             return new Scale(lengthScale, velocityScale, massScale);
         }
 
-        public Scale ConvertTo(Scale other)
-        {
-            return new Scale(
+        public Scale ConvertTo(Scale other) =>
+            new Scale(
                 other.LengthScale / LengthScale,
                 other.VelocityScale / VelocityScale,
                 other.MassScale / MassScale
             );
-        }
     }
 }

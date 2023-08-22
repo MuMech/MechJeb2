@@ -11,6 +11,7 @@ using MechJebLib.Core;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+using static System.Math;
 
 namespace MechJebLib.Maneuvers
 {
@@ -92,7 +93,7 @@ namespace MechJebLib.Maneuvers
         public static (V3 V, double dt) Maneuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0, double moonSOI,
             V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity)
         {
-            Statics.Log(
+            Statics.Print(
                 $"ManeuverToReturnFromMoon({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
             const double DIFFSTEP = 1e-9;
             const double EPSX = 1e-4;
@@ -116,8 +117,8 @@ namespace MechJebLib.Maneuvers
             bndl[3] = dtmin;
             bndu[3] = dtmax;
 
-            var moonScale = Scale.Create(moonMu, Math.Sqrt(r0.magnitude * moonSOI));
-            var planetScale = Scale.Create(centralMu, Math.Sqrt(moonR0.magnitude * peR));
+            var moonScale = Scale.Create(moonMu, Sqrt(r0.magnitude * moonSOI));
+            var planetScale = Scale.Create(centralMu, Sqrt(moonR0.magnitude * peR));
             Scale moonToPlanetScale = moonScale.ConvertTo(planetScale);
 
 

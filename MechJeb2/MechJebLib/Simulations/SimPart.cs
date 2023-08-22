@@ -1,10 +1,9 @@
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Text;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.Simulations
 {
@@ -128,7 +127,7 @@ namespace MechJebLib.Simulations
             if (!Resources.TryGetValue(resourceId, out SimResource resource))
                 return;
 
-            resource.Residual     = Math.Max(resource.Residual, residual);
+            resource.Residual     = Max(resource.Residual, residual);
             Resources[resourceId] = resource;
         }
 
@@ -142,7 +141,7 @@ namespace MechJebLib.Simulations
             {
                 SimResource resource = Resources[id];
                 resource.Residual = 0;
-                Resources[id] = resource;
+                Resources[id]     = resource;
             }
         }
 
@@ -185,7 +184,7 @@ namespace MechJebLib.Simulations
 
                 double dt = (resource.Amount - resource.ResidualThreshold) / resourceDrain;
 
-                maxTime = Math.Min(maxTime, dt);
+                maxTime = Min(maxTime, dt);
             }
 
             return maxTime;
@@ -208,7 +207,7 @@ namespace MechJebLib.Simulations
 
                 double dt = (resource.Amount - resource.ResidualThreshold) / resourceDrain;
 
-                maxTime = Math.Min(maxTime, dt);
+                maxTime = Min(maxTime, dt);
             }
 
             return maxTime;

@@ -9,6 +9,7 @@ using System.Globalization;
 using MechJebLib.Primitives;
 using Xunit.Sdk;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace AssertExtensions
 {
@@ -60,7 +61,7 @@ namespace AssertExtensions
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
-            if (Math.Abs(actual) > epsilon)
+            if (Abs(actual) > epsilon)
                 throw new EqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", 0.0),
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
@@ -73,7 +74,7 @@ namespace AssertExtensions
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
-            if (Math.Abs(actual.x) > epsilon || Math.Abs(actual.y) > epsilon || Math.Abs(actual.z) > epsilon)
+            if (Abs(actual.x) > epsilon || Abs(actual.y) > epsilon || Abs(actual.z) > epsilon)
                 throw new EqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", 0.0),
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)

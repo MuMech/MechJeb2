@@ -30,7 +30,7 @@ namespace MuMech
         public readonly EditableDoubleMult DesiredAttachAltFixed = new EditableDoubleMult(DESIRED_ATTACH_ALT_DEFAULT, 1000);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DesiredFPA = new EditableDoubleMult(DESIRED_FPA_DEFAULT, PI / 180);
+        public readonly EditableDoubleMult DesiredFPA = new EditableDoubleMult(DESIRED_FPA_DEFAULT, Math.PI / 180);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult DynamicPressureTrigger = new EditableDoubleMult(DYNAMIC_PRESSURE_TRIGGER_DEFAULT, 1000);

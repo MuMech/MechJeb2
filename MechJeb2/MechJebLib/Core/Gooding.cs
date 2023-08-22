@@ -7,6 +7,7 @@ using System;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable CompareOfFloatsByEqualityOperator
@@ -73,7 +74,7 @@ namespace MechJebLib.Core
 
             V3 uy2 = V3.Cross(uz2, ux2).normalized;
 
-            theta += TAU * Math.Abs(nrev);
+            theta += TAU * Abs(nrev);
 
             double VR11, VT11, VR12, VT12;
             double VR21, VT21, VR22, VT22;
@@ -132,17 +133,17 @@ namespace MechJebLib.Core
 
             double VR11 = 0.0, VT11 = 0.0, VR12 = 0.0, VT12 = 0.0;
             double VR21 = 0.0, VT21 = 0.0, VR22 = 0.0, VT22 = 0.0;
-            int M = Convert.ToInt32(Math.Floor(TH / (2.0 * Math.PI)));
-            double THR2 = TH / 2.0 - M * Math.PI;
+            int M = Convert.ToInt32(Floor(TH / (2.0 * PI)));
+            double THR2 = TH / 2.0 - M * PI;
             double DR = R1 - R2;
             double R1R2 = R1 * R2;
-            double R1R2TH = 4.0 * R1R2 * Math.Pow(Math.Sin(THR2), 2);
-            double CSQ = Math.Pow(DR, 2) + R1R2TH;
-            double C = Math.Sqrt(CSQ);
+            double R1R2TH = 4.0 * R1R2 * Pow(Sin(THR2), 2);
+            double CSQ = Pow(DR, 2) + R1R2TH;
+            double C = Sqrt(CSQ);
             double S = (R1 + R2 + C) / 2.0;
-            double GMS = Math.Sqrt(GM * S / 2.0);
+            double GMS = Sqrt(GM * S / 2.0);
             double QSQFM1 = C / S;
-            double Q = Math.Sqrt(R1R2) * Math.Cos(THR2) / S;
+            double Q = Sqrt(R1R2) * Cos(THR2) / S;
             double RHO;
             double SIG;
             if (C != 0.0)
@@ -156,7 +157,7 @@ namespace MechJebLib.Core
                 SIG = 1.0;
             }
 
-            double T = 4.0 * GMS * TDELT / Math.Pow(S, 2);
+            double T = 4.0 * GMS * TDELT / Pow(S, 2);
 
             (int N, double X1, double X2) = XLAMB(M, Q, QSQFM1, T);
 
@@ -170,7 +171,7 @@ namespace MechJebLib.Core
 
                 (_, QZMINX, QZPLX, ZPLQX) = TLAMB(M, Q, QSQFM1, X, -1);
 
-                double VT2 = GMS * ZPLQX * Math.Sqrt(SIG);
+                double VT2 = GMS * ZPLQX * Sqrt(SIG);
                 double VR1 = GMS * (QZMINX - QZPLX * RHO) / R1;
                 double VT1 = VT2 / R1;
                 double VR2 = -GMS * (QZMINX + QZPLX * RHO) / R2;
@@ -209,7 +210,7 @@ namespace MechJebLib.Core
             const double C3 = 0.15;
             const double C41 = 1.0;
             const double C42 = 0.24;
-            double THR2 = Math.Atan2(QSQFM1, 2.0 * Q) / Math.PI;
+            double THR2 = Atan2(QSQFM1, 2.0 * Q) / PI;
             double T, T0, DT, D2T, D3T;
             double D2T2 = 0.0;
             double TMIN = 0.0;
@@ -236,21 +237,21 @@ namespace MechJebLib.Core
                 else
                 {
                     X = -TDIFF / (TDIFF + 4.0);
-                    W = X + C0 * Math.Sqrt(2.0 * (1.0 - THR2));
+                    W = X + C0 * Sqrt(2.0 * (1.0 - THR2));
                     if (W < 0.0)
-                        X -= Math.Sqrt(Math.Pow(-W, 1.0 / 8.0)) * (X + Math.Sqrt(TDIFF / (TDIFF + 1.5 * T0)));
+                        X -= Sqrt(Pow(-W, 1.0 / 8.0)) * (X + Sqrt(TDIFF / (TDIFF + 1.5 * T0)));
                     W =  4.0 / (4.0 + TDIFF);
-                    X *= 1.0 + X * (C1 * W - C2 * X * Math.Sqrt(W));
+                    X *= 1.0 + X * (C1 * W - C2 * X * Sqrt(W));
                 }
             }
             else
             {
                 /* "WITH MUTIREVS, FIRST GET T(MIN) AS BASIS FOR STARTER */
-                XM = 1.0 / (1.5 * (M + 0.5) * Math.PI);
+                XM = 1.0 / (1.5 * (M + 0.5) * PI);
                 if (THR2 < 0.5)
-                    XM = Math.Pow(2.0 * THR2, 1.0 / 8.0) * XM;
+                    XM = Pow(2.0 * THR2, 1.0 / 8.0) * XM;
                 if (THR2 > 0.5)
-                    XM = (2.0 - Math.Pow(2.0 - 2.0 * THR2, 1.0 / 8.0)) * XM;
+                    XM = (2.0 - Pow(2.0 - 2.0 * THR2, 1.0 / 8.0)) * XM;
                 /* "STARTER FOR TMIN" */
                 for (int I = 1; I <= 12; I++)
                 {
@@ -259,7 +260,7 @@ namespace MechJebLib.Core
                         goto Two;
                     double XMOLD = XM;
                     XM -= DT * D2T / (D2T * D2T - DT * D3T / 2.0);
-                    double XTEST = Math.Abs(XMOLD / XM - 1.0);
+                    double XTEST = Abs(XMOLD / XM - 1.0);
                     if (XTEST <= TOL)
                         goto Two;
                 }
@@ -287,11 +288,11 @@ namespace MechJebLib.Core
 
                 N = 3;
                 if (D2T == 0.0)
-                    D2T = 6.0 * M * Math.PI;
-                X    = Math.Sqrt(TDIFFM / (D2T / 2.0 + TDIFFM / Math.Pow(1.0 - XM, 2.0)));
+                    D2T = 6.0 * M * PI;
+                X    = Sqrt(TDIFFM / (D2T / 2.0 + TDIFFM / Pow(1.0 - XM, 2.0)));
                 W    = XM + X;
-                W    = W * 4.0 / (4.0 + TDIFFM) + Math.Pow(1.0 - W, 2.0);
-                X    = X * (1.0 - (1.0 + M + C41 * (THR2 - 0.5)) / (1.0 + C3 * M) * X * (C1 * W + C2 * X * Math.Sqrt(W))) + XM;
+                W    = W * 4.0 / (4.0 + TDIFFM) + Pow(1.0 - W, 2.0);
+                X    = X * (1.0 - (1.0 + M + C41 * (THR2 - 0.5)) / (1.0 + C3 * M) * X * (C1 * W + C2 * X * Sqrt(W))) + XM;
                 D2T2 = D2T / 2.0;
                 if (X >= 1.0)
                 {
@@ -326,16 +327,16 @@ namespace MechJebLib.Core
             TDIFF = TIN - T0;
             if (TDIFF <= 0.0)
             {
-                X = XM - Math.Sqrt(TDIFFM / (D2T2 - TDIFFM * (D2T2 / TDIFF0 - 1.0 / Math.Pow(XM, 2))));
+                X = XM - Sqrt(TDIFFM / (D2T2 - TDIFFM * (D2T2 / TDIFF0 - 1.0 / Pow(XM, 2))));
             }
             else
             {
                 X = -TDIFF / (TDIFF + 4.0);
-                W = X + C0 * Math.Sqrt(2.0 * (1.0 - THR2));
+                W = X + C0 * Sqrt(2.0 * (1.0 - THR2));
                 if (W < 0.0)
-                    X -= Math.Sqrt(Math.Pow(-W, 1.0 / 8.0)) * (X + Math.Sqrt(TDIFF / (TDIFF + 1.5 * T0)));
+                    X -= Sqrt(Pow(-W, 1.0 / 8.0)) * (X + Sqrt(TDIFF / (TDIFF + 1.5 * T0)));
                 W =  4.0 / (4.0 + TDIFF);
-                X *= 1.0 + (1.0 + M + C42 * (THR2 - 0.5)) / (1.0 + C3 * M) * X * (C1 * W - C2 * X * Math.Sqrt(W));
+                X *= 1.0 + (1.0 + M + C42 * (THR2 - 0.5)) / (1.0 + C3 * M) * X * (C1 * W - C2 * X * Sqrt(W));
                 if (X <= -1.0)
                 {
                     N -= 1;
@@ -378,11 +379,11 @@ namespace MechJebLib.Core
                 D3T = 0.0;
             }
 
-            if (LM1 || M > 0.0 || X < 0.0 || Math.Abs(U) > SW)
+            if (LM1 || M > 0.0 || X < 0.0 || Abs(U) > SW)
             {
                 /* "DIRECT COMPUTATION (NOT SERIES)" -- Gooding */
-                double Y = Math.Sqrt(Math.Abs(U));
-                double Z = Math.Sqrt(QSQFM1 + QSQ * XSQ);
+                double Y = Sqrt(Abs(U));
+                double Z = Sqrt(QSQFM1 + QSQ * XSQ);
                 double QX = Q * X;
 
                 double A = 0.0;
@@ -429,13 +430,13 @@ namespace MechJebLib.Core
                     double F = A * Y;
                     if (X <= 1.0)
                     {
-                        T = M * Math.PI + Math.Atan2(F, G);
+                        T = M * PI + Atan2(F, G);
                     }
                     else
                     {
                         if (F > SW)
                         {
-                            T = Math.Log(F + G);
+                            T = Log(F + G);
                         }
                         else
                         {
