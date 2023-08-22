@@ -78,14 +78,10 @@ namespace MechJebLib.Core
         public static double CircularVelocity(double mu, double r) => Sqrt(mu / r);
 
         public static double PeriapsisFromKeplerian(double sma, double ecc) => sma * (1 - ecc);
+        public static Dual   PeriapsisFromKeplerian(Dual sma, Dual ecc)     => sma * (1 - ecc);
 
-        public static double ApoapsisFromKeplerian(double sma, double ecc, bool hyperbolic = true)
-        {
-            double apo = sma * (1 + ecc);
-            if (apo >= 0)
-                return apo;
-            return hyperbolic ? apo : double.MaxValue;
-        }
+        public static double ApoapsisFromKeplerian(double sma, double ecc) => sma * (1 + ecc);
+        public static Dual   ApoapsisFromKeplerian(Dual sma, Dual ecc)     => sma * (1 + ecc);
 
         public static double PeriapsisFromStateVectors(double mu, V3 r, V3 v)
         {
@@ -94,16 +90,36 @@ namespace MechJebLib.Core
             return PeriapsisFromKeplerian(sma, ecc);
         }
 
-        public static double ApoapsisFromStateVectors(double mu, V3 r, V3 v, bool hyperbolic = true)
+        public static Dual PeriapsisFromStateVectors(Dual mu, DualV3 r, DualV3 v)
+        {
+            Dual sma, ecc;
+            (sma, ecc) = SmaEccFromStateVectors(mu, r, v);
+            return PeriapsisFromKeplerian(sma, ecc);
+        }
+
+        public static double ApoapsisFromStateVectors(double mu, V3 r, V3 v)
         {
             double sma, ecc;
             (sma, ecc) = SmaEccFromStateVectors(mu, r, v);
-            return ApoapsisFromKeplerian(sma, ecc, hyperbolic);
+            return ApoapsisFromKeplerian(sma, ecc);
+        }
+
+        public static Dual ApoapsisFromStateVectors(Dual mu, DualV3 r, DualV3 v)
+        {
+            Dual sma, ecc;
+            (sma, ecc) = SmaEccFromStateVectors(mu, r, v);
+            return ApoapsisFromKeplerian(sma, ecc);
         }
 
         public static double EccFromStateVectors(double mu, V3 r, V3 v)
         {
             V3 eccvec = V3.Cross(v / mu, V3.Cross(r, v)) - r.normalized;
+            return eccvec.magnitude;
+        }
+
+        public static Dual EccFromStateVectors(Dual mu, DualV3 r, DualV3 v)
+        {
+            DualV3 eccvec = DualV3.Cross(v / mu, DualV3.Cross(r, v)) - r.normalized;
             return eccvec.magnitude;
         }
 
@@ -114,7 +130,16 @@ namespace MechJebLib.Core
             return (sma, Sqrt(Max(1 - h.sqrMagnitude / (sma * mu), 0)));
         }
 
+        public static (Dual sma, Dual ecc) SmaEccFromStateVectors(Dual mu, DualV3 r, DualV3 v)
+        {
+            var h = DualV3.Cross(r, v);
+            Dual sma = SmaFromStateVectors(mu, r, v);
+            return (sma, Dual.Sqrt(Dual.Max(1 - h.sqrMagnitude / (sma * mu), 0)));
+        }
+
         public static double SmaFromStateVectors(double mu, V3 r, V3 v) => mu / (2.0 * mu / r.magnitude - V3.Dot(v, v));
+
+        public static Dual SmaFromStateVectors(Dual mu, DualV3 r, DualV3 v) => mu / (2.0 * mu / r.magnitude - DualV3.Dot(v, v));
 
         public static double IncFromStateVectors(V3 r, V3 v)
         {
