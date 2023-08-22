@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.PVG
 {
@@ -69,10 +70,7 @@ namespace MechJebLib.PVG
             }
         }
 
-        public Optimizer? GetOptimizer()
-        {
-            return _optimizer;
-        }
+        public Optimizer? GetOptimizer() => _optimizer;
 
         private Optimizer ConvergedOptimization(Optimizer.OptimizerBuilder builder, Solution solution)
         {
@@ -105,7 +103,7 @@ namespace MechJebLib.PVG
             (_, _, _, _, _, double tanof, _) =
                 Maths.KeplerianFromStateVectors(_mu, rf, vf);
 
-            if (_attachAltFlag || Math.Abs(ClampPi(tanof)) < PI / 2.0)
+            if (_attachAltFlag || Abs(ClampPi(tanof)) < PI / 2.0)
                 return pvg;
 
             ApplyFPA(builder);
@@ -279,7 +277,7 @@ namespace MechJebLib.PVG
             (_, _, _, _, _, double tanof, _) =
                 Maths.KeplerianFromStateVectors(_mu, rf, vf);
 
-            return Math.Abs(ClampPi(tanof)) > PI / 2.0 ? pvg2 : pvg3;
+            return Abs(ClampPi(tanof)) > PI / 2.0 ? pvg2 : pvg3;
         }
 
         private void ForceNumericalIntegration()
@@ -304,7 +302,7 @@ namespace MechJebLib.PVG
                         continue;
 
                     if (!_phases[i].Coast)
-                        _phases[i].bt = Math.Min(oldSolution.Bt(j, _t0), _phases[i].bt);
+                        _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].bt);
                     else
                         _phases[i].bt = oldSolution.Bt(j, _t0);
                 }
@@ -322,9 +320,6 @@ namespace MechJebLib.PVG
             return newphases;
         }
 
-        public static AscentBuilder Builder()
-        {
-            return new AscentBuilder();
-        }
+        public static AscentBuilder Builder() => new AscentBuilder();
     }
 }

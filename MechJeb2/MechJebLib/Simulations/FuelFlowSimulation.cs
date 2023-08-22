@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using MechJebLib.Simulations.PartModules;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.Simulations
 {
@@ -113,7 +114,7 @@ namespace MechJebLib.Simulations
 
                 // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
                 // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
-                if (Math.Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
+                if (Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
                 {
                     ClearResiduals();
                     ComputeRcsMaxValues(vessel);
@@ -351,7 +352,7 @@ namespace MechJebLib.Simulations
             double maxTime = double.MaxValue;
 
             foreach (SimPart part in _partsWithRCSDrains)
-                maxTime = Math.Min(part.RCSMaxTime(), maxTime);
+                maxTime = Min(part.RCSMaxTime(), maxTime);
 
             return maxTime;
         }
@@ -370,7 +371,7 @@ namespace MechJebLib.Simulations
             double maxTime = double.MaxValue;
 
             foreach (SimPart part in _partsWithResourceDrains)
-                maxTime = Math.Min(part.ResourceMaxTime(), maxTime);
+                maxTime = Min(part.ResourceMaxTime(), maxTime);
 
             return maxTime;
         }
@@ -378,8 +379,8 @@ namespace MechJebLib.Simulations
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
         {
-            double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Math.Log(startMass / endMass);
-            double rcsISP = rcsDeltaV / (G0 * Math.Log(startMass / endMass));
+            double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass);
+            double rcsISP = rcsDeltaV / (G0 * Log(startMass / endMass));
 
             if (_currentSegment.RcsISP == 0)
                 _currentSegment.RcsISP = rcsISP;
@@ -411,8 +412,8 @@ namespace MechJebLib.Simulations
             double thrust = _currentSegment.Thrust;
             double endMass = vessel.Mass;
             double deltaTime = _time - _currentSegment.StartTime;
-            double deltaV = startMass > endMass ? thrust * deltaTime / (startMass - endMass) * Math.Log(startMass / endMass) : 0;
-            double isp = startMass > endMass ? deltaV / (G0 * Math.Log(startMass / endMass)) : 0;
+            double deltaV = startMass > endMass ? thrust * deltaTime / (startMass - endMass) * Log(startMass / endMass) : 0;
+            double isp = startMass > endMass ? deltaV / (G0 * Log(startMass / endMass)) : 0;
 
             _currentSegment.DeltaTime = deltaTime;
             _currentSegment.EndMass   = endMass;

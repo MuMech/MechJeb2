@@ -13,6 +13,7 @@ using MechJebLib.Primitives;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLibTest.Maths
 {
@@ -196,20 +197,20 @@ namespace MechJebLibTest.Maths
             Assert.Equal(0, dv.z, 9);
 
             r0 = new V3(r185, 0, 0);
-            v0 = new V3(v185 / Math.Sqrt(2), v185 / Math.Sqrt(2), 0);
+            v0 = new V3(v185 / Sqrt(2), v185 / Sqrt(2), 0);
 
             dv = Maneuvers.DeltaVToChangeFPA(r0, v0, 0);
-            Assert.Equal(-v185 / Math.Sqrt(2), dv.x, 9);
-            Assert.Equal(v185 - v185 / Math.Sqrt(2), dv.y, 9);
+            Assert.Equal(-v185 / Sqrt(2), dv.x, 9);
+            Assert.Equal(v185 - v185 / Sqrt(2), dv.y, 9);
             Assert.Equal(0, dv.z, 9);
 
             r0 = new V3(r185, 0, 0);
-            v0 = new V3(v185 / Math.Sqrt(2), 0, v185 / Math.Sqrt(2));
+            v0 = new V3(v185 / Sqrt(2), 0, v185 / Sqrt(2));
 
             dv = Maneuvers.DeltaVToChangeFPA(r0, v0, 0);
-            Assert.Equal(-v185 / Math.Sqrt(2), dv.x, 9);
+            Assert.Equal(-v185 / Sqrt(2), dv.x, 9);
             Assert.Equal(0, dv.y, 9);
-            Assert.Equal(v185 - v185 / Math.Sqrt(2), dv.z, 9);
+            Assert.Equal(v185 - v185 / Sqrt(2), dv.z, 9);
         }
 
         [Fact]
@@ -230,10 +231,10 @@ namespace MechJebLibTest.Maths
             (pitch, heading) = MechJebLib.Core.Maths.ECIToPitchHeading(new V3(10, 10, 0), new V3(10, 10, 0));
             Assert.Equal(Deg2Rad(90), pitch, 9);
             Assert.Equal(Deg2Rad(90), heading, 9);
-            (pitch, heading) = MechJebLib.Core.Maths.ECIToPitchHeading(new V3(10, 10, 0), new V3(10, 10, Math.Sqrt(200)));
+            (pitch, heading) = MechJebLib.Core.Maths.ECIToPitchHeading(new V3(10, 10, 0), new V3(10, 10, Sqrt(200)));
             Assert.Equal(Deg2Rad(45), pitch, 9);
             Assert.Equal(0, heading, 9);
-            (pitch, heading) = MechJebLib.Core.Maths.ECIToPitchHeading(new V3(10, 10, 0), new V3(10, 10, -Math.Sqrt(200)));
+            (pitch, heading) = MechJebLib.Core.Maths.ECIToPitchHeading(new V3(10, 10, 0), new V3(10, 10, -Sqrt(200)));
             Assert.Equal(Deg2Rad(45), pitch, 9);
             Assert.Equal(Deg2Rad(180), heading, 9);
         }
@@ -244,11 +245,11 @@ namespace MechJebLibTest.Maths
             double inc = MechJebLib.Core.Maths.IncFromStateVectors(new V3(10, 10, 0), new V3(0, 10, 0));
             Assert.Equal(0, inc);
             inc = MechJebLib.Core.Maths.IncFromStateVectors(new V3(10, 10, 0), new V3(0, 0, 10));
-            Assert.Equal(Math.PI / 2, inc);
+            Assert.Equal(PI / 2, inc);
             inc = MechJebLib.Core.Maths.IncFromStateVectors(new V3(10, 10, 0), new V3(0, -10, 0));
-            Assert.Equal(Math.PI, inc);
+            Assert.Equal(PI, inc);
             inc = MechJebLib.Core.Maths.IncFromStateVectors(new V3(10, 10, 0), new V3(0, 0, -10));
-            Assert.Equal(Math.PI / 2, inc);
+            Assert.Equal(PI / 2, inc);
         }
 
         [Fact]
@@ -258,15 +259,15 @@ namespace MechJebLibTest.Maths
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], 0, 9);
             Assert.Equal(vf[2], 10, 9);
-            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), Math.PI / 2);
+            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), PI / 2);
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], 10, 9);
             Assert.Equal(vf[2], 0, 9);
-            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), Math.PI);
+            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), PI);
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], 0, 9);
             Assert.Equal(vf[2], -10, 9);
-            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), 3 * Math.PI / 2);
+            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), 3 * PI / 2);
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], -10, 9);
             Assert.Equal(vf[2], 0, 9);
@@ -274,15 +275,15 @@ namespace MechJebLibTest.Maths
             Assert.Equal(vf[0], 10, 9);
             Assert.Equal(vf[1], 0, 9);
             Assert.Equal(vf[2], 10, 9);
-            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), Math.PI / 2);
+            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), PI / 2);
             Assert.Equal(vf[0], 10, 9);
             Assert.Equal(vf[1], 10, 9);
             Assert.Equal(vf[2], 0, 9);
-            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), Math.PI);
+            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), PI);
             Assert.Equal(vf[0], 10, 9);
             Assert.Equal(vf[1], 0, 9);
             Assert.Equal(vf[2], -10, 9);
-            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), 3 * Math.PI / 2);
+            vf = MechJebLib.Core.Maths.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), 3 * PI / 2);
             Assert.Equal(vf[0], 10, 9);
             Assert.Equal(vf[1], -10, 9);
             Assert.Equal(vf[2], 0, 9);
@@ -295,15 +296,15 @@ namespace MechJebLibTest.Maths
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], 10, 9);
             Assert.Equal(vf[2], 0, 9);
-            vf = MechJebLib.Core.Maths.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), Math.PI / 2);
+            vf = MechJebLib.Core.Maths.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), PI / 2);
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], 0, 9);
             Assert.Equal(vf[2], 10, 9);
-            vf = MechJebLib.Core.Maths.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), Math.PI);
+            vf = MechJebLib.Core.Maths.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), PI);
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], -10, 9);
             Assert.Equal(vf[2], 0, 9);
-            vf = MechJebLib.Core.Maths.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), -Math.PI / 2);
+            vf = MechJebLib.Core.Maths.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), -PI / 2);
             Assert.Equal(vf[0], 0, 9);
             Assert.Equal(vf[1], 0, 9);
             Assert.Equal(vf[2], -10, 9);

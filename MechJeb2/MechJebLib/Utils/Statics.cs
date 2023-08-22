@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MechJebLib.Primitives;
+using static System.Math;
 
 namespace MechJebLib.Utils
 {
@@ -19,7 +20,6 @@ namespace MechJebLib.Utils
     /// </summary>
     public static class Statics
     {
-        public const double PI  = Math.PI;
         public const double TAU = 2 * PI;
 
         /// <summary>
@@ -45,10 +45,7 @@ namespace MechJebLib.Utils
         /// <param name="max">Max value</param>
         /// <returns>Clamped value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Clamp(double x, double min, double max)
-        {
-            return x < min ? min : x > max ? max : x;
-        }
+        public static double Clamp(double x, double min, double max) => x < min ? min : x > max ? max : x;
 
         /// <summary>
         ///     Clamp first value between min and max by truncating.
@@ -58,10 +55,7 @@ namespace MechJebLib.Utils
         /// <param name="max">Max value</param>
         /// <returns>Clamped value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int Clamp(int x, int min, int max)
-        {
-            return x < min ? min : x > max ? max : x;
-        }
+        public static int Clamp(int x, int min, int max) => x < min ? min : x > max ? max : x;
 
         /// <summary>
         ///     Clamps the value between 0 and 1.
@@ -69,10 +63,7 @@ namespace MechJebLib.Utils
         /// <param name="x">Value to clamp</param>
         /// <returns>Clamped value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Clamp01(double x)
-        {
-            return Clamp(x, 0, 1);
-        }
+        public static double Clamp01(double x) => Clamp(x, 0, 1);
 
         /// <summary>
         ///     Convert Degrees to Radians.
@@ -80,10 +71,7 @@ namespace MechJebLib.Utils
         /// <param name="deg">degrees</param>
         /// <returns>radians</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Deg2Rad(double deg)
-        {
-            return deg * UtilMath.Deg2Rad;
-        }
+        public static double Deg2Rad(double deg) => deg * UtilMath.Deg2Rad;
 
         /// <summary>
         ///     Linear interpolation.
@@ -93,10 +81,7 @@ namespace MechJebLib.Utils
         /// <param name="t">fraction between start and end</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Lerp(double a, double b, double t)
-        {
-            return a + (b - a) * Clamp01(t);
-        }
+        public static double Lerp(double a, double b, double t) => a + (b - a) * Clamp01(t);
 
         /// <summary>
         ///     Convert Radians to Degrees.
@@ -104,10 +89,7 @@ namespace MechJebLib.Utils
         /// <param name="rad">Radians</param>
         /// <returns>Degrees</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Rad2Deg(double rad)
-        {
-            return rad * UtilMath.Rad2Deg;
-        }
+        public static double Rad2Deg(double rad) => rad * UtilMath.Rad2Deg;
 
         /// <summary>
         ///     Safe inverse cosine that clamps its input.
@@ -115,10 +97,7 @@ namespace MechJebLib.Utils
         /// <param name="x">Cosine value</param>
         /// <returns>Radians</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double SafeAcos(double x)
-        {
-            return Math.Acos(Clamp(x, -1.0, 1.0));
-        }
+        public static double SafeAcos(double x) => Acos(Clamp(x, -1.0, 1.0));
 
         /// <summary>
         ///     Safe inverse sine that clamps its input.
@@ -126,10 +105,7 @@ namespace MechJebLib.Utils
         /// <param name="x">Sine value</param>
         /// <returns>Radians</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double SafeAsin(double x)
-        {
-            return Math.Asin(Clamp(x, -1.0, 1.0));
-        }
+        public static double SafeAsin(double x) => Asin(Clamp(x, -1.0, 1.0));
 
         /// <summary>
         ///     Inverse hyperbolic tangent funtion.
@@ -140,10 +116,10 @@ namespace MechJebLib.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Atanh(double x)
         {
-            if (Math.Abs(x) > 1)
+            if (Abs(x) > 1)
                 throw new ArgumentException($"Argument to Atanh is out of range: {x}");
 
-            return 0.5 * Math.Log((1 + x) / (1 - x));
+            return 0.5 * Log((1 + x) / (1 - x));
         }
 
         /// <summary>
@@ -158,7 +134,7 @@ namespace MechJebLib.Utils
             if (x < 1)
                 throw new ArgumentException($"Argument to Acosh is out of range: {x}");
 
-            return Math.Log(x + Math.Sqrt(x * x - 1));
+            return Log(x + Sqrt(x * x - 1));
         }
 
         /// <summary>
@@ -167,10 +143,7 @@ namespace MechJebLib.Utils
         /// <param name="x"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Asinh(double x)
-        {
-            return Math.Log(x + Math.Sqrt(x * x + 1));
-        }
+        public static double Asinh(double x) => Log(x + Sqrt(x * x + 1));
 
         /// <summary>
         ///     Raise floating point number to an integral power using exponentiation by squaring.
@@ -237,10 +210,7 @@ namespace MechJebLib.Utils
         /// <param name="x">Value</param>
         /// <returns>True if the value is finite</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFinite(this double x)
-        {
-            return !double.IsNaN(x) && !double.IsInfinity(x);
-        }
+        public static bool IsFinite(this double x) => !double.IsNaN(x) && !double.IsInfinity(x);
 
         /// <summary>
         ///     Helper to check if a vector is finite in all its compoenents (not NaN or Ininity).
@@ -248,10 +218,7 @@ namespace MechJebLib.Utils
         /// <param name="v">Vector</param>
         /// <returns>True if all the components are finite</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFinite(V3 v)
-        {
-            return IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
-        }
+        public static bool IsFinite(V3 v) => IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]);
 
         /*
         /// <summary>
@@ -291,10 +258,7 @@ namespace MechJebLib.Utils
         /// <param name="range"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Approx(double val, double about, double range)
-        {
-            return val > about - range && val < about + range;
-        }
+        public static bool Approx(double val, double about, double range) => val > about - range && val < about + range;
 
         /// <summary>
         ///     Compares two double values with a relative tolerance.
@@ -308,12 +272,12 @@ namespace MechJebLib.Utils
             if (a.Equals(b))
                 return true;
 
-            double diff = Math.Abs(a - b);
+            double diff = Abs(a - b);
 
             if (a == 0 || b == 0)
                 return diff < epsilon;
 
-            epsilon = Math.Max(Math.Abs(a), Math.Abs(b)) * epsilon;
+            epsilon = Max(Abs(a), Abs(b)) * epsilon;
 
             return diff < epsilon;
         }
@@ -332,7 +296,7 @@ namespace MechJebLib.Utils
 
             var diff = V3.Abs(a - b);
 
-            double epsilon2 = Math.Max(a.magnitude, b.magnitude) * epsilon;
+            double epsilon2 = Max(a.magnitude, b.magnitude) * epsilon;
 
             for (int i = 0; i < 3; i++)
             {
@@ -357,14 +321,14 @@ namespace MechJebLib.Utils
             if (a.Equals(b))
                 return true;
 
-            double epsilon2 = Math.Max(a.max_magnitude, b.max_magnitude) * epsilon;
+            double epsilon2 = Max(a.max_magnitude, b.max_magnitude) * epsilon;
 
             for (int i = 0; i < 9; i++)
             {
-                if ((a[i] == 0 || b[i] == 0) && Math.Abs(a[i] - b[i]) > epsilon)
+                if ((a[i] == 0 || b[i] == 0) && Abs(a[i] - b[i]) > epsilon)
                     return false;
 
-                if (Math.Abs(a[i] - b[i]) > epsilon2)
+                if (Abs(a[i] - b[i]) > epsilon2)
                     return false;
             }
 
@@ -421,7 +385,7 @@ namespace MechJebLib.Utils
                 sumsq += array[i] * array[i];
             }
 
-            return Math.Sqrt(sumsq);
+            return Sqrt(sumsq);
         }
 
         private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" };
@@ -436,18 +400,18 @@ namespace MechJebLib.Utils
 
             // this is an offset to d to deal with rounding (e.g. 9.9995 gets rounded to 10.00 so gains a wholeDigit)
             // (also 999.95 should be rounded to 1k, so bumps up an SI prefix)
-            double offset = 5 * (d != 0 ? Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(d))) - sigFigs) : 0);
+            double offset = 5 * (d != 0 ? Pow(10, Floor(Log10(Abs(d))) - sigFigs) : 0);
 
-            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d) + offset));
+            int exponent = (int)Floor(Log10(Abs(d) + offset));
 
-            int index = d != 0 ? (int)Math.Abs(Math.Floor(exponent / 3.0)) : 0; // index of the SI prefix
-            if (index > 10) index = 10;                                         // there's only 10 SI prefixes
+            int index = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
+            if (index > 10) index = 10;                               // there's only 10 SI prefixes
 
-            int siExponent = Math.Sign(exponent) * index * 3; // the SI prefix exponent
+            int siExponent = Sign(exponent) * index * 3; // the SI prefix exponent
 
             string unit = exponent < 0 ? _negPrefix[index] : _posPrefix[index];
 
-            d /= Math.Pow(10, siExponent); // scale d by the SI prefix exponent
+            d /= Pow(10, siExponent); // scale d by the SI prefix exponent
 
             int wholeDigits = d != 0 ? exponent - siExponent + 1 : 1;
             int maxDecimalDigits = siExponent - maxPrecision;
@@ -459,16 +423,10 @@ namespace MechJebLib.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToSI(this float f, int maxPrecision = -99, int sigFigs = 4)
-        {
-            return ((double)f).ToSI(maxPrecision, sigFigs);
-        }
+        public static string ToSI(this float f, int maxPrecision = -99, int sigFigs = 4) => ((double)f).ToSI(maxPrecision, sigFigs);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Log(string message)
-        {
-            Logger.Log(message);
-        }
+        public static void Print(string message) => Logger.Print(message);
 
         public static void CopyFrom(this double[] dest, double[] source)
         {
@@ -501,10 +459,7 @@ namespace MechJebLib.Utils
             a[index + 2] = v.z;
         }
 
-        public static V3 Get(this IList<double> a, int index)
-        {
-            return new V3(a[index], a[index + 1], a[index + 2]);
-        }
+        public static V3 Get(this IList<double> a, int index) => new V3(a[index], a[index + 1], a[index + 2]);
 
         public static void Set(this double[] a, int index, V3 v)
         {
@@ -513,14 +468,8 @@ namespace MechJebLib.Utils
             a[index + 2] = v.z;
         }
 
-        public static V3 Get(this double[] a, int index)
-        {
-            return new V3(a[index], a[index + 1], a[index + 2]);
-        }
+        public static V3 Get(this double[] a, int index) => new V3(a[index], a[index + 1], a[index + 2]);
 
-        public static double[] Expand(this double[] a, int n)
-        {
-            return a.Length < n ? new double[n] : a;
-        }
+        public static double[] Expand(this double[] a, int n) => a.Length < n ? new double[n] : a;
     }
 }

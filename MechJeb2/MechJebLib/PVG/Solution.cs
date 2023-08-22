@@ -11,6 +11,7 @@ using System.Text;
 using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.PVG
 {
@@ -134,7 +135,7 @@ namespace MechJebLib.PVG
         public double BtBar(int segment, double tbar)
         {
             double hi = _tmax[segment];
-            double lo = Math.Min(Math.Max(_tmin[segment], tbar), hi);
+            double lo = Min(Max(_tmin[segment], tbar), hi);
 
             return hi - lo;
         }
@@ -156,7 +157,7 @@ namespace MechJebLib.PVG
             var xmin = OutputLayout.CreateFrom(ddmin);
             using Vn ddmax = Interpolate(n, max);
             var xmax = OutputLayout.CreateFrom(ddmax);
-            return Math.Max(xmax.DV - xmin.DV, 0) * _velocityScale;
+            return Max(xmax.DV - xmin.DV, 0) * _velocityScale;
         }
 
         public double Tgo(double t)
@@ -174,7 +175,7 @@ namespace MechJebLib.PVG
         public double TgoBar(double tbar, int n)
         {
             if (tbar > _tmin[n])
-                return Math.Max(_tmax[n] - tbar, 0);
+                return Max(_tmax[n] - tbar, 0);
             return _tmax[n] - _tmin[n];
         }
 
@@ -337,7 +338,7 @@ namespace MechJebLib.PVG
 
             var hT = V3.Cross(rT, vT);
 
-            Log($"hf: {hf.magnitude} hT: {hT.magnitude} check: {hf.magnitude > hT.magnitude}");
+            Print($"hf: {hf.magnitude} hT: {hT.magnitude} check: {hf.magnitude > hT.magnitude}");
 
             return hf.magnitude > hT.magnitude;
         }

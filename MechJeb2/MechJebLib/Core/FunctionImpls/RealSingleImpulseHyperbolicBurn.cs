@@ -59,7 +59,7 @@ namespace MechJebLib.Core.FunctionImpls
         {
             if (debug)
             {
-                Log("[MechJeb] singleImpulseHyperbolicBurn mu = " + mu + " r0 = " + r0 + " v0 = " + v0 + " vInf = " + vInf + " rot = " + rot);
+                Print("[MechJeb] singleImpulseHyperbolicBurn mu = " + mu + " r0 = " + r0 + " v0 = " + v0 + " vInf = " + vInf + " rot = " + rot);
             }
 
             // angular momentum of the parking orbit
@@ -95,7 +95,7 @@ namespace MechJebLib.Core.FunctionImpls
 
             if (debug)
             {
-                Log("rp0hat: " + rp0Hat + " e0: " + Math.Abs(ecc0));
+                Print("rp0hat: " + rp0Hat + " e0: " + Math.Abs(ecc0));
             }
 
             // parking orbit periapsis velocity unit vector
@@ -147,7 +147,7 @@ namespace MechJebLib.Core.FunctionImpls
 
             if (debug)
             {
-                Log("position of burn: " + r);
+                Print("position of burn: " + r);
             }
 
             // constant
@@ -206,10 +206,10 @@ namespace MechJebLib.Core.FunctionImpls
 
             if (debug)
             {
-                Log("mean motion: " + n);
-                Log("true anomaly of ref position: " + nu0 + " true anomaly of burn: " + nu10);
-                Log("eccentric anomaly of ref position: " + e0 + " eccentric anomaly of burn: " + e1);
-                Log("mean anomaly of ref posotion: " + m0 + " mean anomaly of burn: " + m1);
+                Print("mean motion: " + n);
+                Print("true anomaly of ref position: " + nu0 + " true anomaly of burn: " + nu10);
+                Print("eccentric anomaly of ref position: " + e0 + " eccentric anomaly of burn: " + e1);
+                Print("mean anomaly of ref posotion: " + m0 + " mean anomaly of burn: " + m1);
             }
 
             // coast time on the parking orbit
@@ -221,7 +221,7 @@ namespace MechJebLib.Core.FunctionImpls
 
             if (debug)
             {
-                Log("[MechJeb] singleImpulseHyperbolicBurn vNeg = " + vNeg + " vPos = " + vPos + " r = " + r + " dt = " + dt);
+                Print("[MechJeb] singleImpulseHyperbolicBurn vNeg = " + vNeg + " vPos = " + vPos + " r = " + r + " dt = " + dt);
             }
 
             return (vNeg, vPos, r, dt);

@@ -10,6 +10,7 @@ using System.Collections;
 using System.Collections.Generic;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 // ReSharper disable InconsistentNaming
 
@@ -125,7 +126,7 @@ namespace MechJebLib.Primitives
                 for (int i = 0; i < _n; i++)
                     sumsq += this[i] * this[i];
 
-                return Math.Sqrt(sumsq);
+                return Sqrt(sumsq);
             }
         }
 
@@ -133,10 +134,7 @@ namespace MechJebLib.Primitives
         {
         }
 
-        private static Vn New()
-        {
-            return new Vn();
-        }
+        private static Vn New() => new Vn();
 
         public Vn CopyFrom(IReadOnlyList<double> other)
         {
@@ -159,10 +157,7 @@ namespace MechJebLib.Primitives
             this[index + 2] = v.z;
         }
 
-        public V3 Get(int index)
-        {
-            return new V3(this[index], this[index + 1], this[index + 2]);
-        }
+        public V3 Get(int index) => new V3(this[index], this[index + 1], this[index + 2]);
 
         public static Vn Rent(int n)
         {
@@ -175,10 +170,7 @@ namespace MechJebLib.Primitives
             return list;
         }
 
-        private void RemoveRange(int i, int listCount)
-        {
-            _values.RemoveRange(i, listCount);
-        }
+        private void RemoveRange(int i, int listCount) => _values.RemoveRange(i, listCount);
 
         public static Vn Rent(double[] other)
         {
@@ -196,74 +188,35 @@ namespace MechJebLib.Primitives
                 obj[i] = 0;
         }
 
-        public static void Return(Vn obj)
-        {
-            _pool.Release(obj);
-        }
+        public static void Return(Vn obj) => _pool.Release(obj);
 
-        public void Dispose()
-        {
-            _pool.Release(this);
-        }
+        public void Dispose() => _pool.Release(this);
 
-        public IEnumerator<double> GetEnumerator()
-        {
-            return _values.GetEnumerator();
-        }
+        public IEnumerator<double> GetEnumerator() => _values.GetEnumerator();
 
-        public override string ToString()
-        {
-            return DoubleArrayString(this);
-        }
+        public override string ToString() => DoubleArrayString(this);
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable)_values).GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_values).GetEnumerator();
 
-        public void Add(double item)
-        {
-            _values.Add(item);
-        }
+        public void Add(double item) => _values.Add(item);
 
-        public void Clear()
-        {
-            _values.Clear();
-        }
+        public void Clear() => _values.Clear();
 
-        public bool Contains(double item)
-        {
-            return _values.Contains(item);
-        }
+        public bool Contains(double item) => _values.Contains(item);
 
-        public void CopyTo(double[] array, int arrayIndex)
-        {
-            _values.CopyTo(array, arrayIndex);
-        }
+        public void CopyTo(double[] array, int arrayIndex) => _values.CopyTo(array, arrayIndex);
 
-        public bool Remove(double item)
-        {
-            return _values.Remove(item);
-        }
+        public bool Remove(double item) => _values.Remove(item);
 
         public int Count => _values.Count;
 
         public bool IsReadOnly => ((ICollection<double>)_values).IsReadOnly;
 
-        public int IndexOf(double item)
-        {
-            return _values.IndexOf(item);
-        }
+        public int IndexOf(double item) => _values.IndexOf(item);
 
-        public void Insert(int index, double item)
-        {
-            _values.Insert(index, item);
-        }
+        public void Insert(int index, double item) => _values.Insert(index, item);
 
-        public void RemoveAt(int index)
-        {
-            _values.RemoveAt(index);
-        }
+        public void RemoveAt(int index) => _values.RemoveAt(index);
 
         public double this[int index]
         {

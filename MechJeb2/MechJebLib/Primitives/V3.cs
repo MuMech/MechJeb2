@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 #nullable enable
 
@@ -98,40 +99,19 @@ namespace MechJebLib.Primitives
             z = nz;
         }
 
-        public static V3 Scale(V3 a, V3 b)
-        {
-            return new V3(a.x * b.x, a.y * b.y, a.z * b.z);
-        }
+        public static V3 Scale(V3 a, V3 b) => new V3(a.x * b.x, a.y * b.y, a.z * b.z);
 
-        public static V3 Divide(V3 a, V3 b)
-        {
-            return new V3(a.x / b.x, a.y / b.y, a.z / b.z);
-        }
+        public static V3 Divide(V3 a, V3 b) => new V3(a.x / b.x, a.y / b.y, a.z / b.z);
 
-        public static V3 Abs(V3 a)
-        {
-            return new V3(Math.Abs(a.x), Math.Abs(a.y), Math.Abs(a.z));
-        }
+        public static V3 Abs(V3 a) => new V3(Math.Abs(a.x), Math.Abs(a.y), Math.Abs(a.z));
 
-        public static V3 Sign(V3 a)
-        {
-            return new V3(Math.Sign(a.x), Math.Sign(a.y), Math.Sign(a.z));
-        }
+        public static V3 Sign(V3 a) => new V3(Math.Sign(a.x), Math.Sign(a.y), Math.Sign(a.z));
 
-        public static V3 Sqrt(V3 a)
-        {
-            return new V3(Math.Sqrt(a.x), Math.Sqrt(a.y), Math.Sqrt(a.z));
-        }
+        public static V3 Sqrt(V3 a) => new V3(Math.Sqrt(a.x), Math.Sqrt(a.y), Math.Sqrt(a.z));
 
-        public static V3 Max(V3 a, V3 b)
-        {
-            return new V3(Math.Max(a.x, b.x), Math.Max(a.y, b.y), Math.Max(a.z, b.z));
-        }
+        public static V3 Max(V3 a, V3 b) => new V3(Math.Max(a.x, b.x), Math.Max(a.y, b.y), Math.Max(a.z, b.z));
 
-        public static V3 Min(V3 a, V3 b)
-        {
-            return new V3(Math.Min(a.x, b.x), Math.Min(a.y, b.y), Math.Min(a.z, b.z));
-        }
+        public static V3 Min(V3 a, V3 b) => new V3(Math.Min(a.x, b.x), Math.Min(a.y, b.y), Math.Min(a.z, b.z));
 
         public void Scale(V3 scale)
         {
@@ -140,20 +120,11 @@ namespace MechJebLib.Primitives
             z *= scale.z;
         }
 
-        public static V3 Cross(V3 v1, V3 v2)
-        {
-            return new V3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
-        }
+        public static V3 Cross(V3 v1, V3 v2) => new V3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
 
-        public bool Equals(V3 other)
-        {
-            return x.Equals(other.x) && y.Equals(other.y) && z.Equals(other.z);
-        }
+        public bool Equals(V3 other) => x.Equals(other.x) && y.Equals(other.y) && z.Equals(other.z);
 
-        public override bool Equals(object? obj)
-        {
-            return obj is V3 other && Equals(other);
-        }
+        public override bool Equals(object? obj) => obj is V3 other && Equals(other);
 
         public override int GetHashCode()
         {
@@ -166,10 +137,7 @@ namespace MechJebLib.Primitives
             }
         }
 
-        public static double Dot(V3 v1, V3 v2)
-        {
-            return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-        }
+        public static double Dot(V3 v1, V3 v2) => v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 
         // FIXME: precision
         public static V3 Project(V3 vector, V3 onNormal)
@@ -268,10 +236,7 @@ namespace MechJebLib.Primitives
 
         private V3 _internal_normalize => this / _internal_magnitude;
 
-        public static double Magnitude(V3 vector)
-        {
-            return vector.magnitude;
-        }
+        public static double Magnitude(V3 vector) => vector.magnitude;
 
         public static V3 Normalize(V3 value)
         {
@@ -306,10 +271,7 @@ namespace MechJebLib.Primitives
             }
         }
 
-        public static double SqrMagnitude(V3 vector)
-        {
-            return vector.sqrMagnitude;
-        }
+        public static double SqrMagnitude(V3 vector) => vector.sqrMagnitude;
 
         public double sqrMagnitude => x * x + y * y + z * z;
 
@@ -355,7 +317,7 @@ namespace MechJebLib.Primitives
         /// </summary>
         /// <param name="v"></param>
         /// <returns></returns>
-        public V3 sph2cart => x * new V3(Math.Cos(z) * Math.Sin(y), Math.Sin(z) * Math.Sin(y), Math.Cos(y));
+        public V3 sph2cart => x * new V3(Cos(z) * Sin(y), Sin(z) * Sin(y), Cos(y));
 
         /// <summary>
         ///     Convert vector stored as cartesian x,y,z to spherical radius, theta, phi
@@ -367,51 +329,27 @@ namespace MechJebLib.Primitives
             get
             {
                 double r = magnitude;
-                return new V3(r, SafeAcos(z / r), Clamp2Pi(Math.Atan2(y, x)));
+                return new V3(r, SafeAcos(z / r), Clamp2Pi(Atan2(y, x)));
             }
         }
 
         public V3 xzy => new V3(this[0], this[2], this[1]);
 
-        public static V3 operator +(V3 a, V3 b)
-        {
-            return new V3(a.x + b.x, a.y + b.y, a.z + b.z);
-        }
+        public static V3 operator +(V3 a, V3 b) => new V3(a.x + b.x, a.y + b.y, a.z + b.z);
 
-        public static V3 operator -(V3 a, V3 b)
-        {
-            return new V3(a.x - b.x, a.y - b.y, a.z - b.z);
-        }
+        public static V3 operator -(V3 a, V3 b) => new V3(a.x - b.x, a.y - b.y, a.z - b.z);
 
-        public static V3 operator *(V3 a, V3 b)
-        {
-            return new V3(a.x * b.x, a.y * b.y, a.z * b.z);
-        }
+        public static V3 operator *(V3 a, V3 b) => new V3(a.x * b.x, a.y * b.y, a.z * b.z);
 
-        public static V3 operator /(V3 a, V3 b)
-        {
-            return new V3(a.x / b.x, a.y / b.y, a.z / b.z);
-        }
+        public static V3 operator /(V3 a, V3 b) => new V3(a.x / b.x, a.y / b.y, a.z / b.z);
 
-        public static V3 operator -(V3 a)
-        {
-            return new V3(-a.x, -a.y, -a.z);
-        }
+        public static V3 operator -(V3 a) => new V3(-a.x, -a.y, -a.z);
 
-        public static V3 operator *(V3 a, double d)
-        {
-            return new V3(a.x * d, a.y * d, a.z * d);
-        }
+        public static V3 operator *(V3 a, double d) => new V3(a.x * d, a.y * d, a.z * d);
 
-        public static V3 operator *(double d, V3 a)
-        {
-            return new V3(a.x * d, a.y * d, a.z * d);
-        }
+        public static V3 operator *(double d, V3 a) => new V3(a.x * d, a.y * d, a.z * d);
 
-        public static V3 operator /(V3 a, double d)
-        {
-            return new V3(a.x / d, a.y / d, a.z / d);
-        }
+        public static V3 operator /(V3 a, double d) => new V3(a.x / d, a.y / d, a.z / d);
 
         public static bool operator ==(V3 lhs, V3 rhs)
         {
@@ -422,20 +360,11 @@ namespace MechJebLib.Primitives
             return sqrmag < KEPS * KEPS;
         }
 
-        public static bool operator !=(V3 lhs, V3 rhs)
-        {
-            return !(lhs == rhs);
-        }
+        public static bool operator !=(V3 lhs, V3 rhs) => !(lhs == rhs);
 
-        public override string ToString()
-        {
-            return ToString(null, CultureInfo.InvariantCulture.NumberFormat);
-        }
+        public override string ToString() => ToString(null, CultureInfo.InvariantCulture.NumberFormat);
 
-        public string ToString(string? format)
-        {
-            return ToString(format, CultureInfo.InvariantCulture.NumberFormat);
-        }
+        public string ToString(string? format) => ToString(format, CultureInfo.InvariantCulture.NumberFormat);
 
         public string ToString(string? format, IFormatProvider formatProvider)
         {
@@ -445,10 +374,7 @@ namespace MechJebLib.Primitives
                 $"[{x.ToString(format, formatProvider)}, {y.ToString(format, formatProvider)}, {z.ToString(format, formatProvider)}]";
         }
 
-        public bool IsFinite()
-        {
-            return x.IsFinite() && y.IsFinite() && z.IsFinite();
-        }
+        public bool IsFinite() => x.IsFinite() && y.IsFinite() && z.IsFinite();
 
         public void CopyFrom(IList<double> other, int index = 0)
         {

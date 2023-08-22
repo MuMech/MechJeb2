@@ -7,6 +7,7 @@ using System;
 using MechJebLib.Core;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 #nullable enable
 
@@ -82,7 +83,7 @@ namespace MechJebLib.Maneuvers
             if (type == Type.ECC)
             {
                 // changing the ECC is actually a global optimization problem due to basins around parabolic ecc == 1.0
-                double boost = Math.Sign(value - 1.0) * 0.1 + Math.Sqrt(2);
+                double boost = Sign(value - 1.0) * 0.1 + Sqrt(2);
 
                 V3 dv = Core.Functions.Maneuvers.DeltaVRelativeToCircularVelocity(1.0, p, q, boost);
                 x[0] = dv.x;

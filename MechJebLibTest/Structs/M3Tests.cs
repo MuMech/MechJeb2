@@ -1,8 +1,8 @@
-using System;
 using AssertExtensions;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLibTest.Structs
 {
@@ -259,13 +259,13 @@ namespace MechJebLibTest.Structs
             var two = Q3.AngleAxis(Deg2Rad(45), new V3(0, 1, 0));
             var three = Q3.AngleAxis(Deg2Rad(60), new V3(0, 0, 1));
             var five = new M3(1, 0, 0,
-                0, Math.Cos(Deg2Rad(30)), -Math.Sin(Deg2Rad(30)),
-                0, Math.Sin(Deg2Rad(30)), Math.Cos(Deg2Rad(30)));
-            var six = new M3(Math.Cos(Deg2Rad(45)), 0, Math.Sin(Deg2Rad(45)),
+                0, Cos(Deg2Rad(30)), -Sin(Deg2Rad(30)),
+                0, Sin(Deg2Rad(30)), Cos(Deg2Rad(30)));
+            var six = new M3(Cos(Deg2Rad(45)), 0, Sin(Deg2Rad(45)),
                 0, 1, 0,
-                -Math.Sin(Deg2Rad(45)), 0, Math.Cos(Deg2Rad(45)));
-            var seven = new M3(Math.Cos(Deg2Rad(60)), -Math.Sin(Deg2Rad(60)), 0,
-                Math.Sin(Deg2Rad(60)), Math.Cos(Deg2Rad(60)), 0,
+                -Sin(Deg2Rad(45)), 0, Cos(Deg2Rad(45)));
+            var seven = new M3(Cos(Deg2Rad(60)), -Sin(Deg2Rad(60)), 0,
+                Sin(Deg2Rad(60)), Cos(Deg2Rad(60)), 0,
                 0, 0, 1);
 
             M3.Rotate(one).ShouldEqual(five);

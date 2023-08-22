@@ -8,6 +8,7 @@ using MechJebLib.Core.FunctionImpls;
 using MechJebLib.Core.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 #nullable enable
 
@@ -15,15 +16,9 @@ namespace MechJebLib.Core
 {
     public static class Maths
     {
-        public static double VmagFromVisViva(double mu, double sma, double r)
-        {
-            return Math.Sqrt(mu * (2 / r - 1 / sma));
-        }
+        public static double VmagFromVisViva(double mu, double sma, double r) => Sqrt(mu * (2 / r - 1 / sma));
 
-        public static double HmagFromKeplerian(double mu, double sma, double ecc)
-        {
-            return Math.Sqrt(mu * sma * (1 - ecc * ecc));
-        }
+        public static double HmagFromKeplerian(double mu, double sma, double ecc) => Sqrt(mu * sma * (1 - ecc * ecc));
 
         // FIXME: busted with hyperbolic and NANs.
         public static double HmagFromApsides(double mu, double peR, double apR)
@@ -32,42 +27,24 @@ namespace MechJebLib.Core
             return HmagFromKeplerian(mu, sma, ecc);
         }
 
-        public static V3 HunitFromKeplerian(double inc, double lan)
-        {
-            return new V3(Math.Sin(lan) * Math.Sin(inc), -Math.Cos(lan) * Math.Sin(inc), Math.Cos(inc));
-        }
+        public static V3 HunitFromKeplerian(double inc, double lan) => new V3(Sin(lan) * Sin(inc), -Cos(lan) * Sin(inc), Cos(inc));
 
-        public static V3 HvecFromKeplerian(double mu, double sma, double ecc, double inc, double lan)
-        {
-            return HunitFromKeplerian(inc, lan) * HmagFromKeplerian(mu, sma, ecc);
-        }
+        public static V3 HvecFromKeplerian(double mu, double sma, double ecc, double inc, double lan) =>
+            HunitFromKeplerian(inc, lan) * HmagFromKeplerian(mu, sma, ecc);
 
-        public static V3 HvecFromFlightPathAngle(double r, double v, double gamma, double inc, double lan)
-        {
-            return HunitFromKeplerian(inc, lan) * HmagFromFlightPathAngle(r, v, gamma);
-        }
+        public static V3 HvecFromFlightPathAngle(double r, double v, double gamma, double inc, double lan) =>
+            HunitFromKeplerian(inc, lan) * HmagFromFlightPathAngle(r, v, gamma);
 
-        private static double HmagFromFlightPathAngle(double r, double v, double gamma)
-        {
-            return r * v * Math.Cos(gamma);
-        }
+        private static double HmagFromFlightPathAngle(double r, double v, double gamma) => r * v * Cos(gamma);
 
-        public static V3 EvecFromKeplerian(double ecc, double inc, double lan, double argP)
-        {
-            return new V3(Math.Cos(argP) * Math.Cos(lan) - Math.Cos(inc) * Math.Sin(argP) * Math.Sin(lan),
-                Math.Cos(argP) * Math.Sin(lan) + Math.Cos(inc) * Math.Cos(lan) * Math.Sin(argP),
-                Math.Sin(argP) * Math.Sin(inc)) * ecc;
-        }
+        public static V3 EvecFromKeplerian(double ecc, double inc, double lan, double argP) =>
+            new V3(Cos(argP) * Cos(lan) - Cos(inc) * Sin(argP) * Sin(lan),
+                Cos(argP) * Sin(lan) + Cos(inc) * Cos(lan) * Sin(argP),
+                Sin(argP) * Sin(inc)) * ecc;
 
-        public static double SmaFromApsides(double peR, double apR)
-        {
-            return (peR + apR) / 2;
-        }
+        public static double SmaFromApsides(double peR, double apR) => (peR + apR) / 2;
 
-        public static double EccFromApsides(double peR, double apR)
-        {
-            return (apR - peR) / (apR + peR);
-        }
+        public static double EccFromApsides(double peR, double apR) => (apR - peR) / (apR + peR);
 
         public static (double sma, double ecc) SmaEccFromApsides(double peR, double apR)
         {
@@ -79,10 +56,7 @@ namespace MechJebLib.Core
             return (sma, ecc);
         }
 
-        public static double FlightPathAngleFromAngularVelocity(double h, double r, double v)
-        {
-            return SafeAcos(h / (r * v));
-        }
+        public static double FlightPathAngleFromAngularVelocity(double h, double r, double v) => SafeAcos(h / (r * v));
 
         public static (double vT, double gammaT) ConvertApsidesTargetToFPA(double peR, double apR, double attR, double mu)
         {
@@ -99,20 +73,11 @@ namespace MechJebLib.Core
             return (vT, gammaT);
         }
 
-        public static double EscapeVelocity(double mu, double r)
-        {
-            return Math.Sqrt(2 * mu / r);
-        }
+        public static double EscapeVelocity(double mu, double r) => Sqrt(2 * mu / r);
 
-        public static double CircularVelocity(double mu, double r)
-        {
-            return Math.Sqrt(mu / r);
-        }
+        public static double CircularVelocity(double mu, double r) => Sqrt(mu / r);
 
-        public static double PeriapsisFromKeplerian(double sma, double ecc)
-        {
-            return sma * (1 - ecc);
-        }
+        public static double PeriapsisFromKeplerian(double sma, double ecc) => sma * (1 - ecc);
 
         public static double ApoapsisFromKeplerian(double sma, double ecc, bool hyperbolic = true)
         {
@@ -146,18 +111,15 @@ namespace MechJebLib.Core
         {
             var h = V3.Cross(r, v);
             double sma = SmaFromStateVectors(mu, r, v);
-            return (sma, Math.Sqrt(Math.Max(1 - h.sqrMagnitude / (sma * mu), 0)));
+            return (sma, Sqrt(Max(1 - h.sqrMagnitude / (sma * mu), 0)));
         }
 
-        public static double SmaFromStateVectors(double mu, V3 r, V3 v)
-        {
-            return mu / (2.0 * mu / r.magnitude - V3.Dot(v, v));
-        }
+        public static double SmaFromStateVectors(double mu, V3 r, V3 v) => mu / (2.0 * mu / r.magnitude - V3.Dot(v, v));
 
         public static double IncFromStateVectors(V3 r, V3 v)
         {
             V3 hhat = V3.Cross(r, v).normalized;
-            return Math.Acos(hhat[2]);
+            return Acos(hhat[2]);
         }
 
         public static double PeriodFromStateVectors(double mu, V3 r, V3 v)
@@ -165,13 +127,10 @@ namespace MechJebLib.Core
             double sma = SmaFromStateVectors(mu, r, v);
             if (sma < 0)
                 throw new Exception("cannot find period of hyperbolic orbit, sma = " + sma);
-            return TAU * Math.Sqrt(sma * sma * sma / mu);
+            return TAU * Sqrt(sma * sma * sma / mu);
         }
 
-        public static double RadiusFromTrueAnomaly(double sma, double ecc, double nu)
-        {
-            return sma * (1 - ecc * ecc) / (1 + ecc * Math.Cos(nu));
-        }
+        public static double RadiusFromTrueAnomaly(double sma, double ecc, double nu) => sma * (1 - ecc * ecc) / (1 + ecc * Cos(nu));
 
         public static double RadiusFromTrueAnomaly(double mu, V3 r, V3 v, double nu)
         {
@@ -203,27 +162,18 @@ namespace MechJebLib.Core
         public static double TrueAnomalyFromEccentricAnomaly(double ecc, double eanom)
         {
             if (ecc < 1)
-                return Clamp2Pi(2.0 * Math.Atan(Math.Sqrt((1 + ecc) / (1 - ecc)) * Math.Tan(eanom / 2.0)));
+                return Clamp2Pi(2.0 * Atan(Sqrt((1 + ecc) / (1 - ecc)) * Tan(eanom / 2.0)));
             if (ecc > 1)
-                return Clamp2Pi(2.0 * Math.Atan(Math.Sqrt((ecc + 1) / (ecc - 1)) * Math.Tanh(eanom / 2.0)));
+                return Clamp2Pi(2.0 * Atan(Sqrt((ecc + 1) / (ecc - 1)) * Tanh(eanom / 2.0)));
 
-            return Clamp2Pi(2 * Math.Atan(eanom));
+            return Clamp2Pi(2 * Atan(eanom));
         }
 
-        public static V3 RhatFromLatLng(double lat, double lng)
-        {
-            return new V3(Math.Cos(lat) * Math.Cos(lng), Math.Cos(lat) * Math.Sin(lng), Math.Sin(lat));
-        }
+        public static V3 RhatFromLatLng(double lat, double lng) => new V3(Cos(lat) * Cos(lng), Cos(lat) * Sin(lng), Sin(lat));
 
-        public static double PitchAngle(V3 v, V3 up)
-        {
-            return PI * 0.5 - V3.Angle(v, up);
-        }
+        public static double PitchAngle(V3 v, V3 up) => PI * 0.5 - V3.Angle(v, up);
 
-        public static double FlightPathAngle(V3 r, V3 v)
-        {
-            return SafeAsin(V3.Dot(r.normalized, v.normalized));
-        }
+        public static double FlightPathAngle(V3 r, V3 v) => SafeAsin(V3.Dot(r.normalized, v.normalized));
 
         // r is the ECI reference point, v is the vector in ECI to be converted to ENU
         public static V3 ENUToECI(V3 pos, V3 vec)
@@ -231,10 +181,10 @@ namespace MechJebLib.Core
             double lat = LatitudeFromBCI(pos); // should be geodetic, but we don't care for now
             double lng = LongitudeFromBCI(pos);
 
-            double slat = Math.Sin(lat);
-            double slng = Math.Sin(lng);
-            double clat = Math.Cos(lat);
-            double clng = Math.Cos(lng);
+            double slat = Sin(lat);
+            double slng = Sin(lng);
+            double clat = Cos(lat);
+            double clng = Cos(lng);
 
             var m = new M3(
                 -slng, -slat * clng, clat * clng,
@@ -249,27 +199,21 @@ namespace MechJebLib.Core
         {
             V3 vtemp = ECIToENU(r, v);
             double hmag = new V3(vtemp.x, vtemp.y).magnitude;
-            vtemp[0] = hmag * Math.Sin(newHeading);
-            vtemp[1] = hmag * Math.Cos(newHeading);
+            vtemp[0] = hmag * Sin(newHeading);
+            vtemp[1] = hmag * Cos(newHeading);
             return ENUToECI(r, vtemp);
         }
 
-        public static V3 ENUHeadingForInclination(double inc, V3 r)
-        {
-            return ENUHeadingForInclination(inc, LatitudeFromBCI(r));
-        }
+        public static V3 ENUHeadingForInclination(double inc, V3 r) => ENUHeadingForInclination(inc, LatitudeFromBCI(r));
 
         public static V3 ENUHeadingForInclination(double inc, double lat)
         {
             double angle = AngleForInclination(inc, lat);
 
-            return new V3(Math.Cos(angle), Math.Sin(angle), 0);
+            return new V3(Cos(angle), Sin(angle), 0);
         }
 
-        public static double HeadingForInclination(double inc, V3 r)
-        {
-            return HeadingForInclination(inc, LatitudeFromBCI(r));
-        }
+        public static double HeadingForInclination(double inc, V3 r) => HeadingForInclination(inc, LatitudeFromBCI(r));
 
         public static double HeadingForInclination(double inc, double lat)
         {
@@ -280,14 +224,14 @@ namespace MechJebLib.Core
 
         private static double AngleForInclination(double inc, double lat)
         {
-            double cosAngle = Math.Cos(inc) / Math.Cos(lat);
+            double cosAngle = Cos(inc) / Cos(lat);
 
-            if (Math.Abs(cosAngle) > 1.0)
+            if (Abs(cosAngle) > 1.0)
                 // for impossible inclinations return due east or west
-                return Math.Abs(ClampPi(inc)) < PI * 0.5 ? 0 : Deg2Rad(180);
+                return Abs(ClampPi(inc)) < PI * 0.5 ? 0 : Deg2Rad(180);
 
             // angle is from east, with 90 degrees due north
-            double angle = Math.Acos(cosAngle);
+            double angle = Acos(cosAngle);
 
             // negative inclinations are conventionally south-going
             if (inc < 0) angle *= -1;
@@ -295,15 +239,9 @@ namespace MechJebLib.Core
             return angle;
         }
 
-        public static double LatitudeFromBCI(V3 r)
-        {
-            return SafeAsin(r.z / r.magnitude);
-        }
+        public static double LatitudeFromBCI(V3 r) => SafeAsin(r.z / r.magnitude);
 
-        public static double LongitudeFromBCI(V3 r)
-        {
-            return Math.Atan2(r.y, r.x);
-        }
+        public static double LongitudeFromBCI(V3 r) => Atan2(r.y, r.x);
 
         // r is the ECI reference point, v is the vector in ENU to be converted to ECI
         public static V3 ECIToENU(V3 r, V3 v)
@@ -311,10 +249,10 @@ namespace MechJebLib.Core
             double lat = LatitudeFromBCI(r);
             double lng = LongitudeFromBCI(r);
 
-            double slat = Math.Sin(lat);
-            double slng = Math.Sin(lng);
-            double clat = Math.Cos(lat);
-            double clng = Math.Cos(lng);
+            double slat = Sin(lat);
+            double slng = Sin(lng);
+            double clat = Cos(lat);
+            double clng = Cos(lng);
 
             var m = new M3(
                 -slng, clng, 0.0,
@@ -339,22 +277,19 @@ namespace MechJebLib.Core
         {
             V3 v0 = ECIToENU(r, v);
             double vmag = v0.magnitude;
-            V3 vf = new V3(v0.x, v0.y).normalized * Math.Cos(newFPA) * vmag;
-            vf.z = Math.Sin(newFPA) * vmag;
+            V3 vf = new V3(v0.x, v0.y).normalized * Cos(newFPA) * vmag;
+            vf.z = Sin(newFPA) * vmag;
             vf   = ENUToECI(r, vf);
             return vf;
         }
 
-        public static V3 CircularVelocityFromHvec(double mu, V3 r, V3 h)
-        {
-            return V3.Cross(h, r).normalized * CircularVelocity(mu, r.magnitude);
-        }
+        public static V3 CircularVelocityFromHvec(double mu, V3 r, V3 h) => V3.Cross(h, r).normalized * CircularVelocity(mu, r.magnitude);
 
         // r is the ECI reference point, v is the vector in ECI to be converted to pitch, heading angles
         public static (double pitch, double heading) ECIToPitchHeading(V3 r, V3 v)
         {
             V3 enu = ECIToENU(r, v).normalized;
-            return (Math.Asin(enu.z), Clamp2Pi(Math.Atan2(enu.x, enu.y)));
+            return (Asin(enu.z), Clamp2Pi(Atan2(enu.x, enu.y)));
         }
 
         /// <summary>
@@ -369,9 +304,9 @@ namespace MechJebLib.Core
         public static (double time, double inclination) MinimumTimeToPlane(double rotationPeriod, double latitude, double celestialLongitude,
             double lan, double inc)
         {
-            double north = TimeToPlane(rotationPeriod, latitude, celestialLongitude, lan, Math.Abs(inc));
-            double south = TimeToPlane(rotationPeriod, latitude, celestialLongitude, lan, -Math.Abs(inc));
-            return north < south ? (north, Math.Abs(inc)) : (south, -Math.Abs(inc));
+            double north = TimeToPlane(rotationPeriod, latitude, celestialLongitude, lan, Abs(inc));
+            double south = TimeToPlane(rotationPeriod, latitude, celestialLongitude, lan, -Abs(inc));
+            return north < south ? (north, Abs(inc)) : (south, -Abs(inc));
         }
 
         /// <summary>
@@ -390,12 +325,12 @@ namespace MechJebLib.Core
             inc                = Deg2Rad(inc);
 
             // handle singularities at the poles where tan(lat) is infinite
-            if (Math.Abs(Math.Abs(latitude) - PI / 2) < EPS)
+            if (Abs(Abs(latitude) - PI / 2) < EPS)
                 return 0;
 
             // Napier's rules for spherical trig
             // the clamped Asin produces correct results for abs(inc) < abs(lat)
-            double angleEastOfAN = SafeAsin(Math.Tan(latitude) / Math.Tan(Math.Abs(inc)));
+            double angleEastOfAN = SafeAsin(Tan(latitude) / Tan(Abs(inc)));
 
             // handle south going trajectories (and the other two quadrants that Asin doesn't cover).
             // if you are launching to the north your AN is always going to be [-90,90] relative to
@@ -413,13 +348,10 @@ namespace MechJebLib.Core
             if (rotationPeriod < 0)
                 lanDiff = -lanDiff;
 
-            return Clamp2Pi(lanDiff) / TAU * Math.Abs(rotationPeriod);
+            return Clamp2Pi(lanDiff) / TAU * Abs(rotationPeriod);
         }
 
-        public static double MeanMotion(double mu, double sma)
-        {
-            return Math.Sqrt(Math.Abs(mu / (sma * sma * sma)));
-        }
+        public static double MeanMotion(double mu, double sma) => Sqrt(Abs(mu / (sma * sma * sma)));
 
         // FIXME: hyperbolic and circular orbits
         public static double TimeToNextApoapsis(double mu, V3 r, V3 v)
@@ -466,9 +398,9 @@ namespace MechJebLib.Core
             double time1 = TimeToNextTrueAnomaly(mu, r, v, nu1);
             double time2 = TimeToNextTrueAnomaly(mu, r, v, nu2);
             if (time1 >= 0 && time2 >= 0)
-                return Math.Min(time1, time2);
+                return Min(time1, time2);
             if (time1 < 0 && time2 < 0)
-                return Math.Max(time1, time2);
+                return Max(time1, time2);
             return time1 >= 0 ? time1 : time2;
         }
 
@@ -482,18 +414,16 @@ namespace MechJebLib.Core
         /// <returns>Time of flight</returns>
         public static double TimeSincePeriapsisFromEccentricAnomaly(double mu, double sma, double ecc, double eanom)
         {
-            double k = Math.Sqrt(Math.Abs(mu / (sma * sma * sma)));
+            double k = Sqrt(Abs(mu / (sma * sma * sma)));
             if (ecc < 1)
-                return (eanom - ecc * Math.Sin(eanom)) / k;
+                return (eanom - ecc * Sin(eanom)) / k;
             if (ecc > 1)
-                return (ecc * Math.Sinh(eanom) - eanom) / k;
-            return Math.Sqrt(2) * (eanom + eanom * eanom * eanom / 3.0) / k;
+                return (ecc * Sinh(eanom) - eanom) / k;
+            return Sqrt(2) * (eanom + eanom * eanom * eanom / 3.0) / k;
         }
 
-        public static Q3 PerifocalToECIMatrix(double inc, double argp, double lan)
-        {
-            return Q3.AngleAxis(lan, V3.zaxis) * Q3.AngleAxis(inc, V3.xaxis) * Q3.AngleAxis(argp, V3.zaxis);
-        }
+        public static Q3 PerifocalToECIMatrix(double inc, double argp, double lan) =>
+            Q3.AngleAxis(lan, V3.zaxis) * Q3.AngleAxis(inc, V3.xaxis) * Q3.AngleAxis(argp, V3.zaxis);
 
         public static (V3 p, V3 q, Q3 rot) PerifocalFromStateVectors(double mu, V3 r, V3 v)
         {
@@ -506,13 +436,13 @@ namespace MechJebLib.Core
 
         public static (V3 p, V3 q) PerifocalFromElements(double mu, double l, double ecc, double nu)
         {
-            double cnu = Math.Cos(nu);
-            double snu = Math.Sin(nu);
+            double cnu = Cos(nu);
+            double snu = Sin(nu);
 
             var one = new V3(cnu, snu, 0);
             var two = new V3(-snu, ecc + cnu, 0);
 
-            return (one * l / (1 + ecc * cnu), two * Math.Sqrt(mu / l));
+            return (one * l / (1 + ecc * cnu), two * Sqrt(mu / l));
         }
 
         public static (V3 r, V3 v) StateVectorsFromKeplerian(double mu, double l, double ecc, double inc, double lan, double argp, double nu)
@@ -559,12 +489,12 @@ namespace MechJebLib.Core
             double xk = V3.Dot(eccvec, fhat);
             double x1 = V3.Dot(r, fhat);
             double y1 = V3.Dot(r, ghat);
-            double xlambdot = Math.Atan2(y1, x1);
+            double xlambdot = Atan2(y1, x1);
 
-            double ecc = Math.Sqrt(h * h + xk * xk);
-            double inc = 2.0 * Math.Atan(Math.Sqrt(p * p + q * q));
-            double lan = Clamp2Pi(inc > EPS ? Math.Atan2(p, q) : 0.0);
-            double argp = Clamp2Pi(ecc > EPS ? Math.Atan2(h, xk) - lan : 0.0);
+            double ecc = Sqrt(h * h + xk * xk);
+            double inc = 2.0 * Atan(Sqrt(p * p + q * q));
+            double lan = Clamp2Pi(inc > EPS ? Atan2(p, q) : 0.0);
+            double argp = Clamp2Pi(ecc > EPS ? Atan2(h, xk) - lan : 0.0);
             double nu = Clamp2Pi(xlambdot - lan - argp);
 
             return (sma, ecc, inc, lan, argp, nu, l);
@@ -573,7 +503,7 @@ namespace MechJebLib.Core
         // Danby's method
         public static (double eanom, double nu) AnomaliesFromMean(double manom, double ecc)
         {
-            double xma = manom - TAU * Math.Truncate(manom / TAU);
+            double xma = manom - TAU * Truncate(manom / TAU);
             double eanom, nu;
 
             if (ecc == 0)
@@ -583,9 +513,9 @@ namespace MechJebLib.Core
             }
 
             if (ecc < 1) // elliptic initial guess
-                eanom = xma + 0.85 * Math.Sign(Math.Sin(xma)) * ecc;
+                eanom = xma + 0.85 * Sign(Sin(xma)) * ecc;
             else // hyperbolic initial guess
-                eanom = Math.Log(2 * xma / ecc + 1.8);
+                eanom = Log(2 * xma / ecc + 1.8);
 
             int n = 0;
 
@@ -596,8 +526,8 @@ namespace MechJebLib.Core
                 if (ecc < 1)
                 {
                     // elliptic orbit
-                    s    = ecc * Math.Sin(eanom);
-                    c    = ecc * Math.Cos(eanom);
+                    s    = ecc * Sin(eanom);
+                    c    = ecc * Cos(eanom);
                     f    = eanom - s - xma;
                     fp   = 1 - c;
                     fpp  = s;
@@ -606,15 +536,15 @@ namespace MechJebLib.Core
                 else
                 {
                     // hyperbolic orbit
-                    s    = ecc * Math.Sinh(eanom);
-                    c    = ecc * Math.Cosh(eanom);
+                    s    = ecc * Sinh(eanom);
+                    c    = ecc * Cosh(eanom);
                     f    = s - eanom - xma;
                     fp   = c - 1;
                     fpp  = s;
                     fppp = c;
                 }
 
-                if (Math.Abs(f) <= EPS || ++n > 20)
+                if (Abs(f) <= EPS || ++n > 20)
                     break;
 
                 // update eccentric anomaly
@@ -630,24 +560,22 @@ namespace MechJebLib.Core
             if (ecc < 1)
             {
                 // elliptic
-                sta = Math.Sqrt(1 - ecc * ecc) * Math.Sin(eanom);
-                cta = Math.Cos(eanom) - ecc;
+                sta = Sqrt(1 - ecc * ecc) * Sin(eanom);
+                cta = Cos(eanom) - ecc;
             }
             else
             {
                 // hyperbolic
-                sta = Math.Sqrt(ecc * ecc - 1) * Math.Sinh(eanom);
-                cta = ecc - Math.Cosh(eanom);
+                sta = Sqrt(ecc * ecc - 1) * Sinh(eanom);
+                cta = ecc - Cosh(eanom);
             }
 
-            nu = Math.Atan2(sta, cta);
+            nu = Atan2(sta, cta);
 
             return (eanom, nu);
         }
 
-        public static (V3 vNeg, V3 vPos, V3 r, double dt) SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false)
-        {
-            return RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, debug);
-        }
+        public static (V3 vNeg, V3 vPos, V3 r, double dt) SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false) =>
+            RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, debug);
     }
 }

@@ -10,6 +10,7 @@ using MechJebLib.Core.ODE;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLibTest.Maths
 {
@@ -63,7 +64,7 @@ namespace MechJebLibTest.Maths
                 y0[0] = x0;
                 y0[1] = v0;
                 using var yf = Vn.Rent(2);
-                double omega = Math.Sqrt(k / m);
+                double omega = Sqrt(k / m);
 
                 double dt = (tf - t0) / count1;
                 double dt2 = (tf - t0) / count2;
@@ -73,7 +74,7 @@ namespace MechJebLibTest.Maths
                 for (int i = 0; i <= count1; i++)
                 {
                     double t = t0 + dt * i;
-                    expected[i] = x0 * Math.Cos(omega * (t - t0)) + v0 * Math.Sin(omega * (t - t0)) / omega;
+                    expected[i] = x0 * Cos(omega * (t - t0)) + v0 * Sin(omega * (t - t0)) / omega;
                 }
 
                 double[] expected2 = new double[count2 + 1];
@@ -81,7 +82,7 @@ namespace MechJebLibTest.Maths
                 for (int i = 0; i <= count2; i++)
                 {
                     double t = t0 + dt2 * i;
-                    expected2[i] = x0 * Math.Cos(omega * (t - t0)) + v0 * Math.Sin(omega * (t - t0)) / omega;
+                    expected2[i] = x0 * Cos(omega * (t - t0)) + v0 * Sin(omega * (t - t0)) / omega;
                 }
 
                 for (int i = 0; i <= count1; i++)
@@ -149,7 +150,7 @@ namespace MechJebLibTest.Maths
                 var v = new V3(yin[3], yin[4], yin[5]);
 
                 double rm2 = r.sqrMagnitude;
-                double rm = Math.Sqrt(rm2);
+                double rm = Sqrt(rm2);
                 double rm3 = rm2 * rm;
 
                 V3 dr = v;

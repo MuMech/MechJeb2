@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AssertExtensions;
 using MechJebLib.Core;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLibTest.Maths
 {
@@ -47,9 +47,9 @@ namespace MechJebLibTest.Maths
 
                     double energy = ecc != 1 ? -1.0 / (2.0 * sma) : 0;
 
-                    double r = smp / (1.0 + ecc * Math.Cos(tanom));
+                    double r = smp / (1.0 + ecc * Cos(tanom));
 
-                    double v = Math.Sqrt(2 * (energy + 1.0 / r));
+                    double v = Sqrt(2 * (energy + 1.0 / r));
 
                     elist.Add(eanom);
                     tlist.Add(time);
@@ -68,11 +68,11 @@ namespace MechJebLibTest.Maths
 
                         (_, VR11, VT11, VR12, VT12, _, _, _, _) =
                             Gooding.VLAMB(1.0, rlist[n1], rlist[n2], flist[n2] - flist[n1], tlist[n2] - tlist[n1]);
-                        double vi = Math.Sqrt(VR11 * VR11 + VT11 * VT11);
-                        double vf = Math.Sqrt(VR12 * VR12 + VT12 * VT12);
+                        double vi = Sqrt(VR11 * VR11 + VT11 * VT11);
+                        double vf = Sqrt(VR12 * VR12 + VT12 * VT12);
                         double diff1 = vlist[n1] - vi;
                         double diff2 = vlist[n2] - vf;
-                        double diff = Math.Sqrt(diff1 * diff1 + diff2 * diff2);
+                        double diff = Sqrt(diff1 * diff1 + diff2 * diff2);
                         if (diff > diffmax)
                         {
                             diffmax = diff;

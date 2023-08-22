@@ -12,6 +12,7 @@ using MechJebLib.Primitives;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLibTest.Maths
 {
@@ -62,7 +63,7 @@ namespace MechJebLibTest.Maths
                 var v = new V3(yin[3], yin[4], yin[5]);
 
                 double rm2 = r.sqrMagnitude;
-                double rm = Math.Sqrt(rm2);
+                double rm = Sqrt(rm2);
                 double rm3 = rm2 * rm;
 
                 V3 dr = v;
