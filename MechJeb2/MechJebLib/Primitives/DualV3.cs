@@ -18,7 +18,7 @@ namespace MechJebLib.Primitives
         public Dual y => new Dual(M.y, D.y);
         public Dual z => new Dual(M.z, D.z);
 
-        private DualV3(V3 m, V3? dx = null)
+        public DualV3(V3 m, V3? dx = null)
         {
             M = m;
             D = dx ?? V3.zero;
@@ -30,6 +30,7 @@ namespace MechJebLib.Primitives
         public Dual   sqrMagnitude => x * x + y * y + z * z;
         public Dual   magnitude    => Dual.Sqrt(x * x + y * y + z * z);
         public DualV3 normalized   => this / magnitude;
+        public DualV3 sph2cart     => x * new DualV3(Dual.Cos(z) * Dual.Sin(y), Dual.Sin(z) * Dual.Sin(y), Dual.Cos(y));
 
         public static DualV3 operator +(DualV3 a, DualV3 b) => new DualV3(a.x + b.x, a.y + b.y, a.z + b.z);
 
