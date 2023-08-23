@@ -194,6 +194,14 @@ namespace MechJebLib.Maneuvers
             return DeltaV(mu, r, v, apR, Type.APOAPSIS, optguard);
         }
 
+        public static V3 ChangeApsis(double mu, V3 r, V3 v, double valueR, bool optguard = false)
+        {
+            if (!valueR.IsFinite())
+                throw new ArgumentException($"Bad apoapsis in ChangeOrbitalElement = {valueR}");
+
+            return valueR <= r.magnitude ? DeltaV(mu, r, v, valueR, Type.PERIAPSIS, optguard) : DeltaV(mu, r, v, valueR, Type.APOAPSIS, optguard);
+        }
+
         public static V3 ChangeSMA(double mu, V3 r, V3 v, double sma, bool optguard = false)
         {
             if (!sma.IsFinite())

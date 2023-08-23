@@ -374,6 +374,65 @@ namespace MechJebLib.Utils
             return sb.ToString();
         }
 
+        public static string DoubleArraySparsity(IList<double> user, IList<double> numerical, double tol)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append("[");
+            int last = user.Count - 1;
+
+            for (int i = 0; i <= last; i++)
+            {
+                if (user[i] == 0 && numerical[i] == 0)
+                    sb.Append("⚫"); // zero in both
+                else if (NearlyEqual(user[i], numerical[i], tol))
+                    sb.Append("✅"); // agrees
+                else if (user[i] == 0)
+                    sb.Append("❗"); // not done yet
+                else
+                    sb.Append("❌"); // mistake
+                if (i < last)
+                    sb.Append(",");
+            }
+
+            sb.Append("]");
+
+
+            return sb.ToString();
+        }
+
+        public static string DoubleMatrixString(double[,] matrix)
+        {
+            var sb = new StringBuilder();
+
+            for (int i = 0; i <= matrix.GetUpperBound(0); i++)
+                sb.AppendLine(DoubleArrayString(GetRow(matrix, i)));
+
+            return sb.ToString();
+        }
+
+        public static string DoubleMatrixSparsityCheck(double[,] user, double[,] numerical, double tol)
+        {
+            var sb = new StringBuilder();
+
+            for (int i = 0; i <= user.GetUpperBound(0); i++)
+                sb.AppendLine(DoubleArraySparsity(GetRow(user, i), GetRow(numerical, i), tol));
+
+            return sb.ToString();
+        }
+
+        public static double[] GetRow(double[,] array, int row)
+        {
+            int cols = array.GetUpperBound(1) + 1;
+            double[] result = new double[cols];
+
+            int size = sizeof(double);
+
+            Buffer.BlockCopy(array, row * cols * size, result, 0, cols * size);
+
+            return result;
+        }
+
         public static double DoubleArrayMagnitude(IList<double> array)
         {
             int last = array.Count - 1;

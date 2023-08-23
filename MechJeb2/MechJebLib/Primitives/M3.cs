@@ -563,6 +563,13 @@ namespace MechJebLib.Primitives
             }
         }
 
+        public void CopyTo(double[,] other, int x, int y)
+        {
+            for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                other[x + i, y + j] = this[i, j];
+        }
+
         // TODO:
         // private QuaternionD    GetRotation();
         // public static M3 LookAt(V3 from, V3 to, V3 up);
