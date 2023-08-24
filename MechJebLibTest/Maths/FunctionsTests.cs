@@ -10,6 +10,7 @@ using MechJebLib.Core.Functions;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
@@ -845,6 +846,7 @@ namespace MechJebLibTest.Maths
         [Fact]
         private void NextManeuverToReturnFromMoonTest()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             double centralMu = 398600435436096;
             double moonMu = 4902800066163.8;
             var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
@@ -872,11 +874,6 @@ namespace MechJebLibTest.Maths
                 r0 = new V3(1105140.06213014, -8431008.05414815, -4729658.84487529);
                 v0 = new V3(-293.374690393787, -1173.3597686151, -411.755491683683);
                 */
-
-                (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
-                    MechJebLib.Core.Maths.KeplerianFromStateVectors(moonMu, r0, v0);
-
-                _testOutputHelper.WriteLine($"sma = {sma}, ecc = {ecc} r0 = {r0} v0 = {v0}");
 
                 (V3 dv, double dt, double newPeR) =
                     ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, 0);
