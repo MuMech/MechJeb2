@@ -134,7 +134,8 @@ namespace MechJebLib.Core
         {
             var h = DualV3.Cross(r, v);
             Dual sma = SmaFromStateVectors(mu, r, v);
-            return (sma, Dual.Sqrt(Dual.Max(1 - h.sqrMagnitude / (sma * mu), 0)));
+            var ecc = Dual.Sqrt(Dual.Max(1 - h.sqrMagnitude / (sma * mu), 0));
+            return (sma, ecc);
         }
 
         public static double SmaFromStateVectors(double mu, V3 r, V3 v) => mu / (2.0 * mu / r.magnitude - V3.Dot(v, v));
@@ -401,10 +402,8 @@ namespace MechJebLib.Core
             return Clamp2Pi(-manom) / meanMotion;
         }
 
-        public static double TimeToNextTrueAnomaly(double mu, V3 r, V3 v, double nu2)
+        public static double TimetoNextTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
         {
-            (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
-
             double meanMotion = MeanMotion(mu, sma);
 
             double manom1 = Angles.MFromNu(nu1, ecc);
@@ -414,6 +413,13 @@ namespace MechJebLib.Core
                 return Clamp2Pi(manom2 - manom1) / meanMotion;
 
             return (manom2 - manom1) / meanMotion;
+        }
+
+        public static double TimeToNextTrueAnomaly(double mu, V3 r, V3 v, double nu2)
+        {
+            (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
+
+            return TimetoNextTrueAnomaly(mu, sma, ecc, nu1, nu2);
         }
 
         public static double TimeToNextRadius(double mu, V3 r, V3 v, double radius)

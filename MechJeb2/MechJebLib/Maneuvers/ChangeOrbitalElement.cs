@@ -106,7 +106,7 @@ namespace MechJebLib.Maneuvers
             }
         }
 
-        private static V3 DeltaV(double mu, V3 r, V3 v, double value, Type type, bool optguard=false)
+        private static V3 DeltaV(double mu, V3 r, V3 v, double value, Type type, bool optguard = false)
         {
             if (!mu.IsFinite())
                 throw new ArgumentException("bad mu in ChangeOrbitalElement");
@@ -116,7 +116,7 @@ namespace MechJebLib.Maneuvers
                 throw new ArgumentException("bad v in ChangeOrbitalElement");
 
             const double DIFFSTEP = 1e-7;
-            const double EPSX = 1e-15;
+            const double EPSX = 1e-7;
             const int MAXITS = 1000;
 
             const int NVARIABLES = 2;
@@ -137,7 +137,7 @@ namespace MechJebLib.Maneuvers
                 // changing the ECC is actually a global optimization problem due to basins around parabolic ecc == 1.0
                 double boost = Sign(value - 1.0) * 0.1 + Sqrt(2);
 
-                V3 dv = Core.Functions.Maneuvers.DeltaVRelativeToCircularVelocity(1.0, p, q, boost);
+                V3 dv = Simple.DeltaVRelativeToCircularVelocity(1.0, p, q, boost);
                 x[0] = dv.x;
                 x[1] = dv.y;
             }
@@ -161,7 +161,7 @@ namespace MechJebLib.Maneuvers
             }
 
             alglib.minnlcoptimize(state, NLPFunction2, null, args);
-            alglib.minnlcresults(state, out x, out alglib.minnlcreport rep);
+            alglib.minnlcresults(state, out double[] x2, out alglib.minnlcreport rep);
 
             if (rep.terminationtype < 0)
                 throw new Exception(
@@ -175,7 +175,7 @@ namespace MechJebLib.Maneuvers
                     throw new Exception("alglib optguard caught an error, i should report better on errors now");
             }
 
-            return rot * new V3(x[0], x[1], 0) * scale.VelocityScale;
+            return rot * new V3(x2[0], x2[1], 0) * scale.VelocityScale;
         }
 
         public static V3 ChangePeriapsis(double mu, V3 r, V3 v, double peR, bool optguard = false)

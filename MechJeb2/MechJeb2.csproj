@@ -118,6 +118,7 @@
         <Compile Include="MechJebLib\Core\TwoBody\Farnocchia.cs"/>
         <Compile Include="MechJebLib\Maneuvers\ChangeOrbitalElement.cs"/>
         <Compile Include="MechJebLib\Maneuvers\ReturnFromMoon.cs"/>
+        <Compile Include="MechJebLib\Maneuvers\Simple.cs"/>
         <Compile Include="MechJebLib\Primitives\Dual.cs"/>
         <Compile Include="MechJebLib\Primitives\DualV3.cs"/>
         <Compile Include="MechJebLib\Primitives\Vn.cs"/>
