@@ -58,6 +58,9 @@
     <ItemGroup>
         <Compile Include="AssertionExtensions.cs"/>
         <Compile Include="Control\PIDLoopTests.cs"/>
+        <Compile Include="Maneuvers\ChangeOrbitalElementTests.cs"/>
+        <Compile Include="Maneuvers\ReturnFromMoonTests.cs"/>
+        <Compile Include="Maneuvers\Simple.cs"/>
         <Compile Include="Maths\BisectionTests.cs"/>
         <Compile Include="Maths\BS3Tests.c.cs"/>
         <Compile Include="Maths\DP5Tests.cs"/>
