@@ -364,7 +364,7 @@ namespace MechJebLib.Maneuvers
         }
 
         private const double DIFFSTEP = 1e-9;
-        private const double EPSX     = 1e-4;
+        private const double EPSX     = 1e-8;
         private const int    MAXITS   = 1000;
 
         private const int NVARIABLES             = 20;
@@ -397,7 +397,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlccreate(NVARIABLES, x, out alglib.minnlcstate state);
 
             alglib.minnlcsetbc(state, bndl, bndu);
-            alglib.minnlcsetstpmax(state, 1e-8);
+            alglib.minnlcsetstpmax(state, 1e-4);
             //double rho = 1000.0;
             //int outerits = 5;
             //alglib.minnlcsetalgoaul(state, rho, outerits);
