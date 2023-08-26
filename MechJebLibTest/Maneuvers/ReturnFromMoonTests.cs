@@ -61,6 +61,7 @@ namespace MechJebLibTest.Maneuvers
                 r0 = new V3(1105140.06213014, -8431008.05414815, -4729658.84487529);
                 v0 = new V3(-293.374690393787, -1173.3597686151, -411.755491683683);
                 */
+                _testOutputHelper.WriteLine($"iteration: {i}");
 
                 (V3 dv, double dt, double newPeR) =
                     ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, 0);
@@ -71,6 +72,8 @@ namespace MechJebLibTest.Maneuvers
                 (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
                 V3 r3 = moonR2 + r2;
                 V3 v3 = moonV2 + v2;
+
+                _testOutputHelper.WriteLine($"periapsis: {MechJebLib.Core.Maths.PeriapsisFromStateVectors(centralMu, r3, v3)}");
 
                 MechJebLib.Core.Maths.PeriapsisFromStateVectors(centralMu, r3, v3).ShouldEqual(peR, 1e-3);
                 newPeR.ShouldEqual(peR, 1e-3);
