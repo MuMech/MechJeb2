@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.Core.ODE
 {
@@ -63,31 +64,54 @@ namespace MechJebLib.Core.ODE
                     if (errorNorm == 0)
                         factor = MAX_FACTOR;
                     else
-                        factor = Math.Min(MAX_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha) * Math.Pow(_lastErrorNorm, Beta));
+                        factor = Min(MAX_FACTOR, SAFETY * Pow(errorNorm, -_alpha) * Pow(_lastErrorNorm, Beta));
 
                     if (previouslyRejected)
-                        factor = Math.Min(1.0, factor);
+                        factor = Min(1.0, factor);
 
                     Tnew = T + Habs * Direction;
 
-                    _lastErrorNorm = Math.Max(errorNorm, 1e-4);
+                    _lastErrorNorm = Max(errorNorm, 1e-4);
 
                     return (Habs, Habs * factor);
                 }
 
-                Habs *= Math.Max(MIN_FACTOR, SAFETY * Math.Pow(errorNorm, -_alpha));
+                Habs *= Max(MIN_FACTOR, SAFETY * Pow(errorNorm, -_alpha));
 
                 previouslyRejected = true;
             }
         }
 
-        protected override double SelectInitialStep(double t0, double tf)
+        // https://github.com/scipy/scipy/blob/c374ca7fdfa32dd3817cbec0f1863e01640279eb/scipy/integrate/_ivp/common.py#L66-L121
+        // E. Hairer, S. P. Norsett G. Wanner, "Solving Ordinary Differential Equations I: Nonstiff Problems", Sec. II.4.
+        protected override double SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0, IReadOnlyList<double> dy, int direction)
         {
-            if (Hstart > 0)
-                return Hstart;
+            using Vn y = Vn.Rent(N).CopyFrom(y0);
+            using Vn f0 = Vn.Rent(N).CopyFrom(dy);
+            using Vn scale = y.Abs().MutTimes(Rtol).MutAdd(Atol);
 
-            double v = Math.Abs(tf - t0);
-            return 0.001 * v;
+            double d0 = y.magnitude / scale.magnitude;
+            double d1 = f0.magnitude / scale.magnitude;
+
+            double h0;
+            if (d0 < 1e-5 || d1 < 1e-5)
+                h0 = 1e-6;
+            else
+                h0 = 0.01 * d0 / d1;
+
+            using Vn y1 = f0.Dup().MutTimes(h0).MutTimes(direction).MutAdd(y0);
+
+            using var f1 = Vn.Rent(N);
+            f(f1, t0 + h0 * direction, y1);
+            double d2 = f1.MutSub(f0).MutDiv(scale).magnitude / h0;
+
+            double h1;
+            if (d1 <= 1e-15 && d2 <= 1e-15)
+                h1 = Max(1e-6, h0 * 1e-3);
+            else
+                h1 = Pow(0.01 / Max(d1, d2), 1.0 / (Order + 1));
+
+            return Min(100 * h0, h1);
         }
 
         protected override void Init()
@@ -118,11 +142,11 @@ namespace MechJebLib.Core.ODE
 
             for (int i = 0; i < n; i++)
             {
-                double scale = Atol + Rtol * Math.Max(Math.Abs(Y[i]), Math.Abs(Ynew[i]));
+                double scale = Atol + Rtol * Max(Abs(Y[i]), Abs(Ynew[i]));
                 error += Powi(err[i] / scale, 2);
             }
 
-            return Math.Sqrt(error / n);
+            return Sqrt(error / n);
         }
     }
 }
