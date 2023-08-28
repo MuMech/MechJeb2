@@ -19,7 +19,6 @@ namespace MechJebLib.Core.ODE
     // TODO:
     //  - Needs better MinStep based on next floating point number
     //  - Configurable to throw or just continue at MinStep
-    //  - Needs better initial step guessing
     //  - Needs working event API
     public abstract class AbstractIVP
     {
@@ -51,7 +50,7 @@ namespace MechJebLib.Core.ODE
         /// <summary>
         ///     Starting step-size (can be zero for automatic guess).
         /// </summary>
-        public double Hstart { get; set; }
+        public double Hstart { get; set; } = 0.0;
 
         /// <summary>
         ///     Interpolants are pulled on an evenly spaced grid
@@ -136,7 +135,7 @@ namespace MechJebLib.Core.ODE
 
             f(Y, T, Dy);
 
-            Habs = SelectInitialStep(f, T, Y, Dy, Direction);
+            Habs = Hstart > 0 ? Hstart : SelectInitialStep(f, T, Y, Dy, Direction);
 
             interpolant?.Add(T, Y, Dy);
 
@@ -264,10 +263,10 @@ namespace MechJebLib.Core.ODE
         }
 
         protected abstract (double, double) Step(IVPFunc f);
-        protected abstract double           SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0, IReadOnlyList<double> f0, int direction);
-        protected abstract void             InitInterpolant();
-        protected abstract void             Interpolate(double x, Vn yout);
-        protected abstract void             Init();
-        protected abstract void             Cleanup();
+        protected abstract double SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0, IReadOnlyList<double> f0, int direction);
+        protected abstract void InitInterpolant();
+        protected abstract void Interpolate(double x, Vn yout);
+        protected abstract void Init();
+        protected abstract void Cleanup();
     }
 }

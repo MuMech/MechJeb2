@@ -24,7 +24,7 @@ namespace MechJebLibTest.Maneuvers
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms
             ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
 
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+            //Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             double centralMu = 398600435436096;
             double moonMu = 4902800066163.8;
             var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
