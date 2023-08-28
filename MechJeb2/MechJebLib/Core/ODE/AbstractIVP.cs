@@ -126,7 +126,6 @@ namespace MechJebLib.Core.ODE
             IReadOnlyList<Event>? events)
         {
             Direction = t0 != tf ? Math.Sign(tf - t0) : 1;
-            Habs      = SelectInitialStep(t0, tf);
             MaxStep   = Hmax;
             MinStep   = Hmin;
 
@@ -136,6 +135,8 @@ namespace MechJebLib.Core.ODE
             int interpCount = 1;
 
             f(Y, T, Dy);
+
+            Habs = SelectInitialStep(f, T, Y, Dy, Direction);
 
             interpolant?.Add(T, Y, Dy);
 
@@ -263,7 +264,7 @@ namespace MechJebLib.Core.ODE
         }
 
         protected abstract (double, double) Step(IVPFunc f);
-        protected abstract double           SelectInitialStep(double t0, double tf);
+        protected abstract double           SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0, IReadOnlyList<double> f0, int direction);
         protected abstract void             InitInterpolant();
         protected abstract void             Interpolate(double x, Vn yout);
         protected abstract void             Init();
