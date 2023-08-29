@@ -297,7 +297,7 @@ namespace MechJebLib.Maneuvers
 
             // calculate the true anomaly of the SOI point on the transfer orbit (using the planet scale)
             double moonSOI2 = moonSOI / moonToPlanetScale.LengthScale;
-            double nuSOI = TAU-SafeAcos((sma * (1 - ecc * ecc) / moonSOI2 - 1) / ecc); // FIXME: probably assumes we're going to a periapsis?
+            double nuSOI = TAU - SafeAcos((sma * (1 - ecc * ecc) / moonSOI2 - 1) / ecc); // FIXME: probably assumes we're going to a periapsis?
 
             if (Maths.EccFromStateVectors(1.0, r0, v0) < 1 && Maths.ApoapsisFromStateVectors(1.0, r0, v0) < moonSOI)
             {
@@ -306,18 +306,18 @@ namespace MechJebLib.Maneuvers
 
                 // now compute the lunar hyperbolic burn.
                 V3 vneg, vpos, rburn;
-                (vneg, vpos, rburn, dt) = Maths.SingleImpulseHyperbolicBurn(1.0, r0, v0, vsoiPlanet * moonToPlanetScale.VelocityScale);
+                (vneg, vpos, rburn, dt) = Maths.SingleImpulseHyperbolicBurn(1.0, r0, v0, (vsoiPlanet - moonV0) * moonToPlanetScale.VelocityScale);
 
-                dv       = vpos - vneg;
-                tt1      = Maths.TimeToNextRadius(1.0, rburn, vpos, moonSOI);
+                dv           = vpos - vneg;
+                tt1          = Maths.TimeToNextRadius(1.0, rburn, vpos, moonSOI);
                 (rsoi, vsoi) = Shepperd.Solve(1.0, tt1, rburn, vpos);
             }
             else
             {
                 // if we're already on an escape trajectory, try an immediate burn and hope we're reasonably close
-                dt       = 0;
-                dv       = V3.zero;
-                tt1      = Maths.TimeToNextRadius(1.0, r0, v0, moonSOI);
+                dt           = 0;
+                dv           = V3.zero;
+                tt1          = Maths.TimeToNextRadius(1.0, r0, v0, moonSOI);
                 (rsoi, vsoi) = Shepperd.Solve(1.0, tt1, r0, v0);
             }
 
@@ -334,7 +334,10 @@ namespace MechJebLib.Maneuvers
             (rf, vf) = Shepperd.Solve(1.0, tt2, rsoiPlanet, vsoiPlanet3);
 
             V3 r2Sph = rsoi.cart2sph;
-            V3 v2Sph = vsoi.cart2sph;
+            //V3 v2Sph = vsoi.cart2sph;
+            // taking the average of the mismatch in vsoi and spreading the infeasibility over both SOIs seems to actually
+            // produce better convergence properties.
+            V3 v2Sph = (((vsoiPlanet3 - moonV2) * moonToPlanetScale.VelocityScale + vsoi) / 2).cart2sph;
 
             x[0]  = dv.x;     // maneuver x
             x[1]  = dv.y;     // maneuver y
@@ -364,8 +367,8 @@ namespace MechJebLib.Maneuvers
         }
 
         private const double DIFFSTEP = 1e-9;
-        private const double EPSX     = 1e-8;
-        private const int    MAXITS   = 1000;
+        private const double EPSX     = 1e-4;
+        private const int    MAXITS   = 10000;
 
         private const int NVARIABLES             = 20;
         private const int NEQUALITYCONSTRAINTS   = 17;
@@ -397,7 +400,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlccreate(NVARIABLES, x, out alglib.minnlcstate state);
 
             alglib.minnlcsetbc(state, bndl, bndu);
-            alglib.minnlcsetstpmax(state, 1e-4);
+            alglib.minnlcsetstpmax(state, 1e-2);
             //double rho = 1000.0;
             //int outerits = 5;
             //alglib.minnlcsetalgoaul(state, rho, outerits);
@@ -420,7 +423,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcresults(state, out double[] x2, out alglib.minnlcreport rep);
 
             sw.Stop();
-            Print($"optimization took {sw.ElapsedMilliseconds}ms");
+            Print($"optimization took {sw.ElapsedMilliseconds}ms: {rep.iterationscount} iter, {rep.nfev} fev");
 
             /*
             alglib.minnlcoptguardresults(state, out alglib.optguardreport ogrep);
