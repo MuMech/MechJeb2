@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MuMech
 {
@@ -15,10 +18,7 @@ namespace MuMech
         /// <param name="UT">Universal Time</param>
         /// <returns>World Velocity</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d WorldOrbitalVelocityAtUT(this Orbit o, double UT)
-        {
-            return o.getOrbitalVelocityAtUT(UT).xzy;
-        }
+        public static Vector3d WorldOrbitalVelocityAtUT(this Orbit o, double UT) => o.getOrbitalVelocityAtUT(UT).xzy;
 
         /// <summary>
         ///     Get the body centered inertial position at a given time in left handed world coordinates.  This value
@@ -28,10 +28,7 @@ namespace MuMech
         /// <param name="UT">Universal Time</param>
         /// <returns>BCI World Position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d WorldBCIPositionAtUT(this Orbit o, double UT)
-        {
-            return o.getRelativePositionAtUT(UT).xzy;
-        }
+        public static Vector3d WorldBCIPositionAtUT(this Orbit o, double UT) => o.getRelativePositionAtUT(UT).xzy;
 
         /// <summary>
         ///     Get the world space position at a given time in left handed world coordinates.  This value
@@ -41,10 +38,7 @@ namespace MuMech
         /// <param name="UT">Universal Time</param>
         /// <returns>World Position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d WorldPositionAtUT(this Orbit o, double UT)
-        {
-            return o.referenceBody.position + o.WorldBCIPositionAtUT(UT);
-        }
+        public static Vector3d WorldPositionAtUT(this Orbit o, double UT) => o.referenceBody.position + o.WorldBCIPositionAtUT(UT);
 
         /// <summary>
         ///     Get the orbital velocity at a given time in right handed coordinates.  This value will rotate
@@ -54,10 +48,7 @@ namespace MuMech
         /// <param name="UT">Universal Time</param>
         /// <returns>World Velocity</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static V3 RightHandedOrbitalVelocityAtUT(this Orbit o, double UT)
-        {
-            return o.getOrbitalVelocityAtUT(UT).ToV3();
-        }
+        public static V3 RightHandedOrbitalVelocityAtUT(this Orbit o, double UT) => o.getOrbitalVelocityAtUT(UT).ToV3();
 
         /// <summary>
         ///     Get the body centered inertial position at a given time in right handed coordinates.  This value
@@ -67,10 +58,7 @@ namespace MuMech
         /// <param name="UT">Universal Time</param>
         /// <returns>BCI World Position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static V3 RightHandedBCIPositionAtUT(this Orbit o, double UT)
-        {
-            return o.getRelativePositionAtUT(UT).ToV3();
-        }
+        public static V3 RightHandedBCIPositionAtUT(this Orbit o, double UT) => o.getRelativePositionAtUT(UT).ToV3();
 
         /// <summary>
         ///     Get both position and velocity state vectors at a given time in right handed coordinates.  This value
@@ -89,75 +77,47 @@ namespace MuMech
         //normalized vector perpendicular to the orbital plane
         //convention: as you look down along the orbit normal, the satellite revolves counterclockwise
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d OrbitNormal(this Orbit o)
-        {
-            return -o.GetOrbitNormal().xzy.normalized;
-        }
+        public static Vector3d OrbitNormal(this Orbit o) => -o.GetOrbitNormal().xzy.normalized;
 
         //normalized vector pointing radially outward and perpendicular to prograde
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d RadialPlus(this Orbit o, double UT)
-        {
-            return Vector3d.Exclude(o.Prograde(UT), o.Up(UT)).normalized;
-        }
+        public static Vector3d RadialPlus(this Orbit o, double UT) => Vector3d.Exclude(o.Prograde(UT), o.Up(UT)).normalized;
 
         //another name for the orbit normal; this form makes it look like the other directions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d NormalPlus(this Orbit o, double UT)
-        {
-            return o.OrbitNormal();
-        }
+        public static Vector3d NormalPlus(this Orbit o, double UT) => o.OrbitNormal();
 
         //normalized vector parallel to the planet's surface, and pointing in the same general direction as the orbital velocity
         //(parallel to an ideally spherical planet's surface, anyway)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d Horizontal(this Orbit o, double UT)
-        {
-            return Vector3d.Exclude(o.Up(UT), o.Prograde(UT)).normalized;
-        }
+        public static Vector3d Horizontal(this Orbit o, double UT) => Vector3d.Exclude(o.Up(UT), o.Prograde(UT)).normalized;
 
         //horizontal component of the velocity vector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d HorizontalVelocity(this Orbit o, double UT)
-        {
-            return Vector3d.Exclude(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT));
-        }
+        public static Vector3d HorizontalVelocity(this Orbit o, double UT) => Vector3d.Exclude(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT));
 
         //vertical component of the velocity vector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d VerticalVelocity(this Orbit o, double UT)
-        {
-            return Vector3d.Dot(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT)) * o.Up(UT);
-        }
+        public static Vector3d VerticalVelocity(this Orbit o, double UT) => Vector3d.Dot(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT)) * o.Up(UT);
 
         //normalized vector parallel to the planet's surface and pointing in the northward direction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d North(this Orbit o, double UT)
-        {
-            return Vector3d.Exclude(o.Up(UT), o.referenceBody.transform.up * (float)o.referenceBody.Radius - o.WorldBCIPositionAtUT(UT))
+        public static Vector3d North(this Orbit o, double UT) =>
+            Vector3d.Exclude(o.Up(UT), o.referenceBody.transform.up * (float)o.referenceBody.Radius - o.WorldBCIPositionAtUT(UT))
                 .normalized;
-        }
 
         //normalized vector parallel to the planet's surface and pointing in the eastward direction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3d East(this Orbit o, double UT)
-        {
-            return Vector3d.Cross(o.Up(UT), o.North(UT));
-        }
+        public static Vector3d East(this Orbit o, double UT) => Vector3d.Cross(o.Up(UT), o.North(UT));
 
         //distance from the center of the planet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Radius(this Orbit o, double UT)
-        {
-            return o.WorldBCIPositionAtUT(UT).magnitude;
-        }
+        public static double Radius(this Orbit o, double UT) => o.WorldBCIPositionAtUT(UT).magnitude;
 
         //returns a new Orbit object that represents the result of applying a given dV to o at UT
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Orbit PerturbedOrbit(this Orbit o, double UT, Vector3d dV)
-        {
-            return MuUtils.OrbitFromStateVectors(o.WorldPositionAtUT(UT), o.WorldOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
-        }
+        public static Orbit PerturbedOrbit(this Orbit o, double UT, Vector3d dV) =>
+            MuUtils.OrbitFromStateVectors(o.WorldPositionAtUT(UT), o.WorldOrbitalVelocityAtUT(UT) + dV, o.referenceBody, UT);
 
         // returns a new orbit that is identical to the current one (although the epoch will change)
         // (i tried many different APIs in the orbit class, but the GetOrbitalStateVectors/UpdateFromStateVectors route was the only one that worked)
@@ -207,26 +167,17 @@ namespace MuMech
             }
         }
 
-        //mean motion is rate of increase of the mean anomaly
+        // circular orbital speed at this instant
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double MeanMotion(this Orbit o)
-        {
-            if (o.eccentricity > 1)
-            {
-                return Math.Sqrt(o.referenceBody.gravParameter / Math.Abs(Math.Pow(o.semiMajorAxis, 3)));
-            }
+        public static double CircularOrbitSpeed(this Orbit o) => Maths.CircularVelocity(o.referenceBody.gravParameter, o.radius);
 
-            // The above formula is wrong when using the RealSolarSystem mod, which messes with orbital periods.
-            // This simpler formula should be foolproof for elliptical orbits:
-            return 2 * Math.PI / o.period;
-        }
+        // circular orbital period at this instant
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double CircularOrbitPeriod(this Orbit o) => TAU * o.radius / o.CircularOrbitSpeed();
 
         //distance between two orbiting objects at a given time
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Separation(this Orbit a, Orbit b, double UT)
-        {
-            return (a.WorldPositionAtUT(UT) - b.WorldPositionAtUT(UT)).magnitude;
-        }
+        public static double Separation(this Orbit a, Orbit b, double UT) => (a.WorldPositionAtUT(UT) - b.WorldPositionAtUT(UT)).magnitude;
 
         //Time during a's next orbit at which object a comes nearest to object b.
         //If a is hyperbolic, the examined interval is the next 100 units of mean anomaly.
@@ -240,7 +191,7 @@ namespace MuMech
             double interval = a.period;
             if (a.eccentricity > 1)
             {
-                interval = 100 / a.MeanMotion(); //this should be an interval of time that covers a large chunk of the hyperbolic arc
+                interval = 100 / a.meanMotion; //this should be an interval of time that covers a large chunk of the hyperbolic arc
             }
 
             double maxTime = UT + interval;
@@ -269,10 +220,7 @@ namespace MuMech
 
         //Distance between a and b at the closest approach found by NextClosestApproachTime
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double NextClosestApproachDistance(this Orbit a, Orbit b, double UT)
-        {
-            return a.Separation(b, a.NextClosestApproachTime(b, UT));
-        }
+        public static double NextClosestApproachDistance(this Orbit a, Orbit b, double UT) => a.Separation(b, a.NextClosestApproachTime(b, UT));
 
         //The mean anomaly of the orbit.
         //For elliptical orbits, the value return is always between 0 and 2pi
@@ -282,7 +230,7 @@ namespace MuMech
         {
             // We use ObtAtEpoch and not meanAnomalyAtEpoch because somehow meanAnomalyAtEpoch
             // can be wrong when using the RealSolarSystem mod. ObtAtEpoch is always correct.
-            double ret = (o.ObTAtEpoch + (UT - o.epoch)) * o.MeanMotion();
+            double ret = (o.ObTAtEpoch + (UT - o.epoch)) * o.meanMotion;
             if (o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
             return ret;
         }
@@ -297,7 +245,7 @@ namespace MuMech
             double currentMeanAnomaly = o.MeanAnomalyAtUT(UT);
             double meanDifference = meanAnomaly - currentMeanAnomaly;
             if (o.eccentricity < 1) meanDifference = MuUtils.ClampRadiansTwoPi(meanDifference);
-            return UT + meanDifference / o.MeanMotion();
+            return UT + meanDifference / o.meanMotion;
         }
 
         //The next time at which the orbiting object will be at periapsis.
@@ -312,7 +260,7 @@ namespace MuMech
                 return o.TimeOfTrueAnomaly(0, UT);
             }
 
-            return UT - o.MeanAnomalyAtUT(UT) / o.MeanMotion();
+            return UT - o.MeanAnomalyAtUT(UT) / o.meanMotion;
         }
 
         //Returns the next time at which the orbiting object will be at apoapsis.
@@ -323,7 +271,7 @@ namespace MuMech
         {
             if (o.eccentricity < 1)
             {
-                return o.TimeOfTrueAnomaly(Math.PI, UT);
+                return o.TimeOfTrueAnomaly(PI, UT);
             }
 
             throw new ArgumentException("OrbitExtensions.NextApoapsisTime cannot be called on hyperbolic orbits");
@@ -343,10 +291,7 @@ namespace MuMech
         //with b's orbit.
         //The returned value is always between 0 and 2 * PI.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double DescendingNodeTrueAnomaly(this Orbit a, Orbit b)
-        {
-            return MuUtils.ClampRadiansTwoPi(a.AscendingNodeTrueAnomaly(b) + Math.PI);
-        }
+        public static double DescendingNodeTrueAnomaly(this Orbit a, Orbit b) => MuUtils.ClampRadiansTwoPi(a.AscendingNodeTrueAnomaly(b) + PI);
 
         //Gives the true anomaly at which o crosses the equator going northwards, if o is east-moving,
         //or southwards, if o is west-moving.
@@ -362,55 +307,45 @@ namespace MuMech
         //or northwards, if o is west-moving.
         //The returned value is always between 0 and 2 * PI.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double DescendingNodeEquatorialTrueAnomaly(this Orbit o)
-        {
-            return MuUtils.ClampRadiansTwoPi(o.AscendingNodeEquatorialTrueAnomaly() + Math.PI);
-        }
+        public static double DescendingNodeEquatorialTrueAnomaly(this Orbit o) =>
+            MuUtils.ClampRadiansTwoPi(o.AscendingNodeEquatorialTrueAnomaly() + PI);
 
         //For hyperbolic orbits, the true anomaly only takes on values in the range
         // -M < true anomaly < +M for some M. This function computes M.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MaximumTrueAnomaly(this Orbit o)
         {
-            if (o.eccentricity < 1) return Math.PI;
-            return Math.Acos(-1 / o.eccentricity);
+            if (o.eccentricity < 1) return PI;
+            return Acos(-1 / o.eccentricity);
         }
 
         //Returns whether a has an ascending node with b. This can be false
         //if a is hyperbolic and the would-be ascending node is within the opening
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool AscendingNodeExists(this Orbit a, Orbit b)
-        {
-            return Math.Abs(MuUtils.ClampRadiansPi(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
-        }
+        public static bool AscendingNodeExists(this Orbit a, Orbit b) =>
+            Abs(MuUtils.ClampRadiansPi(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
 
         //Returns whether a has a descending node with b. This can be false
         //if a is hyperbolic and the would-be descending node is within the opening
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool DescendingNodeExists(this Orbit a, Orbit b)
-        {
-            return Math.Abs(MuUtils.ClampRadiansPi(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
-        }
+        public static bool DescendingNodeExists(this Orbit a, Orbit b) =>
+            Abs(MuUtils.ClampRadiansPi(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
 
         //Returns whether o has an ascending node with the equator. This can be false
         //if o is hyperbolic and the would-be ascending node is within the opening
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool AscendingNodeEquatorialExists(this Orbit o)
-        {
-            return Math.Abs(MuUtils.ClampRadiansPi(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
-        }
+        public static bool AscendingNodeEquatorialExists(this Orbit o) =>
+            Abs(MuUtils.ClampRadiansPi(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
 
         //Returns whether o has a descending node with the equator. This can be false
         //if o is hyperbolic and the would-be descending node is within the opening
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool DescendingNodeEquatorialExists(this Orbit o)
-        {
-            return Math.Abs(MuUtils.ClampRadiansPi(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
-        }
+        public static bool DescendingNodeEquatorialExists(this Orbit o) =>
+            Abs(MuUtils.ClampRadiansPi(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
 
         //Returns the vector from the primary to the orbiting body at periapsis
         //Better than using Orbit.eccVec because that is zero for circular orbits
@@ -457,7 +392,7 @@ namespace MuMech
             //orbit normal and vector to the periapsis. This gives a vector that points to center of the
             //outgoing side of the orbit. If vectorToAN is more than 90 degrees from this vector, it occurs
             //during the infalling part of the orbit.
-            if (Math.Abs(Vector3d.Angle(projected, Vector3d.Cross(oNormal, vectorToPe))) < 90)
+            if (Abs(Vector3d.Angle(projected, Vector3d.Cross(oNormal, vectorToPe))) < 90)
             {
                 return angleFromPe * UtilMath.Deg2Rad;
             }
@@ -478,21 +413,21 @@ namespace MuMech
 
             if (e < 1) //elliptical orbits
             {
-                double cosE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
-                double sinE = Math.Sqrt(1 - cosE * cosE);
-                if (trueAnomaly > Math.PI) sinE *= -1;
+                double cosE = (e + Cos(trueAnomaly)) / (1 + e * Cos(trueAnomaly));
+                double sinE = Sqrt(1 - cosE * cosE);
+                if (trueAnomaly > PI) sinE *= -1;
 
-                return MuUtils.ClampRadiansTwoPi(Math.Atan2(sinE, cosE));
+                return MuUtils.ClampRadiansTwoPi(Atan2(sinE, cosE));
             }
 
             //hyperbolic orbits
-            double coshE = (e + Math.Cos(trueAnomaly)) / (1 + e * Math.Cos(trueAnomaly));
+            double coshE = (e + Cos(trueAnomaly)) / (1 + e * Cos(trueAnomaly));
             if (coshE < 1)
                 throw new ArgumentException("OrbitExtensions.GetEccentricAnomalyAtTrueAnomaly: True anomaly of " + trueAnomaly +
                                             " radians is not attained by orbit with eccentricity " + o.eccentricity);
 
             double E = MuUtils.Acosh(coshE);
-            if (trueAnomaly > Math.PI) E *= -1;
+            if (trueAnomaly > PI) E *= -1;
 
             return E;
         }
@@ -507,11 +442,11 @@ namespace MuMech
             double e = o.eccentricity;
             if (e < 1) //elliptical orbits
             {
-                return MuUtils.ClampRadiansTwoPi(E - e * Math.Sin(E));
+                return MuUtils.ClampRadiansTwoPi(E - e * Sin(E));
             }
 
             //hyperbolic orbits
-            return e * Math.Sinh(E) - E;
+            return e * Sinh(E) - E;
         }
 
         //Converts a true anomaly into a mean anomaly (via the intermediate step of the eccentric anomaly)
@@ -520,10 +455,8 @@ namespace MuMech
         //NOTE: For a hyperbolic orbit, if a true anomaly is requested that does not exist (a true anomaly
         //past the true anomaly of the asymptote) then an ArgumentException is thrown
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double GetMeanAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
-        {
-            return o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
-        }
+        public static double GetMeanAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly) =>
+            o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(trueAnomaly));
 
         //Returns the next time at which a will cross its ascending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
@@ -532,10 +465,7 @@ namespace MuMech
         //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "ascending node"
         //occurs at a true anomaly that a does not actually ever attain
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TimeOfAscendingNode(this Orbit a, Orbit b, double UT)
-        {
-            return a.TimeOfTrueAnomaly(a.AscendingNodeTrueAnomaly(b), UT);
-        }
+        public static double TimeOfAscendingNode(this Orbit a, Orbit b, double UT) => a.TimeOfTrueAnomaly(a.AscendingNodeTrueAnomaly(b), UT);
 
         //Returns the next time at which a will cross its descending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
@@ -544,10 +474,7 @@ namespace MuMech
         //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "descending node"
         //occurs at a true anomaly that a does not actually ever attain
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TimeOfDescendingNode(this Orbit a, Orbit b, double UT)
-        {
-            return a.TimeOfTrueAnomaly(a.DescendingNodeTrueAnomaly(b), UT);
-        }
+        public static double TimeOfDescendingNode(this Orbit a, Orbit b, double UT) => a.TimeOfTrueAnomaly(a.DescendingNodeTrueAnomaly(b), UT);
 
         //Returns the next time at which the orbiting object will cross the equator
         //moving northward, if o is east-moving, or southward, if o is west-moving.
@@ -557,10 +484,8 @@ namespace MuMech
         //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
         //"ascending node" occurs at a true anomaly that o does not actually ever attain.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TimeOfAscendingNodeEquatorial(this Orbit o, double UT)
-        {
-            return o.TimeOfTrueAnomaly(o.AscendingNodeEquatorialTrueAnomaly(), UT);
-        }
+        public static double TimeOfAscendingNodeEquatorial(this Orbit o, double UT) =>
+            o.TimeOfTrueAnomaly(o.AscendingNodeEquatorialTrueAnomaly(), UT);
 
         //Returns the next time at which the orbiting object will cross the equator
         //moving southward, if o is east-moving, or northward, if o is west-moving.
@@ -570,10 +495,8 @@ namespace MuMech
         //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
         //"descending node" occurs at a true anomaly that o does not actually ever attain.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TimeOfDescendingNodeEquatorial(this Orbit o, double UT)
-        {
-            return o.TimeOfTrueAnomaly(o.DescendingNodeEquatorialTrueAnomaly(), UT);
-        }
+        public static double TimeOfDescendingNodeEquatorial(this Orbit o, double UT) =>
+            o.TimeOfTrueAnomaly(o.DescendingNodeEquatorialTrueAnomaly(), UT);
 
         //Computes the period of the phase angle between orbiting objects a and b.
         //This only really makes sense for approximately circular orbits in similar planes.
@@ -584,7 +507,7 @@ namespace MuMech
         public static double SynodicPeriod(this Orbit a, Orbit b)
         {
             int sign = Vector3d.Dot(a.OrbitNormal(), b.OrbitNormal()) > 0 ? 1 : -1; //detect relative retrograde motion
-            return Math.Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period));        //period after which the phase angle repeats
+            return Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period));             //period after which the phase angle repeats
         }
 
         //Computes the phase angle between two orbiting objects.
@@ -607,10 +530,7 @@ namespace MuMech
         //Note that in the convention used two objects orbiting in the same plane but in
         //opposite directions have a relative inclination of 180 degrees.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double RelativeInclination(this Orbit a, Orbit b)
-        {
-            return Math.Abs(Vector3d.Angle(a.OrbitNormal(), b.OrbitNormal()));
-        }
+        public static double RelativeInclination(this Orbit a, Orbit b) => Abs(Vector3d.Angle(a.OrbitNormal(), b.OrbitNormal()));
 
         //Finds the next time at which the orbiting object will achieve a given radius
         //from the center of the primary.
@@ -627,19 +547,17 @@ namespace MuMech
                                             " and o.ApR = " + o.ApR);
 
             double trueAnomaly1 = o.TrueAnomalyAtRadius(radius);
-            double trueAnomaly2 = 2 * Math.PI - trueAnomaly1;
+            double trueAnomaly2 = 2 * PI - trueAnomaly1;
             double time1 = o.TimeOfTrueAnomaly(trueAnomaly1, UT);
             double time2 = o.TimeOfTrueAnomaly(trueAnomaly2, UT);
             if (time2 < time1 && time2 > UT) return time2;
             return time1;
         }
 
-        public static Vector3d DeltaVToManeuverNodeCoordinates(this Orbit o, double UT, Vector3d dV)
-        {
-            return new Vector3d(Vector3d.Dot(o.RadialPlus(UT), dV),
+        public static Vector3d DeltaVToManeuverNodeCoordinates(this Orbit o, double UT, Vector3d dV) =>
+            new Vector3d(Vector3d.Dot(o.RadialPlus(UT), dV),
                 Vector3d.Dot(-o.NormalPlus(UT), dV),
                 Vector3d.Dot(o.Prograde(UT), dV));
-        }
 
         // Return the orbit of the parent body orbiting the sun
         public static Orbit TopParentOrbit(this Orbit orbit)
@@ -653,11 +571,9 @@ namespace MuMech
             return result;
         }
 
-        public static string MuString(this Orbit o)
-        {
-            return "PeA:" + o.PeA + " ApA:" + o.ApA + " SMA:" + o.semiMajorAxis + " ECC:" + o.eccentricity + " INC:" + o.inclination + " LAN:" +
-                   o.LAN + " ArgP:" + o.argumentOfPeriapsis + " TA:" + o.trueAnomaly;
-        }
+        public static string MuString(this Orbit o) =>
+            "PeA:" + o.PeA + " ApA:" + o.ApA + " SMA:" + o.semiMajorAxis + " ECC:" + o.eccentricity + " INC:" + o.inclination + " LAN:" +
+            o.LAN + " ArgP:" + o.argumentOfPeriapsis + " TA:" + o.trueAnomaly;
 
         public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState, Vessel vessel)
         {
@@ -666,11 +582,11 @@ namespace MuMech
 
             double angleFromHorizontal = 90 - Vector3d.Angle(-vessel.srf_velocity, vesselState.up);
             angleFromHorizontal = MuUtils.Clamp(angleFromHorizontal, 0, 90);
-            double sine = Math.Sin(angleFromHorizontal * UtilMath.Deg2Rad);
+            double sine = Sin(angleFromHorizontal * UtilMath.Deg2Rad);
             double g = vesselState.localg;
             double T = vesselState.limitedMaxThrustAccel;
 
-            double effectiveDecel = 0.5 * (-2 * g * sine + Math.Sqrt(2 * g * sine * (2 * g * sine) + 4 * (T * T - g * g)));
+            double effectiveDecel = 0.5 * (-2 * g * sine + Sqrt(2 * g * sine * (2 * g * sine) + 4 * (T * T - g * g)));
             double decelTime = vesselState.speedSurface / effectiveDecel;
 
             Vector3d estimatedLandingSite = vesselState.CoM + 0.5 * decelTime * vessel.srf_velocity;

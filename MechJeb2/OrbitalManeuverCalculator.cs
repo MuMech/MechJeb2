@@ -13,44 +13,30 @@ namespace MuMech
 {
     public static class OrbitalManeuverCalculator
     {
-        //Computes the speed of a circular orbit of a given radius for a given body.
-        public static double CircularOrbitSpeed(CelestialBody body, double radius)
-        {
-            //v = sqrt(GM/r)
-            return Math.Sqrt(body.gravParameter / radius);
-        }
-
         //Computes the deltaV of the burn needed to circularize an orbit at a given UT.
-        public static Vector3d DeltaVToCircularize(Orbit o, double UT)
+        public static Vector3d DeltaVToCircularize(Orbit o, double ut)
         {
-            Vector3d desiredVelocity = CircularOrbitSpeed(o.referenceBody, o.Radius(UT)) * o.Horizontal(UT);
-            Vector3d actualVelocity = o.WorldOrbitalVelocityAtUT(UT);
-            return desiredVelocity - actualVelocity;
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
+
+            V3 dv = Simple.DeltaVToCircularize(o.referenceBody.gravParameter, r, v);
+
+            return dv.V3ToWorld();
         }
 
         //Computes the deltaV of the burn needed to set a given PeR and ApR at at a given UT.
-        public static Vector3d DeltaVToEllipticize(Orbit o, double UT, double newPeR, double newApR)
+        public static Vector3d DeltaVToEllipticize(Orbit o, double ut, double newPeR, double newApR)
         {
-            double radius = o.Radius(UT);
+            double radius = o.Radius(ut);
 
             //sanitize inputs
             newPeR = MuUtils.Clamp(newPeR, 0 + 1, radius - 1);
             newApR = Math.Max(newApR, radius + 1);
 
-            double GM = o.referenceBody.gravParameter;
-            double E = -GM / (newPeR + newApR); //total energy per unit mass of new orbit
-            double L = Math.Sqrt(Math.Abs((Math.Pow(E * (newApR - newPeR), 2) - GM * GM) / (2 * E))); //angular momentum per unit mass of new orbit
-            double kineticE = E + GM / radius; //kinetic energy (per unit mass) of new orbit at UT
-            double horizontalV = L / radius; //horizontal velocity of new orbit at UT
-            double verticalV = Math.Sqrt(Math.Abs(2 * kineticE - horizontalV * horizontalV)); //vertical velocity of new orbit at UT
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            Vector3d actualVelocity = o.WorldOrbitalVelocityAtUT(UT);
+            V3 dv = Simple.DeltaVToEllipticize(o.referenceBody.gravParameter, r, v, newPeR, newApR);
 
-            //untested:
-            verticalV *= Math.Sign(Vector3d.Dot(o.Up(UT), actualVelocity));
-
-            Vector3d desiredVelocity = horizontalV * o.Horizontal(UT) + verticalV * o.Up(UT);
-            return desiredVelocity - actualVelocity;
+            return dv.V3ToWorld();
         }
 
         //Computes the delta-V of the burn required to attain a given periapsis, starting from
@@ -146,7 +132,7 @@ namespace MuMech
         {
             CelestialBody body = vessel.mainBody;
             double latitudeDegrees = vesselState.latitude;
-            double orbVel = CircularOrbitSpeed(body, vesselState.altitudeASL + body.Radius);
+            double orbVel = vessel.orbit.CircularOrbitSpeed();
             double headingOne = HeadingForInclination(inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
             double headingTwo = HeadingForInclination(-inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
             double now = Planetarium.GetUniversalTime();
@@ -859,10 +845,8 @@ namespace MuMech
 
         //Computes the delta-V of the burn at a given time required to zero out the difference in orbital velocities
         //between a given orbit and a target.
-        public static Vector3d DeltaVToMatchVelocities(Orbit o, double UT, Orbit target)
-        {
-            return target.WorldOrbitalVelocityAtUT(UT) - o.WorldOrbitalVelocityAtUT(UT);
-        }
+        public static Vector3d DeltaVToMatchVelocities(Orbit o, double UT, Orbit target) =>
+            target.WorldOrbitalVelocityAtUT(UT) - o.WorldOrbitalVelocityAtUT(UT);
 
         // Compute the delta-V of the burn at the givent time required to enter an orbit with a period of (resonanceDivider-1)/resonanceDivider of the starting orbit period
         public static Vector3d DeltaVToResonantOrbit(Orbit o, double UT, double f)
@@ -1010,7 +994,7 @@ namespace MuMech
         //
 
         public static readonly Pool<Orbit> OrbitPool = new Pool<Orbit>(createOrbit, resetOrbit);
-        private static         Orbit       createOrbit()       { return new Orbit(); }
+        private static         Orbit       createOrbit()       => new Orbit();
         private static         void        resetOrbit(Orbit o) { }
 
         private static readonly PatchedConics.SolverParameters solverParameters = new PatchedConics.SolverParameters();

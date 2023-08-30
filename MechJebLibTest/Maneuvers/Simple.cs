@@ -1,4 +1,6 @@
-﻿using MechJebLib.Primitives;
+﻿using System;
+using AssertExtensions;
+using MechJebLib.Primitives;
 using Xunit;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
@@ -7,6 +9,61 @@ namespace MechJebLibTest.Maneuvers
 {
     public class Simple
     {
+        [Fact]
+        public void DeltaVToCircularizeTest()
+        {
+            const int NTRIALS = 50;
+
+            var random = new Random();
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+
+                double rscale = random.NextDouble() * 1.5e8 + 1;
+                double vscale = random.NextDouble() * 3e4 + 1;
+                r *= rscale;
+                v *= vscale;
+                double mu = rscale * vscale * vscale;
+
+                V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToCircularize(mu, r, v);
+
+                MechJebLib.Core.Maths.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-15);
+                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
+                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
+            }
+        }
+
+        [Fact]
+        public void DeltaVToEllipticizeTest()
+        {
+            const int NTRIALS = 50;
+
+            var random = new Random();
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                double newPeR = random.NextDouble() * r.magnitude;
+                double newApR = random.NextDouble() * 1e9 + r.magnitude;
+
+                double rscale = random.NextDouble() * 1.5e8 + 1;
+                double vscale = random.NextDouble() * 3e4 + 1;
+                r      *= rscale;
+                v      *= vscale;
+                newPeR *= rscale;
+                newApR *= rscale;
+                double mu = rscale * vscale * vscale;
+
+                V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToEllipticize(mu, r, v, newPeR, newApR);
+
+                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-5);
+                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-5);
+            }
+        }
+
         [Fact]
         public void DeltaVToChangeInclinationTest1()
         {
