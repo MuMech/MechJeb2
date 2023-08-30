@@ -24,7 +24,7 @@ namespace MechJebLibTest.Maneuvers
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms
             ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
 
-            //Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+            // Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             double centralMu = 398600435436096;
             double moonMu = 4902800066163.8;
             var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
@@ -32,7 +32,7 @@ namespace MechJebLibTest.Maneuvers
             double moonSOI = 66167158.6569544;
             var r0 = new V3(4198676.73768844, 5187520.71497923, -3.29371833446352);
             var v0 = new V3(-666.230112925872, 539.234048888927, 0.000277598267012666);
-            double peR = 6.3781e6 + 60000; // 60Mm
+            double peR = 6.3781e6 + 60000; // 60km
 
             // this test periodically just fails, although its about 1-in-150 right now
             for (int i = 0; i < 1; i++)
@@ -48,6 +48,18 @@ namespace MechJebLibTest.Maneuvers
                     continue;
 
                 /*
+                r0 = new V3(3033960.04435434, -538512.74449519, -1569171.01639252);
+                v0 = new V3(344.550626047212, -973.108221764261, 907.813925253141);
+
+                r0 = new V3(-23744.6019871556, -935848.195057236, -2970820.75826717);
+                v0 = new V3(-511.683969531061, -141.692448007731, 975.982327934346);
+
+                r0 = new V3(-1358340.16497667, -2896749.43027493, -2706207.90479207);
+                v0 = new V3(774.176044284448, -468.922061598358, -642.571722922182);
+
+                 r0 = new V3(-2370135.82005065, -78770.3300753334, 504857.052794559);
+                 v0 = new V3(-735.735041897621, -590.266316007015, -137.364944041411);
+
                 r0 = new V3(1922287.76973033, 1688857.60199125, -1128186.04080648);
                 v0 = new V3(-644.272529354446, 90.1035308326145, -74.2516010414118);
 
