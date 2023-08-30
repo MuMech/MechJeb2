@@ -180,15 +180,13 @@ namespace MuMech
         public int markBodyIndex = 1;
 
         [ValueInfoItem("#MechJeb_MarkBody", InfoItem.Category.Recorder)] //Mark body
-        public string MarkBody() { return FlightGlobals.Bodies[markBodyIndex].bodyName; }
+        public string MarkBody() => FlightGlobals.Bodies[markBodyIndex].bodyName;
 
         [ValueInfoItem("#MechJeb_DistanceFromMark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")] //Distance from mark
-        public double DistanceFromMark()
-        {
-            return Vector3d.Distance(VesselState.CoM,
+        public double DistanceFromMark() =>
+            Vector3d.Distance(VesselState.CoM,
                 FlightGlobals.Bodies[markBodyIndex].GetWorldSurfacePosition(markLatitude, markLongitude, markAltitude) -
                 FlightGlobals.Bodies[markBodyIndex].position);
-        }
 
         [ValueInfoItem("#MechJeb_DownrangeDistance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")] //Downrange distance
         public double GroundDistanceFromMark()
@@ -267,7 +265,7 @@ namespace MuMech
 
             maxDragGees = Math.Max(maxDragGees, VesselState.drag / 9.81);
 
-            double circularPeriod = 2 * Math.PI * VesselState.radius / OrbitalManeuverCalculator.CircularOrbitSpeed(MainBody, VesselState.radius);
+            double circularPeriod = Orbit.CircularOrbitPeriod();
             double angleTraversed = VesselState.longitude - markLongitude + 360 * (VesselState.time - markUT) / Part.vessel.mainBody.rotationPeriod;
             phaseAngleFromMark = MuUtils.ClampDegrees360(360 * (VesselState.time - markUT) / circularPeriod - angleTraversed);
 
@@ -348,7 +346,7 @@ namespace MuMech
                 for (int idx = 0; idx <= historyIdx; idx++)
                 {
                     RecordStruct r = history[idx];
-                    writer.Write(r[(recordType)0]);
+                    writer.Write(r[0]);
                     for (int i = 1; i < typeCount; i++)
                     {
                         writer.Write(',');

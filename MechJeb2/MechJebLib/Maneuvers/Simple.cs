@@ -2,6 +2,8 @@
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+using static System.Math;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Maneuvers
 {
@@ -29,6 +31,29 @@ namespace MechJebLib.Maneuvers
 
             var h = V3.Cross(r, v);
             return Maths.CircularVelocityFromHvec(mu, r, h) - v;
+        }
+
+        public static V3 DeltaVToEllipticize(double mu, V3 r, V3 v, double newPeR, double newApR)
+        {
+            double rm = r.magnitude;
+            // orbital energy
+            double e = -mu / (newPeR + newApR);
+            // orbital angular momentum
+            double l = Sqrt(Abs((Powi(e * (newApR - newPeR), 2) - mu * mu) / (2 * e)));
+            // orbital kinetic energy
+            double ke = e + mu / rm;
+
+            // radial/transverse as used in RSW, see Vallado
+            double vtransverse = l / rm;
+            double vradial = Sqrt(Abs(2 * ke - vtransverse * vtransverse));
+
+            V3 radialhat = r.normalized;
+            V3 transversehat = V3.Cross(V3.Cross(radialhat, v), radialhat).normalized;
+
+            V3 one = vtransverse * transversehat + vradial * radialhat - v;
+            V3 two = vtransverse * transversehat - vradial * radialhat - v;
+
+            return one.magnitude < two.magnitude ? one : two;
         }
 
         public static V3 DeltaVToCircularizeAfterTime(double mu, V3 r, V3 v, double dt)

@@ -751,7 +751,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_CircularOrbitSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Circular orbit speed
-        public double CircularOrbitSpeed() => OrbitalManeuverCalculator.CircularOrbitSpeed(MainBody, VesselState.radius);
+        public double CircularOrbitSpeed() => Orbit.CircularOrbitSpeed();
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showStagedMass = false;
