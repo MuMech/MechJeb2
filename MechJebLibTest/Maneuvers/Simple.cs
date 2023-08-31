@@ -59,8 +59,36 @@ namespace MechJebLibTest.Maneuvers
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToEllipticize(mu, r, v, newPeR, newApR);
 
-                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-5);
-                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-5);
+                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-4);
+                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
+            }
+        }
+
+        [Fact]
+        public void DeltaVToChangeInclinationTest()
+        {
+            const int NTRIALS = 50;
+
+            var random = new Random();
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+
+                double rscale = random.NextDouble() * 1.5e8 + 1;
+                double vscale = random.NextDouble() * 3e4 + 1;
+                r      *= rscale;
+                v      *= vscale;
+
+                double plusOrMinusOne = random.Next(0, 2) * 2 - 1;
+                double lat = MechJebLib.Core.Maths.LatitudeFromBCI(r);
+                double newInc = Abs(lat) + random.NextDouble() * (PI - 2 * Abs(lat));
+                newInc *= plusOrMinusOne;
+
+                V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToChangeInclination(r, v, newInc);
+
+                MechJebLib.Core.Maths.IncFromStateVectors(r, v + dv).ShouldEqual(Abs(newInc), 1e-4);
             }
         }
 

@@ -35,6 +35,13 @@ namespace MechJebLib.Maneuvers
 
         public static V3 DeltaVToEllipticize(double mu, V3 r, V3 v, double newPeR, double newApR)
         {
+            Check.Finite(mu);
+            Check.Finite(r);
+            Check.Finite(v);
+            Check.Positive(mu);
+            Check.Positive(newPeR);
+            Check.Finite(newApR);
+
             double rm = r.magnitude;
             // orbital energy
             double e = -mu / (newPeR + newApR);
@@ -52,6 +59,9 @@ namespace MechJebLib.Maneuvers
 
             V3 one = vtransverse * transversehat + vradial * radialhat - v;
             V3 two = vtransverse * transversehat - vradial * radialhat - v;
+
+            Check.Finite(one);
+            Check.Finite(two);
 
             return one.magnitude < two.magnitude ? one : two;
         }
