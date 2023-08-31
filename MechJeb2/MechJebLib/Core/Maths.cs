@@ -221,13 +221,19 @@ namespace MechJebLib.Core
             return m * vec;
         }
 
+        public static double HeadingForVelocity(V3 r, V3 v)
+        {
+            V3 venu = ECIToENU(r, v);
+            return Clamp2Pi(Atan2(venu[0], venu[1]));
+        }
+
         public static V3 VelocityForHeading(V3 r, V3 v, double newHeading)
         {
-            V3 vtemp = ECIToENU(r, v);
-            double hmag = new V3(vtemp.x, vtemp.y).magnitude;
-            vtemp[0] = hmag * Sin(newHeading);
-            vtemp[1] = hmag * Cos(newHeading);
-            return ENUToECI(r, vtemp);
+            V3 venu = ECIToENU(r, v);
+            double hmag = new V3(venu.x, venu.y).magnitude;
+            venu[0] = hmag * Sin(newHeading);
+            venu[1] = hmag * Cos(newHeading);
+            return ENUToECI(r, venu);
         }
 
         public static V3 ENUHeadingForInclination(double inc, V3 r) => ENUHeadingForInclination(inc, LatitudeFromBCI(r));
@@ -287,6 +293,13 @@ namespace MechJebLib.Core
             );
 
             return m * v;
+        }
+
+        public static V3 EscapeVelocityForInclination(double mu, V3 r, double newInc)
+        {
+            V3 vf = ENUHeadingForInclination(newInc, r) * EscapeVelocity(mu, r.magnitude);
+            vf = ENUToECI(r, vf);
+            return vf;
         }
 
         public static V3 VelocityForInclination(V3 r, V3 v, double newInc)
