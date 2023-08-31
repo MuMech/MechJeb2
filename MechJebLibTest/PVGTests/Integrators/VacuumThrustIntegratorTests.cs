@@ -5,7 +5,7 @@ using MechJebLib.PVG.Integrators;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace MechJebLibTest.PVG
+namespace MechJebLibTest.PVGTests
 {
     public class VacuumThrustIntegratorTests
     {

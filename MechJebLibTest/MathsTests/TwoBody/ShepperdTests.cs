@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using AssertExtensions;
+using MechJebLib.Core;
 using MechJebLib.Core.ODE;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
@@ -14,7 +15,7 @@ using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.Maths
+namespace MechJebLibTest.MathsTests
 {
     public class ShepperdTests
     {
@@ -139,7 +140,7 @@ namespace MechJebLibTest.Maths
                 double dt = 10 * random.NextDouble() - 5;
 
                 (double _, double ecc, double _, double _, double _, double _, double _) =
-                    MechJebLib.Core.Maths.KeplerianFromStateVectors(1.0, r0, v0);
+                    Maths.KeplerianFromStateVectors(1.0, r0, v0);
 
                 // near-parabolic orbits are difficult for Shepperd, see the Farnocchia paper.
                 if (ecc < 1.01 && ecc > 0.99)

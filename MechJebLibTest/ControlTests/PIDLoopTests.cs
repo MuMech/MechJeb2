@@ -1,7 +1,7 @@
 using MechJebLib.Control;
 using Xunit;
 
-namespace MechJebLibTest.Control
+namespace ControlTests
 {
     public class PIDLoopTests
     {

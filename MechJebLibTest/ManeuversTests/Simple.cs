@@ -1,11 +1,12 @@
 ﻿using System;
 using AssertExtensions;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using Xunit;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest.Maneuvers
+namespace MechJebLibTest.ManeuversTests
 {
     public class Simple
     {
@@ -29,9 +30,9 @@ namespace MechJebLibTest.Maneuvers
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToCircularize(mu, r, v);
 
-                MechJebLib.Core.Maths.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-15);
-                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
-                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
+                Maths.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-15);
+                Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
+                Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
             }
         }
 
@@ -59,8 +60,8 @@ namespace MechJebLibTest.Maneuvers
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToEllipticize(mu, r, v, newPeR, newApR);
 
-                MechJebLib.Core.Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-4);
-                MechJebLib.Core.Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
+                Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-4);
+                Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
             }
         }
 
@@ -78,17 +79,17 @@ namespace MechJebLibTest.Maneuvers
 
                 double rscale = random.NextDouble() * 1.5e8 + 1;
                 double vscale = random.NextDouble() * 3e4 + 1;
-                r      *= rscale;
-                v      *= vscale;
+                r *= rscale;
+                v *= vscale;
 
                 double plusOrMinusOne = random.Next(0, 2) * 2 - 1;
-                double lat = MechJebLib.Core.Maths.LatitudeFromBCI(r);
+                double lat = Maths.LatitudeFromBCI(r);
                 double newInc = Abs(lat) + random.NextDouble() * (PI - 2 * Abs(lat));
                 newInc *= plusOrMinusOne;
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToChangeInclination(r, v, newInc);
 
-                MechJebLib.Core.Maths.IncFromStateVectors(r, v + dv).ShouldEqual(Abs(newInc), 1e-4);
+                Maths.IncFromStateVectors(r, v + dv).ShouldEqual(Abs(newInc), 1e-4);
             }
         }
 
@@ -98,7 +99,7 @@ namespace MechJebLibTest.Maneuvers
             const double mu = 3.986004418e+14;
             const double rearth = 6.371e+6;
             const double r185 = rearth + 185e+3;
-            double v185 = MechJebLib.Core.Maths.CircularVelocity(mu, r185);
+            double v185 = Maths.CircularVelocity(mu, r185);
 
             var r0 = new V3(r185, 0, 0);
             var v0 = new V3(0, v185, 0);
@@ -118,7 +119,7 @@ namespace MechJebLibTest.Maneuvers
             const double mu = 3.986004418e+14;
             const double rearth = 6.371e+6;
             const double r185 = rearth + 185e+3;
-            double v185 = MechJebLib.Core.Maths.CircularVelocity(mu, r185);
+            double v185 = Maths.CircularVelocity(mu, r185);
 
             var r0 = new V3(r185, 0, 0);
             var v0 = new V3(0, v185, 0);

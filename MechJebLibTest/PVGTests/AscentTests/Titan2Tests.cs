@@ -6,12 +6,13 @@
 
 using System;
 using AssertExtensions;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest.PVG
+namespace MechJebLibTest.PVGTests
 {
     public class Titan2Tests
     {
@@ -44,7 +45,7 @@ namespace MechJebLibTest.PVG
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
-                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
+                Maths.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(0).ShouldEqual(r0);
             solution.V(0).ShouldEqual(v0);
@@ -94,7 +95,7 @@ namespace MechJebLibTest.PVG
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
-                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
+                Maths.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(0).ShouldEqual(r0);
             solution.V(0).ShouldEqual(v0);
@@ -144,7 +145,7 @@ namespace MechJebLibTest.PVG
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
-                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
+                Maths.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(0).ShouldEqual(r0);
             solution.V(0).ShouldEqual(v0);
@@ -155,8 +156,8 @@ namespace MechJebLibTest.PVG
             solution.Vgo(0).ShouldEqual(8498.9352440057573, 1e-7);
             solution.Pv(0).ShouldEqual(new V3(0.24009395607850137, 0.21526467329187604, 0.13094696426599889), 1e-7);
 
-            double aprf = MechJebLib.Core.Maths.ApoapsisFromKeplerian(smaf, eccf);
-            double perf = MechJebLib.Core.Maths.PeriapsisFromKeplerian(smaf, eccf);
+            double aprf = Maths.ApoapsisFromKeplerian(smaf, eccf);
+            double perf = Maths.PeriapsisFromKeplerian(smaf, eccf);
 
             perf.ShouldEqual(PeR, 1e-9);
             aprf.ShouldEqual(ApR, 1e-9);

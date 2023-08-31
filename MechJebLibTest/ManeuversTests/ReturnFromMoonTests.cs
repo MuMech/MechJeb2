@@ -1,13 +1,13 @@
 ﻿using System;
 using AssertExtensions;
+using MechJebLib.Core;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace MechJebLibTest.Maneuvers
+namespace MechJebLibTest.ManeuversTests
 {
     public class ReturnFromMoonTests
     {
@@ -43,8 +43,8 @@ namespace MechJebLibTest.Maneuvers
                 v0 = new V3(2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000);
 
                 // skip if its already an escape orbit
-                if (MechJebLib.Core.Maths.EccFromStateVectors(moonMu, r0, v0) > 1 ||
-                    MechJebLib.Core.Maths.ApoapsisFromStateVectors(moonMu, r0, v0) > moonSOI)
+                if (Maths.EccFromStateVectors(moonMu, r0, v0) > 1 ||
+                    Maths.ApoapsisFromStateVectors(moonMu, r0, v0) > moonSOI)
                     continue;
 
                 /*
@@ -79,15 +79,15 @@ namespace MechJebLibTest.Maneuvers
                     ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, 0);
 
                 (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
-                double tt1 = MechJebLib.Core.Maths.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
+                double tt1 = Maths.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
                 (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
                 (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
                 V3 r3 = moonR2 + r2;
                 V3 v3 = moonV2 + v2;
 
-                _testOutputHelper.WriteLine($"periapsis: {MechJebLib.Core.Maths.PeriapsisFromStateVectors(centralMu, r3, v3)}");
+                _testOutputHelper.WriteLine($"periapsis: {Maths.PeriapsisFromStateVectors(centralMu, r3, v3)}");
 
-                MechJebLib.Core.Maths.PeriapsisFromStateVectors(centralMu, r3, v3).ShouldEqual(peR, 1e-3);
+                Maths.PeriapsisFromStateVectors(centralMu, r3, v3).ShouldEqual(peR, 1e-3);
                 newPeR.ShouldEqual(peR, 1e-3);
             }
         }

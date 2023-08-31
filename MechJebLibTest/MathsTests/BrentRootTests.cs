@@ -11,7 +11,7 @@ using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.Maths
+namespace MechJebLibTest.MathsTests
 {
     public class BrentRootTests
     {
