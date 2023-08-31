@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using KSP.Localization;
 using UnityEngine;
 using UnityEngine.Profiling;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MuMech
 {

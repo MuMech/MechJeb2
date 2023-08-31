@@ -11,7 +11,7 @@ using MechJebLib.Core;
 using MechJebLib.PVG;
 using MechJebLib.Simulations;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 #nullable enable
 

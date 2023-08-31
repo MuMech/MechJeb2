@@ -6,10 +6,10 @@
 
 using AssertExtensions;
 using Xunit;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.UtilsTests
+namespace MechJebLibTest
 {
     public class StaticTests
     {

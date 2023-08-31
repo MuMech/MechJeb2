@@ -10,7 +10,7 @@ using System.Diagnostics;
 using MechJebLib.Core;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 namespace MechJebLib.Maneuvers

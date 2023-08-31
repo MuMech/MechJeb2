@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using KSP.Localization;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using Object = UnityEngine.Object;
 
 namespace MuMech

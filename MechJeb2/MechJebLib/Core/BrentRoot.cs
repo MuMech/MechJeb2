@@ -7,7 +7,7 @@
 
 using System;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator

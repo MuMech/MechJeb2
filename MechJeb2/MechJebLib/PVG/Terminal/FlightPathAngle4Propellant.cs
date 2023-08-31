@@ -6,7 +6,7 @@
 using System;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 #nullable enable
 

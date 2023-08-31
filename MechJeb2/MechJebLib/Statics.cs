@@ -11,9 +11,10 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static System.Math;
 
-namespace MechJebLib.Utils
+namespace MechJebLib
 {
     /// <summary>
     ///     Static class for helpers which are common enough that they're used as syntactic sugar.

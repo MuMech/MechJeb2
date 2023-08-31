@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using KSP.Localization;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MuMech
 {

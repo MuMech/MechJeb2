@@ -4,7 +4,7 @@ using MechJebLib.PVG;
 using MechJebLib.PVG.Integrators;
 using Xunit;
 using Xunit.Abstractions;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MechJebLibTest.PVGTests
 {

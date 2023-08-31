@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 #nullable enable
 

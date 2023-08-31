@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 #nullable enable

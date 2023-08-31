@@ -7,7 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 #nullable enable

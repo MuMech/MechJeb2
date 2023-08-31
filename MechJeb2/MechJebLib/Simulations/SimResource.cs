@@ -1,4 +1,4 @@
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 #nullable enable
 

@@ -3,7 +3,7 @@ using AssertExtensions;
 using MechJebLib.Core;
 using Xunit;
 using Xunit.Abstractions;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.MathsTests

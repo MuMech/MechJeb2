@@ -3,7 +3,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MechJebLib.Utils
 {
