@@ -8,6 +8,7 @@ using Smooth.Pools;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -101,21 +102,9 @@ namespace MuMech
         //Returned heading is in degrees and in the range 0 to 360.
         //If the given latitude is too large, so that an orbit with a given inclination never attains the
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        public static double HeadingForInclination(double inclinationDegrees, double latitudeDegrees)
+        private static double HeadingForInclination(double inclinationDegrees, double latitudeDegrees)
         {
-            double cosDesiredSurfaceAngle = Math.Cos(inclinationDegrees * UtilMath.Deg2Rad) / Math.Cos(latitudeDegrees * UtilMath.Deg2Rad);
-            if (Math.Abs(cosDesiredSurfaceAngle) > 1.0)
-            {
-                //If inclination < latitude, we get this case: the desired inclination is impossible
-                if (Math.Abs(MuUtils.ClampDegrees180(inclinationDegrees)) < 90) return 90;
-                return 270;
-            }
-
-            double angleFromEast = UtilMath.Rad2Deg * Math.Acos(cosDesiredSurfaceAngle); //an angle between 0 and 180
-            if (inclinationDegrees < 0) angleFromEast *= -1;
-            //now angleFromEast is between -180 and 180
-
-            return MuUtils.ClampDegrees360(90 - angleFromEast);
+            return Rad2Deg(Maths.HeadingForInclination(Deg2Rad(inclinationDegrees), Deg2Rad(latitudeDegrees)));
         }
 
         //See #676
@@ -199,17 +188,13 @@ namespace MuMech
         //   - first, clamp newInclination to the range -180, 180
         //   - if newInclination > 0, do the cheaper burn to set that inclination
         //   - if newInclination < 0, do the more expensive burn to set that inclination
-        public static Vector3d DeltaVToChangeInclination(Orbit o, double UT, double newInclination)
+        public static Vector3d DeltaVToChangeInclination(Orbit o, double ut, double newInclination)
         {
-            double latitude = o.referenceBody.GetLatitude(o.WorldPositionAtUT(UT));
-            double desiredHeading = HeadingForInclination(newInclination, latitude);
-            var actualHorizontalVelocity = Vector3d.Exclude(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT));
-            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Sin(UtilMath.Deg2Rad * desiredHeading) * o.East(UT);
-            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(UtilMath.Deg2Rad * desiredHeading) * o.North(UT);
-            if (Vector3d.Dot(actualHorizontalVelocity, northComponent) < 0) northComponent *= -1;
-            if (MuUtils.ClampDegrees180(newInclination) < 0) northComponent                *= -1;
-            Vector3d desiredHorizontalVelocity = eastComponent + northComponent;
-            return desiredHorizontalVelocity - actualHorizontalVelocity;
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
+
+            V3 dv = Simple.DeltaVToChangeInclination(r, v, Deg2Rad(newInclination));
+
+            return dv.V3ToWorld();
         }
 
         //Computes the delta-V and time of a burn to match planes with the target orbit. The output burnUT
