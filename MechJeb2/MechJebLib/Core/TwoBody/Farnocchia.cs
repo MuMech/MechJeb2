@@ -9,7 +9,7 @@ using System;
 using MechJebLib.Core.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MechJebLib.Core.TwoBody
 {

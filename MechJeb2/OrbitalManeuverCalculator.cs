@@ -8,7 +8,7 @@ using Smooth.Pools;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MuMech
 {

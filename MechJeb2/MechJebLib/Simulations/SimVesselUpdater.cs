@@ -7,7 +7,7 @@ using KSP.UI.Screens;
 using MechJebLib.Simulations.PartModules;
 using MuMech;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 namespace MechJebLib.Simulations

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Text;
 using MechJebLib.Core;
 using MechJebLib.Primitives;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 namespace MechJebLib.PVG

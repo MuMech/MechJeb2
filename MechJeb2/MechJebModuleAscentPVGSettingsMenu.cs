@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MuMech
 {

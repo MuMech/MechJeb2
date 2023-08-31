@@ -3,7 +3,7 @@ using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static System.Math;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MechJebLib.Maneuvers
 {

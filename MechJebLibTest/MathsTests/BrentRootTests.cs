@@ -8,7 +8,7 @@ using AssertExtensions;
 using MechJebLib.Core;
 using MechJebLib.Utils;
 using Xunit;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.MathsTests

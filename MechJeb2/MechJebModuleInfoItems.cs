@@ -8,7 +8,7 @@ using KSP.UI.Screens;
 using Smooth.Pools;
 using UniLinq;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MuMech
 {

@@ -4,7 +4,7 @@ using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using Xunit;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MechJebLibTest.PVGTests
 {

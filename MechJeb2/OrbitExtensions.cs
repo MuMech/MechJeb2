@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using MechJebLib.Core;
 using MechJebLib.Primitives;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 namespace MuMech

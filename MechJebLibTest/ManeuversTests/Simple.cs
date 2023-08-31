@@ -4,7 +4,7 @@ using MechJebLib.Core;
 using MechJebLib.Primitives;
 using Xunit;
 using static System.Math;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MechJebLibTest.ManeuversTests
 {

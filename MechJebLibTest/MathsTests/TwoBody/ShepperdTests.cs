@@ -12,7 +12,7 @@ using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using Xunit;
 using Xunit.Abstractions;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.MathsTests

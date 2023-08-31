@@ -2,7 +2,7 @@
 
 using System.Collections.Generic;
 using MechJebLib.Simulations.PartModules;
-using static MechJebLib.Utils.Statics;
+using static MechJebLib.Statics;
 
 namespace MechJebLib.Simulations
 {
