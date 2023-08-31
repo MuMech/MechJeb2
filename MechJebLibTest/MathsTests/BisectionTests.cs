@@ -2,7 +2,7 @@
 using MechJebLib.Core;
 using Xunit;
 
-namespace MechJebLibTest.Maths
+namespace MechJebLibTest.MathsTests
 {
     public class BisectionTests
     {

@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.Maths
+namespace MechJebLibTest.MathsTests
 {
     public class GoodingTests
     {
@@ -39,9 +39,9 @@ namespace MechJebLibTest.Maths
                 {
                     double eanom = Deg2Rad(i);
 
-                    double time = MechJebLib.Core.Maths.TimeSincePeriapsisFromEccentricAnomaly(mu, sma, ecc, eanom);
+                    double time = Maths.TimeSincePeriapsisFromEccentricAnomaly(mu, sma, ecc, eanom);
 
-                    double tanom = MechJebLib.Core.Maths.TrueAnomalyFromEccentricAnomaly(ecc, eanom);
+                    double tanom = Maths.TrueAnomalyFromEccentricAnomaly(ecc, eanom);
 
                     double smp = ecc == 1 ? 2 * sma : sma * (1.0 - ecc * ecc);
 

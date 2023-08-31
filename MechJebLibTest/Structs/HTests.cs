@@ -8,7 +8,7 @@ using AssertExtensions;
 using MechJebLib.Primitives;
 using Xunit;
 
-namespace MechJebLibTest.Structs
+namespace MechJebLibTest.StructsTest
 {
     public class HTests
     {

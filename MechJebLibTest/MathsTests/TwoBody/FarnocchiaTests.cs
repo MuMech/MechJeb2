@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.Maths
+namespace MechJebLibTest.MathsTests
 {
     public class FarnocchiaTests
     {

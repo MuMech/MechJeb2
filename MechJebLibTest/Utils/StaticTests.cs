@@ -9,7 +9,7 @@ using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.Utils
+namespace MechJebLibTest.UtilsTests
 {
     public class StaticTests
     {

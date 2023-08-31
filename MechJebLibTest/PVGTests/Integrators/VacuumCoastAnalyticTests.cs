@@ -6,7 +6,7 @@ using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest.PVG
+namespace MechJebLibTest.PVGTests
 {
     public class VacuumCoastAnalyticTests
     {

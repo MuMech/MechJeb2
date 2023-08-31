@@ -1,11 +1,12 @@
 ﻿using System;
 using AssertExtensions;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest.PVG
+namespace MechJebLibTest.PVGTests
 {
     // test from buggy rockets that people have given me
     public class BuggyTests
@@ -46,7 +47,7 @@ namespace MechJebLibTest.PVG
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
-                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
+                Maths.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(t0).ShouldEqual(r0);
             solution.V(t0).ShouldEqual(v0);

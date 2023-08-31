@@ -1,11 +1,12 @@
 ﻿using System;
 using AssertExtensions;
+using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest.PVG
+namespace MechJebLibTest.PVGTests
 {
     public class TheStandardTests
     {
@@ -49,7 +50,7 @@ namespace MechJebLibTest.PVG
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
-                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf, vf);
+                Maths.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(t0).ShouldEqual(r0);
             solution.V(t0).ShouldEqual(v0);
@@ -91,7 +92,7 @@ namespace MechJebLibTest.PVG
             (V3 rf2, V3 vf2) = solution2.TerminalStateVectors();
 
             (double smaf2, double eccf2, double incf2, double lanf2, double argpf2, double tanof2, _) =
-                MechJebLib.Core.Maths.KeplerianFromStateVectors(mu, rf2, vf2);
+                Maths.KeplerianFromStateVectors(mu, rf2, vf2);
 
             solution2.R(t0).ShouldEqual(r0);
             solution2.V(t0).ShouldEqual(v0);
