@@ -93,18 +93,6 @@ namespace MuMech
             return dv.V3ToWorld();
         }
 
-        //Computes the heading of the ground track of an orbit with a given inclination at a given latitude.
-        //Both inputs are in degrees.
-        //Convention: At equator, inclination    0 => heading 90 (east)
-        //                        inclination   90 => heading 0  (north)
-        //                        inclination  -90 => heading 180 (south)
-        //                        inclination ±180 => heading 270 (west)
-        //Returned heading is in degrees and in the range 0 to 360.
-        //If the given latitude is too large, so that an orbit with a given inclination never attains the
-        //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        private static double HeadingForInclination(double inclinationDegrees, double latitudeDegrees) =>
-            Rad2Deg(Maths.HeadingForInclination(Deg2Rad(inclinationDegrees), Deg2Rad(latitudeDegrees)));
-
         //See #676
         //Computes the heading for a ground launch at the specified latitude accounting for the body rotation.
         //Both inputs are in degrees.
