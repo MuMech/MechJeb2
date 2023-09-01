@@ -6,9 +6,9 @@ using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using Smooth.Pools;
 using UnityEngine;
+using static MechJebLib.Statics;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
-using static MechJebLib.Statics;
 
 namespace MuMech
 {
@@ -102,10 +102,8 @@ namespace MuMech
         //Returned heading is in degrees and in the range 0 to 360.
         //If the given latitude is too large, so that an orbit with a given inclination never attains the
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        private static double HeadingForInclination(double inclinationDegrees, double latitudeDegrees)
-        {
-            return Rad2Deg(Maths.HeadingForInclination(Deg2Rad(inclinationDegrees), Deg2Rad(latitudeDegrees)));
-        }
+        private static double HeadingForInclination(double inclinationDegrees, double latitudeDegrees) =>
+            Rad2Deg(Maths.HeadingForInclination(Deg2Rad(inclinationDegrees), Deg2Rad(latitudeDegrees)));
 
         //See #676
         //Computes the heading for a ground launch at the specified latitude accounting for the body rotation.
@@ -117,67 +115,12 @@ namespace MuMech
         //Returned heading is in degrees and in the range 0 to 360.
         //If the given latitude is too large, so that an orbit with a given inclination never attains the
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        public static double HeadingForLaunchInclination(Vessel vessel, VesselState vesselState, double inclinationDegrees)
+        public static double HeadingForLaunchInclination(Orbit o, double inclinationDegrees)
         {
-            CelestialBody body = vessel.mainBody;
-            double latitudeDegrees = vesselState.latitude;
-            double orbVel = vessel.orbit.CircularOrbitSpeed();
-            double headingOne = HeadingForInclination(inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
-            double headingTwo = HeadingForInclination(-inclinationDegrees, latitudeDegrees) * UtilMath.Deg2Rad;
-            double now = Planetarium.GetUniversalTime();
-            Orbit o = vessel.orbit;
+            (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(Planetarium.GetUniversalTime());
+            double rotFreq = TAU / o.referenceBody.rotationPeriod;
 
-            Vector3d north = vesselState.north;
-            Vector3d east = vesselState.east;
-
-            var actualHorizontalVelocity = Vector3d.Exclude(o.Up(now), o.WorldOrbitalVelocityAtUT(now));
-            Vector3d desiredHorizontalVelocityOne = orbVel * (Math.Sin(headingOne) * east + Math.Cos(headingOne) * north);
-            Vector3d desiredHorizontalVelocityTwo = orbVel * (Math.Sin(headingTwo) * east + Math.Cos(headingTwo) * north);
-
-            Vector3d deltaHorizontalVelocityOne = desiredHorizontalVelocityOne - actualHorizontalVelocity;
-            Vector3d deltaHorizontalVelocityTwo = desiredHorizontalVelocityTwo - actualHorizontalVelocity;
-
-            Vector3d desiredHorizontalVelocity;
-            Vector3d deltaHorizontalVelocity;
-
-            if (vesselState.speedSurfaceHorizontal < 200)
-            {
-                // at initial launch we have to head the direction the user specifies (90 north instead of -90 south).
-                // 200 m/s of surface velocity also defines a 'grace period' where someone can catch a rocket that they meant
-                // to launch at -90 and typed 90 into the inclination box fast after it started to initiate the turn.
-                // if the rocket gets outside of the 200 m/s surface velocity envelope, then there is no way to tell MJ to
-                // take a south travelling rocket and turn north or vice versa.
-                desiredHorizontalVelocity = desiredHorizontalVelocityOne;
-                deltaHorizontalVelocity   = deltaHorizontalVelocityOne;
-            }
-            else
-            {
-                // now in order to get great circle tracks correct we pick the side which gives the lowest delta-V, which will get
-                // ground tracks that cross the maximum (or minimum) latitude of a great circle correct.
-                if (deltaHorizontalVelocityOne.magnitude < deltaHorizontalVelocityTwo.magnitude)
-                {
-                    desiredHorizontalVelocity = desiredHorizontalVelocityOne;
-                    deltaHorizontalVelocity   = deltaHorizontalVelocityOne;
-                }
-                else
-                {
-                    desiredHorizontalVelocity = desiredHorizontalVelocityTwo;
-                    deltaHorizontalVelocity   = deltaHorizontalVelocityTwo;
-                }
-            }
-
-            // if you circularize in one burn, towards the end deltaHorizontalVelocity will whip around, but we want to
-            // fall back to tracking desiredHorizontalVelocity
-            if (Vector3d.Dot(desiredHorizontalVelocity.normalized, deltaHorizontalVelocity.normalized) < 0.90)
-            {
-                // it is important that we do NOT do the fracReserveDV math here, we want to ignore the deltaHV entirely at ths point
-                return MuUtils.ClampDegrees360(UtilMath.Rad2Deg *
-                                               Math.Atan2(Vector3d.Dot(desiredHorizontalVelocity, east),
-                                                   Vector3d.Dot(desiredHorizontalVelocity, north)));
-            }
-
-            return MuUtils.ClampDegrees360(UtilMath.Rad2Deg *
-                                           Math.Atan2(Vector3d.Dot(deltaHorizontalVelocity, east), Vector3d.Dot(deltaHorizontalVelocity, north)));
+            return Rad2Deg(Simple.HeadingForLaunchInclination(o.referenceBody.gravParameter, r, v, Deg2Rad(inclinationDegrees), rotFreq));
         }
 
         //Computes the delta-V of the burn required to change an orbit's inclination to a given value

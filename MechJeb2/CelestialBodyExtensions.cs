@@ -2,10 +2,8 @@
 {
     public static class CelestialBodyExtensions
     {
-        public static double TerrainAltitude(this CelestialBody body, Vector3d worldPosition)
-        {
-            return body.TerrainAltitude(body.GetLatitude(worldPosition), body.GetLongitude(worldPosition));
-        }
+        public static double TerrainAltitude(this CelestialBody body, Vector3d worldPosition) =>
+            body.TerrainAltitude(body.GetLatitude(worldPosition), body.GetLongitude(worldPosition));
 
         //The KSP drag law is dv/dt = -b * v^2 where b is proportional to the air density and
         //the ship's drag coefficient. In this equation b has units of inverse length. So 1/b
@@ -23,15 +21,10 @@
             return mass / (0.0005 * PhysicsGlobals.DragMultiplier * airDensity * dragCoeff);
         }
 
-        public static double DragLength(this CelestialBody body, double altitudeASL, double dragCoeff, double mass)
-        {
-            return body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL), dragCoeff, mass);
-        }
+        public static double DragLength(this CelestialBody body, double altitudeASL, double dragCoeff, double mass) =>
+            body.DragLength(body.GetWorldSurfacePosition(0, 0, altitudeASL), dragCoeff, mass);
 
-        public static double RealMaxAtmosphereAltitude(this CelestialBody body)
-        {
-            return !body.atmosphere ? 0 : body.atmosphereDepth;
-        }
+        public static double RealMaxAtmosphereAltitude(this CelestialBody body) => !body.atmosphere ? 0 : body.atmosphereDepth;
 
         public static double AltitudeForPressure(this CelestialBody body, double pressure)
         {
