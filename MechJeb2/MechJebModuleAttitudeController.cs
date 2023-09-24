@@ -315,6 +315,30 @@ namespace MuMech
                 : 0;
         }
 
+        public double attitudeAngleFromNode()
+        {
+            if (!Enabled) return 0;
+
+            Vector3 fwd, up;
+            Quaternion rotRef = Quaternion.identity;
+
+            Vector3d thrustForward = VesselState.thrustForward;
+
+            // the off-axis thrust modifications get into a fight with the differential throttle so do not use them when diffthrottle is used
+            if (Core.Thrust.DifferentialThrottle)
+                thrustForward = VesselState.forward;
+
+            fwd = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit);
+            up = Vector3d.Cross(fwd, VesselState.normalPlus);
+            Vector3.OrthoNormalize(ref fwd, ref up);
+            rotRef = Quaternion.LookRotation(fwd, up);
+            rotRef = Quaternion.FromToRotation(thrustForward, VesselState.forward) * rotRef;
+            //up = attitudeWorldToReference(attitudeReferenceToWorld(attitudeTarget * Vector3d.up, reference), reference);
+            //var attitudeTarget = Vector3d.forward;
+
+            return Math.Abs(Vector3d.Angle(rotRef * Vector3d.forward, VesselState.forward));
+        }
+
         public Vector3d targetAttitude()
         {
             if (Enabled)

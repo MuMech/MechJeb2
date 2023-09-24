@@ -254,7 +254,7 @@ namespace MuMech
                 ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
                 double dVLeft = node.GetBurnVector(Orbit).magnitude;
 
-                if (dVLeft < tolerance && Core.Attitude.attitudeAngleFromTarget() > 5)
+                if (dVLeft < tolerance && Core.Attitude.attitudeAngleFromNode() > 5)
                 {
                     burnTriggered = false;
 
@@ -278,8 +278,20 @@ namespace MuMech
                     }
                 }
 
-                //aim along the node
-                Core.Attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
+                if (!burnTriggered || !alignedForBurn || dVLeft > VesselState.minThrustAccel)
+                {
+                    //aim along the node but if the engines are running then only if there's >= 1s of burn left
+                    Core.Attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
+                }
+                else
+                {
+                    if (!Core.Attitude.attitudeKILLROT)
+                    {
+                        Core.Attitude.attitudeTo(Quaternion.LookRotation(Vessel.GetTransform().up, -Vessel.GetTransform().forward),
+                            AttitudeReference.INERTIAL, this);
+                        Core.Attitude.attitudeKILLROT = true;
+                    }
+                }
 
                 double halfBurnTime, spool;
                 BurnTime(dVLeft, out halfBurnTime, out spool);
@@ -298,12 +310,12 @@ namespace MuMech
                 //autowarp, but only if we're already aligned with the node
                 if (autowarp && !burnTriggered)
                 {
-                    if ((Core.Attitude.attitudeAngleFromTarget() < 1 && Core.vessel.angularVelocity.magnitude < 0.001) ||
-                        (Core.Attitude.attitudeAngleFromTarget() < 10 && !MuUtils.PhysicsRunning()))
+                    if ((Core.Attitude.attitudeAngleFromNode() < 1 && Core.vessel.angularVelocity.magnitude < 0.001) ||
+                        (Core.Attitude.attitudeAngleFromNode() < 10 && !MuUtils.PhysicsRunning()))
                     {
                         Core.Warp.WarpToUT(node.UT - halfBurnTime - leadTime);
                     }
-                    else if (!MuUtils.PhysicsRunning() && Core.Attitude.attitudeAngleFromTarget() > 10 && timeToNode < 600)
+                    else if (!MuUtils.PhysicsRunning() && Core.Attitude.attitudeAngleFromNode() > 10 && timeToNode < 600)
                     {
                         //realign
                         Core.Warp.MinimumWarp();
@@ -318,7 +330,7 @@ namespace MuMech
                 {
                     if (alignedForBurn)
                     {
-                        if (Core.Attitude.attitudeAngleFromTarget() < 90)
+                        if (Core.Attitude.attitudeAngleFromNode() < 90)
                         {
                             double timeConstant = dVLeft > 10 || VesselState.minThrustAccel > 0.25 * VesselState.maxThrustAccel ? 0.5 : 2;
                             Core.Thrust.ThrustForDV(dVLeft + tolerance, timeConstant);
@@ -330,7 +342,7 @@ namespace MuMech
                     }
                     else
                     {
-                        if (Core.Attitude.attitudeAngleFromTarget() < 2)
+                        if (Core.Attitude.attitudeAngleFromNode() < 2)
                         {
                             alignedForBurn = true;
                         }
