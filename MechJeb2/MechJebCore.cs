@@ -550,8 +550,6 @@ namespace MuMech
 
         public override void OnAwake()
         {
-            FuelFlowSimulation.FuelNode.DoReflection();
-
             CachedLocalizer.Bootstrap();
 
             Dispatcher.CreateDispatcher();

@@ -17,7 +17,6 @@ namespace MuMech
         public bool          LiveSLT = true;
         public double        AltSLT  = 0;
         public double        Mach    = 0;
-        public bool          OldFFS;
 
         private int _vabRebuildTimer = 1;
 
@@ -87,13 +86,6 @@ namespace MuMech
 
         private void RunSimulation()
         {
-            if (OldFFS)
-            {
-                RunOldFFS();
-
-                return;
-            }
-
             using ProfilerMarker.AutoScope auto = _newRunSimulationProfile.Auto();
 
             CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? EditorBody : Vessel.mainBody;
@@ -229,53 +221,6 @@ namespace MuMech
             GetResults();
 
             TryStartSimulation();
-        }
-
-        private void RunOldFFS()
-        {
-            MechJebModuleStageStatsOld oldstats = Core.GetComputerModule<MechJebModuleStageStatsOld>();
-            oldstats.editorBody = EditorBody;
-            oldstats.liveSLT    = LiveSLT;
-            oldstats.altSLT     = AltSLT;
-            oldstats.mach       = Mach;
-            oldstats.RequestUpdate(this, true);
-            AtmoStats.Clear();
-            VacStats.Clear();
-            for (int i = 0; i < oldstats.vacStats.Length; i++)
-            {
-                FuelFlowSimulation.FuelStats item = oldstats.vacStats[i];
-                var newItem = new FuelStats
-                {
-                    StartMass   = item.StartMass,
-                    EndMass     = item.EndMass,
-                    DeltaTime   = item.DeltaTime,
-                    DeltaV      = item.DeltaV,
-                    SpoolUpTime = item.SpoolUpTime,
-                    Isp         = item.Isp,
-                    StagedMass  = item.StagedMass,
-                    Thrust      = item.EndThrust,
-                    KSPStage    = i
-                };
-                VacStats.Add(newItem);
-            }
-
-            for (int i = 0; i < oldstats.atmoStats.Length; i++)
-            {
-                FuelFlowSimulation.FuelStats item = oldstats.atmoStats[i];
-                var newItem = new FuelStats
-                {
-                    StartMass   = item.StartMass,
-                    EndMass     = item.EndMass,
-                    DeltaTime   = item.DeltaTime,
-                    DeltaV      = item.DeltaV,
-                    SpoolUpTime = item.SpoolUpTime,
-                    Isp         = item.Isp,
-                    StagedMass  = item.StagedMass,
-                    Thrust      = item.EndThrust,
-                    KSPStage    = i
-                };
-                AtmoStats.Add(newItem);
-            }
         }
     }
 }
