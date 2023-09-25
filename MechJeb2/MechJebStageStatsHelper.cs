@@ -17,7 +17,6 @@ namespace MuMech
     {
         private bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showThrust, showVacInitialTWR, showAtmoInitialTWR;
         private bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, showRcs, timeSeconds, liveSLT;
-        private bool oldFFS;
         private int TWRBody;
         private float altSLTScale, machScale;
         private int StageDisplayState { get => infoItems.StageDisplayState; set => infoItems.StageDisplayState = value; }
@@ -219,12 +218,6 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(CachedLocalizer.Instance.MechJeb_InfoItems_label1); //"Stage stats"
-
-            if (GUILayout.Button(oldFFS ? "Old" : "New", GUILayout.ExpandWidth(false)))
-            {
-                oldFFS       = !oldFFS;
-                stats.OldFFS = oldFFS;
-            }
 
             if (GUILayout.Button(timeSeconds ? "s" : "dhms", GUILayout.ExpandWidth(false)))
             {
