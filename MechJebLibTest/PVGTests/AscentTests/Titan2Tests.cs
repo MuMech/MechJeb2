@@ -52,7 +52,7 @@ namespace MechJebLibTest.PVGTests
             solution.M(0).ShouldEqual(153180);
 
             solution.Constant(0).ShouldBeZero(1e-7);
-            solution.Constant(solution.tmax).ShouldBeZero(1e-7);
+            solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
             solution.Vgo(0).ShouldEqual(9327.0948576056289, 1e-7);
             solution.Pv(0).ShouldEqual(new V3(0.24913591286181805, 0.23909088173239779, 0.13587844086293846), 1e-7);
 
@@ -102,7 +102,7 @@ namespace MechJebLibTest.PVGTests
             solution.M(0).ShouldEqual(157355.487476332);
 
             solution.Constant(0).ShouldBeZero(1e-7);
-            solution.Constant(solution.tmax).ShouldBeZero(1e-7);
+            solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
             solution.Vgo(0).ShouldEqual(9291.2315891261242, 1e-7);
             solution.Pv(0).ShouldEqual(new V3(0.25236763236272763, 0.24870860524790397, 0.13764101483910374), 1e-7);
 
@@ -152,7 +152,7 @@ namespace MechJebLibTest.PVGTests
             solution.M(0).ShouldEqual(157355.487476332);
 
             solution.Constant(0).ShouldBeZero(1e-7);
-            solution.Constant(solution.tmax).ShouldBeZero(1e-7);
+            solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
             solution.Vgo(0).ShouldEqual(8498.9352440057573, 1e-7);
             solution.Pv(0).ShouldEqual(new V3(0.24009395607850137, 0.21526467329187604, 0.13094696426599889), 1e-7);
 
@@ -169,6 +169,58 @@ namespace MechJebLibTest.PVGTests
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
             argpf.ShouldEqual(1.6494150858682159, 1e-7);
             tanof.ShouldEqual(0.09094016908398217, 1e-7);
+        }
+
+        [Fact]
+        public void CircularTest()
+        {
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
+            double rbody = 6.371e+6;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
+
+            Ascent ascent = Ascent.Builder()
+                .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)
+                .AddStageUsingThrust(32758.6353093992, 456100.006103516, 315.000112652779, 178.63040653022, 3, 3, true)
+                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
+                .Build();
+
+            ascent.Run();
+
+            Optimizer pvg = ascent.GetOptimizer() ?? throw new Exception("null optimzer");
+
+            Solution solution = pvg.GetSolution();
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                Maths.KeplerianFromStateVectors(mu, rf, vf);
+
+            solution.R(0).ShouldEqual(r0);
+            solution.V(0).ShouldEqual(v0);
+            solution.M(0).ShouldEqual(157355.487476332);
+
+            solution.Constant(0).ShouldBeZero(1e-4);
+            solution.Constant(solution.Tmax).ShouldBeZero(1e-4);
+            solution.Vgo(0).ShouldEqual(8498.6610944186486, 1e-7);
+            solution.Pv(0).ShouldEqual(new V3(0.24011527786624715, 0.21525367023286618, 0.13089596115507932), 1e-7);
+
+            double aprf = Maths.ApoapsisFromKeplerian(smaf, eccf);
+            double perf = Maths.PeriapsisFromKeplerian(smaf, eccf);
+
+            perf.ShouldEqual(PeR, 1e-6);
+            aprf.ShouldEqual(ApR, 1e-6);
+
+            pvg.Znorm.ShouldBeZero(1e-5);
+            smaf.ShouldEqual(6556000, 1e-6);
+            eccf.ShouldEqual(0, 1e-6);
+            incf.ShouldEqual(incT, 1e-6);
+            lanf.ShouldEqual(Deg2Rad(270), 1e-4);
         }
     }
 }

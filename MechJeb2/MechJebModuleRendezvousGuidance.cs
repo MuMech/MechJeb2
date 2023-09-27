@@ -109,8 +109,8 @@ namespace MuMech
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button3"))) //"Intercept with Hohmann transfer"
             {
-                double UT;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, out UT);
+                (Vector3d dV, double UT) =
+                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, false);
                 Vessel.RemoveAllManeuverNodes();
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
             }
@@ -190,24 +190,12 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(150) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(150) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_RZplan_title"); //"Rendezvous Planner"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_RZplan_title"); //"Rendezvous Planner"
 
-        public override string IconName()
-        {
-            return "Rendezvous Planner";
-        }
+        public override string IconName() => "Rendezvous Planner";
 
-        protected override bool IsSpaceCenterUpgradeUnlocked()
-        {
-            return Vessel.patchedConicsUnlocked();
-        }
+        protected override bool IsSpaceCenterUpgradeUnlocked() => Vessel.patchedConicsUnlocked();
     }
 }

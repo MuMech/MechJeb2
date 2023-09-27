@@ -278,6 +278,13 @@ namespace MechJebLib.Primitives
             return q;
         }
 
+        public static Q3 FromToRotation(V3 from, V3 to)
+        {
+            var c = V3.Cross(from, to);
+            double w = Sqrt(from.sqrMagnitude * to.sqrMagnitude) + V3.Dot(from, to);
+            return Normalize(new Q3(c.x, c.y, c.z, w));
+        }
+
         public static Q3 AngleAxis(double angle, V3 axis)
         {
             var q = new Q3();
