@@ -12,7 +12,16 @@ namespace MuMech
         public override         string GetName() => _name;
 
         [UsedImplicitly]
-        public bool InterceptOnly;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool Capture = true;
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool PlanCapture = true;
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool Rendezvous = true;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -26,7 +35,7 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool SimpleTransfer;
+        public bool Coplanar;
 
         private static readonly TimeReference[] _timeReferences =
         {
@@ -39,14 +48,24 @@ namespace MuMech
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            InterceptOnly =
-                GUILayout.Toggle(InterceptOnly, Localizer.Format("#MechJeb_Hohm_intercept_only")); //intercept only, no capture burn (impact/flyby)
-            SimpleTransfer = GUILayout.Toggle(SimpleTransfer, Localizer.Format("#MechJeb_Hohm_simpleTransfer")); //simple coplanar Hohmann transfer
+            Capture =
+                !GUILayout.Toggle(!Capture, Localizer.Format("#MechJeb_Hohm_intercept_only")); //no capture burn (impact/flyby)
+            if (Capture)
+                PlanCapture = GUILayout.Toggle(PlanCapture, "Plan capture burn");
+            Coplanar = GUILayout.Toggle(Coplanar, Localizer.Format("#MechJeb_Hohm_simpleTransfer")); //coplanar maneuver
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), PeriodOffset); //fractional target period offset
-            if (!SimpleTransfer)
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Toggle(Rendezvous, "Rendezvous"))
+                Rendezvous = true;
+            if (GUILayout.Toggle(!Rendezvous, "Transfer"))
+                Rendezvous = false;
+            GUILayout.EndHorizontal();
+            /*
+            if (!Coplanar)
             {
                 _timeSelector.DoChooseTimeGUI();
             }
+            */
         }
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -75,43 +94,43 @@ namespace MuMech
                 targetOrbit.MutatedOrbit(PeriodOffset);
             }
 
-            if (SimpleTransfer)
+            (dV, ut) = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, coplanar: Coplanar, rendezvous: Rendezvous);
+
+            /*
+        else
+        {
+            if (_timeSelector.TimeReference == TimeReference.COMPUTED)
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, out ut);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out ut,
+                    intercept_only: InterceptOnly);
             }
             else
             {
-                if (_timeSelector.TimeReference == TimeReference.COMPUTED)
+                bool anExists = o.AscendingNodeExists(target.TargetOrbit);
+                bool dnExists = o.DescendingNodeExists(target.TargetOrbit);
+
+                if (_timeSelector.TimeReference == TimeReference.REL_ASCENDING && !anExists)
                 {
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out ut,
-                        intercept_only: InterceptOnly);
+                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception3")); //ascending node with target doesn't exist.
                 }
-                else
+
+                if (_timeSelector.TimeReference == TimeReference.REL_DESCENDING && !dnExists)
                 {
-                    bool anExists = o.AscendingNodeExists(target.TargetOrbit);
-                    bool dnExists = o.DescendingNodeExists(target.TargetOrbit);
-
-                    if (_timeSelector.TimeReference == TimeReference.REL_ASCENDING && !anExists)
-                    {
-                        throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception3")); //ascending node with target doesn't exist.
-                    }
-
-                    if (_timeSelector.TimeReference == TimeReference.REL_DESCENDING && !dnExists)
-                    {
-                        throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception4")); //descending node with target doesn't exist.
-                    }
-
-                    if (_timeSelector.TimeReference == TimeReference.REL_NEAREST_AD && !(anExists || dnExists))
-                    {
-                        throw new OperationException(
-                            Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
-                    }
-
-                    ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, ut, out ut, intercept_only: InterceptOnly,
-                        fixed_ut: true);
+                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception4")); //descending node with target doesn't exist.
                 }
+
+                if (_timeSelector.TimeReference == TimeReference.REL_NEAREST_AD && !(anExists || dnExists))
+                {
+                    throw new OperationException(
+                        Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
+                }
+
+                ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, ut, out ut, intercept_only: InterceptOnly,
+                    fixed_ut: true);
             }
+        }
+        */
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }

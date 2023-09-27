@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using MechJebLib.Core;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Maneuvers;
@@ -8,7 +7,6 @@ using Smooth.Pools;
 using UnityEngine;
 using static MechJebLib.Statics;
 using Debug = UnityEngine.Debug;
-using Random = System.Random;
 
 namespace MuMech
 {
@@ -152,110 +150,20 @@ namespace MuMech
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
 
-        //Computes the dV of a Hohmann transfer burn at time UT that will put the apoapsis or periapsis
-        //of the transfer orbit on top of the target orbit.
-        //The output value apsisPhaseAngle is the phase angle between the transferring vessel and the
-        //target object as the transferring vessel crosses the target orbit at the apoapsis or periapsis
-        //of the transfer orbit.
-        //Actually, it's not exactly the phase angle. It's a sort of mean anomaly phase angle. The
-        //difference is not important for how this function is used by DeltaVAndTimeForHohmannTransfer.
-        private static Vector3d DeltaVAndApsisPhaseAngleOfHohmannTransfer(Orbit o, Orbit target, double UT, out double apsisPhaseAngle)
-        {
-            Vector3d apsisDirection = -o.WorldBCIPositionAtUT(UT);
-            double desiredApsis = target.RadiusAtTrueAnomaly(UtilMath.Deg2Rad * target.TrueAnomalyFromVector(apsisDirection));
-
-            Vector3d dV;
-            if (desiredApsis > o.ApR)
-            {
-                dV = DeltaVToChangeApoapsis(o, UT, desiredApsis);
-                Orbit transferOrbit = o.PerturbedOrbit(UT, dV);
-                double transferApTime = transferOrbit.NextApoapsisTime(UT);
-                Vector3d transferApDirection =
-                    transferOrbit.WorldBCIPositionAtApoapsis(); // getRelativePositionAtUT was returning NaNs! :(((((
-                double targetTrueAnomaly = target.TrueAnomalyFromVector(transferApDirection);
-                double meanAnomalyOffset = 360 * (target.TimeOfTrueAnomaly(targetTrueAnomaly, UT) - transferApTime) / target.period;
-                apsisPhaseAngle = meanAnomalyOffset;
-            }
-            else
-            {
-                dV = DeltaVToChangePeriapsis(o, UT, desiredApsis);
-                Orbit transferOrbit = o.PerturbedOrbit(UT, dV);
-                double transferPeTime = transferOrbit.NextPeriapsisTime(UT);
-                Vector3d transferPeDirection =
-                    transferOrbit.WorldBCIPositionAtPeriapsis(); // getRelativePositionAtUT was returning NaNs! :(((((
-                double targetTrueAnomaly = target.TrueAnomalyFromVector(transferPeDirection);
-                double meanAnomalyOffset = 360 * (target.TimeOfTrueAnomaly(targetTrueAnomaly, UT) - transferPeTime) / target.period;
-                apsisPhaseAngle = meanAnomalyOffset;
-            }
-
-            apsisPhaseAngle = MuUtils.ClampDegrees180(apsisPhaseAngle);
-
-            return dV;
-        }
-
         //Computes the time and dV of a Hohmann transfer injection burn such that at apoapsis the transfer
         //orbit passes as close as possible to the target.
         //The output burnUT will be the first transfer window found after the given UT.
         //Assumes o and target are in approximately the same plane, and orbiting in the same direction.
         //Also assumes that o is a perfectly circular orbit (though result should be OK for small eccentricity).
-        public static Vector3d DeltaVAndTimeForHohmannTransfer(Orbit o, Orbit target, double UT, out double burnUT)
+        public static ( Vector3d dV, double burnUT) DeltaVAndTimeForHohmannTransfer(Orbit o, Orbit target, double ut, bool coplanar = true, bool rendezvous = true)
         {
-            //We do a binary search for the burn time that zeros out the phase angle between the
-            //transferring vessel and the target at the apsis of the transfer orbit.
-            double synodicPeriod = o.SynodicPeriod(target);
+            (V3 r1, V3 v1) = o.RightHandedStateVectorsAtUT(ut);
+            (V3 r2, V3 v2) = target.RightHandedStateVectorsAtUT(ut);
 
-            double lastApsisPhaseAngle;
-            Vector3d immediateBurnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, UT, out lastApsisPhaseAngle);
+            (V3 dv, double dt, _, _) =
+                CoplanarTransfer.NextManeuver(o.referenceBody.gravParameter, r1, v1, r2, v2, coplanar: coplanar, rendezvous: rendezvous);
 
-            double minTime = UT;
-            double maxTime = UT + 1.5 * synodicPeriod;
-
-            //first find roughly where the zero point is
-            const int numDivisions = 30;
-            double dt = (maxTime - minTime) / numDivisions;
-            for (int i = 1; i <= numDivisions; i++)
-            {
-                double t = minTime + dt * i;
-
-                double apsisPhaseAngle;
-                DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, t, out apsisPhaseAngle);
-
-                if (Math.Abs(apsisPhaseAngle) < 90 && Math.Sign(lastApsisPhaseAngle) != Math.Sign(apsisPhaseAngle))
-                {
-                    minTime = t - dt;
-                    maxTime = t;
-                    break;
-                }
-
-                if (i == 1 && Math.Abs(lastApsisPhaseAngle) < 0.5 && Math.Sign(lastApsisPhaseAngle) == Math.Sign(apsisPhaseAngle))
-                {
-                    //In this case we are JUST passed the center of the transfer window, but probably we
-                    //can still do the transfer just fine. Don't do a search, just return an immediate burn
-                    burnUT = UT;
-                    return immediateBurnDV;
-                }
-
-                lastApsisPhaseAngle = apsisPhaseAngle;
-
-                if (i == numDivisions)
-                {
-                    throw new ArgumentException("OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer: couldn't find the transfer window!!");
-                }
-            }
-
-            burnUT = 0;
-            Func<double, object, double> f = delegate(double testTime, object ign)
-            {
-                double testApsisPhaseAngle;
-                DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, testTime, out testApsisPhaseAngle);
-                return testApsisPhaseAngle;
-            };
-            try { burnUT = BrentRoot.Solve(f, maxTime, minTime, null); }
-            catch (TimeoutException) { Debug.Log("[MechJeb] Brents method threw a timeout error (supressed)"); }
-
-            Vector3d burnDV = DeltaVAndApsisPhaseAngleOfHohmannTransfer(o, target, burnUT, out _);
-
-            return burnDV;
+            return (dv.V3ToWorld(), dt);
         }
 
         // Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
@@ -408,7 +316,7 @@ namespace MuMech
             if (syncPhaseAngle)
             {
                 //time the ejection burn to intercept the target
-                idealDeltaV = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT, out idealBurnUT);
+                (idealDeltaV, idealBurnUT) = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT);
             }
             else
             {
@@ -471,274 +379,6 @@ namespace MuMech
             Vector3d preEjectionVelocity = o.WorldOrbitalVelocityAtUT(burnUT);
 
             return ejectionVelocity - preEjectionVelocity;
-        }
-
-        public struct LambertProblem
-        {
-            public Vector3d pos,  vel;  // position + velocity of source orbit at reference time
-            public Vector3d tpos, tvel; // position + velocity of target orbit at reference time
-            public double   GM;
-            public bool     shortway;
-            public bool     intercept_only; // omit the second burn from the cost
-        }
-
-        // x[0] is the burn time before/after zeroUT
-        // x[1] is the time of the transfer
-        //
-        // f[1] is the cost of the burn
-        //
-        // prob.shortway is which lambert solution to find
-        // prob.intercept_only omits adding the second burn to the cost
-        //
-        public static void LambertCost(double[] x, double[] f, object obj)
-        {
-            var prob = (LambertProblem)obj;
-            Vector3d secondBurn;
-
-            try
-            {
-                f[0] = DeltaVToInterceptAtTime(prob.GM, prob.pos, prob.vel, prob.tpos, prob.tvel, x[0], x[1], out secondBurn, prob.shortway)
-                    .magnitude;
-                if (!prob.intercept_only)
-                {
-                    f[0] += secondBurn.magnitude;
-                }
-            }
-            catch (Exception)
-            {
-                // need Sqrt of MaxValue so least-squares can square it without an infinity
-                f[0] = Math.Sqrt(double.MaxValue);
-            }
-
-            if (!f[0].IsFinite())
-                f[0] = Math.Sqrt(double.MaxValue);
-        }
-
-        // Levenburg-Marquardt local optimization of a two burn transfer.
-        public static Vector3d DeltaVAndTimeForBiImpulsiveTransfer(double GM, Vector3d pos, Vector3d vel, Vector3d tpos, Vector3d tvel, double DT,
-            double TT, out double burnDT, out double burnTT, out double burnCost, double minDT = double.NegativeInfinity,
-            double maxDT = double.PositiveInfinity, double maxTT = double.PositiveInfinity, double maxDTplusT = double.PositiveInfinity,
-            bool intercept_only = false, double eps = 1e-9, int maxIter = 100, bool shortway = false)
-        {
-            double[] x = { DT, TT };
-            double[] scale = new double[2];
-
-            if (maxDT != double.PositiveInfinity && maxTT != double.PositiveInfinity)
-            {
-                scale[0] = maxDT;
-                scale[1] = maxTT;
-            }
-            else
-            {
-                scale[0] = DT;
-                scale[1] = TT;
-            }
-
-            // absolute final time constraint: x[0] + x[1] <= maxUTplusT
-            double[,] C = { { 1, 1, maxDTplusT } };
-            int[] CT = { -1 };
-
-            double[] bndl = { minDT, 0 };
-            double[] bndu = { maxDT, maxTT };
-
-            alglib.minlmstate state;
-            var rep = new alglib.minlmreport();
-            alglib.minlmcreatev(1, x, 0.000001, out state);
-            alglib.minlmsetscale(state, scale);
-            alglib.minlmsetbc(state, bndl, bndu);
-            if (maxDTplusT != double.PositiveInfinity)
-                alglib.minlmsetlc(state, C, CT);
-            alglib.minlmsetcond(state, eps, maxIter);
-
-            var prob = new LambertProblem();
-
-            prob.pos            = pos;
-            prob.vel            = vel;
-            prob.tpos           = tpos;
-            prob.tvel           = tvel;
-            prob.GM             = GM;
-            prob.shortway       = shortway;
-            prob.intercept_only = intercept_only;
-
-            alglib.minlmoptimize(state, LambertCost, null, prob);
-            alglib.minlmresultsbuf(state, ref x, rep);
-            Debug.Log("iter = " + rep.iterationscount);
-            if (rep.terminationtype < 0)
-            {
-                // FIXME: we should not accept this result
-                Debug.Log("MechJeb Lambert Transfer minlmoptimize termination code: " + rep.terminationtype);
-            }
-
-            //Debug.Log("DeltaVAndTimeForBiImpulsiveTransfer: x[0] = " + x[0] + " x[1] = " + x[1]);
-
-            double[] fout = new double[1];
-            LambertCost(x, fout, prob);
-            burnCost = fout[0];
-
-            burnDT = x[0];
-            burnTT = x[1];
-
-            Vector3d secondBurn; // ignored
-            return DeltaVToInterceptAtTime(prob.GM, prob.pos, prob.vel, prob.tpos, prob.tvel, x[0], x[1], out secondBurn, prob.shortway);
-        }
-
-        public static double acceptanceProbabilityForBiImpulsive(double currentCost, double newCost, double temp)
-        {
-            if (newCost < currentCost)
-                return 1.0;
-            return Math.Exp((currentCost - newCost) / temp);
-        }
-
-        // Basin-Hopping algorithm global search for a two burn transfer (Note this says "Annealing" but it was converted to Basin-Hopping)
-        //
-        // FIXME: there's some very confusing nomenclature between DeltaVAndTimeForBiImpulsiveTransfer and this
-        //        the minUT/maxUT values here are zero-centered on this methods UT.  the minUT/maxUT parameters to
-        //        the other method are proper UT times and not zero centered at all.
-        public static Vector3d DeltaVAndTimeForBiImpulsiveAnnealed(Orbit o, Orbit target, double UT, out double bestUT, double minDT = 0.0,
-            double maxDT = double.PositiveInfinity, bool intercept_only = false, bool fixed_ut = false)
-        {
-            Debug.Log("origin = " + o.MuString());
-            Debug.Log("target = " + target.MuString());
-
-            Vector3d pos = o.WorldBCIPositionAtUT(UT);
-            Vector3d vel = o.WorldOrbitalVelocityAtUT(UT);
-            Vector3d tpos = target.WorldBCIPositionAtUT(UT);
-            Vector3d tvel = target.WorldOrbitalVelocityAtUT(UT);
-            double GM = o.referenceBody.gravParameter;
-
-            double MAXTEMP = 10000;
-            double temp = MAXTEMP;
-            double coolingRate = 0.01;
-
-            double bestTT = 0;
-            double bestDT = 0;
-            double bestCost = double.MaxValue;
-            Vector3d bestBurnVec = Vector3d.zero;
-            bool bestshortway = false;
-
-            var random = new Random();
-
-            double maxDTplusT = double.PositiveInfinity;
-
-            // min transfer time must be > 0 (no teleportation)
-            double minTT = 1e-15;
-
-            // update the patched conic prediction for hyperbolic orbits (important *not* to do this for mutated planetary orbits, since we will
-            // get encouters, but we need the patchEndTransition for hyperbolic orbits).
-            if (target.eccentricity >= 1.0)
-                target.CalculateNextOrbit();
-
-            if (maxDT == double.PositiveInfinity)
-                maxDT = 1.5 * o.SynodicPeriod(target);
-
-            // figure the max transfer time of a Hohmann orbit using the SMAs of the two orbits instead of the radius (as a guess), multiplied by 2
-            double a = (Math.Abs(o.semiMajorAxis) + Math.Abs(target.semiMajorAxis)) / 2;
-            double maxTT = Math.PI * Math.Sqrt(a * a * a / o.referenceBody.gravParameter); // FIXME: allow tweaking
-
-            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check1: minDT = " + minDT + " maxDT = " + maxDT + " maxTT = " + maxTT +
-                      " maxDTplusT = " + maxDTplusT);
-            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed target.patchEndTransition = " + target.patchEndTransition);
-
-            if (target.patchEndTransition != Orbit.PatchTransitionType.FINAL && target.patchEndTransition != Orbit.PatchTransitionType.INITIAL)
-            {
-                // reset the guess to search for start times out to the end of the target orbit
-                maxDT = target.EndUT - UT;
-                // longest possible transfer time would leave now and arrive at the target patch end
-                maxTT = Math.Min(maxTT, target.EndUT - UT);
-                // constraint on DT + TT <= maxDTplusT to arrive before the target orbit ends
-                maxDTplusT = Math.Min(maxDTplusT, target.EndUT - UT);
-            }
-
-            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed o.patchEndTransition = " + o.patchEndTransition);
-
-            // if our orbit ends, search for start times all the way to the end, but don't violate maxDTplusT if its set
-            if (o.patchEndTransition != Orbit.PatchTransitionType.FINAL && o.patchEndTransition != Orbit.PatchTransitionType.INITIAL)
-            {
-                maxDT = Math.Min(o.EndUT - UT, maxDTplusT);
-            }
-
-            // user requested a burn at a specific time
-            if (fixed_ut)
-            {
-                maxDT = 0;
-                minDT = 0;
-            }
-
-            Debug.Log("[MechJeb] DeltaVAndTimeForBiImpulsiveAnnealed Check2: minDT = " + minDT + " maxDT = " + maxDT + " maxTT = " + maxTT +
-                      " maxDTplusT = " + maxDTplusT);
-
-            double currentCost = double.MaxValue;
-            double currentDT = maxDT / 2;
-            double currentTT = maxTT / 2;
-
-            var stopwatch = new Stopwatch();
-
-            int n = 0;
-
-            stopwatch.Start();
-            while (temp > 1000)
-            {
-                double burnDT, burnTT, burnCost;
-
-                // shrink the neighborhood based on temp
-                double windowDT = temp / MAXTEMP * (maxDT - minDT);
-                double windowTT = temp / MAXTEMP * (maxTT - minTT);
-                double windowminDT = currentDT - windowDT;
-                windowminDT = windowminDT < minDT ? minDT : windowminDT;
-                double windowmaxDT = currentDT + windowDT;
-                windowmaxDT = windowmaxDT > maxDT ? maxDT : windowmaxDT;
-                double windowminTT = currentTT - windowTT;
-                windowminTT = windowminTT < minTT ? minTT : windowminTT;
-                double windowmaxTT = currentTT + windowTT;
-                windowmaxTT = windowmaxTT > maxTT ? maxTT : windowmaxTT;
-
-                // compute the neighbor
-                double nextDT = random.NextDouble() * (windowmaxDT - windowminDT) + windowminDT;
-                double nextTT = random.NextDouble() * (windowmaxTT - windowminTT) + windowminTT;
-                nextTT = Math.Min(nextTT, maxDTplusT - nextDT);
-
-                // just randomize the shortway
-                bool nextshortway = random.NextDouble() > 0.5;
-
-                //Debug.Log("nextDT = " + nextDT + " nextTT = " + nextTT);
-                Vector3d burnVec = DeltaVAndTimeForBiImpulsiveTransfer(GM, pos, vel, tpos, tvel, nextDT, nextTT, out burnDT, out burnTT, out burnCost,
-                    minDT, maxDT, maxTT, maxDTplusT, intercept_only, shortway: nextshortway);
-
-                //Debug.Log("burnDT = " + burnDT + " burnTT = " + burnTT + " cost = " + burnCost + " bestCost = " + bestCost);
-
-                if (burnCost < bestCost)
-                {
-                    bestDT       = burnDT;
-                    bestTT       = burnTT;
-                    bestshortway = nextshortway;
-                    bestCost     = burnCost;
-                    bestBurnVec  = burnVec;
-                    currentDT    = bestDT;
-                    currentTT    = bestTT;
-                    currentCost  = bestCost;
-                }
-                else if (acceptanceProbabilityForBiImpulsive(currentCost, burnCost, temp) > random.NextDouble())
-                {
-                    currentDT   = burnDT;
-                    currentTT   = burnTT;
-                    currentCost = burnCost;
-                }
-
-                temp *= 1 - coolingRate;
-
-                n++;
-            }
-
-            stopwatch.Stop();
-
-            Debug.Log("MechJeb DeltaVAndTimeForBiImpulsiveAnnealed N = " + n + " time = " + stopwatch.Elapsed);
-
-            bestUT = UT + bestDT;
-
-            Debug.Log("Annealing results burnUT = " + bestUT + " zero'd burnUT = " + bestDT + " TT = " + bestTT + " Cost = " + bestCost +
-                      " shortway= " + bestshortway);
-
-            return bestBurnVec;
         }
 
         public static (Vector3d dv, double dt) DeltaVAndTimeForMoonReturnEjection(Orbit o, double ut, double targetPrimaryRadius)

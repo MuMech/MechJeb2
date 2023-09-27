@@ -27,10 +27,7 @@ namespace MuMech
             if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
         }
 
-        protected override void OnModuleDisabled()
-        {
-            Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
-        }
+        protected override void OnModuleDisabled() => Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
 
         public override void Drive(FlightCtrlState s)
         {
@@ -138,9 +135,8 @@ namespace MuMech
             {
                 //We're not on an intercept course, but we have a circular orbit in the right plane.
 
-                double hohmannUT;
-                Vector3d hohmannDV =
-                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, out hohmannUT);
+                (Vector3d hohmannDV, double hohmannUT) =
+                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, false);
 
                 double numPhasingOrbits = (hohmannUT - VesselState.time) / Orbit.period;
 

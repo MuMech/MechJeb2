@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using MechJebLib.Core.FunctionImpls;
 using MechJebLib.Core.Functions;
 using MechJebLib.Primitives;
@@ -16,10 +17,13 @@ namespace MechJebLib.Core
 {
     public static class Maths
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double VmagFromVisViva(double mu, double sma, double r) => Sqrt(mu * (2 / r - 1 / sma));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double HmagFromKeplerian(double mu, double sma, double ecc) => Sqrt(mu * sma * (1 - ecc * ecc));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // FIXME: busted with hyperbolic and NANs.
         public static double HmagFromApsides(double mu, double peR, double apR)
         {
@@ -27,25 +31,33 @@ namespace MechJebLib.Core
             return HmagFromKeplerian(mu, sma, ecc);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 HunitFromKeplerian(double inc, double lan) => new V3(Sin(lan) * Sin(inc), -Cos(lan) * Sin(inc), Cos(inc));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 HvecFromKeplerian(double mu, double sma, double ecc, double inc, double lan) =>
             HunitFromKeplerian(inc, lan) * HmagFromKeplerian(mu, sma, ecc);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 HvecFromFlightPathAngle(double r, double v, double gamma, double inc, double lan) =>
             HunitFromKeplerian(inc, lan) * HmagFromFlightPathAngle(r, v, gamma);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double HmagFromFlightPathAngle(double r, double v, double gamma) => r * v * Cos(gamma);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 EvecFromKeplerian(double ecc, double inc, double lan, double argP) =>
             new V3(Cos(argP) * Cos(lan) - Cos(inc) * Sin(argP) * Sin(lan),
                 Cos(argP) * Sin(lan) + Cos(inc) * Cos(lan) * Sin(argP),
                 Sin(argP) * Sin(inc)) * ecc;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double SmaFromApsides(double peR, double apR) => (peR + apR) / 2;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double EccFromApsides(double peR, double apR) => (apR - peR) / (apR + peR);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (double sma, double ecc) SmaEccFromApsides(double peR, double apR)
         {
             // remap nonsense to circular orbits
@@ -56,8 +68,10 @@ namespace MechJebLib.Core
             return (sma, ecc);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double FlightPathAngleFromAngularVelocity(double h, double r, double v) => SafeAcos(h / (r * v));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (double vT, double gammaT) ConvertApsidesTargetToFPA(double peR, double apR, double attR, double mu)
         {
             if (attR < peR)
@@ -73,16 +87,25 @@ namespace MechJebLib.Core
             return (vT, gammaT);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double EscapeVelocity(double mu, double r) => Sqrt(2 * mu / r);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double CircularVelocity(double mu, double r) => Sqrt(mu / r);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double PeriapsisFromKeplerian(double sma, double ecc) => sma * (1 - ecc);
-        public static Dual   PeriapsisFromKeplerian(Dual sma, Dual ecc)     => sma * (1 - ecc);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual PeriapsisFromKeplerian(Dual sma, Dual ecc) => sma * (1 - ecc);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ApoapsisFromKeplerian(double sma, double ecc) => sma * (1 + ecc);
-        public static Dual   ApoapsisFromKeplerian(Dual sma, Dual ecc)     => sma * (1 + ecc);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual ApoapsisFromKeplerian(Dual sma, Dual ecc) => sma * (1 + ecc);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double PeriapsisFromStateVectors(double mu, V3 r, V3 v)
         {
             double sma, ecc;
@@ -90,6 +113,7 @@ namespace MechJebLib.Core
             return PeriapsisFromKeplerian(sma, ecc);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual PeriapsisFromStateVectors(Dual mu, DualV3 r, DualV3 v)
         {
             Dual sma, ecc;
@@ -97,6 +121,7 @@ namespace MechJebLib.Core
             return PeriapsisFromKeplerian(sma, ecc);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ApoapsisFromStateVectors(double mu, V3 r, V3 v)
         {
             double sma, ecc;
@@ -104,6 +129,7 @@ namespace MechJebLib.Core
             return ApoapsisFromKeplerian(sma, ecc);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual ApoapsisFromStateVectors(Dual mu, DualV3 r, DualV3 v)
         {
             Dual sma, ecc;
@@ -111,18 +137,20 @@ namespace MechJebLib.Core
             return ApoapsisFromKeplerian(sma, ecc);
         }
 
-        public static double EccFromStateVectors(double mu, V3 r, V3 v)
-        {
-            V3 eccvec = V3.Cross(v / mu, V3.Cross(r, v)) - r.normalized;
-            return eccvec.magnitude;
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double EccFromStateVectors(double mu, V3 r, V3 v) => EccVecFromStateVectors(mu, r, v).magnitude;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual EccFromStateVectors(Dual mu, DualV3 r, DualV3 v)
         {
             DualV3 eccvec = DualV3.Cross(v / mu, DualV3.Cross(r, v)) - r.normalized;
             return eccvec.magnitude;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static V3 EccVecFromStateVectors(double mu, V3 r, V3 v) => V3.Cross(v / mu, V3.Cross(r, v)) - r.normalized;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (double sma, double ecc) SmaEccFromStateVectors(double mu, V3 r, V3 v)
         {
             var h = V3.Cross(r, v);
@@ -130,6 +158,7 @@ namespace MechJebLib.Core
             return (sma, Sqrt(Max(1 - h.sqrMagnitude / (sma * mu), 0)));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Dual sma, Dual ecc) SmaEccFromStateVectors(Dual mu, DualV3 r, DualV3 v)
         {
             var h = DualV3.Cross(r, v);
@@ -138,16 +167,20 @@ namespace MechJebLib.Core
             return (sma, ecc);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double SmaFromStateVectors(double mu, V3 r, V3 v) => mu / (2.0 * mu / r.magnitude - V3.Dot(v, v));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual SmaFromStateVectors(Dual mu, DualV3 r, DualV3 v) => mu / (2.0 * mu / r.magnitude - DualV3.Dot(v, v));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double IncFromStateVectors(V3 r, V3 v)
         {
             V3 hhat = V3.Cross(r, v).normalized;
             return Acos(hhat[2]);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double PeriodFromStateVectors(double mu, V3 r, V3 v)
         {
             double sma = SmaFromStateVectors(mu, r, v);
@@ -156,8 +189,10 @@ namespace MechJebLib.Core
             return TAU * Sqrt(sma * sma * sma / mu);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double RadiusFromTrueAnomaly(double sma, double ecc, double nu) => sma * (1 - ecc * ecc) / (1 + ecc * Cos(nu));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double RadiusFromTrueAnomaly(double mu, V3 r, V3 v, double nu)
         {
             (double sma, double ecc) = SmaEccFromStateVectors(mu, r, v);
@@ -165,12 +200,14 @@ namespace MechJebLib.Core
             return RadiusFromTrueAnomaly(sma, ecc, nu);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TrueAnomalyFromRadius(double sma, double ecc, double radius)
         {
             double l = sma * (1 - ecc * ecc);
             return SafeAcos((l / radius - 1) / ecc);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TrueAnomalyFromRadius(double mu, V3 r, V3 v, double radius)
         {
             (double sma, double ecc) = SmaEccFromStateVectors(mu, r, v);
@@ -185,6 +222,7 @@ namespace MechJebLib.Core
         /// <param name="ecc">Eccentricity</param>
         /// <param name="eanom">Eccentric Anomaly</param>
         /// <returns>True Anomaly</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TrueAnomalyFromEccentricAnomaly(double ecc, double eanom)
         {
             if (ecc < 1)
@@ -195,13 +233,17 @@ namespace MechJebLib.Core
             return Clamp2Pi(2 * Atan(eanom));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 RhatFromLatLng(double lat, double lng) => new V3(Cos(lat) * Cos(lng), Cos(lat) * Sin(lng), Sin(lat));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double PitchAngle(V3 v, V3 up) => PI * 0.5 - V3.Angle(v, up);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double FlightPathAngle(V3 r, V3 v) => SafeAsin(V3.Dot(r.normalized, v.normalized));
 
         // r is the ECI reference point, v is the vector in ECI to be converted to ENU
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 ENUToECI(V3 pos, V3 vec)
         {
             double lat = LatitudeFromBCI(pos); // should be geodetic, but we don't care for now
@@ -221,12 +263,14 @@ namespace MechJebLib.Core
             return m * vec;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double HeadingForVelocity(V3 r, V3 v)
         {
             V3 venu = ECIToENU(r, v);
             return Clamp2Pi(Atan2(venu[0], venu[1]));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForHeading(V3 r, V3 v, double newHeading)
         {
             V3 venu = ECIToENU(r, v);
@@ -236,8 +280,10 @@ namespace MechJebLib.Core
             return ENUToECI(r, venu);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 ENUHeadingForInclination(double inc, V3 r) => ENUHeadingForInclination(inc, LatitudeFromBCI(r));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 ENUHeadingForInclination(double inc, double lat)
         {
             double angle = AngleForInclination(inc, lat);
@@ -245,8 +291,10 @@ namespace MechJebLib.Core
             return new V3(Cos(angle), Sin(angle), 0);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double HeadingForInclination(double inc, V3 r) => HeadingForInclination(inc, LatitudeFromBCI(r));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double HeadingForInclination(double inc, double lat)
         {
             double angle = AngleForInclination(inc, lat);
@@ -254,6 +302,7 @@ namespace MechJebLib.Core
             return Clamp2Pi(Deg2Rad(90) - angle);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double AngleForInclination(double inc, double lat)
         {
             double cosAngle = Cos(inc) / Cos(lat);
@@ -271,11 +320,14 @@ namespace MechJebLib.Core
             return angle;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LatitudeFromBCI(V3 r) => SafeAsin(r.z / r.magnitude);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double LongitudeFromBCI(V3 r) => Atan2(r.y, r.x);
 
         // r is the ECI reference point, v is the vector in ENU to be converted to ECI
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 ECIToENU(V3 r, V3 v)
         {
             double lat = LatitudeFromBCI(r);
@@ -295,6 +347,7 @@ namespace MechJebLib.Core
             return m * v;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 EscapeVelocityForInclination(double mu, V3 r, double newInc)
         {
             V3 vf = ENUHeadingForInclination(newInc, r) * EscapeVelocity(mu, r.magnitude);
@@ -302,6 +355,7 @@ namespace MechJebLib.Core
             return vf;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForInclination(V3 r, V3 v, double newInc)
         {
             V3 v0 = ECIToENU(r, v);
@@ -312,6 +366,7 @@ namespace MechJebLib.Core
             return vf;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForFPA(V3 r, V3 v, double newFPA)
         {
             V3 v0 = ECIToENU(r, v);
@@ -322,9 +377,11 @@ namespace MechJebLib.Core
             return vf;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 CircularVelocityFromHvec(double mu, V3 r, V3 h) => V3.Cross(h, r).normalized * CircularVelocity(mu, r.magnitude);
 
         // r is the ECI reference point, v is the vector in ECI to be converted to pitch, heading angles
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (double pitch, double heading) ECIToPitchHeading(V3 r, V3 v)
         {
             V3 enu = ECIToENU(r, v).normalized;
@@ -340,6 +397,7 @@ namespace MechJebLib.Core
         /// <param name="celestialLongitude">Celestial longitude of the current position of the launch site.</param>
         /// <param name="lan">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (double time, double inclination) MinimumTimeToPlane(double rotationPeriod, double latitude, double celestialLongitude,
             double lan, double inc)
         {
@@ -356,6 +414,7 @@ namespace MechJebLib.Core
         /// <param name="celestialLongitude">Celestial longitude of the current position of the launch site (degrees).</param>
         /// <param name="lan">Longitude of the Ascending Node of the target plane (degrees).</param>
         /// <param name="inc">Inclination of the target plane (degrees).</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double lan, double inc)
         {
             latitude           = Deg2Rad(latitude);
@@ -390,9 +449,11 @@ namespace MechJebLib.Core
             return Clamp2Pi(lanDiff) / TAU * Abs(rotationPeriod);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MeanMotion(double mu, double sma) => Sqrt(Abs(mu / (sma * sma * sma)));
 
         // FIXME: hyperbolic and circular orbits
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToNextApoapsis(double mu, V3 r, V3 v)
         {
             (double sma, double ecc, _, _, _, double nu, _) = KeplerianFromStateVectors(mu, r, v);
@@ -404,6 +465,7 @@ namespace MechJebLib.Core
             return Clamp2Pi(PI - manom) / meanMotion;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToNextPeriapsis(double mu, V3 r, V3 v)
         {
             (double sma, double ecc, _, _, _, double nu, _) = KeplerianFromStateVectors(mu, r, v);
@@ -415,6 +477,7 @@ namespace MechJebLib.Core
             return Clamp2Pi(-manom) / meanMotion;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimetoNextTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
         {
             double meanMotion = MeanMotion(mu, sma);
@@ -428,6 +491,7 @@ namespace MechJebLib.Core
             return (manom2 - manom1) / meanMotion;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToNextTrueAnomaly(double mu, V3 r, V3 v, double nu2)
         {
             (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
@@ -435,6 +499,7 @@ namespace MechJebLib.Core
             return TimetoNextTrueAnomaly(mu, sma, ecc, nu1, nu2);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToNextRadius(double mu, V3 r, V3 v, double radius)
         {
             double nu1 = TrueAnomalyFromRadius(mu, r, v, radius);
@@ -448,6 +513,15 @@ namespace MechJebLib.Core
             return time1 >= 0 ? time1 : time2;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double SynodicPeriod(double mu, V3 r1, V3 v1, V3 r2, V3 v2)
+        {
+            double t1 = PeriodFromStateVectors(mu, r1, v1);
+            double t2 = PeriodFromStateVectors(mu, r2, v2);
+            int sign = Sign(V3.Dot(V3.Cross(r1, v1), V3.Cross(r2, v2)));
+            return Abs(1.0 / (1.0 / t1 - sign / t2));
+        }
+
         /// <summary>
         ///     Kepler's Equation for time since periapsis from the Eccentric Anomaly.
         /// </summary>
@@ -456,6 +530,7 @@ namespace MechJebLib.Core
         /// <param name="ecc">Eccentricity</param>
         /// <param name="eanom">Eccentric Anomaly</param>
         /// <returns>Time of flight</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeSincePeriapsisFromEccentricAnomaly(double mu, double sma, double ecc, double eanom)
         {
             double k = Sqrt(Abs(mu / (sma * sma * sma)));
@@ -466,9 +541,11 @@ namespace MechJebLib.Core
             return Sqrt(2) * (eanom + eanom * eanom * eanom / 3.0) / k;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Q3 PerifocalToECIMatrix(double inc, double argp, double lan) =>
             Q3.AngleAxis(lan, V3.zaxis) * Q3.AngleAxis(inc, V3.xaxis) * Q3.AngleAxis(argp, V3.zaxis);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (V3 p, V3 q, Q3 rot) PerifocalFromStateVectors(double mu, V3 r, V3 v)
         {
             (_, double ecc, double inc, double lan, double argp, double nu, double l) = KeplerianFromStateVectors(mu, r, v);
@@ -478,6 +555,7 @@ namespace MechJebLib.Core
             return (p, q, rot);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (V3 p, V3 q) PerifocalFromElements(double mu, double l, double ecc, double nu)
         {
             double cnu = Cos(nu);
@@ -489,6 +567,7 @@ namespace MechJebLib.Core
             return (one * l / (1 + ecc * cnu), two * Sqrt(mu / l));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (V3 r, V3 v) StateVectorsFromKeplerian(double mu, double l, double ecc, double inc, double lan, double argp, double nu)
         {
             (V3 p, V3 q) = PerifocalFromElements(mu, l, ecc, nu);
@@ -621,5 +700,21 @@ namespace MechJebLib.Core
 
         public static (V3 vNeg, V3 vPos, V3 r, double dt) SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false) =>
             RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, debug);
+
+        public static (double dv1, double dv2, double tt, double alpha) HohmannTransferParameters(double mu, V3 r1, V3 r2)
+        {
+            const double C = 0.35355339059327373;
+            double r1M = r1.magnitude;
+            double r2M = r2.magnitude;
+            double rsum = r1M + r2M;
+            double c1 = Sqrt(2.0 * r2M / rsum);
+            double c2 = Sqrt(2.0 * r1M / rsum);
+            double dv1 = Sqrt(mu / r1M) * (c1 - 1);
+            double dv2 = Sqrt(mu / r2M) * (1 - c2);
+            double tt = PI * Sqrt(Powi(rsum, 3) / (8 * mu));
+            double c3 = r1M / r2M + 1;
+            double alpha = PI * (1 - C * Sqrt(Powi(c3, 3)));
+            return (dv1, dv2, tt, alpha);
+        }
     }
 }

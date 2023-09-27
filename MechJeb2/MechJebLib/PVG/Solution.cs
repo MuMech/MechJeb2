@@ -18,7 +18,7 @@ namespace MechJebLib.PVG
     public class Solution : IDisposable
     {
         public           double       T0;
-        public           double       Tf => T0 + tmax * _timeScale;
+        public           double       Tf => T0 + Tmax * _timeScale;
         private readonly Scale        _scale;
         private readonly List<double> _tmin         = new List<double>();
         private readonly List<double> _tmax         = new List<double>();
@@ -33,8 +33,8 @@ namespace MechJebLib.PVG
         private double _velocityScale => _scale.VelocityScale;
         private double _massScale     => _scale.MassScale;
 
-        public  double tmax => _tmax[Segments - 1];
-        private double tmin => _tmin[0];
+        public double Tmax => _tmax[Segments - 1];
+        public double Tmin => _tmin[0];
 
         public Solution(Problem problem)
         {
@@ -57,11 +57,11 @@ namespace MechJebLib.PVG
         public double Tbar(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            if (tbar < tmin)
-                return tmin;
+            if (tbar < Tmin)
+                return Tmin;
 
-            if (tbar > tmax)
-                return tmax;
+            if (tbar > Tmax)
+                return Tmax;
 
             return tbar;
         }
@@ -163,7 +163,7 @@ namespace MechJebLib.PVG
         public double Tgo(double t)
         {
             double tbar = (t - T0) / _timeScale;
-            return (tmax - tbar) * _timeScale;
+            return (Tmax - tbar) * _timeScale;
         }
 
         public double Tgo(double t, int n)
@@ -267,7 +267,7 @@ namespace MechJebLib.PVG
             return (pitch, heading);
         }
 
-        public (V3 r, V3 v) TerminalStateVectors() => StateVectors(tmax);
+        public (V3 r, V3 v) TerminalStateVectors() => StateVectors(Tmax);
 
         public (V3 r, V3 v) StateVectors(double tbar)
         {

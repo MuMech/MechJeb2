@@ -4,6 +4,7 @@ using MechJebLib.Core;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using Xunit;
+using Xunit.Abstractions;
 using static MechJebLib.Statics;
 
 namespace MechJebLibTest.PVGTests
@@ -11,6 +12,13 @@ namespace MechJebLibTest.PVGTests
     // test from buggy rockets that people have given me
     public class BuggyTests
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public BuggyTests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
+
         // A suborbital Thor that had convergence issues on the pad
         [Fact]
         public void SubOrbitalThor()
