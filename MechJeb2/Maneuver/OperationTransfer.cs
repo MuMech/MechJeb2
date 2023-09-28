@@ -25,7 +25,7 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble PeriodOffset = 0;
+        public EditableDouble LagTime = 0;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime MinDepartureUT = 0;
@@ -51,15 +51,17 @@ namespace MuMech
             Capture =
                 !GUILayout.Toggle(!Capture, Localizer.Format("#MechJeb_Hohm_intercept_only")); //no capture burn (impact/flyby)
             if (Capture)
-                PlanCapture = GUILayout.Toggle(PlanCapture, "Plan capture burn");
+                PlanCapture = GUILayout.Toggle(PlanCapture, "Plan insertion burn");
             Coplanar = GUILayout.Toggle(Coplanar, Localizer.Format("#MechJeb_Hohm_simpleTransfer")); //coplanar maneuver
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), PeriodOffset); //fractional target period offset
             GUILayout.BeginHorizontal();
             if (GUILayout.Toggle(Rendezvous, "Rendezvous"))
                 Rendezvous = true;
             if (GUILayout.Toggle(!Rendezvous, "Transfer"))
                 Rendezvous = false;
             GUILayout.EndHorizontal();
+            if (Rendezvous)
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), LagTime, "sec"); //fractional target period offset
+
             /*
             if (!Coplanar)
             {
@@ -70,31 +72,20 @@ namespace MuMech
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double ut;
-
             if (!target.NormalTargetExists)
-            {
                 throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception1")); //must select a target for the bi-impulsive transfer.
-            }
 
             if (o.referenceBody != target.TargetOrbit.referenceBody)
-            {
                 throw
                     new OperationException(
                         Localizer.Format("#MechJeb_Hohm_Exception2")); //target for bi-impulsive transfer must be in the same sphere of influence.
-            }
-
-            Vector3d dV;
 
             Orbit targetOrbit = target.TargetOrbit;
 
-            if (PeriodOffset != 0)
-            {
-                targetOrbit = target.TargetOrbit.Clone();
-                targetOrbit.MutatedOrbit(PeriodOffset);
-            }
+            double lagTime = Rendezvous ? LagTime.val : 0;
 
-            (dV, ut) = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, coplanar: Coplanar, rendezvous: Rendezvous);
+            (Vector3d dV1, double ut1, Vector3d dV2, double ut2) =
+                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, Coplanar, Rendezvous, Capture);
 
             /*
         else
@@ -132,7 +123,9 @@ namespace MuMech
         }
         */
 
-            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
+            if (Capture && PlanCapture)
+                return new List<ManeuverParameters> { new ManeuverParameters(dV1, ut1), new ManeuverParameters(dV2, ut2) };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV1, ut1) };
         }
     }
 }

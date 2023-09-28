@@ -1,12 +1,10 @@
 ﻿using System;
 using MechJebLib.Core;
-using MechJebLib.Core.TwoBody;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using Smooth.Pools;
 using UnityEngine;
 using static MechJebLib.Statics;
-using Debug = UnityEngine.Debug;
 
 namespace MuMech
 {
@@ -155,15 +153,19 @@ namespace MuMech
         //The output burnUT will be the first transfer window found after the given UT.
         //Assumes o and target are in approximately the same plane, and orbiting in the same direction.
         //Also assumes that o is a perfectly circular orbit (though result should be OK for small eccentricity).
-        public static ( Vector3d dV, double burnUT) DeltaVAndTimeForHohmannTransfer(Orbit o, Orbit target, double ut, bool coplanar = true, bool rendezvous = true)
+        public static ( Vector3d dV1, double UT1, Vector3d dV2, double UT2) DeltaVAndTimeForHohmannTransfer(Orbit o, Orbit target, double ut,
+            double lagTime = double.NaN,
+            bool coplanar = true, bool rendezvous = true, bool capture = true)
         {
             (V3 r1, V3 v1) = o.RightHandedStateVectorsAtUT(ut);
             (V3 r2, V3 v2) = target.RightHandedStateVectorsAtUT(ut);
 
-            (V3 dv, double dt, _, _) =
-                CoplanarTransfer.NextManeuver(o.referenceBody.gravParameter, r1, v1, r2, v2, coplanar: coplanar, rendezvous: rendezvous);
+            (V3 dv1, double dt1, V3 dv2, double dt2) =
+                CoplanarTransfer.NextManeuver(o.referenceBody.gravParameter, r1, v1, r2, v2, lagTime: lagTime, coplanar: coplanar,
+                    rendezvous: rendezvous,
+                    capture: capture);
 
-            return (dv.V3ToWorld(), dt);
+            return (dv1.V3ToWorld(), ut + dt1, dv2.V3ToWorld(), ut + dt2);
         }
 
         // Computes the delta-V of a burn at a given time that will put an object with a given orbit on a
@@ -189,38 +191,6 @@ namespace MuMech
             }
 
             return ((transferVi - vi).V3ToWorld(), (vf - transferVf).V3ToWorld());
-        }
-
-        // Lambert Solver Driver function.
-        //
-        // This uses Shepperd's method instead of using KSP's Orbit class.
-        //
-        // The reference time is usually 'now' or the first time the burn can start.
-        //
-        // GM       - grav parameter of the celestial
-        // pos      - position of the source orbit at a reference time
-        // vel      - velocity of the source orbit at a reference time
-        // tpos     - position of the target orbit at a reference time
-        // tvel     - velocity of the target orbit at a reference time
-        // DT       - time of the burn in seconds after the reference time
-        // TT       - transfer time of the burn in seconds after the burn time
-        // secondDV - the second burn dV
-        // returns  - the first burn dV
-        //
-        private static Vector3d DeltaVToInterceptAtTime(double GM, Vector3d pos, Vector3d vel, Vector3d tpos, Vector3d tvel, double dt, double tt,
-            out Vector3d secondDV, bool posigrade = true)
-        {
-            // advance the source orbit to ref + DT
-            (V3 pos1, V3 vel1) = Shepperd.Solve(GM, dt, pos.ToV3(), vel.ToV3());
-
-            // advance the target orbit to ref + DT + TT
-            (V3 pos2, V3 vel2) = Shepperd.Solve(GM, dt + tt, tpos.ToV3(), tvel.ToV3());
-
-            (V3 transferVi, V3 transferVf) = Gooding.Solve(GM, pos1, vel1, pos2, posigrade ? tt : -tt, 0);
-
-            secondDV = (vel2 - transferVf).ToVector3d();
-
-            return (transferVi - vel1).ToVector3d();
         }
 
         // This does a line-search to find the burnUT for the cheapest course correction that will intercept exactly
@@ -316,7 +286,7 @@ namespace MuMech
             if (syncPhaseAngle)
             {
                 //time the ejection burn to intercept the target
-                (idealDeltaV, idealBurnUT) = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT);
+                (idealDeltaV, idealBurnUT, _, _) = DeltaVAndTimeForHohmannTransfer(planetOrbit, target, UT);
             }
             else
             {
