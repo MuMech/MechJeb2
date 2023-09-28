@@ -109,8 +109,8 @@ namespace MuMech
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button3"))) //"Intercept with Hohmann transfer"
             {
-                (Vector3d dV, double UT) =
-                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, false);
+                (Vector3d dV, double UT, _, _) =
+                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, coplanar: false);
                 Vessel.RemoveAllManeuverNodes();
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
             }

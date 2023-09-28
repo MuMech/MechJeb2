@@ -135,8 +135,8 @@ namespace MuMech
             {
                 //We're not on an intercept course, but we have a circular orbit in the right plane.
 
-                (Vector3d hohmannDV, double hohmannUT) =
-                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, false);
+                (Vector3d hohmannDV, double hohmannUT, _, _) =
+                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, coplanar: false);
 
                 double numPhasingOrbits = (hohmannUT - VesselState.time) / Orbit.period;
 

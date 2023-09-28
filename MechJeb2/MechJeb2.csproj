@@ -56,9 +56,6 @@
         <Compile Include="FlyingSim\SimulatedParachute.cs"/>
         <Compile Include="FlyingSim\SimulatedPart.cs"/>
         <Compile Include="FlyingSim\SimulatedVessel.cs"/>
-        <Compile Include="FuelFlowSimulation.cs"/>
-        <Compile Include="FuelNode.cs"/>
-        <Compile Include="FuelStats.cs"/>
         <Compile Include="GlobalSuppressions.cs"/>
         <Compile Include="GLUtils.cs"/>
         <Compile Include="GuiUtils.cs"/>
@@ -228,7 +225,6 @@
         <Compile Include="MechJebModuleSpaceplaneAutopilot.cs"/>
         <Compile Include="MechJebModuleSpaceplaneGuidance.cs"/>
         <Compile Include="MechJebModuleSpinupController.cs"/>
-        <Compile Include="MechJebModuleStageStatsOld.cs"/>
         <Compile Include="MechJebModuleStagingController.cs"/>
         <Compile Include="MechJebModuleSuicideTimer.cs"/>
         <Compile Include="MechJebModuleTargetController.cs"/>
