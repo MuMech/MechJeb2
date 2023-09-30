@@ -38,6 +38,7 @@ namespace MechJebLib.Simulations
         public double DisabledResourcesMass;
         public double EngineResiduals;
 
+        public bool IsRoot;
         public bool IsLaunchClamp;
         public bool IsEngine;
         public bool IsSepratron => IsEngine && IsThrottleLocked && ActivatesEvenIfDisconnected && InverseStage == DecoupledInStage;

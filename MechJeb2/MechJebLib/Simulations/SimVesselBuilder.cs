@@ -138,6 +138,7 @@ namespace MechJebLib.Simulations
                 part.Mass                              = kspPart.mass;
                 part.Name                              = kspPart.name;
                 part.DryMass                           = kspPart.prefabMass;
+                part.IsRoot                            = kspPart.parent is null;
                 part.ModulesStagedMass                 = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.STAGED);
                 part.ModulesUnstagedMass               = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.UNSTAGED);
                 part.DecoupledInStage                  = int.MinValue;

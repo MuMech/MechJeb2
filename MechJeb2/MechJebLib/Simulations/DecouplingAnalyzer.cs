@@ -26,12 +26,18 @@ namespace MechJebLib.Simulations
             CalculateDecoupledInStageRecursively(v, rootPart, null, -1);
         }
 
+        private static SimPart FindRootPart(IReadOnlyList<SimPart> parts)
+        {
+            for (int i = 0; i < parts.Count; i++)
+                if (parts[i].IsRoot)
+                    return parts[i];
+            return parts[0];
+        }
+
         // BUG: This should at least be fixed to not pick the payload fairings if they are left in stage 0
         // BUG: Does this even do anything?  What part has a inverseStage of -1?
         // BUG: Even if we change this to p.InverseStage <= 0 below what happens with the last decoupler when
         //      it should detatch the payload and so the part decoupled from it should be the root, not the part itself?
-        private static SimPart FindRootPart(IReadOnlyList<SimPart> parts) => parts[0];
-
         /*
             SimPart? rootPart = null;
 
