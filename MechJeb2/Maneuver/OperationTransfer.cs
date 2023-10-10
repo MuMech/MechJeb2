@@ -62,12 +62,8 @@ namespace MuMech
             if (Rendezvous)
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), LagTime, "sec"); //fractional target period offset
 
-            /*
-            if (!Coplanar)
-            {
-                _timeSelector.DoChooseTimeGUI();
-            }
-            */
+            _timeSelector.DoChooseTimeGUI();
+
         }
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -78,6 +74,21 @@ namespace MuMech
             if (o.referenceBody != target.TargetOrbit.referenceBody)
                 throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception2")); //target for bi-impulsive transfer must be in the same sphere of influence.
 
+            bool anExists = o.AscendingNodeExists(target.TargetOrbit);
+            bool dnExists = o.DescendingNodeExists(target.TargetOrbit);
+
+            switch (_timeSelector.TimeReference)
+            {
+                case TimeReference.REL_ASCENDING when !anExists:
+                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception3")); //ascending node with target doesn't exist.
+                case TimeReference.REL_DESCENDING when !dnExists:
+                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception4")); //descending node with target doesn't exist.
+                case TimeReference.REL_NEAREST_AD when !(anExists || dnExists):
+                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
+            }
+
+            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+
             if (target.Target is CelestialBody && Capture && PlanCapture)
                 ErrorMessage = "Insertion burn to a celestial with an SOI is not supported by this maneuver.  A Transfer-to-Moon maneuver needs to be written to properly support this case.";
 
@@ -86,43 +97,7 @@ namespace MuMech
             double lagTime = Rendezvous ? LagTime.val : 0;
 
             (Vector3d dV1, double ut1, Vector3d dV2, double ut2) =
-                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, Coplanar, Rendezvous, Capture);
-
-            /*
-        else
-        {
-            if (_timeSelector.TimeReference == TimeReference.COMPUTED)
-            {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, universalTime, out ut,
-                    intercept_only: InterceptOnly);
-            }
-            else
-            {
-                bool anExists = o.AscendingNodeExists(target.TargetOrbit);
-                bool dnExists = o.DescendingNodeExists(target.TargetOrbit);
-
-                if (_timeSelector.TimeReference == TimeReference.REL_ASCENDING && !anExists)
-                {
-                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception3")); //ascending node with target doesn't exist.
-                }
-
-                if (_timeSelector.TimeReference == TimeReference.REL_DESCENDING && !dnExists)
-                {
-                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception4")); //descending node with target doesn't exist.
-                }
-
-                if (_timeSelector.TimeReference == TimeReference.REL_NEAREST_AD && !(anExists || dnExists))
-                {
-                    throw new OperationException(
-                        Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
-                }
-
-                ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeForBiImpulsiveAnnealed(o, targetOrbit, ut, out ut, intercept_only: InterceptOnly,
-                    fixed_ut: true);
-            }
-        }
-        */
+                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, ut, lagTime, Coplanar, Rendezvous, Capture);
 
             if (Capture && PlanCapture)
                 return new List<ManeuverParameters> { new ManeuverParameters(dV1, ut1), new ManeuverParameters(dV2, ut2) };
