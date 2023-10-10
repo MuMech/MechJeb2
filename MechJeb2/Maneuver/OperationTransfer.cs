@@ -76,9 +76,10 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception1")); //must select a target for the bi-impulsive transfer.
 
             if (o.referenceBody != target.TargetOrbit.referenceBody)
-                throw
-                    new OperationException(
-                        Localizer.Format("#MechJeb_Hohm_Exception2")); //target for bi-impulsive transfer must be in the same sphere of influence.
+                throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception2")); //target for bi-impulsive transfer must be in the same sphere of influence.
+
+            if (target.Target is CelestialBody && Capture && PlanCapture)
+                ErrorMessage = "Insertion burn to a celestial with an SOI is not supported by this maneuver.  A Transfer-to-Moon maneuver needs to be written to properly support this case.";
 
             Orbit targetOrbit = target.TargetOrbit;
 

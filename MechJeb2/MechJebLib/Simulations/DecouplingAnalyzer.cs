@@ -21,6 +21,9 @@ namespace MechJebLib.Simulations
             // second rule is at least necessary for the final decoupler to break the 0=0 tie.
             // Doing the bookkeeping quickly will likely be challenging.  But this would eliminate
             // the root part requirement from the algorithm entirely.
+            //
+            // OR: could probably find all the decouplers with the lowest inverseStage and then
+            // form an algorithm to pick which side of which decoupler was considered the "root".
             SimPart rootPart = FindRootPart(v.Parts);
 
             CalculateDecoupledInStageRecursively(v, rootPart, null, -1);
