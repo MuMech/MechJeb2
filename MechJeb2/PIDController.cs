@@ -4,54 +4,47 @@ namespace MuMech
 {
     public class PIDController : IConfigNode
     {
-        public double prevError, intAccum, Kp, Ki, Kd, max, min;
+        private          double _prevError;
+        public           double INTAccum, Kp, Ki, Kd;
+        private readonly double _max;
+        private readonly double _min;
 
-        public PIDController(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue)
+        public PIDController(double kp = 0, double ki = 0, double kd = 0, double max = double.MaxValue, double min = double.MinValue)
         {
-            this.Kp  = Kp;
-            this.Ki  = Ki;
-            this.Kd  = Kd;
-            this.max = max;
-            this.min = min;
+            Kp   = kp;
+            Ki   = ki;
+            Kd   = kd;
+            _max = max;
+            _min = min;
             Reset();
         }
 
         public double Compute(double error)
         {
-            intAccum += error * TimeWarp.fixedDeltaTime;
-            double action = Kp * error + Ki * intAccum + Kd * (error - prevError) / TimeWarp.fixedDeltaTime;
-            double clamped = Math.Max(min, Math.Min(max, action));
+            INTAccum += error * TimeWarp.fixedDeltaTime;
+            double action = Kp * error + Ki * INTAccum + Kd * (error - _prevError) / TimeWarp.fixedDeltaTime;
+            double clamped = Math.Max(_min, Math.Min(_max, action));
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (clamped != action)
-            {
-                intAccum -= error * TimeWarp.fixedDeltaTime;
-            }
+                INTAccum -= error * TimeWarp.fixedDeltaTime;
 
-            prevError = error;
+            _prevError = error;
 
             return action;
         }
 
-        public void Reset()
-        {
-            prevError = intAccum = 0;
-        }
+        public void Reset() => _prevError = INTAccum = 0;
 
         public void Load(ConfigNode node)
         {
             if (node.HasValue("Kp"))
-            {
                 Kp = Convert.ToDouble(node.GetValue("Kp"));
-            }
 
             if (node.HasValue("Ki"))
-            {
                 Ki = Convert.ToDouble(node.GetValue("Ki"));
-            }
 
             if (node.HasValue("Kd"))
-            {
                 Kd = Convert.ToDouble(node.GetValue("Kd"));
-            }
         }
 
         public void Save(ConfigNode node)
@@ -62,138 +55,75 @@ namespace MuMech
         }
     }
 
-    public class PIDControllerV : IConfigNode
-    {
-        public Vector3d prevError, intAccum;
-        public double   Kp,        Ki, Kd, max, min;
-
-        public PIDControllerV(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue)
-        {
-            this.Kp  = Kp;
-            this.Ki  = Ki;
-            this.Kd  = Kd;
-            this.max = max;
-            this.min = min;
-            Reset();
-        }
-
-        public Vector3d Compute(Vector3d error)
-        {
-            intAccum += error * TimeWarp.fixedDeltaTime;
-            Vector3d action = Kp * error + Ki * intAccum + Kd * (error - prevError) / TimeWarp.fixedDeltaTime;
-            var clamped = new Vector3d(Math.Max(min, Math.Min(max, action.x)), Math.Max(min, Math.Min(max, action.y)),
-                Math.Max(min, Math.Min(max, action.z)));
-            if (Math.Abs((clamped - action).magnitude) > 0.01)
-            {
-                intAccum -= error * TimeWarp.fixedDeltaTime;
-            }
-
-            prevError = error;
-
-            return action;
-        }
-
-        public void Reset()
-        {
-            prevError = intAccum = Vector3d.zero;
-        }
-
-        public void Load(ConfigNode node)
-        {
-            if (node.HasValue("Kp"))
-            {
-                Kp = Convert.ToDouble(node.GetValue("Kp"));
-            }
-
-            if (node.HasValue("Ki"))
-            {
-                Ki = Convert.ToDouble(node.GetValue("Ki"));
-            }
-
-            if (node.HasValue("Kd"))
-            {
-                Kd = Convert.ToDouble(node.GetValue("Kd"));
-            }
-        }
-
-        public void Save(ConfigNode node)
-        {
-            node.SetValue("Kp", Kp.ToString());
-            node.SetValue("Ki", Ki.ToString());
-            node.SetValue("Kd", Kd.ToString());
-        }
-    }
-
-    // This PID Controler is used by Raf04 patch for the attitude controler. They have a separate implementation since they use
-    // a different set of argument and do more (and less) than the other PID controler
     public class PIDControllerV2 : IConfigNode
     {
-        public Vector3d intAccum, derivativeAct, propAct;
-        public double   Kp,       Ki,            Kd, max, min;
+        private          Vector3d _intAccum;
+        private          Vector3d _derivativeAct;
+        private          Vector3d _propAct;
+        public           double   Kp, Ki, Kd;
+        private readonly double   _max;
+        private readonly double   _min;
 
-        public PIDControllerV2(double Kp = 0, double Ki = 0, double Kd = 0, double max = double.MaxValue, double min = double.MinValue)
+        public PIDControllerV2(double kp = 0, double ki = 0, double kd = 0, double max = double.MaxValue, double min = double.MinValue)
         {
-            this.Kp  = Kp;
-            this.Ki  = Ki;
-            this.Kd  = Kd;
-            this.max = max;
-            this.min = min;
+            Kp   = kp;
+            Ki   = ki;
+            Kd   = kd;
+            _max = max;
+            _min = min;
             Reset();
         }
 
         public Vector3d Compute(Vector3d error, Vector3d omega)
         {
-            derivativeAct = omega * Kd;
+            _derivativeAct = omega * Kd;
 
             // integral actíon + Anti Windup
-            intAccum.x = Math.Abs(derivativeAct.x) < 0.6 * max ? intAccum.x + error.x * Ki * TimeWarp.fixedDeltaTime : 0.9 * intAccum.x;
-            intAccum.y = Math.Abs(derivativeAct.y) < 0.6 * max ? intAccum.y + error.y * Ki * TimeWarp.fixedDeltaTime : 0.9 * intAccum.y;
-            intAccum.z = Math.Abs(derivativeAct.z) < 0.6 * max ? intAccum.z + error.z * Ki * TimeWarp.fixedDeltaTime : 0.9 * intAccum.z;
+            _intAccum.x = Math.Abs(_derivativeAct.x) < 0.6 * _max ? _intAccum.x + error.x * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.x;
+            _intAccum.y = Math.Abs(_derivativeAct.y) < 0.6 * _max ? _intAccum.y + error.y * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.y;
+            _intAccum.z = Math.Abs(_derivativeAct.z) < 0.6 * _max ? _intAccum.z + error.z * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.z;
 
-            propAct = error * Kp;
+            _propAct = error * Kp;
 
-            Vector3d action = propAct + derivativeAct + intAccum;
+            Vector3d action = _propAct + _derivativeAct + _intAccum;
 
             // action clamp
-            action = new Vector3d(Math.Max(min, Math.Min(max, action.x)),
-                Math.Max(min, Math.Min(max, action.y)),
-                Math.Max(min, Math.Min(max, action.z)));
+            action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
+                Math.Max(_min, Math.Min(_max, action.y)),
+                Math.Max(_min, Math.Min(_max, action.z)));
             return action;
         }
 
-        public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d Wlimit)
+        public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d wlimit)
         {
-            derivativeAct = omega * Kd;
-            Wlimit        = Wlimit * Kd;
+            _derivativeAct =  omega * Kd;
+            wlimit         *= Kd;
 
             // integral actíon + Anti Windup
-            intAccum.x = Math.Abs(derivativeAct.x) < 0.6 * max ? intAccum.x + error.x * Ki * TimeWarp.fixedDeltaTime : 0.9 * intAccum.x;
-            intAccum.y = Math.Abs(derivativeAct.y) < 0.6 * max ? intAccum.y + error.y * Ki * TimeWarp.fixedDeltaTime : 0.9 * intAccum.y;
-            intAccum.z = Math.Abs(derivativeAct.z) < 0.6 * max ? intAccum.z + error.z * Ki * TimeWarp.fixedDeltaTime : 0.9 * intAccum.z;
+            _intAccum.x = Math.Abs(_derivativeAct.x) < 0.6 * _max ? _intAccum.x + error.x * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.x;
+            _intAccum.y = Math.Abs(_derivativeAct.y) < 0.6 * _max ? _intAccum.y + error.y * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.y;
+            _intAccum.z = Math.Abs(_derivativeAct.z) < 0.6 * _max ? _intAccum.z + error.z * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.z;
 
-            propAct = error * Kp;
+            _propAct = error * Kp;
 
-            Vector3d action = propAct + intAccum;
+            Vector3d action = _propAct + _intAccum;
 
             // Clamp (propAct + intAccum) to limit the angular velocity:
-            action = new Vector3d(Math.Max(-Wlimit.x, Math.Min(Wlimit.x, action.x)),
-                Math.Max(-Wlimit.y, Math.Min(Wlimit.y, action.y)),
-                Math.Max(-Wlimit.z, Math.Min(Wlimit.z, action.z)));
+            action = new Vector3d(Math.Max(-wlimit.x, Math.Min(wlimit.x, action.x)),
+                Math.Max(-wlimit.y, Math.Min(wlimit.y, action.y)),
+                Math.Max(-wlimit.z, Math.Min(wlimit.z, action.z)));
 
             // add. derivative action
-            action += derivativeAct;
+            action += _derivativeAct;
 
             // action clamp
-            action = new Vector3d(Math.Max(min, Math.Min(max, action.x)),
-                Math.Max(min, Math.Min(max, action.y)),
-                Math.Max(min, Math.Min(max, action.z)));
+            action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
+                Math.Max(_min, Math.Min(_max, action.y)),
+                Math.Max(_min, Math.Min(_max, action.z)));
             return action;
         }
 
-        public void Reset()
-        {
-            intAccum = Vector3d.zero;
-        }
+        public void Reset() => _intAccum = Vector3d.zero;
 
         public void Load(ConfigNode node)
         {
@@ -223,52 +153,50 @@ namespace MuMech
 
     public class PIDControllerV3 : IConfigNode
     {
-        public Vector3d Kp,  Ki, Kd, intAccum, derivativeAct, propAct;
-        public double   max, min;
+        public           Vector3d Kp, Ki, Kd, INTAccum, DerivativeAct, PropAct;
+        private readonly double   _max;
+        private readonly double   _min;
 
-        public PIDControllerV3(Vector3d Kp, Vector3d Ki, Vector3d Kd, double max = double.MaxValue, double min = double.MinValue)
+        public PIDControllerV3(Vector3d kp, Vector3d ki, Vector3d kd, double max = double.MaxValue, double min = double.MinValue)
         {
-            this.Kp  = Kp;
-            this.Ki  = Ki;
-            this.Kd  = Kd;
-            this.max = max;
-            this.min = min;
+            Kp   = kp;
+            Ki   = ki;
+            Kd   = kd;
+            _max = max;
+            _min = min;
             Reset();
         }
 
-        public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d Wlimit)
+        public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d wlimit)
         {
-            derivativeAct = Vector3d.Scale(omega, Kd);
-            Wlimit        = Vector3d.Scale(Wlimit, Kd);
+            DerivativeAct = Vector3d.Scale(omega, Kd);
+            wlimit        = Vector3d.Scale(wlimit, Kd);
 
             // integral actíon + Anti Windup
-            intAccum.x = Math.Abs(derivativeAct.x) < 0.6 * max ? intAccum.x + error.x * Ki.x * TimeWarp.fixedDeltaTime : 0.9 * intAccum.x;
-            intAccum.y = Math.Abs(derivativeAct.y) < 0.6 * max ? intAccum.y + error.y * Ki.y * TimeWarp.fixedDeltaTime : 0.9 * intAccum.y;
-            intAccum.z = Math.Abs(derivativeAct.z) < 0.6 * max ? intAccum.z + error.z * Ki.z * TimeWarp.fixedDeltaTime : 0.9 * intAccum.z;
+            INTAccum.x = Math.Abs(DerivativeAct.x) < 0.6 * _max ? INTAccum.x + error.x * Ki.x * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.x;
+            INTAccum.y = Math.Abs(DerivativeAct.y) < 0.6 * _max ? INTAccum.y + error.y * Ki.y * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.y;
+            INTAccum.z = Math.Abs(DerivativeAct.z) < 0.6 * _max ? INTAccum.z + error.z * Ki.z * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.z;
 
-            propAct = Vector3d.Scale(error, Kp);
+            PropAct = Vector3d.Scale(error, Kp);
 
-            Vector3d action = propAct + intAccum;
+            Vector3d action = PropAct + INTAccum;
 
             // Clamp (propAct + intAccum) to limit the angular velocity:
-            action = new Vector3d(Math.Max(-Wlimit.x, Math.Min(Wlimit.x, action.x)),
-                Math.Max(-Wlimit.y, Math.Min(Wlimit.y, action.y)),
-                Math.Max(-Wlimit.z, Math.Min(Wlimit.z, action.z)));
+            action = new Vector3d(Math.Max(-wlimit.x, Math.Min(wlimit.x, action.x)),
+                Math.Max(-wlimit.y, Math.Min(wlimit.y, action.y)),
+                Math.Max(-wlimit.z, Math.Min(wlimit.z, action.z)));
 
             // add. derivative action
-            action += derivativeAct;
+            action += DerivativeAct;
 
             // action clamp
-            action = new Vector3d(Math.Max(min, Math.Min(max, action.x)),
-                Math.Max(min, Math.Min(max, action.y)),
-                Math.Max(min, Math.Min(max, action.z)));
+            action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
+                Math.Max(_min, Math.Min(_max, action.y)),
+                Math.Max(_min, Math.Min(_max, action.z)));
             return action;
         }
 
-        public void Reset()
-        {
-            intAccum = Vector3d.zero;
-        }
+        public void Reset() => INTAccum = Vector3d.zero;
 
         public void Load(ConfigNode node)
         {

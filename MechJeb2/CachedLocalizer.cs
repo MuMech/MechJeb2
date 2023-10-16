@@ -86,15 +86,9 @@ namespace MuMech
             Instance = go.AddComponent<CachedLocalizer>();
         }
 
-        public void OnDestroy()
-        {
-            Instance = null;
-        }
+        public void OnDestroy() => Instance = null;
 
-        public void Awake()
-        {
-            UpdateCachedStrings();
-        }
+        public void Awake() => UpdateCachedStrings();
 
         private void UpdateCachedStrings()
         {

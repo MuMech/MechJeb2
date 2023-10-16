@@ -12,14 +12,8 @@ namespace MuMech.MechJebLib
             public double Tf;
         }
 
-        public static SuicideBuilder Builder()
-        {
-            return new SuicideBuilder();
-        }
+        public static SuicideBuilder Builder() => new SuicideBuilder();
 
-        protected override SuicideResult Run(object o)
-        {
-            throw new NotImplementedException();
-        }
+        protected override SuicideResult Run(object o) => throw new NotImplementedException();
     }
 }

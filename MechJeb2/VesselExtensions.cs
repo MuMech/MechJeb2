@@ -9,11 +9,9 @@ namespace MuMech
 {
     public static class VesselExtensions
     {
-        public static bool VesselOffGround(this Vessel vessel)
-        {
-            return vessel.situation == Vessel.Situations.FLYING || vessel.situation == Vessel.Situations.ESCAPING ||
-                   vessel.situation == Vessel.Situations.ORBITING || vessel.situation == Vessel.Situations.SUB_ORBITAL;
-        }
+        public static bool VesselOffGround(this Vessel vessel) =>
+            vessel.situation == Vessel.Situations.FLYING || vessel.situation == Vessel.Situations.ESCAPING ||
+            vessel.situation == Vessel.Situations.ORBITING || vessel.situation == Vessel.Situations.SUB_ORBITAL;
 
         public static List<ITargetable> GetTargetables(this Vessel vessel)
         {
@@ -128,15 +126,11 @@ namespace MuMech
             return amount;
         }
 
-        public static double TotalResourceAmount(this Vessel vessel, string resourceName)
-        {
-            return vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
-        }
+        public static double TotalResourceAmount(this Vessel vessel, string resourceName) =>
+            vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
 
-        public static double TotalResourceAmount(this Vessel vessel, int resourceId)
-        {
-            return vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceId));
-        }
+        public static double TotalResourceAmount(this Vessel vessel, int resourceId) =>
+            vessel.TotalResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceId));
 
         public static double TotalResourceMass(this Vessel vessel, string resourceName)
         {
@@ -179,10 +173,8 @@ namespace MuMech
             return vessel.MaxResourceAmount(definition);
         }
 
-        public static double MaxResourceAmount(this Vessel vessel, string resourceName)
-        {
-            return vessel.MaxResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
-        }
+        public static double MaxResourceAmount(this Vessel vessel, string resourceName) =>
+            vessel.MaxResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
 
         public static bool HasElectricCharge(this Vessel vessel)
         {
@@ -215,10 +207,7 @@ namespace MuMech
             return false;
         }
 
-        public static bool LiftedOff(this Vessel vessel)
-        {
-            return vessel.situation != Vessel.Situations.PRELAUNCH;
-        }
+        public static bool LiftedOff(this Vessel vessel) => vessel.situation != Vessel.Situations.PRELAUNCH;
 
         public static Orbit GetPatchAtUT(this Vessel vessel, double UT)
         {
@@ -333,15 +322,15 @@ namespace MuMech
 
                 if (debug)
                 {
-                    MonoBehaviour.print("[GetBoundingBox] " + p.name + " " + (partBox.p1 - partBox.p2).magnitude.ToString("F3"));
+                    MonoBehaviour.print("[GetBoundingBox] " + p.name + " " + (partBox.P1 - partBox.P2).magnitude.ToString("F3"));
                 }
 
-                maxBounds.x = Mathf.Max(maxBounds.x, partBox.p1.x);
-                minBounds.x = Mathf.Min(minBounds.x, partBox.p2.x);
-                maxBounds.y = Mathf.Max(maxBounds.y, partBox.p1.y);
-                minBounds.y = Mathf.Min(minBounds.y, partBox.p2.y);
-                maxBounds.z = Mathf.Max(maxBounds.z, partBox.p1.z);
-                minBounds.z = Mathf.Min(minBounds.z, partBox.p2.z);
+                maxBounds.x = Mathf.Max(maxBounds.x, partBox.P1.x);
+                minBounds.x = Mathf.Min(minBounds.x, partBox.P2.x);
+                maxBounds.y = Mathf.Max(maxBounds.y, partBox.P1.y);
+                minBounds.y = Mathf.Min(minBounds.y, partBox.P2.y);
+                maxBounds.z = Mathf.Max(maxBounds.z, partBox.P1.z);
+                minBounds.z = Mathf.Min(minBounds.z, partBox.P2.z);
 
                 //foreach (var sympart in p.symmetryCounterparts)
                 //{
@@ -372,11 +361,9 @@ namespace MuMech
         // 0.90 added a building upgrade to unlock Orbit visualization and patched conics
         // Unfortunately when patchedConics are disabled vessel.patchedConicSolver is null
         // So we need to add a lot of sanity check and/or disable modules
-        public static bool patchedConicsUnlocked(this Vessel vessel)
-        {
-            return GameVariables.Instance.GetOrbitDisplayMode(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.TrackingStation)) ==
-                   GameVariables.OrbitDisplayMode.PatchedConics;
-        }
+        public static bool patchedConicsUnlocked(this Vessel vessel) =>
+            GameVariables.Instance.GetOrbitDisplayMode(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.TrackingStation)) ==
+            GameVariables.OrbitDisplayMode.PatchedConics;
 
         public static void UpdateNode(this ManeuverNode node, Vector3d dV, double ut)
         {
@@ -389,11 +376,9 @@ namespace MuMech
             node.attachedGizmo.patchAhead  = node.nextPatch;
         }
 
-        public static Vector3d WorldDeltaV(this ManeuverNode node)
-        {
-            return node.patch.Prograde(node.UT) * node.DeltaV.z + node.patch.RadialPlus(node.UT) * node.DeltaV.x +
-                   -node.patch.NormalPlus(node.UT) * node.DeltaV.y;
-        }
+        public static Vector3d WorldDeltaV(this ManeuverNode node) =>
+            node.patch.Prograde(node.UT) * node.DeltaV.z + node.patch.RadialPlus(node.UT) * node.DeltaV.x +
+            -node.patch.NormalPlus(node.UT) * node.DeltaV.y;
 
         // The part loop in VesselState could expose this, but it gets disabled when the RCS action group is disabled.
         // This method is also useful when the RCS AG is off.

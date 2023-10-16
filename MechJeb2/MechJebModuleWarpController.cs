@@ -29,10 +29,8 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool useQuickWarp;
 
-        public void useQuickWarpInfoItem()
-        {
+        public void useQuickWarpInfoItem() =>
             useQuickWarp = GUILayout.Toggle(useQuickWarp, Localizer.Format("#MechJeb_WarpHelper_checkbox1")); //"Quick warp"
-        }
 
         [GeneralInfoItem("#MechJeb_MJWarpControl", InfoItem.Category.Misc)] //MJ Warp Control
         public void ControlWarpButton()

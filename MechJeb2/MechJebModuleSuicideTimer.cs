@@ -18,15 +18,9 @@ namespace MuMech
         {
         }
 
-        protected override void OnModuleEnabled()
-        {
-            Reset();
-        }
+        protected override void OnModuleEnabled() => Reset();
 
-        protected override void OnModuleDisabled()
-        {
-            Reset();
-        }
+        protected override void OnModuleDisabled() => Reset();
 
         private void Reset()
         {

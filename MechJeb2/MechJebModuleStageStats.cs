@@ -75,10 +75,10 @@ namespace MuMech
                 VacStats.Clear();
                 foreach (FuelStats item in _vesselManagerVac.FuelFlowSimulation.Segments)
                     VacStats.Add(item);
-                VacT                                            = _vesselManagerVac.T;
-                VacR                                            = _vesselManagerVac.R;
-                VacV                                            = _vesselManagerVac.V;
-                VacU                                            = _vesselManagerVac.U;
+                VacT = _vesselManagerVac.T;
+                VacR = _vesselManagerVac.R;
+                VacV = _vesselManagerVac.V;
+                VacU = _vesselManagerVac.U;
 
                 _vesselManagerVac.FuelFlowSimulation.ResultReady = false;
             }

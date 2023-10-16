@@ -104,7 +104,7 @@ namespace MuMech.AttitudeControllers
             pid.Ki = 1 / (kiFactor * Math.Sqrt(2)) * pid.Kp;
             pid.Ki.Scale(invTf);
 
-            pid.intAccum = pid.intAccum.Clamp(-5, 5);
+            pid.INTAccum = pid.INTAccum.Clamp(-5, 5);
         }
 
         public void tuneTf(Vector3d torque)
@@ -142,10 +142,7 @@ namespace MuMech.AttitudeControllers
             kWlimit  = 0.15;
         }
 
-        public override void Reset()
-        {
-            pid.Reset();
-        }
+        public override void Reset() => pid.Reset();
 
         public override void DrivePre(FlightCtrlState s, out Vector3d act, out Vector3d deltaEuler)
         {
@@ -332,17 +329,17 @@ namespace MuMech.AttitudeControllers
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label16"), GUILayout.ExpandWidth(true)); //"prop. action."
-                GUILayout.Label(MuUtils.PrettyPrint(pid.propAct), GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.PrettyPrint(pid.PropAct), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label17"), GUILayout.ExpandWidth(true)); //"deriv. action"
-                GUILayout.Label(MuUtils.PrettyPrint(pid.derivativeAct), GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.PrettyPrint(pid.DerivativeAct), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label18"), GUILayout.ExpandWidth(true)); //"integral action."
-                GUILayout.Label(MuUtils.PrettyPrint(pid.intAccum), GUILayout.ExpandWidth(false));
+                GUILayout.Label(MuUtils.PrettyPrint(pid.INTAccum), GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();

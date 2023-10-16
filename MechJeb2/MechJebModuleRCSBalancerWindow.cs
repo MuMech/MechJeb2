@@ -117,20 +117,11 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(240), GUILayout.Height(30) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(30) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_RCSBalancer_title"); //"RCS Balancer"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_RCSBalancer_title"); //"RCS Balancer"
 
-        public override string IconName()
-        {
-            return "RCS Balancer";
-        }
+        public override string IconName() => "RCS Balancer";
 
         public MechJebModuleRCSBalancerWindow(MechJebCore core) : base(core) { }
     }

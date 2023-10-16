@@ -15,15 +15,9 @@ namespace MuMech
 
         public static int PoolSize => pool.Size;
 
-        private static SimulatedVessel Create()
-        {
-            return new SimulatedVessel();
-        }
+        private static SimulatedVessel Create() => new SimulatedVessel();
 
-        public void Release()
-        {
-            pool.Release(this);
-        }
+        public void Release() => pool.Release(this);
 
         private static void Reset(SimulatedVessel obj)
         {

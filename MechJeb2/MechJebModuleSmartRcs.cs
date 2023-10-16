@@ -25,11 +25,9 @@ namespace MuMech
         public bool autoDisableSmartRCS = true;
 
         [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)] //Disable SmartRcs automatically
-        public void AutoDisableSmartRCS()
-        {
+        public void AutoDisableSmartRCS() =>
             autoDisableSmartRCS =
                 GUILayout.Toggle(autoDisableSmartRCS, Localizer.Format("#MechJeb_SmartRcs_checkbox1 ")); //"Disable SmartRcs automatically"
-        }
 
         protected void TargetButton(Target bt)
         {
@@ -115,19 +113,10 @@ namespace MuMech
             }
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(180), GUILayout.Height(100) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_SmartRcs_title"); //"SmartRcs"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_SmartRcs_title"); //"SmartRcs"
 
-        public override string IconName()
-        {
-            return "SmartRcs";
-        }
+        public override string IconName() => "SmartRcs";
     }
 }

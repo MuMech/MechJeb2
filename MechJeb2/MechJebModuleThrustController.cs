@@ -418,8 +418,8 @@ namespace MuMech
                 }
                 else
                 {
-                    bool useGimbal = VesselState.torqueGimbal.positive.x > VesselState.torqueAvailable.x * 10 ||
-                                     VesselState.torqueGimbal.positive.z > VesselState.torqueAvailable.z * 10;
+                    bool useGimbal = VesselState.torqueGimbal.Positive.x > VesselState.torqueAvailable.x * 10 ||
+                                     VesselState.torqueGimbal.Positive.z > VesselState.torqueAvailable.z * 10;
 
                     bool useDiffThrottle = VesselState.torqueDiffThrottle.x > VesselState.torqueAvailable.x * 10 ||
                                            VesselState.torqueDiffThrottle.z > VesselState.torqueAvailable.z * 10;
@@ -583,11 +583,9 @@ namespace MuMech
             }
         }
 
-        public override void OnFixedUpdate()
-        {
+        public override void OnFixedUpdate() =>
             DifferentialThrottleSuccess =
                 DifferentialThrottle ? ComputeDifferentialThrottle(DifferentialThrottleDemandedTorque) : DifferentialThrottleStatus.SUCCESS;
-        }
 
         //A throttle setting that throttles down when the vertical velocity of the ship exceeds terminal velocity
         private float TerminalVelocityThrottle()
@@ -628,12 +626,10 @@ namespace MuMech
             return (1 - maxTempRatio) / TEMP_SAFETY_MARGIN;
         }
 
-        private float ApplySmoothThrottle(float mainThrottle)
-        {
-            return Mathf.Clamp(mainThrottle,
+        private float ApplySmoothThrottle(float mainThrottle) =>
+            Mathf.Clamp(mainThrottle,
                 (float)(LastThrottle - VesselState.deltaT / ThrottleSmoothingTime),
                 (float)(LastThrottle + VesselState.deltaT / ThrottleSmoothingTime));
-        }
 
         private float FlameoutSafetyThrottle()
         {

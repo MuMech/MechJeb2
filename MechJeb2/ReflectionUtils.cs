@@ -6,7 +6,7 @@ namespace MuMech
 {
     public static class ReflectionUtils
     {
-        public static bool isAssemblyLoaded(string assemblyName)
+        public static bool IsAssemblyLoaded(string assemblyName)
         {
             foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
             {
@@ -27,7 +27,7 @@ namespace MuMech
             return false;
         }
 
-        public static FieldInfo getFieldByReflection(string assemblyString, string className, string fieldName,
+        public static FieldInfo GetFieldByReflection(string assemblyString, string className, string fieldName,
             BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
         {
             string assemblyName = "";
@@ -57,7 +57,7 @@ namespace MuMech
             return type.GetField(fieldName, flags);
         }
 
-        public static MethodInfo getMethodByReflection(string assemblyString, string className, string methodName, BindingFlags flags)
+        public static MethodInfo GetMethodByReflection(string assemblyString, string className, string methodName, BindingFlags flags)
         {
             string assemblyName = "";
 
@@ -86,7 +86,7 @@ namespace MuMech
             return type.GetMethod(methodName, flags);
         }
 
-        public static MethodInfo getMethodByReflection(string assemblyString, string className, string methodName, BindingFlags flags, Type[] args)
+        public static MethodInfo GetMethodByReflection(string assemblyString, string className, string methodName, BindingFlags flags, Type[] args)
         {
             string assemblyName = "";
 

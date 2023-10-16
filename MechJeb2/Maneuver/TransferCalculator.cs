@@ -101,10 +101,8 @@ namespace MuMech
             //ComputeDeltaV(this);
         }
 
-        private bool IsBetter(int dateIndex1, int durationIndex1, int dateIndex2, int durationIndex2)
-        {
-            return Computed[dateIndex1, durationIndex1] > Computed[dateIndex2, durationIndex2];
-        }
+        private bool IsBetter(int dateIndex1, int durationIndex1, int dateIndex2, int durationIndex2) =>
+            Computed[dateIndex1, durationIndex1] > Computed[dateIndex2, durationIndex2];
 
         private void CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
         {
@@ -204,25 +202,14 @@ namespace MuMech
 
         public virtual int Progress => (int)(100 * (1 - Math.Sqrt((double)Math.Max(0, NextDateIndex) / DateSamples)));
 
-        private int TakeDateIndex()
-        {
-            return Interlocked.Decrement(ref NextDateIndex);
-        }
+        private int TakeDateIndex() => Interlocked.Decrement(ref NextDateIndex);
 
-        protected virtual int DurationSamplesForDate(int dateIndex)
-        {
-            return (int)(MaxDurationSamples * (MaxDepartureTime - DateFromIndex(dateIndex)) / MaxTransferTime);
-        }
+        protected virtual int DurationSamplesForDate(int dateIndex) =>
+            (int)(MaxDurationSamples * (MaxDepartureTime - DateFromIndex(dateIndex)) / MaxTransferTime);
 
-        public double DurationFromIndex(int index)
-        {
-            return MinTransferTime + index * (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
-        }
+        public double DurationFromIndex(int index) => MinTransferTime + index * (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
 
-        public double DateFromIndex(int index)
-        {
-            return MinDepartureTime + index * (MaxDepartureTime - MinDepartureTime) / DateSamples;
-        }
+        public double DateFromIndex(int index) => MinDepartureTime + index * (MaxDepartureTime - MinDepartureTime) / DateSamples;
 
         private static ManeuverParameters ComputeEjectionManeuver(Vector3d exitVelocity, Orbit initialOrbit, double ut0, bool debug = false)
         {
@@ -522,10 +509,7 @@ namespace MuMech
             StartThreads();
         }
 
-        protected override int DurationSamplesForDate(int dateIndex)
-        {
-            return MaxDurationSamples;
-        }
+        protected override int DurationSamplesForDate(int dateIndex) => MaxDurationSamples;
 
         public override int Progress => Math.Min(100, (int)(100 * (1 - (double)NextDateIndex / DateSamples)));
     }

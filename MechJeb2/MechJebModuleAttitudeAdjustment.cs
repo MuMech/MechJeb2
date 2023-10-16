@@ -154,19 +154,10 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(350), GUILayout.Height(150) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(350), GUILayout.Height(150) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_AttitudeAdjust_title"); //Attitude Adjustment
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_AttitudeAdjust_title"); //Attitude Adjustment
 
-        public override string IconName()
-        {
-            return "Attitude Adjustment";
-        }
+        public override string IconName() => "Attitude Adjustment";
     }
 }

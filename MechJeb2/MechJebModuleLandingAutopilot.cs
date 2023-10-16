@@ -109,10 +109,7 @@ namespace MuMech
         {
         }
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            _predictor = Core.GetComputerModule<MechJebModuleLandingPredictions>();
-        }
+        public override void OnStart(PartModule.StartState state) => _predictor = Core.GetComputerModule<MechJebModuleLandingPredictions>();
 
         //public interface:
         public void LandAtPositionTarget(object controller)
@@ -308,14 +305,14 @@ namespace MuMech
             // Now solve a 2x2 system of linear equations to determine the linear combination
             // of perturbationDirection01 and normal+ that will give the desired offset in the
             // predicted landing position.
-            var a = new Matrix2x2(
+            var a = new Matrix2X2(
                 downrangeDelta.sqrMagnitude, Vector3d.Dot(downrangeDelta, deltas[2]),
                 Vector3d.Dot(downrangeDelta, deltas[2]), deltas[2].sqrMagnitude
             );
 
             var b = new Vector2d(Vector3d.Dot(desiredDelta, downrangeDelta), Vector3d.Dot(desiredDelta, deltas[2]));
 
-            Vector2d coeffs = a.inverse() * b;
+            Vector2d coeffs = a.Inverse() * b;
 
             Vector3d courseCorrection = coeffs.x * downrangeDirection + coeffs.y * perturbationDirections[2];
 
@@ -391,10 +388,7 @@ namespace MuMech
         }
 
         // This methods works out if there are any parachutes that have already been deployed (or semi deployed)
-        private bool ParachutesDeployed()
-        {
-            return VesselState.parachuteDeployed;
-        }
+        private bool ParachutesDeployed() => VesselState.parachuteDeployed;
 
         private void DeployLandingGears()
         {
@@ -529,16 +523,11 @@ namespace MuMech
             return Orbit.PeA < 2 * stoppingDistance + MainBody.Radius / 4;
         }
 
-        public double MaxAllowedSpeed()
-        {
-            return DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
-        }
+        public double MaxAllowedSpeed() => DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
 
-        public double MaxAllowedSpeedAfterDt(double dt)
-        {
-            return DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM + VesselState.orbitalVelocity * dt - MainBody.position,
+        public double MaxAllowedSpeedAfterDt(double dt) =>
+            DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM + VesselState.orbitalVelocity * dt - MainBody.position,
                 VesselState.surfaceVelocity + dt * VesselState.gravityForce);
-        }
 
         [ValueInfoItem("#MechJeb_ParachuteControlInfo", InfoItem.Category.Misc, showInEditor = false)] //ParachuteControlInfo
         public string ParachuteControlInfo()
@@ -793,11 +782,9 @@ namespace MuMech
         }
 
         // Throw away any old data, and create a new empty dataset
-        public void ClearData()
-        {
+        public void ClearData() =>
             // Create the linear regression for storing previous prediction results
             _regression = new LinearRegression(DATA_SET_SIZE); // Stored the previous 20 predictions
-        }
 
         public void StartPlanning()
         {

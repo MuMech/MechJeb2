@@ -18,10 +18,8 @@ namespace MuMech
         }
 
         public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0,
-            double radius = 0)
-        {
+            double radius = 0) =>
             DrawGroundMarker(body, latitude, longitude, c, true, rotation, radius);
-        }
 
         public static void DrawGroundMarker(CelestialBody body, double latitude, double longitude, Color c, bool map, double rotation = 0,
             double radius = 0)

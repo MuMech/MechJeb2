@@ -178,10 +178,8 @@ namespace MuMech
             return Vector3.SignedAngle(north, target, up);
         }
 
-        public float TurningSpeed(double speed, double error)
-        {
-            return (float)Math.Max(speed / (Math.Abs(error) / 3 > 1 ? Math.Abs(error) / 3 : 1), turnSpeed);
-        }
+        public float TurningSpeed(double speed, double error) =>
+            (float)Math.Max(speed / (Math.Abs(error) / 3 > 1 ? Math.Abs(error) / 3 : 1), turnSpeed);
 
         public void CalculateTraction()
         {
@@ -212,8 +210,8 @@ namespace MuMech
             base.OnModuleDisabled();
         }
 
-        private float  Square(float number)  { return number * number; }
-        private double Square(double number) { return number * number; }
+        private float  Square(float number)  => number * number;
+        private double Square(double number) => number * number;
 
         public override void
             Drive(FlightCtrlState s) // TODO put the brake in when running out of power to prevent nighttime solar failures on hills, or atleast try to
@@ -231,7 +229,7 @@ namespace MuMech
             curSpeed = Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
 
             CalculateTraction();
-            speedIntAcc = speedPID.intAccum;
+            speedIntAcc = speedPID.INTAccum;
 
             if (wp != null && wp.Body == Orbit.referenceBody)
             {
@@ -326,7 +324,7 @@ namespace MuMech
 
             if (ControlHeading)
             {
-                headingPID.intAccum = Mathf.Clamp((float)headingPID.intAccum, -1, 1);
+                headingPID.INTAccum = Mathf.Clamp((float)headingPID.INTAccum, -1, 1);
 
                 double instantaneousHeading = VesselState.rotationVesselSurface.eulerAngles.y;
                 headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
@@ -351,7 +349,7 @@ namespace MuMech
             }
             else if (ControlSpeed)
             {
-                speedPID.intAccum = Mathf.Clamp((float)speedPID.intAccum, -5, 5);
+                speedPID.INTAccum = Mathf.Clamp((float)speedPID.INTAccum, -5, 5);
 
                 speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
                 if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != Vessel)
@@ -480,7 +478,7 @@ namespace MuMech
 
             if (lastETA + 0.2 < DateTime.Now.TimeOfDay.TotalSeconds)
             {
-                etaSpeed.value = curSpeed;
+                etaSpeed.Value = curSpeed;
                 lastETA        = DateTime.Now.TimeOfDay.TotalSeconds;
             }
 

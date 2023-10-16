@@ -795,19 +795,10 @@ namespace MuMech
             return nf * Math.Pow(10.0, exp);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(400), GUILayout.Height(300) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(400), GUILayout.Height(300) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Flightrecord_title"); //"Flight Recorder"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Flightrecord_title"); //"Flight Recorder"
 
-        public override string IconName()
-        {
-            return "Flight Recorder";
-        }
+        public override string IconName() => "Flight Recorder";
     }
 }

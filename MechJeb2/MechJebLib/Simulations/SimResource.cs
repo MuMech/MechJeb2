@@ -1,5 +1,3 @@
-using static MechJebLib.Statics;
-
 #nullable enable
 
 namespace MechJebLib.Simulations

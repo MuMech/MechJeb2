@@ -29,10 +29,7 @@ namespace MuMech
             }
         }
 
-        protected override bool isModules(ModuleDeployablePart p)
-        {
-            return p is ModuleDeployableSolarPanel;
-        }
+        protected override bool isModules(ModuleDeployablePart p) => p is ModuleDeployableSolarPanel;
 
         protected override string getButtonText(DeployablePartState deployablePartState)
         {

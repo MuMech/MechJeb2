@@ -40,20 +40,11 @@ namespace MuMech
 
         public MechJebModuleTranslatron(MechJebCore core) : base(core) { }
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Translatron_title");
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Translatron_title");
 
-        public override string IconName()
-        {
-            return "Translatron";
-        }
+        public override string IconName() => "Translatron";
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(130) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(130) };
 
         protected override void WindowGUI(int windowID)
         {

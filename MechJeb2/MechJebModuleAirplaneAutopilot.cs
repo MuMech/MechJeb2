@@ -189,17 +189,17 @@ namespace MuMech
             // synchronize PID controllers
             if (_initPitchController)
             {
-                PitchPIDController.intAccum = s.pitch * 100 / PitchPIDController.Ki;
+                PitchPIDController.INTAccum = s.pitch * 100 / PitchPIDController.Ki;
             }
 
             if (_initRollController)
             {
-                RollPIDController.intAccum = s.roll * 100 / RollPIDController.Ki;
+                RollPIDController.INTAccum = s.roll * 100 / RollPIDController.Ki;
             }
 
             if (_initYawController)
             {
-                YawPIDController.intAccum = s.yaw * 100 / YawPIDController.Ki;
+                YawPIDController.INTAccum = s.yaw * 100 / YawPIDController.Ki;
             }
 
             _initPitchController = false;
@@ -230,7 +230,7 @@ namespace MuMech
                 Spd                                = spd;
                 RealAccelerationTarget             = (SpeedTarget - spd) / 4;
                 AErr                               = RealAccelerationTarget - CurAcc;
-                AccelerationPIDController.intAccum = MuUtils.Clamp(AccelerationPIDController.intAccum, -1 / AccKi, 1 / AccKi);
+                AccelerationPIDController.INTAccum = MuUtils.Clamp(AccelerationPIDController.INTAccum, -1 / AccKi, 1 / AccKi);
                 double tAct = AccelerationPIDController.Compute(AErr);
                 if (!double.IsNaN(tAct))
                 {
@@ -276,7 +276,7 @@ namespace MuMech
                 RealPitchTarget = UtilMath.Clamp(RealPitchTarget, -PitchDownLimit, PitchUpLimit);
                 PitchErr        = MuUtils.ClampDegrees180(RealPitchTarget - VesselState.vesselPitch);
 
-                PitchPIDController.intAccum = UtilMath.Clamp(PitchPIDController.intAccum, -100 / PitKi, 100 / PitKi);
+                PitchPIDController.INTAccum = UtilMath.Clamp(PitchPIDController.INTAccum, -100 / PitKi, 100 / PitKi);
                 PitchAct                    = PitchPIDController.Compute(PitchErr) / 100;
 
                 if (double.IsNaN(PitchAct))
@@ -325,7 +325,7 @@ namespace MuMech
                 RealRollTarget = UtilMath.Clamp(RealRollTarget, -RollLimit, RollLimit);
                 RollErr        = MuUtils.ClampDegrees180(RealRollTarget - -VesselState.currentRoll);
 
-                RollPIDController.intAccum = MuUtils.Clamp(RollPIDController.intAccum, -100 / RolKi, 100 / RolKi);
+                RollPIDController.INTAccum = MuUtils.Clamp(RollPIDController.INTAccum, -100 / RolKi, 100 / RolKi);
                 RollAct                    = RollPIDController.Compute(RollErr) / 100;
 
                 if (double.IsNaN(RollAct))
@@ -339,7 +339,7 @@ namespace MuMech
                 RealYawTarget = UtilMath.Clamp(RealYawTarget, -YawLimit, YawLimit);
                 YawErr        = MuUtils.ClampDegrees180(RealYawTarget - CurrYaw);
 
-                YawPIDController.intAccum = MuUtils.Clamp(YawPIDController.intAccum, -100 / YawKi, 100 / YawKi);
+                YawPIDController.INTAccum = MuUtils.Clamp(YawPIDController.INTAccum, -100 / YawKi, 100 / YawKi);
                 YawAct                    = YawPIDController.Compute(YawErr) / 100;
 
                 if (double.IsNaN(YawAct))

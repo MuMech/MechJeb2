@@ -10,10 +10,7 @@ namespace MechJebLib.Simulations.PartModules
 
         public bool IsDecoupled;
 
-        public override void Dispose()
-        {
-            _pool.Release(this);
-        }
+        public override void Dispose() => _pool.Release(this);
 
         public static SimProceduralFairingDecoupler Borrow(SimPart part)
         {
@@ -22,10 +19,7 @@ namespace MechJebLib.Simulations.PartModules
             return decoupler;
         }
 
-        private static SimProceduralFairingDecoupler New()
-        {
-            return new SimProceduralFairingDecoupler();
-        }
+        private static SimProceduralFairingDecoupler New() => new SimProceduralFairingDecoupler();
 
         private static void Clear(SimProceduralFairingDecoupler m)
         {

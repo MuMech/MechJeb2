@@ -11,11 +11,11 @@ namespace MechJebLib.Maneuvers
     {
         private struct Args
         {
-            public V3     R1;
-            public V3     V1;
-            public V3     R2;
-            public V3     V2;
-            public bool   Capture;
+            public V3   R1;
+            public V3   V1;
+            public V3   R2;
+            public V3   V2;
+            public bool Capture;
         }
 
         private static (V3 dv1, V3 dv2) LambertFunction(double dt, double tt, double offset, Args args)
@@ -26,8 +26,8 @@ namespace MechJebLib.Maneuvers
             V3 v2 = args.V2;
 
             (V3 rburn, V3 vburn) = Shepperd.Solve(1.0, dt, r1, v1);
-            (V3 rf2, V3 vf2) = Shepperd.Solve(1.0, dt + tt + offset, r2, v2);
-            (V3 vi, V3 vf)   = Gooding.Solve(1.0, rburn, vburn, rf2, tt, 0);
+            (V3 rf2, V3 vf2)     = Shepperd.Solve(1.0, dt + tt + offset, r2, v2);
+            (V3 vi, V3 vf)       = Gooding.Solve(1.0, rburn, vburn, rf2, tt, 0);
 
             return (vi - vburn, vf2 - vf);
         }
@@ -57,7 +57,8 @@ namespace MechJebLib.Maneuvers
         public static (V3 dv1, double dt1, V3 dv2, double dt2) Maneuver(double mu, V3 r1, V3 v1, V3 r2, V3 v2, double dtguess, double offsetGuess,
             bool coplanar = true, bool rendezvous = true, bool capture = true, double dtmin = double.NegativeInfinity,
             double dtmax = double.PositiveInfinity,
-            double ttmin = double.NegativeInfinity, double ttmax = double.PositiveInfinity, double offsetMin = double.NegativeInfinity, double offsetMax = double.PositiveInfinity, bool optguard = false)
+            double ttmin = double.NegativeInfinity, double ttmax = double.PositiveInfinity, double offsetMin = double.NegativeInfinity,
+            double offsetMax = double.PositiveInfinity, bool optguard = false)
         {
             if (!mu.IsFinite())
                 throw new ArgumentException("bad mu in ChangeOrbitalElement");
@@ -91,16 +92,16 @@ namespace MechJebLib.Maneuvers
                 v2 = toCoplanar * v2;
             }
 
-            r1       /= scale.LengthScale;
-            v1       /= scale.VelocityScale;
-            r2       /= scale.LengthScale;
-            v2       /= scale.VelocityScale;
-            dtguess  /= scale.TimeScale;
+            r1          /= scale.LengthScale;
+            v1          /= scale.VelocityScale;
+            r2          /= scale.LengthScale;
+            v2          /= scale.VelocityScale;
+            dtguess     /= scale.TimeScale;
             offsetGuess /= scale.TimeScale;
-            dtmin    /= scale.TimeScale;
-            dtmax    /= scale.TimeScale;
-            ttmin    /= scale.TimeScale;
-            ttmax    /= scale.TimeScale;
+            dtmin       /= scale.TimeScale;
+            dtmax       /= scale.TimeScale;
+            ttmin       /= scale.TimeScale;
+            ttmax       /= scale.TimeScale;
             offsetMin   /= scale.TimeScale;
             offsetMax   /= scale.TimeScale;
 
@@ -112,15 +113,15 @@ namespace MechJebLib.Maneuvers
 
             var args = new Args
             {
-                R1         = r1,
-                V1         = v1,
-                R2         = r2,
-                V2         = v2,
-                Capture    = capture
+                R1      = r1,
+                V1      = v1,
+                R2      = r2,
+                V2      = v2,
+                Capture = capture
             };
 
             double[] bndl = { dtmin, ttmin, offsetMin };
-            double[] bndu = { dtmax, ttmax, offsetMax};
+            double[] bndu = { dtmax, ttmax, offsetMax };
 
             alglib.minbleiccreatef(x, DIFFSTEP, out alglib.minbleicstate state);
             alglib.minbleicsetbc(state, bndl, bndu);
@@ -153,7 +154,7 @@ namespace MechJebLib.Maneuvers
 
             (V3 dv1, V3 dv2) = LambertFunction(x[0], x[1], x[2], args);
 
-            return (dv1 * scale.VelocityScale, x[0] * scale.TimeScale, dv2 * scale.VelocityScale, (x[0]+x[1]) * scale.TimeScale);
+            return (dv1 * scale.VelocityScale, x[0] * scale.TimeScale, dv2 * scale.VelocityScale, (x[0] + x[1]) * scale.TimeScale);
         }
 
         public static (V3 dv1, double dt1, V3 dv2, double dt2) NextManeuver(double mu, V3 r1, V3 v1, V3 r2, V3 v2, int maxiter = 50,
@@ -165,7 +166,6 @@ namespace MechJebLib.Maneuvers
 
             for (int iter = 0; iter < maxiter; iter++)
             {
-
                 V3 dv1, dv2;
                 double dt1, dt2;
                 double offsetGuess = 0;
@@ -182,14 +182,15 @@ namespace MechJebLib.Maneuvers
                     }
 
                     (dv1, dt1, dv2, dt2) =
-                        Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, offsetMin: offsetMin, offsetMax: offsetMax, coplanar: coplanar, rendezvous: true, capture: capture,
+                        Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, offsetMin: offsetMin, offsetMax: offsetMax, coplanar: coplanar,
+                            rendezvous: true, capture: capture,
                             optguard: optguard);
                 }
 
                 else
                 {
                     (dv1, dt1, dv2, dt2) =
-                        Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, coplanar, rendezvous: false, capture,
+                        Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, coplanar, false, capture,
                             optguard: optguard);
 
                     // we have to try the other side of the target orbit since we might get eg. the DN instead of the AN when the AN is closer
@@ -197,14 +198,14 @@ namespace MechJebLib.Maneuvers
                     // plots will be the better solution)
 
                     (V3 a, double b, V3 c, double d) =
-                        Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar: coplanar, optguard: optguard,
+                        Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar, optguard: optguard,
                             rendezvous: false, capture: capture);
                     if (b > 0 && (b < dt1 || dt1 < 0))
                     {
                         dv1 = a;
-                        dt1  = b;
+                        dt1 = b;
                         dv2 = c;
-                        dt2  = d;
+                        dt2 = d;
                     }
                 }
 

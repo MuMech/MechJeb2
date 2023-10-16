@@ -130,19 +130,10 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Settings_title"); //"Settings"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Settings_title"); //"Settings"
 
-        public override string IconName()
-        {
-            return "Settings";
-        }
+        public override string IconName() => "Settings";
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(200), GUILayout.Height(100) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(100) };
     }
 }

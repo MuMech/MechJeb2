@@ -39,10 +39,8 @@ namespace MechJebLib.PVG.Terminal
             _hT = Maths.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
         }
 
-        public IPVGTerminal Rescale(Scale scale)
-        {
-            return new FlightPathAngle5Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT, _lanT);
-        }
+        public IPVGTerminal Rescale(Scale scale) =>
+            new FlightPathAngle5Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT, _lanT);
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {

@@ -501,15 +501,9 @@ namespace MuMech
             onAnyOptionClickedEvent = ToolbarTypes.getEvent(popupMenuDrawableType, "OnAnyOptionClicked");
         }
 
-        public void Update()
-        {
-            updateMethod.Invoke(realPopupMenuDrawable, null);
-        }
+        public void Update() => updateMethod.Invoke(realPopupMenuDrawable, null);
 
-        public Vector2 Draw(Vector2 position)
-        {
-            return (Vector2)drawMethod.Invoke(realPopupMenuDrawable, new object[] { position });
-        }
+        public Vector2 Draw(Vector2 position) => (Vector2)drawMethod.Invoke(realPopupMenuDrawable, new object[] { position });
 
         /// <summary>
         ///     Adds a new option to the popup menu.
@@ -525,18 +519,12 @@ namespace MuMech
         /// <summary>
         ///     Adds a separator to the popup menu.
         /// </summary>
-        public void AddSeparator()
-        {
-            addSeparatorMethod.Invoke(realPopupMenuDrawable, null);
-        }
+        public void AddSeparator() => addSeparatorMethod.Invoke(realPopupMenuDrawable, null);
 
         /// <summary>
         ///     Destroys this drawable. This must always be called before disposing of this drawable.
         /// </summary>
-        public void Destroy()
-        {
-            destroyMethod.Invoke(realPopupMenuDrawable, null);
-        }
+        public void Destroy() => destroyMethod.Invoke(realPopupMenuDrawable, null);
     }
 
     #endregion
@@ -722,10 +710,7 @@ namespace MuMech
             types.button.destroyMethod.Invoke(realButton, null);
         }
 
-        private void detachEventHandler(EventInfo @event, Delegate d, object realButton)
-        {
-            @event.RemoveEventHandler(realButton, d);
-        }
+        private void detachEventHandler(EventInfo @event, Delegate d, object realButton) => @event.RemoveEventHandler(realButton, d);
     }
 
     public partial class ClickEvent : EventArgs
@@ -792,25 +777,13 @@ namespace MuMech
             return type;
         }
 
-        internal static PropertyInfo getProperty(Type type, string name)
-        {
-            return type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-        }
+        internal static PropertyInfo getProperty(Type type, string name) => type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
 
-        internal static PropertyInfo getStaticProperty(Type type, string name)
-        {
-            return type.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
-        }
+        internal static PropertyInfo getStaticProperty(Type type, string name) => type.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
 
-        internal static EventInfo getEvent(Type type, string name)
-        {
-            return type.GetEvent(name, BindingFlags.Public | BindingFlags.Instance);
-        }
+        internal static EventInfo getEvent(Type type, string name) => type.GetEvent(name, BindingFlags.Public | BindingFlags.Instance);
 
-        internal static MethodInfo getMethod(Type type, string name)
-        {
-            return type.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
-        }
+        internal static MethodInfo getMethod(Type type, string name) => type.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
     }
 
     internal class ButtonTypes

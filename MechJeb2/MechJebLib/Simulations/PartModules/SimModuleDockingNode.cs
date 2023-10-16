@@ -11,10 +11,7 @@ namespace MechJebLib.Simulations.PartModules
         public bool     Staged;
         public SimPart? AttachedPart;
 
-        public override void Dispose()
-        {
-            _pool.Release(this);
-        }
+        public override void Dispose() => _pool.Release(this);
 
         public static SimModuleDockingNode Borrow(SimPart part)
         {
@@ -23,14 +20,8 @@ namespace MechJebLib.Simulations.PartModules
             return decoupler;
         }
 
-        private static SimModuleDockingNode New()
-        {
-            return new SimModuleDockingNode();
-        }
+        private static SimModuleDockingNode New() => new SimModuleDockingNode();
 
-        private static void Clear(SimModuleDockingNode m)
-        {
-            m.AttachedPart = null;
-        }
+        private static void Clear(SimModuleDockingNode m) => m.AttachedPart = null;
     }
 }

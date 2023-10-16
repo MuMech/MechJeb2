@@ -28,58 +28,37 @@ namespace MechJebLib.Utils
             }
         }
 
-        private static string GetTypeName<T>()
-        {
-            return typeof(T).FullName;
-        }
+        private static string GetTypeName<T>() => typeof(T).FullName;
 
         /*
          * Booleans
          */
 
         [Conditional("DEBUG")]
-        public static void True(bool b)
-        {
-            DoCheck(b);
-        }
+        public static void True(bool b) => DoCheck(b);
 
         [Conditional("DEBUG")]
-        public static void False(bool b)
-        {
-            DoCheck(!b);
-        }
+        public static void False(bool b) => DoCheck(!b);
 
         /*
          * Null
          */
 
         [Conditional("DEBUG")]
-        public static void NotNull<T>(T? obj) where T : class
-        {
-            DoCheck(obj != null);
-        }
+        public static void NotNull<T>(T? obj) where T : class => DoCheck(obj != null);
 
         [Conditional("DEBUG")]
-        public static void NotNull<T>(T? obj) where T : struct
-        {
-            DoCheck(obj != null);
-        }
+        public static void NotNull<T>(T? obj) where T : struct => DoCheck(obj != null);
 
         /*
          * Floats
          */
 
         [Conditional("DEBUG")]
-        public static void Finite(double d)
-        {
-            DoCheck(d.IsFinite());
-        }
+        public static void Finite(double d) => DoCheck(d.IsFinite());
 
         [Conditional("DEBUG")]
-        public static void Positive(double d)
-        {
-            DoCheck(d > 0);
-        }
+        public static void Positive(double d) => DoCheck(d > 0);
 
         [Conditional("DEBUG")]
         public static void PositiveFinite(double d)
@@ -89,10 +68,7 @@ namespace MechJebLib.Utils
         }
 
         [Conditional("DEBUG")]
-        public static void NonNegative(double d)
-        {
-            DoCheck(d >= 0);
-        }
+        public static void NonNegative(double d) => DoCheck(d >= 0);
 
         [Conditional("DEBUG")]
         public static void NonNegativeFinite(double d)
@@ -102,10 +78,7 @@ namespace MechJebLib.Utils
         }
 
         [Conditional("DEBUG")]
-        public static void Negative(double d)
-        {
-            DoCheck(d < 0);
-        }
+        public static void Negative(double d) => DoCheck(d < 0);
 
         [Conditional("DEBUG")]
         public static void NegativeFinite(double d)
@@ -115,10 +88,7 @@ namespace MechJebLib.Utils
         }
 
         [Conditional("DEBUG")]
-        public static void NonPositive(double d)
-        {
-            DoCheck(d <= 0);
-        }
+        public static void NonPositive(double d) => DoCheck(d <= 0);
 
         [Conditional("DEBUG")]
         public static void NonPositiveFinite(double d)
@@ -128,16 +98,10 @@ namespace MechJebLib.Utils
         }
 
         [Conditional("DEBUG")]
-        public static void Zero(double d)
-        {
-            DoCheck(d == 0);
-        }
+        public static void Zero(double d) => DoCheck(d == 0);
 
         [Conditional("DEBUG")]
-        public static void NonZero(double d)
-        {
-            DoCheck(d != 0);
-        }
+        public static void NonZero(double d) => DoCheck(d != 0);
 
         [Conditional("DEBUG")]
         public static void NonZeroFinite(double d)
@@ -159,16 +123,10 @@ namespace MechJebLib.Utils
         */
 
         [Conditional("DEBUG")]
-        public static void Finite(V3 v)
-        {
-            DoCheck(IsFinite(v));
-        }
+        public static void Finite(V3 v) => DoCheck(IsFinite(v));
 
         [Conditional("DEBUG")]
-        public static void NonZero(V3 v)
-        {
-            DoCheck(v != V3.zero);
-        }
+        public static void NonZero(V3 v) => DoCheck(v != V3.zero);
 
         [Conditional("DEBUG")]
         public static void NonZeroFinite(V3 v)
@@ -182,15 +140,9 @@ namespace MechJebLib.Utils
          */
 
         [Conditional("DEBUG")]
-        public static void CanContain(double[] arry, int len)
-        {
-            DoCheck(arry.Length >= len);
-        }
+        public static void CanContain(double[] arry, int len) => DoCheck(arry.Length >= len);
 
         [Conditional("DEBUG")]
-        public static void CanContain(IReadOnlyList<double> arry, int len)
-        {
-            DoCheck(arry.Count >= len);
-        }
+        public static void CanContain(IReadOnlyList<double> arry, int len) => DoCheck(arry.Count >= len);
     }
 }

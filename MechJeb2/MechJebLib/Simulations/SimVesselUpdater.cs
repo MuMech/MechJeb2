@@ -28,18 +28,18 @@ namespace MechJebLib.Simulations
 
             static SimVesselUpdater()
             {
-                if (ReflectionUtils.isAssemblyLoaded("ProceduralFairings"))
+                if (ReflectionUtils.IsAssemblyLoaded("ProceduralFairings"))
                 {
-                    _pfDecoupled = ReflectionUtils.getFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler",
+                    _pfDecoupled = ReflectionUtils.GetFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler",
                         "decoupled");
                     if (_pfDecoupled == null)
                         Debug.Log("MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
                 }
 
-                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
+                if (ReflectionUtils.IsAssemblyLoaded("RealFuels"))
                 {
                     _rfPredictedMaximumResiduals =
-                        ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
+                        ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
                     if (_rfPredictedMaximumResiduals == null)
                         Debug.Log(
                             "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");

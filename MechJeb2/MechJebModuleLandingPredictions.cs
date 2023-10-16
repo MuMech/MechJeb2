@@ -17,10 +17,7 @@ namespace MuMech
     {
         // TODO Move the endASL code to the CheckResult method
         // For Compatibility with RPM
-        public ReentrySimulation.Result GetResult()
-        {
-            return Result;
-        }
+        public ReentrySimulation.Result GetResult() => Result;
 
         public ReentrySimulation.Result Result =>
             //if (result != null)
@@ -156,14 +153,12 @@ namespace MuMech
         private double lastErrorSimSteps;
 
         [ValueInfoItem("#MechJeb_LandingSim", InfoItem.Category.Misc, showInEditor = false)] //LandingSim
-        public string LandingSimTime()
-        {
-            return (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastSimTime.ToString("F2") + " (" + lastSimSteps + ")\n"
-                   + (errorStopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastErrorSimTime.ToString("F2") + " (" + lastErrorSimSteps +
-                   ")\n"
-                   + ReentrySimulation.ActiveDt.ToString("F2") + " " + ReentrySimulation.ActiveStep + "\n"
-                   + dt.ToString("F2") + " " + Time.fixedDeltaTime.ToString("F2") + " " + parachuteSemiDeployMultiplier.ToString("F3");
-        }
+        public string LandingSimTime() =>
+            (stopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastSimTime.ToString("F2") + " (" + lastSimSteps + ")\n"
+            + (errorStopwatch.ElapsedMilliseconds / 1000d).ToString("F1") + "/" + lastErrorSimTime.ToString("F2") + " (" + lastErrorSimSteps +
+            ")\n"
+            + ReentrySimulation.ActiveDt.ToString("F2") + " " + ReentrySimulation.ActiveStep + "\n"
+            + dt.ToString("F2") + " " + Time.fixedDeltaTime.ToString("F2") + " " + parachuteSemiDeployMultiplier.ToString("F3");
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -174,10 +169,7 @@ namespace MuMech
             }
         }
 
-        protected override void OnModuleEnabled()
-        {
-            TryStartSimulation(false);
-        }
+        protected override void OnModuleEnabled() => TryStartSimulation(false);
 
         protected override void OnModuleDisabled()
         {
@@ -236,10 +228,7 @@ namespace MuMech
             }
         }
 
-        public override void OnUpdate()
-        {
-            MaintainAerobrakeNode();
-        }
+        public override void OnUpdate() => MaintainAerobrakeNode();
 
         protected void StartSimulation(bool addParachuteError)
         {

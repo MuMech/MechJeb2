@@ -37,10 +37,7 @@ namespace MechJebLib.Utils
             _create = create;
         }
 
-        public T Borrow()
-        {
-            return _pool.TryTake(out T item) ? item : _create();
-        }
+        public T Borrow() => _pool.TryTake(out T item) ? item : _create();
 
         public void Release(T item)
         {

@@ -139,10 +139,7 @@ namespace MuMech
             foreach (BaseAttitudeController attitudeController in _controllers) attitudeController.OnLoad(local, type, global);
         }
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            SetActiveController(activeController);
-        }
+        public override void OnStart(PartModule.StartState state) => SetActiveController(activeController);
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
@@ -150,20 +147,13 @@ namespace MuMech
             foreach (BaseAttitudeController attitudeController in _controllers) attitudeController.OnSave(local, type, global);
         }
 
-        public void SetAxisControl(bool pitch, bool yaw, bool roll)
-        {
-            AxisControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0);
-        }
+        public void SetAxisControl(bool pitch, bool yaw, bool roll) => AxisControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0);
 
-        public void SetActuationControl(bool pitch = true, bool yaw = true, bool roll = true)
-        {
+        public void SetActuationControl(bool pitch = true, bool yaw = true, bool roll = true) =>
             ActuationControl = new Vector3d(pitch ? 1 : 0, roll ? 1 : 0, yaw ? 1 : 0);
-        }
 
-        public void SetOmegaTarget(double pitch = double.NaN, double yaw = double.NaN, double roll = double.NaN)
-        {
+        public void SetOmegaTarget(double pitch = double.NaN, double yaw = double.NaN, double roll = double.NaN) =>
             OmegaTarget = new Vector3d(pitch, roll, yaw);
-        }
 
         public Quaternion attitudeGetReferenceRotation(AttitudeReference reference)
         {
@@ -257,15 +247,10 @@ namespace MuMech
             return rotRef;
         }
 
-        private Vector3d attitudeWorldToReference(Vector3d vector, AttitudeReference reference)
-        {
-            return Quaternion.Inverse(attitudeGetReferenceRotation(reference)) * vector;
-        }
+        private Vector3d attitudeWorldToReference(Vector3d vector, AttitudeReference reference) =>
+            Quaternion.Inverse(attitudeGetReferenceRotation(reference)) * vector;
 
-        private Vector3d attitudeReferenceToWorld(Vector3d vector, AttitudeReference reference)
-        {
-            return attitudeGetReferenceRotation(reference) * vector;
-        }
+        private Vector3d attitudeReferenceToWorld(Vector3d vector, AttitudeReference reference) => attitudeGetReferenceRotation(reference) * vector;
 
         public void attitudeTo(Quaternion attitude, AttitudeReference reference, object controller, bool AxisCtrlPitch = true,
             bool AxisCtrlYaw = true, bool AxisCtrlRoll = true)
@@ -308,12 +293,10 @@ namespace MuMech
         }
 
         //angle in degrees between the vessel's current pointing direction and the attitude target, ignoring roll
-        public double attitudeAngleFromTarget()
-        {
-            return Enabled
+        public double attitudeAngleFromTarget() =>
+            Enabled
                 ? Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, VesselState.forward))
                 : 0;
-        }
 
         public Vector3d targetAttitude()
         {
@@ -325,7 +308,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            steeringError.value = attitudeError = attitudeAngleFromTarget();
+            steeringError.Value = attitudeError = attitudeAngleFromTarget();
 
             if (useSAS)
                 return;

@@ -135,10 +135,7 @@ namespace MuMech
             nextID++;
         }
 
-        public virtual GUILayoutOption[] WindowOptions()
-        {
-            return new GUILayoutOption[0];
-        }
+        public virtual GUILayoutOption[] WindowOptions() => new GUILayoutOption[0];
 
         protected void WindowGUI(int windowID, bool draggable)
         {
@@ -172,10 +169,7 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        protected virtual void WindowGUI(int windowID)
-        {
-            WindowGUI(windowID, true);
-        }
+        protected virtual void WindowGUI(int windowID) => WindowGUI(windowID, true);
 
         public virtual void DrawGUI(bool inEditor)
         {
@@ -320,14 +314,8 @@ namespace MuMech
             }
         }
 
-        public virtual string GetName()
-        {
-            return "Display Module";
-        }
+        public virtual string GetName() => "Display Module";
 
-        public virtual string IconName()
-        {
-            return "Display Module Icon";
-        }
+        public virtual string IconName() => "Display Module Icon";
     }
 }

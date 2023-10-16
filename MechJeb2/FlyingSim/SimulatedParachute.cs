@@ -30,10 +30,7 @@ namespace MuMech
 
         public new static int PoolSize => pool.Size;
 
-        private static SimulatedParachute Create()
-        {
-            return new SimulatedParachute();
-        }
+        private static SimulatedParachute Create() => new SimulatedParachute();
 
         public override void Release()
         {

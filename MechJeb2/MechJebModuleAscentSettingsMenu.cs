@@ -123,19 +123,10 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(275), GUILayout.Height(30) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
 
-        public override string GetName()
-        {
-            return "Ascent Settings";
-        }
+        public override string GetName() => "Ascent Settings";
 
-        public override string IconName()
-        {
-            return "Ascent Settings";
-        }
+        public override string IconName() => "Ascent Settings";
     }
 }

@@ -12,25 +12,13 @@ namespace MuMech
 
         public MechJebModuleRoverWindow(MechJebCore core) : base(core) { }
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            autopilot = Core.GetComputerModule<MechJebModuleRoverController>();
-        }
+        public override void OnStart(PartModule.StartState state) => autopilot = Core.GetComputerModule<MechJebModuleRoverController>();
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Rover_title"); // "Rover Autopilot"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Rover_title"); // "Rover Autopilot"
 
-        public override string IconName()
-        {
-            return "Rover Autopilot";
-        }
+        public override string IconName() => "Rover Autopilot";
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(200), GUILayout.Height(50) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(50) };
 
         protected override void WindowGUI(int windowID)
         {

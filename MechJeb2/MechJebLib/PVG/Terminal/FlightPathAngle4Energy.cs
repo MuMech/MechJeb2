@@ -36,10 +36,7 @@ namespace MechJebLib.PVG.Terminal
             _iHT  = Maths.HunitFromKeplerian(_incT, _lanT);
         }
 
-        public IPVGTerminal Rescale(Scale scale)
-        {
-            return new FlightPathAngle4Energy(_rT / scale.LengthScale, _incT, _lanT);
-        }
+        public IPVGTerminal Rescale(Scale scale) => new FlightPathAngle4Energy(_rT / scale.LengthScale, _incT, _lanT);
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {

@@ -62,10 +62,7 @@ namespace MuMech
             _text           = (val / multiplier).ToString();
         }
 
-        public static implicit operator double(EditableDoubleMult x)
-        {
-            return x.val;
-        }
+        public static implicit operator double(EditableDoubleMult x) => x.val;
     }
 
     public class EditableDouble : EditableDoubleMult
@@ -75,10 +72,7 @@ namespace MuMech
         {
         }
 
-        public static implicit operator EditableDouble(double x)
-        {
-            return new EditableDouble(x);
-        }
+        public static implicit operator EditableDouble(double x) => new EditableDouble(x);
     }
 
     public class EditableTime : EditableDouble
@@ -121,10 +115,7 @@ namespace MuMech
             }
         }
 
-        public static implicit operator EditableTime(double x)
-        {
-            return new EditableTime(x);
-        }
+        public static implicit operator EditableTime(double x) => new EditableTime(x);
     }
 
     public class EditableAngle
@@ -154,15 +145,9 @@ namespace MuMech
             seconds  =  Math.Round(3600 * angle);
         }
 
-        public static implicit operator double(EditableAngle x)
-        {
-            return (x.negative ? -1 : 1) * (x.degrees + x.minutes / 60.0 + x.seconds / 3600.0);
-        }
+        public static implicit operator double(EditableAngle x) => (x.negative ? -1 : 1) * (x.degrees + x.minutes / 60.0 + x.seconds / 3600.0);
 
-        public static implicit operator EditableAngle(double x)
-        {
-            return new EditableAngle(x);
-        }
+        public static implicit operator EditableAngle(double x) => new EditableAngle(x);
 
         public enum Direction { NS, EW }
 
@@ -219,15 +204,9 @@ namespace MuMech
             _text    = val.ToString();
         }
 
-        public static implicit operator int(EditableInt x)
-        {
-            return x.val;
-        }
+        public static implicit operator int(EditableInt x) => x.val;
 
-        public static implicit operator EditableInt(int x)
-        {
-            return new EditableInt(x);
-        }
+        public static implicit operator EditableInt(int x) => new EditableInt(x);
     }
 
     public class EditableIntList : IEditable
@@ -567,10 +546,7 @@ namespace MuMech
         public static  GUILayoutOption LayoutExpandWidth   => _layoutExpandWidth ??= GUILayout.ExpandWidth(true);
         public static  GUILayoutOption LayoutNoExpandWidth => _layoutNoExpandWidth ??= GUILayout.ExpandWidth(false);
 
-        public static GUILayoutOption ExpandWidth(bool b)
-        {
-            return b ? LayoutExpandWidth : LayoutNoExpandWidth;
-        }
+        public static GUILayoutOption ExpandWidth(bool b) => b ? LayoutExpandWidth : LayoutNoExpandWidth;
 
         private static readonly Dictionary<float, GUILayoutOption> _layoutWidthDict = new Dictionary<float, GUILayoutOption>(16);
 
@@ -646,10 +622,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        public static void SimpleLabelInt(string leftLabel, int rightValue)
-        {
-            SimpleLabel(leftLabel, rightValue.ToString());
-        }
+        public static void SimpleLabelInt(string leftLabel, int rightValue) => SimpleLabel(leftLabel, rightValue.ToString());
 
         public static int ArrowSelector(int index, int numIndices, Action centerGuiAction)
         {
@@ -788,10 +761,8 @@ namespace MuMech
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
 
-        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0)
-        {
-            return ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
-        }
+        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) =>
+            ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
 
         public static bool MouseIsOverWindow(MechJebCore core)
         {
@@ -991,10 +962,7 @@ namespace MuMech
                    + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
         }
 
-        public string ToStringDecimal(bool newline = false, int precision = 3)
-        {
-            return ToStringDecimal(latitude, longitude, newline, precision);
-        }
+        public string ToStringDecimal(bool newline = false, int precision = 3) => ToStringDecimal(latitude, longitude, newline, precision);
 
         public static string ToStringDMS(double latitude, double longitude, bool newline = false)
         {
@@ -1003,10 +971,7 @@ namespace MuMech
                    + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
         }
 
-        public string ToStringDMS(bool newline = false)
-        {
-            return ToStringDMS(latitude, longitude, newline);
-        }
+        public string ToStringDMS(bool newline = false) => ToStringDMS(latitude, longitude, newline);
 
         public static string AngleToDMS(double angle)
         {

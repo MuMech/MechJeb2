@@ -1,96 +1,95 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
     public class Vector6 : IConfigNode
     {
-        public Vector3d positive = Vector3d.zero, negative = Vector3d.zero;
+        public Vector3d Positive = Vector3d.zero, Negative = Vector3d.zero;
 
         public enum Direction { FORWARD = 0, BACK = 1, UP = 2, DOWN = 3, RIGHT = 4, LEFT = 5 }
 
-        public static readonly Vector3d[] directions = { Vector3d.forward, Vector3d.back, Vector3d.up, Vector3d.down, Vector3d.right, Vector3d.left };
+        public static readonly Vector3d[] Directions = { Vector3d.forward, Vector3d.back, Vector3d.up, Vector3d.down, Vector3d.right, Vector3d.left };
 
         public static readonly Direction[] Values = (Direction[])Enum.GetValues(typeof(Direction));
 
-        public double forward
+        [UsedImplicitly]
+        public double Forward
         {
-            get => positive.z;
-            set => positive.z = value;
+            get => Positive.z;
+            set => Positive.z = value;
         }
 
-        public double back
+        [UsedImplicitly]
+        public double Back
         {
-            get => negative.z;
-            set => negative.z = value;
+            get => Negative.z;
+            set => Negative.z = value;
         }
 
-        public double up
+        [UsedImplicitly]
+        public double Up
         {
-            get => positive.y;
-            set => positive.y = value;
+            get => Positive.y;
+            set => Positive.y = value;
         }
 
-        public double down
+        [UsedImplicitly]
+        public double Down
         {
-            get => negative.y;
-            set => negative.y = value;
+            get => Negative.y;
+            set => Negative.y = value;
         }
 
-        public double right
+        [UsedImplicitly]
+        public double Right
         {
-            get => positive.x;
-            set => positive.x = value;
+            get => Positive.x;
+            set => Positive.x = value;
         }
 
-        public double left
+        [UsedImplicitly]
+        public double Left
         {
-            get => negative.x;
-            set => negative.x = value;
+            get => Negative.x;
+            set => Negative.x = value;
         }
 
+        [UsedImplicitly]
         public double this[Direction index]
         {
-            get
-            {
-                switch (index)
+            get =>
+                index switch
                 {
-                    case Direction.FORWARD:
-                        return forward;
-                    case Direction.BACK:
-                        return back;
-                    case Direction.UP:
-                        return up;
-                    case Direction.DOWN:
-                        return down;
-                    case Direction.RIGHT:
-                        return right;
-                    case Direction.LEFT:
-                        return left;
-                }
-
-                return 0;
-            }
+                    Direction.FORWARD => Forward,
+                    Direction.BACK    => Back,
+                    Direction.UP      => Up,
+                    Direction.DOWN    => Down,
+                    Direction.RIGHT   => Right,
+                    Direction.LEFT    => Left,
+                    _                 => 0
+                };
             set
             {
                 switch (index)
                 {
                     case Direction.FORWARD:
-                        forward = value;
+                        Forward = value;
                         break;
                     case Direction.BACK:
-                        back = value;
+                        Back = value;
                         break;
                     case Direction.UP:
-                        up = value;
+                        Up = value;
                         break;
                     case Direction.DOWN:
-                        down = value;
+                        Down = value;
                         break;
                     case Direction.RIGHT:
-                        right = value;
+                        Right = value;
                         break;
                     case Direction.LEFT:
-                        left = value;
+                        Left = value;
                         break;
                 }
             }
@@ -100,14 +99,14 @@ namespace MuMech
 
         public Vector6(Vector3d positive, Vector3d negative)
         {
-            this.positive = positive;
-            this.negative = negative;
+            Positive = positive;
+            Negative = negative;
         }
 
         public void Reset()
         {
-            positive = Vector3d.zero;
-            negative = Vector3d.zero;
+            Positive = Vector3d.zero;
+            Negative = Vector3d.zero;
         }
 
         public void Add(Vector3d vector)
@@ -115,7 +114,7 @@ namespace MuMech
             for (int i = 0; i < Values.Length; i++)
             {
                 Direction d = Values[i];
-                double projection = Vector3d.Dot(vector, directions[(int)d]);
+                double projection = Vector3d.Dot(vector, Directions[(int)d]);
                 if (projection > 0)
                 {
                     this[d] += projection;
@@ -129,7 +128,7 @@ namespace MuMech
             for (int i = 0; i < Values.Length; i++)
             {
                 Direction d = Values[i];
-                double projection = Vector3d.Dot(direction.normalized, directions[(int)d]);
+                double projection = Vector3d.Dot(direction.normalized, Directions[(int)d]);
                 if (projection > 0)
                 {
                     sqrMagnitude += Math.Pow(projection * this[d], 2);
@@ -139,28 +138,25 @@ namespace MuMech
             return Math.Sqrt(sqrMagnitude);
         }
 
-        public double MaxMagnitude()
-        {
-            return Math.Max(positive.MaxMagnitude(), negative.MaxMagnitude());
-        }
+        public double MaxMagnitude() => Math.Max(Positive.MaxMagnitude(), Negative.MaxMagnitude());
 
         public void Load(ConfigNode node)
         {
             if (node.HasValue("positive"))
             {
-                positive = KSPUtil.ParseVector3d(node.GetValue("positive"));
+                Positive = KSPUtil.ParseVector3d(node.GetValue("positive"));
             }
 
             if (node.HasValue("negative"))
             {
-                negative = KSPUtil.ParseVector3d(node.GetValue("negative"));
+                Negative = KSPUtil.ParseVector3d(node.GetValue("negative"));
             }
         }
 
         public void Save(ConfigNode node)
         {
-            node.SetValue("positive", KSPUtil.WriteVector(positive));
-            node.SetValue("negative", KSPUtil.WriteVector(negative));
+            node.SetValue("positive", KSPUtil.WriteVector(Positive));
+            node.SetValue("negative", KSPUtil.WriteVector(Negative));
         }
     }
 }

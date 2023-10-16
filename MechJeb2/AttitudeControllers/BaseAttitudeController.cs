@@ -58,9 +58,6 @@
         {
         }
 
-        public virtual void Reset(int i)
-        {
-            Reset();
-        }
+        public virtual void Reset(int i) => Reset();
     }
 }

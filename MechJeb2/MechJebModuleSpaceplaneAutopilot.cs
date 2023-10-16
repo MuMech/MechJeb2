@@ -158,10 +158,7 @@ namespace MuMech
                 InitRunwaysList();
         }
 
-        protected override void OnModuleDisabled()
-        {
-            Core.Attitude.attitudeDeactivate();
-        }
+        protected override void OnModuleDisabled() => Core.Attitude.attitudeDeactivate();
 
         public enum AutolandApproachState
         {
@@ -387,34 +384,26 @@ namespace MuMech
             return maximumSafeBankAngle;
         }
 
-        public double GetAutolandLateralDistanceFromTouchdownToFinalApproach()
-        {
+        public double GetAutolandLateralDistanceFromTouchdownToFinalApproach() =>
             // Formula is x = cot(omega) * 2r
-            return 1.0 / Math.Tan(angleToFinalApproachPointTurnDiameter * UtilMath.Deg2Rad) * GetAutolandTurnRadius() * 2.0 +
-                   lateralDistanceFromTouchdownToFinalApproach;
-        }
+            1.0 / Math.Tan(angleToFinalApproachPointTurnDiameter * UtilMath.Deg2Rad) * GetAutolandTurnRadius() * 2.0 +
+            lateralDistanceFromTouchdownToFinalApproach;
 
-        public double GetAutolandTurnRadius()
-        {
+        public double GetAutolandTurnRadius() =>
             // Formula is r = v / (RoT * (pi/180))
-            return VesselState.speedSurfaceHorizontal / (GetAutolandMaxRateOfTurn() * UtilMath.Deg2Rad);
-        }
+            VesselState.speedSurfaceHorizontal / (GetAutolandMaxRateOfTurn() * UtilMath.Deg2Rad);
 
-        public double GetAutolandMaxRateOfTurn()
-        {
+        public double GetAutolandMaxRateOfTurn() =>
             // Formula is RoT = (g * (180/pi) * tan(Bank)) / v
-            return runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg * Math.Tan(GetAutolandTargetBankAngle() * UtilMath.Deg2Rad) /
-                   VesselState.speedSurfaceHorizontal;
-        }
+            runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg * Math.Tan(GetAutolandTargetBankAngle() * UtilMath.Deg2Rad) /
+            VesselState.speedSurfaceHorizontal;
 
-        public double GetAutolandTargetBankAngle()
-        {
+        public double GetAutolandTargetBankAngle() =>
             // TODO: return Autopilot.RollLimit;
             // Formula is Bank = atan((v * t) / (g * (180/pi)))
-            return Math.Min(
+            Math.Min(
                 Math.Atan(VesselState.speedSurfaceHorizontal * targetRateOfTurn / (runway.GetGravitationalAcceleration() * UtilMath.Rad2Deg)) *
                 UtilMath.Rad2Deg, GetAutolandMaxBankAngle());
-        }
 
         public double GetAutolandTargetSpeed()
         {
@@ -436,10 +425,7 @@ namespace MuMech
             return approachSpeed;
         }
 
-        public double GetAutolandLateralDistanceToNextWaypoint()
-        {
-            return LateralDistance(VesselState.CoM, GetAutolandTargetVector());
-        }
+        public double GetAutolandLateralDistanceToNextWaypoint() => LateralDistance(VesselState.CoM, GetAutolandTargetVector());
 
         /// <summary>
         ///     Computes and returns the target vector for approach and autoland.
@@ -584,10 +570,8 @@ namespace MuMech
         ///     Returns the final approach point (FAP/FAF)
         /// </summary>
         /// <returns></returns>
-        public Vector3d GetFinalApproachPoint()
-        {
-            return runway.GetPointOnGlideslope(glideslope, lateralDistanceFromTouchdownToFinalApproach - runway.touchdownPoint);
-        }
+        public Vector3d GetFinalApproachPoint() =>
+            runway.GetPointOnGlideslope(glideslope, lateralDistanceFromTouchdownToFinalApproach - runway.touchdownPoint);
 
         /// <summary>
         ///     Returns the initial approach point (IAP/IAF)
@@ -665,10 +649,7 @@ namespace MuMech
             return PreventClimbingIntoGlideslope(pointOnLocalizer);
         }
 
-        private double LateralDistance(Vector3d v1, Vector3d v2)
-        {
-            return Vector3d.Distance(v1.ProjectOnPlane(runway.Up()), v2.ProjectOnPlane(runway.Up()));
-        }
+        private double LateralDistance(Vector3d v1, Vector3d v2) => Vector3d.Distance(v1.ProjectOnPlane(runway.Up()), v2.ProjectOnPlane(runway.Up()));
 
         public static List<Runway> runways;
 
@@ -782,15 +763,9 @@ namespace MuMech
             public double longitude;
             public double altitude;
 
-            public Vector3d Position(CelestialBody body)
-            {
-                return body.GetWorldSurfacePosition(latitude, longitude, altitude);
-            }
+            public Vector3d Position(CelestialBody body) => body.GetWorldSurfacePosition(latitude, longitude, altitude);
 
-            public Vector3d Up(CelestialBody body)
-            {
-                return body.GetSurfaceNVector(latitude, longitude);
-            }
+            public Vector3d Up(CelestialBody body) => body.GetSurfaceNVector(latitude, longitude);
         }
 
         public string        name;
@@ -799,14 +774,11 @@ namespace MuMech
         public Endpoint      start;
         public Endpoint      end;
 
-        public Vector3d Start() { return start.Position(body); }
-        public Vector3d End()   { return end.Position(body); }
-        public Vector3d Up()    { return start.Up(body); }
+        public Vector3d Start() => start.Position(body);
+        public Vector3d End()   => end.Position(body);
+        public Vector3d Up()    => start.Up(body);
 
-        public double GetGravitationalAcceleration()
-        {
-            return body.GeeASL * 9.81;
-        }
+        public double GetGravitationalAcceleration() => body.GeeASL * 9.81;
 
         public Vector3d GetVectorToTouchdown()
         {

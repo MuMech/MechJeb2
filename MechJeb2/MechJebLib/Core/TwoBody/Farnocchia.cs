@@ -59,10 +59,7 @@ namespace MechJebLib.Core.TwoBody
             }
         }
 
-        public static double KeplerEquationNearParabolic(double D, double M, double ecc)
-        {
-            return DToMNearParabolic(D, ecc) - M;
-        }
+        public static double KeplerEquationNearParabolic(double D, double M, double ecc) => DToMNearParabolic(D, ecc) - M;
 
         public static double KeplerEquationPrimeNearParabolic(double D, double M, double ecc)
         {

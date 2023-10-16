@@ -13,15 +13,9 @@ namespace MuMech
             {
             }
 
-            private static SimCurves CreateSimCurve()
-            {
-                return new SimCurves();
-            }
+            private static SimCurves CreateSimCurve() => new SimCurves();
 
-            public void Release()
-            {
-                _simcurvesPool.Release(this);
-            }
+            public void Release() => _simcurvesPool.Release(this);
 
             private static void ResetSimCurve(SimCurves obj)
             {

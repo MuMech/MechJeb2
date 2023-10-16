@@ -37,18 +37,9 @@ namespace MuMech
             }
         }
 
-        protected void SetStep(AutopilotStep step)
-        {
-            CurrentStep = step;
-        }
+        protected void SetStep(AutopilotStep step) => CurrentStep = step;
 
-        public string Status
-        {
-            get
-            {
-                return CurrentStep == null ? "Off" : CurrentStep.Status;
-            }
-        }
+        public string Status => CurrentStep == null ? "Off" : CurrentStep.Status;
 
         protected bool Active => CurrentStep != null;
 
@@ -67,11 +58,11 @@ namespace MuMech
 
         protected AutopilotStep(MechJebCore core)
         {
-            this.Core = core;
+            Core = core;
         }
 
-        public virtual AutopilotStep Drive(FlightCtrlState s) { return this; }
-        public virtual AutopilotStep OnFixedUpdate()          { return this; }
+        public virtual AutopilotStep Drive(FlightCtrlState s) => this;
+        public virtual AutopilotStep OnFixedUpdate()          => this;
         public         string        Status                   { get; protected set; }
     }
 }

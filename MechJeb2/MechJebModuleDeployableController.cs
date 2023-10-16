@@ -35,10 +35,7 @@ namespace MuMech
                     cachedPartModules.Add(mdp);
         }
 
-        protected bool isDeployable(ModuleDeployablePart sa)
-        {
-            return sa.Events["Extend"].active || sa.Events["Retract"].active;
-        }
+        protected bool isDeployable(ModuleDeployablePart sa) => sa.Events["Extend"].active || sa.Events["Retract"].active;
 
         public void ExtendAll()
         {
@@ -144,9 +141,6 @@ namespace MuMech
                 DiscoverDeployablePartModules();
         }
 
-        public override void OnVesselWasModified(Vessel v)
-        {
-            DiscoverDeployablePartModules();
-        }
+        public override void OnVesselWasModified(Vessel v) => DiscoverDeployablePartModules();
     }
 }
