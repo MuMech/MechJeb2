@@ -33,10 +33,7 @@ namespace MuMech
                 InitLandingSitesList();
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(200), GUILayout.Height(150) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(150) };
 
         private void MoveByMeter(ref EditableAngle angle, double distance, double alt)
         {
@@ -404,20 +401,11 @@ namespace MuMech
             }
         }
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_LandingGuidance_title"); //Landing Guidance
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_LandingGuidance_title"); //Landing Guidance
 
-        public override string IconName()
-        {
-            return "Landing Guidance";
-        }
+        public override string IconName() => "Landing Guidance";
 
-        protected override bool IsSpaceCenterUpgradeUnlocked()
-        {
-            return Vessel.patchedConicsUnlocked();
-        }
+        protected override bool IsSpaceCenterUpgradeUnlocked() => Vessel.patchedConicsUnlocked();
 
         public MechJebModuleLandingGuidance(MechJebCore core) : base(core) { }
     }

@@ -8,10 +8,7 @@ namespace MechJebLib.Simulations.PartModules
     {
         private static readonly ObjectPool<SimLaunchClamp> _pool = new ObjectPool<SimLaunchClamp>(New, Clear);
 
-        public override void Dispose()
-        {
-            _pool.Release(this);
-        }
+        public override void Dispose() => _pool.Release(this);
 
         public static SimLaunchClamp Borrow(SimPart part)
         {
@@ -20,10 +17,7 @@ namespace MechJebLib.Simulations.PartModules
             return clamp;
         }
 
-        private static SimLaunchClamp New()
-        {
-            return new SimLaunchClamp();
-        }
+        private static SimLaunchClamp New() => new SimLaunchClamp();
 
         private static void Clear(SimLaunchClamp m)
         {

@@ -125,24 +125,12 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(250), GUILayout.Height(30) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
 
-        public override bool isActive()
-        {
-            return Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
-        }
+        public override bool isActive() => Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Utilities_title"); //"Utilities"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Utilities_title"); //"Utilities"
 
-        public override string IconName()
-        {
-            return "Utilities";
-        }
+        public override string IconName() => "Utilities";
     }
 }

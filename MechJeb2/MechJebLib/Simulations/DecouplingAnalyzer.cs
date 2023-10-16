@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using MechJebLib.Simulations.PartModules;
-using static MechJebLib.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -106,6 +105,7 @@ namespace MechJebLib.Simulations
                                         TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                                         return p.DecoupledInStage;
                                     }
+
                                     // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
                                     // The part and other children are dropped with the traversalParent.
                                     p.DecoupledInStage = parentDecoupledInStage;
@@ -127,6 +127,7 @@ namespace MechJebLib.Simulations
                                         TrackPartDecoupledInStage(v, p, p.DecoupledInStage);
                                         return p.DecoupledInStage;
                                     }
+
                                     // We are still attached to our traversalParent.  The part we decouple is dropped when we decouple.
                                     // The part and other children are dropped with the traversalParent.
                                     p.DecoupledInStage = parentDecoupledInStage;

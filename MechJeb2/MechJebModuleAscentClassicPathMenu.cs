@@ -28,10 +28,7 @@ namespace MuMech
             _path           = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(100) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
 
         protected override void WindowGUI(int windowID)
         {
@@ -213,14 +210,8 @@ namespace MuMech
             }
         }
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_AscentPathEd_title"); //"Ascent Path Editor"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_AscentPathEd_title"); //"Ascent Path Editor"
 
-        public override string IconName()
-        {
-            return "Ascent Path Editor";
-        }
+        public override string IconName() => "Ascent Path Editor";
     }
 }

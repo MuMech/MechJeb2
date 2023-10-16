@@ -63,7 +63,6 @@ namespace MuMech
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), LagTime, "sec"); //fractional target period offset
 
             _timeSelector.DoChooseTimeGUI();
-
         }
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -72,7 +71,9 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception1")); //must select a target for the bi-impulsive transfer.
 
             if (o.referenceBody != target.TargetOrbit.referenceBody)
-                throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception2")); //target for bi-impulsive transfer must be in the same sphere of influence.
+                throw
+                    new OperationException(
+                        Localizer.Format("#MechJeb_Hohm_Exception2")); //target for bi-impulsive transfer must be in the same sphere of influence.
 
             bool anExists = o.AscendingNodeExists(target.TargetOrbit);
             bool dnExists = o.DescendingNodeExists(target.TargetOrbit);
@@ -84,13 +85,15 @@ namespace MuMech
                 case TimeReference.REL_DESCENDING when !dnExists:
                     throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception4")); //descending node with target doesn't exist.
                 case TimeReference.REL_NEAREST_AD when !(anExists || dnExists):
-                    throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
+                    throw new OperationException(
+                        Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
             }
 
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
 
             if (target.Target is CelestialBody && Capture && PlanCapture)
-                ErrorMessage = "Insertion burn to a celestial with an SOI is not supported by this maneuver.  A Transfer-to-Moon maneuver needs to be written to properly support this case.";
+                ErrorMessage =
+                    "Insertion burn to a celestial with an SOI is not supported by this maneuver.  A Transfer-to-Moon maneuver needs to be written to properly support this case.";
 
             Orbit targetOrbit = target.TargetOrbit;
 

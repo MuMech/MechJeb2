@@ -24,15 +24,9 @@ namespace MuMech
             AscentSettings.Enabled = false;
         }
 
-        public double VerticalAscentEnd()
-        {
-            return AscentSettings.AutoPath ? AscentSettings.AutoTurnStartAltitude : AscentSettings.TurnStartAltitude;
-        }
+        public double VerticalAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartAltitude : AscentSettings.TurnStartAltitude;
 
-        private double SpeedAscentEnd()
-        {
-            return AscentSettings.AutoPath ? AscentSettings.AutoTurnStartVelocity : AscentSettings.TurnStartVelocity;
-        }
+        private double SpeedAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartVelocity : AscentSettings.TurnStartVelocity;
 
         private bool IsVerticalAscent(double altitude, double velocity)
         {

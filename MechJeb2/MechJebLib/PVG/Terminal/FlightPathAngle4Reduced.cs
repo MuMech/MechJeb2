@@ -38,10 +38,7 @@ namespace MechJebLib.PVG.Terminal
             _incT   = Math.Abs(ClampPi(incT));
         }
 
-        public IPVGTerminal Rescale(Scale scale)
-        {
-            return new FlightPathAngle4Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT);
-        }
+        public IPVGTerminal Rescale(Scale scale) => new FlightPathAngle4Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT);
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {

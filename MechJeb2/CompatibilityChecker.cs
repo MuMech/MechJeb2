@@ -85,22 +85,18 @@ namespace MuMech
             \*-----------------------------------------------*/
         }
 
-        public static bool IsUnityCompatible()
-        {
+        public static bool IsUnityCompatible() =>
             /*-----------------------------------------------*\
             |    BEGIN IMPLEMENTATION-SPECIFIC EDITS HERE.    |
             \*-----------------------------------------------*/
-
             // TODO: Implement your own Unity compatibility check.
             //
             // MJ is not going to care about the fact that KSP .25 OSX uses a different Unity.
-            return true;
+            true;
 
-            /*-----------------------------------------------*\
+        /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |
             \*-----------------------------------------------*/
-        }
-
         // Version of the compatibility checker itself.
         private static int _version = 5;
 
@@ -210,15 +206,9 @@ namespace MuMech
             }
         }
 
-        public static bool IsWin64()
-        {
-            return IntPtr.Size == 8 && Environment.OSVersion.Platform == PlatformID.Win32NT;
-        }
+        public static bool IsWin64() => IntPtr.Size == 8 && Environment.OSVersion.Platform == PlatformID.Win32NT;
 
-        public static bool IsAllCompatible()
-        {
-            return IsCompatible() && IsUnityCompatible(); // && !IsWin64();
-        }
+        public static bool IsAllCompatible() => IsCompatible() && IsUnityCompatible(); // && !IsWin64();
 
         private static IEnumerable<Type> getAllTypes()
         {

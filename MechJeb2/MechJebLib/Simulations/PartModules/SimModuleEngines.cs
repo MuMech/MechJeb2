@@ -144,10 +144,7 @@ namespace MechJebLib.Simulations.PartModules
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Dispose()
-        {
-            _pool.Release(this);
-        }
+        public override void Dispose() => _pool.Release(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SimModuleEngines Borrow(SimPart part)
@@ -158,10 +155,7 @@ namespace MechJebLib.Simulations.PartModules
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static SimModuleEngines New()
-        {
-            return new SimModuleEngines();
-        }
+        private static SimModuleEngines New() => new SimModuleEngines();
 
         private static void Clear(SimModuleEngines m)
         {
@@ -181,10 +175,8 @@ namespace MechJebLib.Simulations.PartModules
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool DrawingFuelFromPartDroppedInStage(SimPart p, int resourceId, int stageNum)
-        {
-            return PartHasResource(p, resourceId) && p.DecoupledInStage == stageNum;
-        }
+        private bool DrawingFuelFromPartDroppedInStage(SimPart p, int resourceId, int stageNum) =>
+            PartHasResource(p, resourceId) && p.DecoupledInStage == stageNum;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool DrawingFuelFromPartsDroppedInStage(IList<SimPart> parts, int resourceId, int stageNum)

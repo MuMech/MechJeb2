@@ -44,15 +44,9 @@ namespace MuMech
             _selectionStyle.normal.background = background;
         }
 
-        private double X(int index)
-        {
-            return _minx + index * (_maxx - _minx) / _texture.width;
-        }
+        private double X(int index) => _minx + index * (_maxx - _minx) / _texture.width;
 
-        private double Y(int index)
-        {
-            return _miny + index * (_maxy - _miny) / _texture.height;
-        }
+        private double Y(int index) => _miny + index * (_maxy - _miny) / _texture.height;
 
         private int[] _lastHoveredPoint;
 

@@ -197,25 +197,13 @@ namespace MuMech
             }
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(240), GUILayout.Height(50) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(50) };
 
-        public override bool isActive()
-        {
-            return warping;
-        }
+        public override bool isActive() => warping;
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_WarpHelper_title"); //"Warp Helper"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_WarpHelper_title"); //"Warp Helper"
 
-        public override string IconName()
-        {
-            return "Warp Helper";
-        }
+        public override string IconName() => "Warp Helper";
 
         public MechJebModuleWarpHelper(MechJebCore core) : base(core) { }
     }

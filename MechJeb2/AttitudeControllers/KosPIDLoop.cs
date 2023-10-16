@@ -65,10 +65,7 @@ namespace MuMech.AttitudeControllers
             return Update(input);
         }
 
-        public double Update(double input, double setpoint, double maxOutput)
-        {
-            return Update(input, setpoint, -maxOutput, maxOutput);
-        }
+        public double Update(double input, double setpoint, double maxOutput) => Update(input, setpoint, -maxOutput, maxOutput);
 
         public double Update(double input)
         {

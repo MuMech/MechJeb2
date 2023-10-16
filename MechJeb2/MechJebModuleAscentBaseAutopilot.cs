@@ -312,7 +312,7 @@ namespace MuMech
                 double instantRatePerThrottle =
                     (Orbit.ApR - _raiseApoapsisLastApR) / ((VesselState.time - _raiseApoapsisLastUT) * _raiseApoapsisLastThrottle);
                 instantRatePerThrottle              = Math.Max(1.0, instantRatePerThrottle); //avoid problems from negative rates
-                _raiseApoapsisRatePerThrottle.value = instantRatePerThrottle;
+                _raiseApoapsisRatePerThrottle.Value = instantRatePerThrottle;
                 double desiredApRate = (finalApR - currentApR) / 1.0;
                 desiredThrottle = Mathf.Clamp((float)(desiredApRate / _raiseApoapsisRatePerThrottle), 0.05F, 1.0F);
             }

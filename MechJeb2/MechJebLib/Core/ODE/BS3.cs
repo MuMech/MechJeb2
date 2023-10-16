@@ -71,9 +71,6 @@ namespace MechJebLib.Core.ODE
             // intentionally left blank
         }
 
-        protected override void Interpolate(double x, Vn yout)
-        {
-            Interpolants.CubicHermiteInterpolant(T, Y, Dy, Tnew, Ynew, Dynew, x, N, yout);
-        }
+        protected override void Interpolate(double x, Vn yout) => Interpolants.CubicHermiteInterpolant(T, Y, Dy, Tnew, Ynew, Dynew, x, N, yout);
     }
 }

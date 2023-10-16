@@ -158,10 +158,7 @@ namespace MechJebLib.Primitives
         ///     Required for putting vlaues into Dictionaries/Hashes
         /// </summary>
         /// <returns>hash code</returns>
-        public override int GetHashCode()
-        {
-            return GetColumn(0).GetHashCode() ^ (GetColumn(1).GetHashCode() << 2) ^ (GetColumn(2).GetHashCode() >> 2);
-        }
+        public override int GetHashCode() => GetColumn(0).GetHashCode() ^ (GetColumn(1).GetHashCode() << 2) ^ (GetColumn(2).GetHashCode() >> 2);
 
         /// <summary>
         ///     Required for putting values into Dictionaries/Hashes
@@ -182,12 +179,10 @@ namespace MechJebLib.Primitives
         /// </summary>
         /// <param name="other">Matrix to compare to</param>
         /// <returns>if all the elements are strictly equal</returns>
-        public bool Equals(M3 other)
-        {
-            return GetColumn(0).Equals(other.GetColumn(0))
-                   && GetColumn(1).Equals(other.GetColumn(1))
-                   && GetColumn(2).Equals(other.GetColumn(2));
-        }
+        public bool Equals(M3 other) =>
+            GetColumn(0).Equals(other.GetColumn(0))
+            && GetColumn(1).Equals(other.GetColumn(1))
+            && GetColumn(2).Equals(other.GetColumn(2));
 
         /// <summary>
         ///     Multiply a matrix by another matrix
@@ -258,10 +253,7 @@ namespace MechJebLib.Primitives
         /// <param name="value">the number</param>
         /// <param name="rhs">the matrix</param>
         /// <returns>result of multiplication</returns>
-        public static M3 operator *(double value, M3 rhs)
-        {
-            return rhs * value;
-        }
+        public static M3 operator *(double value, M3 rhs) => rhs * value;
 
         /// <summary>
         ///     Divides all emeents of a matrix by a number.
@@ -292,10 +284,7 @@ namespace MechJebLib.Primitives
         /// </summary>
         /// <param name="m">input matrix</param>
         /// <returns>negative matrix</returns>
-        public static M3 operator -(M3 m)
-        {
-            return m * -1;
-        }
+        public static M3 operator -(M3 m) => m * -1;
 
         /// <summary>
         ///     This tests for strict equality between two matricies on all values.  Returns false in the presence of NaN values.
@@ -303,12 +292,10 @@ namespace MechJebLib.Primitives
         /// <param name="lhs">matrix to compare</param>
         /// <param name="rhs">matrix to compare to</param>
         /// <returns>if they are equal</returns>
-        public static bool operator ==(M3 lhs, M3 rhs)
-        {
-            return lhs.GetColumn(0) == rhs.GetColumn(0)
-                   && lhs.GetColumn(1) == rhs.GetColumn(1)
-                   && lhs.GetColumn(2) == rhs.GetColumn(2);
-        }
+        public static bool operator ==(M3 lhs, M3 rhs) =>
+            lhs.GetColumn(0) == rhs.GetColumn(0)
+            && lhs.GetColumn(1) == rhs.GetColumn(1)
+            && lhs.GetColumn(2) == rhs.GetColumn(2);
 
         /// <summary>
         ///     This tests for strict inequality between two matricies on all values.  Returns true in the presence of NaN values.
@@ -316,11 +303,9 @@ namespace MechJebLib.Primitives
         /// <param name="lhs">matrix to compare</param>
         /// <param name="rhs">matrix to compare to</param>
         /// <returns>if they are equal</returns>
-        public static bool operator !=(M3 lhs, M3 rhs)
-        {
+        public static bool operator !=(M3 lhs, M3 rhs) =>
             // Returns true in the presence of NaN values.
-            return !(lhs == rhs);
-        }
+            !(lhs == rhs);
 
         /// <summary>
         ///     Returns the column of a matrix as a vector.
@@ -387,10 +372,7 @@ namespace MechJebLib.Primitives
         /// </summary>
         /// <param name="vector">the vector</param>
         /// <returns>vector result</returns>
-        public V3 MultiplyVector(V3 vector)
-        {
-            return this * vector;
-        }
+        public V3 MultiplyVector(V3 vector) => this * vector;
 
         /// <summary>
         ///     Create rotation matrix from unit Q3 quaternion (you must provide unit quaternion).
@@ -441,15 +423,9 @@ namespace MechJebLib.Primitives
             new V3(0, 1, 0),
             new V3(0, 0, 1));
 
-        public override string ToString()
-        {
-            return ToString(null, CultureInfo.InvariantCulture.NumberFormat);
-        }
+        public override string ToString() => ToString(null, CultureInfo.InvariantCulture.NumberFormat);
 
-        public string ToString(string? format)
-        {
-            return ToString(format, CultureInfo.InvariantCulture.NumberFormat);
-        }
+        public string ToString(string? format) => ToString(format, CultureInfo.InvariantCulture.NumberFormat);
 
         public string ToString(string? format, IFormatProvider formatProvider)
         {
@@ -465,19 +441,14 @@ namespace MechJebLib.Primitives
         ///     Returns if the matrix is the identity with strict comparison.
         /// </summary>
         /// <returns>if the matrix is the identity matrix</returns>
-        private bool IsIdentity()
-        {
+        private bool IsIdentity() =>
             // ReSharper disable CompareOfFloatsByEqualityOperator
-            return m00 == 1.0 && m10 == 0.0 && m20 == 0.0 &&
-                   m01 == 0.0 && m11 == 1.0 && m21 == 0.0 &&
-                   m02 == 0.0 && m12 == 0.0 && m22 == 1.0;
-            // ReSharper restore CompareOfFloatsByEqualityOperator
-        }
+            m00 == 1.0 && m10 == 0.0 && m20 == 0.0 &&
+            m01 == 0.0 && m11 == 1.0 && m21 == 0.0 &&
+            m02 == 0.0 && m12 == 0.0 && m22 == 1.0;
+        // ReSharper restore CompareOfFloatsByEqualityOperator
 
-        private double GetDeterminant()
-        {
-            return m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m21 * m02) + m20 * (m01 * m12 - m11 * m02);
-        }
+        private double GetDeterminant() => m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m21 * m02) + m20 * (m01 * m12 - m11 * m02);
 
         /// <summary>
         ///     Returns if the matrix is the identity, with strict comparison.
@@ -494,7 +465,7 @@ namespace MechJebLib.Primitives
         /// </summary>
         /// <param name="m">matrix</param>
         /// <returns>the matrix determinant</returns>
-        public static double Determinant(M3 m) { return m.determinant; }
+        public static double Determinant(M3 m) => m.determinant;
 
         /// <summary>
         ///     Returns the inverse of the matrix.
@@ -527,12 +498,10 @@ namespace MechJebLib.Primitives
         /// </summary>
         /// <param name="m">the matrix</param>
         /// <returns>matrix transpose</returns>
-        public static M3 Transpose(M3 m)
-        {
-            return new M3(new V3(m.m00, m.m01, m.m02),
+        public static M3 Transpose(M3 m) =>
+            new M3(new V3(m.m00, m.m01, m.m02),
                 new V3(m.m10, m.m11, m.m12),
                 new V3(m.m20, m.m21, m.m22));
-        }
 
         /// <summary>
         ///     Returns the transpose of the matrix.

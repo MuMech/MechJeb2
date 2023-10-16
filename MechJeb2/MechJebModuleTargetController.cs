@@ -69,16 +69,11 @@ namespace MuMech
             return "N/A";
         }
 
-        public Vector3d GetPositionTargetPosition()
-        {
-            return targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude)) -
-                   targetBody.position;
-        }
+        public Vector3d GetPositionTargetPosition() =>
+            targetBody.GetWorldSurfacePosition(targetLatitude, targetLongitude, targetBody.TerrainAltitude(targetLatitude, targetLongitude)) -
+            targetBody.position;
 
-        public void SetDirectionTarget(string name)
-        {
-            Set(new DirectionTarget(name));
-        }
+        public void SetDirectionTarget(string name) => Set(new DirectionTarget(name));
 
         [ActionInfoItem("#MechJeb_Pickpositiontarget", InfoItem.Category.Target)] //Pick position target
         public void PickPositionTargetOnMap()
@@ -97,15 +92,9 @@ namespace MuMech
             Cursor.visible        = true;
         }
 
-        public void Unset()
-        {
-            Set(null);
-        }
+        public void Unset() => Set(null);
 
-        public void UpdateDirectionTarget(Vector3d direction)
-        {
-            targetDirection = direction;
-        }
+        public void UpdateDirectionTarget(Vector3d direction) => targetDirection = direction;
 
         public bool NormalTargetExists => Target != null && (Target is Vessel || Target is CelestialBody || CanAlign);
 

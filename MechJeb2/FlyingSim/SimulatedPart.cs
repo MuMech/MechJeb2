@@ -189,16 +189,12 @@ namespace MuMech
         }
 
         public virtual bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
-            double semiDeployMultiplier)
-        {
-            return false;
-        }
+            double semiDeployMultiplier) =>
+            false;
 
         public virtual bool Simulate(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
-            double semiDeployMultiplier)
-        {
-            return false;
-        }
+            double semiDeployMultiplier) =>
+            false;
 
         public static class DragCubePool
         {

@@ -325,25 +325,13 @@ namespace MuMech
             GUILayout.EndVertical();
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(150) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(150) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_NodeEd_title"); //"Maneuver Node Editor"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_NodeEd_title"); //"Maneuver Node Editor"
 
-        public override string IconName()
-        {
-            return "Maneuver Node Editor";
-        }
+        public override string IconName() => "Maneuver Node Editor";
 
-        protected override bool IsSpaceCenterUpgradeUnlocked()
-        {
-            return Vessel.patchedConicsUnlocked();
-        }
+        protected override bool IsSpaceCenterUpgradeUnlocked() => Vessel.patchedConicsUnlocked();
 
         public MechJebModuleNodeEditor(MechJebCore core) : base(core) { }
     }

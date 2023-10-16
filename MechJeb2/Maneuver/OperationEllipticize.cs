@@ -58,7 +58,7 @@ namespace MuMech
             double newApR = NewApA + o.referenceBody.Radius;
             Vector3d deltaV = OrbitalManeuverCalculator.DeltaVToEllipticize(o, ut, newPeR, newApR);
 
-            return new List<ManeuverParameters> { new ManeuverParameters(deltaV, ut)};
+            return new List<ManeuverParameters> { new ManeuverParameters(deltaV, ut) };
         }
     }
 }

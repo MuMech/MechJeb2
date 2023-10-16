@@ -86,10 +86,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(350), GUILayout.Height(200) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(350), GUILayout.Height(200) };
 
         public override void OnFixedUpdate()
         {
@@ -103,21 +100,12 @@ namespace MuMech
             }
         }
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            autoland = Core.GetComputerModule<MechJebModuleSpaceplaneAutopilot>();
-        }
+        public override void OnStart(PartModule.StartState state) => autoland = Core.GetComputerModule<MechJebModuleSpaceplaneAutopilot>();
 
         public MechJebModuleSpaceplaneGuidance(MechJebCore core) : base(core) { }
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_ApproAndLand_title"); //Aircraft Approach & Autoland
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_ApproAndLand_title"); //Aircraft Approach & Autoland
 
-        public override string IconName()
-        {
-            return "Aircraft Approach & Autoland";
-        }
+        public override string IconName() => "Aircraft Approach & Autoland";
     }
 }

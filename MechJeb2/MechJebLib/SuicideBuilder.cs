@@ -17,10 +17,7 @@ namespace MuMech.MechJebLib
                 return suicide;
             }
 
-            public SuicideBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody)
-            {
-                return this;
-            }
+            public SuicideBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody) => this;
 
             public SuicideBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase)
             {
@@ -29,10 +26,7 @@ namespace MuMech.MechJebLib
                 return this;
             }
 
-            public SuicideBuilder SetGround(double height)
-            {
-                return this;
-            }
+            public SuicideBuilder SetGround(double height) => this;
         }
     }
 }

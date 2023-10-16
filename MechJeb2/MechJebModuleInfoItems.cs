@@ -158,8 +158,8 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_RCSthrust", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "N")] //RCS thrust
         public double RCSThrust()
         {
-            rcsThrustAvg.value = RCSThrustNow();
-            return rcsThrustAvg.value * 1000; // kN to N
+            rcsThrustAvg.Value = RCSThrustNow();
+            return rcsThrustAvg.Value * 1000; // kN to N
         }
 
         // Returns a value in kN.
@@ -236,8 +236,8 @@ namespace MuMech
                 }
             }
 
-            rcsTranslationEfficiencyAvg.value = effectiveThrust / totalThrust;
-            return (rcsTranslationEfficiencyAvg.value * 100).ToString("F2") + "%";
+            rcsTranslationEfficiencyAvg.Value = effectiveThrust / totalThrust;
+            return (rcsTranslationEfficiencyAvg.Value * 100).ToString("F2") + "%";
         }
 
         [ValueInfoItem("#MechJeb_RCSdV", InfoItem.Category.Vessel, format = "F1", units = "m/s", showInEditor = true)] //RCS ΔV
@@ -265,7 +265,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_AngularVelocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)] //Angular Velocity
-        public string angularVelocity() => MuUtils.PrettyPrint(VesselState.angularVelocityAvg.value.xzy * UtilMath.Rad2Deg) + "°/s";
+        public string angularVelocity() => MuUtils.PrettyPrint(VesselState.angularVelocityAvg.Value.xzy * UtilMath.Rad2Deg) + "°/s";
 
         [ValueInfoItem("#MechJeb_CurrentAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Current acceleration
         public double CurrentAcceleration() => CurrentThrust() / (1000 * VesselMass());

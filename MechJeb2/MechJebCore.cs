@@ -102,64 +102,34 @@ namespace MuMech
         public bool ShowGui { get; private set; } = true;
 
         [KSPAction("#MechJeb_OrbitPrograde")] //Orbit Prograde
-        public void OnOrbitProgradeAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.PROGRADE);
-        }
+        public void OnOrbitProgradeAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.PROGRADE);
 
         [KSPAction("#MechJeb_OrbitRetrograde")] //Orbit Retrograde
-        public void OnOrbitRetrogradeAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RETROGRADE);
-        }
+        public void OnOrbitRetrogradeAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RETROGRADE);
 
         [KSPAction("#MechJeb_OrbitNormal")] //Orbit Normal
-        public void OnOrbitNormalAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_PLUS);
-        }
+        public void OnOrbitNormalAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_PLUS);
 
         [KSPAction("#MechJeb_OrbitAntinormal")] //Orbit Antinormal
-        public void OnOrbitAntinormalAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_MINUS);
-        }
+        public void OnOrbitAntinormalAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.NORMAL_MINUS);
 
         [KSPAction("#MechJeb_OrbitRadialIn")] //Orbit Radial In
-        public void OnOrbitRadialInAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_MINUS);
-        }
+        public void OnOrbitRadialInAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_MINUS);
 
         [KSPAction("#MechJeb_OrbitRadialOut")] //Orbit Radial Out
-        public void OnOrbitRadialOutAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_PLUS);
-        }
+        public void OnOrbitRadialOutAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.RADIAL_PLUS);
 
         [KSPAction("#MechJeb_OrbitKillRotation")] //Orbit Kill Rotation
-        public void OnKillRotationAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.KILLROT);
-        }
+        public void OnKillRotationAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.KILLROT);
 
         [KSPAction("#MechJeb_DeactivateSmartACS")] //Deactivate SmartACS
-        public void OnDeactivateSmartASSAction(KSPActionParam param)
-        {
-            EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
-        }
+        public void OnDeactivateSmartASSAction(KSPActionParam param) => EngageSmartASSOrbitalControl(MechJebModuleSmartASS.Target.OFF);
 
         [KSPAction("#MechJeb_LandSomewhere")] //Land somewhere
-        public void OnLandsomewhereAction(KSPActionParam param)
-        {
-            LandSomewhere();
-        }
+        public void OnLandsomewhereAction(KSPActionParam param) => LandSomewhere();
 
         [KSPAction("#MechJeb_LandatKSC")] //Land at KSC
-        public void OnLandTargetAction(KSPActionParam param)
-        {
-            LandTarget();
-        }
+        public void OnLandTargetAction(KSPActionParam param) => LandTarget();
 
         private void LandTarget()
         {
@@ -225,34 +195,19 @@ namespace MuMech
         }
 
         [KSPAction("#MechJeb_TranslatronOFF")] //Translatron OFF
-        public void OnTranslatronOffAction(KSPActionParam param)
-        {
-            EngageTranslatronControl(MechJebModuleThrustController.TMode.OFF);
-        }
+        public void OnTranslatronOffAction(KSPActionParam param) => EngageTranslatronControl(MechJebModuleThrustController.TMode.OFF);
 
         [KSPAction("#MechJeb_TranslatronKeepVert")] //Translatron Keep Vert
-        public void OnTranslatronKeepVertAction(KSPActionParam param)
-        {
-            EngageTranslatronControl(MechJebModuleThrustController.TMode.KEEP_VERTICAL);
-        }
+        public void OnTranslatronKeepVertAction(KSPActionParam param) => EngageTranslatronControl(MechJebModuleThrustController.TMode.KEEP_VERTICAL);
 
         [KSPAction("#MechJeb_TranslatronZerospeed")] //Translatron Zero speed
-        public void OnTranslatronZeroSpeedAction(KSPActionParam param)
-        {
-            SetTranslatronSpeed(0);
-        }
+        public void OnTranslatronZeroSpeedAction(KSPActionParam param) => SetTranslatronSpeed(0);
 
         [KSPAction("#MechJeb_TranslatronPlusspeed")] //Translatron +1 speed
-        public void OnTranslatronPlusOneSpeedAction(KSPActionParam param)
-        {
-            SetTranslatronSpeed(1, true);
-        }
+        public void OnTranslatronPlusOneSpeedAction(KSPActionParam param) => SetTranslatronSpeed(1, true);
 
         [KSPAction("#MechJeb_TranslatronMinusspeed")] //Translatron -1 speed
-        public void OnTranslatronMinusOneSpeedAction(KSPActionParam param)
-        {
-            SetTranslatronSpeed(-1, true);
-        }
+        public void OnTranslatronMinusOneSpeedAction(KSPActionParam param) => SetTranslatronSpeed(-1, true);
 
         [KSPAction("#MechJeb_TranslatronToggleHS")] //Translatron Toggle H/S
         public void OnTranslatronToggleHSAction(KSPActionParam param)
@@ -368,10 +323,7 @@ namespace MuMech
         }
 
         [UsedImplicitly]
-        public int GetImportance()
-        {
-            return part.State == PartStates.DEAD ? 0 : GetInstanceID();
-        }
+        public int GetImportance() => part.State == PartStates.DEAD ? 0 : GetInstanceID();
 
         public int CompareTo(MechJebCore other)
         {
@@ -411,10 +363,8 @@ namespace MuMech
         }
 
         [UsedImplicitly]
-        public ComputerModule GetComputerModule(string type)
-        {
-            return _unorderedComputerModules.FirstOrDefault(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant()); //null if none
-        }
+        public ComputerModule GetComputerModule(string type) =>
+            _unorderedComputerModules.FirstOrDefault(a => a.GetType().Name.ToLowerInvariant() == type.ToLowerInvariant()); //null if none
 
         public void AddComputerModule(ComputerModule module)
         {
@@ -428,13 +378,11 @@ namespace MuMech
             _sortedDisplayModules.Clear();
         }
 
-        public void AddComputerModuleLater(ComputerModule module)
-        {
+        public void AddComputerModuleLater(ComputerModule module) =>
             //The actual loading is delayed to FixedUpdate because AddComputerModule can get called inside a foreach loop
             //over the modules, and modifying the list during the loop will cause an exception. Maybe there is a better
             //way to deal with this?
             _modulesToLoad.Add(module);
-        }
 
         private void LoadDelayedModules()
         {
@@ -1140,15 +1088,9 @@ namespace MuMech
             s.Z            = Mathf.Clamp(s.Z, -1, 1);
         }
 
-        private void OnShowGUI()
-        {
-            ShowGui = true;
-        }
+        private void OnShowGUI() => ShowGui = true;
 
-        private void OnHideGUI()
-        {
-            ShowGui = false;
-        }
+        private void OnHideGUI() => ShowGui = false;
 
         private void OnGUI()
         {
@@ -1195,16 +1137,10 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        internal void AddToPostDrawQueue(Callback c)
-        {
-            _postDrawQueue.Add(c);
-        }
+        internal void AddToPostDrawQueue(Callback c) => _postDrawQueue.Add(c);
 
         // VAB/SPH description
-        public override string GetInfo()
-        {
-            return Localizer.Format("#MechJeb_MechJebInfo_VABSPH"); //"Attitude control by MechJeb™"
-        }
+        public override string GetInfo() => Localizer.Format("#MechJeb_MechJebInfo_VABSPH"); //"Attitude control by MechJeb™"
 
         //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
         private void PreventClickthrough()
@@ -1237,10 +1173,7 @@ namespace MuMech
             _weLockedInputs = true;
         }
 
-        private void UnlockControl(Vessel v)
-        {
-            UnlockControl();
-        }
+        private void UnlockControl(Vessel v) => UnlockControl();
 
         private void UnlockControl()
         {
@@ -1307,15 +1240,9 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        public static void Print(object message)
-        {
-            print("[MechJeb2] " + message);
-        }
+        public static void Print(object message) => print("[MechJeb2] " + message);
 
         [UsedImplicitly]
-        public static void SafePrint(object message)
-        {
-            Dispatcher.InvokeAsync(() => print("[MechJeb2] " + message));
-        }
+        public static void SafePrint(object message) => Dispatcher.InvokeAsync(() => print("[MechJeb2] " + message));
     }
 }

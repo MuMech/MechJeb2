@@ -18,10 +18,7 @@ namespace MechJebLib.Primitives
         {
         }
 
-        private static H1 New()
-        {
-            return new H1();
-        }
+        private static H1 New() => new H1();
 
         public static H1 Get(bool unityCompat = false)
         {
@@ -36,44 +33,21 @@ namespace MechJebLib.Primitives
             _pool.Release(this);
         }
 
-        protected override double Allocate()
-        {
-            return 0.0;
-        }
+        protected override double Allocate() => 0.0;
 
-        protected override double Allocate(double value)
-        {
-            return value;
-        }
+        protected override double Allocate(double value) => value;
 
-        protected override void Subtract(double a, double b, ref double result)
-        {
-            result = a - b;
-        }
+        protected override void Subtract(double a, double b, ref double result) => result = a - b;
 
-        protected override void Divide(double a, double b, ref double result)
-        {
-            result = a / b;
-        }
+        protected override void Divide(double a, double b, ref double result) => result = a / b;
 
-        protected override void Multiply(double a, double b, ref double result)
-        {
-            result = a * b;
-        }
+        protected override void Multiply(double a, double b, ref double result) => result = a * b;
 
-        protected override void Addition(double a, double b, ref double result)
-        {
-            result = a + b;
-        }
+        protected override void Addition(double a, double b, ref double result) => result = a + b;
 
-        protected override double Interpolant(double x1, double y1, double yp1, double x2, double y2, double yp2, double x)
-        {
-            return Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
-        }
+        protected override double Interpolant(double x1, double y1, double yp1, double x2, double y2, double yp2, double x) =>
+            Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
 
-        private static void Clear(H1 h)
-        {
-            h.Clear();
-        }
+        private static void Clear(H1 h) => h.Clear();
     }
 }

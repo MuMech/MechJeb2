@@ -37,27 +37,19 @@ namespace MuMech
             _state = SpinupState.FINISHED;
             Core.Attitude.SetOmegaTarget(roll: double.NaN);
             Core.Attitude.SetActuationControl();
-            Core.Staging.AutoStageLimitRemove( this);
+            Core.Staging.AutoStageLimitRemove(this);
             Core.Attitude.Users.Remove(this);
             base.OnModuleDisabled();
         }
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            GameEvents.onStageActivate.Add(HandleStageEvent);
-        }
+        public override void OnStart(PartModule.StartState state) => GameEvents.onStageActivate.Add(HandleStageEvent);
 
-        public override void OnDestroy()
-        {
-            GameEvents.onStageActivate.Remove(HandleStageEvent);
-        }
+        public override void OnDestroy() => GameEvents.onStageActivate.Remove(HandleStageEvent);
 
-        private void HandleStageEvent(int data)
-        {
+        private void HandleStageEvent(int data) =>
             // wait a second to enable after staging because aerodynamics may kick us,
             // but on the first tick we may think we are stable
             _startTime = VesselState.time + 1.0;
-        }
 
         public override void Drive(FlightCtrlState s)
         {

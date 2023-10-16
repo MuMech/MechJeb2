@@ -12,10 +12,7 @@ namespace MuMech
 
         private MechJebModuleDockingAutopilot autopilot;
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
-        }
+        public override void OnStart(PartModule.StartState state) => autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
 
         protected override void WindowGUI(int windowID)
         {
@@ -142,24 +139,15 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(50) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(50) };
 
         protected override void OnModuleDisabled()
         {
             if (autopilot != null) autopilot.Users.Remove(this);
         }
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Docking_title"); //"Docking Autopilot"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Docking_title"); //"Docking Autopilot"
 
-        public override string IconName()
-        {
-            return "Docking Autopilot";
-        }
+        public override string IconName() => "Docking Autopilot";
     }
 }

@@ -7,7 +7,6 @@
 
 using System;
 using System.Globalization;
-using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
 {

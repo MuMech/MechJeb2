@@ -98,12 +98,10 @@ namespace MuMech
             return cn;
         }
 
-        public string GetNameWithCoords()
-        {
-            return (Name != "" ? Name : Target != null ? Target.vesselName : "Waypoint") + " - " + Coordinates.ToStringDMS(Latitude, Longitude);
-//				((Latitude >= 0 ? "N " : "S ") + Math.Abs(Math.Round(Latitude, 3)) + ", " + (Longitude >= 0 ? "E " : "W ") + Math.Abs(Math.Round(Longitude, 3)));
-        }
+        public string GetNameWithCoords() => (Name != "" ? Name : Target != null ? Target.vesselName : "Waypoint") + " - " +
+                                             Coordinates.ToStringDMS(Latitude, Longitude);
 
+        //				((Latitude >= 0 ? "N " : "S ") + Math.Abs(Math.Round(Latitude, 3)) + ", " + (Longitude >= 0 ? "E " : "W ") + Math.Abs(Math.Round(Longitude, 3)));
         public void Update()
         {
             if (Target != null)
@@ -404,10 +402,7 @@ namespace MuMech
             cn.Save(MuUtils.GetCfgPath("mechjeb_routes.cfg"));
         }
 
-        public override string GetName()
-        {
-            return Mode + " Waypoints" + (titleAdd != "" ? " - " + titleAdd : "");
-        }
+        public override string GetName() => Mode + " Waypoints" + (titleAdd != "" ? " - " + titleAdd : "");
 
         public static Coordinates GetMouseFlightCoordinates()
         {
@@ -594,10 +589,7 @@ namespace MuMech
             return string.Compare(a.Name, b.Name, true);
         }
 
-        public MechJebWaypoint SelectedWaypoint()
-        {
-            return selIndex > -1 ? ap.Waypoints[selIndex] : null;
-        }
+        public MechJebWaypoint SelectedWaypoint() => selIndex > -1 ? ap.Waypoints[selIndex] : null;
 
         public int SelectedWaypointIndex
         {
@@ -605,10 +597,7 @@ namespace MuMech
             set => selIndex = value;
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(500), GUILayout.Height(400) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(500), GUILayout.Height(400) };
 
         public void DrawPageWaypoints()
         {
@@ -1181,15 +1170,9 @@ namespace MuMech
 
         public MechJebModuleWaypointHelpWindow(MechJebCore core) : base(core) { }
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Waypointhelper_title"); // "Waypoint Help"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Waypointhelper_title"); // "Waypoint Help"
 
-        public override string IconName()
-        {
-            return "Waypoint Help";
-        }
+        public override string IconName() => "Waypoint Help";
 
         public override void OnStart(PartModule.StartState state)
         {

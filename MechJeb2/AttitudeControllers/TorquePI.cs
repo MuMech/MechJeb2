@@ -16,9 +16,6 @@
             return Loop.Update(input, setpoint, maxOutput);
         }
 
-        public void ResetI()
-        {
-            Loop.ResetI();
-        }
+        public void ResetI() => Loop.ResetI();
     }
 }

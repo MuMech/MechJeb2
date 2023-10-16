@@ -8,7 +8,6 @@ using KSP.UI.Screens;
 using MechJebLib.Simulations.PartModules;
 using MuMech;
 using UnityEngine;
-using static MechJebLib.Statics;
 
 namespace MechJebLib.Simulations
 {
@@ -45,9 +44,9 @@ namespace MechJebLib.Simulations
             {
                 _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
 
-                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
+                if (ReflectionUtils.IsAssemblyLoaded("RealFuels"))
                 {
-                    _rfSpoolUpTime = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
+                    _rfSpoolUpTime = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
                     if (_rfSpoolUpTime == null)
                         Debug.Log(
                             "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
@@ -256,7 +255,7 @@ namespace MechJebLib.Simulations
                 engine.ModuleSpoolupTime = 0;
                 engine.isModuleEnginesRF = false;
 
-                if (ReflectionUtils.isAssemblyLoaded("RealFuels"))
+                if (ReflectionUtils.IsAssemblyLoaded("RealFuels"))
                 {
                     engine.isModuleEnginesRF = _rfType!.IsInstanceOfType(kspEngine);
 

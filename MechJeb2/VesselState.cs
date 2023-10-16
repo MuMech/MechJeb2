@@ -374,20 +374,20 @@ namespace MuMech
             FARVesselRefArea          = null;
             FARVesselTermVelEst       = null;
             FARVesselDynPres          = null;
-            isLoadedProceduralFairing = ReflectionUtils.isAssemblyLoaded("ProceduralFairings");
-            isLoadedRealFuels         = ReflectionUtils.isAssemblyLoaded("RealFuels");
-            isLoadedPrincipia         = ReflectionUtils.isAssemblyLoaded("principia.ksp_plugin_adapter");
+            isLoadedProceduralFairing = ReflectionUtils.IsAssemblyLoaded("ProceduralFairings");
+            isLoadedRealFuels         = ReflectionUtils.IsAssemblyLoaded("RealFuels");
+            isLoadedPrincipia         = ReflectionUtils.IsAssemblyLoaded("principia.ksp_plugin_adapter");
             if (isLoadedRealFuels)
             {
                 Debug.Log("MechJeb: RealFuels Assembly is loaded");
-                RFullageSetField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullageSet");
+                RFullageSetField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullageSet");
                 if (RFullageSetField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullageSet field, disabling RF");
                     isLoadedRealFuels = false;
                 }
 
-                RFGetUllageStabilityMethod = ReflectionUtils.getMethodByReflection("RealFuels", "RealFuels.Ullage.UllageSet", "GetUllageStability",
+                RFGetUllageStabilityMethod = ReflectionUtils.GetMethodByReflection("RealFuels", "RealFuels.Ullage.UllageSet", "GetUllageStability",
                     BindingFlags.Public | BindingFlags.Instance);
                 if (RFGetUllageStabilityMethod == null)
                 {
@@ -395,14 +395,14 @@ namespace MuMech
                     isLoadedRealFuels = false;
                 }
 
-                RFignitionsField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignitions");
+                RFignitionsField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignitions");
                 if (RFignitionsField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
                     isLoadedRealFuels = false;
                 }
 
-                RFignitedField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignited",
+                RFignitedField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignited",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if (RFignitedField == null)
                 {
@@ -410,14 +410,14 @@ namespace MuMech
                     isLoadedRealFuels = false;
                 }
 
-                RFullageField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
+                RFullageField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
                 if (RFullageField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
                     isLoadedRealFuels = false;
                 }
 
-                FieldInfo RFveryStableField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "veryStable",
+                FieldInfo RFveryStableField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "veryStable",
                     BindingFlags.NonPublic | BindingFlags.Static);
                 if (RFveryStableField == null)
                 {
@@ -437,7 +437,7 @@ namespace MuMech
                     return;
                 }
 
-                FieldInfo RFstableField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "stable",
+                FieldInfo RFstableField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "stable",
                     BindingFlags.NonPublic | BindingFlags.Static);
                 if (RFstableField == null)
                 {
@@ -456,7 +456,7 @@ namespace MuMech
                     return;
                 }
 
-                FieldInfo RFriskyField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "risky",
+                FieldInfo RFriskyField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "risky",
                     BindingFlags.NonPublic | BindingFlags.Static);
                 if (RFriskyField == null)
                 {
@@ -475,7 +475,7 @@ namespace MuMech
                     return;
                 }
 
-                FieldInfo RFveryRiskyField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "veryRisky",
+                FieldInfo RFveryRiskyField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "veryRisky",
                     BindingFlags.NonPublic | BindingFlags.Static);
                 if (RFveryRiskyField == null)
                 {
@@ -495,7 +495,7 @@ namespace MuMech
                     return;
                 }
 
-                FieldInfo RFunstableField = ReflectionUtils.getFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "unstable",
+                FieldInfo RFunstableField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "unstable",
                     BindingFlags.NonPublic | BindingFlags.Static);
                 if (RFunstableField == null)
                 {
@@ -520,13 +520,13 @@ namespace MuMech
                 }
             }
 
-            isLoadedFAR = ReflectionUtils.isAssemblyLoaded("FerramAerospaceResearch");
+            isLoadedFAR = ReflectionUtils.IsAssemblyLoaded("FerramAerospaceResearch");
             if (isLoadedFAR)
             {
                 var farNames = new List<string> { "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
                 foreach (string name in farNames)
                 {
-                    MethodInfo methodInfo = ReflectionUtils.getMethodByReflection(
+                    MethodInfo methodInfo = ReflectionUtils.GetMethodByReflection(
                         "FerramAerospaceResearch",
                         "FerramAerospaceResearch.FARAPI",
                         name,
@@ -545,7 +545,7 @@ namespace MuMech
                     }
                 }
 
-                MethodInfo FARCalculateVesselAeroForcesMethodInfo = ReflectionUtils.getMethodByReflection(
+                MethodInfo FARCalculateVesselAeroForcesMethodInfo = ReflectionUtils.GetMethodByReflection(
                     "FerramAerospaceResearch",
                     "FerramAerospaceResearch.FARAPI",
                     "CalculateVesselAeroForces",
@@ -762,10 +762,10 @@ namespace MuMech
             gravityForce = FlightGlobals.getGeeForceAtPosition(CoM); // TODO vessel.gravityForPos or vessel.gravityTrue
             localg       = gravityForce.magnitude;
 
-            speedOrbital.value  = orbitalVelocity.magnitude;
-            speedSurface.value  = surfaceVelocity.magnitude;
-            speedVertical.value = Vector3d.Dot(surfaceVelocity, up);
-            speedSurfaceHorizontal.value =
+            speedOrbital.Value  = orbitalVelocity.magnitude;
+            speedSurface.Value  = surfaceVelocity.magnitude;
+            speedVertical.Value = Vector3d.Dot(surfaceVelocity, up);
+            speedSurfaceHorizontal.Value =
                 Vector3d.Exclude(up, surfaceVelocity).magnitude; //(velocityVesselSurface - (speedVertical * up)).magnitude;
             speedOrbitHorizontal = (orbitalVelocity - speedVertical * up).magnitude;
 
@@ -773,28 +773,28 @@ namespace MuMech
             var srfProj = Vector3.ProjectOnPlane(surfaceVelocity.normalized, vessel.ReferenceTransform.right);
             double tmpAoA = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.forward),
                 Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.up));
-            AoA.value = double.IsNaN(tmpAoA) || speedSurface.value < 0.01 ? 0 : tmpAoA;
+            AoA.Value = double.IsNaN(tmpAoA) || speedSurface.Value < 0.01 ? 0 : tmpAoA;
 
             // Angle of Sideslip, angle between surface velocity and the ship-nose vector (KSP "up" vector) in the plane that has no ship-top/bottom in it (KSP "forward"/"back")
             srfProj = Vector3.ProjectOnPlane(surfaceVelocity.normalized, vessel.ReferenceTransform.forward);
             double tmpAoS = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.right),
                 Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.up));
-            AoS.value = double.IsNaN(tmpAoS) || speedSurface.value < 0.01 ? 0 : tmpAoS;
+            AoS.Value = double.IsNaN(tmpAoS) || speedSurface.Value < 0.01 ? 0 : tmpAoS;
 
             // Displacement Angle, angle between surface velocity and the ship-nose vector (KSP "up" vector) -- ignores roll of the craft (0 to 180 degrees)
             double tempAoD = UtilMath.Rad2Deg *
                              Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized), -1, 1));
-            displacementAngle.value = double.IsNaN(tempAoD) || speedSurface.value < 0.01 ? 0 : tempAoD;
+            displacementAngle.Value = double.IsNaN(tempAoD) || speedSurface.Value < 0.01 ? 0 : tempAoD;
 
-            vesselHeading.value = currentHeading;
-            vesselPitch.value   = currentPitch;
-            vesselRoll.value    = currentRoll;
+            vesselHeading.Value = currentHeading;
+            vesselPitch.Value   = currentPitch;
+            vesselRoll.Value    = currentRoll;
 
-            altitudeASL.value = vessel.mainBody.GetAltitude(CoM);
+            altitudeASL.Value = vessel.mainBody.GetAltitude(CoM);
 
             surfaceAltitudeASL = vessel.mainBody.pqsController != null ? vessel.pqsAltitude : 0d;
             if (vessel.mainBody.ocean && surfaceAltitudeASL < 0) surfaceAltitudeASL = 0;
-            altitudeTrue.value = altitudeASL - surfaceAltitudeASL;
+            altitudeTrue.Value = altitudeASL - surfaceAltitudeASL;
 
             // altitudeBottom will be recomputed if someone requests it.
             altitudeBottomIsCurrent = false;
@@ -820,21 +820,21 @@ namespace MuMech
 
             speedOfSound = vessel.speedOfSound;
 
-            orbitApA.value      = vessel.orbit.ApA;
-            orbitPeA.value      = vessel.orbit.PeA;
-            orbitPeriod.value   = vessel.orbit.period;
-            orbitTimeToAp.value = vessel.orbit.timeToAp;
-            orbitTimeToPe.value = vessel.orbit.timeToPe;
+            orbitApA.Value      = vessel.orbit.ApA;
+            orbitPeA.Value      = vessel.orbit.PeA;
+            orbitPeriod.Value   = vessel.orbit.period;
+            orbitTimeToAp.Value = vessel.orbit.timeToAp;
+            orbitTimeToPe.Value = vessel.orbit.timeToPe;
 
-            orbitLAN.value = vessel.orbit.LAN;
+            orbitLAN.Value = vessel.orbit.LAN;
 
-            orbitArgumentOfPeriapsis.value = vessel.orbit.argumentOfPeriapsis;
-            orbitInclination.value         = vessel.orbit.inclination;
-            orbitEccentricity.value        = vessel.orbit.eccentricity;
-            orbitSemiMajorAxis.value       = vessel.orbit.semiMajorAxis;
-            celestialLongitude.value       = Planetarium.right.AngleInPlane(-Planetarium.up, orbitalPosition);
-            latitude.value                 = vessel.mainBody.GetLatitude(CoM);
-            longitude.value                = MuUtils.ClampDegrees180(vessel.mainBody.GetLongitude(CoM));
+            orbitArgumentOfPeriapsis.Value = vessel.orbit.argumentOfPeriapsis;
+            orbitInclination.Value         = vessel.orbit.inclination;
+            orbitEccentricity.Value        = vessel.orbit.eccentricity;
+            orbitSemiMajorAxis.Value       = vessel.orbit.semiMajorAxis;
+            celestialLongitude.Value       = Planetarium.right.AngleInPlane(-Planetarium.up, orbitalPosition);
+            latitude.Value                 = vessel.mainBody.GetLatitude(CoM);
+            longitude.Value                = MuUtils.ClampDegrees180(vessel.mainBody.GetLongitude(CoM));
 
             if (vessel.mainBody != Planetarium.fetch.Sun)
             {
@@ -872,7 +872,7 @@ namespace MuMech
                 for (int i = 0; i < Vector6.Values.Length; i++)
                 {
                     Vector6.Direction dir6 = Vector6.Values[i];
-                    Vector3d dir = Vector6.directions[(int)dir6];
+                    Vector3d dir = Vector6.Directions[(int)dir6];
                     double[] throttles;
                     List<RCSSolver.Thruster> thrusters;
                     rcsbal.GetThrottles(dir, out throttles, out thrusters);
@@ -979,11 +979,11 @@ namespace MuMech
             GUILayout.Label(Localizer.Format("#MechJeb_RCSTranslation")); //"RCS Translation"
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos", GUILayout.ExpandWidth(true)); //
-            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.positive), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.Positive), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Neg", GUILayout.ExpandWidth(true)); //
-            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.negative), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.Negative), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
@@ -995,12 +995,12 @@ namespace MuMech
             GUILayout.Label(Localizer.Format("#MechJeb_RCSTorque")); //"RCS Torque"
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.positive), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.Positive), GUILayout.ExpandWidth(false));
             //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.positive), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.negative), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.Negative), GUILayout.ExpandWidth(false));
             //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.negative), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -1251,24 +1251,24 @@ namespace MuMech
                 }
             }
 
-            torqueAvailable += Vector3d.Max(torqueReactionWheel.positive, torqueReactionWheel.negative);
+            torqueAvailable += Vector3d.Max(torqueReactionWheel.Positive, torqueReactionWheel.Negative);
 
             //torqueAvailable += Vector3d.Max(torqueRcs.positive, torqueRcs.negative);
 
-            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            torqueAvailable += Vector3d.Max(rcsTorqueAvailable.Positive, rcsTorqueAvailable.Negative);
 
-            torqueAvailable += Vector3d.Max(torqueControlSurface.positive, torqueControlSurface.negative);
+            torqueAvailable += Vector3d.Max(torqueControlSurface.Positive, torqueControlSurface.Negative);
 
-            torqueAvailable += Vector3d.Max(torqueGimbal.positive, torqueGimbal.negative);
+            torqueAvailable += Vector3d.Max(torqueGimbal.Positive, torqueGimbal.Negative);
 
-            torqueAvailable += Vector3d.Max(torqueOthers.positive, torqueOthers.negative); // Mostly FAR
+            torqueAvailable += Vector3d.Max(torqueOthers.Positive, torqueOthers.Negative); // Mostly FAR
 
-            torqueDiffThrottle   = Vector3d.Max(einfo.torqueDiffThrottle.positive, einfo.torqueDiffThrottle.negative);
+            torqueDiffThrottle   = Vector3d.Max(einfo.torqueDiffThrottle.Positive, einfo.torqueDiffThrottle.Negative);
             torqueDiffThrottle.y = 0;
 
             if (torqueAvailable.sqrMagnitude > 0)
             {
-                torqueReactionSpeed = Vector3d.Max(torqueReactionSpeed6.positive, torqueReactionSpeed6.negative);
+                torqueReactionSpeed = Vector3d.Max(torqueReactionSpeed6.Positive, torqueReactionSpeed6.Negative);
                 torqueReactionSpeed.Scale(torqueAvailable.InvertNoNaN());
             }
             else
@@ -1337,16 +1337,16 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_Torque", InfoItem.Category.Vessel, showInEditor = true)] //Torque
         public void TorqueCompare()
         {
-            var reactionTorque = Vector3d.Max(torqueReactionWheel.positive, torqueReactionWheel.negative);
+            var reactionTorque = Vector3d.Max(torqueReactionWheel.Positive, torqueReactionWheel.Negative);
             //var rcsTorque = Vector3d.Max(torqueRcs.positive, torqueRcs.negative);
 
-            var rcsTorqueMJ = Vector3d.Max(rcsTorqueAvailable.positive, rcsTorqueAvailable.negative);
+            var rcsTorqueMJ = Vector3d.Max(rcsTorqueAvailable.Positive, rcsTorqueAvailable.Negative);
 
-            var controlTorque = Vector3d.Max(torqueControlSurface.positive, torqueControlSurface.negative);
-            var gimbalTorque = Vector3d.Max(torqueGimbal.positive, torqueGimbal.negative);
-            var diffTorque = Vector3d.Max(einfo.torqueDiffThrottle.positive, einfo.torqueDiffThrottle.negative);
+            var controlTorque = Vector3d.Max(torqueControlSurface.Positive, torqueControlSurface.Negative);
+            var gimbalTorque = Vector3d.Max(torqueGimbal.Positive, torqueGimbal.Negative);
+            var diffTorque = Vector3d.Max(einfo.torqueDiffThrottle.Positive, einfo.torqueDiffThrottle.Negative);
             diffTorque.y = 0;
-            var othersTorque = Vector3d.Max(torqueOthers.positive, torqueOthers.negative);
+            var othersTorque = Vector3d.Max(torqueOthers.Positive, torqueOthers.Negative);
 
             GUILayout.Label("Torque sources", GuiUtils.LabelNoWrap);
             GUILayout.BeginHorizontal();
@@ -1416,7 +1416,7 @@ namespace MuMech
             if (thrustVectorMaxThrottle.magnitude == 0 && vessel.ActionGroups[KSPActionGroup.RCS])
             {
                 rcsThrust               =  true;
-                thrustVectorMaxThrottle += forward * rcsThrustAvailable.down;
+                thrustVectorMaxThrottle += forward * rcsThrustAvailable.Down;
             }
             else
             {
@@ -1428,14 +1428,11 @@ namespace MuMech
         {
             MoI                      = vessel.MOI;
             angularMomentum          = vessel.angularMomentum;
-            angularVelocityAvg.value = angularVelocity;
+            angularVelocityAvg.Value = angularVelocity;
         }
 
         [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")] //Terminal velocity
-        public double TerminalVelocity()
-        {
-            return TerminalVelocityCall();
-        }
+        public double TerminalVelocity() => TerminalVelocityCall();
 
         public DTerminalVelocity TerminalVelocityCall;
 
@@ -1446,20 +1443,12 @@ namespace MuMech
             return Math.Sqrt(2000 * mass * localg / (areaDrag * vesselRef.atmDensity));
         }
 
-        public double TerminalVelocityFAR()
-        {
-            return FARVesselTermVelEst(vesselRef);
-        }
+        public double TerminalVelocityFAR() => FARVesselTermVelEst(vesselRef);
 
-        public double ThrustAccel(double throttle)
-        {
-            return (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
-        }
+        public double ThrustAccel(double throttle) => (1.0 - throttle) * minThrustAccel + throttle * maxThrustAccel;
 
-        public double HeadingFromDirection(Vector3d dir)
-        {
-            return MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(dir, east), Vector3d.Dot(dir, north)));
-        }
+        public double HeadingFromDirection(Vector3d dir) =>
+            MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(dir, east), Vector3d.Dot(dir, north)));
 
         // Altitude of bottom of craft, only calculated when requested because it is a bit expensive
         private bool   altitudeBottomIsCurrent;
@@ -1903,15 +1892,9 @@ namespace MuMech
 
             public static int PoolSize => pool.Size;
 
-            private static ResourceInfo Create()
-            {
-                return new ResourceInfo();
-            }
+            private static ResourceInfo Create() => new ResourceInfo();
 
-            public virtual void Release()
-            {
-                pool.Release(this);
-            }
+            public virtual void Release() => pool.Release(this);
 
             public static void Release(Dictionary<int, ResourceInfo>.ValueCollection objList)
             {

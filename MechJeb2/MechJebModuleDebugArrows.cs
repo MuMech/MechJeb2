@@ -582,15 +582,9 @@ namespace MuMech
             SeeThrough(seeThrough);
         }
 
-        public void Destroy()
-        {
-            Object.Destroy(gameObject);
-        }
+        public void Destroy() => Object.Destroy(gameObject);
 
-        public void Set(Vector3d position)
-        {
-            gameObject.transform.position = position;
-        }
+        public void Set(Vector3d position) => gameObject.transform.position = position;
 
         public void State(bool state)
         {

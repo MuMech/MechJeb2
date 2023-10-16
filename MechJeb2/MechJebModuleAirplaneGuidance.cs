@@ -415,19 +415,10 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(200) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(200) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_Aircraftauto_title"); //Aircraft Autopilot
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_Aircraftauto_title"); //Aircraft Autopilot
 
-        public override string IconName()
-        {
-            return "Aircraft Autopilot";
-        }
+        public override string IconName() => "Aircraft Autopilot";
     }
 }

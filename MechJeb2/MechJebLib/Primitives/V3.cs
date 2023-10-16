@@ -351,7 +351,7 @@ namespace MechJebLib.Primitives
 
         public static V3 operator /(V3 a, double d) => new V3(a.x / d, a.y / d, a.z / d);
 
-        public static V3 operator /(double d, V3 a) => new V3(d/a.x, d/a.y, d/a.z);
+        public static V3 operator /(double d, V3 a) => new V3(d / a.x, d / a.y, d / a.z);
 
         public static bool operator ==(V3 lhs, V3 rhs)
         {
@@ -394,9 +394,9 @@ namespace MechJebLib.Primitives
 
         public void CopyTo(double[,] other, int i, int j)
         {
-            other[i,j]     = this[0];
-            other[i + 1,j] = this[1];
-            other[i + 2,j] = this[2];
+            other[i, j]     = this[0];
+            other[i + 1, j] = this[1];
+            other[i + 2, j] = this[2];
         }
     }
 }

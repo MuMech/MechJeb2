@@ -20,7 +20,7 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             base.OnModuleEnabled();
-            _mode                 = AscentMode.VERTICAL_ASCENT;
+            _mode = AscentMode.VERTICAL_ASCENT;
             Core.Guidance.Users.Add(this);
             Core.Guidance.CascadeDisable(this);
             Core.Glueball.Users.Add(this);
@@ -44,11 +44,9 @@ namespace MuMech
 
         private AscentMode _mode;
 
-        protected override void TimedLaunchHook()
-        {
+        protected override void TimedLaunchHook() =>
             // timedLaunch kills the optimizer so re-enable it here
             Core.Guidance.Enabled = true;
-        }
 
         protected override bool DriveAscent2()
         {

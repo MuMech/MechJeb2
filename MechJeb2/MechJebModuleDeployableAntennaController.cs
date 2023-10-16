@@ -28,10 +28,7 @@ namespace MuMech
             }
         }
 
-        protected override bool isModules(ModuleDeployablePart p)
-        {
-            return p is ModuleDeployableAntenna;
-        }
+        protected override bool isModules(ModuleDeployablePart p) => p is ModuleDeployableAntenna;
 
         protected override string getButtonText(DeployablePartState deployablePartState)
         {

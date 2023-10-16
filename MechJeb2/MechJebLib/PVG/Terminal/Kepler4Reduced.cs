@@ -39,10 +39,7 @@ namespace MechJebLib.PVG.Terminal
             _peRT = Maths.PeriapsisFromKeplerian(_smaT, _eccT);
         }
 
-        public IPVGTerminal Rescale(Scale scale)
-        {
-            return new Kepler4Reduced(_smaT / scale.LengthScale, _eccT, _incT, _lanT);
-        }
+        public IPVGTerminal Rescale(Scale scale) => new Kepler4Reduced(_smaT / scale.LengthScale, _eccT, _incT, _lanT);
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {

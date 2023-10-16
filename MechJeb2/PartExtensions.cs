@@ -5,15 +5,9 @@ namespace MuMech
 {
     public static class PartExtensions
     {
-        public static bool HasModule<T>(this Part part) where T : PartModule
-        {
-            return part.FindModuleImplementing<T>() != null;
-        }
+        public static bool HasModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>() != null;
 
-        public static T GetModule<T>(this Part part) where T : PartModule
-        {
-            return part.FindModuleImplementing<T>();
-        }
+        public static T GetModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>();
 
         // An allocation free version of GetModuleMass
         public static float GetModuleMassNoAlloc(this Part p, float defaultMass, ModifierStagingSituation sit)
@@ -32,10 +26,7 @@ namespace MuMech
             return mass;
         }
 
-        public static bool EngineHasFuel(this ModuleEngines me)
-        {
-            return !me.getFlameoutState && !me.engineShutdown;
-        }
+        public static bool EngineHasFuel(this ModuleEngines me) => !me.getFlameoutState && !me.engineShutdown;
 
         public static bool EngineHasFuel(this Part p)
         {
@@ -170,14 +161,12 @@ namespace MuMech
             return isp;
         }
 
-        public static bool IsDecoupler(this Part p)
-        {
-            return p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null ||
-                                 p.FindModuleImplementing<ModuleDockingNode>() != null ||
-                                 p.Modules.Contains("ProceduralFairingDecoupler"));
-        }
+        public static bool IsDecoupler(this Part p) =>
+            p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null ||
+                          p.FindModuleImplementing<ModuleDockingNode>() != null ||
+                          p.Modules.Contains("ProceduralFairingDecoupler"));
 
-        public static bool IsUnfiredDecoupler(this ModuleDecouplerBase decoupler, out Part decoupledPart)
+        private static bool IsUnfiredDecoupler(this ModuleDecouplerBase decoupler, out Part decoupledPart)
         {
             if (!decoupler.isDecoupled && decoupler.stagingEnabled && decoupler.part.stagingOn)
             {
@@ -191,7 +180,7 @@ namespace MuMech
             return false;
         }
 
-        public static bool IsUnfiredDecoupler(this ModuleDockingNode mDockingNode, out Part decoupledPart)
+        private static bool IsUnfiredDecoupler(this ModuleDockingNode mDockingNode, out Part decoupledPart)
         {
             if (mDockingNode.staged && mDockingNode.stagingEnabled && mDockingNode.part.stagingOn)
             {
@@ -205,7 +194,7 @@ namespace MuMech
             return false;
         }
 
-        public static bool IsUnfiredProceduralFairingDecoupler(this PartModule decoupler, out Part decoupledPart)
+        private static bool IsUnfiredProceduralFairingDecoupler(this PartModule decoupler, out Part decoupledPart)
         {
             if (VesselState.isLoadedProceduralFairing && decoupler.moduleName == "ProceduralFairingDecoupler")
             {
@@ -223,8 +212,8 @@ namespace MuMech
 
         public static bool IsUnfiredDecoupler(this PartModule m, out Part decoupledPart)
         {
-            if (m is ModuleDecouplerBase && IsUnfiredDecoupler(m as ModuleDecouplerBase, out decoupledPart)) return true;
-            if (m is ModuleDockingNode && IsUnfiredDecoupler(m as ModuleDockingNode, out decoupledPart)) return true;
+            if (m is ModuleDecouplerBase @base && IsUnfiredDecoupler(@base, out decoupledPart)) return true;
+            if (m is ModuleDockingNode node && IsUnfiredDecoupler(node, out decoupledPart)) return true;
             if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" &&
                 m.IsUnfiredProceduralFairingDecoupler(out decoupledPart)) return true;
             decoupledPart = null;
@@ -270,18 +259,13 @@ namespace MuMech
 
         //Any engine that is decoupled in the same stage in
         //which it activates we call a sepratron.
-        public static bool IsSepratron(this Part p)
-        {
-            return p.ActivatesEvenIfDisconnected
-                   && p.IsThrottleLockedEngine()
-                   && p.IsDecoupledInStage(p.inverseStage)
-                   && p.isControlSource == Vessel.ControlLevel.NONE;
-        }
+        public static bool IsSepratron(this Part p) =>
+            p.ActivatesEvenIfDisconnected
+            && p.IsThrottleLockedEngine()
+            && p.IsDecoupledInStage(p.inverseStage)
+            && p.isControlSource == Vessel.ControlLevel.NONE;
 
-        public static bool IsEngine(this Part p)
-        {
-            return p.FindModuleImplementing<ModuleEngines>() != null;
-        }
+        public static bool IsEngine(this Part p) => p.FindModuleImplementing<ModuleEngines>() != null;
 
         public static bool IsThrottleLockedEngine(this Part p)
         {
@@ -289,21 +273,14 @@ namespace MuMech
             return me != null && me.throttleLocked;
         }
 
-        public static bool IsParachute(this Part p)
-        {
-            return p.FindModuleImplementing<ModuleParachute>() != null;
-        }
+        public static bool IsParachute(this Part p) => p.FindModuleImplementing<ModuleParachute>() != null;
 
-        public static bool IsLaunchClamp(this Part p)
-        {
-            return p.FindModuleImplementing<LaunchClamp>() != null;
-        }
+        public static bool IsLaunchClamp(this Part p) => p.FindModuleImplementing<LaunchClamp>() != null;
 
         public static bool IsDecoupledInStage(this Part p, int stage)
         {
-            Part decoupledPart;
-            if (((p.IsUnfiredDecoupler(out decoupledPart) && p == decoupledPart) || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
-            if (p.parent == null) return false;
+            if (((p.IsUnfiredDecoupler(out Part decoupledPart) && p == decoupledPart) || p.IsLaunchClamp()) && p.inverseStage == stage) return true;
+            if (p.parent is null) return false;
             if (p.parent.IsUnfiredDecoupler(out decoupledPart) && p == decoupledPart && p.parent.inverseStage == stage) return true;
             return p.parent.IsDecoupledInStage(stage);
         }
@@ -321,14 +298,14 @@ namespace MuMech
 
         public struct Vector3Pair
         {
-            public Vector3 p1;
+            public Vector3 P1;
 
-            public Vector3 p2;
+            public Vector3 P2;
 
             public Vector3Pair(Vector3 point1, Vector3 point2)
             {
-                p1 = point1;
-                p2 = point2;
+                P1 = point1;
+                P2 = point2;
             }
         }
 

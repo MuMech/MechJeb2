@@ -102,15 +102,9 @@ namespace MuMech
 
         public static int PoolSize => _pool.Size;
 
-        private static ReentrySimulation Create()
-        {
-            return new ReentrySimulation();
-        }
+        private static ReentrySimulation Create() => new ReentrySimulation();
 
-        public void Release()
-        {
-            _pool.Release(this);
-        }
+        public void Release() => _pool.Release(this);
 
         private static void Reset(ReentrySimulation obj)
         {
@@ -292,20 +286,11 @@ namespace MuMech
             return _result;
         }
 
-        private bool OrbitReenters(Orbit initialOrbit)
-        {
-            return initialOrbit.PeR < _decelRadius || initialOrbit.PeR < _aerobrakedRadius;
-        }
+        private bool OrbitReenters(Orbit initialOrbit) => initialOrbit.PeR < _decelRadius || initialOrbit.PeR < _aerobrakedRadius;
 
-        private bool Landed()
-        {
-            return _x.magnitude < _probableLandingSiteRadius;
-        }
+        private bool Landed() => _x.magnitude < _probableLandingSiteRadius;
 
-        private bool Aerobraked()
-        {
-            return _bodyHasAtmosphere && _x.magnitude > _aerobrakedRadius && Vector3d.Dot(_x, _v) > 0;
-        }
+        private bool Aerobraked() => _bodyHasAtmosphere && _x.magnitude > _aerobrakedRadius && Vector3d.Dot(_x, _v) > 0;
 
         private bool Escaping()
         {
@@ -498,10 +483,7 @@ namespace MuMech
             }
         }
 
-        private void RecordTrajectory()
-        {
-            _trajectory.Add(_referenceFrame.ToAbsolute(_x, _t));
-        }
+        private void RecordTrajectory() => _trajectory.Add(_referenceFrame.ToAbsolute(_x, _t));
 
         private Vector3d TotalAccel(Vector3d pos, Vector3d vel, bool record = false)
         {
@@ -543,10 +525,7 @@ namespace MuMech
             return totalAccel;
         }
 
-        private Vector3d GravAccel(Vector3d pos)
-        {
-            return -(_gravParameter / pos.sqrMagnitude) * pos.normalized;
-        }
+        private Vector3d GravAccel(Vector3d pos) => -(_gravParameter / pos.sqrMagnitude) * pos.normalized;
 
         private Vector3d DragForce(Vector3d pos, Vector3d vel, float dynamicPressurekPa, float mach)
         {
@@ -617,11 +596,9 @@ namespace MuMech
             return StaticPressure(altitude);
         }
 
-        private Vector3d SurfaceVelocity(Vector3d pos, Vector3d vel)
-        {
+        private Vector3d SurfaceVelocity(Vector3d pos, Vector3d vel) =>
             //if we're low enough, calculate the airspeed properly:
-            return vel - Vector3d.Cross(_bodyAngularVelocity, pos);
-        }
+            vel - Vector3d.Cross(_bodyAngularVelocity, pos);
 
         private double AirDensity(Vector3d pos, double altitude)
         {
@@ -817,10 +794,7 @@ namespace MuMech
 
             private static readonly Pool<Result> _pool = new Pool<Result>(Create, Reset);
 
-            private static Result Create()
-            {
-                return new Result();
-            }
+            private static Result Create() => new Result();
 
             public void Release()
             {
@@ -830,10 +804,7 @@ namespace MuMech
                 _pool.Release(this);
             }
 
-            private static void Reset(Result obj)
-            {
-                obj.AeroBrake = false;
-            }
+            private static void Reset(Result obj) => obj.AeroBrake = false;
 
             public static Result Borrow()
             {
@@ -844,40 +815,19 @@ namespace MuMech
             // debuging
             public Prediction Prediction;
 
-            public Vector3d RelativeEndPosition()
-            {
-                return WorldEndPosition() - Body.position;
-            }
+            public Vector3d RelativeEndPosition() => WorldEndPosition() - Body.position;
 
-            public Vector3d WorldEndPosition()
-            {
-                return ReferenceFrame.WorldPositionAtCurrentTime(EndPosition);
-            }
+            public Vector3d WorldEndPosition() => ReferenceFrame.WorldPositionAtCurrentTime(EndPosition);
 
-            private Vector3d WorldEndVelocity()
-            {
-                return ReferenceFrame.WorldVelocityAtCurrentTime(EndVelocity);
-            }
+            private Vector3d WorldEndVelocity() => ReferenceFrame.WorldVelocityAtCurrentTime(EndVelocity);
 
-            public Orbit EndOrbit()
-            {
-                return MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), Body, EndUT);
-            }
+            public Orbit EndOrbit() => MuUtils.OrbitFromStateVectors(WorldEndPosition(), WorldEndVelocity(), Body, EndUT);
 
-            public Vector3d WorldAeroBrakePosition()
-            {
-                return ReferenceFrame.WorldPositionAtCurrentTime(AeroBrakePosition);
-            }
+            public Vector3d WorldAeroBrakePosition() => ReferenceFrame.WorldPositionAtCurrentTime(AeroBrakePosition);
 
-            public Vector3d WorldAeroBrakeVelocity()
-            {
-                return ReferenceFrame.WorldVelocityAtCurrentTime(AeroBrakeVelocity);
-            }
+            public Vector3d WorldAeroBrakeVelocity() => ReferenceFrame.WorldVelocityAtCurrentTime(AeroBrakeVelocity);
 
-            public Orbit AeroBrakeOrbit()
-            {
-                return MuUtils.OrbitFromStateVectors(WorldAeroBrakePosition(), WorldAeroBrakeVelocity(), Body, EndUT);
-            }
+            public Orbit AeroBrakeOrbit() => MuUtils.OrbitFromStateVectors(WorldAeroBrakePosition(), WorldAeroBrakeVelocity(), Body, EndUT);
 
             public Disposable<List<Vector3d>> WorldTrajectory(double timeStep, bool world = true)
             {
@@ -1060,15 +1010,11 @@ namespace MuMech
 
         //Interprets a given AbsoluteVector as a position, and returns the corresponding Vector3d position
         //in world coordinates.
-        public Vector3d WorldPositionAtCurrentTime(AbsoluteVector absolute)
-        {
-            return _referenceBody.position + WorldVelocityAtCurrentTime(absolute);
-        }
+        public Vector3d WorldPositionAtCurrentTime(AbsoluteVector absolute) => _referenceBody.position + WorldVelocityAtCurrentTime(absolute);
 
-        public Vector3d BodyPositionAtCurrentTime(AbsoluteVector absolute)
-        {
-            return _referenceBody.position + absolute.Radius * _referenceBody.GetSurfaceNVector(absolute.Latitude, absolute.Longitude);
-        }
+        public Vector3d BodyPositionAtCurrentTime(AbsoluteVector absolute) => _referenceBody.position +
+                                                                              absolute.Radius * _referenceBody.GetSurfaceNVector(absolute.Latitude,
+                                                                                  absolute.Longitude);
 
         //Interprets a given AbsoluteVector as a velocity, and returns the corresponding Vector3d velocity
         //in world coordinates.
@@ -1079,9 +1025,6 @@ namespace MuMech
             return absolute.Radius * _referenceBody.GetSurfaceNVector(absolute.Latitude, unrotatedLongitude);
         }
 
-        public double Latitude(Vector3d vector3d)
-        {
-            return UtilMath.Rad2Deg * Math.Asin(Vector3d.Dot(vector3d.normalized, _lat90AtStart));
-        }
+        public double Latitude(Vector3d vector3d) => UtilMath.Rad2Deg * Math.Asin(Vector3d.Dot(vector3d.normalized, _lat90AtStart));
     }
 }

@@ -35,10 +35,7 @@ namespace MuMech
 
         public bool UnlockChecked;
 
-        public int CompareTo(ComputerModule other)
-        {
-            return other == null ? 1 : Priority.CompareTo(other.Priority);
-        }
+        public int CompareTo(ComputerModule other) => other == null ? 1 : Priority.CompareTo(other.Priority);
 
         private bool _enabled;
 
@@ -185,10 +182,7 @@ namespace MuMech
         {
         }
 
-        protected virtual bool IsSpaceCenterUpgradeUnlocked()
-        {
-            return true;
-        }
+        protected virtual bool IsSpaceCenterUpgradeUnlocked() => true;
 
         public virtual void UnlockCheck()
         {
@@ -242,27 +236,15 @@ namespace MuMech
             }
         }
 
-        protected static void Print(object message)
-        {
-            MonoBehaviour.print("[MechJeb2] " + message);
-        }
+        protected static void Print(object message) => MonoBehaviour.print("[MechJeb2] " + message);
 
         [UsedImplicitly]
-        public void Disable()
-        {
-            Enabled = false;
-        }
+        public void Disable() => Enabled = false;
 
         [UsedImplicitly]
-        public void Enable()
-        {
-            Enabled = true;
-        }
+        public void Enable() => Enabled = true;
 
-        public void CascadeDisable(ComputerModule m)
-        {
-            ModuleDisabledEvents.Add(m.Disable);
-        }
+        public void CascadeDisable(ComputerModule m) => ModuleDisabledEvents.Add(m.Disable);
     }
 
     [Flags]
@@ -275,9 +257,9 @@ namespace MuMech
 
     public class ModuleEvent
     {
-        public delegate void              OnEvent();
+        public delegate void OnEvent();
 
-        private readonly List<OnEvent> _events = new List<OnEvent>();
+        private readonly List<OnEvent>            _events     = new List<OnEvent>();
         private readonly Dictionary<OnEvent, int> _eventIndex = new Dictionary<OnEvent, int>();
 
         public void Add(OnEvent evt)
@@ -307,7 +289,6 @@ namespace MuMech
 
         public void Fire(bool reverse)
         {
-
             if (reverse)
             {
                 for (int i = _events.Count - 1; i >= 0; i--)

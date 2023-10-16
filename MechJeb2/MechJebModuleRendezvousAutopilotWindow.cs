@@ -63,24 +63,12 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(300), GUILayout.Height(50) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(50) };
 
-        public override string GetName()
-        {
-            return Localizer.Format("#MechJeb_RZauto_title"); //"Rendezvous Autopilot"
-        }
+        public override string GetName() => Localizer.Format("#MechJeb_RZauto_title"); //"Rendezvous Autopilot"
 
-        public override string IconName()
-        {
-            return "Rendezvous Autopilot";
-        }
+        public override string IconName() => "Rendezvous Autopilot";
 
-        protected override bool IsSpaceCenterUpgradeUnlocked()
-        {
-            return Vessel.patchedConicsUnlocked();
-        }
+        protected override bool IsSpaceCenterUpgradeUnlocked() => Vessel.patchedConicsUnlocked();
     }
 }

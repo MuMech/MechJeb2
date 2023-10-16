@@ -29,7 +29,7 @@ namespace MuMech
     public abstract class Operation
     {
         protected string ErrorMessage = "";
-        public    string GetErrorMessage() { return ErrorMessage; }
+        public    string GetErrorMessage() => ErrorMessage;
 
         // Methods that need to be implemented for new operations:
 

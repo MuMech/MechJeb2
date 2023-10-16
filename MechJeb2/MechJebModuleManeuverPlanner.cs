@@ -87,7 +87,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button1"))) //"Create node"
             {
-                makingNode    = true;
+                makingNode = true;
             }
 
             if (Core.Node != null && GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button2"))) //"Create and execute"

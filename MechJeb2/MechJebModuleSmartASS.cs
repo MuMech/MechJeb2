@@ -155,13 +155,11 @@ namespace MuMech
         public bool autoDisableSmartASS = true;
 
         [GeneralInfoItem("#MechJeb_DisableSmartACSAutomatically", InfoItem.Category.Misc)] //Disable SmartACS automatically
-        public void AutoDisableSmartASS()
-        {
+        public void AutoDisableSmartASS() =>
             autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS,
                 Core.eduMode
                     ? Localizer.Format("#MechJeb_SmartASS_checkbox1")
                     : Localizer.Format("#MechJeb_SmartASS_checkbox2")); //"Disable SmartACS automatically":"Disable SmartASS automatically"
-        }
 
         public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
 
@@ -421,7 +419,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelRol = -VesselState.vesselRoll.value;
+                                srfVelRol = -VesselState.vesselRoll.Value;
                                 changed   = true;
                             }
 
@@ -449,7 +447,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelPit = VesselState.AoA.value;
+                                srfVelPit = VesselState.AoA.Value;
                                 changed   = true;
                             }
 
@@ -477,7 +475,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelYaw = -VesselState.AoS.value;
+                                srfVelYaw = -VesselState.AoS.Value;
                                 changed   = true;
                             }
 
@@ -624,7 +622,7 @@ namespace MuMech
                     reference = AttitudeReference.TARGET_ORIENTATION;
                     break;
                 case Target.ADVANCED:
-                    direction = Vector6.directions[(int)advDirection];
+                    direction = Vector6.Directions[(int)advDirection];
                     reference = advReference;
                     break;
                 case Target.SURFACE_PROGRADE:
@@ -669,21 +667,13 @@ namespace MuMech
             if (resetPID) { Core.Attitude.Controller.Reset(); }
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(180), GUILayout.Height(100) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
 
-        public override string GetName()
-        {
-            return Core.eduMode
+        public override string GetName() =>
+            Core.eduMode
                 ? Localizer.Format("#MechJeb_SmartACS_title")
                 : Localizer.Format("#MechJeb_SmartASS_title"); //"Smart A.C.S.":"Smart A.S.S."
-        }
 
-        public override string IconName()
-        {
-            return Core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
-        }
+        public override string IconName() => Core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
     }
 }

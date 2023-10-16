@@ -110,7 +110,7 @@ namespace MuMech
             // We might have wonky transforms and have a tiny bit of fore RCS, so require at least 10% of the max RCS thrust to be
             // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics).
             bool hasRCS = Vessel.hasEnabledRCSModules() &&
-                          VesselState.rcsThrustAvailable.up > 0.1 * VesselState.rcsThrustAvailable.MaxMagnitude();
+                          VesselState.rcsThrustAvailable.Up > 0.1 * VesselState.rcsThrustAvailable.MaxMagnitude();
 
             return hasRCS && Status != PVGStatus.TERMINAL_RCS;
         }

@@ -70,7 +70,7 @@ namespace MuMech
             int limit = 0;
             foreach (int value in _autoStageModuleLimit.Values)
             {
-               if (value > limit)
+                if (value > limit)
                     limit = value;
             }
 

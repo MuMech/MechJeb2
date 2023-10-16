@@ -7,63 +7,36 @@ namespace MuMech
 {
     public static class MathExtensions
     {
-        public static Vector3d Sign(this Vector3d vector)
-        {
-            return new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
-        }
+        public static Vector3d Sign(this Vector3d vector) => new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
 
-        public static Vector3d Abs(this Vector3d vector)
-        {
-            return new Vector3d(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
-        }
+        public static Vector3d Abs(this Vector3d vector) => new Vector3d(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
 
-        public static Vector3 Abs(this Vector3 vector)
-        {
-            return new Vector3(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
-        }
+        public static Vector3 Abs(this Vector3 vector) => new Vector3(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
 
-        public static Vector3d Sqrt(this Vector3d vector)
-        {
-            return new Vector3d(Math.Sqrt(vector.x), Math.Sqrt(vector.y), Math.Sqrt(vector.z));
-        }
+        public static Vector3d Sqrt(this Vector3d vector) => new Vector3d(Math.Sqrt(vector.x), Math.Sqrt(vector.y), Math.Sqrt(vector.z));
 
-        public static double MaxMagnitude(this Vector3d vector)
-        {
-            return Math.Max(Math.Max(Math.Abs(vector.x), Math.Abs(vector.y)), Math.Abs(vector.z));
-        }
+        public static double MaxMagnitude(this Vector3d vector) => Math.Max(Math.Max(Math.Abs(vector.x), Math.Abs(vector.y)), Math.Abs(vector.z));
 
-        public static Vector3d Invert(this Vector3d vector)
-        {
-            return new Vector3d(1 / vector.x, 1 / vector.y, 1 / vector.z);
-        }
+        public static Vector3d Invert(this Vector3d vector) => new Vector3d(1 / vector.x, 1 / vector.y, 1 / vector.z);
 
-        public static Vector3d InvertNoNaN(this Vector3d vector)
-        {
-            return new Vector3d(vector.x != 0 ? 1 / vector.x : 0, vector.y != 0 ? 1 / vector.y : 0, vector.z != 0 ? 1 / vector.z : 0);
-        }
+        public static Vector3d InvertNoNaN(this Vector3d vector) => new Vector3d(vector.x != 0 ? 1 / vector.x : 0, vector.y != 0 ? 1 / vector.y : 0,
+            vector.z != 0 ? 1 / vector.z : 0);
 
-        public static Vector3d ProjectOnPlane(this Vector3d vector, Vector3d planeNormal)
-        {
-            return vector - Vector3d.Project(vector, planeNormal);
-        }
+        public static Vector3d ProjectOnPlane(this Vector3d vector, Vector3d planeNormal) => vector - Vector3d.Project(vector, planeNormal);
 
-        public static Vector3d DeltaEuler(this Quaternion delta)
-        {
-            return new Vector3d(
+        public static Vector3d DeltaEuler(this Quaternion delta) =>
+            new Vector3d(
                 delta.eulerAngles.x > 180 ? delta.eulerAngles.x - 360.0F : delta.eulerAngles.x,
                 -(delta.eulerAngles.y > 180 ? delta.eulerAngles.y - 360.0F : delta.eulerAngles.y),
                 delta.eulerAngles.z > 180 ? delta.eulerAngles.z - 360.0F : delta.eulerAngles.z
             );
-        }
 
-        public static Vector3d Clamp(this Vector3d value, double min, double max)
-        {
-            return new Vector3d(
+        public static Vector3d Clamp(this Vector3d value, double min, double max) =>
+            new Vector3d(
                 Clamp(value.x, min, max),
                 Clamp(value.y, min, max),
                 Clamp(value.z, min, max)
             );
-        }
 
         public static double Clamp(double val, double min, double max)
         {
@@ -89,32 +62,26 @@ namespace MuMech
             return angle;
         }
 
-        public static Quaternion Add(this Quaternion left, Quaternion right)
-        {
-            return new Quaternion(
+        public static Quaternion Add(this Quaternion left, Quaternion right) =>
+            new Quaternion(
                 left.x + right.x,
                 left.y + right.y,
                 left.z + right.z,
                 left.w + right.w);
-        }
 
-        public static Quaternion Mult(this Quaternion left, float lambda)
-        {
-            return new Quaternion(
+        public static Quaternion Mult(this Quaternion left, float lambda) =>
+            new Quaternion(
                 left.x * lambda,
                 left.y * lambda,
                 left.z * lambda,
                 left.w * lambda);
-        }
 
-        public static Quaternion Conj(this Quaternion left)
-        {
-            return new Quaternion(
+        public static Quaternion Conj(this Quaternion left) =>
+            new Quaternion(
                 -left.x,
                 -left.y,
                 -left.z,
                 left.w);
-        }
 
         public static Vector3d Project(this Vector3d vector, Vector3d onNormal)
         {
@@ -122,17 +89,11 @@ namespace MuMech
             return normal * Vector3d.Dot(vector, normal);
         }
 
-        public static bool IsFinite(this Vector3d vector)
-        {
-            return vector[0].IsFinite() && vector[1].IsFinite() && vector[2].IsFinite();
-        }
+        public static bool IsFinite(this Vector3d vector) => vector[0].IsFinite() && vector[1].IsFinite() && vector[2].IsFinite();
 
         // +/- infinity is not a finite number (not finite)
         // NaN is also not a finite number (not a number)
-        public static bool IsFinite(this double v)
-        {
-            return !double.IsNaN(v) && !double.IsInfinity(v);
-        }
+        public static bool IsFinite(this double v) => !double.IsNaN(v) && !double.IsInfinity(v);
 
         public static double NextGaussian(this Random r, double mu = 0, double sigma = 1)
         {
@@ -147,35 +108,17 @@ namespace MuMech
             return rand_normal;
         }
 
-        public static V3 WorldToV3Rotated(this Vector3d vector)
-        {
-            return (QuaternionD.Inverse(Planetarium.fetch.rotation) * vector).xzy.ToV3();
-        }
+        public static V3 WorldToV3Rotated(this Vector3d vector) => (QuaternionD.Inverse(Planetarium.fetch.rotation) * vector).xzy.ToV3();
 
-        public static V3 WorldToV3(this Vector3d vector)
-        {
-            return vector.xzy.ToV3();
-        }
+        public static V3 WorldToV3(this Vector3d vector) => vector.xzy.ToV3();
 
-        public static V3 ToV3(this Vector3d vector)
-        {
-            return new V3(vector.x, vector.y, vector.z);
-        }
+        public static V3 ToV3(this Vector3d vector) => new V3(vector.x, vector.y, vector.z);
 
-        public static Vector3d ToVector3d(this V3 vector)
-        {
-            return new Vector3d(vector.x, vector.y, vector.z);
-        }
+        public static Vector3d ToVector3d(this V3 vector) => new Vector3d(vector.x, vector.y, vector.z);
 
-        public static Vector3d V3ToWorld(this V3 vector)
-        {
-            return vector.ToVector3d().xzy;
-        }
+        public static Vector3d V3ToWorld(this V3 vector) => vector.ToVector3d().xzy;
 
-        public static Vector3d V3ToWorldRotated(this V3 vector)
-        {
-            return Planetarium.fetch.rotation * vector.ToVector3d().xzy;
-        }
+        public static Vector3d V3ToWorldRotated(this V3 vector) => Planetarium.fetch.rotation * vector.ToVector3d().xzy;
 
         public static void LoadH1(this H1 h, FloatCurve f)
         {
@@ -187,14 +130,8 @@ namespace MuMech
                 h.Add(frame.time, frame.value, frame.inTangent, frame.outTangent);
         }
 
-        public static Q3 ToQ3(this QuaternionD q)
-        {
-            return new Q3(q.z, q.y, q.x, -q.w);
-        }
+        public static Q3 ToQ3(this QuaternionD q) => new Q3(q.z, q.y, q.x, -q.w);
 
-        public static QuaternionD ToQuaternionD(this Q3 q)
-        {
-            return new QuaternionD(q.z, q.y, q.x, -q.w);
-        }
+        public static QuaternionD ToQuaternionD(this Q3 q) => new QuaternionD(q.z, q.y, q.x, -q.w);
     }
 }

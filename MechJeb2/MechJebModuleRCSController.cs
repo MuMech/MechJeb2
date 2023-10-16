@@ -144,10 +144,7 @@ namespace MuMech
 
         // When evaluating how fast RCS can accelerate and calculate a speed that available thrust should
         // be multiplied by that since the PID controller actual lower the used acceleration
-        public double rcsAccelFactor()
-        {
-            return pid.Kp;
-        }
+        public double rcsAccelFactor() => pid.Kp;
 
         protected override void OnModuleDisabled()
         {
@@ -222,14 +219,14 @@ namespace MuMech
                 for (int i = 0; i < Vector6.Values.Length; i++)
                 {
                     Vector6.Direction dir = Vector6.Values[i];
-                    double dirDv = Vector3d.Dot(velocityDelta, Vector6.directions[(int)dir]);
+                    double dirDv = Vector3d.Dot(velocityDelta, Vector6.Directions[(int)dir]);
                     double dirAvail = VesselState.rcsThrustAvailable[dir];
                     if (dirAvail > 0 && Math.Abs(dirDv) > 0.001)
                     {
                         double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / VesselState.mass);
                         if (dirAction > 0)
                         {
-                            rcs += Vector6.directions[(int)dir] * dirAction;
+                            rcs += Vector6.Directions[(int)dir] * dirAction;
                         }
                     }
                 }

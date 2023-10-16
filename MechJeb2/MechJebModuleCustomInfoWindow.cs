@@ -49,10 +49,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         private EditableInt refreshRate = 10;
 
-        public void UpdateRefreshRate()
-        {
-            refreshInterval = TimeSpan.FromSeconds(1d / refreshRate);
-        }
+        public void UpdateRefreshRate() => refreshInterval = TimeSpan.FromSeconds(1d / refreshRate);
 
         public override void OnDestroy()
         {
@@ -138,10 +135,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(250), GUILayout.Height(30) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
 
         public override void DrawGUI(bool inEditor)
         {
@@ -206,15 +200,9 @@ namespace MuMech
             }
         }
 
-        public override string GetName()
-        {
-            return title;
-        }
+        public override string GetName() => title;
 
-        public override string IconName()
-        {
-            return title;
-        }
+        public override string IconName() => title;
 
         public MechJebModuleCustomInfoWindow(MechJebCore core) : base(core) { }
     }
@@ -343,10 +331,7 @@ namespace MuMech
             }
         }
 
-        public override void OnStart(PartModule.StartState state)
-        {
-            editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
-        }
+        public override void OnStart(PartModule.StartState state) => editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
 
         private void RegisterInfoItems(object obj)
         {
@@ -567,20 +552,11 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions()
-        {
-            return new[] { GUILayout.Width(200), GUILayout.Height(540) };
-        }
+        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(540) };
 
-        public override string GetName()
-        {
-            return CachedLocalizer.Instance.MechJeb_WindowEd_title; //Custom Window Editor
-        }
+        public override string GetName() => CachedLocalizer.Instance.MechJeb_WindowEd_title; //Custom Window Editor
 
-        public override string IconName()
-        {
-            return "Custom Window Editor";
-        }
+        public override string IconName() => "Custom Window Editor";
 
         public MechJebModuleCustomWindowEditor(MechJebCore core)
             : base(core)
@@ -820,10 +796,7 @@ namespace MuMech
             this.obj = obj;
         }
 
-        public override void DrawItem()
-        {
-            draw();
-        }
+        public override void DrawItem() => draw();
 
         public override void UpdateItem()
         {
