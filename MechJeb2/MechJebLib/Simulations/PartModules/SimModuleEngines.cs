@@ -79,7 +79,6 @@ namespace MechJebLib.Simulations.PartModules
         public void Activate()
         {
             IsOperational    = true;
-            ThrustPercentage = 100f;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
