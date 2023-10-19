@@ -48,7 +48,7 @@ namespace MechJebLib.Simulations.PartModules
         public float  FlowMultCap;
         public float  FlowMultCapSharpness;
         public bool   ThrottleLocked;
-        public float  ThrustPercentage;
+        public float  ThrottleLimiter;
         public bool   AtmChangeFlow;
         public bool   UseAtmCurve;
         public bool   UseAtmCurveIsp;
@@ -76,10 +76,7 @@ namespace MechJebLib.Simulations.PartModules
         private double _machNumber  => Part.Vessel.MachNumber;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Activate()
-        {
-            IsOperational    = true;
-        }
+        public void Activate() => IsOperational = true;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateEngineStatus()
@@ -233,7 +230,7 @@ namespace MechJebLib.Simulations.PartModules
             if (minFuelFlow == 0 && MinThrust > 0) minFuelFlow = MinThrust / (AtmosphereCurve.Evaluate(0f) * G);
             if (maxFuelFlow == 0 && MaxThrust > 0) maxFuelFlow = MaxThrust / (AtmosphereCurve.Evaluate(0f) * G);
 
-            return Lerp(minFuelFlow, maxFuelFlow, _throttle * 0.01f * ThrustPercentage) * FlowMultiplier;
+            return Lerp(minFuelFlow, maxFuelFlow, _throttle * 0.01f * ThrottleLimiter) * FlowMultiplier;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -243,7 +240,7 @@ namespace MechJebLib.Simulations.PartModules
             ThrustMax     = V3.zero;
             ThrustMin     = V3.zero;
 
-            double thrustLimiter = ThrustPercentage / 100f;
+            double thrustLimiter = ThrottleLimiter / 100f;
 
             double maxThrust = MaxFuelFlow * FlowMultiplier * ISP * G * MultIsp;
             double minThrust = MinFuelFlow * FlowMultiplier * ISP * G * MultIsp;
