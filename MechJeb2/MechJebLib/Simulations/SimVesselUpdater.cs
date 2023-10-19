@@ -158,12 +158,12 @@ namespace MechJebLib.Simulations
                     return;
                 }
 
-                engine.IsEnabled        = kspEngine.isEnabled;
-                engine.IsOperational    = kspEngine.isOperational;
-                engine.ThrustPercentage = kspEngine.thrustPercentage;
-                engine.MultIsp          = kspEngine.multIsp;
-                engine.NoPropellants    = kspEngine is { flameout: true, statusL2: "No propellants" };
-                engine.ModuleResiduals  = 0;
+                engine.IsEnabled       = kspEngine.isEnabled;
+                engine.IsOperational   = kspEngine.isOperational;
+                engine.ThrottleLimiter = kspEngine.thrustPercentage;
+                engine.MultIsp         = kspEngine.multIsp;
+                engine.NoPropellants   = kspEngine is { flameout: true, statusL2: "No propellants" };
+                engine.ModuleResiduals = 0;
 
                 if (engine.isModuleEnginesRF && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
                     engine.ModuleResiduals = doubleVal;
