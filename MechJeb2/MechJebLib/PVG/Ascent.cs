@@ -195,7 +195,7 @@ namespace MechJebLib.PVG
                 bootphases2[_optimizedCoastPhase].bt = total;
             }
 
-            using Optimizer pvg2 = builder.Build(bootphases2);
+            Optimizer pvg2 = builder.Build(bootphases2);
             pvg2.Bootstrap(solution);
             pvg2.Run();
 
@@ -216,21 +216,27 @@ namespace MechJebLib.PVG
 
             List<Phase> bootphases = DupPhases(_phases);
 
-            bootphases[bootphases.Count - 1].Infinite = true;
-            bootphases[bootphases.Count - 1].Unguided = false;
-
+            // set the coast phase to fixed time of zero
             if (_optimizedCoastPhase > -1)
             {
                 bootphases[_optimizedCoastPhase].OptimizeTime = false;
                 bootphases[_optimizedCoastPhase].bt           = 0;
             }
 
+            // switch the optimized phase to the top stage of the rocket
+            bootphases[_optimizedPhase].OptimizeTime = false;
+
+            // set the top stage to infinite + optimized + unguided
+            bootphases[bootphases.Count - 1].Infinite     = true;
+            bootphases[bootphases.Count - 1].Unguided     = false;
+            bootphases[bootphases.Count - 1].OptimizeTime = true;
+
             using Optimizer pvg = builder.Build(bootphases);
             pvg.Bootstrap(pvGuess, _r0.normalized);
             pvg.Run();
 
             if (!pvg.Success())
-                throw new Exception("Target unreachable (bootstrapping)");
+                throw new Exception("Target unreachable (infinite ISP)");
 
             using Solution solution = pvg.GetSolution();
             ApplyOldBurnTimesToPhases(solution);
@@ -246,14 +252,22 @@ namespace MechJebLib.PVG
                 _phases[_optimizedCoastPhase].bt           = total;
             }
 
-            using Optimizer pvg2 = builder.Build(_phases);
+            Optimizer pvg2 = builder.Build(_phases);
             pvg2.Bootstrap(solution);
             pvg2.Run();
 
             if (!pvg2.Success())
-                throw new Exception("Target unreachable");
+            {
+                // when analytic thrust integrals fail, the numerical thrust integrals may succeed.
+                ForceNumericalIntegration();
+                pvg2 = builder.Build(_phases);
+                pvg2.Bootstrap(solution);
+                pvg2.Run();
+                if (!pvg2.Success())
+                    throw new Exception("Target unreachable");
+            }
 
-            if (_attachAltFlag)
+            if (_attachAltFlag || _eccT < 1e-4)
                 return pvg2;
 
             // we have a periapsis attachment solution, redo with free attachment
@@ -262,7 +276,7 @@ namespace MechJebLib.PVG
             ApplyKepler(builder);
             ApplyOldBurnTimesToPhases(solution2);
 
-            using Optimizer pvg3 = builder.Build(_phases);
+            Optimizer pvg3 = builder.Build(_phases);
             pvg3.Bootstrap(solution2);
             pvg3.Run();
 
