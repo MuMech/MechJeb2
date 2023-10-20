@@ -58,6 +58,12 @@ namespace MechJebLib.Utils
         private readonly Action<Task<T>>  _onTaskFaultedDelegate;
         private readonly Action<Task<T>>  _onTaskCancelledDelegate;
 
+        public void RunSync(object? o)
+        {
+            Result      = _executeDelegate(o);
+            ResultReady = true;
+        }
+
         public void StartJob(object? o)
         {
             ResultReady = false;

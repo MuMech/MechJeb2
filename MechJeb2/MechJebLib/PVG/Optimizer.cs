@@ -18,9 +18,9 @@ namespace MechJebLib.PVG
     {
         public double      ZnormTerminationLevel = 1e-9;
         public double      Znorm;
-        public int         MaxIter          { get; set; } = 20000; // this could maybe be pushed down
-        public double      LmEpsx           { get; set; } = 1e-10; // we terminate manually at 1e-9 so could lower this?
-        public double      LmDiffStep       { get; set; } = 1e-9;
+        public int         MaxIter          { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
+        public double      LmEpsx           { get; set; } = EPS;    // rely more on manual termination at znorm=1e-9
+        public double      LmDiffStep       { get; set; } = 1e-10;
         public int         OptimizerTimeout { get; set; } = 5000; // milliseconds
         public int         LmStatus;
         public int         LmIterations;
@@ -236,7 +236,7 @@ namespace MechJebLib.PVG
             {
                 // pin the maximum time of any finite burn phase to below the tau value of the stage
                 if (!_phases[i].Coast && !_phases[i].Infinite && _phases[i].OptimizeTime)
-                    bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau * 0.999;
+                    bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau;
 
                 // pin the time of any phase which isn't allowed to be optimized
                 if (!_phases[i].OptimizeTime)

@@ -115,16 +115,72 @@ namespace MechJebLibTest.PVGTests
             ClampPi(tanof).ShouldEqual(0.090826664012324976, 1e-7);
         }
 
-        // target a 185x186 without getting apopasis attachment.  unfortuantely, i don't have a use case that
-        // exercizes the logic to re-pin to the periapsis because it grabs the apopasis incorrectly.
+        // extreme 1010 x 1012 and still get free attachment
         [Fact]
-        public void Kepler3NoApoapsisAttachment()
+        public void Kepler3ExtremeElliptical()
         {
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
             double t0 = 0;
-            double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 186e+3;
+            double PeR = 6.371e+6 + 1.010e+6;
+            double ApR = 6.371e+6 + 1.012e+6;
+            double rbody = 6.371e+6;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
+
+            Ascent ascent = Ascent.Builder()
+                .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)
+                .AddStageUsingThrust(32758.6353093992, 456100.006103516, 315.000112652779, 178.63040653022, 3, 3, true)
+                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
+                .Build();
+
+            ascent.Run();
+
+            Optimizer pvg = ascent.GetOptimizer() ?? throw new Exception("null optimzer");
+
+            Solution solution = pvg.GetSolution();
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                Maths.KeplerianFromStateVectors(mu, rf, vf);
+
+            solution.R(0).ShouldEqual(r0);
+            solution.V(0).ShouldEqual(v0);
+            solution.M(0).ShouldEqual(157355.487476332);
+
+            // the lower epsilon values below here probably indicate that the free attachment solution is breaking down
+            solution.Constant(0).ShouldBeZero(1e-3);
+            solution.Constant(solution.Tmax).ShouldBeZero(1e-3);
+
+            solution.Vgo(0).ShouldEqual(18968.729888080918, 1e-7);
+            solution.Pv(0).ShouldEqual(new V3(0.39420604314896607, 0.024122181832433174, 0.21558209101216347), 1e-7);
+
+            double aprf = Maths.ApoapsisFromKeplerian(smaf, eccf);
+            double perf = Maths.PeriapsisFromKeplerian(smaf, eccf);
+
+            perf.ShouldEqual(PeR, 1e-9);
+            aprf.ShouldEqual(ApR, 1e-9);
+
+            pvg.Znorm.ShouldBeZero(1e-5);
+            smaf.ShouldEqual(7381999.9997271635, 1e-5);
+            eccf.ShouldEqual(0.00013546395462809413, 1e-5);
+            incf.ShouldEqual(incT, 1e-5);
+            lanf.ShouldEqual(Deg2Rad(270), 1e-2);
+            argpf.ShouldEqual(1.5561731710314275, 1e-5);
+            tanof.ShouldEqual(0.036325746839258599, 1e-5);
+        }
+
+        // extreme 1130 x 1132 which breaks free attachment and falls back to periapsis
+        [Fact]
+        public void Kepler3MoreExtremerElliptical()
+        {
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 1.130e+6;
+            double ApR = 6.371e+6 + 1.132e+6;
             double rbody = 6.371e+6;
             double incT = Deg2Rad(28.608);
             double mu = 3.986004418e+14;
@@ -153,8 +209,10 @@ namespace MechJebLibTest.PVGTests
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
-            solution.Vgo(0).ShouldEqual(8498.9352440057573, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.24009395607850137, 0.21526467329187604, 0.13094696426599889), 1e-7);
+
+            // this is 0.12 seconds before tau with an 18 kg final mass
+            solution.Vgo(0).ShouldEqual(27198.792190399912, 1e-7);
+            solution.Pv(0).ShouldEqual(new V3(0.42013374453123059, 0.013974700407340215, 0.22914045811295167), 1e-7);
 
             double aprf = Maths.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Maths.PeriapsisFromKeplerian(smaf, eccf);
@@ -162,13 +220,13 @@ namespace MechJebLibTest.PVGTests
             perf.ShouldEqual(PeR, 1e-9);
             aprf.ShouldEqual(ApR, 1e-9);
 
-            pvg.Znorm.ShouldBeZero(1e-9);
-            smaf.ShouldEqual(6556500.0000104867, 1e-7);
-            eccf.ShouldEqual(7.6259809968559891E-05, 1e-7);
+            pvg.Znorm.ShouldBeZero(1e-7);
+            smaf.ShouldEqual(7502000.0002534958, 1e-7);
+            eccf.ShouldEqual(0.0001332978218926981, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.6494150858682159, 1e-7);
-            tanof.ShouldEqual(0.09094016908398217, 1e-7);
+            argpf.ShouldEqual(1.6027749993714844, 1e-7);
+            tanof.ShouldEqual(0.00011182292330591537, 1e-7);
         }
 
         [Fact]
@@ -207,8 +265,8 @@ namespace MechJebLibTest.PVGTests
 
             solution.Constant(0).ShouldBeZero(1e-4);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-4);
-            solution.Vgo(0).ShouldEqual(8498.6610944186486, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.24011527786624715, 0.21525367023286618, 0.13089596115507932), 1e-7);
+            solution.Vgo(0).ShouldEqual(8498.6702629355023, 1e-7);
+            solution.Pv(0).ShouldEqual(new V3(0.24008912999871768, 0.21525232653820714, 0.1309443327389036), 1e-7);
 
             double aprf = Maths.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Maths.PeriapsisFromKeplerian(smaf, eccf);
