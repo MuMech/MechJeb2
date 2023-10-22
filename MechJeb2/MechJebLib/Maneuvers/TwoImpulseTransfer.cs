@@ -7,7 +7,7 @@ using static System.Math;
 
 namespace MechJebLib.Maneuvers
 {
-    public class CoplanarTransfer
+    public static class TwoImpulseTransfer
     {
         private struct Args
         {
@@ -54,8 +54,8 @@ namespace MechJebLib.Maneuvers
                 func = dv1.magnitude;
         }
 
-        public static (V3 dv1, double dt1, V3 dv2, double dt2) Maneuver(double mu, V3 r1, V3 v1, V3 r2, V3 v2, double dtguess, double offsetGuess,
-            bool coplanar = true, bool rendezvous = true, bool capture = true, double dtmin = double.NegativeInfinity,
+        private static (V3 dv1, double dt1, V3 dv2, double dt2) Maneuver(double mu, V3 r1, V3 v1, V3 r2, V3 v2, double dtguess, double offsetGuess,
+            bool coplanar = true, bool capture = true, double dtmin = double.NegativeInfinity,
             double dtmax = double.PositiveInfinity,
             double ttmin = double.NegativeInfinity, double ttmax = double.PositiveInfinity, double offsetMin = double.NegativeInfinity,
             double offsetMax = double.PositiveInfinity, bool optguard = false)
@@ -138,7 +138,7 @@ namespace MechJebLib.Maneuvers
 
             if (rep.terminationtype < 0)
                 throw new Exception(
-                    $"CoplanarTransfer.Maneuver({mu}, {r1}, {v1}, {r2}, {v2}): CG solver terminated abnormally: {rep.terminationtype}"
+                    $"TwoImpulseTransfer.Maneuver({mu}, {r1}, {v1}, {r2}, {v2}): CG solver terminated abnormally: {rep.terminationtype}"
                 );
 
             if (optguard)
@@ -157,64 +157,82 @@ namespace MechJebLib.Maneuvers
             return (dv1 * scale.VelocityScale, x[0] * scale.TimeScale, dv2 * scale.VelocityScale, (x[0] + x[1]) * scale.TimeScale);
         }
 
+        private static (V3 dv1, double dt1, V3 dv2, double dt2) ManeuverInternal(double mu, V3 r1, V3 v1, V3 r2, V3 v2, double dtguess,
+            double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true,
+            bool fixedtime = false, bool optguard = false)
+        {
+            V3 dv1, dv2;
+            double dt1, dt2;
+
+            double dtmin = double.NegativeInfinity;
+            double dtmax = double.PositiveInfinity;
+
+            if (fixedtime)
+            {
+                dtmin = dtguess;
+                dtmax = dtguess;
+            }
+
+            if (rendezvous)
+            {
+                double offsetGuess = 0;
+                double offsetMin = 0;
+                double offsetMax = 0;
+                if (lagTime.IsFinite())
+                {
+                    offsetMin   = -lagTime;
+                    offsetMax   = -lagTime;
+                    offsetGuess = -lagTime;
+                }
+
+                (dv1, dt1, dv2, dt2) =
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, dtmin: dtmin, dtmax: dtmax, offsetMin: offsetMin, offsetMax: offsetMax, coplanar: coplanar, capture: capture, optguard: optguard);
+            }
+            else
+            {
+                (dv1, dt1, dv2, dt2) =
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, 0, dtmin: dtmin, dtmax: dtmax , coplanar: coplanar, capture: capture, optguard: optguard);
+
+                // we have to try the other side of the target orbit since we might get eg. the DN instead of the AN when the AN is closer
+                // (this may be insufficient and may need more of a search box but then we're O(N^2) and i think basinhopping or porkchop
+                // plots will be the better solution)
+                double targetPeriod = Maths.PeriodFromStateVectors(mu, r2, v2);
+
+                (V3 a, double b, V3 c, double d) =
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar: coplanar, capture: capture, optguard: optguard);
+
+                if (b > 0 && (b < dt1 || dt1 < 0))
+                {
+                    dv1 = a;
+                    dt1 = b;
+                    dv2 = c;
+                    dt2 = d;
+                }
+            }
+
+            return (dv1, dt1, dv2, dt2);
+        }
+
         public static (V3 dv1, double dt1, V3 dv2, double dt2) NextManeuver(double mu, V3 r1, V3 v1, V3 r2, V3 v2, int maxiter = 50,
-            double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true, bool optguard = false)
+            double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true,
+            bool fixedTime = false, bool optguard = false)
         {
             double synodicPeriod = Maths.SynodicPeriod(mu, r1, v1, r2, v2);
-            double targetPeriod = Maths.PeriodFromStateVectors(mu, r2, v2);
-            double dtguess = 0;
 
+            if (fixedTime)
+                return ManeuverInternal(mu, r1, v1, r2, v2, dtguess: 0, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard, lagTime:lagTime, fixedtime: true);
+
+            double dtguess = 0;
             for (int iter = 0; iter < maxiter; iter++)
             {
-                V3 dv1, dv2;
-                double dt1, dt2;
-                double offsetGuess = 0;
-
-                if (rendezvous)
-                {
-                    double offsetMin = 0;
-                    double offsetMax = 0;
-                    if (lagTime.IsFinite())
-                    {
-                        offsetMin   = -lagTime;
-                        offsetMax   = -lagTime;
-                        offsetGuess = -lagTime;
-                    }
-
-                    (dv1, dt1, dv2, dt2) =
-                        Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, offsetMin: offsetMin, offsetMax: offsetMax, coplanar: coplanar,
-                            rendezvous: true, capture: capture,
-                            optguard: optguard);
-                }
-
-                else
-                {
-                    (dv1, dt1, dv2, dt2) =
-                        Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, coplanar, false, capture,
-                            optguard: optguard);
-
-                    // we have to try the other side of the target orbit since we might get eg. the DN instead of the AN when the AN is closer
-                    // (this may be insufficient and may need more of a search box but then we're O(N^2) and i think basinhopping or porkchop
-                    // plots will be the better solution)
-
-                    (V3 a, double b, V3 c, double d) =
-                        Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar, optguard: optguard,
-                            rendezvous: false, capture: capture);
-                    if (b > 0 && (b < dt1 || dt1 < 0))
-                    {
-                        dv1 = a;
-                        dt1 = b;
-                        dv2 = c;
-                        dt2 = d;
-                    }
-                }
+                (V3 dv1, double dt1, V3 dv2, double dt2) = ManeuverInternal(mu, r1, v1, r2, v2, dtguess: dtguess, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard, lagTime:lagTime);
 
                 if (dt1 > 0)
                     return (dv1, dt1, dv2, dt2);
                 dtguess += synodicPeriod * 0.10;
             }
 
-            throw new MechJebLibException($"CoplanarTransfer.NextManeuver({mu}, {r1}, {v1}, {v2}, {r2}): too many iterations");
+            throw new MechJebLibException($"TwoImpulseTransfer.NextManeuver({mu}, {r1}, {v1}, {v2}, {r2}): too many iterations");
         }
     }
 }
