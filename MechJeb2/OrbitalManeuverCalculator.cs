@@ -154,14 +154,14 @@ namespace MuMech
         //Assumes o and target are in approximately the same plane, and orbiting in the same direction.
         //Also assumes that o is a perfectly circular orbit (though result should be OK for small eccentricity).
         public static ( Vector3d dV1, double UT1, Vector3d dV2, double UT2) DeltaVAndTimeForHohmannTransfer(Orbit o, Orbit target, double ut,
-            double lagTime = double.NaN,
+            double lagTime = double.NaN, bool fixedTime = false,
             bool coplanar = true, bool rendezvous = true, bool capture = true)
         {
             (V3 r1, V3 v1) = o.RightHandedStateVectorsAtUT(ut);
             (V3 r2, V3 v2) = target.RightHandedStateVectorsAtUT(ut);
 
             (V3 dv1, double dt1, V3 dv2, double dt2) =
-                CoplanarTransfer.NextManeuver(o.referenceBody.gravParameter, r1, v1, r2, v2, lagTime: lagTime, coplanar: coplanar,
+                TwoImpulseTransfer.NextManeuver(o.referenceBody.gravParameter, r1, v1, r2, v2, lagTime: lagTime, coplanar: coplanar,
                     rendezvous: rendezvous, capture: capture);
 
             return (dv1.V3ToWorld(), ut + dt1, dv2.V3ToWorld(), ut + dt2);

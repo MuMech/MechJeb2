@@ -59,7 +59,7 @@
         <Compile Include="AssertionExtensions.cs"/>
         <Compile Include="ControlTests\PIDLoopTests.cs"/>
         <Compile Include="ManeuversTests\ChangeOrbitalElementTests.cs"/>
-        <Compile Include="ManeuversTests\CoplanarTransferTests.cs"/>
+        <Compile Include="ManeuversTests\TwoImpulseTransferTests.cs"/>
         <Compile Include="ManeuversTests\ReturnFromMoonTests.cs"/>
         <Compile Include="ManeuversTests\Simple.cs"/>
         <Compile Include="MathsTests\BisectionTests.cs"/>
