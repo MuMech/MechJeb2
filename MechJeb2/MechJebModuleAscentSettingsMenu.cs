@@ -93,7 +93,7 @@ namespace MuMech
                 GUILayout.Toggle(_ascentSettings.AutoDeployAntennas, CachedLocalizer.Instance.MechJeb_Ascent_checkbox7); //Auto-deploy antennas
 
             GUILayout.BeginHorizontal();
-            Core.Node.autowarp = GUILayout.Toggle(Core.Node.autowarp, CachedLocalizer.Instance.MechJeb_Ascent_checkbox8); //Auto-warp
+            Core.Node.Autowarp = GUILayout.Toggle(Core.Node.Autowarp, CachedLocalizer.Instance.MechJeb_Ascent_checkbox8); //Auto-warp
             if (_ascentSettings.AscentType != AscentType.PVG)
             {
                 _ascentSettings.SkipCircularization =

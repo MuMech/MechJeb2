@@ -56,7 +56,7 @@ namespace MuMech
                 if (autopilot.Enabled) GUILayout.Label(Localizer.Format("#MechJeb_RZauto_label7", autopilot.status)); //"Status: <<1>>"
             }
 
-            Core.Node.autowarp = GUILayout.Toggle(Core.Node.autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1")); //"Auto-warp"
+            Core.Node.Autowarp = GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_RZauto_checkbox1")); //"Auto-warp"
 
             GUILayout.EndVertical();
 

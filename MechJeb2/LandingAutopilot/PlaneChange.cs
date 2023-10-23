@@ -82,7 +82,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (Core.Node.autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
+                    if (Core.Node.Autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status15"); //"Moving to low orbit plane change burn point"
                 }
 

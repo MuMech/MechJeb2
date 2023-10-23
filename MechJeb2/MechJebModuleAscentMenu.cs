@@ -260,7 +260,7 @@ namespace MuMech
             Profiler.BeginSample("MJ.GUIWindow.ShowAutoWarp");
             GUILayout.BeginVertical(GUI.skin.box);
 
-            if (Core.Node.autowarp)
+            if (Core.Node.Autowarp)
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label33, _ascentSettings.WarpCountDown, "s", 35); //Launch countdown:
 
             bool targetExists = Core.Target.NormalTargetExists;

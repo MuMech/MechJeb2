@@ -137,7 +137,7 @@ namespace MuMech
                     35); //Touchdown speed:
 
                 if (Core.Landing != null)
-                    Core.Node.autowarp = GUILayout.Toggle(Core.Node.autowarp, Localizer.Format("#MechJeb_LandingGuidance_checkbox1")); //Auto-warp
+                    Core.Node.Autowarp = GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_LandingGuidance_checkbox1")); //Auto-warp
 
                 Core.Landing.DeployGears =
                     GUILayout.Toggle(Core.Landing.DeployGears, Localizer.Format("#MechJeb_LandingGuidance_checkbox2")); //Deploy Landing Gear

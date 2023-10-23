@@ -176,7 +176,7 @@ namespace MuMech
                 Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
             }
 
-            if (Core.Node.autowarp)
+            if (Core.Node.Autowarp)
             {
                 //warp at x2 physical warp:
                 Core.Warp.WarpPhysicsAtRate(2);

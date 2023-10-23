@@ -387,8 +387,8 @@ namespace MuMech
 
                     CreateFeatureButton(maneuverPlannerModule, "Auto_Warp", "MechJeb Auto-warp", b =>
                     {
-                        Core.Node.autowarp = !Core.Node.autowarp;
-                    }, () => Core.Node.autowarp);
+                        Core.Node.Autowarp = !Core.Node.Autowarp;
+                    }, () => Core.Node.Autowarp);
                 }
             }
         }

@@ -114,7 +114,7 @@ namespace MuMech
                 }
 
                 //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
-                if (_warpReady && Core.Node.autowarp)
+                if (_warpReady && Core.Node.Autowarp)
                 {
                     // Make sure if we're hovering that we don't go straight into too fast of a warp
                     // (g * 5 is average velocity falling for 10 seconds from a hover)
