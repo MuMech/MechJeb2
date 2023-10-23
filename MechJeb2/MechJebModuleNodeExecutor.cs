@@ -136,21 +136,22 @@ namespace MuMech
             s.Z = -1.0F;
         }
 
+        private bool _isLoadedPrincipia => VesselState.isLoadedPrincipia;
+
         public override void OnFixedUpdate()
         {
             _nearingBurn = false;
-            bool hasPrincipia = VesselState.isLoadedPrincipia;
             bool hasNodes = Vessel.patchedConicSolver.maneuverNodes.Count > 0;
             if (!Vessel.patchedConicsUnlocked()
-                || (!hasPrincipia && !hasNodes))
+                || (!_isLoadedPrincipia && !hasNodes))
             {
                 Abort();
                 return;
             }
 
-            if (hasPrincipia && _mode == Mode.ONE_PNODE)
+            if (_isLoadedPrincipia && _mode == Mode.ONE_PNODE)
             {
-                if (_dvLeft < Tolerance)
+                if (_dvLeft < 0)
                 {
                     BurnTriggered = false;
 
@@ -188,17 +189,9 @@ namespace MuMech
 
                 HandleAutowarp(ignitionUT);
 
-                HandleAligning(_dvLeft);
+                HandleAligningAndThrust(_dvLeft);
 
-                if ((BurnTriggered || _nearingBurn) && MuUtils.PhysicsRunning())
-                {
-                    // decrement remaining dV based on engine and RCS thrust
-                    // Since this is Principia, we can't rely on the node's delta V itself updating, we have to do it ourselves.
-                    // We also can't just use vesselState.currentThrustAccel because only engines are counted.
-                    // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
-                    Vector3d dV = (Vessel.acceleration_immediate - Vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
-                    _dvLeft -= Vector3d.Dot(dV, Core.Attitude.targetAttitude());
-                }
+                DecrementDvLeft();
             }
             else if (hasNodes)
             {
@@ -239,19 +232,32 @@ namespace MuMech
 
                 _nearingBurn = ignitionUT <= VesselState.time;
 
-                //(!double.IsInfinity(num) && num > 0.0 && num2 < num) || num2 <= 0.0
-                if (_mode == Mode.ONE_NODE || _mode == Mode.ALL_NODES)
+                if (ignitionUT < VesselState.time)
                 {
-                    if (ignitionUT < VesselState.time)
-                    {
-                        BurnTriggered = true;
-                        if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
-                    }
+                    BurnTriggered = true;
+                    if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
                 }
 
                 HandleAutowarp(ignitionUT);
 
-                HandleAligning(dVLeft);
+                HandleAligningAndThrust(dVLeft);
+
+                DecrementDvLeft();
+            }
+        }
+
+        private void DecrementDvLeft()
+        {
+            if (!_isLoadedPrincipia) return;
+
+            if ((BurnTriggered || _nearingBurn) && MuUtils.PhysicsRunning())
+            {
+                // decrement remaining dV based on engine and RCS thrust
+                // Since this is Principia, we can't rely on the node's delta V itself updating, we have to do it ourselves.
+                // We also can't just use vesselState.currentThrustAccel because only engines are counted.
+                // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
+                Vector3d dV = (Vessel.acceleration_immediate - Vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
+                _dvLeft -= Vector3d.Dot(dV, Core.Attitude.targetAttitude());
             }
         }
 
@@ -275,31 +281,29 @@ namespace MuMech
             }
         }
 
-        //private void HandleAligning(double timeToNode, double halfBurnTime, double dVLeft)
-        private void HandleAligning(double dVLeft)
+        private void HandleAligningAndThrust(double dVLeft)
         {
             Core.Thrust.TargetThrottle = 0;
 
-            if (BurnTriggered)
+            if (!BurnTriggered) return;
+
+            if (_alignedForBurn)
             {
-                if (_alignedForBurn)
+                if (Core.Attitude.attitudeAngleFromTarget() < 90)
                 {
-                    if (Core.Attitude.attitudeAngleFromTarget() < 90)
-                    {
-                        double timeConstant = dVLeft > 10 || VesselState.minThrustAccel > 0.25 * VesselState.maxThrustAccel ? 0.5 : 2;
-                        Core.Thrust.ThrustForDV(dVLeft + Tolerance, timeConstant);
-                    }
-                    else
-                    {
-                        _alignedForBurn = false;
-                    }
+                    double timeConstant = dVLeft > 10 || VesselState.minThrustAccel > 0.25 * VesselState.maxThrustAccel ? 0.5 : 2;
+                    Core.Thrust.ThrustForDV(dVLeft + Tolerance, timeConstant);
                 }
                 else
                 {
-                    if (Core.Attitude.attitudeAngleFromTarget() < 2)
-                    {
-                        _alignedForBurn = true;
-                    }
+                    _alignedForBurn = false;
+                }
+            }
+            else
+            {
+                if (Core.Attitude.attitudeAngleFromTarget() < 2)
+                {
+                    _alignedForBurn = true;
                 }
             }
         }
