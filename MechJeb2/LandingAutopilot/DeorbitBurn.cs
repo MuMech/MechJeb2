@@ -108,7 +108,7 @@ namespace MuMech
                 else
                 {
                     Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT, Core.Landing);
-                    if (Core.Node.autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 10));
+                    if (Core.Node.Autowarp) Core.Warp.WarpRegularAtRate((float)(Orbit.period / 10));
 
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status8"); //"Moving to high deorbit burn point"
                 }

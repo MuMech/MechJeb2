@@ -281,10 +281,10 @@ namespace MuMech
                 }
 
                 GUILayout.BeginHorizontal();
-                Core.Node.autowarp =
-                    GUILayout.Toggle(Core.Node.autowarp, Localizer.Format("#MechJeb_NodeEd_checkbox1"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                Core.Node.Autowarp =
+                    GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_NodeEd_checkbox1"), GUILayout.ExpandWidth(true)); //"Auto-warp"
                 GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label7"), GUILayout.ExpandWidth(false));                            //"Tolerance:"
-                Core.Node.tolerance.text = GUILayout.TextField(Core.Node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                Core.Node.Tolerance.text = GUILayout.TextField(Core.Node.Tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
             }

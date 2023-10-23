@@ -117,7 +117,7 @@ namespace MuMech
                 }
                 else
                 {
-                    if (Core.Node.autowarp)
+                    if (Core.Node.Autowarp)
                         Core.Warp.WarpToUT(_launchTime - AscentSettings.WarpCountDown);
                 }
 
@@ -280,7 +280,7 @@ namespace MuMech
                 Core.Node.ExecuteOneNode(this);
             }
 
-            Status = Localizer.Format(Core.Node.burnTriggered ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
+            Status = Localizer.Format(Core.Node.BurnTriggered ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
         }
 
         protected abstract bool DriveAscent2();

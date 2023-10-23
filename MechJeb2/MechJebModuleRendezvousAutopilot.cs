@@ -37,7 +37,7 @@ namespace MuMech
                 return;
             }
 
-            Core.Node.autowarp = Core.Node.autowarp && Core.Target.Distance > 1000;
+            Core.Node.Autowarp = Core.Node.Autowarp && Core.Target.Distance > 1000;
 
             //If we get within the target distance and then next maneuver node is still
             //far in the future, delete it and we will create a new one to match velocities immediately.

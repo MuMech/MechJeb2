@@ -162,23 +162,23 @@ namespace MuMech
                 }
 
                 GUILayout.BeginHorizontal();
-                Core.Node.autowarp =
-                    GUILayout.Toggle(Core.Node.autowarp, Localizer.Format("#MechJeb_RZplan_checkbox"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                Core.Node.Autowarp =
+                    GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_RZplan_checkbox"), GUILayout.ExpandWidth(true)); //"Auto-warp"
                 GUILayout.Label(Localizer.Format("#MechJeb_RZplan_label9"), GUILayout.ExpandWidth(false));                           //"Tolerance:"
-                Core.Node.tolerance.text = GUILayout.TextField(Core.Node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                Core.Node.Tolerance.text = GUILayout.TextField(Core.Node.Tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.tolerance.val += 0.1;
+                    Core.Node.Tolerance.val += 0.1;
                 }
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.tolerance.val -= Core.Node.tolerance.val > 0.1 ? 0.1 : 0.0;
+                    Core.Node.Tolerance.val -= Core.Node.Tolerance.val > 0.1 ? 0.1 : 0.0;
                 }
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.tolerance.val = 0.1;
+                    Core.Node.Tolerance.val = 0.1;
                 }
 
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));

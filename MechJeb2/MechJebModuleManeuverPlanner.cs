@@ -156,26 +156,26 @@ namespace MuMech
                 }
 
                 GUILayout.BeginHorizontal();
-                Core.Node.autowarp =
-                    GUILayout.Toggle(Core.Node.autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                Core.Node.Autowarp =
+                    GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
 
                 GUILayout.BeginVertical();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Tolerance"), GUILayout.ExpandWidth(false)); //"Tolerance:"
-                Core.Node.tolerance.text = GUILayout.TextField(Core.Node.tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                Core.Node.Tolerance.text = GUILayout.TextField(Core.Node.Tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.tolerance.val += 0.1;
+                    Core.Node.Tolerance.val += 0.1;
                 }
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.tolerance.val -= Core.Node.tolerance.val > 0.1 ? 0.1 : 0.0;
+                    Core.Node.Tolerance.val -= Core.Node.Tolerance.val > 0.1 ? 0.1 : 0.0;
                 }
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.tolerance.val = 0.1;
+                    Core.Node.Tolerance.val = 0.1;
                 }
 
                 GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
@@ -183,20 +183,20 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Lead_time"), GUILayout.ExpandWidth(false)); //Lead time:
-                Core.Node.leadTime.text = GUILayout.TextField(Core.Node.leadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                Core.Node.LeadTime.text = GUILayout.TextField(Core.Node.LeadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.leadTime.val += 1;
+                    Core.Node.LeadTime.val += 1;
                 }
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.leadTime.val -= 1;
+                    Core.Node.LeadTime.val -= 1;
                 }
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
                 {
-                    Core.Node.leadTime.val = 3;
+                    Core.Node.LeadTime.val = 3;
                 }
 
                 GUILayout.Label("s", GUILayout.ExpandWidth(false));
