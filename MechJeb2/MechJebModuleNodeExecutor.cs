@@ -1,7 +1,8 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using UnityEngine;
+using static System.Math;
+using static MechJebLib.Statics;
 
 namespace MuMech
 {
@@ -15,10 +16,6 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble
             LeadTime = new EditableDouble(3); //how many seconds before a burn to end warp (note that we align with the node before warping)
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public readonly EditableDouble
-            Tolerance = new EditableDouble(0.1); //we decide we're finished the burn when the remaining dV falls below this value (in m/s)
 
         [ValueInfoItem("#MechJeb_NodeBurnLength", InfoItem.Category.Thrust)] //Node Burn Length
         public string NextNodeBurnTime()
@@ -39,8 +36,7 @@ namespace MuMech
                 dV = node.GetBurnVector(Orbit).magnitude;
             }
 
-            double halfBurnTime, spool;
-            return GuiUtils.TimeToDHMS(BurnTime(dV, out halfBurnTime, out spool));
+            return GuiUtils.TimeToDHMS(BurnTime(dV, out double _, out double _));
         }
 
         [ValueInfoItem("#MechJeb_NodeBurnCountdown", InfoItem.Category.Thrust)] //Node Burn Countdown
@@ -49,12 +45,11 @@ namespace MuMech
             if (!Vessel.patchedConicsUnlocked() || Vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 return "-";
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-            bool isPrincipia = VesselState.isLoadedPrincipia;
-            double dV = isPrincipia ? _dvLeft : node.GetBurnVector(Orbit).magnitude;
+            double dV = _isLoadedPrincipia ? _dvLeft : node.GetBurnVector(Orbit).magnitude;
 
             double ut = node.UT;
             BurnTime(dV, out double halfBurnTIme, out double spool);
-            if (isPrincipia)
+            if (_isLoadedPrincipia)
                 ut -= spool;
             else
                 ut -= halfBurnTIme; // already takes spoolup into account
@@ -66,17 +61,15 @@ namespace MuMech
         {
             _mode = Mode.ONE_NODE;
             Users.Add(controller);
-            BurnTriggered   = false;
-            _alignedForBurn = false;
-            _dvLeft         = 0;
+            BurnTriggered = false;
+            _dvLeft       = 0;
         }
 
         public void ExecuteOnePNode(object controller) //Principia Node
         {
             _mode = Mode.ONE_PNODE;
             Users.Add(controller);
-            BurnTriggered   = false;
-            _alignedForBurn = false;
+            BurnTriggered = false;
 
             _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
         }
@@ -85,9 +78,8 @@ namespace MuMech
         {
             _mode = Mode.ALL_NODES;
             Users.Add(controller);
-            BurnTriggered   = false;
-            _alignedForBurn = false;
-            _dvLeft         = 0;
+            BurnTriggered = false;
+            _dvLeft       = 0;
         }
 
         public void Abort()
@@ -116,16 +108,16 @@ namespace MuMech
 
         private Mode _mode = Mode.ONE_NODE;
 
-        public  bool   BurnTriggered;
-        private bool   _alignedForBurn;
-        private double _dvLeft; // for Principia
-        private bool   _nearingBurn;
+        public  bool     BurnTriggered;
+        private double   _dvLeft; // for Principia
+        private Vector3d _direction; // de-rotated world vector
 
         public override void Drive(FlightCtrlState s) => HandleUllage(s);
 
         private void HandleUllage(FlightCtrlState s)
         {
-            if (BurnTriggered || !_nearingBurn || !Core.Thrust.LimitToPreventUnstableIgnition ||
+            // FIXME: can't we rely on the Throttle+Staging controllers to do this right?
+            if (BurnTriggered || !Core.Thrust.LimitToPreventUnstableIgnition ||
                 VesselState.lowestUllage == VesselState.UllageState.VeryStable) return;
 
             if (!Vessel.hasEnabledRCSModules()) return;
@@ -136,14 +128,12 @@ namespace MuMech
             s.Z = -1.0F;
         }
 
-        private bool _isLoadedPrincipia => VesselState.isLoadedPrincipia;
+        private static bool _isLoadedPrincipia => VesselState.isLoadedPrincipia;
+        private        bool _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
 
         public override void OnFixedUpdate()
         {
-            _nearingBurn = false;
-            bool hasNodes = Vessel.patchedConicSolver.maneuverNodes.Count > 0;
-            if (!Vessel.patchedConicsUnlocked()
-                || (!_isLoadedPrincipia && !hasNodes))
+            if (!Vessel.patchedConicsUnlocked() || (!_isLoadedPrincipia && !_hasNodes))
             {
                 Abort();
                 return;
@@ -151,6 +141,9 @@ namespace MuMech
 
             if (_isLoadedPrincipia && _mode == Mode.ONE_PNODE)
             {
+                ManeuverNode node = _hasNodes ? Vessel.patchedConicSolver.maneuverNodes[0] : null;
+                _direction = NextDirection();
+
                 if (_dvLeft < 0)
                 {
                     BurnTriggered = false;
@@ -159,29 +152,11 @@ namespace MuMech
                     return;
                 }
 
-                //aim along the node
-                ManeuverNode node = hasNodes ? Vessel.patchedConicSolver.maneuverNodes[0] : null;
-                if (hasNodes)
-                {
-                    Core.Attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
-                }
-                else
-                {
-                    if (!Core.Attitude.attitudeKILLROT)
-                    {
-                        Core.Attitude.attitudeTo(Quaternion.LookRotation(Vessel.GetTransform().up, -Vessel.GetTransform().forward),
-                            AttitudeReference.INERTIAL, this);
-                        Core.Attitude.attitudeKILLROT = true;
-                    }
-                }
+                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL, this);
 
-                BurnTime(_dvLeft, out double halfBurnTime, out double spool);
+                double ignitionUT = CalculateIgnitionUT(node);
 
-                double ignitionUT = hasNodes ? node.UT - spool - LeadTime : -1;
-
-                _nearingBurn = ignitionUT <= VesselState.time;
-
-                if (ignitionUT < VesselState.time)
+                if (VesselState.time >= ignitionUT)
                 {
                     BurnTriggered = true;
                     if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
@@ -189,17 +164,18 @@ namespace MuMech
 
                 HandleAutowarp(ignitionUT);
 
-                HandleAligningAndThrust(_dvLeft);
+                HandleAligningAndThrust();
 
                 DecrementDvLeft();
             }
-            else if (hasNodes)
+            else if (_hasNodes)
             {
                 //check if we've finished a node:
                 ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-                double dVLeft = node.GetBurnVector(Orbit).magnitude;
+                _dvLeft = node.GetBurnVector(Orbit).magnitude;
+                _direction = NextDirection();
 
-                if (dVLeft < Tolerance && Core.Attitude.attitudeAngleFromTarget() > 5)
+                if (BurnTriggered && AngleFromTarget() >= 0.5 * PI)
                 {
                     BurnTriggered = false;
 
@@ -223,16 +199,11 @@ namespace MuMech
                     }
                 }
 
-                //aim along the node
-                Core.Attitude.attitudeTo(Vector3d.forward, AttitudeReference.MANEUVER_NODE_COT, this);
+                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL, this);
 
-                BurnTime(dVLeft, out double halfBurnTime, out double spool);
+                double ignitionUT = CalculateIgnitionUT(node);
 
-                double ignitionUT = node.UT - halfBurnTime - LeadTime;
-
-                _nearingBurn = ignitionUT <= VesselState.time;
-
-                if (ignitionUT < VesselState.time)
+                if (VesselState.time >= ignitionUT)
                 {
                     BurnTriggered = true;
                     if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
@@ -240,72 +211,83 @@ namespace MuMech
 
                 HandleAutowarp(ignitionUT);
 
-                HandleAligningAndThrust(dVLeft);
+                HandleAligningAndThrust();
 
                 DecrementDvLeft();
             }
+        }
+
+        private double AngleFromTarget()
+        {
+            Vector3d fwd = VesselState.forward.normalized;
+            Vector3d dir = (Planetarium.fetch.rotation * _direction).normalized;
+            return SafeAcos(Vector3d.Dot(fwd, dir));
+        }
+
+        private Vector3d NextDirection()
+        {
+            var invRot = QuaternionD.Inverse(Planetarium.fetch.rotation);
+
+            if (_isLoadedPrincipia && !_hasNodes) return _direction;
+
+            if (!_isLoadedPrincipia && _dvLeft < VesselState.minThrustAccel) return _direction;
+
+            return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit);
+        }
+
+        private double CalculateIgnitionUT(ManeuverNode node)
+        {
+            BurnTime(_dvLeft, out double halfBurnTime, out double spool);
+            if (_isLoadedPrincipia)
+                // in principia node.UT is the start of the burn and we need to subtract off the spool time
+                return _hasNodes ? node.UT - spool - LeadTime : -1;
+
+            // in stock node.UT is the center of the burn and the halfBurnTime calculation has the spool time
+            return node.UT - halfBurnTime - LeadTime;
         }
 
         private void DecrementDvLeft()
         {
             if (!_isLoadedPrincipia) return;
 
-            if ((BurnTriggered || _nearingBurn) && MuUtils.PhysicsRunning())
-            {
-                // decrement remaining dV based on engine and RCS thrust
-                // Since this is Principia, we can't rely on the node's delta V itself updating, we have to do it ourselves.
-                // We also can't just use vesselState.currentThrustAccel because only engines are counted.
-                // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
-                Vector3d dV = (Vessel.acceleration_immediate - Vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
-                _dvLeft -= Vector3d.Dot(dV, Core.Attitude.targetAttitude());
-            }
+            if (!BurnTriggered || !MuUtils.PhysicsRunning()) return;
+
+            // decrement remaining dV based on engine and RCS thrust
+            // Since this is Principia, we can't rely on the node's delta V itself updating, we have to do it ourselves.
+            // We also can't just use vesselState.currentThrustAccel because only engines are counted.
+            // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
+            Vector3d dV = (Vessel.acceleration_immediate - Vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
+            _dvLeft -= Vector3d.Dot(dV, Core.Attitude.targetAttitude());
         }
 
         private void HandleAutowarp(double ignitionUT)
         {
-            double timeToBurn = ignitionUT - VesselState.time - LeadTime;
-            //autowarp, but only if we're already aligned with the node
-            if (Autowarp && !BurnTriggered)
+            if (BurnTriggered || !Autowarp) return;
+
+            double timeToBurn = ignitionUT - VesselState.time;
+
+            if (timeToBurn > 600)
             {
-                if (timeToBurn > 600 || (MuUtils.PhysicsRunning()
-                        ? Core.Attitude.attitudeAngleFromTarget() < 1 && Core.vessel.angularVelocity.magnitude < 0.001
-                        : Core.Attitude.attitudeAngleFromTarget() < 10))
-                {
-                    Core.Warp.WarpToUT(VesselState.time + timeToBurn);
-                }
-                else
-                {
-                    //realign
-                    Core.Warp.MinimumWarp();
-                }
+                Core.Warp.WarpToUT(ignitionUT - 600);
+                return;
             }
+
+            if (MuUtils.PhysicsRunning()
+                    ? AngleFromTarget() < Deg2Rad(1) && Core.vessel.angularVelocity.magnitude < 0.001
+                    : AngleFromTarget() < Deg2Rad(2))
+                Core.Warp.WarpToUT(ignitionUT - 3);
+            else
+                Core.Warp.MinimumWarp();
         }
 
-        private void HandleAligningAndThrust(double dVLeft)
+        private void HandleAligningAndThrust()
         {
             Core.Thrust.TargetThrottle = 0;
 
             if (!BurnTriggered) return;
 
-            if (_alignedForBurn)
-            {
-                if (Core.Attitude.attitudeAngleFromTarget() < 90)
-                {
-                    double timeConstant = dVLeft > 10 || VesselState.minThrustAccel > 0.25 * VesselState.maxThrustAccel ? 0.5 : 2;
-                    Core.Thrust.ThrustForDV(dVLeft + Tolerance, timeConstant);
-                }
-                else
-                {
-                    _alignedForBurn = false;
-                }
-            }
-            else
-            {
-                if (Core.Attitude.attitudeAngleFromTarget() < 2)
-                {
-                    _alignedForBurn = true;
-                }
-            }
+            double timeConstant = _dvLeft > 10 || VesselState.minThrustAccel > 0.25 * VesselState.maxThrustAccel ? 0.5 : 2;
+            Core.Thrust.ThrustForDV(_dvLeft, timeConstant);
         }
 
         private double BurnTime(double dv, out double halfBurnTime, out double spoolupTime)
@@ -342,7 +324,7 @@ namespace MuMech
                     continue;
                 }
 
-                double stageBurnDv = Math.Min(s.DeltaV, dvLeft);
+                double stageBurnDv = Min(s.DeltaV, dvLeft);
                 dvLeft -= stageBurnDv;
 
                 double stageBurnFraction = stageBurnDv / s.DeltaV;
@@ -353,7 +335,7 @@ namespace MuMech
                 //      ln(m0 / m1) * stageBurnFraction = ln(m0 / m1b)
                 //      exp(ln(m0 / m1) * stageBurnFraction) = m0 / m1b
                 //      m1b = m0 / (exp(ln(m0 / m1) * stageBurnFraction))
-                double stageBurnFinalMass = s.StartMass / Math.Exp(Math.Log(s.StartMass / s.EndMass) * stageBurnFraction);
+                double stageBurnFinalMass = s.StartMass / Exp(Log(s.StartMass / s.EndMass) * stageBurnFraction);
                 double stageAvgAccel = s.Thrust / ((s.StartMass + stageBurnFinalMass) / 2d);
 
                 // Right now, for simplicity, we're ignoring throttle limits for
@@ -365,8 +347,8 @@ namespace MuMech
                     stageAvgAccel *= VesselState.throttleFixedLimit;
                 }
 
-                halfBurnTime += Math.Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
-                halfDvLeft   =  Math.Max(0, halfDvLeft - stageBurnDv);
+                halfBurnTime += Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
+                halfDvLeft   =  Max(0, halfDvLeft - stageBurnDv);
 
                 burnTime += stageBurnDv / stageAvgAccel;
 

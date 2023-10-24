@@ -160,26 +160,6 @@ namespace MuMech
                     GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
 
                 GUILayout.BeginVertical();
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Tolerance"), GUILayout.ExpandWidth(false)); //"Tolerance:"
-                Core.Node.Tolerance.text = GUILayout.TextField(Core.Node.Tolerance.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
-                if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
-                {
-                    Core.Node.Tolerance.val += 0.1;
-                }
-
-                if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
-                {
-                    Core.Node.Tolerance.val -= Core.Node.Tolerance.val > 0.1 ? 0.1 : 0.0;
-                }
-
-                if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
-                {
-                    Core.Node.Tolerance.val = 0.1;
-                }
-
-                GUILayout.Label("m/s", GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Lead_time"), GUILayout.ExpandWidth(false)); //Lead time:

@@ -224,6 +224,7 @@ namespace MuMech
         public double thrustCurrent   => Vector3d.Dot(thrustVectorLastFrame, forward);
 
         // Forward direction of thrust (CoT-CoM).normalized
+        // FIXME: this is Vector3d.zero if throttle is zero!
         public Vector3d thrustForward;
 
         // Acceleration in the forward direction, for when dividing by mass is too complicated.
@@ -1657,6 +1658,7 @@ namespace MuMech
             public void AddNewEngine(ModuleEngines e, ModuleGimbal gimbal, List<EngineWrapper> enginesWrappers, ref Vector3d CoT, ref Vector3d DoT,
                 ref double CoTScalar)
             {
+                // FIXME: shouldn't we gather statistics on unignited engines???
                 if (!e.EngineIgnited || !e.isEnabled)
                 {
                     return;
