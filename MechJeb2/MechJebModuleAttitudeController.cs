@@ -183,7 +183,7 @@ namespace MuMech
             switch (reference)
             {
                 case AttitudeReference.INERTIAL_COT:
-                    rotRef = Quaternion.FromToRotation(thrustForward, VesselState.forward) * rotRef;
+                    rotRef = Quaternion.FromToRotation(thrustForward, VesselState.forward);
                     break;
                 case AttitudeReference.ORBIT:
                     rotRef = Quaternion.LookRotation(VesselState.orbitalVelocity.normalized, VesselState.up);
