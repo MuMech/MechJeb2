@@ -109,7 +109,7 @@ namespace MuMech
         private Mode _mode = Mode.ONE_NODE;
 
         public  bool     BurnTriggered;
-        private double   _dvLeft; // for Principia
+        private double   _dvLeft;    // for Principia
         private Vector3d _direction; // de-rotated world vector
 
         public override void Drive(FlightCtrlState s) => HandleUllage(s);
@@ -152,7 +152,7 @@ namespace MuMech
                     return;
                 }
 
-                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL, this);
+                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
 
                 double ignitionUT = CalculateIgnitionUT(node);
 
@@ -172,10 +172,10 @@ namespace MuMech
             {
                 //check if we've finished a node:
                 ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-                _dvLeft = node.GetBurnVector(Orbit).magnitude;
+                _dvLeft    = node.GetBurnVector(Orbit).magnitude;
                 _direction = NextDirection();
 
-                if (BurnTriggered && AngleFromTarget() >= 0.5 * PI)
+                if (BurnTriggered && AngleFromNode() >= 0.5 * PI)
                 {
                     BurnTriggered = false;
 
@@ -199,7 +199,7 @@ namespace MuMech
                     }
                 }
 
-                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL, this);
+                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
 
                 double ignitionUT = CalculateIgnitionUT(node);
 
@@ -217,9 +217,16 @@ namespace MuMech
             }
         }
 
-        private double AngleFromTarget()
+        private double AngleFromNode()
         {
-            Vector3d fwd = VesselState.forward.normalized;
+            Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
+            Vector3d dir = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
+            return SafeAcos(Vector3d.Dot(fwd, dir));
+        }
+
+        private double AngleFromDirection()
+        {
+            Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
             Vector3d dir = (Planetarium.fetch.rotation * _direction).normalized;
             return SafeAcos(Vector3d.Dot(fwd, dir));
         }
@@ -273,8 +280,8 @@ namespace MuMech
             }
 
             if (MuUtils.PhysicsRunning()
-                    ? AngleFromTarget() < Deg2Rad(1) && Core.vessel.angularVelocity.magnitude < 0.001
-                    : AngleFromTarget() < Deg2Rad(2))
+                    ? AngleFromDirection() < Deg2Rad(1) && Core.vessel.angularVelocity.magnitude < 0.001
+                    : AngleFromDirection() < Deg2Rad(2))
                 Core.Warp.WarpToUT(ignitionUT - 3);
             else
                 Core.Warp.MinimumWarp();
