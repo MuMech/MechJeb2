@@ -62,7 +62,7 @@ namespace MuMech
             _mode = Mode.ONE_NODE;
             Users.Add(controller);
             BurnTriggered = false;
-            _dvLeft       = 0;
+            _dvLeft       = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
         }
 
         public void ExecuteAllNodes(object controller)
@@ -70,7 +70,7 @@ namespace MuMech
             _mode = Mode.ALL_NODES;
             Users.Add(controller);
             BurnTriggered = false;
-            _dvLeft       = 0;
+            _dvLeft       = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
         }
 
         public void Abort()
@@ -99,9 +99,12 @@ namespace MuMech
 
         private Mode _mode = Mode.ONE_NODE;
 
-        public  bool     BurnTriggered;
-        private double   _dvLeft;    // for Principia
-        private Vector3d _direction; // de-rotated world vector
+        public         bool     BurnTriggered;
+        public         bool     IsAligned;
+        private        double   _dvLeft;    // for Principia
+        private        Vector3d _direction; // de-rotated world vector
+        private static bool     _isLoadedPrincipia => VesselState.isLoadedPrincipia;
+        private        bool     _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
 
         public override void Drive(FlightCtrlState s) => HandleUllage(s);
 
@@ -119,9 +122,6 @@ namespace MuMech
             s.Z = -1.0F;
         }
 
-        private static bool _isLoadedPrincipia => VesselState.isLoadedPrincipia;
-        private        bool _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
-
         public override void OnFixedUpdate()
         {
             if (!Vessel.patchedConicsUnlocked() || (!_isLoadedPrincipia && !_hasNodes))
@@ -134,6 +134,8 @@ namespace MuMech
 
             if (!_isLoadedPrincipia)
                 _dvLeft    = node!.GetBurnVector(Orbit).magnitude;
+            else
+                DecrementDvLeft();
 
             _direction = NextDirection();
 
@@ -157,8 +159,6 @@ namespace MuMech
             HandleAutowarp(ignitionUT);
 
             HandleAligningAndThrust();
-
-            DecrementDvLeft();
         }
 
         private bool ShouldTerminate(ref ManeuverNode node)
@@ -223,8 +223,6 @@ namespace MuMech
 
         private void DecrementDvLeft()
         {
-            if (!_isLoadedPrincipia) return;
-
             if (!BurnTriggered || !MuUtils.PhysicsRunning()) return;
 
             // decrement remaining dV based on engine and RCS thrust
@@ -232,7 +230,7 @@ namespace MuMech
             // We also can't just use vesselState.currentThrustAccel because only engines are counted.
             // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
             Vector3d dV = (Vessel.acceleration_immediate - Vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
-            _dvLeft -= Vector3d.Dot(dV, Core.Attitude.targetAttitude());
+            _dvLeft -= Vector3d.Dot(dV, _direction);
         }
 
         private void HandleAutowarp(double ignitionUT)
