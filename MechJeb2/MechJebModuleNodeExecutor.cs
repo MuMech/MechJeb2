@@ -65,15 +65,6 @@ namespace MuMech
             _dvLeft       = 0;
         }
 
-        public void ExecuteOnePNode(object controller) //Principia Node
-        {
-            _mode = Mode.ONE_PNODE;
-            Users.Add(controller);
-            BurnTriggered = false;
-
-            _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
-        }
-
         public void ExecuteAllNodes(object controller)
         {
             _mode = Mode.ALL_NODES;
@@ -104,7 +95,7 @@ namespace MuMech
             _dvLeft = 0;
         }
 
-        private enum Mode { ONE_NODE, ONE_PNODE, ALL_NODES }
+        private enum Mode { ONE_NODE, ALL_NODES }
 
         private Mode _mode = Mode.ONE_NODE;
 
