@@ -139,82 +139,59 @@ namespace MuMech
                 return;
             }
 
-            if (_isLoadedPrincipia && _mode == Mode.ONE_PNODE)
+            ManeuverNode node = _hasNodes ? Vessel.patchedConicSolver.maneuverNodes[0] : null;
+
+            if (!_isLoadedPrincipia)
+                _dvLeft    = node!.GetBurnVector(Orbit).magnitude;
+
+            _direction = NextDirection();
+
+            if (ShouldTerminate(ref node))
             {
-                ManeuverNode node = _hasNodes ? Vessel.patchedConicSolver.maneuverNodes[0] : null;
-                _direction = NextDirection();
-
-                if (_dvLeft < 0)
-                {
-                    BurnTriggered = false;
-
-                    Abort();
-                    return;
-                }
-
-                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
-
-                double ignitionUT = CalculateIgnitionUT(node);
-
-                if (VesselState.time >= ignitionUT)
-                {
-                    BurnTriggered = true;
-                    if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
-                }
-
-                HandleAutowarp(ignitionUT);
-
-                HandleAligningAndThrust();
-
-                DecrementDvLeft();
+                BurnTriggered = false;
+                Abort();
+                return;
             }
-            else if (_hasNodes)
+
+            Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
+
+            double ignitionUT = CalculateIgnitionUT(node);
+
+            if (VesselState.time >= ignitionUT)
             {
-                //check if we've finished a node:
-                ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-                _dvLeft    = node.GetBurnVector(Orbit).magnitude;
-                _direction = NextDirection();
-
-                if (BurnTriggered && AngleFromNode() >= 0.5 * PI)
-                {
-                    BurnTriggered = false;
-
-                    node.RemoveSelf();
-
-                    if (_mode == Mode.ONE_NODE)
-                    {
-                        Abort();
-                        return;
-                    }
-
-                    if (_mode == Mode.ALL_NODES)
-                    {
-                        if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
-                        {
-                            Abort();
-                            return;
-                        }
-
-                        node = Vessel.patchedConicSolver.maneuverNodes[0];
-                    }
-                }
-
-                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
-
-                double ignitionUT = CalculateIgnitionUT(node);
-
-                if (VesselState.time >= ignitionUT)
-                {
-                    BurnTriggered = true;
-                    if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
-                }
-
-                HandleAutowarp(ignitionUT);
-
-                HandleAligningAndThrust();
-
-                DecrementDvLeft();
+                BurnTriggered = true;
+                if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
             }
+
+            HandleAutowarp(ignitionUT);
+
+            HandleAligningAndThrust();
+
+            DecrementDvLeft();
+        }
+
+        private bool ShouldTerminate(ref ManeuverNode node)
+        {
+            if (_isLoadedPrincipia)
+                return _dvLeft < 0;
+
+            if (BurnTriggered && AngleFromNode() >= 0.5 * PI)
+            {
+                node.RemoveSelf();
+
+                if (_mode == Mode.ONE_NODE)
+                    return true;
+
+                if (_mode == Mode.ALL_NODES)
+                {
+                    if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
+                        return true;
+
+                    node = Vessel.patchedConicSolver.maneuverNodes[0];
+                }
+            }
+
+            return false;
         }
 
         private double AngleFromNode()
