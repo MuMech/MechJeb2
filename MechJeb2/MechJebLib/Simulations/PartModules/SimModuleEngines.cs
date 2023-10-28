@@ -247,7 +247,7 @@ namespace MechJebLib.Simulations.PartModules
 
             double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
             double eMinThrust = ThrottleLocked ? eMaxThrust : minThrust;
-            double eCurrentThrust = MassFlowRate * FlowMultiplier * ISP * G * MultIsp;
+            double eCurrentThrust = MassFlowRate * ISP * G * MultIsp;
 
             for (int i = 0; i < ThrustDirectionVectors.Count; i++)
             {
@@ -277,7 +277,10 @@ namespace MechJebLib.Simulations.PartModules
             }
 
             if (UseThrustCurve)
-                flowMultiplier *= ThrustCurve.Evaluate(0.5);
+                // MJ doesn't support thrust curves.  And Engines where "1.0" values don't give reasonable numbers
+                // will not work with MJ.  I don't think this will be much of a problem, but I don't care if it is.
+                //flowMultiplier *= ThrustCurve.Evaluate(0.5);
+                flowMultiplier *= 1.0;
 
             if (UseVelCurve)
                 flowMultiplier *= VelCurve.Evaluate(_machNumber);
