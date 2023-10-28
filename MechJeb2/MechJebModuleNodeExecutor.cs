@@ -62,16 +62,7 @@ namespace MuMech
             _mode = Mode.ONE_NODE;
             Users.Add(controller);
             BurnTriggered = false;
-            _dvLeft       = 0;
-        }
-
-        public void ExecuteOnePNode(object controller) //Principia Node
-        {
-            _mode = Mode.ONE_PNODE;
-            Users.Add(controller);
-            BurnTriggered = false;
-
-            _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            _dvLeft       = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
         }
 
         public void ExecuteAllNodes(object controller)
@@ -79,7 +70,7 @@ namespace MuMech
             _mode = Mode.ALL_NODES;
             Users.Add(controller);
             BurnTriggered = false;
-            _dvLeft       = 0;
+            _dvLeft       = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
         }
 
         public void Abort()
@@ -104,13 +95,16 @@ namespace MuMech
             _dvLeft = 0;
         }
 
-        private enum Mode { ONE_NODE, ONE_PNODE, ALL_NODES }
+        private enum Mode { ONE_NODE, ALL_NODES }
 
         private Mode _mode = Mode.ONE_NODE;
 
-        public  bool     BurnTriggered;
-        private double   _dvLeft;    // for Principia
-        private Vector3d _direction; // de-rotated world vector
+        public         bool     BurnTriggered;
+        public         bool     IsAligned;
+        private        double   _dvLeft;    // for Principia
+        private        Vector3d _direction; // de-rotated world vector
+        private static bool     _isLoadedPrincipia => VesselState.isLoadedPrincipia;
+        private        bool     _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
 
         public override void Drive(FlightCtrlState s) => HandleUllage(s);
 
@@ -128,9 +122,6 @@ namespace MuMech
             s.Z = -1.0F;
         }
 
-        private static bool _isLoadedPrincipia => VesselState.isLoadedPrincipia;
-        private        bool _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
-
         public override void OnFixedUpdate()
         {
             if (!Vessel.patchedConicsUnlocked() || (!_isLoadedPrincipia && !_hasNodes))
@@ -139,82 +130,59 @@ namespace MuMech
                 return;
             }
 
-            if (_isLoadedPrincipia && _mode == Mode.ONE_PNODE)
-            {
-                ManeuverNode node = _hasNodes ? Vessel.patchedConicSolver.maneuverNodes[0] : null;
-                _direction = NextDirection();
+            ManeuverNode node = _hasNodes ? Vessel.patchedConicSolver.maneuverNodes[0] : null;
 
-                if (_dvLeft < 0)
-                {
-                    BurnTriggered = false;
-
-                    Abort();
-                    return;
-                }
-
-                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
-
-                double ignitionUT = CalculateIgnitionUT(node);
-
-                if (VesselState.time >= ignitionUT)
-                {
-                    BurnTriggered = true;
-                    if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
-                }
-
-                HandleAutowarp(ignitionUT);
-
-                HandleAligningAndThrust();
-
+            if (!_isLoadedPrincipia)
+                _dvLeft    = node!.GetBurnVector(Orbit).magnitude;
+            else
                 DecrementDvLeft();
-            }
-            else if (_hasNodes)
+
+            _direction = NextDirection();
+
+            if (ShouldTerminate(ref node))
             {
-                //check if we've finished a node:
-                ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-                _dvLeft    = node.GetBurnVector(Orbit).magnitude;
-                _direction = NextDirection();
-
-                if (BurnTriggered && AngleFromNode() >= 0.5 * PI)
-                {
-                    BurnTriggered = false;
-
-                    node.RemoveSelf();
-
-                    if (_mode == Mode.ONE_NODE)
-                    {
-                        Abort();
-                        return;
-                    }
-
-                    if (_mode == Mode.ALL_NODES)
-                    {
-                        if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
-                        {
-                            Abort();
-                            return;
-                        }
-
-                        node = Vessel.patchedConicSolver.maneuverNodes[0];
-                    }
-                }
-
-                Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
-
-                double ignitionUT = CalculateIgnitionUT(node);
-
-                if (VesselState.time >= ignitionUT)
-                {
-                    BurnTriggered = true;
-                    if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
-                }
-
-                HandleAutowarp(ignitionUT);
-
-                HandleAligningAndThrust();
-
-                DecrementDvLeft();
+                BurnTriggered = false;
+                Abort();
+                return;
             }
+
+            Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
+
+            double ignitionUT = CalculateIgnitionUT(node);
+
+            if (VesselState.time >= ignitionUT)
+            {
+                BurnTriggered = true;
+                if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
+            }
+
+            HandleAutowarp(ignitionUT);
+
+            HandleAligningAndThrust();
+        }
+
+        private bool ShouldTerminate(ref ManeuverNode node)
+        {
+            if (_isLoadedPrincipia)
+                return _dvLeft < 0;
+
+            if (BurnTriggered && AngleFromNode() >= 0.5 * PI)
+            {
+                node.RemoveSelf();
+
+                if (_mode == Mode.ONE_NODE)
+                    return true;
+
+                if (_mode == Mode.ALL_NODES)
+                {
+                    if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
+                        return true;
+
+                    node = Vessel.patchedConicSolver.maneuverNodes[0];
+                }
+            }
+
+            return false;
         }
 
         private double AngleFromNode()
@@ -255,8 +223,6 @@ namespace MuMech
 
         private void DecrementDvLeft()
         {
-            if (!_isLoadedPrincipia) return;
-
             if (!BurnTriggered || !MuUtils.PhysicsRunning()) return;
 
             // decrement remaining dV based on engine and RCS thrust
@@ -264,7 +230,7 @@ namespace MuMech
             // We also can't just use vesselState.currentThrustAccel because only engines are counted.
             // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
             Vector3d dV = (Vessel.acceleration_immediate - Vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
-            _dvLeft -= Vector3d.Dot(dV, Core.Attitude.targetAttitude());
+            _dvLeft -= Vector3d.Dot(dV, _direction);
         }
 
         private void HandleAutowarp(double ignitionUT)
