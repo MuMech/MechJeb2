@@ -65,15 +65,18 @@ namespace MuMech
         {
             Users.Add(controller);
             _mode      = Mode.ONE_NODE;
-            State      = States.WARPALIGN;
-            _direction = Vector3d.zero;
-            _dvLeft    = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            Init();
         }
 
         public void ExecuteAllNodes(object controller)
         {
             Users.Add(controller);
             _mode      = Mode.ALL_NODES;
+            Init();
+        }
+
+        private void Init()
+        {
             State      = States.WARPALIGN;
             _direction = Vector3d.zero;
             _dvLeft    = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
@@ -230,10 +233,7 @@ namespace MuMech
                 DecrementDvLeft();
 
             if (ShouldTerminate())
-            {
-                Abort();
                 return;
-            }
 
             if (!RCSOnly)
             {
@@ -250,14 +250,27 @@ namespace MuMech
 
         private bool ShouldTerminate()
         {
-            if (_isLoadedPrincipia)
-                return _dvLeft < 0;
+            if (_isLoadedPrincipia && _dvLeft < 0)
+            {
+                Abort();
+                return true;
+            }
 
             if (AngleFromNode() >= 0.5 * PI)
             {
                 ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
 
                 node.RemoveSelf();
+
+                if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                {
+                    Core.Thrust.ThrustOff();
+                    Init();
+                }
+                else
+                {
+                    Abort();
+                }
 
                 return true;
             }
