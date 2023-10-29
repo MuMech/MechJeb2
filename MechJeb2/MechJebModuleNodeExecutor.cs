@@ -64,14 +64,14 @@ namespace MuMech
         public void ExecuteOneNode(object controller)
         {
             Users.Add(controller);
-            _mode      = Mode.ONE_NODE;
+            _mode = Mode.ONE_NODE;
             Init();
         }
 
         public void ExecuteAllNodes(object controller)
         {
             Users.Add(controller);
-            _mode      = Mode.ALL_NODES;
+            _mode = Mode.ALL_NODES;
             Init();
         }
 
@@ -80,6 +80,7 @@ namespace MuMech
             State      = States.WARPALIGN;
             _direction = Vector3d.zero;
             _dvLeft    = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            Core.Thrust.ThrustOff();
         }
 
         public void Abort()
@@ -114,6 +115,7 @@ namespace MuMech
 
         private        double   _dvLeft;    // for Principia
         private        Vector3d _direction; // de-rotated world vector
+        private        Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
         private        double   _ignitionUT;
         private static bool     _isLoadedPrincipia => VesselState.isLoadedPrincipia;
         private        bool     _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
@@ -201,7 +203,7 @@ namespace MuMech
 
             SetAttitude();
 
-            if (MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(2))
+            if (MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(10))
                 Core.Warp.WarpToUT(_ignitionUT - LeadTime);
             else
                 Core.Warp.MinimumWarp();
@@ -211,10 +213,15 @@ namespace MuMech
         {
             Core.Thrust.ThrustOff();
 
-            if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
+            if (!MuUtils.PhysicsRunning())
+            {
+                Core.Warp.MinimumWarp();
+                return;
+            }
 
             SetAttitude();
 
+            // update _dvLeft here because we're out of warp and might be doing RCS
             if (!_isLoadedPrincipia)
                 _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
             else
@@ -223,7 +230,11 @@ namespace MuMech
 
         private void StateBurn()
         {
-            if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
+            if (!MuUtils.PhysicsRunning())
+            {
+                Core.Warp.MinimumWarp();
+                return;
+            }
 
             SetAttitude();
 
@@ -244,8 +255,8 @@ namespace MuMech
 
         private void SetAttitude()
         {
-            Core.Attitude.SetAxisControl(true,true, false);
-            Core.Attitude.attitudeTo(Planetarium.fetch.rotation * _direction, AttitudeReference.INERTIAL_COT, this);
+            Core.Attitude.SetAxisControl(true, true, false);
+            Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL, this);
         }
 
         private bool ShouldTerminate()
@@ -263,14 +274,9 @@ namespace MuMech
                 node.RemoveSelf();
 
                 if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
-                {
-                    Core.Thrust.ThrustOff();
                     Init();
-                }
                 else
-                {
                     Abort();
-                }
 
                 return true;
             }
@@ -282,15 +288,17 @@ namespace MuMech
 
         private double AngleFromNode()
         {
-            Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
+            //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
+            Vector3d fwd = VesselState.forward;
             Vector3d dir = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
             return SafeAcos(Vector3d.Dot(fwd, dir));
         }
 
         private double AngleFromDirection()
         {
-            Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
-            Vector3d dir = (Planetarium.fetch.rotation * _direction).normalized;
+            //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
+            Vector3d fwd = VesselState.forward;
+            Vector3d dir = _worldDirection.normalized;
             return SafeAcos(Vector3d.Dot(fwd, dir));
         }
 
@@ -306,7 +314,7 @@ namespace MuMech
                 if (!_isLoadedPrincipia && _dvLeft < VesselState.minThrustAccel) return _direction;
             }
 
-            return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit);
+            return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
         }
 
         private double CalculateIgnitionUT()
@@ -329,7 +337,7 @@ namespace MuMech
             // We also can't just use vesselState.currentThrustAccel because only engines are counted.
             // NOTE: This *will* include acceleration from decouplers, which is pretty cool.
             Vector3d dV = (Vessel.acceleration_immediate - Vessel.graviticAcceleration) * TimeWarp.fixedDeltaTime;
-            _dvLeft -= Vector3d.Dot(dV, _direction);
+            _dvLeft -= Vector3d.Dot(dV, _worldDirection);
         }
 
         // FIXME: this needs to work with RCSOnly
