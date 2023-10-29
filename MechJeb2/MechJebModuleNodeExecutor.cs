@@ -193,6 +193,12 @@ namespace MuMech
                 return;
             }
 
+            if (MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(10))
+            {
+                Core.Warp.WarpToUT(_ignitionUT - LeadTime);
+                return;
+            }
+
             double timeToBurn = _ignitionUT - VesselState.time;
 
             if (timeToBurn > 600)
@@ -201,12 +207,8 @@ namespace MuMech
                 return;
             }
 
+            Core.Warp.MinimumWarp();
             SetAttitude();
-
-            if (MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(10))
-                Core.Warp.WarpToUT(_ignitionUT - LeadTime);
-            else
-                Core.Warp.MinimumWarp();
         }
 
         private void StateLeadTime()
