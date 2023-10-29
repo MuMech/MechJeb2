@@ -153,31 +153,24 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 Core.Node.Autowarp =
                     GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                Core.Node.RCSOnly = GUILayout.Toggle(Core.Node.RCSOnly, "RCS Burn", GUILayout.ExpandWidth(true));
 
-                GUILayout.BeginVertical();
+                GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Lead_time"), GUILayout.ExpandWidth(false)); //Lead time:
                 Core.Node.LeadTime.text = GUILayout.TextField(Core.Node.LeadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                GUILayout.Label("s", GUILayout.ExpandWidth(false));
+
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
-                {
                     Core.Node.LeadTime.val += 1;
-                }
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
-                {
                     Core.Node.LeadTime.val -= 1;
-                }
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
-                {
                     Core.Node.LeadTime.val = 3;
-                }
 
-                GUILayout.Label("s", GUILayout.ExpandWidth(false));
-                GUILayout.EndHorizontal();
-
-                GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
             }
 

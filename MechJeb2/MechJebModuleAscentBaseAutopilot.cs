@@ -280,7 +280,8 @@ namespace MuMech
                 Core.Node.ExecuteOneNode(this);
             }
 
-            Status = Localizer.Format(Core.Node.BurnTriggered ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
+            Status = Localizer.Format(
+                Core.Node.State == MechJebModuleNodeExecutor.States.BURN ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
         }
 
         protected abstract bool DriveAscent2();
