@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using UnityEngine;
 using static System.Math;
@@ -161,6 +162,7 @@ namespace MuMech
 
             _direction = NextDirection();
 
+            // note that in principia after our node disappears this value will change to -1
             _ignitionUT = CalculateIgnitionUT();
 
             if (VesselState.time >= _ignitionUT - LeadTime && State != States.BURN)
@@ -265,7 +267,11 @@ namespace MuMech
         {
             if (_isLoadedPrincipia && _dvLeft < 0)
             {
-                Abort();
+                if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                    Init();
+                else
+                    Abort();
+
                 return true;
             }
 
@@ -288,6 +294,8 @@ namespace MuMech
 
         private bool AlignedAndSettled() => AngleFromDirection() < Deg2Rad(1) && Core.vessel.angularVelocity.magnitude < 0.001;
 
+        // This returns the angle to the node (in radians), note that you probably don't want to use this outside of
+        // stock checks for maneuver termination, and probably never in principia (see SafeCurrentPrincipiaNode()).
         private double AngleFromNode()
         {
             //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
@@ -296,6 +304,7 @@ namespace MuMech
             return SafeAcos(Vector3d.Dot(fwd, dir));
         }
 
+        // This returns the angle to saved inertial direction (in radians).
         private double AngleFromDirection()
         {
             //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
@@ -304,13 +313,32 @@ namespace MuMech
             return SafeAcos(Vector3d.Dot(fwd, dir));
         }
 
+        // This handles safely getting the current burning node in Principia without grabbing any subsequent node after
+        // principia cleans it up for us.
+        private ManeuverNode SafeCurrentPrincipiaNode()
+        {
+            if (!_hasNodes)
+                return null;
+
+            ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
+
+            // if we're burning the node may disappear in principia, if there's a subsequent node it will
+            // appear at a future time, but we don't want to return that (yet anyway).
+            if (State == States.BURN && node.UT > VesselState.time)
+                return null;
+
+            return node;
+        }
+
+        // This manages both initalization and updating of the saved inertial direction.  Note that this is a
+        // 'derotated' world vector so that it is consistent across ticks.
         private Vector3d NextDirection()
         {
             var invRot = QuaternionD.Inverse(Planetarium.fetch.rotation);
 
             if (_direction != Vector3d.zero) // handle initialization
             {
-                if (_isLoadedPrincipia && !_hasNodes) return _direction;
+                if (_isLoadedPrincipia && SafeCurrentPrincipiaNode() == null) return _direction;
 
                 // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
                 if (!_isLoadedPrincipia && _dvLeft < VesselState.minThrustAccel) return _direction;
@@ -323,8 +351,12 @@ namespace MuMech
         {
             BurnTime(_dvLeft, out double halfBurnTime, out double spool);
             if (_isLoadedPrincipia)
+            {
+                ManeuverNode node = SafeCurrentPrincipiaNode();
                 // in principia node.UT is the start of the burn and we need to subtract off the spool time
-                return _hasNodes ? Vessel.patchedConicSolver.maneuverNodes[0].UT - spool : -1;
+                // XXX: maybe we should return VesselState.time here instead of -1 to have it make more sense?
+                return node != null ? Vessel.patchedConicSolver.maneuverNodes[0].UT - spool : -1;
+            }
 
             // in stock node.UT is the center of the burn and the halfBurnTime calculation has the spool time
             return Vessel.patchedConicSolver.maneuverNodes[0].UT - halfBurnTime;

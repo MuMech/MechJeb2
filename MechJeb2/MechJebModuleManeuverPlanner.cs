@@ -134,7 +134,7 @@ namespace MuMech
                         Core.Node.ExecuteOneNode(this);
                     }
 
-                    if (Vessel.patchedConicSolver.maneuverNodes.Count > 1)
+                    if (Vessel.patchedConicSolver.maneuverNodes.Count > 1 || VesselState.isLoadedPrincipia)
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button5"))) //Execute all nodes
                         {
