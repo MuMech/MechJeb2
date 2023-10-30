@@ -111,9 +111,9 @@ namespace MuMech
             Profiler.BeginSample("MJ.GUIWindow.TopButtons");
             GUILayout.BeginVertical(GUI.skin.box);
 
-            if (_autopilot.Enabled && GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button1)) //Disengage autopilot
+            if (_autopilot.Enabled && GUILayout.Button(CachedLocalizer.Instance.MechJebAscentButton1)) //Disengage autopilot
                 _autopilot.Users.Remove(this);
-            else if (!_autopilot.Enabled && GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button2)) //Engage autopilot
+            else if (!_autopilot.Enabled && GUILayout.Button(CachedLocalizer.Instance.MechJebAscentButton2)) //Engage autopilot
                 _autopilot.Users.Add(this);
             GUILayout.EndVertical();
             Profiler.EndSample();
@@ -128,40 +128,40 @@ namespace MuMech
             {
                 if (_ascentSettings.OptimizeStage >= 0)
                 {
-                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label1, _ascentSettings.DesiredOrbitAltitude,
-                        "km");                                                                                                     //Target Periapsis
-                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label2, _ascentSettings.DesiredApoapsis, "km"); //Target Apoapsis:
-                    GuiUtils.ToggledTextBox(ref _ascentSettings.AttachAltFlag, CachedLocalizer.Instance.MechJeb_Ascent_attachAlt,
+                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel1, _ascentSettings.DesiredOrbitAltitude,
+                        "km");                                                                                                   //Target Periapsis
+                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel2, _ascentSettings.DesiredApoapsis, "km"); //Target Apoapsis:
+                    GuiUtils.ToggledTextBox(ref _ascentSettings.AttachAltFlag, CachedLocalizer.Instance.MechJebAscentAttachAlt,
                         _ascentSettings.DesiredAttachAlt, "km");
                 }
                 else
                 {
                     if (!_launchingWithAnyPlaneControl)
                         GuiUtils.SimpleTextBox("Flight Path Angle", _ascentSettings.DesiredFPA, "°");
-                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_attachAlt,
+                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentAttachAlt,
                         _ascentSettings.DesiredAttachAltFixed, "km");
                 }
 
                 if (_ascentSettings.DesiredApoapsis >= 0 && _ascentSettings.DesiredApoapsis < _ascentSettings.DesiredOrbitAltitude)
-                    GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label3, GuiUtils.yellowLabel); //Ap < Pe: circularizing orbit
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel3, GuiUtils.yellowLabel); //Ap < Pe: circularizing orbit
                 else if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt > _ascentSettings.DesiredApoapsis)
-                    GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_warnAttachAltHigh,
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltHigh,
                         GuiUtils.orangeLabel); //Attach > Ap: apoapsis insertion
                 if (_ascentSettings.DesiredApoapsis < 0)
-                    GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label4, GuiUtils.orangeLabel); //Hyperbolic target orbit (neg Ap)
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel4, GuiUtils.orangeLabel); //Hyperbolic target orbit (neg Ap)
                 if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt < _ascentSettings.DesiredOrbitAltitude)
-                    GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_warnAttachAltLow,
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltLow,
                         GuiUtils.orangeLabel); //Attach < Pe: periapsis insertion
             }
             else
             {
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label5, _ascentSettings.DesiredOrbitAltitude, "km"); //Orbit altitude
+                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel5, _ascentSettings.DesiredOrbitAltitude, "km"); //Orbit altitude
             }
 
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.skin.label,
-                false);                                                                                          //Orbit inc.
-            if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button13, GuiUtils.ExpandWidth(false))) //Current
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.skin.label,
+                false);                                                                                        //Orbit inc.
+            if (GUILayout.Button(CachedLocalizer.Instance.MechJebAscentButton13, GuiUtils.ExpandWidth(false))) //Current
                 _ascentSettings.DesiredInclination.val = Math.Round(VesselState.latitude, 3);
             GUILayout.EndHorizontal();
 
@@ -182,14 +182,14 @@ namespace MuMech
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label8, _ascentSettings.TurnStartAltitude,
+                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel8, _ascentSettings.TurnStartAltitude,
                     "km"); //Turn start altitude:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label9, _ascentSettings.TurnStartVelocity,
-                    "m/s");                                                                                                     //Turn start velocity:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label10, _ascentSettings.TurnStartPitch, "deg"); //Turn start pitch:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label11, _ascentSettings.IntermediateAltitude,
-                    "km");                                                                                                //Intermediate altitude:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label12, _ascentSettings.HoldAPTime, "s"); //Hold AP Time:
+                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel9, _ascentSettings.TurnStartVelocity,
+                    "m/s");                                                                                                   //Turn start velocity:
+                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel10, _ascentSettings.TurnStartPitch, "deg"); //Turn start pitch:
+                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel11, _ascentSettings.IntermediateAltitude,
+                    "km");                                                                                              //Intermediate altitude:
+                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel12, _ascentSettings.HoldAPTime, "s"); //Hold AP Time:
                 GUILayout.EndVertical();
             }
 
@@ -261,20 +261,20 @@ namespace MuMech
             GUILayout.BeginVertical(GUI.skin.box);
 
             if (Core.Node.Autowarp)
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label33, _ascentSettings.WarpCountDown, "s", 35); //Launch countdown:
+                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel33, _ascentSettings.WarpCountDown, "s", 35); //Launch countdown:
 
             bool targetExists = Core.Target.NormalTargetExists;
             if (!_launchingWithAnyPlaneControl && !targetExists)
             {
                 _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = false;
-                GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label34); //Select a target for a timed launch.
+                GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel34); //Select a target for a timed launch.
             }
 
             if (!_launchingWithAnyPlaneControl)
             {
                 // Launch to Rendezvous
                 if (targetExists && _ascentSettings.AscentType != AscentType.PVG
-                                 && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_button14, _ascentSettings.LaunchPhaseAngle, "º",
+                                 && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJebAscentButton14, _ascentSettings.LaunchPhaseAngle, "º",
                                      width: 40)) //Launch to rendezvous:
                 {
                     _launchingToRendezvous = true;
@@ -284,7 +284,7 @@ namespace MuMech
                 }
 
                 //Launch into plane of target
-                if (targetExists && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_button15, _ascentSettings.LaunchLANDifference, "º",
+                if (targetExists && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJebAscentButton15, _ascentSettings.LaunchLANDifference, "º",
                         width: LAN_WIDTH)) //Launch into plane of target
                 {
                     _launchingToPlane = true;
@@ -301,7 +301,7 @@ namespace MuMech
 
                 //Launch to target LAN
                 if (targetExists && _ascentSettings.AscentType == AscentType.PVG
-                                 && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_LaunchToTargetLan,
+                                 && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJebAscentLaunchToTargetLan,
                                      _ascentSettings.LaunchLANDifference,
                                      "º", width: LAN_WIDTH)) //Launch to target LAN
                 {
@@ -320,7 +320,7 @@ namespace MuMech
                 //Launch to LAN
                 if (_ascentSettings.AscentType == AscentType.PVG)
                 {
-                    if (GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJeb_Ascent_LaunchToLan, _ascentSettings.DesiredLan, "º",
+                    if (GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJebAscentLaunchToLan, _ascentSettings.DesiredLan, "º",
                             width: LAN_WIDTH)) //Launch to LAN
                     {
                         _launchingToLan = true;
@@ -340,7 +340,7 @@ namespace MuMech
             if (_launchingWithAnyPlaneControl)
             {
                 GUILayout.Label(launchTimer);
-                if (GUILayout.Button(CachedLocalizer.Instance.MechJeb_Ascent_button17)) //Abort
+                if (GUILayout.Button(CachedLocalizer.Instance.MechJebAscentButton17)) //Abort
                     _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = _launchingToLan = _autopilot.TimedLaunch = false;
             }
 
@@ -368,24 +368,24 @@ namespace MuMech
             heading = $"heading: {Core.Guidance.Heading:F1}";
             tgo     = $"tgo: {Core.Guidance.Tgo:F3}";
             pitch   = $"pitch: {Core.Guidance.Pitch:F1}";
-            label26 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label26}{Core.Guidance.Status}";
-            label27 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label27}{Core.Glueball.SuccessfulConverges}";
-            label28 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label28}{Core.Glueball.LastLmStatus}";
+            label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.Guidance.Status}";
+            label27 = $"{CachedLocalizer.Instance.MechJebAscentLabel27}{Core.Glueball.SuccessfulConverges}";
+            label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.Glueball.LastLmStatus}";
             n       = $"n: {Core.Glueball.LastLmIterations}({Core.Glueball.MaxLmIterations})";
-            label29 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label29} {GuiUtils.TimeToDHMS(Core.Glueball.Staleness)}";
+            label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.Glueball.Staleness)}";
             znorm   = $"znorm: {Core.Glueball.LastZnorm:G5}";
             if (Core.Glueball.Exception != null)
-                label30 = $"{CachedLocalizer.Instance.MechJeb_Ascent_label30}{Core.Glueball.Exception.Message}";
+                label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.Glueball.Exception.Message}";
 
-            if (_launchingToPlane) launchTimer           = CachedLocalizer.Instance.MechJeb_Ascent_msg2;                 //Launching to target plane
-            else if (_launchingToRendezvous) launchTimer = CachedLocalizer.Instance.MechJeb_Ascent_msg3;                 //Launching to rendezvous
-            else if (_launchingToMatchLan) launchTimer   = CachedLocalizer.Instance.MechJeb_Ascent_LaunchingToTargetLAN; //Launching to target LAN
-            else if (_launchingToLan) launchTimer        = CachedLocalizer.Instance.MechJeb_Ascent_LaunchingToManualLAN; //Launching to manual LAN
+            if (_launchingToPlane) launchTimer           = CachedLocalizer.Instance.MechJebAscentMsg2;                 //Launching to target plane
+            else if (_launchingToRendezvous) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg3;                 //Launching to rendezvous
+            else if (_launchingToMatchLan) launchTimer   = CachedLocalizer.Instance.MechJebAscentLaunchingToTargetLAN; //Launching to target LAN
+            else if (_launchingToLan) launchTimer        = CachedLocalizer.Instance.MechJebAscentLaunchingToManualLAN; //Launching to manual LAN
             else launchTimer                             = string.Empty;
             if (_autopilot.TMinus > 3 * VesselState.deltaT)
                 launchTimer += $": T-{GuiUtils.TimeToDHMS(_autopilot.TMinus, 1)}";
 
-            autopilotStatus = CachedLocalizer.Instance.MechJeb_Ascent_label35 + _autopilot.Status;
+            autopilotStatus = CachedLocalizer.Instance.MechJebAscentLabel35 + _autopilot.Status;
             Profiler.EndSample();
         }
 
@@ -431,12 +431,12 @@ namespace MuMech
 
             if (_autopilot.Enabled) GUILayout.Label(autopilotStatus); //Autopilot status:
             if (Core.DeactivateControl)
-                GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label36, GuiUtils.redLabel); //CONTROL DISABLED (AVIONICS)
+                GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel36, GuiUtils.redLabel); //CONTROL DISABLED (AVIONICS)
 
             if (!Vessel.patchedConicsUnlocked() && _ascentSettings.AscentType != AscentType.PVG)
             {
                 GUILayout.Label(CachedLocalizer.Instance
-                    .MechJeb_Ascent_label37); //"Warning: MechJeb is unable to circularize without an upgraded Tracking Station."
+                    .MechJebAscentLabel37); //"Warning: MechJeb is unable to circularize without an upgraded Tracking Station."
             }
 
             GUILayout.BeginHorizontal();
@@ -454,7 +454,7 @@ namespace MuMech
 
             if (_ascentSettings.AscentType == AscentType.CLASSIC)
                 _classicPathMenu.Enabled =
-                    GUILayout.Toggle(_classicPathMenu.Enabled, CachedLocalizer.Instance.MechJeb_Ascent_checkbox10); //Edit ascent path
+                    GUILayout.Toggle(_classicPathMenu.Enabled, CachedLocalizer.Instance.MechJebAscentCheckbox10); //Edit ascent path
 
             RefreshRateGUI();
 
@@ -522,7 +522,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
 
-        public override string GetName() => CachedLocalizer.Instance.MechJeb_Ascent_title; //"Ascent Guidance"
+        public override string GetName() => CachedLocalizer.Instance.MechJebAscentTitle; //"Ascent Guidance"
 
         public override string IconName() => "Ascent Guidance";
     }

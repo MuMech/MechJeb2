@@ -15,8 +15,8 @@ namespace MuMech
         private MechJebModuleAscentSettings      _ascentSettings => Core.AscentSettings;
         private MechJebModuleAscentBaseAutopilot _autopilot      => Core.Ascent;
 
-        private readonly string _climbString = $"{CachedLocalizer.Instance.MechJeb_Ascent_label22}: ";
-        private readonly string _turnString  = $"{CachedLocalizer.Instance.MechJeb_Ascent_label23}: ";
+        private readonly string _climbString = $"{CachedLocalizer.Instance.MechJebAscentLabel22}: ";
+        private readonly string _turnString  = $"{CachedLocalizer.Instance.MechJebAscentLabel23}: ";
 
         private void ShowAscentSettingsGUIElements()
         {
@@ -37,7 +37,7 @@ namespace MuMech
                 Core.Thrust.ElectricThrottle        = false;
             }
 
-            _ascentSettings.ForceRoll = GUILayout.Toggle(_ascentSettings.ForceRoll, CachedLocalizer.Instance.MechJeb_Ascent_checkbox2); //Force Roll
+            _ascentSettings.ForceRoll = GUILayout.Toggle(_ascentSettings.ForceRoll, CachedLocalizer.Instance.MechJebAscentCheckbox2); //Force Roll
             if (_ascentSettings.ForceRoll)
             {
                 GUILayout.BeginHorizontal();
@@ -52,7 +52,7 @@ namespace MuMech
             {
                 GUIStyle s = _ascentSettings.LimitingAoA ? GuiUtils.greenToggle : null;
                 string sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
-                GuiUtils.ToggledTextBox(ref _ascentSettings.LimitAoA, CachedLocalizer.Instance.MechJeb_Ascent_checkbox3, _ascentSettings.MaxAoA,
+                GuiUtils.ToggledTextBox(ref _ascentSettings.LimitAoA, CachedLocalizer.Instance.MechJebAscentCheckbox3, _ascentSettings.MaxAoA,
                     sCurrentMaxAoA, s,
                     30); //Limit AoA to
 
@@ -63,7 +63,7 @@ namespace MuMech
                     GUIStyle sl = _ascentSettings.LimitingAoA && VesselState.dynamicPressure < _ascentSettings.AOALimitFadeoutPressure
                         ? GuiUtils.greenLabel
                         : GuiUtils.skin.label;
-                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label24, _ascentSettings.AOALimitFadeoutPressure, "Pa", 50,
+                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel24, _ascentSettings.AOALimitFadeoutPressure, "Pa", 50,
                         sl); //Dynamic Pressure Fadeout
                     GUILayout.EndHorizontal();
                 }
@@ -76,28 +76,28 @@ namespace MuMech
                 // corrective steering only applies to Classic
                 GUILayout.BeginHorizontal();
                 _ascentSettings.CorrectiveSteering = GUILayout.Toggle(_ascentSettings.CorrectiveSteering,
-                    CachedLocalizer.Instance.MechJeb_Ascent_checkbox4,
+                    CachedLocalizer.Instance.MechJebAscentCheckbox4,
                     GuiUtils.ExpandWidth(false)); //Corrective steering
                 if (_ascentSettings.CorrectiveSteering)
-                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label25, _ascentSettings.CorrectiveSteeringGain, width: 40,
+                    GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel25, _ascentSettings.CorrectiveSteeringGain, width: 40,
                         horizontalFraming: false); // Gain
                 GUILayout.EndHorizontal();
             }
 
-            _ascentSettings.Autostage = GUILayout.Toggle(_ascentSettings.Autostage, CachedLocalizer.Instance.MechJeb_Ascent_checkbox5); //Autostage
+            _ascentSettings.Autostage = GUILayout.Toggle(_ascentSettings.Autostage, CachedLocalizer.Instance.MechJebAscentCheckbox5); //Autostage
             if (_ascentSettings.Autostage) Core.Staging.AutostageSettingsInfoItem();
 
             _ascentSettings.AutodeploySolarPanels =
-                GUILayout.Toggle(_ascentSettings.AutodeploySolarPanels, CachedLocalizer.Instance.MechJeb_Ascent_checkbox6); //Auto-deploy solar panels
+                GUILayout.Toggle(_ascentSettings.AutodeploySolarPanels, CachedLocalizer.Instance.MechJebAscentCheckbox6); //Auto-deploy solar panels
             _ascentSettings.AutoDeployAntennas =
-                GUILayout.Toggle(_ascentSettings.AutoDeployAntennas, CachedLocalizer.Instance.MechJeb_Ascent_checkbox7); //Auto-deploy antennas
+                GUILayout.Toggle(_ascentSettings.AutoDeployAntennas, CachedLocalizer.Instance.MechJebAscentCheckbox7); //Auto-deploy antennas
 
             GUILayout.BeginHorizontal();
-            Core.Node.Autowarp = GUILayout.Toggle(Core.Node.Autowarp, CachedLocalizer.Instance.MechJeb_Ascent_checkbox8); //Auto-warp
+            Core.Node.Autowarp = GUILayout.Toggle(Core.Node.Autowarp, CachedLocalizer.Instance.MechJebAscentCheckbox8); //Auto-warp
             if (_ascentSettings.AscentType != AscentType.PVG)
             {
                 _ascentSettings.SkipCircularization =
-                    GUILayout.Toggle(_ascentSettings.SkipCircularization, CachedLocalizer.Instance.MechJeb_Ascent_checkbox9); //Skip Circularization
+                    GUILayout.Toggle(_ascentSettings.SkipCircularization, CachedLocalizer.Instance.MechJebAscentCheckbox9); //Skip Circularization
             }
             else
             {

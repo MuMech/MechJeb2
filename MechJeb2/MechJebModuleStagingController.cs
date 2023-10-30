@@ -176,24 +176,24 @@ namespace MuMech
 
         protected override void OnModuleDisabled() => AutostagingOnce = false;
 
-        private readonly string _sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label39} <";
-        private readonly string _sFairingMinAltitude        = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label40} >";
-        private readonly string _sFairingMaxAerothermalFlux = $"  {CachedLocalizer.Instance.MechJeb_Ascent_label41} <";
+        private readonly string _sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJebAscentLabel39} <";
+        private readonly string _sFairingMinAltitude        = $"  {CachedLocalizer.Instance.MechJebAscentLabel40} >";
+        private readonly string _sFairingMaxAerothermalFlux = $"  {CachedLocalizer.Instance.MechJebAscentLabel41} <";
 
         private readonly string _sHotstaging =
-            $"{CachedLocalizer.Instance.MechJeb_Ascent_hotStaging} {CachedLocalizer.Instance.MechJeb_Ascent_leadTime}";
+            $"{CachedLocalizer.Instance.MechJebAscentHotStaging} {CachedLocalizer.Instance.MechJebAscentLeadTime}";
 
         private readonly string _sDropSolids =
-            $"{CachedLocalizer.Instance.MechJeb_Ascent_dropSolids} {CachedLocalizer.Instance.MechJeb_Ascent_leadTime}";
+            $"{CachedLocalizer.Instance.MechJebAscentDropSolids} {CachedLocalizer.Instance.MechJebAscentLeadTime}";
 
-        private readonly string _sLeadTime = $"{CachedLocalizer.Instance.MechJeb_Ascent_leadTime}: ";
+        private readonly string _sLeadTime = $"{CachedLocalizer.Instance.MechJebAscentLeadTime}: ";
 
         [GeneralInfoItem("#MechJeb_AutostagingSettings", InfoItem.Category.Misc)] //Autostaging settings
         public void AutostageSettingsInfoItem()
         {
             GUILayout.BeginVertical(GUI.skin.box);
 
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label42, AutostageLimit, width: 40); //"Stop at stage #"
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel42, AutostageLimit, width: 40); //"Stop at stage #"
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Delays: ");
@@ -205,19 +205,19 @@ namespace MuMech
 
             ClampAutostageThrust();
 
-            GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label38);                           //"Stage fairings when:"
+            GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel38);                             //"Stage fairings when:"
             GuiUtils.SimpleTextBox(_sFairingMinDynamicPressure, FairingMaxDynamicPressure, "kPa", 50);  //"dynamic pressure"
             GuiUtils.SimpleTextBox(_sFairingMinAltitude, FairingMinAltitude, "km", 50);                 //altitude
             GuiUtils.SimpleTextBox(_sFairingMaxAerothermalFlux, FairingMaxAerothermalFlux, "W/m²", 50); //aerothermal flux
 
             GUILayout.BeginHorizontal();
-            HotStaging = GUILayout.Toggle(HotStaging, CachedLocalizer.Instance.MechJeb_Ascent_hotStaging); //"Support hotstaging"
+            HotStaging = GUILayout.Toggle(HotStaging, CachedLocalizer.Instance.MechJebAscentHotStaging); //"Support hotstaging"
             GUILayout.FlexibleSpace();
             GuiUtils.SimpleTextBox(_sLeadTime, HotStagingLeadTime, "s", 35); //"lead time"
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            DropSolids = GUILayout.Toggle(DropSolids, CachedLocalizer.Instance.MechJeb_Ascent_dropSolids); //"Drop solids early"
+            DropSolids = GUILayout.Toggle(DropSolids, CachedLocalizer.Instance.MechJebAscentDropSolids); //"Drop solids early"
             GUILayout.FlexibleSpace();
             GuiUtils.SimpleTextBox(_sLeadTime, DropSolidsLeadTime, "s", 35); //"lead time"
             GUILayout.EndHorizontal();
@@ -228,16 +228,16 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Autostagingstatus", InfoItem.Category.Misc)] //Autostaging status
         public string AutostageStatus()
         {
-            if (!Enabled) return CachedLocalizer.Instance.MechJeb_Ascent_status9;          //"Autostaging off"
-            if (AutostagingOnce) return CachedLocalizer.Instance.MechJeb_Ascent_status10;  //"Will autostage next stage only"
-            return CachedLocalizer.Instance.MechJeb_Ascent_status11 + (int)AutostageLimit; //"Autostaging until stage #"
+            if (!Enabled) return CachedLocalizer.Instance.MechJebAscentStatus9;          //"Autostaging off"
+            if (AutostagingOnce) return CachedLocalizer.Instance.MechJebAscentStatus10;  //"Will autostage next stage only"
+            return CachedLocalizer.Instance.MechJebAscentStatus11 + (int)AutostageLimit; //"Autostaging until stage #"
         }
 
         [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)] //Clamp Autostage Thrust
         private void ClampAutostageThrust()
         {
             double prev = Core.Staging.ClampAutoStageThrustPct;
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label44, Core.Staging.ClampAutoStageThrustPct, "%",
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel44, Core.Staging.ClampAutoStageThrustPct, "%",
                 50); //"Clamp AutoStage Thrust "
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (prev != Core.Staging.ClampAutoStageThrustPct)
