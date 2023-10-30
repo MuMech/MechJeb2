@@ -6,16 +6,10 @@ namespace MuMech
 {
     public static class GLUtils
     {
-        private static Material _material;
+        private static Material _materialInternal;
 
-        private static Material material
-        {
-            get
-            {
-                if (_material == null) _material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
-                return _material;
-            }
-        }
+        private static Material _material =>
+            _materialInternal ?? (_materialInternal = new Material(Shader.Find("Legacy Shaders/Particles/Additive")));
 
         public static void DrawMapViewGroundMarker(CelestialBody body, double latitude, double longitude, Color c, double rotation = 0,
             double radius = 0) =>
@@ -67,10 +61,10 @@ namespace MuMech
                 , c, map);
         }
 
-        public static void GLTriangle(Vector3d worldVertices1, Vector3d worldVertices2, Vector3d worldVertices3, Color c, bool map)
+        private static void GLTriangle(Vector3d worldVertices1, Vector3d worldVertices2, Vector3d worldVertices3, Color c, bool map)
         {
             GL.PushMatrix();
-            material.SetPass(0);
+            _material.SetPass(0);
             GL.LoadOrtho();
             GL.Begin(GL.TRIANGLES);
             GL.Color(c);
@@ -81,7 +75,7 @@ namespace MuMech
             GL.PopMatrix();
         }
 
-        public static void GLVertex(Vector3d worldPosition, bool map = false)
+        private static void GLVertex(Vector3d worldPosition, bool map = false)
         {
             Vector3 screenPoint =
                 map
@@ -90,7 +84,7 @@ namespace MuMech
             GL.Vertex3(screenPoint.x, screenPoint.y, 0);
         }
 
-        public static void GLPixelLine(Vector3d worldPosition1, Vector3d worldPosition2, bool map)
+        private static void GLPixelLine(Vector3d worldPosition1, Vector3d worldPosition2, bool map)
         {
             Vector3 screenPoint1, screenPoint2;
             if (map)
@@ -113,17 +107,17 @@ namespace MuMech
 
         //Tests if byBody occludes worldPosition, from the perspective of the planetarium camera
         // https://cesiumjs.org/2013/04/25/Horizon-culling/
-        public static bool IsOccluded(Vector3d worldPosition, CelestialBody byBody, Vector3d camPos)
+        private static bool IsOccluded(Vector3d worldPosition, CelestialBody byBody, Vector3d camPos)
         {
-            Vector3d VC = (byBody.position - camPos) / (byBody.Radius - 100);
-            Vector3d VT = (worldPosition - camPos) / (byBody.Radius - 100);
+            Vector3d vc = (byBody.position - camPos) / (byBody.Radius - 100);
+            Vector3d vt = (worldPosition - camPos) / (byBody.Radius - 100);
 
-            double VT_VC = Vector3d.Dot(VT, VC);
+            double vtVc = Vector3d.Dot(vt, vc);
 
             // In front of the horizon plane
-            if (VT_VC < VC.sqrMagnitude - 1) return false;
+            if (vtVc < vc.sqrMagnitude - 1) return false;
 
-            return VT_VC * VT_VC / VT.sqrMagnitude > VC.sqrMagnitude - 1;
+            return vtVc * vtVc / vt.sqrMagnitude > vc.sqrMagnitude - 1;
         }
 
         //If dashed = false, draws 0-1-2-3-4-5...
@@ -131,7 +125,7 @@ namespace MuMech
         public static void DrawPath(CelestialBody mainBody, List<Vector3d> points, Color c, bool map, bool dashed = false)
         {
             GL.PushMatrix();
-            material.SetPass(0);
+            _material.SetPass(0);
             GL.LoadPixelMatrix();
             GL.Begin(GL.LINES);
             GL.Color(c);
@@ -157,59 +151,62 @@ namespace MuMech
         {
             //Vector3d origin = vessel.GetWorldPos3D() - vessel.GetTransform().rotation * box.center ;
             //Vector3d origin = vessel.GetTransform().TransformPoint(box.center);
-            Vector3d origin = vessel.transform.TransformPoint(box.center);
+            Transform transform;
+            Vector3d origin = (transform = vessel.transform).TransformPoint(box.center);
 
-            Vector3d A1 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, +box.size.y, +box.size.z);
-            Vector3d A2 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, -box.size.y, +box.size.z);
-            Vector3d A3 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, -box.size.y, +box.size.z);
-            Vector3d A4 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, +box.size.y, +box.size.z);
+            Quaternion rotation = transform.rotation;
 
-            Vector3d B1 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, +box.size.y, -box.size.z);
-            Vector3d B2 = origin + vessel.transform.rotation * new Vector3d(+box.size.x, -box.size.y, -box.size.z);
-            Vector3d B3 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, -box.size.y, -box.size.z);
-            Vector3d B4 = origin + vessel.transform.rotation * new Vector3d(-box.size.x, +box.size.y, -box.size.z);
+            Vector3d a1 = origin + rotation * new Vector3d(+box.size.x, +box.size.y, +box.size.z);
+            Vector3d a2 = origin + rotation * new Vector3d(+box.size.x, -box.size.y, +box.size.z);
+            Vector3d a3 = origin + rotation * new Vector3d(-box.size.x, -box.size.y, +box.size.z);
+            Vector3d a4 = origin + rotation * new Vector3d(-box.size.x, +box.size.y, +box.size.z);
+
+            Vector3d b1 = origin + rotation * new Vector3d(+box.size.x, +box.size.y, -box.size.z);
+            Vector3d b2 = origin + rotation * new Vector3d(+box.size.x, -box.size.y, -box.size.z);
+            Vector3d b3 = origin + rotation * new Vector3d(-box.size.x, -box.size.y, -box.size.z);
+            Vector3d b4 = origin + rotation * new Vector3d(-box.size.x, +box.size.y, -box.size.z);
 
             GL.PushMatrix();
-            material.SetPass(0);
+            _material.SetPass(0);
             GL.LoadOrtho();
             GL.Begin(GL.LINES);
             GL.Color(c);
 
-            GLVertex(A1);
-            GLVertex(A2);
+            GLVertex(a1);
+            GLVertex(a2);
 
-            GLVertex(A2);
-            GLVertex(A3);
+            GLVertex(a2);
+            GLVertex(a3);
 
-            GLVertex(A3);
-            GLVertex(A4);
+            GLVertex(a3);
+            GLVertex(a4);
 
-            GLVertex(A4);
-            GLVertex(A1);
+            GLVertex(a4);
+            GLVertex(a1);
 
-            GLVertex(B1);
-            GLVertex(B2);
+            GLVertex(b1);
+            GLVertex(b2);
 
-            GLVertex(B2);
-            GLVertex(B3);
+            GLVertex(b2);
+            GLVertex(b3);
 
-            GLVertex(B3);
-            GLVertex(B4);
+            GLVertex(b3);
+            GLVertex(b4);
 
-            GLVertex(B4);
-            GLVertex(B1);
+            GLVertex(b4);
+            GLVertex(b1);
 
-            GLVertex(A1);
-            GLVertex(B1);
+            GLVertex(a1);
+            GLVertex(b1);
 
-            GLVertex(A2);
-            GLVertex(B2);
+            GLVertex(a2);
+            GLVertex(b2);
 
-            GLVertex(A3);
-            GLVertex(B3);
+            GLVertex(a3);
+            GLVertex(b3);
 
-            GLVertex(A4);
-            GLVertex(B4);
+            GLVertex(a4);
+            GLVertex(b4);
 
             GL.End();
             GL.PopMatrix();
