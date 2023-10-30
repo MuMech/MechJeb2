@@ -12,7 +12,7 @@ namespace MuMech
         public MechJebModuleAscentClassicPathMenu(MechJebCore core)
             : base(core)
         {
-            hidden = true;
+            Hidden = true;
         }
 
         private                 MechJebModuleAscentSettings         _ascentSettings;
@@ -28,7 +28,7 @@ namespace MuMech
             _path           = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
 
         protected override void WindowGUI(int windowID)
         {

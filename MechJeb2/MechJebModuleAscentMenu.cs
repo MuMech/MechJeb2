@@ -520,7 +520,7 @@ namespace MuMech
             return $"burn: {kspStage} {solution.Tgo(t, pvgPhase):F1}s {solution.DV(t, pvgPhase):F1}m/s ({excessDV:F1}m/s)";
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
 
         public override string GetName() => CachedLocalizer.Instance.MechJebAscentTitle; //"Ascent Guidance"
 

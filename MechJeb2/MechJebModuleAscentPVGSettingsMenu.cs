@@ -11,7 +11,7 @@ namespace MuMech
     {
         public MechJebModuleAscentPVGSettingsMenu(MechJebCore core) : base(core)
         {
-            hidden = true;
+            Hidden = true;
         }
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
@@ -19,7 +19,7 @@ namespace MuMech
         private static GUIStyle _btNormal;
         private static GUIStyle _btActive;
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
 
         private void SetupButtonStyles()
         {

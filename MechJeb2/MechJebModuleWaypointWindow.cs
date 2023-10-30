@@ -315,7 +315,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            hidden = true;
+            Hidden = true;
             ap     = Core.GetComputerModule<MechJebModuleRoverController>();
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
@@ -597,7 +597,7 @@ namespace MuMech
             set => selIndex = value;
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(500), GUILayout.Height(400) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(500), GUILayout.Height(400) };
 
         public void DrawPageWaypoints()
         {
@@ -1016,7 +1016,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
+            if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
                 switch (showPage)
@@ -1157,7 +1157,7 @@ namespace MuMech
             if (GUILayout.Button(title, selSubTopic == title ? btnActive : btnInactive))
             {
                 selSubTopic = selSubTopic != title ? title : "";
-                windowPos   = new Rect(windowPos.x, windowPos.y, windowPos.width, 0);
+                WindowPos   = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
             }
 
             if (selSubTopic == title)
@@ -1176,7 +1176,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            hidden = true;
+            Hidden = true;
             base.OnStart(state);
         }
 

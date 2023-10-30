@@ -197,9 +197,9 @@ namespace MuMech
             }
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(50) };
 
-        public override bool isActive() => warping;
+        public override bool IsActive() => warping;
 
         public override string GetName() => Localizer.Format("#MechJeb_WarpHelper_title"); //"Warp Helper"
 

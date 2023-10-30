@@ -769,8 +769,8 @@ namespace MuMech
             //try to check if the mouse is over any active DisplayModule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
-                if (m.Enabled && m.showInCurrentScene && !m.IsOverlay
-                    && m.windowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / scale))
+                if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay
+                    && m.WindowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / scale))
                 {
                     return true;
                 }

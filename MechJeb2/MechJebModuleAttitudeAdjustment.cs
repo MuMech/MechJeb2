@@ -154,7 +154,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(350), GUILayout.Height(150) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(350), GUILayout.Height(150) };
 
         public override string GetName() => Localizer.Format("#MechJeb_AttitudeAdjust_title"); //Attitude Adjustment
 

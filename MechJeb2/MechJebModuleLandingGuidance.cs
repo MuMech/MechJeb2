@@ -33,7 +33,7 @@ namespace MuMech
                 InitLandingSitesList();
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(150) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(150) };
 
         private void MoveByMeter(ref EditableAngle angle, double distance, double alt)
         {

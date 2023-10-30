@@ -9,7 +9,7 @@ namespace MuMech
     {
         public MechJebModuleAscentSettingsMenu(MechJebCore core) : base(core)
         {
-            hidden = true;
+            Hidden = true;
         }
 
         private MechJebModuleAscentSettings      _ascentSettings => Core.AscentSettings;
@@ -123,7 +123,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
 
         public override string GetName() => "Ascent Settings";
 
