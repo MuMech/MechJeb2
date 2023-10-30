@@ -14,8 +14,10 @@ namespace MuMech
     {
         protected void Start()
         {
-            IEnumerable<AssemblyLoader.LoadedAssembly> assemblies = AssemblyLoader.loadedAssemblies
-                .Where(a => a.assembly.GetName().Name == Assembly.GetExecutingAssembly().GetName().Name).Where(a => a.url != "MechJeb2/Plugins");
+            var assemblies = AssemblyLoader.loadedAssemblies
+                .Where(a => a.assembly.GetName().Name == Assembly.GetExecutingAssembly().GetName().Name)
+                .Where(a => a.url != "MechJeb2/Plugins")
+                .ToList();
             if (assemblies.Any())
             {
                 IEnumerable<string> badPaths = assemblies.Select(a => a.path).Select(p =>
@@ -35,7 +37,9 @@ namespace MuMech
                     ), false, HighLogic.UISkin);
             }
 
-            assemblies = AssemblyLoader.loadedAssemblies.Where(a => a.assembly.GetName().Name == "MechJebMenuToolbar");
+            assemblies = AssemblyLoader.loadedAssemblies
+                .Where(a => a.assembly.GetName().Name == "MechJebMenuToolbar")
+                .ToList();
             if (assemblies.Any())
             {
                 IEnumerable<string> badPaths = assemblies.Select(a => a.path).Select(p =>
