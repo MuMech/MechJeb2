@@ -249,8 +249,8 @@ namespace MuMech
                 if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 {
                     MechJebModuleFlightRecorder recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
-                    if (recorder != null) AscentSettings.LaunchPhaseAngle.val    = recorder.phaseAngleFromMark;
-                    if (recorder != null) AscentSettings.LaunchLANDifference.val = VesselState.orbitLAN - recorder.markLAN;
+                    if (recorder != null) AscentSettings.LaunchPhaseAngle.val    = recorder.PhaseAngleFromMark;
+                    if (recorder != null) AscentSettings.LaunchLANDifference.val = VesselState.orbitLAN - recorder.MarkLAN;
 
                     //finished circularize
                     Users.Clear();

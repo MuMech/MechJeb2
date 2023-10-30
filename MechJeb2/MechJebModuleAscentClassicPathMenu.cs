@@ -182,7 +182,7 @@ namespace MuMech
 
         private void DrawnTrajectory(Rect r, MechJebModuleFlightRecorder recorder)
         {
-            if (recorder.history.Length <= 2 || recorder.historyIdx == 0)
+            if (recorder.History.Length <= 2 || recorder.HistoryIdx == 0)
                 return;
 
             float scale = (float)((_ascentSettings.AutoPath ? _ascentSettings.AutoTurnEndAltitude : _ascentSettings.TurnEndAltitude) /
@@ -190,14 +190,14 @@ namespace MuMech
 
             int t = 1;
 
-            var p1 = new Vector2(r.xMin + (float)(recorder.history[0].downRange / scale), r.yMax - (float)(recorder.history[0].altitudeASL / scale));
+            var p1 = new Vector2(r.xMin + (float)(recorder.History[0].DownRange / scale), r.yMax - (float)(recorder.History[0].AltitudeASL / scale));
             var p2 = new Vector2();
 
-            while (t <= recorder.historyIdx && t < recorder.history.Length)
+            while (t <= recorder.HistoryIdx && t < recorder.History.Length)
             {
-                MechJebModuleFlightRecorder.RecordStruct rec = recorder.history[t];
-                p2.x = r.xMin + (float)(rec.downRange / scale);
-                p2.y = r.yMax - (float)(rec.altitudeASL / scale);
+                MechJebModuleFlightRecorder.RecordStruct rec = recorder.History[t];
+                p2.x = r.xMin + (float)(rec.DownRange / scale);
+                p2.y = r.yMax - (float)(rec.AltitudeASL / scale);
 
                 if ((r.Contains(p2) && (p1 - p2).sqrMagnitude >= 1.0) || t < 2)
                 {
