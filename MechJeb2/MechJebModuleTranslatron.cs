@@ -44,7 +44,7 @@ namespace MuMech
 
         public override string IconName() => "Translatron";
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(130) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(130) };
 
         protected override void WindowGUI(int windowID)
         {
@@ -64,7 +64,7 @@ namespace MuMech
             {
                 if (!autoMode)
                 {
-                    windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
+                    WindowPos = new Rect(WindowPos.x, WindowPos.y, 10, 10);
                     autoMode  = true;
                 }
 
@@ -77,7 +77,7 @@ namespace MuMech
             {
                 if (autoMode)
                 {
-                    windowPos = new Rect(windowPos.x, windowPos.y, 10, 10);
+                    WindowPos = new Rect(WindowPos.x, WindowPos.y, 10, 10);
                     autoMode  = false;
                 }
 
@@ -153,7 +153,7 @@ namespace MuMech
             if (Core.Thrust.Tmode != oldMode)
             {
                 Core.Thrust.TransSpdAct = Convert.ToInt16(trans_spd);
-                windowPos               = new Rect(windowPos.x, windowPos.y, 10, 10);
+                WindowPos               = new Rect(WindowPos.x, WindowPos.y, 10, 10);
                 if (Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF)
                 {
                     Core.Thrust.Users.Remove(this);

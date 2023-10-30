@@ -135,7 +135,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
 
         public override void DrawGUI(bool inEditor)
         {
@@ -253,7 +253,7 @@ namespace MuMech
                     bool loadedEnabled;
                     if (bool.TryParse(windowNode.GetValue("enabledEditor"), out loadedEnabled))
                     {
-                        window.enabledEditor = loadedEnabled;
+                        window.EnabledEditor = loadedEnabled;
                         useOldConfig         = false;
                         if (HighLogic.LoadedSceneIsEditor)
                             window.Enabled = loadedEnabled;
@@ -265,7 +265,7 @@ namespace MuMech
                     bool loadedEnabled;
                     if (bool.TryParse(windowNode.GetValue("enabledFlight"), out loadedEnabled))
                     {
-                        window.enabledFlight = loadedEnabled;
+                        window.EnabledFlight = loadedEnabled;
                         useOldConfig         = false;
                         if (HighLogic.LoadedSceneIsFlight)
                             window.Enabled = loadedEnabled;
@@ -280,13 +280,13 @@ namespace MuMech
                         if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled))
                         {
                             window.Enabled       = loadedEnabled;
-                            window.enabledEditor = window.Enabled;
-                            window.enabledFlight = window.Enabled;
+                            window.EnabledEditor = window.Enabled;
+                            window.EnabledFlight = window.Enabled;
                         }
                     }
 
-                    window.enabledEditor = window.Enabled;
-                    window.enabledFlight = window.Enabled;
+                    window.EnabledEditor = window.Enabled;
+                    window.EnabledFlight = window.Enabled;
                 }
 
                 window.items = new List<InfoItem>();
@@ -320,12 +320,12 @@ namespace MuMech
                 var windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.GLOBAL, null);
 
                 if (HighLogic.LoadedSceneIsEditor)
-                    window.enabledEditor = window.Enabled;
+                    window.EnabledEditor = window.Enabled;
                 if (HighLogic.LoadedSceneIsFlight)
-                    window.enabledFlight = window.Enabled;
+                    window.EnabledFlight = window.Enabled;
 
-                windowNode.AddValue("enabledFlight", window.enabledFlight);
-                windowNode.AddValue("enabledEditor", window.enabledEditor);
+                windowNode.AddValue("enabledFlight", window.EnabledFlight);
+                windowNode.AddValue("enabledEditor", window.EnabledEditor);
                 windowNode.CopyTo(global.AddNode(name));
                 window.Dirty = false;
             }
@@ -380,7 +380,7 @@ namespace MuMech
                 {
                     editedWindow.Init();
 
-                    Color newColor = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.backgroundColor);
+                    Color newColor = ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.backgroundColor);
 
                     if (editedWindow.backgroundColor != newColor)
                     {
@@ -396,7 +396,7 @@ namespace MuMech
             {
                 if (editedWindow != null)
                 {
-                    Color newColor = ColorPickerRGB.DrawGUI((int)windowPos.xMax + 5, (int)windowPos.yMin, editedWindow.text);
+                    Color newColor = ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.text);
                     if (editedWindow.text != newColor)
                     {
                         editedWindow.text  = newColor;
@@ -552,7 +552,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(540) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(540) };
 
         public override string GetName() => CachedLocalizer.Instance.MechJebWindowEdTitle; //Custom Window Editor
 

@@ -139,7 +139,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(50) };
 
         protected override void OnModuleDisabled()
         {

@@ -125,9 +125,9 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
 
-        public override bool isActive() => Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
+        public override bool IsActive() => Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
 
         public override string GetName() => Localizer.Format("#MechJeb_Utilities_title"); //"Utilities"
 

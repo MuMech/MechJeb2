@@ -113,7 +113,7 @@ namespace MuMech
             }
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
 
         public override string GetName() => Localizer.Format("#MechJeb_SmartRcs_title"); //"SmartRcs"
 

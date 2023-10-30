@@ -166,7 +166,7 @@ namespace MuMech
 
             MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
 
-            if (masterSmartASS is { hidden: false })
+            if (masterSmartASS is { Hidden: false })
             {
                 masterSmartASS.mode   = MechJebModuleSmartASS.Mode.ORBITAL;
                 masterSmartASS.target = smartassTarget;
@@ -190,7 +190,7 @@ namespace MuMech
 
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-            if (moduleTranslatron is { hidden: false })
+            if (moduleTranslatron is { Hidden: false })
                 moduleTranslatron.PanicSwitch();
         }
 
@@ -218,7 +218,7 @@ namespace MuMech
             {
                 MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-                if (moduleTranslatron is { hidden: false })
+                if (moduleTranslatron is { Hidden: false })
                 {
                     Thrust.TransKillH = !Thrust.TransKillH;
                 }
@@ -264,7 +264,7 @@ namespace MuMech
 
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-            if (moduleTranslatron is { hidden: false })
+            if (moduleTranslatron is { Hidden: false })
             {
                 if (Thrust.Users.Count > 1 && !Thrust.Users.Contains(moduleTranslatron))
                     return;
@@ -289,7 +289,7 @@ namespace MuMech
 
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-            if (moduleTranslatron is { hidden: false })
+            if (moduleTranslatron is { Hidden: false })
                 Thrust.TransSpdAct = (relative ? Thrust.TransSpdAct : 0) + speed;
             else
                 Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");

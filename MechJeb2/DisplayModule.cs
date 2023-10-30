@@ -6,17 +6,15 @@ namespace MuMech
 {
     public class DisplayModule : ComputerModule
     {
-        public bool hidden;
+        public bool Hidden;
 
-        public Rect windowPos
+        public Rect WindowPos
         {
-            get
-            {
-                if (!HighLogic.LoadedSceneIsEditor)
-                    return new Rect(windowVector.x, windowVector.y, windowVector.z, windowVector.w);
-                return new Rect(windowVectorEditor.x, windowVectorEditor.y, windowVectorEditor.z, windowVectorEditor.w);
-            }
-            set
+            get => !HighLogic.LoadedSceneIsEditor
+                ? new Rect(_windowVector.x, _windowVector.y, _windowVector.z, _windowVector.w)
+                : new Rect(_windowVectorEditor.x, _windowVectorEditor.y, _windowVectorEditor.z, _windowVectorEditor.w);
+
+            protected set
             {
                 var newPos = new Vector4(
                     Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
@@ -28,18 +26,18 @@ namespace MuMech
 
                 if (!HighLogic.LoadedSceneIsEditor)
                 {
-                    if (windowVector != newPos)
+                    if (_windowVector != newPos)
                     {
-                        Dirty        = true;
-                        windowVector = newPos;
+                        Dirty         = true;
+                        _windowVector = newPos;
                     }
                 }
                 else
                 {
-                    if (windowVectorEditor != newPos)
+                    if (_windowVectorEditor != newPos)
                     {
-                        Dirty              = true;
-                        windowVectorEditor = newPos;
+                        Dirty               = true;
+                        _windowVectorEditor = newPos;
                     }
                 }
             }
@@ -48,98 +46,92 @@ namespace MuMech
         // Those field should be private but Persistent has a bug that prevent it to work properly on parent class private fields
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public Vector4 windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        private Vector4 _windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public Vector4
-            windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        private Vector4
+            _windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showInFlight = true;
+        private bool _showInFlight = true;
 
         public bool ShowInFlight
         {
-            get => showInFlight;
+            get => _showInFlight;
             set
             {
-                if (showInFlight != value)
+                if (_showInFlight != value)
                 {
-                    showInFlight = value;
-                    Dirty        = true;
+                    _showInFlight = value;
+                    Dirty         = true;
                 }
             }
         }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showInEditor;
+        private bool _showInEditor;
 
         public bool ShowInEditor
         {
-            get => showInEditor;
+            get => _showInEditor;
             set
             {
-                if (showInEditor != value)
-                {
-                    showInEditor = value;
-                    Dirty        = true;
-                }
+                if (_showInEditor == value) return;
+                _showInEditor = value;
+                Dirty         = true;
             }
         }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool isOverlay;
+        private bool _isOverlay;
 
         public bool IsOverlay
         {
-            get => isOverlay;
+            get => _isOverlay;
             set
             {
-                if (isOverlay != value)
-                {
-                    isOverlay = value;
-                    Dirty     = true;
-                }
+                if (_isOverlay == value) return;
+                _isOverlay = value;
+                Dirty      = true;
             }
         }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool locked;
+        private bool _locked;
 
         public bool Locked
         {
-            get => locked;
+            get => _locked;
             set
             {
-                if (locked != value)
-                {
-                    locked = value;
-                    Dirty  = true;
-                }
+                if (_locked == value) return;
+                _locked = value;
+                Dirty   = true;
             }
         }
 
-        internal bool enabledEditor;
-        internal bool enabledFlight;
+        internal bool EnabledEditor;
+        internal bool EnabledFlight;
 
-        private GUILayoutOption[] windowOptions;
+        private GUILayoutOption[] _windowOptions;
 
-        public bool showInCurrentScene => HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight;
+        public bool ShowInCurrentScene => HighLogic.LoadedSceneIsEditor ? _showInEditor : _showInFlight;
 
-        public        int ID;
-        public static int nextID = 72190852;
+        private readonly int _id;
+        private static   int _nextID = 72190852;
 
-        public DisplayModule(MechJebCore core)
+        protected DisplayModule(MechJebCore core)
             : base(core)
         {
-            ID = nextID;
-            nextID++;
+            _id = _nextID;
+            _nextID++;
         }
 
-        public virtual GUILayoutOption[] WindowOptions() => new GUILayoutOption[0];
+        protected virtual GUILayoutOption[] WindowOptions() => Array.Empty<GUILayoutOption>();
 
         protected void WindowGUI(int windowID, bool draggable)
         {
-            if (!isOverlay && GUI.Button(new Rect(windowPos.width - 18, 2, 16, 16), ""))
+            if (!_isOverlay && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
             {
                 Enabled = false;
             }
@@ -149,20 +141,20 @@ namespace MuMech
 //                locked = !locked;
 //            }
 
-            bool allowDrag = !locked;
-            if (!locked && !isOverlay && Core.Settings.useTitlebarDragging)
+            bool allowDrag = !_locked;
+            if (!_locked && !_isOverlay && Core.Settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
-                allowDrag = x >= windowPos.xMin + 3 && x <= windowPos.xMin + windowPos.width - 3 &&
-                            y >= windowPos.yMin + 3 && y <= windowPos.yMin + 17;
+                allowDrag = x >= WindowPos.xMin + 3 && x <= WindowPos.xMin + WindowPos.width - 3 &&
+                            y >= WindowPos.yMin + 3 && y <= WindowPos.yMin + 17;
             }
 
             if (draggable && allowDrag)
                 GUI.DragWindow();
         }
 
-        protected void ProfiledWindowGUI(int windowID)
+        private void ProfiledWindowGUI(int windowID)
         {
             Profiler.BeginSample(GetType().Name);
             WindowGUI(windowID);
@@ -173,36 +165,34 @@ namespace MuMech
 
         public virtual void DrawGUI(bool inEditor)
         {
-            if (showInCurrentScene)
-            {
-                // Cache the array to not create one each frame
-                if (windowOptions == null)
-                    windowOptions = WindowOptions();
+            if (!ShowInCurrentScene) return;
 
-                windowPos = GUILayout.Window(ID, windowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), windowOptions);
+            // Cache the array to not create one each frame
+            _windowOptions ??= WindowOptions();
 
-                //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
-                //
-                //                foreach (var w in windows)
-                //                {
-                //                	if (w == this) { continue; }
-                //
-                //                	var diffL = (w.windowPos.x + w.windowPos.width - 2) - windowPos.x;
-                //                	var diffR = w.windowPos.x - (windowPos.x + windowPos.width + 2);
-                //                	var diffT = (w.windowPos.y + w.windowPos.height - 2) - windowPos.y;
-                //                	var diffB = w.windowPos.y - (windowPos.y + windowPos.height + 2);
-                //
-                //                	if (Math.Abs(diffL) <= 8)
-                //                	{
-                //                		SetPos(w.windowPos.x + w.windowPos.width - 2, windowPos.y);
-                //                	}
-                //
-                //                	if (Math.Abs(diffR) <= 8)
-                //                	{
-                //                		SetPos(w.windowPos.x - windowPos.width + 2, windowPos.y);
-                //                	}
-                //                }
-            }
+            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, _isOverlay ? "" : GetName(), _windowOptions);
+
+            //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
+            //
+            //                foreach (var w in windows)
+            //                {
+            //                	if (w == this) { continue; }
+            //
+            //                	var diffL = (w.windowPos.x + w.windowPos.width - 2) - windowPos.x;
+            //                	var diffR = w.windowPos.x - (windowPos.x + windowPos.width + 2);
+            //                	var diffT = (w.windowPos.y + w.windowPos.height - 2) - windowPos.y;
+            //                	var diffB = w.windowPos.y - (windowPos.y + windowPos.height + 2);
+            //
+            //                	if (Math.Abs(diffL) <= 8)
+            //                	{
+            //                		SetPos(w.windowPos.x + w.windowPos.width - 2, windowPos.y);
+            //                	}
+            //
+            //                	if (Math.Abs(diffR) <= 8)
+            //                	{
+            //                		SetPos(w.windowPos.x - windowPos.width + 2, windowPos.y);
+            //                	}
+            //                }
         }
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -212,12 +202,12 @@ namespace MuMech
             if (global != null)
             {
                 if (HighLogic.LoadedSceneIsEditor)
-                    enabledEditor = Enabled;
+                    EnabledEditor = Enabled;
                 if (HighLogic.LoadedSceneIsFlight)
-                    enabledFlight = Enabled;
+                    EnabledFlight = Enabled;
 
-                global.AddValue("enabledEditor", enabledEditor);
-                global.AddValue("enabledFlight", enabledFlight);
+                global.AddValue("enabledEditor", EnabledEditor);
+                global.AddValue("enabledFlight", EnabledFlight);
             }
 //            if (global != null) global.AddValue("locked", locked);
         }
@@ -229,10 +219,9 @@ namespace MuMech
             bool useOldConfig = true;
             if (global != null && global.HasValue("enabledEditor"))
             {
-                bool loadedEnabled;
-                if (bool.TryParse(global.GetValue("enabledEditor"), out loadedEnabled))
+                if (bool.TryParse(global.GetValue("enabledEditor"), out bool loadedEnabled))
                 {
-                    enabledEditor = loadedEnabled;
+                    EnabledEditor = loadedEnabled;
                     useOldConfig  = false;
                     if (HighLogic.LoadedSceneIsEditor)
                         Enabled = loadedEnabled;
@@ -241,10 +230,9 @@ namespace MuMech
 
             if (global != null && global.HasValue("enabledFlight"))
             {
-                bool loadedEnabled;
-                if (bool.TryParse(global.GetValue("enabledFlight"), out loadedEnabled))
+                if (bool.TryParse(global.GetValue("enabledFlight"), out bool loadedEnabled))
                 {
-                    enabledFlight = loadedEnabled;
+                    EnabledFlight = loadedEnabled;
                     useOldConfig  = false;
                     if (HighLogic.LoadedSceneIsFlight)
                         Enabled = loadedEnabled;
@@ -255,15 +243,14 @@ namespace MuMech
             {
                 if (global != null && global.HasValue("enabled"))
                 {
-                    bool loadedEnabled;
-                    if (bool.TryParse(global.GetValue("enabled"), out loadedEnabled))
+                    if (bool.TryParse(global.GetValue("enabled"), out bool loadedEnabled))
                     {
                         Enabled = loadedEnabled;
                     }
                 }
 
-                enabledEditor = Enabled;
-                enabledFlight = Enabled;
+                EnabledEditor = Enabled;
+                EnabledFlight = Enabled;
             }
 
             //            if (global != null && global.HasValue("locked"))
@@ -273,22 +260,20 @@ namespace MuMech
             //            }
         }
 
-        private ComputerModule[] makesActive;
+        private ComputerModule[] _makesActive;
 
-        public virtual bool isActive()
+        public virtual bool IsActive()
         {
-            if (makesActive == null)
-                makesActive = new ComputerModule[] { Core.Attitude, Core.Thrust, Core.Rover, Core.Node, Core.RCS, Core.Rcsbal };
+            _makesActive ??= new ComputerModule[] { Core.Attitude, Core.Thrust, Core.Rover, Core.Node, Core.RCS, Core.Rcsbal };
 
             bool active = false;
-            for (int i = 0; i < makesActive.Length; i++)
+            for (int i = 0; i < _makesActive.Length; i++)
             {
-                ComputerModule m = makesActive[i];
-                if (m != null)
-                {
-                    if (active |= m.Users.RecursiveUser(this))
-                        break;
-                }
+                ComputerModule m = _makesActive[i];
+                if (m == null) continue;
+
+                if (active |= m.Users.RecursiveUser(this))
+                    break;
             }
 
             return active;
@@ -296,22 +281,21 @@ namespace MuMech
 
         public override void UnlockCheck()
         {
-            if (!UnlockChecked)
-            {
-                bool prevEn = Enabled;
-                Enabled = true;
-                base.UnlockCheck();
-                if (UnlockParts.Trim().Length > 0 || UnlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
-                {
-                    hidden = !Enabled;
-                    if (hidden)
-                    {
-                        prevEn = false;
-                    }
-                }
+            if (UnlockChecked) return;
 
-                Enabled = prevEn;
+            bool prevEn = Enabled;
+            Enabled = true;
+            base.UnlockCheck();
+            if (UnlockParts.Trim().Length > 0 || UnlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
+            {
+                Hidden = !Enabled;
+                if (Hidden)
+                {
+                    prevEn = false;
+                }
             }
+
+            Enabled = prevEn;
         }
 
         public virtual string GetName() => "Display Module";

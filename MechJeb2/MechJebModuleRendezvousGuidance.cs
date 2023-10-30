@@ -172,7 +172,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(150) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(150) };
 
         public override string GetName() => Localizer.Format("#MechJeb_RZplan_title"); //"Rendezvous Planner"
 

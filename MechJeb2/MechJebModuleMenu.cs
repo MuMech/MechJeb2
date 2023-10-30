@@ -18,7 +18,7 @@ namespace MuMech
         {
             Priority     = -1000;
             Enabled      = true;
-            hidden       = true;
+            Hidden       = true;
             ShowInFlight = true;
             ShowInEditor = true;
 
@@ -80,22 +80,22 @@ namespace MuMech
                 switch (windowSide)
                 {
                     case WindowSide.LEFT:
-                        return new Rect((windowProgr - 1) * windowPos.width,
-                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
+                        return new Rect((windowProgr - 1) * WindowPos.width,
+                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - WindowPos.height), WindowPos.width, WindowPos.height);
                     case WindowSide.RIGHT:
-                        return new Rect(GuiUtils.scaledScreenWidth - windowProgr * windowPos.width,
-                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - windowPos.height), windowPos.width, windowPos.height);
+                        return new Rect(GuiUtils.scaledScreenWidth - windowProgr * WindowPos.width,
+                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - WindowPos.height), WindowPos.width, WindowPos.height);
                     case WindowSide.TOP:
                         return new Rect(
-                            Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - windowPos.width * 0.5f - windowHPos, 0,
-                                GuiUtils.scaledScreenWidth - windowPos.width), (windowProgr - 1) * windowPos.height, windowPos.width,
-                            windowPos.height);
+                            Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - WindowPos.width * 0.5f - windowHPos, 0,
+                                GuiUtils.scaledScreenWidth - WindowPos.width), (windowProgr - 1) * WindowPos.height, WindowPos.width,
+                            WindowPos.height);
                     case WindowSide.BOTTOM:
                     default:
                         return new Rect(
-                            Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - windowPos.width * 0.5f - windowHPos, 0,
-                                GuiUtils.scaledScreenWidth - windowPos.width), GuiUtils.scaledScreenHeight - windowProgr * windowPos.height,
-                            windowPos.width, windowPos.height);
+                            Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - WindowPos.width * 0.5f - windowHPos, 0,
+                                GuiUtils.scaledScreenWidth - WindowPos.width), GuiUtils.scaledScreenHeight - windowProgr * WindowPos.height,
+                            WindowPos.width, WindowPos.height);
                 }
             }
         }
@@ -107,17 +107,17 @@ namespace MuMech
                 switch (windowSide)
                 {
                     case WindowSide.LEFT:
-                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.scaledScreenHeight, -100), windowPos.width * windowProgr, 100, 25);
+                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.scaledScreenHeight, -100), WindowPos.width * windowProgr, 100, 25);
                     case WindowSide.RIGHT:
                         return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.scaledScreenHeight, -100),
-                            GuiUtils.scaledScreenWidth - 25 - windowPos.width * windowProgr, 100, 25);
+                            GuiUtils.scaledScreenWidth - 25 - WindowPos.width * windowProgr, 100, 25);
                     case WindowSide.TOP:
                         return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50),
-                            windowProgr * windowPos.height, 100, 25);
+                            windowProgr * WindowPos.height, 100, 25);
                     case WindowSide.BOTTOM:
                     default:
                         return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50),
-                            GuiUtils.scaledScreenHeight - windowProgr * windowPos.height - 25, 100, 25);
+                            GuiUtils.scaledScreenHeight - windowProgr * WindowPos.height - 25, 100, 25);
                 }
             }
         }
@@ -210,14 +210,14 @@ namespace MuMech
 
             List<DisplayModule> displayModules = Core.GetDisplayModules(DisplayOrder.instance);
             int i = 0;
-            int step = Mathf.CeilToInt((float)(displayModules.Count(d => !d.hidden && d.showInCurrentScene) + 1) / columns);
+            int step = Mathf.CeilToInt((float)(displayModules.Count(d => !d.Hidden && d.ShowInCurrentScene) + 1) / columns);
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
 
             foreach (DisplayModule module in displayModules)
             {
-                if (!module.hidden && module.showInCurrentScene)
+                if (!module.Hidden && module.ShowInCurrentScene)
                 {
                     if (i == step)
                     {
@@ -226,7 +226,7 @@ namespace MuMech
                         i = 0;
                     }
 
-                    module.Enabled = GUILayout.Toggle(module.Enabled, module.GetName(), module.isActive() ? toggleActive : toggleInactive);
+                    module.Enabled = GUILayout.Toggle(module.Enabled, module.GetName(), module.IsActive() ? toggleActive : toggleInactive);
                     i++;
                 }
             }
@@ -278,7 +278,7 @@ namespace MuMech
 
             SetupMainToolbarButton();
 
-            foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.hidden))
+            foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.Hidden))
             {
                 Button button;
                 if (!toolbarButtons.ContainsKey(module))
@@ -331,15 +331,15 @@ namespace MuMech
                     button = toolbarButtons[module];
                 }
 
-                button.button.Visible     = module.showInCurrentScene;
-                button.button.TexturePath = module.isActive() ? button.texturePathActive : button.texturePath;
+                button.button.Visible     = module.ShowInCurrentScene;
+                button.button.TexturePath = module.IsActive() ? button.texturePathActive : button.texturePath;
             }
 
             // create toolbar buttons for features
             if (featureButtons.Count == 0)
             {
                 MechJebModuleManeuverPlanner maneuverPlannerModule = Core.GetComputerModule<MechJebModuleManeuverPlanner>();
-                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.hidden)
+                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.Hidden)
                 {
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", b =>
                     {
@@ -437,7 +437,7 @@ namespace MuMech
                     : button.texturePath;
             }, button);
 
-            button.button.Visible     = module.showInCurrentScene;
+            button.button.Visible     = module.ShowInCurrentScene;
             button.button.TexturePath = button.texturePath;
         }
 
@@ -569,12 +569,12 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                windowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + Core.version,
+                WindowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + Core.version,
                     GUILayout.Width(colWidth), GUILayout.Height(20));
             }
             else
             {
-                windowPos = new Rect(GuiUtils.scaledScreenWidth, GuiUtils.scaledScreenHeight, 0, 0); // make it small so the mouse can't hoover it
+                WindowPos = new Rect(GuiUtils.scaledScreenWidth, GuiUtils.scaledScreenHeight, 0, 0); // make it small so the mouse can't hoover it
             }
 
             GUI.depth = -98;

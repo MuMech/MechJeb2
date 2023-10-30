@@ -117,7 +117,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(30) };
 
         public override string GetName() => Localizer.Format("#MechJeb_RCSBalancer_title"); //"RCS Balancer"
 

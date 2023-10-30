@@ -86,7 +86,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(350), GUILayout.Height(200) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(350), GUILayout.Height(200) };
 
         public override void OnFixedUpdate()
         {

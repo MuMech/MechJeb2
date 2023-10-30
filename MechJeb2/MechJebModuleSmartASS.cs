@@ -667,7 +667,7 @@ namespace MuMech
             if (resetPID) { Core.Attitude.Controller.Reset(); }
         }
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
 
         public override string GetName() =>
             Core.eduMode

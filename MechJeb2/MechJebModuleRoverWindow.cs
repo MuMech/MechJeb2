@@ -18,14 +18,14 @@ namespace MuMech
 
         public override string IconName() => "Rover Autopilot";
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(50) };
 
         protected override void WindowGUI(int windowID)
         {
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
 
-            if (GUI.Button(new Rect(windowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
+            if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
                 help.selTopic = ((IList)help.topics).IndexOf("Controller");

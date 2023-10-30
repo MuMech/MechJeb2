@@ -134,6 +134,6 @@ namespace MuMech
 
         public override string IconName() => "Settings";
 
-        public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(100) };
     }
 }
