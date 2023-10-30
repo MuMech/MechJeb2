@@ -253,11 +253,7 @@ namespace MuMech
                 return;
             }
 
-            if (VesselState.currentThrustAccel > 0)
-            {
-                gravityLosses += VesselState.deltaT * Vector3d.Dot(-VesselState.orbitalVelocity.normalized, VesselState.gravityForce);
-            }
-
+            gravityLosses  += VesselState.deltaT * Vector3d.Dot(-VesselState.orbitalVelocity.normalized, VesselState.gravityForce);
             dragLosses     += VesselState.deltaT * VesselState.drag;
             deltaVExpended += VesselState.deltaT * VesselState.currentThrustAccel;
             steeringLosses += VesselState.deltaT * VesselState.currentThrustAccel *
