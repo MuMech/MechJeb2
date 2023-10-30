@@ -108,21 +108,21 @@ namespace MuMech
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUI.skin.box);
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label13, _ascentSettings.PitchStartVelocity, "m/s",
-                40);                                                                                                       //Booster Pitch start:
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel13, _ascentSettings.PitchStartVelocity, "m/s",
+                40);                                                                                                     //Booster Pitch start:
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox("Q Trigger:", _ascentSettings.DynamicPressureTrigger, "kPa", 40);
             GuiUtils.ToggledTextBox(ref _ascentSettings.StagingTriggerFlag, "PVG After Stage:", _ascentSettings.StagingTrigger, width: 40);
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJeb_Ascent_label17, _ascentSettings.LimitQa, "Pa-rad"); //Qα limit
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel17, _ascentSettings.LimitQa, "Pa-rad"); //Qα limit
             if (_ascentSettings.LimitQa < 1000 || _ascentSettings.LimitQa > 4000)
             {
                 if (_ascentSettings.LimitQa < 0 || _ascentSettings.LimitQa > 10000)
                     GUILayout.Label("Qα limit has been clamped to between 0 and 10000 Pa-rad", GuiUtils.redLabel);
                 else
-                    GUILayout.Label(CachedLocalizer.Instance.MechJeb_Ascent_label20,
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel20,
                         GuiUtils.yellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
             }
 

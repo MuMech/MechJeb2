@@ -116,19 +116,19 @@ namespace MuMech
 
             stageHeaderData.Clear();
             stageHeaderData.Add(StageData.KSPStage, "Stage" + SPACING);
-            stageHeaderData.Add(StageData.InitialMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn1 + SPACING);
-            stageHeaderData.Add(StageData.FinalMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn2 + SPACING);
-            stageHeaderData.Add(StageData.StagedMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn3 + SPACING);
-            stageHeaderData.Add(StageData.BurnedMass, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn4 + SPACING);
-            stageHeaderData.Add(StageData.Thrust, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn13 + SPACING);
-            stageHeaderData.Add(StageData.VacInitialTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn5 + SPACING);
-            stageHeaderData.Add(StageData.VacMaxTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn6 + SPACING);
-            stageHeaderData.Add(StageData.AtmoInitialTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn7 + SPACING);
-            stageHeaderData.Add(StageData.AtmoMaxTWR, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn8 + SPACING);
-            stageHeaderData.Add(StageData.Isp, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn9 + SPACING);
-            stageHeaderData.Add(StageData.AtmoDeltaV, (showRcs ? "RCS ∆Vmin" : CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn10) + SPACING);
-            stageHeaderData.Add(StageData.VacDeltaV, (showRcs ? "RCS ∆Vmax" : CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn11) + SPACING);
-            stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn12 + SPACING);
+            stageHeaderData.Add(StageData.InitialMass, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn1 + SPACING);
+            stageHeaderData.Add(StageData.FinalMass, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn2 + SPACING);
+            stageHeaderData.Add(StageData.StagedMass, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn3 + SPACING);
+            stageHeaderData.Add(StageData.BurnedMass, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn4 + SPACING);
+            stageHeaderData.Add(StageData.Thrust, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn13 + SPACING);
+            stageHeaderData.Add(StageData.VacInitialTWR, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn5 + SPACING);
+            stageHeaderData.Add(StageData.VacMaxTWR, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn6 + SPACING);
+            stageHeaderData.Add(StageData.AtmoInitialTWR, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn7 + SPACING);
+            stageHeaderData.Add(StageData.AtmoMaxTWR, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn8 + SPACING);
+            stageHeaderData.Add(StageData.Isp, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn9 + SPACING);
+            stageHeaderData.Add(StageData.AtmoDeltaV, (showRcs ? "RCS ∆Vmin" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn10) + SPACING);
+            stageHeaderData.Add(StageData.VacDeltaV, (showRcs ? "RCS ∆Vmax" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn11) + SPACING);
+            stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn12 + SPACING);
         }
 
         private void GatherStages(List<int> stages)
@@ -217,7 +217,7 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(CachedLocalizer.Instance.MechJeb_InfoItems_label1); //"Stage stats"
+            GUILayout.Label(CachedLocalizer.Instance.MechJebInfoItemsLabel1); //"Stage stats"
 
             if (GUILayout.Button(timeSeconds ? "s" : "dhms", GUILayout.ExpandWidth(false)))
             {
@@ -226,7 +226,7 @@ namespace MuMech
             }
 
             if (GUILayout.Button(
-                    showEmpty ? CachedLocalizer.Instance.MechJeb_InfoItems_showEmpty : CachedLocalizer.Instance.MechJeb_InfoItems_hideEmpty,
+                    showEmpty ? CachedLocalizer.Instance.MechJebInfoItemsShowEmpty : CachedLocalizer.Instance.MechJebInfoItemsHideEmpty,
                     GUILayout.ExpandWidth(false)))
             {
                 showEmpty           = !showEmpty;
@@ -249,7 +249,7 @@ namespace MuMech
             if (!HighLogic.LoadedSceneIsEditor)
             {
                 if (GUILayout.Button(
-                        liveSLT ? CachedLocalizer.Instance.MechJeb_InfoItems_button5 : CachedLocalizer.Instance.MechJeb_InfoItems_button6,
+                        liveSLT ? CachedLocalizer.Instance.MechJebInfoItemsButton5 : CachedLocalizer.Instance.MechJebInfoItemsButton6,
                         GUILayout.ExpandWidth(false))) //"Live SLT" "0Alt SLT"
                 {
                     liveSLT           = !liveSLT;

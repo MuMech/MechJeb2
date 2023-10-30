@@ -309,7 +309,7 @@ namespace MuMech
                 EditorDriver.editorFacility == EditorFacility.VAB);
             return maximumVesselMass < float.MaxValue
                 ? $"{maximumVesselMass:F3} t"
-                : CachedLocalizer.Instance.MechJeb_InfoItems_UnlimitedText; //"Unlimited"
+                : CachedLocalizer.Instance.MechJebInfoItemsUnlimitedText; //"Unlimited"
         }
 
         [ValueInfoItem("#MechJeb_DryMass", InfoItem.Category.Vessel, showInEditor = true, format = "F3", units = "t")] //Dry mass

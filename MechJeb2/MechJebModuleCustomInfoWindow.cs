@@ -109,7 +109,7 @@ namespace MuMech
 
             if (items.Count == 0)
                 GUILayout.Label(CachedLocalizer.Instance
-                    .MechJeb_WindowEd_CustomInfoWindow_Label1); //Add items to this window with the custom window editor.
+                    .MechJebWindowEdCustomInfoWindowLabel1); //Add items to this window with the custom window editor.
 
             RefreshRateGUI();
 
@@ -554,7 +554,7 @@ namespace MuMech
 
         public override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(540) };
 
-        public override string GetName() => CachedLocalizer.Instance.MechJeb_WindowEd_title; //Custom Window Editor
+        public override string GetName() => CachedLocalizer.Instance.MechJebWindowEdTitle; //Custom Window Editor
 
         public override string IconName() => "Custom Window Editor";
 
