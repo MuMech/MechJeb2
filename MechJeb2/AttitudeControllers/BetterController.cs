@@ -9,7 +9,7 @@ namespace MuMech.AttitudeControllers
     internal class BetterController : BaseAttitudeController
     {
         private static readonly Vector3d _vector3dnan = new Vector3d(double.NaN, double.NaN, double.NaN);
-        private                 Vessel   Vessel => ac.Vessel;
+        private                 Vessel   Vessel => Ac.Vessel;
 
         /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */
         [UsedImplicitly]
@@ -66,31 +66,31 @@ namespace MuMech.AttitudeControllers
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
+        public readonly EditableDouble MaxStoppingTime = new EditableDouble(2.0);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble minFlipTime = new EditableDouble(120);
+        public readonly EditableDouble MinFlipTime = new EditableDouble(120);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble rollControlRange = new EditableDouble(5);
+        public readonly EditableDouble RollControlRange = new EditableDouble(5);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool useControlRange = true;
+        public bool UseControlRange = true;
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool useFlipTime = true;
+        public bool UseFlipTime = true;
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool useStoppingTime = true;
+        public bool UseStoppingTime = true;
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public int _version = -1;
+        public int Version = -1;
 
         private const int SETTINGS_VERSION = 5;
 
@@ -109,10 +109,10 @@ namespace MuMech.AttitudeControllers
             VelSmoothIn.val      = 1.0;
             VelSmoothOut.val     = 1.0;
             PosSmoothIn.val      = 1.0;
-            maxStoppingTime.val  = 2;
-            minFlipTime.val      = 120;
-            rollControlRange.val = 5;
-            _version             = SETTINGS_VERSION;
+            MaxStoppingTime.val  = 2;
+            MinFlipTime.val      = 120;
+            RollControlRange.val = 5;
+            Version              = SETTINGS_VERSION;
         }
 
         private readonly PIDLoop[] _pid = { new PIDLoop(), new PIDLoop(), new PIDLoop() };
@@ -140,7 +140,7 @@ namespace MuMech.AttitudeControllers
 
         public override void OnModuleEnabled()
         {
-            if (_version < SETTINGS_VERSION)
+            if (Version < SETTINGS_VERSION)
                 Defaults();
             Reset();
         }
@@ -168,7 +168,7 @@ namespace MuMech.AttitudeControllers
             // "forward" becomes the pointy end, and "up" and "right" correctly define e.g. AoA/pitch and AoS/yaw.  This is just KSP being KSP.
             // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame (we do everything in the ship frame
             // first, and then negate the error to get the error in the target reference frame at the end).
-            Quaternion deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0)) * ac.RequestedAttitude;
+            Quaternion deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0)) * Ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
             Vector3d ea = deltaRotation.eulerAngles;
@@ -193,7 +193,7 @@ namespace MuMech.AttitudeControllers
             );
 
             // apply the axis control from the parent controller
-            phi.Scale(ac.AxisControl);
+            phi.Scale(Ac.AxisControl);
 
             // the error in the ship's position is the negative of the reference position in the ship frame
             _error0 = -phi;
@@ -208,10 +208,10 @@ namespace MuMech.AttitudeControllers
             // lowpass filter on the error input
             _error0 = _error1.IsFinite() ? _error1 + PosSmoothIn * (_error0 - _error1) : _error0;
 
-            Vector3d controlTorque = ac.torque;
+            Vector3d controlTorque = Ac.torque;
 
             // needed to stop wiggling at higher phys warp
-            double warpFactor = ac.VesselState.deltaT / 0.02;
+            double warpFactor = Ac.VesselState.deltaT / 0.02;
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented so we only
             // have the first two PIDs in the cascade.
@@ -229,9 +229,9 @@ namespace MuMech.AttitudeControllers
                 if (_maxAlpha[i] == 0)
                     _maxAlpha[i] = 1;
 
-                if (ac.OmegaTarget[i].IsFinite())
+                if (Ac.OmegaTarget[i].IsFinite())
                 {
-                    _targetOmega[i] = ac.OmegaTarget[i];
+                    _targetOmega[i] = Ac.OmegaTarget[i];
                 }
                 else
                 {
@@ -249,14 +249,14 @@ namespace MuMech.AttitudeControllers
                         _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
                     }
 
-                    if (useStoppingTime)
+                    if (UseStoppingTime)
                     {
-                        _maxOmega[i] = _maxAlpha[i] * maxStoppingTime;
-                        if (useFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / minFlipTime);
+                        _maxOmega[i] = _maxAlpha[i] * MaxStoppingTime;
+                        if (UseFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / MinFlipTime);
                         _targetOmega[i] = MuUtils.Clamp(_targetOmega[i], -_maxOmega[i], _maxOmega[i]);
                     }
 
-                    if (useControlRange && _errorTotal * Mathf.Rad2Deg > rollControlRange)
+                    if (UseControlRange && _errorTotal * Mathf.Rad2Deg > RollControlRange)
                         _targetOmega[1] = 0;
                 }
 
@@ -266,7 +266,7 @@ namespace MuMech.AttitudeControllers
                 _pid[i].N         = VelN;
                 _pid[i].B         = VelB;
                 _pid[i].C         = VelC;
-                _pid[i].Ts        = ac.VesselState.deltaT;
+                _pid[i].Ts        = Ac.VesselState.deltaT;
                 _pid[i].SmoothIn  = MuUtils.Clamp01(VelSmoothIn);
                 _pid[i].SmoothOut = MuUtils.Clamp01(VelSmoothOut);
                 _pid[i].MinOutput = -1;
@@ -280,9 +280,9 @@ namespace MuMech.AttitudeControllers
                 if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
                     _actuation[i] = 0;
 
-                _targetTorque[i] = _actuation[i] * ac.torque[i];
+                _targetTorque[i] = _actuation[i] * Ac.torque[i];
 
-                if (ac.ActuationControl[i] == 0)
+                if (Ac.ActuationControl[i] == 0)
                     Reset(i);
             }
 
@@ -305,22 +305,22 @@ namespace MuMech.AttitudeControllers
         public override void GUI()
         {
             GUILayout.BeginHorizontal();
-            useStoppingTime      = GUILayout.Toggle(useStoppingTime, "Maximum Stopping Time", GUILayout.ExpandWidth(false));
-            maxStoppingTime.text = GUILayout.TextField(maxStoppingTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            UseStoppingTime      = GUILayout.Toggle(UseStoppingTime, "Maximum Stopping Time", GUILayout.ExpandWidth(false));
+            MaxStoppingTime.text = GUILayout.TextField(MaxStoppingTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            useFlipTime      = GUILayout.Toggle(useFlipTime, "Minimum Flip Time", GUILayout.ExpandWidth(false));
-            minFlipTime.text = GUILayout.TextField(minFlipTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            UseFlipTime      = GUILayout.Toggle(UseFlipTime, "Minimum Flip Time", GUILayout.ExpandWidth(false));
+            MinFlipTime.text = GUILayout.TextField(MinFlipTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
-            if (!useStoppingTime)
-                useFlipTime = false;
+            if (!UseStoppingTime)
+                UseFlipTime = false;
 
             GUILayout.BeginHorizontal();
-            useControlRange = GUILayout.Toggle(useControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),
+            UseControlRange = GUILayout.Toggle(UseControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),
                 GUILayout.ExpandWidth(false)); //"RollControlRange"
-            rollControlRange.text = GUILayout.TextField(rollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            RollControlRange.text = GUILayout.TextField(RollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -424,7 +424,7 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label5"), GUILayout.ExpandWidth(true)); //"ControlTorque"
-            GUILayout.Label(MuUtils.PrettyPrint(ac.torque), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(Ac.torque), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

@@ -2,20 +2,15 @@
 {
     public class TorquePI
     {
-        public KosPIDLoop Loop { get; set; }
+        private KosPIDLoop _loop { get; } = new KosPIDLoop();
 
-        public TorquePI()
+        public double Update(double input, double setpoint, double momentOfInertia, double maxOutput)
         {
-            Loop = new KosPIDLoop();
+            _loop.Ki = 4 * momentOfInertia;
+            _loop.Kp = 4 * momentOfInertia;
+            return _loop.Update(input, setpoint, maxOutput);
         }
 
-        public double Update(double input, double setpoint, double MomentOfInertia, double maxOutput)
-        {
-            Loop.Ki = 4 * MomentOfInertia;
-            Loop.Kp = 4 * MomentOfInertia;
-            return Loop.Update(input, setpoint, maxOutput);
-        }
-
-        public void ResetI() => Loop.ResetI();
+        public void ResetI() => _loop.ResetI();
     }
 }

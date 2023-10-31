@@ -1,37 +1,65 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace MuMech.AttitudeControllers
 {
     public class KosPIDLoop
     {
         public  double Kp { get; set; }
-        private double _Ki;
+        private double _ki;
         private double _loopKi;
 
         public double Ki
         {
-            get => _Ki;
+            get => _ki;
             set
             {
-                _Ki     = value;
+                _ki     = value;
                 _loopKi = value;
             }
         }
 
-        public double Kd          { get; set; }
-        public double Input       { get; set; }
-        public double Setpoint    { get; set; }
-        public double Error       { get; set; }
-        public double Output      { get; set; }
-        public double MinOutput   { get; set; }
-        public double MaxOutput   { get; set; }
-        public double ErrorSum    { get; set; }
-        public double PTerm       { get; set; }
-        public double ITerm       { get; set; }
-        public double DTerm       { get; set; }
-        public bool   ExtraUnwind { get; set; }
-        public double ChangeRate  { get; set; }
-        public bool   unWinding   { get; set; }
+        [UsedImplicitly]
+        public double Kd { get; set; }
+
+        [UsedImplicitly]
+        public double Input { get; set; }
+
+        [UsedImplicitly]
+        public double Setpoint { get; set; }
+
+        [UsedImplicitly]
+        public double Error { get; set; }
+
+        [UsedImplicitly]
+        public double Output { get; set; }
+
+        [UsedImplicitly]
+        public double MinOutput { get; set; }
+
+        [UsedImplicitly]
+        public double MaxOutput { get; set; }
+
+        [UsedImplicitly]
+        public double ErrorSum { get; set; }
+
+        [UsedImplicitly]
+        public double PTerm { get; set; }
+
+        [UsedImplicitly]
+        public double ITerm { get; set; }
+
+        [UsedImplicitly]
+        public double DTerm { get; set; }
+
+        [UsedImplicitly]
+        public bool ExtraUnwind { get; set; }
+
+        [UsedImplicitly]
+        public double ChangeRate { get; set; }
+
+        [UsedImplicitly]
+        public bool UnWinding { get; set; }
 
         public KosPIDLoop(double maxoutput = double.MaxValue, double minoutput = double.MinValue, bool extraUnwind = false)
             : this(1.0, 0, 0, maxoutput, minoutput, extraUnwind)
@@ -57,6 +85,7 @@ namespace MuMech.AttitudeControllers
             ExtraUnwind = extraUnwind;
         }
 
+        [UsedImplicitly]
         public double Update(double input, double setpoint, double minOutput, double maxOutput)
         {
             MaxOutput = maxOutput;
@@ -67,6 +96,7 @@ namespace MuMech.AttitudeControllers
 
         public double Update(double input, double setpoint, double maxOutput) => Update(input, setpoint, -maxOutput, maxOutput);
 
+        [UsedImplicitly]
         public double Update(double input)
         {
             double error = Setpoint - input;
@@ -80,16 +110,16 @@ namespace MuMech.AttitudeControllers
                 {
                     if (Math.Sign(error) != Math.Sign(ErrorSum))
                     {
-                        if (!unWinding)
+                        if (!UnWinding)
                         {
                             _loopKi   *= 2;
-                            unWinding =  true;
+                            UnWinding =  true;
                         }
                     }
-                    else if (unWinding)
+                    else if (UnWinding)
                     {
-                        _loopKi   = _Ki;
-                        unWinding = false;
+                        _loopKi   = _ki;
+                        UnWinding = false;
                     }
                 }
 

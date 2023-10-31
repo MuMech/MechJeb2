@@ -2,11 +2,11 @@
 {
     public abstract class BaseAttitudeController
     {
-        protected MechJebModuleAttitudeController ac;
+        protected readonly MechJebModuleAttitudeController Ac;
 
         protected BaseAttitudeController(MechJebModuleAttitudeController controller)
         {
-            ac = controller;
+            Ac = controller;
         }
 
         public virtual void OnModuleDisabled()
