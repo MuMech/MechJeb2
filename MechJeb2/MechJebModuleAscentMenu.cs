@@ -62,11 +62,13 @@ namespace MuMech
             _classicPathMenu = Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
         }
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private bool _lastPVGSettingsEnabled;
+        public bool _lastPVGSettingsEnabled;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private bool _lastSettingsMenuEnabled;
+        public bool _lastSettingsMenuEnabled;
 
         protected override void OnModuleEnabled()
         {
@@ -354,8 +356,9 @@ namespace MuMech
         private string   vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
         private TimeSpan _refreshInterval = TimeSpan.FromSeconds(0.1);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private EditableInt _refreshRate = 10;
+        public EditableInt _refreshRate = 10;
 
         private void UpdateStrings()
         {

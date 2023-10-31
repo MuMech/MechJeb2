@@ -20,8 +20,9 @@ namespace MuMech
 
         private readonly TimeReference[] _allowedTimeRef;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private int _currentTimeRef;
+        public int _currentTimeRef;
 
         public TimeReference TimeReference => _allowedTimeRef[_currentTimeRef];
 

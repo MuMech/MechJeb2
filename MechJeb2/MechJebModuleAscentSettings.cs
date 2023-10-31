@@ -59,8 +59,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult HoldAPTime = new EditableDoubleMult(1);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private int _ascentTypeInteger;
+        public int _ascentTypeInteger;
 
         public AscentType AscentType
         {
@@ -110,8 +111,9 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble RollAltitude = new EditableDouble(50);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private bool _autostage = true;
+        public bool _autostage = true;
 
         public bool Autostage
         {

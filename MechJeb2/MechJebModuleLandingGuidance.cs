@@ -14,8 +14,9 @@ namespace MuMech
         private       MechJebModuleLandingPredictions _predictor;
         public static List<LandingSite>               LandingSites;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        private int _landingSiteIdx;
+        public int _landingSiteIdx;
 
         public struct LandingSite
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Statics;
@@ -18,9 +19,9 @@ namespace MuMech
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.GLOBAL)]
         public List<InfoItem> items = new List<InfoItem>();
 
-        [SerializeField]
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private bool isCompact;
+        public bool isCompact;
 
         public bool IsCompact
         {
@@ -45,9 +46,8 @@ namespace MuMech
         private TimeSpan refreshInterval = TimeSpan.FromSeconds(0.1);
         private DateTime lastRefresh     = DateTime.MinValue;
 
-        [SerializeField]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private EditableInt refreshRate = 10;
+        public EditableInt refreshRate = 10;
 
         public void UpdateRefreshRate() => refreshInterval = TimeSpan.FromSeconds(1d / refreshRate);
 
@@ -213,8 +213,9 @@ namespace MuMech
         public  MechJebModuleCustomInfoWindow editedWindow;
         private int                           selectedItemIndex = -1;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private InfoItem.Category itemCategory = InfoItem.Category.Orbit;
+        public InfoItem.Category itemCategory = InfoItem.Category.Orbit;
 
         private static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
         private                 int      presetIndex;

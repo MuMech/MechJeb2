@@ -18,8 +18,9 @@ namespace MuMech
         private readonly string[] _operationNames =
             new List<Operation>(_operation).ConvertAll(x => x.GetName()).ToArray();
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private int _operationId;
+        public int _operationId;
 
         // Creation or replacement mode
         private bool _createNode = true;

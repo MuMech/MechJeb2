@@ -26,6 +26,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool activateSASOnWarp = true;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool useQuickWarp;
 

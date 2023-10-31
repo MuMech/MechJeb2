@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MuMech
 {
@@ -17,8 +18,9 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDeploy = false;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.LOCAL)]
-        protected bool prev_shouldDeploy;
+        public bool prev_shouldDeploy;
 
         public bool prev_autoDeploy = true;
 

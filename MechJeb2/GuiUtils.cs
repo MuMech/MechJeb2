@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Object = UnityEngine.Object;
@@ -20,8 +21,9 @@ namespace MuMech
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
     public class EditableDoubleMult : IEditable
     {
+        [UsedImplicitly]
         [Persistent]
-        protected double _val;
+        public double _val;
 
         public virtual double val
         {
@@ -37,8 +39,9 @@ namespace MuMech
 
         public bool parsed;
 
+        [UsedImplicitly]
         [Persistent]
-        protected string _text;
+        public string _text;
 
         public virtual string text
         {
@@ -168,8 +171,9 @@ namespace MuMech
 
     public class EditableInt : IEditable
     {
+        [UsedImplicitly]
         [Persistent]
-        private int _val;
+        public int _val;
 
         public int val
         {
@@ -183,8 +187,9 @@ namespace MuMech
 
         private bool _parsed;
 
+        [UsedImplicitly]
         [Persistent]
-        private string _text;
+        public string _text;
 
         public virtual string text
         {
@@ -214,8 +219,9 @@ namespace MuMech
         [Persistent]
         public readonly List<int> val = new List<int>();
 
+        [UsedImplicitly]
         [Persistent]
-        private string _text = "";
+        public string _text = "";
 
         public string text
         {

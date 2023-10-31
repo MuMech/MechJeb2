@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
@@ -17,8 +18,9 @@ namespace MuMech.AttitudeControllers
 
         public Vector3d TfV = new Vector3d(0.3, 0.3, 0.3);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private Vector3 TfVec = new Vector3(0.3f, 0.3f, 0.3f); // use the serialize since Vector3d does not
+        public Vector3 TfVec = new Vector3(0.3f, 0.3f, 0.3f); // use the serialize since Vector3d does not
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public double TfMin = 0.1;
