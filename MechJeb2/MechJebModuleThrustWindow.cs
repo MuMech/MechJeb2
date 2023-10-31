@@ -77,7 +77,7 @@ namespace MuMech
             try
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label2")); //"Jet safety margin"
-                Core.Thrust.FlameoutSafetyPct.text = GUILayout.TextField(Core.Thrust.FlameoutSafetyPct.text, 5);
+                Core.Thrust.FlameoutSafetyPct.Text = GUILayout.TextField(Core.Thrust.FlameoutSafetyPct.Text, 5);
                 GUILayout.Label("%");
             }
             finally
@@ -93,15 +93,15 @@ namespace MuMech
                 {
                     case MechJebModuleThrustController.DifferentialThrottleStatus.MORE_ENGINES_REQUIRED:
                         GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label3"),
-                            GuiUtils.yellowLabel); //"Differential throttle failed\nMore engines required"
+                            GuiUtils.YellowLabel); //"Differential throttle failed\nMore engines required"
                         break;
                     case MechJebModuleThrustController.DifferentialThrottleStatus.ALL_ENGINES_OFF:
                         GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label4"),
-                            GuiUtils.yellowLabel); //"Differential throttle failed\nNo active engine"
+                            GuiUtils.YellowLabel); //"Differential throttle failed\nNo active engine"
                         break;
                     case MechJebModuleThrustController.DifferentialThrottleStatus.SOLVER_FAILED:
                         GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label5"),
-                            GuiUtils.yellowLabel); //"Differential throttle failed\nCannot find solution"
+                            GuiUtils.YellowLabel); //"Differential throttle failed\nCannot find solution"
                         break;
                     case MechJebModuleThrustController.DifferentialThrottleStatus.SUCCESS:
                         break;

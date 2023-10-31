@@ -198,7 +198,7 @@ namespace MuMech
                 Engage();
             }
 
-            rol.text = GUILayout.TextField(rol.text, GUILayout.Width(30));
+            rol.Text = GUILayout.TextField(rol.Text, GUILayout.Width(30));
             GUILayout.Label("°", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }

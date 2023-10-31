@@ -18,18 +18,18 @@ namespace MuMech
             protected set
             {
                 var newPos = new Vector4(
-                    Math.Min(Math.Max(value.x, 0), GuiUtils.scaledScreenWidth - value.width),
-                    Math.Min(Math.Max(value.y, 0), GuiUtils.scaledScreenHeight - value.height),
+                    Math.Min(Math.Max(value.x, 0), GuiUtils.ScaledScreenWidth - value.width),
+                    Math.Min(Math.Max(value.y, 0), GuiUtils.ScaledScreenHeight - value.height),
                     value.width, value.height
                 );
-                newPos.x = Mathf.Clamp(newPos.x, 10 - value.width, GuiUtils.scaledScreenWidth - 10);
-                newPos.y = Mathf.Clamp(newPos.y, 10 - value.height, GuiUtils.scaledScreenHeight - 10);
+                newPos.x = Mathf.Clamp(newPos.x, 10 - value.width, GuiUtils.ScaledScreenWidth - 10);
+                newPos.y = Mathf.Clamp(newPos.y, 10 - value.height, GuiUtils.ScaledScreenHeight - 10);
 
                 if (!HighLogic.LoadedSceneIsEditor)
                 {
                     if (WindowVector != newPos)
                     {
-                        Dirty         = true;
+                        Dirty        = true;
                         WindowVector = newPos;
                     }
                 }
@@ -37,7 +37,7 @@ namespace MuMech
                 {
                     if (WindowVectorEditor != newPos)
                     {
-                        Dirty               = true;
+                        Dirty              = true;
                         WindowVectorEditor = newPos;
                     }
                 }
@@ -66,7 +66,7 @@ namespace MuMech
                 if (ShowInFlightConfig != value)
                 {
                     ShowInFlightConfig = value;
-                    Dirty         = true;
+                    Dirty              = true;
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace MuMech
             {
                 if (ShowInEditorConfig == value) return;
                 ShowInEditorConfig = value;
-                Dirty         = true;
+                Dirty              = true;
             }
         }
 
@@ -97,7 +97,7 @@ namespace MuMech
             {
                 if (IsOverlayConfig == value) return;
                 IsOverlayConfig = value;
-                Dirty      = true;
+                Dirty           = true;
             }
         }
 
@@ -112,7 +112,7 @@ namespace MuMech
             {
                 if (LockedConfig == value) return;
                 LockedConfig = value;
-                Dirty   = true;
+                Dirty        = true;
             }
         }
 
@@ -150,8 +150,8 @@ namespace MuMech
             bool allowDrag = !LockedConfig;
             if (!LockedConfig && !IsOverlayConfig && Core.Settings.useTitlebarDragging)
             {
-                float x = Mouse.screenPos.x / GuiUtils.scale;
-                float y = Mouse.screenPos.y / GuiUtils.scale;
+                float x = Mouse.screenPos.x / GuiUtils.Scale;
+                float y = Mouse.screenPos.y / GuiUtils.Scale;
                 allowDrag = x >= WindowPos.xMin + 3 && x <= WindowPos.xMin + WindowPos.width - 3 &&
                             y >= WindowPos.yMin + 3 && y <= WindowPos.yMin + 17;
             }

@@ -755,7 +755,7 @@ namespace MuMech
 
         public override void OnLoad(ConfigNode sfsNode)
         {
-            if (GuiUtils.skin == null)
+            if (GuiUtils.Skin == null)
             {
                 //GuiUtils.skin = new GUISkin();
                 // ReSharper disable once ObjectCreationAsStatement
@@ -1101,13 +1101,13 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor || (FlightGlobals.ready && vessel == FlightGlobals.ActiveVessel && part.State != PartStates.DEAD))
             {
                 Matrix4x4 previousGuiMatrix = GUI.matrix;
-                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(GuiUtils.scale, GuiUtils.scale, 1));
+                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(GuiUtils.Scale, GuiUtils.Scale, 1));
 
                 GuiUtils.ComboBox.DrawGUI();
 
                 GuiUtils.LoadSkin((GuiUtils.SkinType)Settings.skinId);
 
-                GUI.skin = GuiUtils.skin;
+                GUI.skin = GuiUtils.Skin;
 
                 foreach (ComputerModule computerModule in GetComputerModules<DisplayModule>())
                 {

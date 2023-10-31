@@ -80,7 +80,7 @@ namespace MuMech
 
             Orbit targetOrbit = target.TargetOrbit;
 
-            double lagTime = Rendezvous ? LagTime.val : 0;
+            double lagTime = Rendezvous ? LagTime.Val : 0;
 
             bool fixedTime = false;
 

@@ -142,7 +142,7 @@ namespace MuMech
 
             maxDepartureTime   = minDepartureTime + synodic_period * 1.5;
             maxTransferTime    = hohmann_transfer_time * 2.0;
-            maxArrivalTime.val = synodic_period * 1.5 + hohmann_transfer_time * 2.0;
+            maxArrivalTime.Val = synodic_period * 1.5 + hohmann_transfer_time * 2.0;
         }
 
         private bool layoutSkipped;
@@ -229,10 +229,10 @@ namespace MuMech
                 if (progressStyle == null)
                     progressStyle = new GUIStyle
                     {
-                        font      = GuiUtils.skin.font,
-                        fontSize  = GuiUtils.skin.label.fontSize,
-                        fontStyle = GuiUtils.skin.label.fontStyle,
-                        normal    = { textColor = GuiUtils.skin.label.normal.textColor }
+                        font      = GuiUtils.Skin.font,
+                        fontSize  = GuiUtils.Skin.label.fontSize,
+                        fontStyle = GuiUtils.Skin.label.fontStyle,
+                        normal    = { textColor = GuiUtils.Skin.label.normal.textColor }
                     };
                 GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth),
                     GUILayout.Height(porkchop_Height)); //"Computing:"
@@ -241,7 +241,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label("ΔV: " + dv);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(Localizer.Format("#MechJeb_adv_reset_button"), GuiUtils.yellowOnHover))
+            if (GUILayout.Button(Localizer.Format("#MechJeb_adv_reset_button"), GuiUtils.YellowOnHover))
                 ComputeTimes(o, target.TargetOrbit, universalTime);
             GUILayout.EndHorizontal();
 

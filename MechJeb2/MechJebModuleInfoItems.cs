@@ -996,7 +996,7 @@ namespace MuMech
             while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
             GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label6"), GuiUtils.middleCenterLabel); //"Planet phase angles"
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label6"), GuiUtils.MiddleCenterLabel); //"Planet phase angles"
 
             for (int i = 0; i < FlightGlobals.Bodies.Count; i++)
             {
@@ -1029,7 +1029,7 @@ namespace MuMech
         public void AllMoonPhaseAngles()
         {
             GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label7"), GuiUtils.middleCenterLabel); //"Moon phase angles"
+            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label7"), GuiUtils.MiddleCenterLabel); //"Moon phase angles"
 
             if (Orbit.referenceBody != Planetarium.fetch.Sun)
             {

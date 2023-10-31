@@ -1,4 +1,6 @@
-﻿namespace MuMech
+﻿using JetBrains.Annotations;
+
+namespace MuMech
 {
     public static class CelestialBodyExtensions
     {
@@ -9,6 +11,7 @@
         //the ship's drag coefficient. In this equation b has units of inverse length. So 1/b
         //is a characteristic length: a ship that travels this distance through air will lose a significant
         //fraction of its initial velocity
+        [UsedImplicitly]
         public static double DragLength(this CelestialBody body, Vector3d pos, double dragCoeff, double mass)
         {
             double airDensity =

@@ -114,7 +114,7 @@ namespace MuMech
                 node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
 
-            progradeDelta.text = GUILayout.TextField(progradeDelta.text, GUILayout.Width(50));
+            progradeDelta.Text = GUILayout.TextField(progradeDelta.Text, GUILayout.Width(50));
             if (LimitedRepeatButtoon("+"))
             {
                 prograde += progradeDelta;
@@ -132,7 +132,7 @@ namespace MuMech
                 node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
 
-            radialPlusDelta.text = GUILayout.TextField(radialPlusDelta.text, GUILayout.Width(50));
+            radialPlusDelta.Text = GUILayout.TextField(radialPlusDelta.Text, GUILayout.Width(50));
             if (LimitedRepeatButtoon("+"))
             {
                 radialPlus += radialPlusDelta;
@@ -150,7 +150,7 @@ namespace MuMech
                 node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
             }
 
-            normalPlusDelta.text = GUILayout.TextField(normalPlusDelta.text, GUILayout.Width(50));
+            normalPlusDelta.Text = GUILayout.TextField(normalPlusDelta.Text, GUILayout.Width(50));
             if (LimitedRepeatButtoon("+"))
             {
                 normalPlus += normalPlusDelta;
@@ -189,7 +189,7 @@ namespace MuMech
                 node.UpdateNode(node.DeltaV, node.UT - timeOffset);
             }
 
-            timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
+            timeOffset.Text = GUILayout.TextField(timeOffset.Text, GUILayout.Width(100));
             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
             {
                 node.UpdateNode(node.DeltaV, node.UT + timeOffset);

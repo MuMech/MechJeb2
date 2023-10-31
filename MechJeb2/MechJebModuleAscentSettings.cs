@@ -235,7 +235,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.TYPE)]
         public bool CoastStageFlag;
 
-        public int CoastStage => CoastStageFlag ? CoastStageInternal.val : -1;
+        public int CoastStage => CoastStageFlag ? CoastStageInternal.Val : -1;
 
         [Persistent(pass = (int)Pass.TYPE)]
         public bool OptimizeStageFlag = true;
@@ -243,7 +243,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.TYPE)]
         public readonly EditableInt OptimizeStageInternal = -1;
 
-        public int OptimizeStage => OptimizeStageFlag ? OptimizeStageInternal.val : -1;
+        public int OptimizeStage => OptimizeStageFlag ? OptimizeStageInternal.Val : -1;
 
         [Persistent(pass = (int)Pass.TYPE)]
         public bool SpinupStageFlag = true;
@@ -251,7 +251,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.TYPE)]
         public readonly EditableInt SpinupStageInternal = -1;
 
-        public int SpinupStage => SpinupStageFlag ? SpinupStageInternal.val : -1;
+        public int SpinupStage => SpinupStageFlag ? SpinupStageInternal.Val : -1;
 
         [Persistent(pass = (int)Pass.TYPE)]
         public readonly EditableDouble SpinupLeadTime = 50;
@@ -267,7 +267,7 @@ namespace MuMech
 
         private readonly List<int> _emptyList = new List<int>();
 
-        public List<int> UnguidedStages => UnguidedStagesFlag ? UnguidedStagesInternal.val : _emptyList;
+        public List<int> UnguidedStages => UnguidedStagesFlag ? UnguidedStagesInternal.Val : _emptyList;
 
         /*
          * some non-persisted values
@@ -311,71 +311,71 @@ namespace MuMech
 
         public void ApplyRODefaults()
         {
-            PitchStartVelocity.val     = PITCH_START_VELOCITY_DEFAULT;
-            PitchRate.val              = PITCH_RATE_DEFAULT;
-            DesiredAttachAlt.val       = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredAttachAltFixed.val  = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredFPA.val             = DESIRED_FPA_DEFAULT;
-            DynamicPressureTrigger.val = DYNAMIC_PRESSURE_TRIGGER_DEFAULT;
+            PitchStartVelocity.Val     = PITCH_START_VELOCITY_DEFAULT;
+            PitchRate.Val              = PITCH_RATE_DEFAULT;
+            DesiredAttachAlt.Val       = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredAttachAltFixed.Val  = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredFPA.Val             = DESIRED_FPA_DEFAULT;
+            DynamicPressureTrigger.Val = DYNAMIC_PRESSURE_TRIGGER_DEFAULT;
             AttachAltFlag              = ATTACH_ALT_FLAG_DEFAULT;
             StagingTriggerFlag         = STAGING_TRIGGER_FLAG_DEFAULT;
-            LimitQa.val                = LIMIT_QA_DEFAULT;
+            LimitQa.Val                = LIMIT_QA_DEFAULT;
             LimitQaEnabled             = LIMIT_QA_ENABLED_DEFAULT;
-            MinDeltaV.val              = MIN_DELTAV_DEFAULT;
-            MaxCoast.val               = MAX_COAST_DEFAULT;
-            MinCoast.val               = MIN_COAST_DEFAULT;
+            MinDeltaV.Val              = MIN_DELTAV_DEFAULT;
+            MaxCoast.Val               = MAX_COAST_DEFAULT;
+            MinCoast.Val               = MIN_COAST_DEFAULT;
             FixedCoast                 = FIXED_COAST_DEFAULT;
-            FixedCoastLength.val       = FIXED_COAST_LENGTH_DEFAULT;
-            LaunchPhaseAngle.val       = LAUNCH_PHASE_ANGLE_DEFAULT;
-            LaunchLANDifference.val    = LAUNCH_LAN_DIFFERENCE;
-            PreStageTime.val           = PRE_STAGE_TIME_DEFAULT;
-            OptimizerPauseTime.val     = OPTIMIZER_PAUSE_TIME_DEFAULT;
+            FixedCoastLength.Val       = FIXED_COAST_LENGTH_DEFAULT;
+            LaunchPhaseAngle.Val       = LAUNCH_PHASE_ANGLE_DEFAULT;
+            LaunchLANDifference.Val    = LAUNCH_LAN_DIFFERENCE;
+            PreStageTime.Val           = PRE_STAGE_TIME_DEFAULT;
+            OptimizerPauseTime.Val     = OPTIMIZER_PAUSE_TIME_DEFAULT;
 
-            OptimizeStageInternal.val = -1;
+            OptimizeStageInternal.Val = -1;
             OptimizeStageFlag         = true;
             SpinupStageFlag           = false;
-            SpinupStageInternal.val   = -1;
+            SpinupStageInternal.Val   = -1;
             CoastStageFlag            = false;
-            CoastStageInternal.val    = -1;
+            CoastStageInternal.Val    = -1;
             UnguidedStagesFlag        = false;
 
-            if (DesiredOrbitAltitude.val < 145000)
-                DesiredOrbitAltitude.val = 145000;
+            if (DesiredOrbitAltitude.Val < 145000)
+                DesiredOrbitAltitude.Val = 145000;
 
-            if (Math.Abs(DesiredInclination.val) < Math.Abs(VesselState.latitude))
-                DesiredInclination.val = Math.Round(VesselState.latitude, 3);
+            if (Math.Abs(DesiredInclination.Val) < Math.Abs(VesselState.latitude))
+                DesiredInclination.Val = Math.Round(VesselState.latitude, 3);
 
-            if (Math.Abs(DesiredInclination.val) > 180 - Math.Abs(VesselState.latitude))
-                DesiredInclination.val = 180 - Math.Round(VesselState.latitude, 3);
+            if (Math.Abs(DesiredInclination.Val) > 180 - Math.Abs(VesselState.latitude))
+                DesiredInclination.Val = 180 - Math.Round(VesselState.latitude, 3);
 
-            Core.Guidance.UllageLeadTime.val = 20;
+            Core.Guidance.UllageLeadTime.Val = 20;
 
             Core.Settings.rssMode = true;
 
             /* set the thrust controller to sane RO/RSS defaults */
             Core.Thrust.LimitToPreventUnstableIgnition = false;
             Core.Thrust.AutoRCSUllaging                = true;
-            Core.Thrust.MinThrottle.val                = 0.05;
+            Core.Thrust.MinThrottle.Val                = 0.05;
             Core.Thrust.LimiterMinThrottle             = true;
             Core.Thrust.LimitThrottle                  = false;
             Core.Thrust.LimitAcceleration              = false;
             Core.Thrust.LimitToPreventOverheats        = false;
             Core.Thrust.LimitDynamicPressure           = false;
-            Core.Thrust.MaxDynamicPressure.val         = 20000;
+            Core.Thrust.MaxDynamicPressure.Val         = 20000;
 
             /* reset all of the staging controller, and turn on hotstaging and drop solids */
             Autostage                                  = true;
-            Core.Staging.AutostagePreDelay.val         = 0.0;
-            Core.Staging.AutostagePostDelay.val        = 0.5;
-            Core.Staging.AutostageLimit.val            = 0;
-            Core.Staging.FairingMaxDynamicPressure.val = 5000;
-            Core.Staging.FairingMinAltitude.val        = 50000;
-            Core.Staging.ClampAutoStageThrustPct.val   = 0.99;
-            Core.Staging.FairingMaxAerothermalFlux.val = 1135;
+            Core.Staging.AutostagePreDelay.Val         = 0.0;
+            Core.Staging.AutostagePostDelay.Val        = 0.5;
+            Core.Staging.AutostageLimit.Val            = 0;
+            Core.Staging.FairingMaxDynamicPressure.Val = 5000;
+            Core.Staging.FairingMinAltitude.Val        = 50000;
+            Core.Staging.ClampAutoStageThrustPct.Val   = 0.99;
+            Core.Staging.FairingMaxAerothermalFlux.Val = 1135;
             Core.Staging.HotStaging                    = true;
-            Core.Staging.HotStagingLeadTime.val        = 1.0;
+            Core.Staging.HotStagingLeadTime.Val        = 1.0;
             Core.Staging.DropSolids                    = true;
-            Core.Staging.DropSolidsLeadTime.val        = 1.0;
+            Core.Staging.DropSolidsLeadTime.Val        = 1.0;
         }
 
         private const double LAUNCH_LAN_DIFFERENCE            = 0;

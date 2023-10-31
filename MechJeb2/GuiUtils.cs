@@ -10,7 +10,7 @@ namespace MuMech
 {
     public interface IEditable
     {
-        string text { get; set; }
+        string Text { get; set; }
     }
 
     //An EditableDouble stores a double value and a text string. The user can edit the string.
@@ -23,36 +23,35 @@ namespace MuMech
     {
         [UsedImplicitly]
         [Persistent]
-        public double _val;
+        public double ValConfig;
 
-        public virtual double val
+        public virtual double Val
         {
-            get => _val;
+            get => ValConfig;
             set
             {
-                _val  = value;
-                _text = (_val / multiplier).ToString();
+                ValConfig  = value;
+                TextConfig = (ValConfig / _multiplier).ToString();
             }
         }
 
-        public readonly double multiplier;
+        private readonly double _multiplier;
 
-        public bool parsed;
+        protected bool Parsed;
 
         [UsedImplicitly]
         [Persistent]
-        public string _text;
+        public string TextConfig;
 
-        public virtual string text
+        public virtual string Text
         {
-            get => _text;
+            get => TextConfig;
             set
             {
-                _text = value;
-                _text = Regex.Replace(_text, @"[^\d+-.]", ""); //throw away junk characters
-                double parsedValue;
-                parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) _val = parsedValue * multiplier;
+                TextConfig = value;
+                TextConfig = Regex.Replace(TextConfig, @"[^\d+-.]", ""); //throw away junk characters
+                Parsed     = double.TryParse(TextConfig, out double parsedValue);
+                if (Parsed) ValConfig = parsedValue * _multiplier;
             }
         }
 
@@ -60,12 +59,12 @@ namespace MuMech
 
         public EditableDoubleMult(double val, double multiplier = 1)
         {
-            this.val        = val;
-            this.multiplier = multiplier;
-            _text           = (val / multiplier).ToString();
+            Val         = val;
+            _multiplier = multiplier;
+            TextConfig  = (val / multiplier).ToString();
         }
 
-        public static implicit operator double(EditableDoubleMult x) => x.val;
+        public static implicit operator double(EditableDoubleMult x) => x.Val;
     }
 
     public class EditableDouble : EditableDoubleMult
@@ -82,38 +81,41 @@ namespace MuMech
     {
         public EditableTime() : this(0) { }
 
+        [UsedImplicitly]
         public EditableTime(double seconds)
             : base(seconds)
         {
-            _text = GuiUtils.TimeToDHMS(seconds);
+            TextConfig = GuiUtils.TimeToDHMS(seconds);
         }
 
-        public override double val
+        public override double Val
         {
-            get => _val;
+            get => ValConfig;
             set
             {
-                _val  = value;
-                _text = GuiUtils.TimeToDHMS(_val);
+                ValConfig  = value;
+                TextConfig = GuiUtils.TimeToDHMS(ValConfig);
             }
         }
 
-        public override string text
+        public override string Text
         {
-            get => _text;
+            get => TextConfig;
             set
             {
-                _text = value;
-                _text = Regex.Replace(_text, @"[^\d+-.ydhms ,]", ""); //throw away junk characters
+                TextConfig = value;
+                TextConfig = Regex.Replace(TextConfig, @"[^\d+-.ydhms ,]", ""); //throw away junk characters
 
-                double parsedValue;
-                parsed = double.TryParse(_text, out parsedValue);
-                if (parsed) _val = parsedValue;
-
-                if (!parsed)
+                Parsed = double.TryParse(TextConfig, out double parsedValue);
+                switch (Parsed)
                 {
-                    parsed = GuiUtils.TryParseDHMS(_text, out parsedValue);
-                    if (parsed) _val = parsedValue;
+                    case true:
+                        ValConfig = parsedValue;
+                        break;
+                    case false:
+                        Parsed = GuiUtils.TryParseDHMS(TextConfig, out parsedValue);
+                        if (Parsed) ValConfig = parsedValue;
+                        break;
                 }
             }
         }
@@ -123,32 +125,36 @@ namespace MuMech
 
     public class EditableAngle
     {
+        [UsedImplicitly]
         [Persistent]
-        public EditableDouble degrees = 0;
+        public readonly EditableDouble Degrees;
 
+        [UsedImplicitly]
         [Persistent]
-        public EditableDouble minutes = 0;
+        public readonly EditableDouble Minutes;
 
+        [UsedImplicitly]
         [Persistent]
-        public EditableDouble seconds = 0;
+        public readonly EditableDouble Seconds;
 
+        [UsedImplicitly]
         [Persistent]
-        public bool negative;
+        public bool Negative;
 
         public EditableAngle(double angle)
         {
             angle = MuUtils.ClampDegrees180(angle);
 
-            negative =  angle < 0;
+            Negative =  angle < 0;
             angle    =  Math.Abs(angle);
-            degrees  =  (int)angle;
-            angle    -= degrees;
-            minutes  =  (int)(60 * angle);
-            angle    -= minutes / 60;
-            seconds  =  Math.Round(3600 * angle);
+            Degrees  =  new EditableDouble((int)angle);
+            angle    -= Degrees.Val;
+            Minutes  =  new EditableDouble((int)(60 * angle));
+            angle    -= Minutes.Val / 60;
+            Seconds  =  new EditableDouble(Math.Round(3600 * angle));
         }
 
-        public static implicit operator double(EditableAngle x) => (x.negative ? -1 : 1) * (x.degrees + x.minutes / 60.0 + x.seconds / 3600.0);
+        public static implicit operator double(EditableAngle x) => (x.Negative ? -1 : 1) * (x.Degrees + x.Minutes / 60.0 + x.Seconds / 3600.0);
 
         public static implicit operator EditableAngle(double x) => new EditableAngle(x);
 
@@ -157,14 +163,14 @@ namespace MuMech
         public void DrawEditGUI(Direction direction)
         {
             GUILayout.BeginHorizontal();
-            degrees.text = GUILayout.TextField(degrees.text, GUILayout.Width(30));
+            Degrees.Text = GUILayout.TextField(Degrees.Text, GUILayout.Width(30));
             GUILayout.Label("°", GUILayout.ExpandWidth(false));
-            minutes.text = GUILayout.TextField(minutes.text, GUILayout.Width(30));
+            Minutes.Text = GUILayout.TextField(Minutes.Text, GUILayout.Width(30));
             GUILayout.Label("'", GUILayout.ExpandWidth(false));
-            seconds.text = GUILayout.TextField(seconds.text, GUILayout.Width(30));
+            Seconds.Text = GUILayout.TextField(Seconds.Text, GUILayout.Width(30));
             GUILayout.Label("\"", GUILayout.ExpandWidth(false));
-            string dirString = direction == Direction.NS ? negative ? "S" : "N" : negative ? "W" : "E";
-            if (GUILayout.Button(dirString, GUILayout.Width(25))) negative = !negative;
+            string dirString = direction == Direction.NS ? Negative ? "S" : "N" : Negative ? "W" : "E";
+            if (GUILayout.Button(dirString, GUILayout.Width(25))) Negative = !Negative;
             GUILayout.EndHorizontal();
         }
     }
@@ -173,15 +179,15 @@ namespace MuMech
     {
         [UsedImplicitly]
         [Persistent]
-        public int _val;
+        public int ValConfig;
 
-        public int val
+        public int Val
         {
-            get => _val;
+            get => ValConfig;
             set
             {
-                _val  = value;
-                _text = value.ToString();
+                ValConfig  = value;
+                TextConfig = value.ToString();
             }
         }
 
@@ -189,27 +195,27 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent]
-        public string _text;
+        public string TextConfig;
 
-        public virtual string text
+        public virtual string Text
         {
-            get => _text;
+            get => TextConfig;
             set
             {
-                _text   = value;
-                _text   = Regex.Replace(_text, @"[^\d+-]", ""); //throw away junk characters
-                _parsed = int.TryParse(_text, out int parsedValue);
-                if (_parsed) val = parsedValue;
+                TextConfig = value;
+                TextConfig = Regex.Replace(TextConfig, @"[^\d+-]", ""); //throw away junk characters
+                _parsed    = int.TryParse(TextConfig, out int parsedValue);
+                if (_parsed) Val = parsedValue;
             }
         }
 
         public EditableInt(int val)
         {
-            this.val = val;
-            _text    = val.ToString();
+            Val        = val;
+            TextConfig = val.ToString();
         }
 
-        public static implicit operator int(EditableInt x) => x.val;
+        public static implicit operator int(EditableInt x) => x.Val;
 
         public static implicit operator EditableInt(int x) => new EditableInt(x);
     }
@@ -217,23 +223,23 @@ namespace MuMech
     public class EditableIntList : IEditable
     {
         [Persistent]
-        public readonly List<int> val = new List<int>();
+        public readonly List<int> Val = new List<int>();
 
         [UsedImplicitly]
         [Persistent]
-        public string _text = "";
+        public string TextConfig = "";
 
-        public string text
+        public string Text
         {
-            get => _text;
+            get => TextConfig;
             set
             {
-                _text = value;
-                _text = Regex.Replace(_text, @"[^\d-,]", ""); //throw away junk characters
-                val.Clear();
+                TextConfig = value;
+                TextConfig = Regex.Replace(TextConfig, @"[^\d-,]", ""); //throw away junk characters
+                Val.Clear();
 
                 // supports "1,2,3" and "1-3"
-                foreach (string x in _text.Split(','))
+                foreach (string x in TextConfig.Split(','))
                 {
                     string[] y = x.Split('-');
 
@@ -241,7 +247,7 @@ namespace MuMech
                     if (!int.TryParse(y[y.Length - 1].Trim(), out int end)) continue;
 
                     for (int n = start; n <= end; n++)
-                        val.Add(n);
+                        Val.Add(n);
                 }
             }
         }
@@ -252,7 +258,7 @@ namespace MuMech
         private void OnGUI()
         {
             GuiUtils.CopyDefaultSkin();
-            if (GuiUtils.skin == null) GuiUtils.skin = GuiUtils.defaultSkin;
+            if (GuiUtils.Skin == null) GuiUtils.Skin = GuiUtils.DefaultSkin;
             Destroy(gameObject);
         }
     }
@@ -261,19 +267,17 @@ namespace MuMech
     {
         private static GUIStyle _yellowOnHover;
 
-        public static GUIStyle yellowOnHover
+        public static GUIStyle YellowOnHover
         {
             get
             {
-                if (_yellowOnHover == null)
-                {
-                    _yellowOnHover                 = new GUIStyle(GUI.skin.label);
-                    _yellowOnHover.hover.textColor = Color.yellow;
-                    var t = new Texture2D(1, 1);
-                    t.SetPixel(0, 0, new Color(0, 0, 0, 0));
-                    t.Apply();
-                    _yellowOnHover.hover.background = t;
-                }
+                if (_yellowOnHover != null) return _yellowOnHover;
+
+                _yellowOnHover = new GUIStyle(GUI.skin.label) { hover = { textColor = Color.yellow } };
+                var t = new Texture2D(1, 1);
+                t.SetPixel(0, 0, new Color(0, 0, 0, 0));
+                t.Apply();
+                _yellowOnHover.hover.background = t;
 
                 return _yellowOnHover;
             }
@@ -281,16 +285,13 @@ namespace MuMech
 
         private static GUIStyle _yellowLabel;
 
-        public static GUIStyle yellowLabel
+        public static GUIStyle YellowLabel
         {
             get
             {
-                if (_yellowLabel == null)
-                {
-                    _yellowLabel                  = new GUIStyle(GUI.skin.label);
-                    _yellowLabel.normal.textColor = Color.yellow;
-                    _yellowLabel.hover.textColor  = Color.yellow;
-                }
+                if (_yellowLabel != null) return _yellowLabel;
+
+                _yellowLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.yellow }, hover = { textColor = Color.yellow } };
 
                 return _yellowLabel;
             }
@@ -298,16 +299,13 @@ namespace MuMech
 
         private static GUIStyle _redLabel;
 
-        public static GUIStyle redLabel
+        public static GUIStyle RedLabel
         {
             get
             {
-                if (_redLabel == null)
-                {
-                    _redLabel                  = new GUIStyle(GUI.skin.label);
-                    _redLabel.normal.textColor = Color.red;
-                    _redLabel.hover.textColor  = Color.red;
-                }
+                if (_redLabel != null) return _redLabel;
+
+                _redLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.red }, hover = { textColor = Color.red } };
 
                 return _redLabel;
             }
@@ -315,16 +313,13 @@ namespace MuMech
 
         private static GUIStyle _greenLabel;
 
-        public static GUIStyle greenLabel
+        public static GUIStyle GreenLabel
         {
             get
             {
-                if (_greenLabel == null)
-                {
-                    _greenLabel                  = new GUIStyle(GUI.skin.label);
-                    _greenLabel.normal.textColor = Color.green;
-                    _greenLabel.hover.textColor  = Color.green;
-                }
+                if (_greenLabel != null) return _greenLabel;
+
+                _greenLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.green }, hover = { textColor = Color.green } };
 
                 return _greenLabel;
             }
@@ -332,16 +327,13 @@ namespace MuMech
 
         private static GUIStyle _orangeLabel;
 
-        public static GUIStyle orangeLabel
+        public static GUIStyle OrangeLabel
         {
             get
             {
-                if (_orangeLabel == null)
-                {
-                    _orangeLabel                  = new GUIStyle(GUI.skin.label);
-                    _orangeLabel.normal.textColor = Color.green;
-                    _orangeLabel.hover.textColor  = Color.green;
-                }
+                if (_orangeLabel != null) return _orangeLabel;
+
+                _orangeLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.green }, hover = { textColor = Color.green } };
 
                 return _orangeLabel;
             }
@@ -349,15 +341,13 @@ namespace MuMech
 
         private static GUIStyle _middleCenterLabel;
 
-        public static GUIStyle middleCenterLabel
+        public static GUIStyle MiddleCenterLabel
         {
             get
             {
-                if (_middleCenterLabel == null)
-                {
-                    _middleCenterLabel           = new GUIStyle(GUI.skin.label);
-                    _middleCenterLabel.alignment = TextAnchor.MiddleCenter;
-                }
+                if (_middleCenterLabel != null) return _middleCenterLabel;
+
+                _middleCenterLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
 
                 return _middleCenterLabel;
             }
@@ -365,63 +355,45 @@ namespace MuMech
 
         private static GUIStyle _middleRightLabel;
 
-        public static GUIStyle middleRightLabel
+        public static GUIStyle MiddleRightLabel
         {
             get
             {
-                if (_middleRightLabel == null)
-                {
-                    _middleRightLabel           = new GUIStyle(GUI.skin.label);
-                    _middleRightLabel.alignment = TextAnchor.MiddleRight;
-                }
+                if (_middleRightLabel != null) return _middleRightLabel;
+
+                _middleRightLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight };
 
                 return _middleRightLabel;
             }
         }
 
-        private static GUIStyle _UpperCenterLabel;
+        private static GUIStyle _upperCenterLabel;
 
         public static GUIStyle UpperCenterLabel
         {
             get
             {
-                if (_UpperCenterLabel == null)
-                {
-                    _UpperCenterLabel           = new GUIStyle(GUI.skin.label);
-                    _UpperCenterLabel.alignment = TextAnchor.UpperCenter;
-                }
+                if (_upperCenterLabel != null) return _upperCenterLabel;
 
-                return _UpperCenterLabel;
+                _upperCenterLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter };
+
+                return _upperCenterLabel;
             }
         }
 
         private static GUIStyle _labelNoWrap;
 
-        public static GUIStyle LabelNoWrap
-        {
-            get
-            {
-                if (_labelNoWrap == null)
-                {
-                    _labelNoWrap = new GUIStyle(GUI.skin.label) { wordWrap = false };
-                }
-
-                return _labelNoWrap;
-            }
-        }
+        public static GUIStyle LabelNoWrap => _labelNoWrap ??= new GUIStyle(GUI.skin.label) { wordWrap = false };
 
         private static GUIStyle _greenToggle;
 
-        public static GUIStyle greenToggle
+        public static GUIStyle GreenToggle
         {
             get
             {
-                if (_greenToggle == null)
-                {
-                    _greenToggle                    = new GUIStyle(GUI.skin.toggle);
-                    _greenToggle.onHover.textColor  = Color.green;
-                    _greenToggle.onNormal.textColor = Color.green;
-                }
+                if (_greenToggle != null) return _greenToggle;
+
+                _greenToggle = new GUIStyle(GUI.skin.toggle) { onHover = { textColor = Color.green }, onNormal = { textColor = Color.green } };
 
                 return _greenToggle;
             }
@@ -429,16 +401,13 @@ namespace MuMech
 
         private static GUIStyle _redToggle;
 
-        public static GUIStyle redToggle
+        public static GUIStyle RedToggle
         {
             get
             {
-                if (_redToggle == null)
-                {
-                    _redToggle                    = new GUIStyle(GUI.skin.toggle);
-                    _redToggle.onHover.textColor  = Color.red;
-                    _redToggle.onNormal.textColor = Color.red;
-                }
+                if (_redToggle != null) return _redToggle;
+
+                _redToggle = new GUIStyle(GUI.skin.toggle) { onHover = { textColor = Color.red }, onNormal = { textColor = Color.red } };
 
                 return _redToggle;
             }
@@ -446,111 +415,104 @@ namespace MuMech
 
         private static GUIStyle _yellowToggle;
 
-        public static GUIStyle yellowToggle
-        {
-            get
-            {
-                if (_yellowToggle == null)
-                {
-                    _yellowToggle                    = new GUIStyle(GUI.skin.toggle);
-                    _yellowToggle.onHover.textColor  = Color.yellow;
-                    _yellowToggle.onNormal.textColor = Color.yellow;
-                }
+        public static GUIStyle YellowToggle => _yellowToggle ??=
+            new GUIStyle(GUI.skin.toggle) { onHover = { textColor = Color.yellow }, onNormal = { textColor = Color.yellow } };
 
-                return _yellowToggle;
-            }
-        }
+        public enum SkinType { DEFAULT, MECH_JEB1, COMPACT }
 
-        public enum SkinType { Default, MechJeb1, Compact }
-
-        public static GUISkin skin;
-        public static float   scale                      = 1;
-        public static int     scaledScreenWidth          = 1;
-        public static int     scaledScreenHeight         = 1;
-        public static bool    dontUseDropDownMenu        = false;
-        public static bool    showAdvancedWindowSettings = false;
-        public static GUISkin defaultSkin;
-        public static GUISkin compactSkin;
-        public static GUISkin transparentSkin;
+        public static GUISkin Skin;
+        public static float   Scale                      = 1;
+        public static int     ScaledScreenWidth          = 1;
+        public static int     ScaledScreenHeight         = 1;
+        public static bool    DontUseDropDownMenu        = false;
+        public static bool    ShowAdvancedWindowSettings = false;
+        public static GUISkin DefaultSkin;
+        public static GUISkin CompactSkin;
+        public static GUISkin TransparentSkin;
 
         public static void SetGUIScale(double s)
         {
-            scale              = Mathf.Clamp((float)s, 0.2f, 5f);
-            scaledScreenHeight = Mathf.RoundToInt(Screen.height / scale);
-            scaledScreenWidth  = Mathf.RoundToInt(Screen.width / scale);
+            Scale              = Mathf.Clamp((float)s, 0.2f, 5f);
+            ScaledScreenHeight = Mathf.RoundToInt(Screen.height / Scale);
+            ScaledScreenWidth  = Mathf.RoundToInt(Screen.width / Scale);
         }
 
         public static void CopyDefaultSkin()
         {
             GUI.skin    = null;
-            defaultSkin = Object.Instantiate(GUI.skin);
+            DefaultSkin = Object.Instantiate(GUI.skin);
         }
 
+        [UsedImplicitly]
         public static void CopyCompactSkin()
         {
             GUI.skin    = null;
-            compactSkin = Object.Instantiate(GUI.skin);
+            CompactSkin = Object.Instantiate(GUI.skin);
 
-            skin.name = "KSP Compact";
+            Skin.name = "KSP Compact";
 
-            compactSkin.label.margin  = new RectOffset(1, 1, 1, 1);
-            compactSkin.label.padding = new RectOffset(0, 0, 2, 2);
+            CompactSkin.label.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.label.padding = new RectOffset(0, 0, 2, 2);
 
-            compactSkin.button.margin  = new RectOffset(1, 1, 1, 1);
-            compactSkin.button.padding = new RectOffset(4, 4, 2, 2);
+            CompactSkin.button.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.button.padding = new RectOffset(4, 4, 2, 2);
 
-            compactSkin.toggle.margin  = new RectOffset(1, 1, 1, 1);
-            compactSkin.toggle.padding = new RectOffset(15, 0, 2, 0);
+            CompactSkin.toggle.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.toggle.padding = new RectOffset(15, 0, 2, 0);
 
-            compactSkin.textField.margin  = new RectOffset(1, 1, 1, 1);
-            compactSkin.textField.padding = new RectOffset(2, 2, 2, 2);
+            CompactSkin.textField.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.textField.padding = new RectOffset(2, 2, 2, 2);
 
-            compactSkin.textArea.margin  = new RectOffset(1, 1, 1, 1);
-            compactSkin.textArea.padding = new RectOffset(2, 2, 2, 2);
+            CompactSkin.textArea.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.textArea.padding = new RectOffset(2, 2, 2, 2);
 
-            compactSkin.window.margin  = new RectOffset(0, 0, 0, 0);
-            compactSkin.window.padding = new RectOffset(5, 5, 20, 5);
+            CompactSkin.window.margin  = new RectOffset(0, 0, 0, 0);
+            CompactSkin.window.padding = new RectOffset(5, 5, 20, 5);
         }
 
-        public static void CopyTransparentSkin()
+        private static void CopyTransparentSkin()
         {
             GUI.skin        = null;
-            transparentSkin = Object.Instantiate(GUI.skin);
+            TransparentSkin = Object.Instantiate(GUI.skin);
 
             var t = new Texture2D(1, 1);
             t.SetPixel(0, 0, new Color(0, 0, 0, 0));
             t.Apply();
 
-            transparentSkin.window.normal.background   = t;
-            transparentSkin.window.onNormal.background = t;
-            transparentSkin.window.padding             = new RectOffset(5, 5, 5, 5);
+            TransparentSkin.window.normal.background   = t;
+            TransparentSkin.window.onNormal.background = t;
+            TransparentSkin.window.padding             = new RectOffset(5, 5, 5, 5);
         }
 
         public static void LoadSkin(SkinType skinType)
         {
-            if (defaultSkin == null) CopyDefaultSkin();
-            if (compactSkin == null) CopyCompactSkin();
-            if (transparentSkin == null) CopyTransparentSkin();
+            if (DefaultSkin == null) CopyDefaultSkin();
+            if (CompactSkin == null) CopyCompactSkin();
+            if (TransparentSkin == null) CopyTransparentSkin();
 
             switch (skinType)
             {
-                case SkinType.Default:
-                    skin = defaultSkin;
+                case SkinType.DEFAULT:
+                    Skin = DefaultSkin;
                     break;
 
-                case SkinType.MechJeb1:
-                    skin = AssetBase.GetGUISkin("KSP window 2");
+                case SkinType.MECH_JEB1:
+                    Skin = AssetBase.GetGUISkin("KSP window 2");
                     break;
 
-                case SkinType.Compact:
-                    skin = compactSkin;
+                case SkinType.COMPACT:
+                    Skin = CompactSkin;
                     break;
             }
         }
 
         private static GUILayoutOption _layoutExpandWidth, _layoutNoExpandWidth;
-        public static  GUILayoutOption LayoutExpandWidth   => _layoutExpandWidth ??= GUILayout.ExpandWidth(true);
-        public static  GUILayoutOption LayoutNoExpandWidth => _layoutNoExpandWidth ??= GUILayout.ExpandWidth(false);
+
+        [UsedImplicitly]
+        public static GUILayoutOption LayoutExpandWidth => _layoutExpandWidth ??= GUILayout.ExpandWidth(true);
+
+        [UsedImplicitly]
+        public static GUILayoutOption LayoutNoExpandWidth => _layoutNoExpandWidth ??= GUILayout.ExpandWidth(false);
 
         public static GUILayoutOption ExpandWidth(bool b) => b ? LayoutExpandWidth : LayoutNoExpandWidth;
 
@@ -568,10 +530,10 @@ namespace MuMech
         {
             Profiler.BeginSample("SimpleTextField");
             string res = !expandWidth
-                ? GUILayout.TextField(ed.text, LayoutWidth(width), ExpandWidth(expandWidth))
-                : GUILayout.TextField(ed.text, LayoutWidth(width));
-            if (res != null && !res.Equals(ed.text))
-                ed.text = res;
+                ? GUILayout.TextField(ed.Text, LayoutWidth(width), ExpandWidth(false))
+                : GUILayout.TextField(ed.Text, LayoutWidth(width));
+            if (res != null && !res.Equals(ed.Text))
+                ed.Text = res;
             Profiler.EndSample();
         }
 
@@ -647,38 +609,24 @@ namespace MuMech
 
         private static GUIStyle _arrowSelectorStyeGuiStyleExpand;
 
-        public static GUIStyle arrowSelectorStyeGuiStyleExpand
-        {
-            get
-            {
-                if (_arrowSelectorStyeGuiStyleExpand == null)
-                {
-                    _arrowSelectorStyeGuiStyleExpand = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = true };
-                }
-
-                return _arrowSelectorStyeGuiStyleExpand;
-            }
-        }
+        [UsedImplicitly]
+        public static GUIStyle ArrowSelectorStyeGuiStyleExpand => _arrowSelectorStyeGuiStyleExpand ??=
+            new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = true };
 
         private static GUIStyle _arrowSelectorStyeGuiStyleNoExpand;
 
-        public static GUIStyle arrowSelectorStyeGuiStyleNoExpand
-        {
-            get
-            {
-                if (_arrowSelectorStyeGuiStyleNoExpand == null)
-                {
-                    _arrowSelectorStyeGuiStyleNoExpand = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = false };
-                }
-
-                return _arrowSelectorStyeGuiStyleNoExpand;
-            }
-        }
+        [UsedImplicitly]
+        public static GUIStyle ArrowSelectorStyeGuiStyleNoExpand => _arrowSelectorStyeGuiStyleNoExpand ??=
+            new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, stretchWidth = false };
 
         public static int ArrowSelector(int index, int modulo, string label, bool expandWidth = true)
         {
-            Action drawLabel = () => GUILayout.Label(label, expandWidth ? arrowSelectorStyeGuiStyleExpand : arrowSelectorStyeGuiStyleNoExpand);
-            return ArrowSelector(index, modulo, drawLabel);
+            return ArrowSelector(index, modulo, DrawLabel);
+
+            void DrawLabel()
+            {
+                GUILayout.Label(label, expandWidth ? ArrowSelectorStyeGuiStyleExpand : ArrowSelectorStyeGuiStyleNoExpand);
+            }
         }
 
         public static int HoursPerDay => GameSettings.KERBIN_TIME ? 6 : 24;
@@ -743,14 +691,12 @@ namespace MuMech
             {
                 s = s.Trim(' ', ',', '-');
                 int unitPos = s.IndexOf(units[i]);
-                if (unitPos != -1)
-                {
-                    double value;
-                    if (!double.TryParse(s.Substring(0, unitPos), out value)) return false;
-                    seconds         += value * intervals[i];
-                    s               =  s.Substring(unitPos + 1);
-                    parsedSomething =  true;
-                }
+                if (unitPos == -1) continue;
+
+                if (!double.TryParse(s.Substring(0, unitPos), out double value)) return false;
+                seconds         += value * intervals[i];
+                s               =  s.Substring(unitPos + 1);
+                parsedSomething =  true;
             }
 
             if (minus) seconds = -seconds;
@@ -758,17 +704,18 @@ namespace MuMech
             return parsedSomething;
         }
 
-        public static double ArcDistance(Vector3 From, Vector3 To)
+        private static double ArcDistance(Vector3 from, Vector3 to)
         {
-            double a = (FlightGlobals.ActiveVessel.mainBody.transform.position - From).magnitude;
-            double b = (FlightGlobals.ActiveVessel.mainBody.transform.position - To).magnitude;
-            double c = Vector3d.Distance(From, To);
+            Vector3 position = FlightGlobals.ActiveVessel.mainBody.transform.position;
+            double a = (position - from).magnitude;
+            double b = (position - to).magnitude;
+            double c = Vector3d.Distance(from, to);
             double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
 
-        public static double FromToETA(Vector3 From, Vector3 To, double Speed = 0) =>
-            ArcDistance(From, To) / (Speed > 0 ? Speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
+        public static double FromToETA(Vector3 from, Vector3 to, double speed = 0) =>
+            ArcDistance(from, to) / (speed > 0 ? speed : FlightGlobals.ActiveVessel.horizontalSrfSpeed);
 
         public static bool MouseIsOverWindow(MechJebCore core)
         {
@@ -776,7 +723,7 @@ namespace MuMech
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
                 if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay
-                    && m.WindowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / scale))
+                    && m.WindowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / Scale))
                 {
                     return true;
                 }
@@ -790,21 +737,18 @@ namespace MuMech
             Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
             Vector3d relOrigin = mouseRay.origin - body.position;
-            Vector3d relSurfacePosition;
             double curRadius = body.pqsController.radiusMax;
             double lastRadius = 0;
-            double error = 0;
             int loops = 0;
-            float st = Time.time;
             while (loops < 50)
             {
-                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out relSurfacePosition))
+                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out Vector3d relSurfacePosition))
                 {
                     Vector3d surfacePoint = body.position + relSurfacePosition;
                     double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) *
                                                                      QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) *
                                                                      Vector3d.right);
-                    error = Math.Abs(curRadius - alt);
+                    double error = Math.Abs(curRadius - alt);
                     if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
                     {
                         return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
@@ -830,6 +774,7 @@ namespace MuMech
             return null;
         }
 
+        [UsedImplicitly]
         public class ComboBox
         {
             // Easy to use combobox class
@@ -840,57 +785,55 @@ namespace MuMech
             // There is currently no way of knowing when a choice has been made
 
             // Position of the popup
-            private static Rect rect;
+            private static Rect _rect;
 
             // Identifier of the caller of the popup, null if nobody is waiting for a value
-            private static object   popupOwner;
-            private static string[] entries;
+            private static object   _popupOwner;
+            private static string[] _entries;
 
-            private static bool popupActive;
+            private static bool _popupActive;
 
             // Result to be returned to the owner
-            private static int selectedItem;
+            private static int _selectedItem;
 
             // Unity identifier of the window, just needs to be unique
-            private static readonly int id = GUIUtility.GetControlID(FocusType.Passive);
+            private static readonly int _id = GUIUtility.GetControlID(FocusType.Passive);
 
             // ComboBox GUI Style
-            private static readonly GUIStyle style;
+            private static readonly GUIStyle _style;
 
             static ComboBox()
             {
-                style                     = new GUIStyle(GUI.skin.window);
-                style.normal.background   = null;
-                style.onNormal.background = null;
-                style.border.top          = style.border.bottom;
-                style.padding.top         = style.padding.bottom;
+                _style             = new GUIStyle(GUI.skin.window) { normal = { background = null }, onNormal = { background = null } };
+                _style.border.top  = _style.border.bottom;
+                _style.padding.top = _style.padding.bottom;
             }
 
             public static void DrawGUI()
             {
-                if (popupOwner == null || rect.height == 0 || !popupActive)
+                if (_popupOwner == null || _rect.height == 0 || !_popupActive)
                     return;
 
-                if (style.normal.background == null)
+                if (_style.normal.background == null)
                 {
-                    style.normal.background   = MechJebBundlesManager.comboBoxBackground;
-                    style.onNormal.background = MechJebBundlesManager.comboBoxBackground;
+                    _style.normal.background   = MechJebBundlesManager.comboBoxBackground;
+                    _style.onNormal.background = MechJebBundlesManager.comboBoxBackground;
                 }
 
                 // Make sure the rectangle is fully on screen
-                rect.x = Math.Max(0, Math.Min(rect.x, scaledScreenWidth - rect.width));
-                rect.y = Math.Max(0, Math.Min(rect.y, scaledScreenHeight - rect.height));
+                _rect.x = Math.Max(0, Math.Min(_rect.x, ScaledScreenWidth - _rect.width));
+                _rect.y = Math.Max(0, Math.Min(_rect.y, ScaledScreenHeight - _rect.height));
 
-                rect = GUILayout.Window(id, rect, identifier =>
+                _rect = GUILayout.Window(_id, _rect, identifier =>
                 {
-                    selectedItem = GUILayout.SelectionGrid(-1, entries, 1, yellowOnHover);
+                    _selectedItem = GUILayout.SelectionGrid(-1, _entries, 1, YellowOnHover);
                     if (GUI.changed)
-                        popupActive = false;
-                }, "", style);
+                        _popupActive = false;
+                }, "", _style);
 
                 //Cancel the popup if we click outside
-                if (Event.current.type == EventType.MouseDown && !rect.Contains(Event.current.mousePosition))
-                    popupOwner = null;
+                if (Event.current.type == EventType.MouseDown && !_rect.Contains(Event.current.mousePosition))
+                    _popupOwner = null;
             }
 
             public static int Box(int selectedItem, string[] entries, object caller, bool expandWidth = true)
@@ -907,14 +850,14 @@ namespace MuMech
                 if (selectedItem >= entries.Length)
                     selectedItem = entries.Length - 1;
 
-                if (dontUseDropDownMenu)
+                if (DontUseDropDownMenu)
                     return ArrowSelector(selectedItem, entries.Length, entries[selectedItem], expandWidth);
 
                 // A choice has been made, update the return value
-                if (popupOwner == caller && !popupActive)
+                if (_popupOwner == caller && !_popupActive)
                 {
-                    popupOwner   = null;
-                    selectedItem = ComboBox.selectedItem;
+                    _popupOwner  = null;
+                    selectedItem = _selectedItem;
                     GUI.changed  = true;
                 }
 
@@ -924,23 +867,23 @@ namespace MuMech
                     // We will set the changed status when we return from the menu instead
                     GUI.changed = guiChanged;
                     // Update the global state with the new items
-                    popupOwner       = caller;
-                    popupActive      = true;
-                    ComboBox.entries = entries;
+                    _popupOwner  = caller;
+                    _popupActive = true;
+                    _entries     = entries;
                     // Magic value to force position update during repaint event
-                    rect = new Rect(0, 0, 0, 0);
+                    _rect = new Rect(0, 0, 0, 0);
                 }
 
                 // The GetLastRect method only works during repaint event, but the Button will return false during repaint
-                if (Event.current.type == EventType.Repaint && popupOwner == caller && rect.height == 0)
+                if (Event.current.type == EventType.Repaint && _popupOwner == caller && _rect.height == 0)
                 {
-                    rect = GUILayoutUtility.GetLastRect();
+                    _rect = GUILayoutUtility.GetLastRect();
                     // But even worse, I can't find a clean way to convert from relative to absolute coordinates
                     Vector2 mousePos = Input.mousePosition;
                     mousePos.y = Screen.height - mousePos.y;
                     Vector2 clippedMousePos = Event.current.mousePosition;
-                    rect.x = (rect.x + mousePos.x) / scale - clippedMousePos.x;
-                    rect.y = (rect.y + mousePos.y) / scale - clippedMousePos.y;
+                    _rect.x = (_rect.x + mousePos.x) / Scale - clippedMousePos.x;
+                    _rect.y = (_rect.y + mousePos.y) / Scale - clippedMousePos.y;
                 }
 
                 return selectedItem;
@@ -950,15 +893,16 @@ namespace MuMech
 
     public class Coordinates
     {
-        public double latitude;
-        public double longitude;
+        public readonly double Latitude;
+        public readonly double Longitude;
 
         public Coordinates(double latitude, double longitude)
         {
-            this.latitude  = latitude;
-            this.longitude = longitude;
+            this.Latitude  = latitude;
+            this.Longitude = longitude;
         }
 
+        [UsedImplicitly]
         public static string ToStringDecimal(double latitude, double longitude, bool newline = false, int precision = 3)
         {
             double clampedLongitude = MuUtils.ClampDegrees180(longitude);
@@ -968,7 +912,7 @@ namespace MuMech
                    + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
         }
 
-        public string ToStringDecimal(bool newline = false, int precision = 3) => ToStringDecimal(latitude, longitude, newline, precision);
+        public string ToStringDecimal(bool newline = false, int precision = 3) => ToStringDecimal(Latitude, Longitude, newline, precision);
 
         public static string ToStringDMS(double latitude, double longitude, bool newline = false)
         {
@@ -977,7 +921,7 @@ namespace MuMech
                    + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
         }
 
-        public string ToStringDMS(bool newline = false) => ToStringDMS(latitude, longitude, newline);
+        public string ToStringDMS(bool newline = false) => ToStringDMS(Latitude, Longitude, newline);
 
         public static string AngleToDMS(double angle)
         {
@@ -985,142 +929,146 @@ namespace MuMech
             int minutes = (int)Math.Floor(60 * (Math.Abs(angle) - degrees));
             int seconds = (int)Math.Floor(3600 * (Math.Abs(angle) - degrees - minutes / 60.0));
 
-            return string.Format("{0:0}° {1:00}' {2:00}\"", degrees, minutes, seconds);
+            return $"{degrees:0}° {minutes:00}' {seconds:00}\"";
         }
     }
 
     public static class ColorPickerHSV
     {
-        private static Texture2D displayPicker;
+        private static Texture2D _displayPicker;
 
-        public static  Color setColor;
-        private static Color lastSetColor;
+        [UsedImplicitly]
+        public static Color SetColor;
 
-        private static readonly int textureWidth  = 240;
-        private static readonly int textureHeight = 240;
+        private static Color _lastSetColor;
 
-        private static float     saturationSlider;
-        private static float     alphaSlider;
-        private static Texture2D saturationTexture;
+        private const int TEXTURE_WIDTH  = 240;
+        private const int TEXTURE_HEIGHT = 240;
+
+        private static float     _saturationSlider;
+        private static float     _alphaSlider;
+        private static Texture2D _saturationTexture;
 
         private static void Init()
         {
-            displayPicker = new Texture2D(textureWidth, textureHeight, TextureFormat.ARGB32, false);
-            for (int i = 0; i < textureWidth; i++)
+            _displayPicker = new Texture2D(TEXTURE_WIDTH, TEXTURE_HEIGHT, TextureFormat.ARGB32, false);
+            for (int i = 0; i < TEXTURE_WIDTH; i++)
             {
-                for (int j = 0; j < textureHeight; j++)
+                for (int j = 0; j < TEXTURE_HEIGHT; j++)
                 {
-                    displayPicker.SetPixel(i, j, MuUtils.HSVtoRGB(360f / textureWidth * i, 1.0f / j * textureHeight, 1.0f, 1f));
+                    _displayPicker.SetPixel(i, j, MuUtils.HSVtoRGB(360f / TEXTURE_WIDTH * i, 1.0f / j * TEXTURE_HEIGHT, 1.0f, 1f));
                 }
             }
 
-            displayPicker.Apply();
+            _displayPicker.Apply();
 
             float v = 0.0F;
-            float diff = 1.0f / textureHeight;
-            saturationTexture = new Texture2D(20, textureHeight);
-            for (int i = 0; i < saturationTexture.width; i++)
+            float diff = 1.0f / TEXTURE_HEIGHT;
+            _saturationTexture = new Texture2D(20, TEXTURE_HEIGHT);
+            for (int i = 0; i < _saturationTexture.width; i++)
             {
-                for (int j = 0; j < saturationTexture.height; j++)
+                for (int j = 0; j < _saturationTexture.height; j++)
                 {
-                    saturationTexture.SetPixel(i, j, new Color(v, v, v));
+                    _saturationTexture.SetPixel(i, j, new Color(v, v, v));
                     v += diff;
                 }
 
                 v = 0.0F;
             }
 
-            saturationTexture.Apply();
+            _saturationTexture.Apply();
         }
 
         public static void DrawGUI(int positionLeft, int positionTop)
         {
-            if (!displayPicker)
+            if (!_displayPicker)
                 Init();
 
-            GUI.Box(new Rect(positionLeft - 3, positionTop - 3, textureWidth + 90, textureHeight + 30), "");
+            GUI.Box(new Rect(positionLeft - 3, positionTop - 3, TEXTURE_WIDTH + 90, TEXTURE_HEIGHT + 30), "");
 
-            if (GUI.RepeatButton(new Rect(positionLeft, positionTop, textureWidth, textureHeight), displayPicker))
+            if (GUI.RepeatButton(new Rect(positionLeft, positionTop, TEXTURE_WIDTH, TEXTURE_HEIGHT), _displayPicker))
             {
                 int a = (int)Input.mousePosition.x;
                 int b = Screen.height - (int)Input.mousePosition.y;
 
-                setColor     = displayPicker.GetPixel(a - positionLeft, -(b - positionTop));
-                lastSetColor = setColor;
+                SetColor      = _displayPicker.GetPixel(a - positionLeft, -(b - positionTop));
+                _lastSetColor = SetColor;
             }
 
-            saturationSlider = GUI.VerticalSlider(new Rect(positionLeft + textureWidth + 3, positionTop, 10, textureHeight), saturationSlider, 1, 0);
-            setColor         = lastSetColor + new Color(saturationSlider, saturationSlider, saturationSlider);
-            GUI.Box(new Rect(positionLeft + textureWidth + 20, positionTop, 20, textureHeight), saturationTexture);
-
-            alphaSlider = GUI.VerticalSlider(new Rect(positionLeft + textureWidth + 3 + 10 + 20 + 10, positionTop, 10, textureHeight), alphaSlider, 1,
+            _saturationSlider = GUI.VerticalSlider(new Rect(positionLeft + TEXTURE_WIDTH + 3, positionTop, 10, TEXTURE_HEIGHT), _saturationSlider, 1,
                 0);
-            setColor.a = alphaSlider;
-            GUI.Box(new Rect(positionLeft + textureWidth + 20 + 10 + 20 + 10, positionTop, 20, textureHeight), saturationTexture);
+            SetColor = _lastSetColor + new Color(_saturationSlider, _saturationSlider, _saturationSlider);
+            GUI.Box(new Rect(positionLeft + TEXTURE_WIDTH + 20, positionTop, 20, TEXTURE_HEIGHT), _saturationTexture);
+
+            _alphaSlider = GUI.VerticalSlider(new Rect(positionLeft + TEXTURE_WIDTH + 3 + 10 + 20 + 10, positionTop, 10, TEXTURE_HEIGHT),
+                _alphaSlider, 1,
+                0);
+            SetColor.a = _alphaSlider;
+            GUI.Box(new Rect(positionLeft + TEXTURE_WIDTH + 20 + 10 + 20 + 10, positionTop, 20, TEXTURE_HEIGHT), _saturationTexture);
         }
     }
 
     public static class ColorPickerRGB
     {
-        private static readonly int textureWidth  = 240;
-        private static readonly int textureHeight = 10;
+        private const int TEXTURE_WIDTH  = 240;
+        private const int TEXTURE_HEIGHT = 10;
 
-        private static Texture2D rTexture;
-        private static Texture2D gTexture;
-        private static Texture2D bTexture;
-        private static Texture2D aTexture;
+        private static Texture2D _rTexture;
+        private static Texture2D _gTexture;
+        private static Texture2D _bTexture;
+        private static Texture2D _aTexture;
 
         private static void Init()
         {
-            rTexture = new Texture2D(textureWidth, 1);
-            gTexture = new Texture2D(textureWidth, 1);
-            bTexture = new Texture2D(textureWidth, 1);
-            aTexture = new Texture2D(textureWidth, 1);
-            for (int i = 0; i < textureWidth; i++)
+            _rTexture = new Texture2D(TEXTURE_WIDTH, 1);
+            _gTexture = new Texture2D(TEXTURE_WIDTH, 1);
+            _bTexture = new Texture2D(TEXTURE_WIDTH, 1);
+            _aTexture = new Texture2D(TEXTURE_WIDTH, 1);
+            for (int i = 0; i < TEXTURE_WIDTH; i++)
             {
-                float v = (float)i / (textureWidth - 1);
-                rTexture.SetPixel(i, 0, new Color(v, 0, 0));
-                gTexture.SetPixel(i, 0, new Color(0, v, 0));
-                bTexture.SetPixel(i, 0, new Color(0, 0, v));
-                aTexture.SetPixel(i, 0, new Color(v, v, v));
+                float v = (float)i / (TEXTURE_WIDTH - 1);
+                _rTexture.SetPixel(i, 0, new Color(v, 0, 0));
+                _gTexture.SetPixel(i, 0, new Color(0, v, 0));
+                _bTexture.SetPixel(i, 0, new Color(0, 0, v));
+                _aTexture.SetPixel(i, 0, new Color(v, v, v));
             }
 
-            rTexture.Apply();
-            gTexture.Apply();
-            bTexture.Apply();
-            aTexture.Apply();
+            _rTexture.Apply();
+            _gTexture.Apply();
+            _bTexture.Apply();
+            _aTexture.Apply();
 
-            rTexture.wrapMode = TextureWrapMode.Repeat;
-            gTexture.wrapMode = TextureWrapMode.Repeat;
-            bTexture.wrapMode = TextureWrapMode.Repeat;
-            aTexture.wrapMode = TextureWrapMode.Repeat;
+            _rTexture.wrapMode = TextureWrapMode.Repeat;
+            _gTexture.wrapMode = TextureWrapMode.Repeat;
+            _bTexture.wrapMode = TextureWrapMode.Repeat;
+            _aTexture.wrapMode = TextureWrapMode.Repeat;
         }
 
         public static Color DrawGUI(int positionLeft, int positionTop, Color c)
         {
-            if (!rTexture)
+            if (!_rTexture)
                 Init();
 
-            GUI.Box(new Rect(positionLeft - 3, positionTop - 3, textureWidth + 3, textureHeight + 125), "");
+            GUI.Box(new Rect(positionLeft - 3, positionTop - 3, TEXTURE_WIDTH + 3, TEXTURE_HEIGHT + 125), "");
 
             float pos = positionTop + 5;
-            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), rTexture, new Rect(0, 0, 1, textureHeight));
-            c.r = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.r, 0, 1);
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, TEXTURE_WIDTH, TEXTURE_HEIGHT), _rTexture, new Rect(0, 0, 1, TEXTURE_HEIGHT));
+            c.r = GUI.HorizontalSlider(new Rect(positionLeft, pos + TEXTURE_HEIGHT + 5, TEXTURE_WIDTH, 10), c.r, 0, 1);
 
-            pos += textureHeight + 20;
+            pos += TEXTURE_HEIGHT + 20;
 
-            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), gTexture, new Rect(0, 0, 1, textureHeight));
-            c.g = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.g, 0, 1);
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, TEXTURE_WIDTH, TEXTURE_HEIGHT), _gTexture, new Rect(0, 0, 1, TEXTURE_HEIGHT));
+            c.g = GUI.HorizontalSlider(new Rect(positionLeft, pos + TEXTURE_HEIGHT + 5, TEXTURE_WIDTH, 10), c.g, 0, 1);
 
-            pos += textureHeight + 20;
+            pos += TEXTURE_HEIGHT + 20;
 
-            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), bTexture, new Rect(0, 0, 1, textureHeight));
-            c.b = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.b, 0, 1);
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, TEXTURE_WIDTH, TEXTURE_HEIGHT), _bTexture, new Rect(0, 0, 1, TEXTURE_HEIGHT));
+            c.b = GUI.HorizontalSlider(new Rect(positionLeft, pos + TEXTURE_HEIGHT + 5, TEXTURE_WIDTH, 10), c.b, 0, 1);
 
-            pos += textureHeight + 20;
+            pos += TEXTURE_HEIGHT + 20;
 
-            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, textureWidth, textureHeight), aTexture, new Rect(0, 0, 1, textureHeight));
-            c.a = GUI.HorizontalSlider(new Rect(positionLeft, pos + textureHeight + 5, textureWidth, 10), c.a, 0, 1);
+            GUI.DrawTextureWithTexCoords(new Rect(positionLeft, pos, TEXTURE_WIDTH, TEXTURE_HEIGHT), _aTexture, new Rect(0, 0, 1, TEXTURE_HEIGHT));
+            c.a = GUI.HorizontalSlider(new Rect(positionLeft, pos + TEXTURE_HEIGHT + 5, TEXTURE_WIDTH, 10), c.a, 0, 1);
 
             return c;
         }

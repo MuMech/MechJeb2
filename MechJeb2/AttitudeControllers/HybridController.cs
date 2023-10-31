@@ -154,13 +154,13 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label1"), GUILayout.ExpandWidth(false)); //"MaxStoppingTime"
-            MaxStoppingTime.text = GUILayout.TextField(MaxStoppingTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            MaxStoppingTime.Text = GUILayout.TextField(MaxStoppingTime.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             UseControlRange = GUILayout.Toggle(UseControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),
                 GUILayout.ExpandWidth(false)); //"RollControlRange"
-            RollControlRange.text = GUILayout.TextField(RollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            RollControlRange.Text = GUILayout.TextField(RollControlRange.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             // Not used yet

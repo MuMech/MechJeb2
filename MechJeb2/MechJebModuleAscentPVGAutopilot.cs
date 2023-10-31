@@ -146,7 +146,7 @@ namespace MuMech
             if (!AscentSettings.StagingTriggerFlag)
                 Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
             else
-                Status = $"Pitch Program until stage {AscentSettings.StagingTrigger.val}";
+                Status = $"Pitch Program until stage {AscentSettings.StagingTrigger.Val}";
 
             if (CheckForGuidanceTransition(pitch))
             {
@@ -185,7 +185,7 @@ namespace MuMech
             if (!AscentSettings.StagingTriggerFlag)
                 Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - Core.Guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
             else
-                Status = $"Gravity Turn until stage {AscentSettings.StagingTrigger.val}";
+                Status = $"Gravity Turn until stage {AscentSettings.StagingTrigger.Val}";
 
             if (CheckForGuidanceTransition(pitch))
             {

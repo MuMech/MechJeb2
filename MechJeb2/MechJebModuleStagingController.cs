@@ -241,7 +241,7 @@ namespace MuMech
                 50); //"Clamp AutoStage Thrust "
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (prev != Core.Staging.ClampAutoStageThrustPct)
-                Core.Staging.ClampAutoStageThrustPct.val = UtilMath.Clamp(Core.Staging.ClampAutoStageThrustPct, 0, 100);
+                Core.Staging.ClampAutoStageThrustPct.Val = UtilMath.Clamp(Core.Staging.ClampAutoStageThrustPct, 0, 100);
         }
 
         //internal state:

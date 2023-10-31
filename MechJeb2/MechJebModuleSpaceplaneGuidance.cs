@@ -38,7 +38,7 @@ namespace MuMech
 
             if (availableRunways.Any())
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label1"), GuiUtils.middleCenterLabel); //Landing
+                GUILayout.Label(Localizer.Format("#MechJeb_ApproAndLand_label1"), GuiUtils.MiddleCenterLabel); //Landing
 
                 runwayIndex     = GuiUtils.ComboBox.Box(runwayIndex, availableRunways.Select(p => p.name).ToArray(), this);
                 autoland.runway = availableRunways[runwayIndex];
