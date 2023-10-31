@@ -164,13 +164,13 @@ namespace MuMech.AttitudeControllers
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("MaxStoppingTime", GUILayout.ExpandWidth(false));
-            MaxStoppingTime.text = GUILayout.TextField(MaxStoppingTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+            MaxStoppingTime.Text = GUILayout.TextField(MaxStoppingTime.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
             GUILayout.EndHorizontal();
 
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("RollControlRange", GUILayout.ExpandWidth(false));
-            RollControlRange.text = GUILayout.TextField(RollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+            RollControlRange.Text = GUILayout.TextField(RollControlRange.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

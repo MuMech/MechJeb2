@@ -69,7 +69,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label5")); //"Turn end altitude: "
-                GUILayout.Label(_ascentSettings.AutoTurnEndAltitude.ToSI(2) + "m", GuiUtils.middleRightLabel,
+                GUILayout.Label(_ascentSettings.AutoTurnEndAltitude.ToSI(2) + "m", GuiUtils.MiddleRightLabel,
                     GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
@@ -92,7 +92,7 @@ namespace MuMech
             double sliderTurnShapeExponent = GUILayout.HorizontalSlider((float)_ascentSettings.TurnShapeExponent, 0.0F, 1.0F);
             if (Math.Round(Math.Abs(sliderTurnShapeExponent - oldTurnShapeExponent), SLIDER_PRECISION) > 0)
             {
-                _ascentSettings.TurnShapeExponent.val = Math.Round(sliderTurnShapeExponent, SLIDER_PRECISION);
+                _ascentSettings.TurnShapeExponent.Val = Math.Round(sliderTurnShapeExponent, SLIDER_PRECISION);
             }
 
             GUILayout.Box(_pathTexture);

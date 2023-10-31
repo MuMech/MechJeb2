@@ -52,12 +52,12 @@ namespace MuMech
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
-                _ascentSettings.LastStage.val = Clamp(_ascentSettings.LastStage.val, 0, Core.StageStats.VacStats.Count - 1);
+                _ascentSettings.LastStage.Val = Clamp(_ascentSettings.LastStage.Val, 0, Core.StageStats.VacStats.Count - 1);
 
                 for (int mjPhase = _ascentSettings.LastStage; mjPhase < Core.StageStats.VacStats.Count; mjPhase++)
                 {
                     FuelStats stats = Core.StageStats.VacStats[mjPhase];
-                    if (stats.DeltaV < _ascentSettings.MinDeltaV.val)
+                    if (stats.DeltaV < _ascentSettings.MinDeltaV.Val)
                         continue;
 
                     if (topstage < 0)
@@ -78,7 +78,7 @@ namespace MuMech
             // this should only run once -- maybe it should run in some hook like scene loading or something?
             // we need DV info though.
             if (_ascentSettings.OptimizeStageInternal < 0)
-                _ascentSettings.OptimizeStageInternal.val = topstage;
+                _ascentSettings.OptimizeStageInternal.Val = topstage;
 
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", 30);
@@ -120,10 +120,10 @@ namespace MuMech
             if (_ascentSettings.LimitQa < 1000 || _ascentSettings.LimitQa > 4000)
             {
                 if (_ascentSettings.LimitQa < 0 || _ascentSettings.LimitQa > 10000)
-                    GUILayout.Label("Qα limit has been clamped to between 0 and 10000 Pa-rad", GuiUtils.redLabel);
+                    GUILayout.Label("Qα limit has been clamped to between 0 and 10000 Pa-rad", GuiUtils.RedLabel);
                 else
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel20,
-                        GuiUtils.yellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
+                        GuiUtils.YellowLabel); //Qα limit is recommended to be 1000 to 4000 Pa-rad
             }
 
             Core.Guidance.ShouldDrawTrajectory = GUILayout.Toggle(Core.Guidance.ShouldDrawTrajectory, "Draw Trajectory on Map");

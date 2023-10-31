@@ -3,6 +3,8 @@ using JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
+// ReSharper disable CompareOfFloatsByEqualityOperator
+
 namespace MuMech.AttitudeControllers
 {
     internal class MJAttitudeController : BaseAttitudeController
@@ -257,11 +259,11 @@ namespace MuMech.AttitudeControllers
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label2"), GUILayout.ExpandWidth(true));  //"Tf (s)"
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label3"), GUILayout.ExpandWidth(false)); //"P"
-                _uiTfX.text = GUILayout.TextField(_uiTfX.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                _uiTfX.Text = GUILayout.TextField(_uiTfX.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label4"), GUILayout.ExpandWidth(false)); //"Y"
-                _uiTfY.text = GUILayout.TextField(_uiTfY.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                _uiTfY.Text = GUILayout.TextField(_uiTfY.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label5"), GUILayout.ExpandWidth(false)); //"R"
-                _uiTfZ.text = GUILayout.TextField(_uiTfZ.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                _uiTfZ.Text = GUILayout.TextField(_uiTfZ.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
                 GUILayout.EndHorizontal();
 
                 _uiTfX = Math.Max(0.01, _uiTfX);

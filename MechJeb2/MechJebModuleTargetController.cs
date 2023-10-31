@@ -220,15 +220,15 @@ namespace MuMech
 
                     if (mouseCoords != null)
                     {
-                        GLUtils.DrawGroundMarker(MainBody, mouseCoords.latitude, mouseCoords.longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
+                        GLUtils.DrawGroundMarker(MainBody, mouseCoords.Latitude, mouseCoords.Longitude, new Color(1.0f, 0.56f, 0.0f), true, 60);
 
-                        string biome = MainBody.GetExperimentBiomeSafe(mouseCoords.latitude, mouseCoords.longitude);
+                        string biome = MainBody.GetExperimentBiomeSafe(mouseCoords.Latitude, mouseCoords.Longitude);
                         GUI.Label(new Rect(Input.mousePosition.x + 15, Screen.height - Input.mousePosition.y, 200, 50),
                             mouseCoords.ToStringDecimal() + "\n" + biome);
 
                         if (Input.GetMouseButtonDown(0))
                         {
-                            SetPositionTarget(MainBody, mouseCoords.latitude, mouseCoords.longitude);
+                            SetPositionTarget(MainBody, mouseCoords.Latitude, mouseCoords.Longitude);
                             StopPickPositionTargetOnMap();
                         }
                     }

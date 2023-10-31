@@ -47,7 +47,7 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GUILayout.ExpandWidth(true)); //"Warp for: "
-                timeOffset.text = GUILayout.TextField(timeOffset.text, GUILayout.Width(100));
+                timeOffset.Text = GUILayout.TextField(timeOffset.Text, GUILayout.Width(100));
                 GUILayout.EndHorizontal();
             }
             else if (warpTarget == WarpTarget.PhaseAngleT)

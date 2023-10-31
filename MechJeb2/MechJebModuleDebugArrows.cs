@@ -164,28 +164,28 @@ namespace MuMech
             if (comSphereActive)
             {
                 comSphere.Set(instantCoM);
-                comSphere.SetRadius((float)comSphereRadius.val);
+                comSphere.SetRadius((float)comSphereRadius.Val);
             }
 
             colSphere.State(colSphereActive && VesselState.CoLScalar > 0 && Core.ShowGui);
             if (colSphereActive)
             {
                 colSphere.Set(VesselState.CoL + frameVel);
-                colSphere.SetRadius((float)comSphereRadius.val);
+                colSphere.SetRadius((float)comSphereRadius.Val);
             }
 
             cotSphere.State(cotSphereActive && VesselState.CoTScalar > 0 && Core.ShowGui);
             if (cotSphereActive)
             {
                 cotSphere.Set(VesselState.CoT + frameVel);
-                cotSphere.SetRadius((float)comSphereRadius.val);
+                cotSphere.SetRadius((float)comSphereRadius.Val);
             }
 
             srfVelocityArrow.State(srfVelocityArrowActive && Core.ShowGui);
             if (srfVelocityArrowActive)
             {
                 srfVelocityArrow.Set(arrowPos, Vessel.srf_velocity);
-                srfVelocityArrow.SetLength((float)arrowsLength.val);
+                srfVelocityArrow.SetLength((float)arrowsLength.Val);
                 srfVelocityArrow.SeeThrough(seeThrough);
             }
 
@@ -193,7 +193,7 @@ namespace MuMech
             if (obtVelocityArrowActive)
             {
                 obtVelocityArrow.Set(arrowPos, Vessel.obt_velocity);
-                obtVelocityArrow.SetLength((float)arrowsLength.val);
+                obtVelocityArrow.SetLength((float)arrowsLength.Val);
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
 
@@ -209,7 +209,7 @@ namespace MuMech
             if (forwardArrowActive)
             {
                 forwardArrow.Set(arrowPos, Vessel.GetTransform().up);
-                forwardArrow.SetLength((float)arrowsLength.val);
+                forwardArrow.SetLength((float)arrowsLength.Val);
                 forwardArrow.SeeThrough(seeThrough);
             }
 
@@ -227,7 +227,7 @@ namespace MuMech
             if (requestedAttitudeArrowActive && Core.Attitude.Enabled)
             {
                 requestedAttitudeArrow.Set(arrowPos, Core.Attitude.RequestedAttitude);
-                requestedAttitudeArrow.SetLength((float)arrowsLength.val);
+                requestedAttitudeArrow.SetLength((float)arrowsLength.Val);
                 requestedAttitudeArrow.SeeThrough(seeThrough);
             }
 

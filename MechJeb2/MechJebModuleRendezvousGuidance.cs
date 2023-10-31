@@ -103,7 +103,7 @@ namespace MuMech
                 }
             }
 
-            phasingOrbitAltitude.text = GUILayout.TextField(phasingOrbitAltitude.text, GUILayout.Width(70));
+            phasingOrbitAltitude.Text = GUILayout.TextField(phasingOrbitAltitude.Text, GUILayout.Width(70));
             GUILayout.Label("km", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 

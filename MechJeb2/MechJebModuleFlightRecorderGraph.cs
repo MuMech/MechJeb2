@@ -591,7 +591,7 @@ namespace MuMech
             for (int i = 0; i < count; i++)
             {
                 GUI.Label(new Rect(r.xMin - w, yBase - (float)(invScaleY * state.labelsPos[i]) - h * 0.5f, w, h), state.labels[i],
-                    GuiUtils.middleRightLabel);
+                    GuiUtils.MiddleRightLabel);
             }
         }
 

@@ -116,7 +116,7 @@ namespace MuMech
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act") + ":", buttonStyle, GUILayout.ExpandWidth(true)) || change)
                 {
-                    Core.Thrust.TransSpdAct    = (float)trans_spd.val;
+                    Core.Thrust.TransSpdAct    = (float)trans_spd.Val;
                     GUIUtility.keyboardControl = 0;
                 }
             }

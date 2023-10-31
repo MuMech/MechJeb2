@@ -612,7 +612,7 @@ namespace MuMech
                 for (int i = 0; i < ap.Waypoints.Count; i++)
                 {
                     MechJebWaypoint wp = ap.Waypoints[i];
-                    double maxSpeed = wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.val;
+                    double maxSpeed = wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.Val;
                     float minSpeed = wp.MinSpeed > 0 ? wp.MinSpeed : 0;
                     if (MapView.MapIsEnabled && i == selIndex)
                     {
@@ -1016,7 +1016,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
+            if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
                 switch (showPage)
@@ -1037,7 +1037,7 @@ namespace MuMech
 
             if (styleInactive == null)
             {
-                styleInactive           = new GUIStyle(GuiUtils.skin != null ? GuiUtils.skin.button : GuiUtils.defaultSkin.button);
+                styleInactive           = new GUIStyle(GuiUtils.Skin != null ? GuiUtils.Skin.button : GuiUtils.DefaultSkin.button);
                 styleInactive.alignment = TextAnchor.UpperLeft;
             }
 
@@ -1110,14 +1110,14 @@ namespace MuMech
                             {
                                 if (selIndex > -1 && selIndex < ap.Waypoints.Count)
                                 {
-                                    ap.Waypoints.Insert(selIndex, new MechJebWaypoint(mouseCoords.latitude, mouseCoords.longitude));
+                                    ap.Waypoints.Insert(selIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
                                     tmpRadius = ap.Waypoints[selIndex].Radius.ToString();
                                     tmpLat    = LatToString(ap.Waypoints[selIndex].Latitude);
                                     tmpLon    = LonToString(ap.Waypoints[selIndex].Longitude);
                                 }
                                 else
                                 {
-                                    ap.Waypoints.Add(new MechJebWaypoint(mouseCoords.latitude, mouseCoords.longitude));
+                                    ap.Waypoints.Add(new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
                                 }
 
                                 waitingForPick = alt;
@@ -1184,7 +1184,7 @@ namespace MuMech
         {
             if (btnInactive == null)
             {
-                btnInactive           = new GUIStyle(GuiUtils.skin.button);
+                btnInactive           = new GUIStyle(GuiUtils.Skin.button);
                 btnInactive.alignment = TextAnchor.MiddleLeft;
             }
 

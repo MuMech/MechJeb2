@@ -323,7 +323,7 @@ namespace MuMech
         private static GUIStyle _columnStyle;
 
         public static GUIStyle ColumnStyle =>
-            _columnStyle ??= new GUIStyle(GuiUtils.yellowOnHover)
+            _columnStyle ??= new GUIStyle(GuiUtils.YellowOnHover)
             {
                 alignment = TextAnchor.MiddleRight, wordWrap = false, padding = new RectOffset(2, 2, 0, 0)
             };

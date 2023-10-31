@@ -145,15 +145,15 @@ namespace MuMech
                 }
 
                 if (_ascentSettings.DesiredApoapsis >= 0 && _ascentSettings.DesiredApoapsis < _ascentSettings.DesiredOrbitAltitude)
-                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel3, GuiUtils.yellowLabel); //Ap < Pe: circularizing orbit
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel3, GuiUtils.YellowLabel); //Ap < Pe: circularizing orbit
                 else if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt > _ascentSettings.DesiredApoapsis)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltHigh,
-                        GuiUtils.orangeLabel); //Attach > Ap: apoapsis insertion
+                        GuiUtils.OrangeLabel); //Attach > Ap: apoapsis insertion
                 if (_ascentSettings.DesiredApoapsis < 0)
-                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel4, GuiUtils.orangeLabel); //Hyperbolic target orbit (neg Ap)
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel4, GuiUtils.OrangeLabel); //Hyperbolic target orbit (neg Ap)
                 if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt < _ascentSettings.DesiredOrbitAltitude)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltLow,
-                        GuiUtils.orangeLabel); //Attach < Pe: periapsis insertion
+                        GuiUtils.OrangeLabel); //Attach < Pe: periapsis insertion
             }
             else
             {
@@ -161,15 +161,15 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.skin.label,
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.Skin.label,
                 false);                                                                                        //Orbit inc.
             if (GUILayout.Button(CachedLocalizer.Instance.MechJebAscentButton13, GuiUtils.ExpandWidth(false))) //Current
-                _ascentSettings.DesiredInclination.val = Math.Round(VesselState.latitude, 3);
+                _ascentSettings.DesiredInclination.Val = Math.Round(VesselState.latitude, 3);
             GUILayout.EndHorizontal();
 
             double delta = Math.Abs(VesselState.latitude) - Math.Abs(_ascentSettings.DesiredInclination);
             if (2.001 < delta)
-                GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", delta), GuiUtils.redLabel); //inc {0:F1}º below current latitude
+                GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", delta), GuiUtils.RedLabel); //inc {0:F1}º below current latitude
 
             GUILayout.EndVertical();
             Profiler.EndSample();
@@ -227,11 +227,11 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 GUIStyle si;
                 if (Core.Guidance.IsStable())
-                    si = GuiUtils.greenLabel;
+                    si = GuiUtils.GreenLabel;
                 else if (Core.Guidance.IsInitializing() || Core.Guidance.Status == PVGStatus.FINISHED)
-                    si = GuiUtils.orangeLabel;
+                    si = GuiUtils.OrangeLabel;
                 else
-                    si = GuiUtils.redLabel;
+                    si = GuiUtils.RedLabel;
                 GUILayout.Label(label26, si); //Guidance Status:
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(label27, GuiUtils.LayoutWidth(90)); //converges:
@@ -244,7 +244,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
                 if (Core.Glueball.Exception != null)
                 {
-                    GUILayout.Label(label30, GuiUtils.redLabel); //LAST FAILURE:
+                    GUILayout.Label(label30, GuiUtils.RedLabel); //LAST FAILURE:
                 }
 
                 Profiler.EndSample();
@@ -298,7 +298,7 @@ namespace MuMech
                         Core.Target.TargetOrbit.inclination
                     );
                     _autopilot.StartCountdown(VesselState.time + timeToPlane);
-                    _ascentSettings.DesiredInclination.val = inclination;
+                    _ascentSettings.DesiredInclination.Val = inclination;
                 }
 
                 //Launch to target LAN
@@ -395,7 +395,7 @@ namespace MuMech
         private void RefreshRateGUI()
         {
             int oldRate = _refreshRate;
-            if (GuiUtils.showAdvancedWindowSettings)
+            if (GuiUtils.ShowAdvancedWindowSettings)
                 GuiUtils.SimpleTextBox("Update Interval", _refreshRate, "Hz");
             if (oldRate != _refreshRate)
             {
@@ -434,7 +434,7 @@ namespace MuMech
 
             if (_autopilot.Enabled) GUILayout.Label(autopilotStatus); //Autopilot status:
             if (Core.DeactivateControl)
-                GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel36, GuiUtils.redLabel); //CONTROL DISABLED (AVIONICS)
+                GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel36, GuiUtils.RedLabel); //CONTROL DISABLED (AVIONICS)
 
             if (!Vessel.patchedConicsUnlocked() && _ascentSettings.AscentType != AscentType.PVG)
             {

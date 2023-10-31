@@ -107,7 +107,7 @@ namespace MuMech
             switch (_allowedTimeRef[_currentTimeRef])
             {
                 case TimeReference.X_FROM_NOW:
-                    ut += LeadTime.val;
+                    ut += LeadTime.Val;
                     break;
 
                 case TimeReference.APOAPSIS:

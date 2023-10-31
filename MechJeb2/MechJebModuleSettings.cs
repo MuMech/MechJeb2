@@ -44,8 +44,8 @@ namespace MuMech
         {
             base.OnLoad(local, type, global);
 
-            GuiUtils.SetGUIScale(UIScale.val);
-            GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
+            GuiUtils.SetGUIScale(UIScale.Val);
+            GuiUtils.DontUseDropDownMenu = dontUseDropDownMenu;
 
             if (useOldSkin)
             {
@@ -68,46 +68,46 @@ namespace MuMech
             }
 
             GUILayout.Label(Localizer.Format("#MechJeb_Settings_label1", (GuiUtils.SkinType)skinId)); //"Current skin: <<1>>"
-            if (GuiUtils.skin == null || skinId != 1)
+            if (GuiUtils.Skin == null || skinId != 1)
             {
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button2"))) //"Use MechJeb 1 GUI skin"
                 {
-                    GuiUtils.LoadSkin(GuiUtils.SkinType.MechJeb1);
+                    GuiUtils.LoadSkin(GuiUtils.SkinType.MECH_JEB1);
                     skinId = 1;
                 }
             }
 
-            if (GuiUtils.skin == null || skinId != 0)
+            if (GuiUtils.Skin == null || skinId != 0)
             {
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button3"))) //"Use MechJeb 2 GUI skin"
                 {
-                    GuiUtils.LoadSkin(GuiUtils.SkinType.Default);
+                    GuiUtils.LoadSkin(GuiUtils.SkinType.DEFAULT);
                     skinId = 0;
                 }
             }
 
-            if (GuiUtils.skin == null || skinId != 2)
+            if (GuiUtils.Skin == null || skinId != 2)
             {
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button4"))) //"Use MJ2 Compact GUI skin"
                 {
-                    GuiUtils.LoadSkin(GuiUtils.SkinType.Compact);
+                    GuiUtils.LoadSkin(GuiUtils.SkinType.COMPACT);
                     skinId = 2;
                 }
             }
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GUILayout.ExpandWidth(true)); //"UI Scale:"
-            UIScale.text = GUILayout.TextField(UIScale.text, GUILayout.Width(60));
+            UIScale.Text = GUILayout.TextField(UIScale.Text, GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
-            GuiUtils.SetGUIScale(UIScale.val);
+            GuiUtils.SetGUIScale(UIScale.Val);
 
             dontUseDropDownMenu =
                 GUILayout.Toggle(dontUseDropDownMenu, Localizer.Format("#MechJeb_Settings_checkbox1")); //"Replace drop down menu with arrow selector"
-            GuiUtils.dontUseDropDownMenu = dontUseDropDownMenu;
+            GuiUtils.DontUseDropDownMenu = dontUseDropDownMenu;
 
             showAdvancedWindowSettings          = GUILayout.Toggle(showAdvancedWindowSettings, "Show Advanced Window Settings");
-            GuiUtils.showAdvancedWindowSettings = showAdvancedWindowSettings;
+            GuiUtils.ShowAdvancedWindowSettings = showAdvancedWindowSettings;
 
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             ed.registry.Find(i => i.id == "Toggle:Settings.hideBrakeOnEject").DrawItem();

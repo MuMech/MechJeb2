@@ -23,7 +23,7 @@ namespace MuMech
 
             if (!WaitForPhaseAngle)
             {
-                GUILayout.Label(Localizer.Format("#MechJeb_transfer_Label4"), GuiUtils.yellowLabel); //Using this mode voids your warranty
+                GUILayout.Label(Localizer.Format("#MechJeb_transfer_Label4"), GuiUtils.YellowLabel); //Using this mode voids your warranty
             }
         }
 

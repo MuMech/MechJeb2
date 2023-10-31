@@ -79,7 +79,7 @@ namespace MuMech
         private void RefreshRateGUI()
         {
             int oldRate = refreshRate;
-            if (GuiUtils.showAdvancedWindowSettings)
+            if (GuiUtils.ShowAdvancedWindowSettings)
                 GuiUtils.SimpleTextBox("Update Interval", refreshRate, "Hz");
             if (oldRate != refreshRate)
             {
@@ -90,7 +90,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            GUI.skin         = isCompact ? GuiUtils.compactSkin : GuiUtils.skin;
+            GUI.skin         = isCompact ? GuiUtils.CompactSkin : GuiUtils.Skin;
             GUI.contentColor = text;
 
             // Only run the updater during the Layout pass, not the Repaint pass
@@ -115,7 +115,7 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.yellowOnHover))
+            if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.YellowOnHover))
             {
                 MechJebModuleCustomWindowEditor editor = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
                 if (editor != null)
@@ -125,7 +125,7 @@ namespace MuMech
                 }
             }
 
-            if (!IsOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.yellowOnHover))
+            if (!IsOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.YellowOnHover))
             {
                 MuUtils.SystemClipboard = ToSharingString();
                 ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", GetName()), 3.0f,
@@ -147,7 +147,7 @@ namespace MuMech
 
             base.DrawGUI(inEditor);
             if (IsOverlay)
-                GUI.skin = GuiUtils.skin;
+                GUI.skin = GuiUtils.Skin;
         }
 
         public void Init()
@@ -161,7 +161,7 @@ namespace MuMech
 
             if (IsOverlay && !localSkin)
             {
-                localSkin                            = Object.Instantiate(GuiUtils.transparentSkin);
+                localSkin                            = Object.Instantiate(GuiUtils.TransparentSkin);
                 localSkin.window.normal.background   = background;
                 localSkin.window.onNormal.background = background;
             }
@@ -484,7 +484,7 @@ namespace MuMech
                 scrollPos = GUILayout.BeginScrollView(scrollPos);
                 for (int i = 0; i < editedWindow.items.Count; i++)
                 {
-                    GUIStyle s = i == selectedItemIndex ? GuiUtils.yellowLabel : GUI.skin.label;
+                    GUIStyle s = i == selectedItemIndex ? GuiUtils.YellowLabel : GUI.skin.label;
                     if (GUILayout.Button(Localizer.Format(editedWindow.items[i].description), s)) selectedItemIndex = i; //
                 }
 
@@ -528,7 +528,7 @@ namespace MuMech
                 scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
                 foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
                 {
-                    if (GUILayout.Button(Localizer.Format(item.description), GuiUtils.yellowOnHover)) //
+                    if (GUILayout.Button(Localizer.Format(item.description), GuiUtils.YellowOnHover)) //
                     {
                         editedWindow.items.Add(item);
                     }
@@ -537,7 +537,7 @@ namespace MuMech
                 GUILayout.EndScrollView();
             }
 
-            GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label5"), GuiUtils.middleCenterLabel); //Window presets:
+            GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label5"), GuiUtils.MiddleCenterLabel); //Window presets:
 
             presetIndex = GuiUtils.ArrowSelector(presetIndex, CustomWindowPresets.presets.Length, () =>
             {

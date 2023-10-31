@@ -121,7 +121,7 @@ namespace MuMech
                 GUILayout.ExpandWidth(false)); //Display the CoT
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label10"), GUILayout.ExpandWidth(true)); //Radius of Sphere
-            arrows.comSphereRadius.text = GUILayout.TextField(arrows.comSphereRadius.text, GUILayout.Width(40));
+            arrows.comSphereRadius.Text = GUILayout.TextField(arrows.comSphereRadius.Text, GUILayout.Width(40));
             GUILayout.EndHorizontal();
             arrows.displayAtCoM =
                 GUILayout.Toggle(arrows.displayAtCoM, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox10")); //Arrows origins at the CoM

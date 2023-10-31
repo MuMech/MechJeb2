@@ -25,7 +25,7 @@ namespace MuMech
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
 
-            if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.yellowOnHover))
+            if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
                 help.selTopic = ((IList)help.topics).IndexOf("Controller");
@@ -35,18 +35,18 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
             GUILayout.BeginHorizontal();
             ed.registry.Find(i => i.id == "Editable:RoverController.heading").DrawItem();
-            if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.heading.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.heading.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
-            if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.heading.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.heading.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
             GUILayout.EndHorizontal();
             ed.registry.Find(i => i.id == "Value:RoverController.headingErr").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
             GUILayout.BeginHorizontal();
             ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
-            if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.speed.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.speed.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
-            if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.speed.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.speed.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
             GUILayout.EndHorizontal();
             ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();

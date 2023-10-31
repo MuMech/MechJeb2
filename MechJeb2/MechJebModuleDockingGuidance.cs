@@ -29,13 +29,13 @@ namespace MuMech
             if (Vessel.GetReferenceTransformPart() == null || !Vessel.GetReferenceTransformPart().Modules.Contains("ModuleDockingNode"))
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label2"),
-                    GuiUtils.yellowLabel); //Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
+                    GuiUtils.YellowLabel); //Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
             }
 
             if (!(Core.Target.Target is ModuleDockingNode))
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),
-                    GuiUtils.yellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
+                    GuiUtils.YellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
             }
 
             bool onAxisNodeExists = false;
@@ -52,7 +52,7 @@ namespace MuMech
             if (!onAxisNodeExists)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label4"),
-                    GuiUtils.yellowLabel); //Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select "Control from here."
+                    GuiUtils.YellowLabel); //Warning: this vessel is not controlled from a docking node. Right click the desired docking node on this vessel and select "Control from here."
             }
 
             bool active = GUILayout.Toggle(autopilot.Enabled, Localizer.Format("#MechJeb_Docking_checkbox1")); // "Autopilot enabled"
@@ -102,7 +102,7 @@ namespace MuMech
             autopilot.forceRol =
                 GUILayout.Toggle(autopilot.forceRol, Localizer.Format("#MechJeb_Docking_checkbox6"), GUILayout.ExpandWidth(false)); //"Force Roll :"
 
-            autopilot.rol.text = GUILayout.TextField(autopilot.rol.text, GUILayout.Width(30));
+            autopilot.rol.Text = GUILayout.TextField(autopilot.rol.Text, GUILayout.Width(30));
             GUILayout.Label("°", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 

@@ -50,7 +50,7 @@ namespace MuMech
 
             if (_ascentSettings.AscentType != AscentType.PVG)
             {
-                GUIStyle s = _ascentSettings.LimitingAoA ? GuiUtils.greenToggle : null;
+                GUIStyle s = _ascentSettings.LimitingAoA ? GuiUtils.GreenToggle : null;
                 string sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
                 GuiUtils.ToggledTextBox(ref _ascentSettings.LimitAoA, CachedLocalizer.Instance.MechJebAscentCheckbox3, _ascentSettings.MaxAoA,
                     sCurrentMaxAoA, s,
@@ -61,8 +61,8 @@ namespace MuMech
                     GUILayout.BeginHorizontal();
                     GUILayout.Space(25);
                     GUIStyle sl = _ascentSettings.LimitingAoA && VesselState.dynamicPressure < _ascentSettings.AOALimitFadeoutPressure
-                        ? GuiUtils.greenLabel
-                        : GuiUtils.skin.label;
+                        ? GuiUtils.GreenLabel
+                        : GuiUtils.Skin.label;
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel24, _ascentSettings.AOALimitFadeoutPressure, "Pa", 50,
                         sl); //Dynamic Pressure Fadeout
                     GUILayout.EndHorizontal();

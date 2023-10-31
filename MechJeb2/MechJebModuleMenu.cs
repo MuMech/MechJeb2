@@ -81,20 +81,20 @@ namespace MuMech
                 {
                     case WindowSide.LEFT:
                         return new Rect((windowProgr - 1) * WindowPos.width,
-                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - WindowPos.height), WindowPos.width, WindowPos.height);
+                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.ScaledScreenHeight - WindowPos.height), WindowPos.width, WindowPos.height);
                     case WindowSide.RIGHT:
-                        return new Rect(GuiUtils.scaledScreenWidth - windowProgr * WindowPos.width,
-                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.scaledScreenHeight - WindowPos.height), WindowPos.width, WindowPos.height);
+                        return new Rect(GuiUtils.ScaledScreenWidth - windowProgr * WindowPos.width,
+                            Mathf.Clamp(-100 - windowVPos, 0, GuiUtils.ScaledScreenHeight - WindowPos.height), WindowPos.width, WindowPos.height);
                     case WindowSide.TOP:
                         return new Rect(
-                            Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - WindowPos.width * 0.5f - windowHPos, 0,
-                                GuiUtils.scaledScreenWidth - WindowPos.width), (windowProgr - 1) * WindowPos.height, WindowPos.width,
+                            Mathf.Clamp(GuiUtils.ScaledScreenWidth - 50 - WindowPos.width * 0.5f - windowHPos, 0,
+                                GuiUtils.ScaledScreenWidth - WindowPos.width), (windowProgr - 1) * WindowPos.height, WindowPos.width,
                             WindowPos.height);
                     case WindowSide.BOTTOM:
                     default:
                         return new Rect(
-                            Mathf.Clamp(GuiUtils.scaledScreenWidth - 50 - WindowPos.width * 0.5f - windowHPos, 0,
-                                GuiUtils.scaledScreenWidth - WindowPos.width), GuiUtils.scaledScreenHeight - windowProgr * WindowPos.height,
+                            Mathf.Clamp(GuiUtils.ScaledScreenWidth - 50 - WindowPos.width * 0.5f - windowHPos, 0,
+                                GuiUtils.ScaledScreenWidth - WindowPos.width), GuiUtils.ScaledScreenHeight - windowProgr * WindowPos.height,
                             WindowPos.width, WindowPos.height);
                 }
             }
@@ -107,17 +107,17 @@ namespace MuMech
                 switch (windowSide)
                 {
                     case WindowSide.LEFT:
-                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.scaledScreenHeight, -100), WindowPos.width * windowProgr, 100, 25);
+                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.ScaledScreenHeight, -100), WindowPos.width * windowProgr, 100, 25);
                     case WindowSide.RIGHT:
-                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.scaledScreenHeight, -100),
-                            GuiUtils.scaledScreenWidth - 25 - WindowPos.width * windowProgr, 100, 25);
+                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.ScaledScreenHeight, -100),
+                            GuiUtils.ScaledScreenWidth - 25 - WindowPos.width * windowProgr, 100, 25);
                     case WindowSide.TOP:
-                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50),
+                        return new Rect(Mathf.Clamp(GuiUtils.ScaledScreenWidth - windowHPos - 100, 0, GuiUtils.ScaledScreenWidth - 50),
                             windowProgr * WindowPos.height, 100, 25);
                     case WindowSide.BOTTOM:
                     default:
-                        return new Rect(Mathf.Clamp(GuiUtils.scaledScreenWidth - windowHPos - 100, 0, GuiUtils.scaledScreenWidth - 50),
-                            GuiUtils.scaledScreenHeight - windowProgr * WindowPos.height - 25, 100, 25);
+                        return new Rect(Mathf.Clamp(GuiUtils.ScaledScreenWidth - windowHPos - 100, 0, GuiUtils.ScaledScreenWidth - 50),
+                            GuiUtils.ScaledScreenHeight - windowProgr * WindowPos.height - 25, 100, 25);
                 }
             }
         }
@@ -574,7 +574,7 @@ namespace MuMech
             }
             else
             {
-                WindowPos = new Rect(GuiUtils.scaledScreenWidth, GuiUtils.scaledScreenHeight, 0, 0); // make it small so the mouse can't hoover it
+                WindowPos = new Rect(GuiUtils.ScaledScreenWidth, GuiUtils.ScaledScreenHeight, 0, 0); // make it small so the mouse can't hoover it
             }
 
             GUI.depth = -98;
@@ -609,11 +609,11 @@ namespace MuMech
                 {
                     if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
                     {
-                        windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.width, 0) / GuiUtils.scale;
+                        windowVPos = Mathf.Clamp(Input.mousePosition.y - Screen.height - 50, -Screen.width, 0) / GuiUtils.Scale;
                     }
                     else
                     {
-                        windowHPos = Mathf.Clamp(Screen.width - Input.mousePosition.x - 50, 0, Screen.width) / GuiUtils.scale;
+                        windowHPos = Mathf.Clamp(Screen.width - Input.mousePosition.x - 50, 0, Screen.width) / GuiUtils.Scale;
                     }
                 }
                 else if (Input.GetMouseButtonUp(1))

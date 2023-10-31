@@ -239,7 +239,7 @@ namespace MuMech
 
                     // update GUI text only if the value changed
                     if (newHeading != heading)
-                        heading.val = newHeading;
+                        heading.Val = newHeading;
                 }
 
                 if (ControlSpeed)
@@ -256,7 +256,7 @@ namespace MuMech
                     double minSpeed = wp.MinSpeed > 0 ? wp.MinSpeed :
                         nextWP != null                ? TurningSpeed(nextWP.MaxSpeed > 0 ? nextWP.MaxSpeed : speed,
                             MuUtils.ClampDegrees180(heading - HeadingToPos(wp.Position, nextWP.Position))) :
-                        distance - wp.Radius > 50 ? turnSpeed.val : 1;
+                        distance - wp.Radius > 50 ? turnSpeed.Val : 1;
                     minSpeed = wp.Quicksave ? 1 : minSpeed;
                     // ^ speed used to go through the waypoint, using half the set speed or maxSpeed as minSpeed for routing waypoints (all except the last)
                     double newSpeed = Math.Min(maxSpeed, Math.Max((distance - wp.Radius) / curSpeed, minSpeed)); // brake when getting closer
@@ -351,7 +351,7 @@ namespace MuMech
             {
                 speedPID.INTAccum = Mathf.Clamp((float)speedPID.INTAccum, -5, 5);
 
-                speedErr = (WaypointIndex == -1 ? speed.val : tgtSpeed) - Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
+                speedErr = (WaypointIndex == -1 ? speed.Val : tgtSpeed) - Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
                 if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != Vessel)
                 {
                     float act = (float)speedPID.Compute(speedErr);

@@ -95,9 +95,9 @@ namespace MuMech
                 pid.Kp = pid.Kd / (3 * Math.Sqrt(2) * Tf);
                 pid.Ki = pid.Kp / (12 * Math.Sqrt(2) * Tf);
 
-                Kd.val = pid.Kd;
-                Kp.val = pid.Kp;
-                Ki.val = pid.Ki;
+                Kd.Val = pid.Kd;
+                Kp.Val = pid.Kp;
+                Ki.Val = pid.Ki;
             }
         }
 
@@ -110,31 +110,31 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("P", GUILayout.ExpandWidth(false));
-                Kp.text = GUILayout.TextField(Kp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                Kp.Text = GUILayout.TextField(Kp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
 
                 GUILayout.Label("I", GUILayout.ExpandWidth(false));
-                Kd.text = GUILayout.TextField(Kd.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                Kd.Text = GUILayout.TextField(Kd.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
 
                 GUILayout.Label("D", GUILayout.ExpandWidth(false));
-                Ki.text = GUILayout.TextField(Ki.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                Ki.Text = GUILayout.TextField(Ki.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
                 GUILayout.EndHorizontal();
             }
             else
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Tf", GUILayout.ExpandWidth(false));
-                Tf.text = GUILayout.TextField(Tf.text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                Tf.Text = GUILayout.TextField(Tf.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("P", GUILayout.ExpandWidth(false));
-                GUILayout.Label(Kp.val.ToString("F4"), GUILayout.ExpandWidth(true));
+                GUILayout.Label(Kp.Val.ToString("F4"), GUILayout.ExpandWidth(true));
 
                 GUILayout.Label("I", GUILayout.ExpandWidth(false));
-                GUILayout.Label(Ki.val.ToString("F4"), GUILayout.ExpandWidth(true));
+                GUILayout.Label(Ki.Val.ToString("F4"), GUILayout.ExpandWidth(true));
 
                 GUILayout.Label("D", GUILayout.ExpandWidth(false));
-                GUILayout.Label(Kd.val.ToString("F4"), GUILayout.ExpandWidth(true));
+                GUILayout.Label(Kd.Val.ToString("F4"), GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
             }
 

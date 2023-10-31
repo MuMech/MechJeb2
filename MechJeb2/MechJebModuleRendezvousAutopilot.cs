@@ -188,7 +188,7 @@ namespace MuMech
                         Vessel.PlaceManeuverNode(Orbit, dV, UT);
                     }
 
-                    status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"), maxPhasingOrbits.text,
+                    status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"), maxPhasingOrbits.Text,
                         (phasingOrbitRadius - MainBody.Radius)
                         .ToSI(0)); //"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
                 }

@@ -25,12 +25,12 @@ namespace MuMech
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1",
-                ResonanceNumerator.val + "/" + ResonanceDenominator.val)); //"Change your orbital period to <<1>> of your current orbital period"
+                ResonanceNumerator.Val + "/" + ResonanceDenominator.Val)); //"Change your orbital period to <<1>> of your current orbital period"
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_resonant_label2"), GUILayout.ExpandWidth(true)); //New orbital period ratio :
-            ResonanceNumerator.text = GUILayout.TextField(ResonanceNumerator.text, GUILayout.Width(30));
+            ResonanceNumerator.Text = GUILayout.TextField(ResonanceNumerator.Text, GUILayout.Width(30));
             GUILayout.Label("/", GUILayout.ExpandWidth(false));
-            ResonanceDenominator.text = GUILayout.TextField(ResonanceDenominator.text, GUILayout.Width(30));
+            ResonanceDenominator.Text = GUILayout.TextField(ResonanceDenominator.Text, GUILayout.Width(30));
             GUILayout.EndHorizontal();
             _timeSelector.DoChooseTimeGUI();
         }
@@ -38,7 +38,7 @@ namespace MuMech
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, ut, (double)ResonanceNumerator.val / ResonanceDenominator.val);
+            Vector3d dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, ut, (double)ResonanceNumerator.Val / ResonanceDenominator.Val);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }

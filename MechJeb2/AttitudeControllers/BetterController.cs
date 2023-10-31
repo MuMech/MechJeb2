@@ -96,22 +96,22 @@ namespace MuMech.AttitudeControllers
 
         private void Defaults()
         {
-            PosKp.val            = 1.98;
-            PosDeadband.val      = 0.002;
-            VelKp.val            = 10;
-            VelKi.val            = 20;
-            VelKd.val            = 0.425;
-            VelN.val             = 84.1994541201249;
-            VelB.val             = 0.994;
-            VelC.val             = 0.0185;
-            VelDeadband.val      = 0.0001;
+            PosKp.Val            = 1.98;
+            PosDeadband.Val      = 0.002;
+            VelKp.Val            = 10;
+            VelKi.Val            = 20;
+            VelKd.Val            = 0.425;
+            VelN.Val             = 84.1994541201249;
+            VelB.Val             = 0.994;
+            VelC.Val             = 0.0185;
+            VelDeadband.Val      = 0.0001;
             VelClegg             = false;
-            VelSmoothIn.val      = 1.0;
-            VelSmoothOut.val     = 1.0;
-            PosSmoothIn.val      = 1.0;
-            MaxStoppingTime.val  = 2;
-            MinFlipTime.val      = 120;
-            RollControlRange.val = 5;
+            VelSmoothIn.Val      = 1.0;
+            VelSmoothOut.Val     = 1.0;
+            PosSmoothIn.Val      = 1.0;
+            MaxStoppingTime.Val  = 2;
+            MinFlipTime.Val      = 120;
+            RollControlRange.Val = 5;
             Version              = SETTINGS_VERSION;
         }
 
@@ -306,12 +306,12 @@ namespace MuMech.AttitudeControllers
         {
             GUILayout.BeginHorizontal();
             UseStoppingTime      = GUILayout.Toggle(UseStoppingTime, "Maximum Stopping Time", GUILayout.ExpandWidth(false));
-            MaxStoppingTime.text = GUILayout.TextField(MaxStoppingTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            MaxStoppingTime.Text = GUILayout.TextField(MaxStoppingTime.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             UseFlipTime      = GUILayout.Toggle(UseFlipTime, "Minimum Flip Time", GUILayout.ExpandWidth(false));
-            MinFlipTime.text = GUILayout.TextField(MinFlipTime.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            MinFlipTime.Text = GUILayout.TextField(MinFlipTime.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             if (!UseStoppingTime)
@@ -320,57 +320,57 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             UseControlRange = GUILayout.Toggle(UseControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),
                 GUILayout.ExpandWidth(false)); //"RollControlRange"
-            RollControlRange.text = GUILayout.TextField(RollControlRange.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            RollControlRange.Text = GUILayout.TextField(RollControlRange.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
-            PosSmoothIn.text = GUILayout.TextField(PosSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos Kp", GUILayout.ExpandWidth(false));
-            PosKp.text = GUILayout.TextField(PosKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            PosKp.Text = GUILayout.TextField(PosKp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos Deadband", GUILayout.ExpandWidth(false));
-            PosDeadband.text = GUILayout.TextField(PosDeadband.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Kp", GUILayout.ExpandWidth(false));
-            VelKp.text = GUILayout.TextField(VelKp.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelKp.Text = GUILayout.TextField(VelKp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Ki", GUILayout.ExpandWidth(false));
-            VelKi.text = GUILayout.TextField(VelKi.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelKi.Text = GUILayout.TextField(VelKi.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Kd", GUILayout.ExpandWidth(false));
-            VelKd.text = GUILayout.TextField(VelKd.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelKd.Text = GUILayout.TextField(VelKd.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel N", GUILayout.ExpandWidth(false));
-            VelN.text = GUILayout.TextField(VelN.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelN.Text = GUILayout.TextField(VelN.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel B", GUILayout.ExpandWidth(false));
-            VelB.text = GUILayout.TextField(VelB.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelB.Text = GUILayout.TextField(VelB.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel C", GUILayout.ExpandWidth(false));
-            VelC.text = GUILayout.TextField(VelC.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelC.Text = GUILayout.TextField(VelC.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel Deadband", GUILayout.ExpandWidth(false));
-            VelDeadband.text = GUILayout.TextField(VelDeadband.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -379,12 +379,12 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel SmoothIn", GUILayout.ExpandWidth(false));
-            VelSmoothIn.text = GUILayout.TextField(VelSmoothIn.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelSmoothIn.Text = GUILayout.TextField(VelSmoothIn.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel SmoothOut", GUILayout.ExpandWidth(false));
-            VelSmoothOut.text = GUILayout.TextField(VelSmoothOut.text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

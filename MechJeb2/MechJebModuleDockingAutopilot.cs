@@ -250,12 +250,12 @@ namespace MuMech
             if (!overrideTargetSize)
                 targetSize = targetBoundingBox.size.magnitude;
             else
-                targetSize = (float)overridenTargetSize.val;
+                targetSize = (float)overridenTargetSize.Val;
 
             if (!overrideSafeDistance)
                 safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
             else
-                safeDistance = (float)overridenSafeDistance.val;
+                safeDistance = (float)overridenSafeDistance.Val;
 
             UpdateDistance();
 
@@ -333,12 +333,12 @@ namespace MuMech
                 if (!overrideTargetSize)
                     targetSize = targetBoundingBox.size.magnitude;
                 else
-                    targetSize = (float)overridenTargetSize.val;
+                    targetSize = (float)overridenTargetSize.Val;
 
                 if (!overrideSafeDistance)
                     safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
                 else
-                    safeDistance = (float)overridenSafeDistance.val;
+                    safeDistance = (float)overridenSafeDistance.Val;
 
                 if (Core.Target.Target is ModuleDockingNode)
                     acquireRange = ((ModuleDockingNode)Core.Target.Target).acquireRange * 0.5;

@@ -118,7 +118,7 @@ namespace MuMech
 
             if (_operation[_operationId].GetErrorMessage().Length > 0)
             {
-                GUILayout.Label(_operation[_operationId].GetErrorMessage(), GuiUtils.yellowLabel);
+                GUILayout.Label(_operation[_operationId].GetErrorMessage(), GuiUtils.YellowLabel);
             }
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button3"))) //Remove ALL nodes
@@ -160,17 +160,17 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Lead_time"), GUILayout.ExpandWidth(false)); //Lead time:
-                Core.Node.LeadTime.text = GUILayout.TextField(Core.Node.LeadTime.text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
+                Core.Node.LeadTime.Text = GUILayout.TextField(Core.Node.LeadTime.Text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
                 GUILayout.Label("s", GUILayout.ExpandWidth(false));
 
                 if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
-                    Core.Node.LeadTime.val += 1;
+                    Core.Node.LeadTime.Val += 1;
 
                 if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
-                    Core.Node.LeadTime.val -= 1;
+                    Core.Node.LeadTime.Val -= 1;
 
                 if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
-                    Core.Node.LeadTime.val = 3;
+                    Core.Node.LeadTime.Val = 3;
 
                 GUILayout.EndHorizontal();
             }

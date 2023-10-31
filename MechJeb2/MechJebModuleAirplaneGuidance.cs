@@ -24,11 +24,11 @@ namespace MuMech
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble AltitudeTargettmp = 0,
-            HeadingTargettmp                     = 90,
-            RollTargettmp                        = 0,
-            SpeedTargettmp                       = 0,
-            VertSpeedTargettmp                   = 0,
-            RollMaxtmp                           = 30;
+            HeadingTargettmp                    = 90,
+            RollTargettmp                       = 0,
+            SpeedTargettmp                      = 0,
+            VertSpeedTargettmp                  = 0,
+            RollMaxtmp                          = 30;
 
         protected override void WindowGUI(int windowID)
         {
@@ -98,14 +98,14 @@ namespace MuMech
             bool change = false;
             if (GUILayout.Button("-", GUILayout.Width(18)))
             {
-                AltitudeTargettmp.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                AltitudeTargettmp.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                 change                =  true;
             }
 
-            AltitudeTargettmp.text = GUILayout.TextField(AltitudeTargettmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            AltitudeTargettmp.Text = GUILayout.TextField(AltitudeTargettmp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             if (GUILayout.Button("+", GUILayout.Width(18)))
             {
-                AltitudeTargettmp.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                AltitudeTargettmp.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                 change                =  true;
             }
 
@@ -139,14 +139,14 @@ namespace MuMech
                 change = false;
                 if (GUILayout.Button("-", GUILayout.Width(18)))
                 {
-                    VertSpeedTargettmp.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    VertSpeedTargettmp.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change                 =  true;
                 }
 
-                VertSpeedTargettmp.text = GUILayout.TextField(VertSpeedTargettmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                VertSpeedTargettmp.Text = GUILayout.TextField(VertSpeedTargettmp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
                 if (GUILayout.Button("+", GUILayout.Width(18)))
                 {
-                    VertSpeedTargettmp.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    VertSpeedTargettmp.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change                 =  true;
                 }
 
@@ -167,14 +167,14 @@ namespace MuMech
                 change = false;
                 if (GUILayout.Button("-", GUILayout.Width(18)))
                 {
-                    VertSpeedTargettmp.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    VertSpeedTargettmp.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change                 =  true;
                 }
 
-                VertSpeedTargettmp.text = GUILayout.TextField(VertSpeedTargettmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                VertSpeedTargettmp.Text = GUILayout.TextField(VertSpeedTargettmp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
                 if (GUILayout.Button("+", GUILayout.Width(18)))
                 {
-                    VertSpeedTargettmp.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    VertSpeedTargettmp.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change                 =  true;
                 }
 
@@ -205,14 +205,14 @@ namespace MuMech
             change = false;
             if (GUILayout.Button("-", GUILayout.Width(18)))
             {
-                HeadingTargettmp.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                HeadingTargettmp.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                 change               =  true;
             }
 
-            HeadingTargettmp.text = GUILayout.TextField(HeadingTargettmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            HeadingTargettmp.Text = GUILayout.TextField(HeadingTargettmp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             if (GUILayout.Button("+", GUILayout.Width(18)))
             {
-                HeadingTargettmp.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                HeadingTargettmp.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                 change               =  true;
             }
 
@@ -235,14 +235,14 @@ namespace MuMech
                 change = false;
                 if (GUILayout.Button("-", GUILayout.Width(18)))
                 {
-                    RollTargettmp.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    RollTargettmp.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change            =  true;
                 }
 
-                RollTargettmp.text = GUILayout.TextField(RollTargettmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                RollTargettmp.Text = GUILayout.TextField(RollTargettmp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
                 if (GUILayout.Button("+", GUILayout.Width(18)))
                 {
-                    RollTargettmp.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    RollTargettmp.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change            =  true;
                 }
 
@@ -263,14 +263,14 @@ namespace MuMech
                 change = false;
                 if (GUILayout.Button("-", GUILayout.Width(18)))
                 {
-                    RollMaxtmp.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    RollMaxtmp.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change         =  true;
                 }
 
-                RollMaxtmp.text = GUILayout.TextField(RollMaxtmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                RollMaxtmp.Text = GUILayout.TextField(RollMaxtmp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
                 if (GUILayout.Button("+", GUILayout.Width(18)))
                 {
-                    RollMaxtmp.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                    RollMaxtmp.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                     change         =  true;
                 }
 
@@ -301,14 +301,14 @@ namespace MuMech
             change = false;
             if (GUILayout.Button("-", GUILayout.Width(18)))
             {
-                SpeedTargettmp.val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                SpeedTargettmp.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                 change             =  true;
             }
 
-            SpeedTargettmp.text = GUILayout.TextField(SpeedTargettmp.text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            SpeedTargettmp.Text = GUILayout.TextField(SpeedTargettmp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             if (GUILayout.Button("+", GUILayout.Width(18)))
             {
-                SpeedTargettmp.val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
+                SpeedTargettmp.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1;
                 change             =  true;
             }
 
@@ -344,11 +344,11 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_Label8"), GUILayout.ExpandWidth(true)); //Accceleration
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.AccKp.text = GUILayout.TextField(autopilot.AccKp.text, GUILayout.Width(40));
+                autopilot.AccKp.Text = GUILayout.TextField(autopilot.AccKp.Text, GUILayout.Width(40));
                 GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.AccKi.text = GUILayout.TextField(autopilot.AccKi.text, GUILayout.Width(40));
+                autopilot.AccKi.Text = GUILayout.TextField(autopilot.AccKi.Text, GUILayout.Width(40));
                 GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.AccKd.text = GUILayout.TextField(autopilot.AccKd.text, GUILayout.Width(40));
+                autopilot.AccKd.Text = GUILayout.TextField(autopilot.AccKd.Text, GUILayout.Width(40));
                 GUILayout.EndHorizontal();
                 if (autopilot.SpeedHoldEnabled)
                     GUILayout.Label(
@@ -359,11 +359,11 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_Pitch"), GUILayout.ExpandWidth(true)); //"VertSpeed"
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.PitKp.text = GUILayout.TextField(autopilot.PitKp.text, GUILayout.Width(40));
+                autopilot.PitKp.Text = GUILayout.TextField(autopilot.PitKp.Text, GUILayout.Width(40));
                 GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.PitKi.text = GUILayout.TextField(autopilot.PitKi.text, GUILayout.Width(40));
+                autopilot.PitKi.Text = GUILayout.TextField(autopilot.PitKi.Text, GUILayout.Width(40));
                 GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.PitKd.text = GUILayout.TextField(autopilot.PitKd.text, GUILayout.Width(40));
+                autopilot.PitKd.Text = GUILayout.TextField(autopilot.PitKd.Text, GUILayout.Width(40));
                 GUILayout.EndHorizontal();
                 if (autopilot.VertSpeedHoldEnabled)
                     GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.PitchErr.ToString("F2"),
@@ -373,11 +373,11 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_Label10"), GUILayout.ExpandWidth(true)); //Roll
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.RolKp.text = GUILayout.TextField(autopilot.RolKp.text, GUILayout.Width(40));
+                autopilot.RolKp.Text = GUILayout.TextField(autopilot.RolKp.Text, GUILayout.Width(40));
                 GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.RolKi.text = GUILayout.TextField(autopilot.RolKi.text, GUILayout.Width(40));
+                autopilot.RolKi.Text = GUILayout.TextField(autopilot.RolKi.Text, GUILayout.Width(40));
                 GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.RolKd.text = GUILayout.TextField(autopilot.RolKd.text, GUILayout.Width(40));
+                autopilot.RolKd.Text = GUILayout.TextField(autopilot.RolKd.Text, GUILayout.Width(40));
                 GUILayout.EndHorizontal();
                 if (autopilot.RollHoldEnabled)
                     GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.RollErr.ToString("F2"),
@@ -387,11 +387,11 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Yaw", GUILayout.ExpandWidth(true));
                 GUILayout.Label("Kp", GUILayout.ExpandWidth(false));
-                autopilot.YawKp.text = GUILayout.TextField(autopilot.YawKp.text, GUILayout.Width(40));
+                autopilot.YawKp.Text = GUILayout.TextField(autopilot.YawKp.Text, GUILayout.Width(40));
                 GUILayout.Label("i", GUILayout.ExpandWidth(false));
-                autopilot.YawKi.text = GUILayout.TextField(autopilot.YawKi.text, GUILayout.Width(40));
+                autopilot.YawKi.Text = GUILayout.TextField(autopilot.YawKi.Text, GUILayout.Width(40));
                 GUILayout.Label("d", GUILayout.ExpandWidth(false));
-                autopilot.YawKd.text = GUILayout.TextField(autopilot.YawKd.text, GUILayout.Width(40));
+                autopilot.YawKd.Text = GUILayout.TextField(autopilot.YawKd.Text, GUILayout.Width(40));
                 GUILayout.EndHorizontal();
                 if (autopilot.HeadingHoldEnabled)
                     GUILayout.Label(Localizer.Format("#MecgJeb_Aircraftauto_error2", autopilot.YawErr.ToString("F2"),
@@ -404,13 +404,13 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_PitchDownLimit"), GUILayout.ExpandWidth(false));
-                autopilot.PitchDownLimit.text = GUILayout.TextField(autopilot.PitchDownLimit.text, GUILayout.Width(40));
+                autopilot.PitchDownLimit.Text = GUILayout.TextField(autopilot.PitchDownLimit.Text, GUILayout.Width(40));
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_PitchUpLimit"), GUILayout.ExpandWidth(false));
-                autopilot.PitchUpLimit.text = GUILayout.TextField(autopilot.PitchUpLimit.text, GUILayout.Width(40));
+                autopilot.PitchUpLimit.Text = GUILayout.TextField(autopilot.PitchUpLimit.Text, GUILayout.Width(40));
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_YawLimit"), GUILayout.ExpandWidth(false));
-                autopilot.YawLimit.text = GUILayout.TextField(autopilot.YawLimit.text, GUILayout.Width(40));
+                autopilot.YawLimit.Text = GUILayout.TextField(autopilot.YawLimit.Text, GUILayout.Width(40));
                 GUILayout.Label(Localizer.Format("#MechJeb_Aircraftauto_RollLimit"), GUILayout.ExpandWidth(false));
-                autopilot.RollLimit.text = GUILayout.TextField(autopilot.RollLimit.text, GUILayout.Width(40));
+                autopilot.RollLimit.Text = GUILayout.TextField(autopilot.RollLimit.Text, GUILayout.Width(40));
                 GUILayout.EndHorizontal();
             }
 
