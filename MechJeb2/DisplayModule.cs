@@ -43,15 +43,16 @@ namespace MuMech
             }
         }
 
-        // Those field should be private but Persistent has a bug that prevent it to work properly on parent class private fields
-
+        [SerializeField]
         [Persistent(pass = (int)Pass.GLOBAL)]
         private Vector4 _windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.GLOBAL)]
         private Vector4
             _windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.GLOBAL)]
         private bool _showInFlight = true;
 
@@ -68,6 +69,7 @@ namespace MuMech
             }
         }
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.GLOBAL)]
         private bool _showInEditor;
 
@@ -82,6 +84,7 @@ namespace MuMech
             }
         }
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.GLOBAL)]
         private bool _isOverlay;
 
@@ -96,6 +99,7 @@ namespace MuMech
             }
         }
 
+        [SerializeField]
         [Persistent(pass = (int)Pass.GLOBAL)]
         private bool _locked;
 
