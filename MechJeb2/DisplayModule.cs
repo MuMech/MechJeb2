@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -11,8 +12,8 @@ namespace MuMech
         public Rect WindowPos
         {
             get => !HighLogic.LoadedSceneIsEditor
-                ? new Rect(_windowVector.x, _windowVector.y, _windowVector.z, _windowVector.w)
-                : new Rect(_windowVectorEditor.x, _windowVectorEditor.y, _windowVectorEditor.z, _windowVectorEditor.w);
+                ? new Rect(WindowVector.x, WindowVector.y, WindowVector.z, WindowVector.w)
+                : new Rect(WindowVectorEditor.x, WindowVectorEditor.y, WindowVectorEditor.z, WindowVectorEditor.w);
 
             protected set
             {
@@ -26,84 +27,91 @@ namespace MuMech
 
                 if (!HighLogic.LoadedSceneIsEditor)
                 {
-                    if (_windowVector != newPos)
+                    if (WindowVector != newPos)
                     {
                         Dirty         = true;
-                        _windowVector = newPos;
+                        WindowVector = newPos;
                     }
                 }
                 else
                 {
-                    if (_windowVectorEditor != newPos)
+                    if (WindowVectorEditor != newPos)
                     {
                         Dirty               = true;
-                        _windowVectorEditor = newPos;
+                        WindowVectorEditor = newPos;
                     }
                 }
             }
         }
 
+        // Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public Vector4 _windowVector = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        public Vector4 WindowVector = new Vector4(10, 40, 0, 0);
 
+        // Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public Vector4
-            _windowVectorEditor = new Vector4(10, 40, 0, 0); //Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
+        public Vector4 WindowVectorEditor = new Vector4(10, 40, 0, 0);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool _showInFlight = true;
+        public bool ShowInFlightConfig = true;
 
         public bool ShowInFlight
         {
-            get => _showInFlight;
+            get => ShowInFlightConfig;
             set
             {
-                if (_showInFlight != value)
+                if (ShowInFlightConfig != value)
                 {
-                    _showInFlight = value;
+                    ShowInFlightConfig = value;
                     Dirty         = true;
                 }
             }
         }
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool _showInEditor;
+        public bool ShowInEditorConfig;
 
         public bool ShowInEditor
         {
-            get => _showInEditor;
+            get => ShowInEditorConfig;
             set
             {
-                if (_showInEditor == value) return;
-                _showInEditor = value;
+                if (ShowInEditorConfig == value) return;
+                ShowInEditorConfig = value;
                 Dirty         = true;
             }
         }
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool _isOverlay;
+        public bool IsOverlayConfig;
 
         public bool IsOverlay
         {
-            get => _isOverlay;
+            get => IsOverlayConfig;
             set
             {
-                if (_isOverlay == value) return;
-                _isOverlay = value;
+                if (IsOverlayConfig == value) return;
+                IsOverlayConfig = value;
                 Dirty      = true;
             }
         }
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool _locked;
+        public bool LockedConfig;
 
         public bool Locked
         {
-            get => _locked;
+            get => LockedConfig;
             set
             {
-                if (_locked == value) return;
-                _locked = value;
+                if (LockedConfig == value) return;
+                LockedConfig = value;
                 Dirty   = true;
             }
         }
@@ -113,7 +121,7 @@ namespace MuMech
 
         private GUILayoutOption[] _windowOptions;
 
-        public bool ShowInCurrentScene => HighLogic.LoadedSceneIsEditor ? _showInEditor : _showInFlight;
+        public bool ShowInCurrentScene => HighLogic.LoadedSceneIsEditor ? ShowInEditorConfig : ShowInFlightConfig;
 
         private readonly int _id;
         private static   int _nextID = 72190852;
@@ -129,7 +137,7 @@ namespace MuMech
 
         protected void WindowGUI(int windowID, bool draggable)
         {
-            if (!_isOverlay && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
+            if (!IsOverlayConfig && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
             {
                 Enabled = false;
             }
@@ -139,8 +147,8 @@ namespace MuMech
 //                locked = !locked;
 //            }
 
-            bool allowDrag = !_locked;
-            if (!_locked && !_isOverlay && Core.Settings.useTitlebarDragging)
+            bool allowDrag = !LockedConfig;
+            if (!LockedConfig && !IsOverlayConfig && Core.Settings.useTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.scale;
                 float y = Mouse.screenPos.y / GuiUtils.scale;
@@ -168,7 +176,7 @@ namespace MuMech
             // Cache the array to not create one each frame
             _windowOptions ??= WindowOptions();
 
-            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, _isOverlay ? "" : GetName(), _windowOptions);
+            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, IsOverlayConfig ? "" : GetName(), _windowOptions);
 
             //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
             //
