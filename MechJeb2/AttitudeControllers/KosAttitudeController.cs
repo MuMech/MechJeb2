@@ -1,15 +1,18 @@
 ﻿using System;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace MuMech.AttitudeControllers
 {
     internal class KosAttitudeController : BaseAttitudeController
     {
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
+        public readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
+        public readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
         //public double RollControlRange {
         //    get { return this.rollControlRange; }
         //    set { this.rollControlRange.val = Math.Max(EPSILON, Math.Min(Math.PI, value)); }

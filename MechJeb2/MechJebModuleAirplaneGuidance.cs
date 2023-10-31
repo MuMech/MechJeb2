@@ -17,11 +17,13 @@ namespace MuMech
         {
         }
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.LOCAL)]
-        private bool showpid;
+        public bool showpid;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private EditableDouble AltitudeTargettmp = 0,
+        public EditableDouble AltitudeTargettmp = 0,
             HeadingTargettmp                     = 90,
             RollTargettmp                        = 0,
             SpeedTargettmp                       = 0,

@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using KSP.Localization;
 using MechJebLib.Control;
 using UnityEngine;
@@ -11,65 +12,85 @@ namespace MuMech.AttitudeControllers
         private                 Vessel   Vessel => ac.Vessel;
 
         /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble PosKp = new EditableDouble(1.98);
+        public readonly EditableDouble PosKp = new EditableDouble(1.98);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble PosDeadband = new EditableDouble(0.002);
+        public readonly EditableDouble PosDeadband = new EditableDouble(0.002);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelKp = new EditableDouble(10);
+        public readonly EditableDouble VelKp = new EditableDouble(10);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelKi = new EditableDouble(20);
+        public readonly EditableDouble VelKi = new EditableDouble(20);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelKd = new EditableDouble(0.425);
+        public readonly EditableDouble VelKd = new EditableDouble(0.425);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelN = new EditableDouble(84.1994541201249);
+        public readonly EditableDouble VelN = new EditableDouble(84.1994541201249);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelB = new EditableDouble(0.994);
+        public readonly EditableDouble VelB = new EditableDouble(0.994);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelC = new EditableDouble(0.0185);
+        public readonly EditableDouble VelC = new EditableDouble(0.0185);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelDeadband = new EditableDouble(0.0001);
+        public readonly EditableDouble VelDeadband = new EditableDouble(0.0001);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private bool VelClegg;
+        public bool VelClegg;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelSmoothIn = new EditableDouble(1);
+        public readonly EditableDouble VelSmoothIn = new EditableDouble(1);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble VelSmoothOut = new EditableDouble(1);
+        public readonly EditableDouble VelSmoothOut = new EditableDouble(1);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble PosSmoothIn = new EditableDouble(1);
+        public readonly EditableDouble PosSmoothIn = new EditableDouble(1);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
+        public readonly EditableDouble maxStoppingTime = new EditableDouble(2.0);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble minFlipTime = new EditableDouble(120);
+        public readonly EditableDouble minFlipTime = new EditableDouble(120);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble rollControlRange = new EditableDouble(5);
+        public readonly EditableDouble rollControlRange = new EditableDouble(5);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private bool useControlRange = true;
+        public bool useControlRange = true;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private bool useFlipTime = true;
+        public bool useFlipTime = true;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private bool useStoppingTime = true;
+        public bool useStoppingTime = true;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        private int _version = -1;
+        public int _version = -1;
 
         private const int SETTINGS_VERSION = 5;
 

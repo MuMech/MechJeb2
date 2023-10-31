@@ -30,8 +30,9 @@ namespace MuMech
 
         private double targetUT;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
-        private readonly EditableDouble phaseAngle = 0;
+        public readonly EditableDouble phaseAngle = 0;
 
         protected override void WindowGUI(int windowID)
         {

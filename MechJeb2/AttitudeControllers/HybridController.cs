@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
@@ -6,14 +7,17 @@ namespace MuMech.AttitudeControllers
 {
     internal class HybridController : BaseAttitudeController
     {
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private readonly EditableDouble maxStoppingTime = new EditableDouble(2);
+        public readonly EditableDouble maxStoppingTime = new EditableDouble(2);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
+        public readonly EditableDoubleMult rollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private bool useControlRange = true;
+        public bool useControlRange = true;
 
         public TorquePI pitchPI = new TorquePI();
         public TorquePI yawPI   = new TorquePI();

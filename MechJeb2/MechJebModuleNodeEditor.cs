@@ -12,17 +12,21 @@ namespace MuMech
         private EditableDouble radialPlus = 0;
         private EditableDouble normalPlus = 0;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private EditableDouble progradeDelta = 0;
+        public EditableDouble progradeDelta = 0;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private EditableDouble radialPlusDelta = 0;
+        public EditableDouble radialPlusDelta = 0;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private EditableDouble normalPlusDelta = 0;
+        public EditableDouble normalPlusDelta = 0;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        private readonly EditableTime timeOffset = 0;
+        public readonly EditableTime timeOffset = 0;
 
         private ManeuverNode  node;
         private ManeuverGizmo gizmo;
