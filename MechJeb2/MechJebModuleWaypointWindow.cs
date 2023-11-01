@@ -13,13 +13,15 @@ namespace MuMech
     public class MechJebWaypoint
     {
         private const float    DEFAULT_RADIUS = 5;
-        public       double   Latitude;
-        public       double   Longitude;
-        public       double   Altitude;
-        public       Vector3d Position;
-        public       float    Radius;
+        public        double   Latitude;
+        public        double   Longitude;
+        public        double   Altitude;
+        public        Vector3d Position;
+        public        float    Radius;
+
         [UsedImplicitly]
-        public       string   Name;
+        public string Name;
+
         public readonly Vessel Target;
         public          float  MinSpeed;
         public          float  MaxSpeed;
@@ -30,33 +32,33 @@ namespace MuMech
         public MechJebWaypoint(double latitude, double longitude, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0,
             float maxSpeed = 0)
         {
-            this.Latitude  = latitude;
-            this.Longitude = longitude;
-            this.Radius    = radius;
-            this.Name      = name ?? "";
-            this.MinSpeed  = minSpeed;
-            this.MaxSpeed  = maxSpeed;
+            Latitude  = latitude;
+            Longitude = longitude;
+            Radius    = radius;
+            Name      = name ?? "";
+            MinSpeed  = minSpeed;
+            MaxSpeed  = maxSpeed;
             Update();
         }
 
         public MechJebWaypoint(Vector3d position, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0, float maxSpeed = 0)
         {
-            Latitude      = Body.GetLatitude(position);
-            Longitude     = Body.GetLongitude(position);
-            this.Radius   = radius;
-            this.Name     = name ?? "";
-            this.MinSpeed = minSpeed;
-            this.MaxSpeed = maxSpeed;
+            Latitude  = Body.GetLatitude(position);
+            Longitude = Body.GetLongitude(position);
+            Radius    = radius;
+            Name      = name ?? "";
+            MinSpeed  = minSpeed;
+            MaxSpeed  = maxSpeed;
             Update();
         }
 
         public MechJebWaypoint(Vessel target, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0, float maxSpeed = 0)
         {
-            this.Target   = target;
-            this.Radius   = radius;
-            this.Name     = name ?? "";
-            this.MinSpeed = minSpeed;
-            this.MaxSpeed = maxSpeed;
+            Target   = target;
+            Radius   = radius;
+            Name     = name ?? "";
+            MinSpeed = minSpeed;
+            MaxSpeed = maxSpeed;
             Update();
         }
 
@@ -182,9 +184,9 @@ namespace MuMech
 
         public MechJebWaypointRoute(string name = "", CelestialBody body = null, string mode = "Rover")
         {
-            this.Name = name;
-            this.Body = body != null ? body : FlightGlobals.currentMainBody;
-            this.Mode = mode;
+            Name = name;
+            Body = body != null ? body : FlightGlobals.currentMainBody;
+            Mode = mode;
         }
 
         public MechJebWaypointRoute(ConfigNode node)
@@ -282,7 +284,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)] // Vall Mapdist
         public readonly EditableDouble VallMapdist = 5000;
 
-        internal int    SelIndex    = -1;
+        internal int    SelIndex     = -1;
         private  int    _saveIndex   = -1;
         private  string _tmpRadius   = "";
         private  string _tmpMinSpeed = "";
@@ -318,7 +320,7 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             Hidden = true;
-            _ap     = Core.GetComputerModule<MechJebModuleRoverController>();
+            _ap    = Core.GetComputerModule<MechJebModuleRoverController>();
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
                 _renderer         = MechJebRouteRenderer.AttachToMapView(Core);
@@ -532,7 +534,7 @@ namespace MuMech
 
             float s = (float)lon;
 
-            return string.Format("{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
+            return $"{ew} {h}° {m}' {s:F3}\"";
         }
 
         private static double ParseCoord(string latLon, bool isLongitute = false)
@@ -631,9 +633,8 @@ namespace MuMech
                             wp.Position);
                     }
 
-                    string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1,
-                        wp.GetNameWithCoords(), wp.Radius,
-                        minSpeed, maxSpeed, dist.ToSI(-1), GuiUtils.TimeToDHMS(eta));
+                    string str =
+                        $"[{i + 1}] - {wp.GetNameWithCoords()} - R: {wp.Radius:F1} m\n       S: {minSpeed:F0} ~ {maxSpeed:F0} - D: {dist.ToSI(-1)}m - ETA: {GuiUtils.TimeToDHMS(eta)}";
                     GUI.backgroundColor = i == _ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white;
                     if (GUILayout.Button(str, i == SelIndex ? _styleActive : wp.Quicksave ? _styleQuicksave : _styleInactive))
                     {
@@ -650,7 +651,7 @@ namespace MuMech
                             }
                             else
                             {
-                                SelIndex    = i;
+                                SelIndex     = i;
                                 _tmpRadius   = wp.Radius.ToString();
                                 _tmpMinSpeed = wp.MinSpeed.ToString();
                                 _tmpMaxSpeed = wp.MaxSpeed.ToString();
@@ -715,11 +716,11 @@ namespace MuMech
                         GUILayout.BeginHorizontal();
 
                         GUILayout.Label("Lat ", GUILayout.ExpandWidth(false));
-                        _tmpLat      = GUILayout.TextField(_tmpLat, GUILayout.Width(125));
+                        _tmpLat     = GUILayout.TextField(_tmpLat, GUILayout.Width(125));
                         wp.Latitude = ParseCoord(_tmpLat);
 
                         GUILayout.Label(" -  Lon ", GUILayout.ExpandWidth(false));
-                        _tmpLon       = GUILayout.TextField(_tmpLon, GUILayout.Width(125));
+                        _tmpLon      = GUILayout.TextField(_tmpLon, GUILayout.Width(125));
                         wp.Longitude = ParseCoord(_tmpLon, true);
 
                         GUILayout.EndHorizontal();
@@ -782,7 +783,8 @@ namespace MuMech
                 SelIndex = -1;
             }
 
-            if (GUILayout.Button(alt ? "Top" : "Up", GUILayout.Width(57)) && SelIndex > 0 && SelIndex < _ap.Waypoints.Count && _ap.Waypoints.Count >= 2)
+            if (GUILayout.Button(alt ? "Top" : "Up", GUILayout.Width(57)) && SelIndex > 0 && SelIndex < _ap.Waypoints.Count &&
+                _ap.Waypoints.Count >= 2)
             {
                 if (alt)
                 {
@@ -1143,7 +1145,7 @@ namespace MuMech
     public class MechJebModuleWaypointHelpWindow : DisplayModule
     {
         public          int      SelTopic;
-        public readonly string[] Topics      = { "Rover Controller", "Waypoints", "Routes", "Settings" };
+        public readonly string[] Topics       = { "Rover Controller", "Waypoints", "Routes", "Settings" };
         private         string   _selSubTopic = "";
         private         GUIStyle _btnActive;
         private         GUIStyle _btnInactive;
@@ -1154,7 +1156,7 @@ namespace MuMech
             if (GUILayout.Button(title, _selSubTopic == title ? _btnActive : _btnInactive))
             {
                 _selSubTopic = _selSubTopic != title ? title : "";
-                WindowPos   = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
+                WindowPos    = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
             }
 
             if (_selSubTopic == title)
@@ -1277,16 +1279,16 @@ namespace MuMech
     public class MechJebRouteRenderer : MonoBehaviour
     {
         private static readonly Material                     _material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
-        public                 MechJebModuleRoverController AP;
-        private                LineRenderer                 _pastPath;
-        private                LineRenderer                 _currPath;
-        private                LineRenderer                 _nextPath;
-        private                LineRenderer                 _selWp;
-        private readonly       Color                        _pastPathColor = new Color(0f, 0f, 1f, 0.5f);
-        private readonly       Color                        _currPathColor = new Color(0f, 1f, 0f, 0.5f);
-        private readonly       Color                        _nextPathColor = new Color(1f, 1f, 0f, 0.5f);
-        private readonly       Color                        _selWpColor    = new Color(1f, 0f, 0f, 0.5f);
-        private                double                       _addHeight;
+        public                  MechJebModuleRoverController AP;
+        private                 LineRenderer                 _pastPath;
+        private                 LineRenderer                 _currPath;
+        private                 LineRenderer                 _nextPath;
+        private                 LineRenderer                 _selWp;
+        private readonly        Color                        _pastPathColor = new Color(0f, 0f, 1f, 0.5f);
+        private readonly        Color                        _currPathColor = new Color(0f, 1f, 0f, 0.5f);
+        private readonly        Color                        _nextPathColor = new Color(1f, 1f, 0f, 0.5f);
+        private readonly        Color                        _selWpColor    = new Color(1f, 0f, 0f, 0.5f);
+        private                 double                       _addHeight;
 
         public static MechJebRouteRenderer AttachToMapView(MechJebCore core)
         {
@@ -1325,7 +1327,6 @@ namespace MuMech
             return ScaledSpace.LocalToScaledSpace(body.position +
                                                   (body.Radius + heightOffset + body.TerrainAltitude(lat, lon)) *
                                                   body.GetSurfaceNVector(lat, lon));
-
         }
 
         public new bool enabled

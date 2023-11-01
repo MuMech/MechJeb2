@@ -186,12 +186,13 @@ namespace MechJebLib.Maneuvers
                 }
 
                 (dv1, dt1, dv2, dt2) =
-                    Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, dtmin: dtmin, dtmax: dtmax, offsetMin: offsetMin, offsetMax: offsetMax, coplanar: coplanar, capture: capture, optguard: optguard);
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, dtmin: dtmin, dtmax: dtmax, offsetMin: offsetMin, offsetMax: offsetMax,
+                        coplanar: coplanar, capture: capture, optguard: optguard);
             }
             else
             {
                 (dv1, dt1, dv2, dt2) =
-                    Maneuver(mu, r1, v1, r2, v2, dtguess, 0, dtmin: dtmin, dtmax: dtmax , coplanar: coplanar, capture: capture, optguard: optguard);
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, 0, dtmin: dtmin, dtmax: dtmax, coplanar: coplanar, capture: capture, optguard: optguard);
 
                 // we have to try the other side of the target orbit since we might get eg. the DN instead of the AN when the AN is closer
                 // (this may be insufficient and may need more of a search box but then we're O(N^2) and i think basinhopping or porkchop
@@ -199,7 +200,7 @@ namespace MechJebLib.Maneuvers
                 double targetPeriod = Maths.PeriodFromStateVectors(mu, r2, v2);
 
                 (V3 a, double b, V3 c, double d) =
-                    Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar: coplanar, capture: capture, optguard: optguard);
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar, capture, optguard: optguard);
 
                 if (b > 0 && (b < dt1 || dt1 < 0))
                 {
@@ -220,12 +221,14 @@ namespace MechJebLib.Maneuvers
             double synodicPeriod = Maths.SynodicPeriod(mu, r1, v1, r2, v2);
 
             if (fixedTime)
-                return ManeuverInternal(mu, r1, v1, r2, v2, dtguess: 0, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard, lagTime:lagTime, fixedtime: true);
+                return ManeuverInternal(mu, r1, v1, r2, v2, 0, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard,
+                    lagTime: lagTime, fixedtime: true);
 
             double dtguess = 0;
             for (int iter = 0; iter < maxiter; iter++)
             {
-                (V3 dv1, double dt1, V3 dv2, double dt2) = ManeuverInternal(mu, r1, v1, r2, v2, dtguess: dtguess, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard, lagTime:lagTime);
+                (V3 dv1, double dt1, V3 dv2, double dt2) = ManeuverInternal(mu, r1, v1, r2, v2, dtguess, coplanar: coplanar, rendezvous: rendezvous,
+                    capture: capture, optguard: optguard, lagTime: lagTime);
 
                 if (dt1 > 0)
                     return (dv1, dt1, dv2, dt2);

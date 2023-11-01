@@ -460,7 +460,7 @@ namespace MuMech
         private string GetCleanName(string name)
         {
             string regexSearch = " .:" + new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            var r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            var r = new Regex($"[{Regex.Escape(regexSearch)}]");
             return r.Replace(name, "_");
         }
 

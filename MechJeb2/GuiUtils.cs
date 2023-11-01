@@ -898,8 +898,8 @@ namespace MuMech
 
         public Coordinates(double latitude, double longitude)
         {
-            this.Latitude  = latitude;
-            this.Longitude = longitude;
+            Latitude  = latitude;
+            Longitude = longitude;
         }
 
         [UsedImplicitly]

@@ -126,7 +126,7 @@ namespace MuMech
                 }
 
                 double dv = AscentSettings.PitchStartVelocity - VesselState.surfaceVelocity.magnitude;
-                Status = Localizer.Format("#MechJeb_Ascent_status13", string.Format("{0:F2}", dv)); //Vertical ascent  <<1>>m/s to go
+                Status = Localizer.Format("#MechJeb_Ascent_status13", $"{dv:F2}"); //Vertical ascent  <<1>>m/s to go
             }
         }
 
