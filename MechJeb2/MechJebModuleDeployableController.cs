@@ -26,7 +26,7 @@ namespace MuMech
 
         protected string type = "";
 
-        protected List<ModuleDeployablePart> cachedPartModules = new List<ModuleDeployablePart>(16);
+        protected readonly List<ModuleDeployablePart> cachedPartModules = new List<ModuleDeployablePart>(16);
 
         protected void DiscoverDeployablePartModules()
         {

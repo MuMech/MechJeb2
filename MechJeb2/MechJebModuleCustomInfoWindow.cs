@@ -209,9 +209,9 @@ namespace MuMech
 
     public class MechJebModuleCustomWindowEditor : DisplayModule
     {
-        public  List<InfoItem>                registry = new List<InfoItem>();
-        public  MechJebModuleCustomInfoWindow editedWindow;
-        private int                           selectedItemIndex = -1;
+        public readonly List<InfoItem>                registry = new List<InfoItem>();
+        public          MechJebModuleCustomInfoWindow editedWindow;
+        private         int                           selectedItemIndex = -1;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -251,8 +251,7 @@ namespace MuMech
                 bool useOldConfig = true;
                 if (windowNode.HasValue("enabledEditor"))
                 {
-                    bool loadedEnabled;
-                    if (bool.TryParse(windowNode.GetValue("enabledEditor"), out loadedEnabled))
+                    if (bool.TryParse(windowNode.GetValue("enabledEditor"), out bool loadedEnabled))
                     {
                         window.EnabledEditor = loadedEnabled;
                         useOldConfig         = false;
@@ -263,8 +262,7 @@ namespace MuMech
 
                 if (windowNode.HasValue("enabledFlight"))
                 {
-                    bool loadedEnabled;
-                    if (bool.TryParse(windowNode.GetValue("enabledFlight"), out loadedEnabled))
+                    if (bool.TryParse(windowNode.GetValue("enabledFlight"), out bool loadedEnabled))
                     {
                         window.EnabledFlight = loadedEnabled;
                         useOldConfig         = false;
@@ -277,8 +275,7 @@ namespace MuMech
                 {
                     if (windowNode.HasValue("enabled"))
                     {
-                        bool loadedEnabled;
-                        if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled))
+                        if (bool.TryParse(windowNode.GetValue("enabled"), out bool loadedEnabled))
                         {
                             window.Enabled       = loadedEnabled;
                             window.EnabledEditor = window.Enabled;
@@ -601,11 +598,11 @@ namespace MuMech
 
     public class InfoItem
     {
-        public string name;
-        public string localizedName;
-        public string description;
-        public bool   showInEditor;
-        public bool   showInFlight;
+        public readonly string name;
+        public readonly string localizedName;
+        public readonly string description;
+        public readonly bool   showInEditor;
+        public readonly bool   showInFlight;
 
         public enum Category
         {
@@ -619,7 +616,7 @@ namespace MuMech
             Misc
         }
 
-        public Category category;
+        public readonly Category category;
 
         [Persistent]
         public string id;
@@ -808,8 +805,8 @@ namespace MuMech
 
     public class EditableInfoItem : InfoItem
     {
-        public           string    rightLabel;
-        public           float     width;
+        public readonly  string    rightLabel;
+        public readonly  float     width;
         private readonly IEditable val;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
@@ -835,11 +832,11 @@ namespace MuMech
 
     public abstract class InfoItemAttribute : Attribute
     {
-        public string            name; //the name displayed in the info window
-        public InfoItem.Category category;
-        public string            description  = ""; //the description shown in the window editor list
-        public bool              showInEditor = false;
-        public bool              showInFlight = true;
+        public readonly string            name; //the name displayed in the info window
+        public          InfoItem.Category category;
+        public          string            description  = ""; //the description shown in the window editor list
+        public          bool              showInEditor = false;
+        public          bool              showInFlight = true;
 
         public InfoItemAttribute(string name, InfoItem.Category category)
         {
@@ -853,11 +850,11 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
     public class ValueInfoItemAttribute : InfoItemAttribute
     {
-        public string units             = "";
-        public string format            = "";
-        public int    siSigFigs         = 4;
-        public int    siMaxPrecision    = -33;
-        public int    timeDecimalPlaces = 0;
+        public          string units             = "";
+        public          string format            = "";
+        public          int    siSigFigs         = 4;
+        public readonly int    siMaxPrecision    = -33;
+        public          int    timeDecimalPlaces = 0;
 
         public ValueInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
@@ -902,7 +899,7 @@ namespace MuMech
             public string sharingString;
         }
 
-        public static Preset[] presets =
+        public static readonly Preset[] presets =
         {
             new Preset
             {

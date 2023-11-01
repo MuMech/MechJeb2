@@ -15,7 +15,7 @@ namespace MuMech
         public EditableDouble speedLimit = 1;
 
         [Persistent(pass = (int)Pass.LOCAL)]
-        public EditableDouble rol = new EditableDouble(0);
+        public readonly EditableDouble rol = new EditableDouble(0);
 
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool forceRol = false;

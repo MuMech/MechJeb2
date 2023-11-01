@@ -9,10 +9,10 @@ namespace MuMech
     {
         public Vector3d targetVelocity = Vector3d.zero;
 
-        public  PIDControllerV2 pid;
-        private Vector3d        lastAct                 = Vector3d.zero;
-        private Vector3d        worldVelocityDelta      = Vector3d.zero;
-        private Vector3d        prev_worldVelocityDelta = Vector3d.zero;
+        public readonly PIDControllerV2 pid;
+        private         Vector3d        lastAct                 = Vector3d.zero;
+        private         Vector3d        worldVelocityDelta      = Vector3d.zero;
+        private         Vector3d        prev_worldVelocityDelta = Vector3d.zero;
 
         private enum ControlType
         {
@@ -26,23 +26,23 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         [ToggleInfoItem("#MechJeb_conserveFuel", InfoItem.Category.Thrust)] //Conserve RCS fuel
-        public bool conserveFuel = false;
+        public readonly bool conserveFuel = false;
 
         [EditableInfoItem("#MechJeb_conserveThreshold", InfoItem.Category.Thrust, rightLabel = "m/s")] //Conserve RCS fuel threshold
-        public EditableDouble conserveThreshold = 0.05;
+        public readonly EditableDouble conserveThreshold = 0.05;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         [EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)] //RCS Tf
         public EditableDouble Tf = 1;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble Kp = 0.125;
+        public readonly EditableDouble Kp = 0.125;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble Ki = 0.07;
+        public readonly EditableDouble Ki = 0.07;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble Kd = 0.53;
+        public readonly EditableDouble Kd = 0.53;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool rcsManualPID;

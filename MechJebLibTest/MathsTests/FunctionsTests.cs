@@ -260,15 +260,15 @@ namespace MechJebLibTest.MathsTests
             const double r185 = rearth + 185e+3;
             const double r1000 = rearth + 1000e+3;
 
-            (double sma, double ecc) = Maths.SmaEccFromApsides(r185, r1000);
+            (double sma, double _) = Maths.SmaEccFromApsides(r185, r1000);
             double v185 = Maths.VmagFromVisViva(mu, sma, r185);
             var r0 = new V3(r185, 0, 0);
             var v0 = new V3(0, v185, 0);
 
             double period = Maths.PeriodFromStateVectors(mu, r0, v0);
 
-            (V3 r1, V3 v1) = Shepperd.Solve(mu, period / 3.0, r0, v0);
-            (V3 r2, V3 v2) = Shepperd.Solve(mu, period * 0.75, r0, v0);
+            (V3 r1, V3 _) = Shepperd.Solve(mu, period / 3.0, r0, v0);
+            (V3 r2, V3 _) = Shepperd.Solve(mu, period * 0.75, r0, v0);
 
             Assert.Equal(period / 3.0, Maths.TimeToNextRadius(mu, r0, v0, r1.magnitude), 9);
             Assert.Equal(period * 0.25, Maths.TimeToNextRadius(mu, r0, v0, r2.magnitude), 9);
@@ -283,7 +283,7 @@ namespace MechJebLibTest.MathsTests
             const double r185 = rearth + 185e+3;
             const double r1000 = rearth + 1000e+3;
 
-            (double sma, double ecc) = Maths.SmaEccFromApsides(r185, r1000);
+            (double sma, double _) = Maths.SmaEccFromApsides(r185, r1000);
             double v185 = Maths.VmagFromVisViva(mu, sma, r185);
             var r0 = new V3(r185, 0, 0);
             var v0 = new V3(0, v185, 0);

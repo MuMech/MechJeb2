@@ -117,14 +117,14 @@ namespace MuMech
         protected bool
             errorSimulationRunning; // the predictor can run two types of simulation - 1) simulations of the current situation. 2) simulations of the current situation with deliberate error introduced into the parachute multiplier to aid the statistical analysis of these results.
 
-        protected Stopwatch errorStopwatch = new Stopwatch();
-        protected long      millisecondsBetweenErrorSimulations;
+        protected readonly Stopwatch errorStopwatch = new Stopwatch();
+        protected          long      millisecondsBetweenErrorSimulations;
 
         public bool SimulationRunning { get; private set; }
 
-        protected Stopwatch stopwatch = new Stopwatch();
-        public    double    SimulationRunningTime => SimulationRunning ? stopwatch.ElapsedMilliseconds / 1000d : 0;
-        protected long      millisecondsBetweenSimulations;
+        protected readonly Stopwatch stopwatch = new Stopwatch();
+        public             double    SimulationRunningTime => SimulationRunning ? stopwatch.ElapsedMilliseconds / 1000d : 0;
+        protected          long      millisecondsBetweenSimulations;
 
         protected ReentrySimulation.Result result;
         protected ReentrySimulation.Result errorResult;
@@ -137,7 +137,7 @@ namespace MuMech
             dt = 0.2; // the suggested dt for each timestep in the simulations. This will be adjusted depending on how long the simulations take to run if variabledt is active
 
         // TODO - decide if variable for fixed dt results in a more stable result
-        protected bool
+        protected readonly bool
             variabledt = false; // Set this to true to allow the predictor to choose a dt based on how long each run is taking, and false to use a fixed dt.
 
         public bool noSkipToFreefall = false;

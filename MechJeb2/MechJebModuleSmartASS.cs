@@ -58,7 +58,7 @@ namespace MuMech
             false, false, false, false
         };
 
-        public static string[] ModeTexts =
+        public static readonly string[] ModeTexts =
         {
             Localizer.Format("#MechJeb_SmartASS_button1"), Localizer.Format("#MechJeb_SmartASS_button2"),
             Localizer.Format("#MechJeb_SmartASS_button3"), Localizer.Format("#MechJeb_SmartASS_button4"),
@@ -72,7 +72,7 @@ namespace MuMech
             Localizer.Format("#MechJeb_SmartASS_button10")
         }; //"Orbit""Surface""Target""Advanced""Auto"
 
-        public static string[] TargetTexts =
+        public static readonly string[] TargetTexts =
         {
             Localizer.Format("#MechJeb_SmartASS_button11"), Localizer.Format("#MechJeb_SmartASS_button12"),
             Localizer.Format("#MechJeb_SmartASS_button13"), Localizer.Format("#MechJeb_SmartASS_button14"),
@@ -104,8 +104,8 @@ namespace MuMech
             Localizer.Format("#MechJeb_SmartASS_button56")
         }; //"Off""Kill Rotation""Node""Surface""Prograde""Retrograde""Normal+""Normal-""Radial+""Radial-""Relative Velocity+""Relative Velocity-""Target+""Target-""Parallel+""Parallel-""Advanced""Auto""Surface Velocity+""Surface Velocity-""Horizontal Velocity+""Horizontal Velocity-""Up"
 
-        public static string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
-        public static string[] directionTexts = Enum.GetNames(typeof(Vector6.Direction));
+        public static readonly string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
+        public static readonly string[] directionTexts = Enum.GetNames(typeof(Vector6.Direction));
 
         public static GUIStyle btNormal, btActive, btAuto;
 
@@ -134,7 +134,7 @@ namespace MuMech
         public EditableDouble srfVelRol = new EditableDouble(0);
 
         [Persistent(pass = (int)Pass.LOCAL)]
-        public EditableDouble rol = new EditableDouble(0);
+        public readonly EditableDouble rol = new EditableDouble(0);
 
         [Persistent(pass = (int)Pass.LOCAL)]
         public AttitudeReference advReference = AttitudeReference.INERTIAL;

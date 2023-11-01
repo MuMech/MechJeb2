@@ -23,7 +23,7 @@ namespace MuMech
         public WarpTarget warpTarget = WarpTarget.Periapsis;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableTime leadTime = 0;
+        public readonly EditableTime leadTime = 0;
 
         public           bool         warping;
         private readonly EditableTime timeOffset = 0;

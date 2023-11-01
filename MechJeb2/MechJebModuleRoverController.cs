@@ -9,10 +9,10 @@ namespace MuMech
     [UsedImplicitly]
     public class MechJebModuleRoverController : ComputerModule
     {
-        public  List<MechJebWaypoint> Waypoints     = new List<MechJebWaypoint>();
-        public  int                   WaypointIndex = -1;
-        private CelestialBody         lastBody;
-        public  bool                  LoopWaypoints = false;
+        public readonly List<MechJebWaypoint> Waypoints     = new List<MechJebWaypoint>();
+        public          int                   WaypointIndex = -1;
+        private         CelestialBody         lastBody;
+        public          bool                  LoopWaypoints = false;
 
         [ToggleInfoItem("#MechJeb_ControlHeading", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Heading control
@@ -28,25 +28,25 @@ namespace MuMech
 
         [EditableInfoItem("#MechJeb_Speed", InfoItem.Category.Rover, width = 40)]
         [Persistent(pass = (int)Pass.LOCAL)] // Speed
-        public EditableDouble speed = 10;
+        public readonly EditableDouble speed = 10;
 
         [ToggleInfoItem("#MechJeb_BrakeOnEject", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Brake on Pilot Eject
-        public bool BrakeOnEject = false;
+        public readonly bool BrakeOnEject = false;
 
         [ToggleInfoItem("#MechJeb_BrakeOnEnergyDepletion", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Brake on Energy Depletion
-        public bool BrakeOnEnergyDepletion = false;
+        public readonly bool BrakeOnEnergyDepletion = false;
 
         [ToggleInfoItem("#MechJeb_WarpToDaylight", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Warp until Day if Depleted
-        public bool WarpToDaylight = false;
+        public readonly bool WarpToDaylight = false;
 
         public bool waitingForDaylight;
 
         [ToggleInfoItem("#MechJeb_StabilityControl", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Stability Control
-        public bool StabilityControl = false;
+        public readonly bool StabilityControl = false;
 
         [ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL | (int)Pass.TYPE)] // Limit Acceleration
@@ -59,39 +59,39 @@ namespace MuMech
 
         [EditableInfoItem("#MechJeb_SafeTurnspeed", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.TYPE)] // Safe turnspeed
-        public EditableDouble turnSpeed = 3;
+        public readonly EditableDouble turnSpeed = 3;
 
         [EditableInfoItem("#MechJeb_TerrainLookAhead", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Terrain Look Ahead
-        public EditableDouble terrainLookAhead = 1.0;
+        public readonly EditableDouble terrainLookAhead = 1.0;
 
         [EditableInfoItem("#MechJeb_BrakeSpeedLimit", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.TYPE)] // Brake Speed Limit
-        public EditableDouble brakeSpeedLimit = 0.7;
+        public readonly EditableDouble brakeSpeedLimit = 0.7;
 
         [EditableInfoItem("#MechJeb_HeadingPIDP", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Heading PID P
-        public EditableDouble hPIDp = 0.03;   // 0.01
+        [Persistent(pass = (int)Pass.GLOBAL)]        // Heading PID P
+        public readonly EditableDouble hPIDp = 0.03; // 0.01
 
         [EditableInfoItem("#MechJeb_HeadingPIDI", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Heading PID I
-        public EditableDouble hPIDi = 0.002;  // 0.001
+        [Persistent(pass = (int)Pass.GLOBAL)]         // Heading PID I
+        public readonly EditableDouble hPIDi = 0.002; // 0.001
 
         [EditableInfoItem("#MechJeb_HeadingPIDD", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Heading PID D
-        public EditableDouble hPIDd = 0.005;
+        public readonly EditableDouble hPIDd = 0.005;
 
         [EditableInfoItem("#MechJeb_SpeedPIDP", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Speed PID P
-        public EditableDouble sPIDp = 2.0;
+        public readonly EditableDouble sPIDp = 2.0;
 
         [EditableInfoItem("#MechJeb_SpeedPIDI", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Speed PID I
-        public EditableDouble sPIDi = 0.1;
+        public readonly EditableDouble sPIDi = 0.1;
 
         [EditableInfoItem("#MechJeb_SpeedPIDD", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Speed PID D
-        public EditableDouble sPIDd = 0.001;
+        public readonly EditableDouble sPIDd = 0.001;
 
         [ValueInfoItem("#MechJeb_SpeedIntAcc", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed Int Acc
         public double speedIntAcc;
@@ -103,7 +103,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.TYPE)] // Traction Brake Limit
         public EditableDouble tractionLimit = 75;
 
-        public List<(PartModule, BaseField)> wheelbases = new List<(PartModule, BaseField)>();
+        public readonly List<(PartModule, BaseField)> wheelbases = new List<(PartModule, BaseField)>();
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -156,11 +156,11 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Speederror", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed error
         public double speedErr;
 
-        public  double        tgtSpeed;
-        public  MovingAverage etaSpeed = new MovingAverage(50);
-        private double        lastETA;
-        private float         lastThrottle;
-        private double        curSpeed;
+        public          double        tgtSpeed;
+        public readonly MovingAverage etaSpeed = new MovingAverage(50);
+        private         double        lastETA;
+        private         float         lastThrottle;
+        private         double        curSpeed;
 
         public double HeadingToPos(Vector3 fromPos, Vector3 toPos)
         {
@@ -371,8 +371,8 @@ namespace MuMech
 
             if (StabilityControl)
             {
-                RaycastHit hit;
-                Physics.Raycast(Vessel.CoM + VesselState.surfaceVelocity * terrainLookAhead + VesselState.up * 100, -VesselState.up, out hit, 500,
+                Physics.Raycast(Vessel.CoM + VesselState.surfaceVelocity * terrainLookAhead + VesselState.up * 100, -VesselState.up,
+                    out RaycastHit hit, 500,
                     1 << 15, QueryTriggerInteraction.Ignore);
                 Vector3 norm = hit.normal;
 

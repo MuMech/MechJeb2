@@ -32,7 +32,7 @@ namespace MuMech
         public static DebugIcoSphere cotSphere;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble comSphereRadius = new EditableDouble(0.09);
+        public readonly EditableDouble comSphereRadius = new EditableDouble(0.09);
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool srfVelocityArrowActive;
@@ -78,7 +78,7 @@ namespace MuMech
         public static Vector3d debugVector2 = Vector3d.one;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble arrowsLength = new EditableDouble(4);
+        public readonly EditableDouble arrowsLength = new EditableDouble(4);
 
         public MechJebModuleDebugArrows(MechJebCore core) : base(core)
         {
@@ -743,8 +743,7 @@ namespace MuMech
             long greaterIndex = firstIsSmaller ? p2 : p1;
             long key = (smallerIndex << 32) + greaterIndex;
 
-            int ret;
-            if (cache.TryGetValue(key, out ret))
+            if (cache.TryGetValue(key, out int ret))
             {
                 return ret;
             }

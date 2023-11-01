@@ -39,7 +39,7 @@ namespace MechJebLibTest.PVGTests
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            var wrapper = InputLayout.CreateFrom(y0);
+            InputLayout.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 
@@ -87,7 +87,7 @@ namespace MechJebLibTest.PVGTests
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            var wrapper = InputLayout.CreateFrom(y0);
+            InputLayout.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 
@@ -129,7 +129,7 @@ namespace MechJebLibTest.PVGTests
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            var wrapper = InputLayout.CreateFrom(y0);
+            InputLayout.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 

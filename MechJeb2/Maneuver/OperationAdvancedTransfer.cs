@@ -31,7 +31,7 @@ namespace MuMech
         private double maxDepartureTime;
         private double maxTransferTime;
 
-        public EditableTime maxArrivalTime = new EditableTime();
+        public readonly EditableTime maxArrivalTime = new EditableTime();
 
         private bool includeCaptureBurn;
 

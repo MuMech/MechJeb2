@@ -74,7 +74,6 @@ namespace MechJebLibTest.PVGTests
             double t0 = 0;
             double PeR = 6.371e+6 + 185e+3;
             double ApR = 6.371e+6 + 4306022;
-            ;
             double rbody = 6.371e+6;
             double incT = Deg2Rad(28.608);
             double mu = 3.986004418e+14;
@@ -256,7 +255,7 @@ namespace MechJebLibTest.PVGTests
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+            (double smaf, double eccf, double incf, double lanf, double _, double _, _) =
                 Maths.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(0).ShouldEqual(r0);

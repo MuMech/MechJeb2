@@ -36,7 +36,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         [ValueInfoItem("#MechJeb_SteeringError", InfoItem.Category.Vessel, format = "F1", units = "º")]
         //Steering error
-        public MovingAverage steeringError = new MovingAverage();
+        public readonly MovingAverage steeringError = new MovingAverage();
 
         public bool attitudeKILLROT;
 
@@ -373,9 +373,7 @@ namespace MuMech
             }
             else
             {
-                Vector3d act;
-                Vector3d deltaEuler;
-                Controller.DrivePre(s, out act, out deltaEuler);
+                Controller.DrivePre(s, out Vector3d act, out Vector3d deltaEuler);
 
                 act.Scale(ActuationControl);
 

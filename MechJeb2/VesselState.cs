@@ -111,35 +111,35 @@ namespace MuMech
         //How about changing these so we store the instantaneous values and *also*
         //the smoothed MovingAverages? Sometimes we need the instantaneous value.
         [ValueInfoItem("#MechJeb_OrbitalSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Orbital speed
-        public MovingAverage speedOrbital = new MovingAverage();
+        public readonly MovingAverage speedOrbital = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_SurfaceSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")] //Surface speed
-        public MovingAverage speedSurface = new MovingAverage();
+        public readonly MovingAverage speedSurface = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_VerticalSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")] //Vertical speed
-        public MovingAverage speedVertical = new MovingAverage();
+        public readonly MovingAverage speedVertical = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_SurfaceHorizontalSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI,
             units = "m/s")] //Surface horizontal speed
-        public MovingAverage speedSurfaceHorizontal = new MovingAverage();
+        public readonly MovingAverage speedSurfaceHorizontal = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_OrbitHorizontalSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Orbit horizontal speed
         public double speedOrbitHorizontal;
 
         [ValueInfoItem("#MechJeb_Heading", InfoItem.Category.Surface, format = "F1", units = "º")] //Heading
-        public MovingAverage vesselHeading = new MovingAverage();
+        public readonly MovingAverage vesselHeading = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Pitch", InfoItem.Category.Surface, format = "F1", units = "º")] //Pitch
-        public MovingAverage vesselPitch = new MovingAverage();
+        public readonly MovingAverage vesselPitch = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Roll", InfoItem.Category.Surface, format = "F1", units = "º")] //Roll
-        public MovingAverage vesselRoll = new MovingAverage();
+        public readonly MovingAverage vesselRoll = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Altitude_ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Altitude (ASL)
-        public MovingAverage altitudeASL = new MovingAverage();
+        public readonly MovingAverage altitudeASL = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Altitude_true", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Altitude (true)
-        public MovingAverage altitudeTrue = new MovingAverage();
+        public readonly MovingAverage altitudeTrue = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_SurfaceAltitudeASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4,
             units = "m")] //Surface altitude ASL
@@ -147,56 +147,56 @@ namespace MuMech
 
         [ValueInfoItem("#MechJeb_Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6,
             category = InfoItem.Category.Orbit)] //Apoapsis
-        public MovingAverage orbitApA = new MovingAverage();
+        public readonly MovingAverage orbitApA = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6,
             category = InfoItem.Category.Orbit)] //Periapsis
-        public MovingAverage orbitPeA = new MovingAverage();
+        public readonly MovingAverage orbitPeA = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_OrbitalPeriod", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 2,
             category = InfoItem.Category.Orbit)] //Orbital period
-        public MovingAverage orbitPeriod = new MovingAverage();
+        public readonly MovingAverage orbitPeriod = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_TimeToApoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)] //Time to apoapsis
-        public MovingAverage orbitTimeToAp = new MovingAverage();
+        public readonly MovingAverage orbitTimeToAp = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_TimeToPeriapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)] //Time to periapsis
-        public MovingAverage orbitTimeToPe = new MovingAverage();
+        public readonly MovingAverage orbitTimeToPe = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_LAN", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)] //LAN
-        public MovingAverage orbitLAN = new MovingAverage();
+        public readonly MovingAverage orbitLAN = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_ArgumentOfPeriapsis", InfoItem.Category.Orbit, format = "F1", units = "º")] //Argument of periapsis
-        public MovingAverage orbitArgumentOfPeriapsis = new MovingAverage();
+        public readonly MovingAverage orbitArgumentOfPeriapsis = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Inclination", InfoItem.Category.Orbit, format = "F3", units = "º")] //Inclination
-        public MovingAverage orbitInclination = new MovingAverage();
+        public readonly MovingAverage orbitInclination = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Eccentricity", InfoItem.Category.Orbit, format = "F3")] //Eccentricity
-        public MovingAverage orbitEccentricity = new MovingAverage();
+        public readonly MovingAverage orbitEccentricity = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_SemiMajorAxis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Semi-major axis
-        public MovingAverage orbitSemiMajorAxis = new MovingAverage();
+        public readonly MovingAverage orbitSemiMajorAxis = new MovingAverage();
 
         [ValueInfoItem("Celestial Longitude", InfoItem.Category.Orbit, format = "F3")]
-        public MovingAverage celestialLongitude = new MovingAverage();
+        public readonly MovingAverage celestialLongitude = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)] //Latitude
-        public MovingAverage latitude = new MovingAverage();
+        public readonly MovingAverage latitude = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)] //Longitude
-        public MovingAverage longitude = new MovingAverage();
+        public readonly MovingAverage longitude = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_AngleOfAttack", InfoItem.Category.Misc, format = "F2", units = "º")] //Angle of Attack
-        public MovingAverage AoA = new MovingAverage();
+        public readonly MovingAverage AoA = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_AngleOfSideslip", InfoItem.Category.Misc, format = "F2", units = "º")] //Angle of Sideslip
-        public MovingAverage AoS = new MovingAverage();
+        public readonly MovingAverage AoS = new MovingAverage();
 
         [ValueInfoItem("#MechJeb_DisplacementAngle", InfoItem.Category.Misc, format = "F2", units = "º")] //Displacement Angle
-        public MovingAverage displacementAngle = new MovingAverage();
+        public readonly MovingAverage displacementAngle = new MovingAverage();
 
-        public MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
+        public readonly MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
 
         // instantaneous values
         public double currentPitch => rotationVesselSurface.eulerAngles.x > 180
@@ -314,9 +314,9 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_AerothermalFlux", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "W/m²")] //Aerothermal flux
         public double freeMolecularAerothermalFlux;
 
-        public Vector6 rcsThrustAvailable = new Vector6(); // thrust available from RCS thrusters
+        public readonly Vector6 rcsThrustAvailable = new Vector6(); // thrust available from RCS thrusters
 
-        public Vector6 rcsTorqueAvailable = new Vector6(); // torque available from RCS thrusters
+        public readonly Vector6 rcsTorqueAvailable = new Vector6(); // torque available from RCS thrusters
 
         // Total torque
         public Vector3d torqueAvailable;
@@ -324,23 +324,23 @@ namespace MuMech
         public Vector3d torqueReactionSpeed;
 
         // Torque from different components
-        public Vector6 torqueReactionWheel = new Vector6(); // torque available from Reaction wheels
+        public readonly Vector6 torqueReactionWheel = new Vector6(); // torque available from Reaction wheels
 
         //public Vector6 torqueRcs = new Vector6();            // torque available from RCS from stock code (not working properly ATM)
-        public Vector6 torqueControlSurface = new Vector6(); // torque available from Aerodynamic control surfaces
-        public Vector6 torqueGimbal         = new Vector6(); // torque available from Gimbaled engines
-        public Vector6 torqueOthers         = new Vector6(); // torque available from Mostly FAR
+        public readonly Vector6 torqueControlSurface = new Vector6(); // torque available from Aerodynamic control surfaces
+        public readonly Vector6 torqueGimbal         = new Vector6(); // torque available from Gimbaled engines
+        public readonly Vector6 torqueOthers         = new Vector6(); // torque available from Mostly FAR
 
         // Variable part of torque related to differential throttle
         public Vector3d torqueDiffThrottle;
 
         // List of parachutes
-        public List<ModuleParachute> parachutes = new List<ModuleParachute>();
+        public readonly List<ModuleParachute> parachutes = new List<ModuleParachute>();
 
         public bool parachuteDeployed;
 
         // Resource information keyed by resource Id.
-        public Dictionary<int, ResourceInfo> resources = new Dictionary<int, ResourceInfo>();
+        public readonly Dictionary<int, ResourceInfo> resources = new Dictionary<int, ResourceInfo>();
 
         public CelestialBody mainBody;
 
@@ -362,8 +362,8 @@ namespace MuMech
 
         private readonly Dictionary<ModuleEngines, ModuleGimbal> engines = new Dictionary<ModuleEngines, ModuleGimbal>();
 
-        public List<VesselStatePartExtension>       vesselStatePartExtensions       = new List<VesselStatePartExtension>();
-        public List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
+        public readonly List<VesselStatePartExtension>       vesselStatePartExtensions       = new List<VesselStatePartExtension>();
+        public readonly List<VesselStatePartModuleExtension> vesselStatePartModuleExtensions = new List<VesselStatePartModuleExtension>();
 
         public delegate double DTerminalVelocity();
 
@@ -874,9 +874,7 @@ namespace MuMech
                 {
                     Vector6.Direction dir6 = Vector6.Values[i];
                     Vector3d dir = Vector6.Directions[(int)dir6];
-                    double[] throttles;
-                    List<RCSSolver.Thruster> thrusters;
-                    rcsbal.GetThrottles(dir, out throttles, out thrusters);
+                    rcsbal.GetThrottles(dir, out double[] throttles, out List<RCSSolver.Thruster> thrusters);
                     if (throttles != null)
                     {
                         for (int j = 0; j < throttles.Length; j++)
@@ -1127,9 +1125,7 @@ namespace MuMech
                     var rw = pm as ModuleReactionWheel;
                     if (rw != null)
                     {
-                        Vector3 pos;
-                        Vector3 neg;
-                        rw.GetPotentialTorque(out pos, out neg);
+                        rw.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
                         // GetPotentialTorque reports the same value for pos & neg on ModuleReactionWheel
                         torqueReactionWheel.Add(pos);
@@ -1139,8 +1135,7 @@ namespace MuMech
                     {
                         var moduleEngines = pm as ModuleEngines;
 
-                        if (!engines.ContainsKey(moduleEngines))
-                            engines.Add(moduleEngines, null);
+                        engines.TryAdd(moduleEngines, null);
                     }
                     else if (pm is ModuleResourceIntake)
                     {
@@ -1164,10 +1159,7 @@ namespace MuMech
                         //if (p.ShieldedFromAirstream || cs.deploy)
                         //    continue;
 
-                        Vector3 ctrlTorquePos;
-                        Vector3 ctrlTorqueNeg;
-
-                        cs.GetPotentialTorque(out ctrlTorquePos, out ctrlTorqueNeg);
+                        cs.GetPotentialTorque(out Vector3 ctrlTorquePos, out Vector3 ctrlTorqueNeg);
 
                         torqueControlSurface.Add(ctrlTorquePos);
                         torqueControlSurface.Add(ctrlTorqueNeg);
@@ -1191,9 +1183,7 @@ namespace MuMech
                             }
                         }
 
-                        Vector3 pos;
-                        Vector3 neg;
-                        g.GetPotentialTorque(out pos, out neg);
+                        g.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
                         // GetPotentialTorque reports the same value for pos & neg on ModuleGimbal
 
@@ -1211,9 +1201,7 @@ namespace MuMech
                     {
                         var tp = pm as ITorqueProvider;
 
-                        Vector3 pos;
-                        Vector3 neg;
-                        tp.GetPotentialTorque(out pos, out neg);
+                        tp.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
                         torqueOthers.Add(pos);
                         torqueOthers.Add(neg);
@@ -1296,9 +1284,8 @@ namespace MuMech
 
             if (isLoadedFAR && !vessel.packed && surfaceVelocity != Vector3d.zero)
             {
-                Vector3 farForce = Vector3.zero;
                 Vector3 farTorque = Vector3.zero;
-                CalculateVesselAeroForcesWithCache(vessel, out farForce, out farTorque, surfaceVelocity, altitudeASL);
+                CalculateVesselAeroForcesWithCache(vessel, out Vector3 farForce, out farTorque, surfaceVelocity, altitudeASL);
 
                 Vector3d farDragVector = Vector3d.Dot(farForce, -surfaceVelocity.normalized) * -surfaceVelocity.normalized;
                 drag      = farDragVector.magnitude / mass;
@@ -1435,7 +1422,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")] //Terminal velocity
         public double TerminalVelocity() => TerminalVelocityCall();
 
-        public DTerminalVelocity TerminalVelocityCall;
+        public readonly DTerminalVelocity TerminalVelocityCall;
 
         public double TerminalVelocityStockKSP()
         {
@@ -1507,7 +1494,7 @@ namespace MuMech
             public Vector3d thrustMin;     // thrust at zero throttle
             public double   maxResponseTime;
 
-            public Vector6 torqueDiffThrottle = new Vector6();
+            public readonly Vector6 torqueDiffThrottle = new Vector6();
 
             // lowestUllage is always VeryStable without RealFuels installed
             public UllageState lowestUllage = UllageState.VeryStable;
@@ -1518,7 +1505,7 @@ namespace MuMech
                 public double requiredAtMaxThrottle;
             }
 
-            public Dictionary<int, FuelRequirement> resourceRequired = new Dictionary<int, FuelRequirement>();
+            public readonly Dictionary<int, FuelRequirement> resourceRequired = new Dictionary<int, FuelRequirement>();
 
             private          Vector3d CoM;
             private          float    atmP0; // pressure now
@@ -1783,9 +1770,9 @@ namespace MuMech
             private void addResource(int id, double current /* u/sec */, double max /* u/sec */)
             {
                 FuelRequirement req;
-                if (resourceRequired.ContainsKey(id))
+                if (resourceRequired.TryGetValue(id, out FuelRequirement value))
                 {
-                    req = resourceRequired[id];
+                    req = value;
                 }
                 else
                 {
@@ -1819,9 +1806,9 @@ namespace MuMech
                 // drag, etc etc.
                 List<ModuleResourceIntake> thelist;
                 int id = PartResourceLibrary.Instance.GetDefinition(intake.resourceName).id;
-                if (allIntakes.ContainsKey(id))
+                if (allIntakes.TryGetValue(id, out List<ModuleResourceIntake> allIntake))
                 {
-                    thelist = allIntakes[id];
+                    thelist = allIntake;
                 }
                 else
                 {
@@ -1836,9 +1823,9 @@ namespace MuMech
 
             public List<ModuleResourceIntake> getIntakes(int id)
             {
-                if (allIntakes.ContainsKey(id))
+                if (allIntakes.TryGetValue(id, out List<ModuleResourceIntake> intakes))
                 {
-                    return allIntakes[id];
+                    return intakes;
                 }
 
                 return empty;
@@ -1876,7 +1863,7 @@ namespace MuMech
                 }
             }
 
-            public List<IntakeData> intakes = new List<IntakeData>();
+            public readonly List<IntakeData> intakes = new List<IntakeData>();
 
             public struct IntakeData
             {
@@ -1886,8 +1873,8 @@ namespace MuMech
                     this.predictedMassFlow = predictedMassFlow;
                 }
 
-                public ModuleResourceIntake intake;
-                public double               predictedMassFlow; // min kg/s this timestep or next
+                public readonly ModuleResourceIntake intake;
+                public readonly double               predictedMassFlow; // min kg/s this timestep or next
             }
 
             private static readonly Pool<ResourceInfo> pool = new Pool<ResourceInfo>(Create, Reset);

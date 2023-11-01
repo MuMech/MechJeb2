@@ -19,8 +19,8 @@ namespace MechJebLib.Core.ODE
         public readonly AssertFunc?   Assert;
         public          bool          SaveBefore = true;
         public          bool          SaveAfter  = true;
-        public          bool          Terminal   = true;
-        public          int           Direction  = 0;
+        public readonly bool          Terminal   = true;
+        public readonly int           Direction  = 0;
         public          double        LastValue;
         public          double        NewValue;
         public          double        Time;

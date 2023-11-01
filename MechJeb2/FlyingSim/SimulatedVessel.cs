@@ -5,9 +5,9 @@ namespace MuMech
 {
     public class SimulatedVessel
     {
-        public  List<SimulatedPart> parts = new List<SimulatedPart>();
-        private int                 count;
-        public  double              totalMass;
+        public readonly List<SimulatedPart> parts = new List<SimulatedPart>();
+        private         int                 count;
+        public          double              totalMass;
 
         private ReentrySimulation.SimCurves simCurves;
 

@@ -28,17 +28,17 @@ namespace MuMech
         // threshold' tuning parameter, because waste thresholds of 1 or above
         // cause problems by allowing unhelpful thrusters to fire.
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble overdriveScale = 0.9;
+        public readonly EditableDouble overdriveScale = 0.9;
 
         // Advanced: tuning parameters
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble tuningParamFactorTorque = 1;
+        public readonly EditableDouble tuningParamFactorTorque = 1;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble tuningParamFactorTranslate = 0.005;
+        public readonly EditableDouble tuningParamFactorTranslate = 0.005;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble tuningParamFactorWaste = 1;
+        public readonly EditableDouble tuningParamFactorWaste = 1;
 
         // Variables for RCS solving.
         private readonly RCSSolverThread          solverThread = new RCSSolverThread();
@@ -46,7 +46,7 @@ namespace MuMech
         private          double[]                 throttles;
 
         [EditableInfoItem("#MechJeb_RCSBalancerPrecision", InfoItem.Category.Thrust)] //RCS balancer precision
-        public EditableInt calcPrecision = 3;
+        public readonly EditableInt calcPrecision = 3;
 
         [GeneralInfoItem("#MechJeb_RCSBalancerInfo", InfoItem.Category.Thrust)] //RCS balancer info
         public void RCSBalancerInfoItem()
