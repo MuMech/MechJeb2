@@ -743,8 +743,7 @@ namespace MuMech
             long greaterIndex = firstIsSmaller ? p2 : p1;
             long key = (smallerIndex << 32) + greaterIndex;
 
-            int ret;
-            if (cache.TryGetValue(key, out ret))
+            if (cache.TryGetValue(key, out int ret))
             {
                 return ret;
             }

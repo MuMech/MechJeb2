@@ -251,8 +251,7 @@ namespace MuMech
                 bool useOldConfig = true;
                 if (windowNode.HasValue("enabledEditor"))
                 {
-                    bool loadedEnabled;
-                    if (bool.TryParse(windowNode.GetValue("enabledEditor"), out loadedEnabled))
+                    if (bool.TryParse(windowNode.GetValue("enabledEditor"), out bool loadedEnabled))
                     {
                         window.EnabledEditor = loadedEnabled;
                         useOldConfig         = false;
@@ -263,8 +262,7 @@ namespace MuMech
 
                 if (windowNode.HasValue("enabledFlight"))
                 {
-                    bool loadedEnabled;
-                    if (bool.TryParse(windowNode.GetValue("enabledFlight"), out loadedEnabled))
+                    if (bool.TryParse(windowNode.GetValue("enabledFlight"), out bool loadedEnabled))
                     {
                         window.EnabledFlight = loadedEnabled;
                         useOldConfig         = false;
@@ -277,8 +275,7 @@ namespace MuMech
                 {
                     if (windowNode.HasValue("enabled"))
                     {
-                        bool loadedEnabled;
-                        if (bool.TryParse(windowNode.GetValue("enabled"), out loadedEnabled))
+                        if (bool.TryParse(windowNode.GetValue("enabled"), out bool loadedEnabled))
                         {
                             window.Enabled       = loadedEnabled;
                             window.EnabledEditor = window.Enabled;

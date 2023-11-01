@@ -874,9 +874,7 @@ namespace MuMech
                 {
                     Vector6.Direction dir6 = Vector6.Values[i];
                     Vector3d dir = Vector6.Directions[(int)dir6];
-                    double[] throttles;
-                    List<RCSSolver.Thruster> thrusters;
-                    rcsbal.GetThrottles(dir, out throttles, out thrusters);
+                    rcsbal.GetThrottles(dir, out double[] throttles, out List<RCSSolver.Thruster> thrusters);
                     if (throttles != null)
                     {
                         for (int j = 0; j < throttles.Length; j++)
@@ -1127,9 +1125,7 @@ namespace MuMech
                     var rw = pm as ModuleReactionWheel;
                     if (rw != null)
                     {
-                        Vector3 pos;
-                        Vector3 neg;
-                        rw.GetPotentialTorque(out pos, out neg);
+                        rw.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
                         // GetPotentialTorque reports the same value for pos & neg on ModuleReactionWheel
                         torqueReactionWheel.Add(pos);
@@ -1163,10 +1159,7 @@ namespace MuMech
                         //if (p.ShieldedFromAirstream || cs.deploy)
                         //    continue;
 
-                        Vector3 ctrlTorquePos;
-                        Vector3 ctrlTorqueNeg;
-
-                        cs.GetPotentialTorque(out ctrlTorquePos, out ctrlTorqueNeg);
+                        cs.GetPotentialTorque(out Vector3 ctrlTorquePos, out Vector3 ctrlTorqueNeg);
 
                         torqueControlSurface.Add(ctrlTorquePos);
                         torqueControlSurface.Add(ctrlTorqueNeg);
@@ -1190,9 +1183,7 @@ namespace MuMech
                             }
                         }
 
-                        Vector3 pos;
-                        Vector3 neg;
-                        g.GetPotentialTorque(out pos, out neg);
+                        g.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
                         // GetPotentialTorque reports the same value for pos & neg on ModuleGimbal
 
@@ -1210,9 +1201,7 @@ namespace MuMech
                     {
                         var tp = pm as ITorqueProvider;
 
-                        Vector3 pos;
-                        Vector3 neg;
-                        tp.GetPotentialTorque(out pos, out neg);
+                        tp.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
                         torqueOthers.Add(pos);
                         torqueOthers.Add(neg);
@@ -1295,9 +1284,8 @@ namespace MuMech
 
             if (isLoadedFAR && !vessel.packed && surfaceVelocity != Vector3d.zero)
             {
-                Vector3 farForce = Vector3.zero;
                 Vector3 farTorque = Vector3.zero;
-                CalculateVesselAeroForcesWithCache(vessel, out farForce, out farTorque, surfaceVelocity, altitudeASL);
+                CalculateVesselAeroForcesWithCache(vessel, out Vector3 farForce, out farTorque, surfaceVelocity, altitudeASL);
 
                 Vector3d farDragVector = Vector3d.Dot(farForce, -surfaceVelocity.normalized) * -surfaceVelocity.normalized;
                 drag      = farDragVector.magnitude / mass;

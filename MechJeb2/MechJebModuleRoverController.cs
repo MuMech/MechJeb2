@@ -371,8 +371,8 @@ namespace MuMech
 
             if (StabilityControl)
             {
-                RaycastHit hit;
-                Physics.Raycast(Vessel.CoM + VesselState.surfaceVelocity * terrainLookAhead + VesselState.up * 100, -VesselState.up, out hit, 500,
+                Physics.Raycast(Vessel.CoM + VesselState.surfaceVelocity * terrainLookAhead + VesselState.up * 100, -VesselState.up,
+                    out RaycastHit hit, 500,
                     1 << 15, QueryTriggerInteraction.Ignore);
                 Vector3 norm = hit.normal;
 

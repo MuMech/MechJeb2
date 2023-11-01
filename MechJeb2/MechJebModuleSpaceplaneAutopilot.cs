@@ -665,8 +665,7 @@ namespace MuMech
                     string runwayName = site.GetValue("name");
                     ConfigNode start = site.GetNode("start");
                     ConfigNode end = site.GetNode("end");
-                    double touchdown = 0.0;
-                    double.TryParse(site.GetValue("touchdown"), out touchdown);
+                    double.TryParse(site.GetValue("touchdown"), out double touchdown);
 
                     if (runwayName == null || start == null || end == null)
                         continue;
@@ -678,10 +677,9 @@ namespace MuMech
                     if (lat == null || lon == null || alt == null)
                         continue;
 
-                    double startLatitude, startLongitude, startAltitude;
-                    double.TryParse(lat, out startLatitude);
-                    double.TryParse(lon, out startLongitude);
-                    double.TryParse(alt, out startAltitude);
+                    double.TryParse(lat, out double startLatitude);
+                    double.TryParse(lon, out double startLongitude);
+                    double.TryParse(alt, out double startAltitude);
 
                     lat = end.GetValue("latitude");
                     lon = end.GetValue("longitude");
@@ -690,10 +688,9 @@ namespace MuMech
                     if (lat == null || lon == null || alt == null)
                         continue;
 
-                    double endLatitude, endLongitude, endAltitude;
-                    double.TryParse(lat, out endLatitude);
-                    double.TryParse(lon, out endLongitude);
-                    double.TryParse(alt, out endAltitude);
+                    double.TryParse(lat, out double endLatitude);
+                    double.TryParse(lon, out double endLongitude);
+                    double.TryParse(alt, out double endAltitude);
 
                     string bodyName = site.GetValue("body");
                     CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;

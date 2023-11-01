@@ -373,9 +373,7 @@ namespace MuMech
             }
             else
             {
-                Vector3d act;
-                Vector3d deltaEuler;
-                Controller.DrivePre(s, out act, out deltaEuler);
+                Controller.DrivePre(s, out Vector3d act, out Vector3d deltaEuler);
 
                 act.Scale(ActuationControl);
 
