@@ -6,7 +6,7 @@ namespace MuMech
 {
     public class SimulatedPart
     {
-        protected DragCubeList cubes = new DragCubeList();
+        protected readonly DragCubeList cubes = new DragCubeList();
 
         public  double totalMass;
         public  bool   shieldedFromAirstream;

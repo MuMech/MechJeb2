@@ -16,21 +16,21 @@ namespace MechJebLib.PVG
 {
     public class Phase
     {
-        public double m0;
-        public double thrust;
-        public double isp;
-        public double mf;
-        public double bt;
-        public double maxt;
-        public double mint;
-        public double ve;
-        public double a0;
-        public double tau;
-        public double mdot;
-        public double dv;
-        public double DropMass; // FIXME: unused
-        public bool   OptimizeTime;
-        public bool   Infinite = false;
+        public          double m0;
+        public          double thrust;
+        public readonly double isp;
+        public          double mf;
+        public          double bt;
+        public          double maxt;
+        public          double mint;
+        public          double ve;
+        public readonly double a0;
+        public          double tau;
+        public          double mdot;
+        public          double dv;
+        public          double DropMass; // FIXME: unused
+        public          bool   OptimizeTime;
+        public          bool   Infinite = false;
 
         private bool _analytic = true;
 
@@ -44,12 +44,12 @@ namespace MechJebLib.PVG
             }
         }
 
-        public bool Unguided;
-        public bool MassContinuity = false;
-        public bool LastFreeBurn   = false;
-        public bool Normalized;
-        public int  KSPStage;
-        public int  MJPhase;
+        public          bool Unguided;
+        public readonly bool MassContinuity = false;
+        public          bool LastFreeBurn   = false;
+        public          bool Normalized;
+        public readonly int  KSPStage;
+        public readonly int  MJPhase;
 
         private IPVGIntegrator? _ipvgIntegrator;
 

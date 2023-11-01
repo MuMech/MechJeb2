@@ -11,13 +11,13 @@ namespace MuMech
         public MechJebModuleRendezvousAutopilot(MechJebCore core) : base(core) { }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble desiredDistance = 100;
+        public readonly EditableDouble desiredDistance = 100;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble maxPhasingOrbits = 5;
+        public readonly EditableDouble maxPhasingOrbits = 5;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble maxClosingSpeed = 100;
+        public readonly EditableDouble maxClosingSpeed = 100;
 
         public string status = "";
 

@@ -20,18 +20,18 @@ namespace MuMech
         public int skinId = 2;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDouble UIScale = 1.0;
+        public readonly EditableDouble UIScale = 1.0;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool dontUseDropDownMenu;
 
         [ToggleInfoItem("#MechJeb_hideBrakeOnEject", InfoItem.Category.Misc)]
         [Persistent(pass = (int)Pass.GLOBAL)] //Hide 'Brake on Eject' in Rover Controller
-        public bool hideBrakeOnEject = false;
+        public readonly bool hideBrakeOnEject = false;
 
         [ToggleInfoItem("#MechJeb_useTitlebarDragging", InfoItem.Category.Misc)]
         [Persistent(pass = (int)Pass.GLOBAL)] //Use only the titlebar for window dragging
-        public bool useTitlebarDragging = false;
+        public readonly bool useTitlebarDragging = false;
 
         [ToggleInfoItem("#MechJeb_rssMode", InfoItem.Category.Misc)]
         [Persistent(pass = (int)Pass.GLOBAL)] //Module disabling does not kill throttle (RSS/RO)

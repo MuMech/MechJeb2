@@ -11,7 +11,7 @@ namespace MuMech
     public class MechJebModuleStageStats : ComputerModule
     {
         [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)] //ΔV include cosine losses
-        public bool DVLinearThrust = true;
+        public readonly bool DVLinearThrust = true;
 
         public CelestialBody EditorBody;
         public bool          LiveSLT = true;

@@ -128,11 +128,11 @@ namespace MuMech
 
         [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc)]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool hideButton = false; //Hide Menu Button
+        public readonly bool hideButton = false; //Hide Menu Button
 
         [ToggleInfoItem("#MechJeb_UseAppLauncher", InfoItem.Category.Misc)]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool useAppLauncher = true; //Use AppLauncher
+        public readonly bool useAppLauncher = true; //Use AppLauncher
 
         [GeneralInfoItem("#MechJeb_MenuPosition", InfoItem.Category.Misc)] //Menu Position
         private void MenuPosition()
@@ -641,7 +641,7 @@ namespace MuMech
             {
             }
 
-            public static DisplayOrder instance = new DisplayOrder();
+            public static readonly DisplayOrder instance = new DisplayOrder();
 
             int IComparer<DisplayModule>.Compare(DisplayModule a, DisplayModule b)
             {

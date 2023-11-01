@@ -38,7 +38,7 @@ namespace MuMech
         ///     Glide slope angle for approach (3-5 seems to work best).
         /// </summary>
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public EditableDouble glideslope = 2.5;
+        public readonly EditableDouble glideslope = 2.5;
 
         /// <summary>
         ///     The angle between the runway centerline and an intercept to that
@@ -83,16 +83,16 @@ namespace MuMech
         ///     result in a decent approach and landing.
         /// </summary>
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public EditableDouble approachSpeed = 80.0;
+        public readonly EditableDouble approachSpeed = 80.0;
 
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public EditableDouble touchdownSpeed = 60.0;
+        public readonly EditableDouble touchdownSpeed = 60.0;
 
         /// <summary>
         ///     Maximum allowed bank angle.
         /// </summary>
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public EditableDouble maximumSafeBankAngle = 25.0;
+        public readonly EditableDouble maximumSafeBankAngle = 25.0;
 
         /// <summary>
         ///     Maximum allowed vertical speed to bring the vessel on the glideslope in m/s
