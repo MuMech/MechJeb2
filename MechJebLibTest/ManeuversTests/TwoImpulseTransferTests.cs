@@ -78,10 +78,9 @@ namespace MechJebLibTest.ManeuversTests
             (V3 r2, V3 v2) = Maths.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, nu);
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false);
-            double dv = dv1.magnitude + dv2.magnitude;
-            (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 rburn2, V3 vburn2) = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 rf, V3 vf)         = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 rburn1, V3 vburn1)                   = Shepperd.Solve(mu, dt1, r1, v1);
+            (V3 _, V3 _)                   = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
+            (V3 _, V3 _)                           = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
             double inc = Maths.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);
@@ -101,10 +100,9 @@ namespace MechJebLibTest.ManeuversTests
             (V3 r2, V3 v2) = Maths.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, 0);
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false, rendezvous: false);
-            double dv = dv1.magnitude + dv2.magnitude;
-            (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 rburn2, V3 vburn2) = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 rf, V3 vf)         = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 rburn1, V3 vburn1)                   = Shepperd.Solve(mu, dt1, r1, v1);
+            (V3 _, V3 _)                   = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
+            (V3 _, V3 _)                           = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
             double inc = Maths.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);

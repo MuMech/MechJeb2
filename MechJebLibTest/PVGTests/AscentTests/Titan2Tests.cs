@@ -256,7 +256,7 @@ namespace MechJebLibTest.PVGTests
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
-            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+            (double smaf, double eccf, double incf, double lanf, double _, double _, _) =
                 Maths.KeplerianFromStateVectors(mu, rf, vf);
 
             solution.R(0).ShouldEqual(r0);
