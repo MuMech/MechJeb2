@@ -28,8 +28,8 @@ namespace MuMech
             if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
-                help.selTopic = ((IList)help.topics).IndexOf("Controller");
-                help.Enabled  = help.selTopic > -1 || help.Enabled;
+                help.SelTopic = ((IList)help.Topics).IndexOf("Controller");
+                help.Enabled  = help.SelTopic > -1 || help.Enabled;
             }
 
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
@@ -84,7 +84,7 @@ namespace MuMech
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button1"))) // "To Target"
                 {
-                    Core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex = -1;
+                    Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex = -1;
                     autopilot.WaypointIndex                                        = 0;
                     autopilot.Waypoints.Clear();
                     if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
@@ -132,7 +132,7 @@ namespace MuMech
                 waypoints.Enabled = !waypoints.Enabled;
                 if (waypoints.Enabled)
                 {
-                    waypoints.Mode = MechJebModuleWaypointWindow.WaypointMode.Rover;
+                    waypoints.Mode = MechJebModuleWaypointWindow.WaypointMode.ROVER;
                 }
             }
 
