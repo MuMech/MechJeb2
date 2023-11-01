@@ -1783,9 +1783,9 @@ namespace MuMech
             private void addResource(int id, double current /* u/sec */, double max /* u/sec */)
             {
                 FuelRequirement req;
-                if (resourceRequired.ContainsKey(id))
+                if (resourceRequired.TryGetValue(id, out FuelRequirement value))
                 {
-                    req = resourceRequired[id];
+                    req = value;
                 }
                 else
                 {
@@ -1819,9 +1819,9 @@ namespace MuMech
                 // drag, etc etc.
                 List<ModuleResourceIntake> thelist;
                 int id = PartResourceLibrary.Instance.GetDefinition(intake.resourceName).id;
-                if (allIntakes.ContainsKey(id))
+                if (allIntakes.TryGetValue(id, out List<ModuleResourceIntake> allIntake))
                 {
-                    thelist = allIntakes[id];
+                    thelist = allIntake;
                 }
                 else
                 {
@@ -1836,9 +1836,9 @@ namespace MuMech
 
             public List<ModuleResourceIntake> getIntakes(int id)
             {
-                if (allIntakes.ContainsKey(id))
+                if (allIntakes.TryGetValue(id, out List<ModuleResourceIntake> intakes))
                 {
-                    return allIntakes[id];
+                    return intakes;
                 }
 
                 return empty;
