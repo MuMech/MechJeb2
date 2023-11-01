@@ -12,69 +12,70 @@ namespace MuMech
 {
     public class MechJebWaypoint
     {
-        public const float    defaultRadius = 5;
+        private const float    DEFAULT_RADIUS = 5;
         public       double   Latitude;
         public       double   Longitude;
         public       double   Altitude;
         public       Vector3d Position;
         public       float    Radius;
+        [UsedImplicitly]
         public       string   Name;
-        public       Vessel   Target;
-        public       float    MinSpeed;
-        public       float    MaxSpeed;
-        public       bool     Quicksave;
+        public readonly Vessel Target;
+        public          float  MinSpeed;
+        public          float  MaxSpeed;
+        public          bool   Quicksave;
 
         public CelestialBody Body => Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody;
 
-        public MechJebWaypoint(double Latitude, double Longitude, float Radius = defaultRadius, string Name = "", float MinSpeed = 0,
-            float MaxSpeed = 0)
+        public MechJebWaypoint(double latitude, double longitude, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0,
+            float maxSpeed = 0)
         {
-            this.Latitude  = Latitude;
-            this.Longitude = Longitude;
-            this.Radius    = Radius;
-            this.Name      = Name == null ? "" : Name;
-            this.MinSpeed  = MinSpeed;
-            this.MaxSpeed  = MaxSpeed;
+            this.Latitude  = latitude;
+            this.Longitude = longitude;
+            this.Radius    = radius;
+            this.Name      = name ?? "";
+            this.MinSpeed  = minSpeed;
+            this.MaxSpeed  = maxSpeed;
             Update();
         }
 
-        public MechJebWaypoint(Vector3d Position, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0)
+        public MechJebWaypoint(Vector3d position, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0, float maxSpeed = 0)
         {
-            Latitude      = Body.GetLatitude(Position);
-            Longitude     = Body.GetLongitude(Position);
-            this.Radius   = Radius;
-            this.Name     = Name == null ? "" : Name;
-            this.MinSpeed = MinSpeed;
-            this.MaxSpeed = MaxSpeed;
+            Latitude      = Body.GetLatitude(position);
+            Longitude     = Body.GetLongitude(position);
+            this.Radius   = radius;
+            this.Name     = name ?? "";
+            this.MinSpeed = minSpeed;
+            this.MaxSpeed = maxSpeed;
             Update();
         }
 
-        public MechJebWaypoint(Vessel Target, float Radius = defaultRadius, string Name = "", float MinSpeed = 0, float MaxSpeed = 0)
+        public MechJebWaypoint(Vessel target, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0, float maxSpeed = 0)
         {
-            this.Target   = Target;
-            this.Radius   = Radius;
-            this.Name     = Name == null ? "" : Name;
-            this.MinSpeed = MinSpeed;
-            this.MaxSpeed = MaxSpeed;
+            this.Target   = target;
+            this.Radius   = radius;
+            this.Name     = name ?? "";
+            this.MinSpeed = minSpeed;
+            this.MaxSpeed = maxSpeed;
             Update();
         }
 
-        public MechJebWaypoint(ConfigNode Node)
+        public MechJebWaypoint(ConfigNode node)
         {
-            if (Node.HasValue("Latitude")) { double.TryParse(Node.GetValue("Latitude"), out Latitude); }
+            if (node.HasValue("Latitude")) { double.TryParse(node.GetValue("Latitude"), out Latitude); }
 
-            if (Node.HasValue("Longitude")) { double.TryParse(Node.GetValue("Longitude"), out Longitude); }
+            if (node.HasValue("Longitude")) { double.TryParse(node.GetValue("Longitude"), out Longitude); }
 
-            Target = Node.HasValue("Target") ? FlightGlobals.Vessels.Find(v => v.id.ToString() == Node.GetValue("Target")) : null;
-            if (Node.HasValue("Radius")) { float.TryParse(Node.GetValue("Radius"), out Radius); }
-            else { Radius = defaultRadius; }
+            Target = node.HasValue("Target") ? FlightGlobals.Vessels.Find(v => v.id.ToString() == node.GetValue("Target")) : null;
+            if (node.HasValue("Radius")) { float.TryParse(node.GetValue("Radius"), out Radius); }
+            else { Radius = DEFAULT_RADIUS; }
 
-            Name = Node.HasValue("Name") ? Node.GetValue("Name") : "";
-            if (Node.HasValue("MinSpeed")) { float.TryParse(Node.GetValue("MinSpeed"), out MinSpeed); }
+            Name = node.HasValue("Name") ? node.GetValue("Name") : "";
+            if (node.HasValue("MinSpeed")) { float.TryParse(node.GetValue("MinSpeed"), out MinSpeed); }
 
-            if (Node.HasValue("MaxSpeed")) { float.TryParse(Node.GetValue("MaxSpeed"), out MaxSpeed); }
+            if (node.HasValue("MaxSpeed")) { float.TryParse(node.GetValue("MaxSpeed"), out MaxSpeed); }
 
-            if (Node.HasValue("Quicksave")) { bool.TryParse(Node.GetValue("Quicksave"), out Quicksave); }
+            if (node.HasValue("Quicksave")) { bool.TryParse(node.GetValue("Quicksave"), out Quicksave); }
 
             Update();
         }
@@ -82,7 +83,7 @@ namespace MuMech
         public ConfigNode ToConfigNode()
         {
             var cn = new ConfigNode("Waypoint");
-            if (Target != null)
+            if (!(Target is null))
             {
                 cn.AddValue("Target", Target.id);
             }
@@ -98,19 +99,13 @@ namespace MuMech
             return cn;
         }
 
-        public string GetNameWithCoords() => (Name != "" ? Name : Target != null ? Target.vesselName : "Waypoint") + " - " +
+        public string GetNameWithCoords() => (Name != "" ? Name : Target is null ? "Waypoint" : Target.vesselName) + " - " +
                                              Coordinates.ToStringDMS(Latitude, Longitude);
 
         //				((Latitude >= 0 ? "N " : "S ") + Math.Abs(Math.Round(Latitude, 3)) + ", " + (Longitude >= 0 ? "E " : "W ") + Math.Abs(Math.Round(Longitude, 3)));
         public void Update()
         {
-            if (Target != null)
-            {
-                Position  = Target.CoM;
-                Latitude  = Body.GetLatitude(Position);
-                Longitude = Body.GetLongitude(Position);
-            }
-            else
+            if (Target is null)
             {
                 Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
                 if (Vector3d.Distance(Position, FlightGlobals.ActiveVessel.CoM) < 200)
@@ -118,8 +113,7 @@ namespace MuMech
                     Vector3d dir = (Position - Body.position).normalized;
                     Vector3d rayPos = Body.position + dir * (Body.Radius + 50000);
                     dir = (Body.position - rayPos).normalized;
-                    RaycastHit hit;
-                    bool raycast = Physics.Raycast(rayPos, dir, out hit, (float)Body.Radius, 1 << 15, QueryTriggerInteraction.Ignore);
+                    bool raycast = Physics.Raycast(rayPos, dir, out RaycastHit hit, (float)Body.Radius, 1 << 15, QueryTriggerInteraction.Ignore);
                     if (raycast)
                     {
                         dir      = hit.point - Body.position;
@@ -129,28 +123,36 @@ namespace MuMech
                     }
                 }
             }
+            else
+            {
+                Position  = Target.CoM;
+                Latitude  = Body.GetLatitude(Position);
+                Longitude = Body.GetLongitude(Position);
+            }
 
-            if (MinSpeed > 0 && MaxSpeed > 0 && MinSpeed > MaxSpeed) { MinSpeed      = MaxSpeed; }
-            else if (MinSpeed > 0 && MaxSpeed > 0 && MaxSpeed < MinSpeed) { MaxSpeed = MinSpeed; }
+            if (MinSpeed > 0 && MaxSpeed > 0 && MinSpeed > MaxSpeed)
+                MinSpeed = MaxSpeed;
+            else if (MinSpeed > 0 && MaxSpeed > 0 && MaxSpeed < MinSpeed)
+                MaxSpeed = MinSpeed;
         }
     }
 
     public class MechJebWaypointRoute : List<MechJebWaypoint>
     {
-        public string Name;
+        public readonly string Name;
 
         public CelestialBody Body { get; }
 
         public string Mode { get; }
 
-        private string stats;
+        private string _stats;
 
         public string Stats
         {
             get
             {
-                updateStats(); // recalculation of the stats all the time are fine according to Majiir and Fractal_UK :3
-                return stats;
+                UpdateStats(); // recalculation of the stats all the time are fine according to Majiir and Fractal_UK :3
+                return _stats;
             }
         }
 
@@ -164,7 +166,7 @@ namespace MuMech
             return cn;
         }
 
-        private void updateStats()
+        private void UpdateStats()
         {
             float distance = 0;
             if (Count > 1)
@@ -175,27 +177,27 @@ namespace MuMech
                 }
             }
 
-            stats = string.Format("{0} waypoints over {1}m", Count, distance.ToSI(-1));
+            _stats = $"{Count} waypoints over {distance.ToSI(-1)}m";
         }
 
-        public MechJebWaypointRoute(string Name = "", CelestialBody Body = null, string Mode = "Rover")
+        public MechJebWaypointRoute(string name = "", CelestialBody body = null, string mode = "Rover")
         {
-            this.Name = Name;
-            this.Body = Body != null ? Body : FlightGlobals.currentMainBody;
-            this.Mode = Mode;
+            this.Name = name;
+            this.Body = body != null ? body : FlightGlobals.currentMainBody;
+            this.Mode = mode;
         }
 
-        public MechJebWaypointRoute(ConfigNode Node)
+        public MechJebWaypointRoute(ConfigNode node)
         {
             // feed this "Waypoints" nodes, just not the local ones of a ship
-            if (Node == null) { return; }
+            if (node == null) { return; }
 
-            Name = Node.HasValue("Name") ? Node.GetValue("Name") : "";
-            Body = Node.HasValue("Body") ? FlightGlobals.Bodies.Find(b => b.bodyName == Node.GetValue("Body")) : null;
-            Mode = Node.HasValue("Mode") ? Node.GetValue("Mode") : "Rover";
-            if (Node.HasNode("Waypoint"))
+            Name = node.HasValue("Name") ? node.GetValue("Name") : "";
+            Body = node.HasValue("Body") ? FlightGlobals.Bodies.Find(b => b.bodyName == node.GetValue("Body")) : null;
+            Mode = node.HasValue("Mode") ? node.GetValue("Mode") : "Rover";
+            if (node.HasNode("Waypoint"))
             {
-                foreach (ConfigNode cn in Node.GetNodes("Waypoint"))
+                foreach (ConfigNode cn in node.GetNodes("Waypoint"))
                 {
                     Add(new MechJebWaypoint(cn));
                 }
@@ -208,106 +210,106 @@ namespace MuMech
     {
         public enum WaypointMode
         {
-            Rover,
-            Plane
+            ROVER,
+            PLANE
         }
 
-        public        WaypointMode                 Mode = WaypointMode.Rover;
-        public        MechJebModuleRoverController ap;
-        public static List<MechJebWaypointRoute>   Routes = new List<MechJebWaypointRoute>();
+        public                  WaypointMode                 Mode = WaypointMode.ROVER;
+        private                 MechJebModuleRoverController _ap;
+        private static readonly List<MechJebWaypointRoute>   _routes = new List<MechJebWaypointRoute>();
 
         [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Moho Mapdist
-        public EditableDouble MohoMapdist = 5000;
+        public readonly EditableDouble MohoMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_EveMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Eve Mapdist
-        public EditableDouble EveMapdist = 5000;
+        public readonly EditableDouble EveMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_GillyMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Gilly Mapdist
-        public EditableDouble GillyMapdist = -500;
+        public readonly EditableDouble GillyMapdist = -500;
 
         [EditableInfoItem("#MechJeb_KerbinMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Kerbin Mapdist
-        public EditableDouble KerbinMapdist = 500;
+        public readonly EditableDouble KerbinMapdist = 500;
 
         [EditableInfoItem("#MechJeb_MunMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Mun Mapdist
-        public EditableDouble MunMapdist = 4000;
+        public readonly EditableDouble MunMapdist = 4000;
 
         [EditableInfoItem("#MechJeb_MinmusMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Minmus Mapdist
-        public EditableDouble MinmusMapdist = 3500;
+        public readonly EditableDouble MinmusMapdist = 3500;
 
         [EditableInfoItem("#MechJeb_DunaMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Duna Mapdist
-        public EditableDouble DunaMapdist = 5000;
+        public readonly EditableDouble DunaMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_IkeMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Ike Mapdist
-        public EditableDouble IkeMapdist = 4000;
+        public readonly EditableDouble IkeMapdist = 4000;
 
         [EditableInfoItem("#MechJeb_DresMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Dres Mapdist
-        public EditableDouble DresMapdist = 1500;
+        public readonly EditableDouble DresMapdist = 1500;
 
         [EditableInfoItem("#MechJeb_EelooMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Eeloo Mapdist
-        public EditableDouble EelooMapdist = 2000;
+        public readonly EditableDouble EelooMapdist = 2000;
 
         [EditableInfoItem("#MechJeb_JoolMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Jool Mapdist
-        public EditableDouble JoolMapdist = 30000;
+        public readonly EditableDouble JoolMapdist = 30000;
 
         [EditableInfoItem("#MechJeb_TyloMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Tylo Mapdist
-        public EditableDouble TyloMapdist = 5000;
+        public readonly EditableDouble TyloMapdist = 5000;
 
         [EditableInfoItem("#MechJeb_LaytheMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Laythe Mapdist
-        public EditableDouble LaytheMapdist = 1000;
+        public readonly EditableDouble LaytheMapdist = 1000;
 
         [EditableInfoItem("#MechJeb_PolMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Pol Mapdist
-        public EditableDouble PolMapdist = 500;
+        public readonly EditableDouble PolMapdist = 500;
 
         [EditableInfoItem("#MechJeb_BopMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Bop Mapdist
-        public EditableDouble BopMapdist = 1000;
+        public readonly EditableDouble BopMapdist = 1000;
 
         [EditableInfoItem("#MechJeb_VallMapdist", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.GLOBAL)] // Vall Mapdist
-        public EditableDouble VallMapdist = 5000;
+        public readonly EditableDouble VallMapdist = 5000;
 
-        internal int    selIndex    = -1;
-        internal int    saveIndex   = -1;
-        internal string tmpRadius   = "";
-        internal string tmpMinSpeed = "";
-        internal string tmpMaxSpeed = "";
-        internal string tmpLat      = "";
-        internal string tmpLon      = "";
+        internal int    SelIndex    = -1;
+        private  int    _saveIndex   = -1;
+        private  string _tmpRadius   = "";
+        private  string _tmpMinSpeed = "";
+        private  string _tmpMaxSpeed = "";
+        private  string _tmpLat      = "";
+        private  string _tmpLon      = "";
 
-        internal const string coordRegEx =
+        private const string COORD_REG_EX =
             @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
 
-        private Vector2  scroll;
-        private GUIStyle styleActive;
-        private GUIStyle styleInactive;
-        private GUIStyle styleQuicksave;
-        private string   titleAdd = "";
-        private string   saveName = "";
-        private bool     waitingForPick;
-        private pages    showPage = pages.waypoints;
+        private Vector2  _scroll;
+        private GUIStyle _styleActive;
+        private GUIStyle _styleInactive;
+        private GUIStyle _styleQuicksave;
+        private string   _titleAdd = "";
+        private string   _saveName = "";
+        private bool     _waitingForPick;
+        private Pages    _showPage = Pages.WAYPOINTS;
 
-        private enum pages { waypoints, settings, routes }
+        private enum Pages { WAYPOINTS, SETTINGS, ROUTES }
 
-        private static MechJebRouteRenderer renderer;
-        private        Rect[]               waypointRects = new Rect[0];
-        private        int                  lastIndex     = -1;
-        private        int                  settingPageIndex;
+        private static MechJebRouteRenderer _renderer;
+        private        Rect[]               _waypointRects = Array.Empty<Rect>();
+        private        int                  _lastIndex     = -1;
+        private        int                  _settingPageIndex;
 
-        private readonly string[] settingPages = { "Rover", "Waypoints" };
+        private readonly string[] _settingPages = { "Rover", "Waypoints" };
 //		private static LineRenderer redLine;
 //		private static LineRenderer greenLine;
 
@@ -316,11 +318,11 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             Hidden = true;
-            ap     = Core.GetComputerModule<MechJebModuleRoverController>();
+            _ap     = Core.GetComputerModule<MechJebModuleRoverController>();
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
-                renderer         = MechJebRouteRenderer.AttachToMapView(Core);
-                renderer.enabled = Enabled;
+                _renderer         = MechJebRouteRenderer.AttachToMapView(Core);
+                _renderer.enabled = Enabled;
             }
 
 //			GameObject obj = new GameObject("LineRenderer");
@@ -343,14 +345,14 @@ namespace MuMech
 
         protected override void OnModuleEnabled()
         {
-            if (renderer != null) { renderer.enabled = true; }
+            if (_renderer != null) { _renderer.enabled = true; }
 
             base.OnModuleEnabled();
         }
 
         protected override void OnModuleDisabled()
         {
-            if (renderer != null) { renderer.enabled = false; }
+            if (_renderer != null) { _renderer.enabled = false; }
 
             base.OnModuleDisabled();
         }
@@ -376,24 +378,24 @@ namespace MuMech
 
             if (wps.HasNode("Waypoints"))
             {
-                Routes.Clear();
+                _routes.Clear();
                 foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
                 {
-                    Routes.Add(new MechJebWaypointRoute(cn));
+                    _routes.Add(new MechJebWaypointRoute(cn));
                 }
 
-                Routes.Sort(SortRoutes);
+                _routes.Sort(SortRoutes);
             }
         }
 
-        public void SaveRoutes()
+        private void SaveRoutes()
         {
             var cn = new ConfigNode("Routes");
 
-            if (Routes.Count > 0)
+            if (_routes.Count > 0)
             {
-                Routes.Sort(SortRoutes);
-                foreach (MechJebWaypointRoute r in Routes)
+                _routes.Sort(SortRoutes);
+                foreach (MechJebWaypointRoute r in _routes)
                 {
                     cn.AddNode(r.ToConfigNode());
                 }
@@ -402,34 +404,30 @@ namespace MuMech
             cn.Save(MuUtils.GetCfgPath("mechjeb_routes.cfg"));
         }
 
-        public override string GetName() => Mode + " Waypoints" + (titleAdd != "" ? " - " + titleAdd : "");
+        public override string GetName() => Mode + " Waypoints" + (_titleAdd != "" ? " - " + _titleAdd : "");
 
-        public static Coordinates GetMouseFlightCoordinates()
+        private static Coordinates GetMouseFlightCoordinates()
         {
             CelestialBody body = FlightGlobals.currentMainBody;
             Ray mouseRay = FlightCamera.fetch.mainCamera.ScreenPointToRay(Input.mousePosition);
-            RaycastHit raycast;
             Vector3d relOrigin = mouseRay.origin - body.position;
-            Vector3d relSurfacePosition;
-            if (Physics.Raycast(mouseRay, out raycast, (float)body.Radius * 4f, 1 << 15, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(mouseRay, out RaycastHit raycast, (float)body.Radius * 4f, 1 << 15, QueryTriggerInteraction.Ignore))
             {
                 return new Coordinates(body.GetLatitude(raycast.point), MuUtils.ClampDegrees180(body.GetLongitude(raycast.point)));
             }
 
             double curRadius = body.pqsController.radiusMax;
             double lastRadius = 0;
-            double error = 0;
             int loops = 0;
-            float st = Time.time;
             while (loops < 50)
             {
-                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out relSurfacePosition))
+                if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out Vector3d relSurfacePosition))
                 {
                     Vector3d surfacePoint = body.position + relSurfacePosition;
                     double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) *
                                                                      QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) *
                                                                      Vector3d.right);
-                    error = Math.Abs(curRadius - alt);
+                    double error = Math.Abs(curRadius - alt);
                     if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
                     {
                         return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
@@ -493,54 +491,54 @@ namespace MuMech
 //				}
         }
 
-        public static string LatToString(double Lat)
+        private static string LatToString(double lat)
         {
-            while (Lat > 90) { Lat -= 180; }
+            while (lat > 90) { lat -= 180; }
 
-            while (Lat < -90) { Lat += 180; }
+            while (lat < -90) { lat += 180; }
 
-            string ns = Lat >= 0 ? "N" : "S";
-            Lat = Math.Abs(Lat);
+            string ns = lat >= 0 ? "N" : "S";
+            lat = Math.Abs(lat);
 
-            int h = (int)Lat;
-            Lat -= h;
-            Lat *= 60;
+            int h = (int)lat;
+            lat -= h;
+            lat *= 60;
 
-            int m = (int)Lat;
-            Lat -= m;
-            Lat *= 60;
+            int m = (int)lat;
+            lat -= m;
+            lat *= 60;
 
-            float s = (float)Lat;
+            float s = (float)lat;
 
-            return string.Format("{0} {1}° {2}' {3:F3}\"", ns, h, m, s);
+            return $"{ns} {h}° {m}' {s:F3}\"";
         }
 
-        public static string LonToString(double Lon)
+        private static string LonToString(double lon)
         {
-            while (Lon > 180) { Lon -= 360; }
+            while (lon > 180) { lon -= 360; }
 
-            while (Lon < -180) { Lon += 360; }
+            while (lon < -180) { lon += 360; }
 
-            string ew = Lon >= 0 ? "E" : "W";
-            Lon = Math.Abs(Lon);
+            string ew = lon >= 0 ? "E" : "W";
+            lon = Math.Abs(lon);
 
-            int h = (int)Lon;
-            Lon -= h;
-            Lon *= 60;
+            int h = (int)lon;
+            lon -= h;
+            lon *= 60;
 
-            int m = (int)Lon;
-            Lon -= m;
-            Lon *= 60;
+            int m = (int)lon;
+            lon -= m;
+            lon *= 60;
 
-            float s = (float)Lon;
+            float s = (float)lon;
 
             return string.Format("{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
         }
 
-        public static double ParseCoord(string LatLon, bool IsLongitute = false)
+        private static double ParseCoord(string latLon, bool isLongitute = false)
         {
-            Match match = new Regex(coordRegEx, RegexOptions.IgnoreCase).Match(LatLon);
-            int range = IsLongitute ? 180 : 90;
+            Match match = new Regex(COORD_REG_EX, RegexOptions.IgnoreCase).Match(latLon);
+            int range = isLongitute ? 180 : 90;
 
             float nsew = 1;
             if (match.Groups[5] != null)
@@ -589,121 +587,121 @@ namespace MuMech
             return string.Compare(a.Name, b.Name, true);
         }
 
-        public MechJebWaypoint SelectedWaypoint() => selIndex > -1 ? ap.Waypoints[selIndex] : null;
+        public MechJebWaypoint SelectedWaypoint() => SelIndex > -1 ? _ap.Waypoints[SelIndex] : null;
 
         public int SelectedWaypointIndex
         {
-            get => selIndex;
-            set => selIndex = value;
+            get => SelIndex;
+            set => SelIndex = value;
         }
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(500), GUILayout.Height(400) };
 
-        public void DrawPageWaypoints()
+        private void DrawPageWaypoints()
         {
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
-            scroll = GUILayout.BeginScrollView(scroll);
-            if (ap.Waypoints.Count > 0)
+            _scroll = GUILayout.BeginScrollView(_scroll);
+            if (_ap.Waypoints.Count > 0)
             {
-                waypointRects = new Rect[ap.Waypoints.Count];
+                _waypointRects = new Rect[_ap.Waypoints.Count];
                 GUILayout.BeginVertical();
                 double eta = 0;
                 double dist = 0;
-                for (int i = 0; i < ap.Waypoints.Count; i++)
+                for (int i = 0; i < _ap.Waypoints.Count; i++)
                 {
-                    MechJebWaypoint wp = ap.Waypoints[i];
-                    double maxSpeed = wp.MaxSpeed > 0 ? wp.MaxSpeed : ap.speed.Val;
+                    MechJebWaypoint wp = _ap.Waypoints[i];
+                    double maxSpeed = wp.MaxSpeed > 0 ? wp.MaxSpeed : _ap.speed.Val;
                     float minSpeed = wp.MinSpeed > 0 ? wp.MinSpeed : 0;
-                    if (MapView.MapIsEnabled && i == selIndex)
+                    if (MapView.MapIsEnabled && i == SelIndex)
                     {
                         GLUtils.DrawGroundMarker(MainBody, wp.Latitude, wp.Longitude, Color.red, true,
                             (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, MainBody.Radius / 100);
                     }
 
-                    if (i >= ap.WaypointIndex)
+                    if (i >= _ap.WaypointIndex)
                     {
-                        if (ap.WaypointIndex > -1)
+                        if (_ap.WaypointIndex > -1)
                         {
-                            eta += GuiUtils.FromToETA(i == ap.WaypointIndex ? Vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position, wp.Position,
-                                ap.etaSpeed > 0.1 && ap.etaSpeed < maxSpeed ? (float)Math.Round(ap.etaSpeed, 1) : maxSpeed);
+                            eta += GuiUtils.FromToETA(i == _ap.WaypointIndex ? Vessel.CoM : (Vector3)_ap.Waypoints[i - 1].Position, wp.Position,
+                                _ap.etaSpeed > 0.1 && _ap.etaSpeed < maxSpeed ? (float)Math.Round(_ap.etaSpeed, 1) : maxSpeed);
                         }
 
                         dist += Vector3.Distance(
-                            i == ap.WaypointIndex || (ap.WaypointIndex == -1 && i == 0) ? Vessel.CoM : (Vector3)ap.Waypoints[i - 1].Position,
+                            i == _ap.WaypointIndex || (_ap.WaypointIndex == -1 && i == 0) ? Vessel.CoM : (Vector3)_ap.Waypoints[i - 1].Position,
                             wp.Position);
                     }
 
                     string str = string.Format("[{0}] - {1} - R: {2:F1} m\n       S: {3:F0} ~ {4:F0} - D: {5}m - ETA: {6}", i + 1,
                         wp.GetNameWithCoords(), wp.Radius,
                         minSpeed, maxSpeed, dist.ToSI(-1), GuiUtils.TimeToDHMS(eta));
-                    GUI.backgroundColor = i == ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white;
-                    if (GUILayout.Button(str, i == selIndex ? styleActive : wp.Quicksave ? styleQuicksave : styleInactive))
+                    GUI.backgroundColor = i == _ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white;
+                    if (GUILayout.Button(str, i == SelIndex ? _styleActive : wp.Quicksave ? _styleQuicksave : _styleInactive))
                     {
                         if (alt)
                         {
-                            ap.WaypointIndex = ap.WaypointIndex == i ? -1 : i;
+                            _ap.WaypointIndex = _ap.WaypointIndex == i ? -1 : i;
                             // set current waypoint or unset it if it's already the current one
                         }
                         else
                         {
-                            if (selIndex == i)
+                            if (SelIndex == i)
                             {
-                                selIndex = -1;
+                                SelIndex = -1;
                             }
                             else
                             {
-                                selIndex    = i;
-                                tmpRadius   = wp.Radius.ToString();
-                                tmpMinSpeed = wp.MinSpeed.ToString();
-                                tmpMaxSpeed = wp.MaxSpeed.ToString();
-                                tmpLat      = LatToString(wp.Latitude);
-                                tmpLon      = LonToString(wp.Longitude);
+                                SelIndex    = i;
+                                _tmpRadius   = wp.Radius.ToString();
+                                _tmpMinSpeed = wp.MinSpeed.ToString();
+                                _tmpMaxSpeed = wp.MaxSpeed.ToString();
+                                _tmpLat      = LatToString(wp.Latitude);
+                                _tmpLon      = LonToString(wp.Longitude);
                             }
                         }
                     }
 
                     if (Event.current.type == EventType.Repaint)
                     {
-                        waypointRects[i] = GUILayoutUtility.GetLastRect();
+                        _waypointRects[i] = GUILayoutUtility.GetLastRect();
                         //if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }
                     }
 
                     GUI.backgroundColor = Color.white;
 
-                    if (selIndex > -1 && selIndex == i)
+                    if (SelIndex > -1 && SelIndex == i)
                     {
                         GUILayout.BeginHorizontal();
 
                         GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
-                        tmpRadius = GUILayout.TextField(tmpRadius, GUILayout.Width(50));
-                        float.TryParse(tmpRadius, out wp.Radius);
+                        _tmpRadius = GUILayout.TextField(_tmpRadius, GUILayout.Width(50));
+                        float.TryParse(_tmpRadius, out wp.Radius);
                         if (GUILayout.Button("A", GUILayout.ExpandWidth(false)))
                         {
-                            ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.Radius = wp.Radius);
+                            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.Radius = wp.Radius);
                         }
 
                         GUILayout.Label("- Speed: ", GUILayout.ExpandWidth(false));
-                        tmpMinSpeed = GUILayout.TextField(tmpMinSpeed, GUILayout.Width(40));
-                        float.TryParse(tmpMinSpeed, out wp.MinSpeed);
+                        _tmpMinSpeed = GUILayout.TextField(_tmpMinSpeed, GUILayout.Width(40));
+                        float.TryParse(_tmpMinSpeed, out wp.MinSpeed);
                         if (GUILayout.Button("A", GUILayout.ExpandWidth(false)))
                         {
-                            ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed);
+                            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed);
                         }
 
                         GUILayout.Label(" - ", GUILayout.ExpandWidth(false));
-                        tmpMaxSpeed = GUILayout.TextField(tmpMaxSpeed, GUILayout.Width(40));
-                        float.TryParse(tmpMaxSpeed, out wp.MaxSpeed);
+                        _tmpMaxSpeed = GUILayout.TextField(_tmpMaxSpeed, GUILayout.Width(40));
+                        float.TryParse(_tmpMaxSpeed, out wp.MaxSpeed);
                         if (GUILayout.Button("A", GUILayout.ExpandWidth(false)))
                         {
-                            ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed);
+                            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed);
                         }
 
                         GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("QS", wp.Quicksave ? styleQuicksave : styleInactive, GUILayout.ExpandWidth(false)))
+                        if (GUILayout.Button("QS", wp.Quicksave ? _styleQuicksave : _styleInactive, GUILayout.ExpandWidth(false)))
                         {
                             if (alt)
                             {
-                                ap.Waypoints.GetRange(i, ap.Waypoints.Count - i).ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
+                                _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
                             }
                             else
                             {
@@ -717,42 +715,42 @@ namespace MuMech
                         GUILayout.BeginHorizontal();
 
                         GUILayout.Label("Lat ", GUILayout.ExpandWidth(false));
-                        tmpLat      = GUILayout.TextField(tmpLat, GUILayout.Width(125));
-                        wp.Latitude = ParseCoord(tmpLat);
+                        _tmpLat      = GUILayout.TextField(_tmpLat, GUILayout.Width(125));
+                        wp.Latitude = ParseCoord(_tmpLat);
 
                         GUILayout.Label(" -  Lon ", GUILayout.ExpandWidth(false));
-                        tmpLon       = GUILayout.TextField(tmpLon, GUILayout.Width(125));
-                        wp.Longitude = ParseCoord(tmpLon, true);
+                        _tmpLon       = GUILayout.TextField(_tmpLon, GUILayout.Width(125));
+                        wp.Longitude = ParseCoord(_tmpLon, true);
 
                         GUILayout.EndHorizontal();
                     }
                 }
 
-                titleAdd = "Distance: " + dist.ToSI(-1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
+                _titleAdd = "Distance: " + dist.ToSI(-1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
                 GUILayout.EndVertical();
             }
             else
             {
-                titleAdd = "";
+                _titleAdd = "";
             }
 
             GUILayout.EndScrollView();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(alt ? "Reverse" : !waitingForPick ? "Add Waypoint" : "Abort Adding", GUILayout.Width(110)))
+            if (GUILayout.Button(alt ? "Reverse" : !_waitingForPick ? "Add Waypoint" : "Abort Adding", GUILayout.Width(110)))
             {
                 if (alt)
                 {
-                    ap.Waypoints.Reverse();
-                    if (ap.WaypointIndex > -1) { ap.WaypointIndex = ap.Waypoints.Count - 1 - ap.WaypointIndex; }
+                    _ap.Waypoints.Reverse();
+                    if (_ap.WaypointIndex > -1) { _ap.WaypointIndex = _ap.Waypoints.Count - 1 - _ap.WaypointIndex; }
 
-                    if (selIndex > -1) { selIndex = ap.Waypoints.Count - 1 - selIndex; }
+                    if (SelIndex > -1) { SelIndex = _ap.Waypoints.Count - 1 - SelIndex; }
                 }
                 else
                 {
-                    if (!waitingForPick)
+                    if (!_waitingForPick)
                     {
-                        waitingForPick = true;
+                        _waitingForPick = true;
                         if (MapView.MapIsEnabled)
                         {
                             Core.Target.Unset();
@@ -761,96 +759,95 @@ namespace MuMech
                     }
                     else
                     {
-                        waitingForPick = false;
+                        _waitingForPick = false;
                     }
                 }
             }
 
-            if (GUILayout.Button(alt ? "Clear" : "Remove", GUILayout.Width(65)) && ap.Waypoints.Count > 0)
+            if (GUILayout.Button(alt ? "Clear" : "Remove", GUILayout.Width(65)) && _ap.Waypoints.Count > 0)
             {
                 if (alt)
                 {
-                    ap.WaypointIndex = -1;
-                    ap.Waypoints.Clear();
+                    _ap.WaypointIndex = -1;
+                    _ap.Waypoints.Clear();
                 }
-                else if (selIndex >= 0)
+                else if (SelIndex >= 0)
                 {
-                    ap.Waypoints.RemoveAt(selIndex);
-                    if (ap.WaypointIndex > selIndex) { ap.WaypointIndex--; }
+                    _ap.Waypoints.RemoveAt(SelIndex);
+                    if (_ap.WaypointIndex > SelIndex) { _ap.WaypointIndex--; }
 
-                    if (ap.WaypointIndex >= ap.Waypoints.Count) { ap.WaypointIndex = ap.Waypoints.Count - 1; }
+                    if (_ap.WaypointIndex >= _ap.Waypoints.Count) { _ap.WaypointIndex = _ap.Waypoints.Count - 1; }
                 }
 
-                selIndex = -1;
+                SelIndex = -1;
             }
 
-            if (GUILayout.Button(alt ? "Top" : "Up", GUILayout.Width(57)) && selIndex > 0 && selIndex < ap.Waypoints.Count && ap.Waypoints.Count >= 2)
+            if (GUILayout.Button(alt ? "Top" : "Up", GUILayout.Width(57)) && SelIndex > 0 && SelIndex < _ap.Waypoints.Count && _ap.Waypoints.Count >= 2)
             {
                 if (alt)
                 {
-                    MechJebWaypoint t = ap.Waypoints[selIndex];
-                    ap.Waypoints.RemoveAt(selIndex);
-                    ap.Waypoints.Insert(0, t);
-                    selIndex = 0;
+                    MechJebWaypoint t = _ap.Waypoints[SelIndex];
+                    _ap.Waypoints.RemoveAt(SelIndex);
+                    _ap.Waypoints.Insert(0, t);
+                    SelIndex = 0;
                 }
                 else
                 {
-                    ap.Waypoints.Swap(selIndex, --selIndex);
+                    _ap.Waypoints.Swap(SelIndex, --SelIndex);
                 }
             }
 
-            if (GUILayout.Button(alt ? "Bottom" : "Down", GUILayout.Width(57)) && selIndex >= 0 && selIndex < ap.Waypoints.Count - 1 &&
-                ap.Waypoints.Count >= 2)
+            if (GUILayout.Button(alt ? "Bottom" : "Down", GUILayout.Width(57)) && SelIndex >= 0 && SelIndex < _ap.Waypoints.Count - 1 &&
+                _ap.Waypoints.Count >= 2)
             {
                 if (alt)
                 {
-                    MechJebWaypoint t = ap.Waypoints[selIndex];
-                    ap.Waypoints.RemoveAt(selIndex);
-                    ap.Waypoints.Add(t);
-                    selIndex = ap.Waypoints.Count - 1;
+                    MechJebWaypoint t = _ap.Waypoints[SelIndex];
+                    _ap.Waypoints.RemoveAt(SelIndex);
+                    _ap.Waypoints.Add(t);
+                    SelIndex = _ap.Waypoints.Count - 1;
                 }
                 else
                 {
-                    ap.Waypoints.Swap(selIndex, ++selIndex);
+                    _ap.Waypoints.Swap(SelIndex, ++SelIndex);
                 }
             }
 
             if (GUILayout.Button("Routes"))
             {
-                showPage = pages.routes;
-                scroll   = Vector2.zero;
+                _showPage = Pages.ROUTES;
+                _scroll   = Vector2.zero;
             }
 
             if (GUILayout.Button("Settings"))
             {
-                showPage = pages.settings;
-                scroll   = Vector2.zero;
+                _showPage = Pages.SETTINGS;
+                _scroll   = Vector2.zero;
             }
 
             GUILayout.EndHorizontal();
 
-            if (selIndex >= ap.Waypoints.Count) { selIndex = -1; }
+            if (SelIndex >= _ap.Waypoints.Count) { SelIndex = -1; }
 
-            if (selIndex == -1 && ap.WaypointIndex > -1 && lastIndex != ap.WaypointIndex && waypointRects.Length > 0)
+            if (SelIndex == -1 && _ap.WaypointIndex > -1 && _lastIndex != _ap.WaypointIndex && _waypointRects.Length > 0)
             {
-                scroll.y = waypointRects[ap.WaypointIndex].y - 160;
+                _scroll.y = _waypointRects[_ap.WaypointIndex].y - 160;
             }
 
-            lastIndex = ap.WaypointIndex;
+            _lastIndex = _ap.WaypointIndex;
         }
 
-        public void DrawPageSettings()
+        private void DrawPageSettings()
         {
-            bool alt = GameSettings.MODIFIER_KEY.GetKey();
-            titleAdd = "Settings";
+            _titleAdd = "Settings";
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-            if (!ap.Enabled) { ap.CalculateTraction(); } // keep calculating traction just for displaying it
+            if (!_ap.Enabled) { _ap.CalculateTraction(); } // keep calculating traction just for displaying it
 
-            scroll = GUILayout.BeginScrollView(scroll);
+            _scroll = GUILayout.BeginScrollView(_scroll);
 
-            settingPageIndex = GUILayout.SelectionGrid(settingPageIndex, settingPages, settingPages.Length);
+            _settingPageIndex = GUILayout.SelectionGrid(_settingPageIndex, _settingPages, _settingPages.Length);
 
-            switch (settingPageIndex)
+            switch (_settingPageIndex)
             {
                 case 0:
                     GUILayout.BeginHorizontal();
@@ -910,15 +907,15 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Waypoints"))
             {
-                showPage  = pages.waypoints;
-                scroll    = Vector2.zero;
-                lastIndex = -1;
+                _showPage  = Pages.WAYPOINTS;
+                _scroll    = Vector2.zero;
+                _lastIndex = -1;
             }
 
             if (GUILayout.Button("Routes"))
             {
-                showPage = pages.routes;
-                scroll   = Vector2.zero;
+                _showPage = Pages.ROUTES;
+                _scroll   = Vector2.zero;
             }
 
             if (GUILayout.Button("Help"))
@@ -930,29 +927,29 @@ namespace MuMech
             GUILayout.EndHorizontal();
         }
 
-        public void DrawPageRoutes()
+        private void DrawPageRoutes()
         {
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
-            titleAdd = "Routes for " + Vessel.mainBody.bodyName;
+            _titleAdd = "Routes for " + Vessel.mainBody.bodyName;
 
-            scroll = GUILayout.BeginScrollView(scroll);
-            List<MechJebWaypointRoute> bodyWPs = Routes.FindAll(r => r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+            _scroll = GUILayout.BeginScrollView(_scroll);
+            List<MechJebWaypointRoute> bodyWPs = _routes.FindAll(r => r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
             for (int i = 0; i < bodyWPs.Count; i++)
             {
                 GUILayout.BeginHorizontal();
                 string str = bodyWPs[i].Name + " - " + bodyWPs[i].Stats;
-                if (GUILayout.Button(str, i == saveIndex ? styleActive : styleInactive))
+                if (GUILayout.Button(str, i == _saveIndex ? _styleActive : _styleInactive))
                 {
-                    saveIndex = saveIndex == i ? -1 : i;
+                    _saveIndex = _saveIndex == i ? -1 : i;
                 }
 
-                if (i == saveIndex)
+                if (i == _saveIndex)
                 {
                     if (GUILayout.Button("Delete", GUILayout.Width(70)))
                     {
-                        Routes.RemoveAll(r => r.Name == bodyWPs[i].Name && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+                        _routes.RemoveAll(r => r.Name == bodyWPs[i].Name && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
                         SaveRoutes();
-                        saveIndex = -1;
+                        _saveIndex = -1;
                     }
                 }
 
@@ -962,53 +959,53 @@ namespace MuMech
             GUILayout.EndScrollView();
 
             GUILayout.BeginHorizontal();
-            saveName = GUILayout.TextField(saveName, GUILayout.Width(150));
+            _saveName = GUILayout.TextField(_saveName, GUILayout.Width(150));
             if (GUILayout.Button("Save", GUILayout.Width(50)))
             {
-                if (saveName != "" && ap.Waypoints.Count > 0)
+                if (_saveName != "" && _ap.Waypoints.Count > 0)
                 {
-                    MechJebWaypointRoute old = Routes.Find(r => r.Name == saveName && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
-                    var wps = new MechJebWaypointRoute(saveName, Vessel.mainBody);
-                    ap.Waypoints.ForEach(wp => wps.Add(wp));
+                    MechJebWaypointRoute old = _routes.Find(r => r.Name == _saveName && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+                    var wps = new MechJebWaypointRoute(_saveName, Vessel.mainBody);
+                    _ap.Waypoints.ForEach(wp => wps.Add(wp));
                     if (old == null)
                     {
-                        Routes.Add(wps);
+                        _routes.Add(wps);
                     }
                     else
                     {
-                        Routes[Routes.IndexOf(old)] = wps;
+                        _routes[_routes.IndexOf(old)] = wps;
                     }
 
-                    Routes.Sort(SortRoutes);
+                    _routes.Sort(SortRoutes);
                     SaveRoutes();
                 }
             }
 
             if (GUILayout.Button(alt ? "Add" : "Load", GUILayout.Width(50)))
             {
-                if (saveIndex > -1)
+                if (_saveIndex > -1)
                 {
                     if (!alt)
                     {
-                        ap.WaypointIndex = -1;
-                        ap.Waypoints.Clear();
+                        _ap.WaypointIndex = -1;
+                        _ap.Waypoints.Clear();
                     }
 
-                    Routes[saveIndex].ForEach(wp => ap.Waypoints.Add(wp));
+                    _routes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp));
                 }
             }
 
             if (GUILayout.Button("Waypoints"))
             {
-                showPage  = pages.waypoints;
-                scroll    = Vector2.zero;
-                lastIndex = -1;
+                _showPage  = Pages.WAYPOINTS;
+                _scroll    = Vector2.zero;
+                _lastIndex = -1;
             }
 
             if (GUILayout.Button("Settings"))
             {
-                showPage = pages.settings;
-                scroll   = Vector2.zero;
+                _showPage = Pages.SETTINGS;
+                _scroll   = Vector2.zero;
             }
 
             GUILayout.EndHorizontal();
@@ -1019,58 +1016,57 @@ namespace MuMech
             if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
-                switch (showPage)
+                switch (_showPage)
                 {
-                    case pages.waypoints:
-                        help.selTopic = ((IList)help.topics).IndexOf("Waypoints");
+                    case Pages.WAYPOINTS:
+                        help.SelTopic = ((IList)help.Topics).IndexOf("Waypoints");
                         break;
-                    case pages.settings:
-                        help.selTopic = ((IList)help.topics).IndexOf("Settings");
+                    case Pages.SETTINGS:
+                        help.SelTopic = ((IList)help.Topics).IndexOf("Settings");
                         break;
-                    case pages.routes:
-                        help.selTopic = ((IList)help.topics).IndexOf("Routes");
+                    case Pages.ROUTES:
+                        help.SelTopic = ((IList)help.Topics).IndexOf("Routes");
                         break;
                 }
 
-                help.Enabled = help.selTopic > -1 || help.Enabled;
+                help.Enabled = help.SelTopic > -1 || help.Enabled;
             }
 
-            if (styleInactive == null)
+            _styleInactive ??= new GUIStyle(GuiUtils.Skin != null ? GuiUtils.Skin.button : GuiUtils.DefaultSkin.button)
             {
-                styleInactive           = new GUIStyle(GuiUtils.Skin != null ? GuiUtils.Skin.button : GuiUtils.DefaultSkin.button);
-                styleInactive.alignment = TextAnchor.UpperLeft;
-            }
+                alignment = TextAnchor.UpperLeft
+            };
 
-            if (styleActive == null)
+            if (_styleActive == null)
             {
-                styleActive = new GUIStyle(styleInactive);
-                styleActive.active.textColor =
-                    styleActive.focused.textColor = styleActive.hover.textColor = styleActive.normal.textColor = Color.green;
+                _styleActive = new GUIStyle(_styleInactive);
+                _styleActive.active.textColor =
+                    _styleActive.focused.textColor = _styleActive.hover.textColor = _styleActive.normal.textColor = Color.green;
             } // for some reason MJ's skin sometimes isn't loaded at OnStart so this has to be done here
 
-            if (styleQuicksave == null)
+            if (_styleQuicksave == null)
             {
-                styleQuicksave = new GUIStyle(styleActive);
-                styleQuicksave.active.textColor = styleQuicksave.focused.textColor =
-                    styleQuicksave.hover.textColor = styleQuicksave.normal.textColor = Color.yellow;
+                _styleQuicksave = new GUIStyle(_styleActive);
+                _styleQuicksave.active.textColor = _styleQuicksave.focused.textColor =
+                    _styleQuicksave.hover.textColor = _styleQuicksave.normal.textColor = Color.yellow;
             }
 
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
 
-            switch (showPage)
+            switch (_showPage)
             {
-                case pages.waypoints:
+                case Pages.WAYPOINTS:
                     DrawPageWaypoints();
                     break;
-                case pages.settings:
+                case Pages.SETTINGS:
                     DrawPageSettings();
                     break;
-                case pages.routes:
+                case Pages.ROUTES:
                     DrawPageRoutes();
                     break;
             }
 
-            if (waitingForPick && Vessel.isActiveVessel && Event.current.type == EventType.Repaint)
+            if (_waitingForPick && Vessel.isActiveVessel && Event.current.type == EventType.Repaint)
             {
                 if (MapView.MapIsEnabled)
                 {
@@ -1078,20 +1074,20 @@ namespace MuMech
                     {
                         if (Core.Target.PositionTargetExists)
                         {
-                            if (selIndex > -1 && selIndex < ap.Waypoints.Count)
+                            if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                             {
-                                ap.Waypoints.Insert(selIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
-                                tmpRadius = ap.Waypoints[selIndex].Radius.ToString();
-                                tmpLat    = LatToString(ap.Waypoints[selIndex].Latitude);
-                                tmpLon    = LonToString(ap.Waypoints[selIndex].Longitude);
+                                _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
+                                _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
+                                _tmpLat    = LatToString(_ap.Waypoints[SelIndex].Latitude);
+                                _tmpLon    = LonToString(_ap.Waypoints[SelIndex].Longitude);
                             }
                             else
                             {
-                                ap.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
+                                _ap.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
                             }
 
                             Core.Target.Unset();
-                            waitingForPick = alt;
+                            _waitingForPick = alt;
                         }
                         else
                         {
@@ -1108,19 +1104,19 @@ namespace MuMech
                         {
                             if (Input.GetMouseButtonDown(0))
                             {
-                                if (selIndex > -1 && selIndex < ap.Waypoints.Count)
+                                if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                                 {
-                                    ap.Waypoints.Insert(selIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
-                                    tmpRadius = ap.Waypoints[selIndex].Radius.ToString();
-                                    tmpLat    = LatToString(ap.Waypoints[selIndex].Latitude);
-                                    tmpLon    = LonToString(ap.Waypoints[selIndex].Longitude);
+                                    _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
+                                    _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
+                                    _tmpLat    = LatToString(_ap.Waypoints[SelIndex].Latitude);
+                                    _tmpLon    = LonToString(_ap.Waypoints[SelIndex].Longitude);
                                 }
                                 else
                                 {
-                                    ap.Waypoints.Add(new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
+                                    _ap.Waypoints.Add(new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
                                 }
 
-                                waitingForPick = alt;
+                                _waitingForPick = alt;
                             }
                         }
                     }
@@ -1132,9 +1128,9 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (Vessel.isActiveVessel && (renderer == null || renderer.ap != ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
+            if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
 
-            ap.Waypoints.ForEach(wp => wp.Update());
+            _ap.Waypoints.ForEach(wp => wp.Update());
 //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
 //			greenLine.SetPosition(0, vessel.CoM);
 //			greenLine.SetPosition(1, vessel.CoM + ap.norm * 5);
@@ -1143,24 +1139,25 @@ namespace MuMech
         }
     }
 
+    [UsedImplicitly]
     public class MechJebModuleWaypointHelpWindow : DisplayModule
     {
-        public  int      selTopic;
-        public  string[] topics      = { "Rover Controller", "Waypoints", "Routes", "Settings" };
-        private string   selSubTopic = "";
-        private GUIStyle btnActive;
-        private GUIStyle btnInactive;
+        public          int      SelTopic;
+        public readonly string[] Topics      = { "Rover Controller", "Waypoints", "Routes", "Settings" };
+        private         string   _selSubTopic = "";
+        private         GUIStyle _btnActive;
+        private         GUIStyle _btnInactive;
 
         private void HelpTopic(string title, string text)
         {
             GUILayout.BeginVertical();
-            if (GUILayout.Button(title, selSubTopic == title ? btnActive : btnInactive))
+            if (GUILayout.Button(title, _selSubTopic == title ? _btnActive : _btnInactive))
             {
-                selSubTopic = selSubTopic != title ? title : "";
+                _selSubTopic = _selSubTopic != title ? title : "";
                 WindowPos   = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
             }
 
-            if (selSubTopic == title)
+            if (_selSubTopic == title)
             {
                 GUILayout.Label(text);
             }
@@ -1182,21 +1179,17 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            if (btnInactive == null)
+            _btnInactive ??= new GUIStyle(GuiUtils.Skin.button) { alignment = TextAnchor.MiddleLeft };
+
+            if (_btnActive == null)
             {
-                btnInactive           = new GUIStyle(GuiUtils.Skin.button);
-                btnInactive.alignment = TextAnchor.MiddleLeft;
+                _btnActive                  = new GUIStyle(_btnInactive);
+                _btnActive.active.textColor = _btnActive.hover.textColor = _btnActive.focused.textColor = _btnActive.normal.textColor = Color.green;
             }
 
-            if (btnActive == null)
-            {
-                btnActive                  = new GUIStyle(btnInactive);
-                btnActive.active.textColor = btnActive.hover.textColor = btnActive.focused.textColor = btnActive.normal.textColor = Color.green;
-            }
+            SelTopic = GUILayout.SelectionGrid(SelTopic, Topics, Topics.Length);
 
-            selTopic = GUILayout.SelectionGrid(selTopic, topics, topics.Length);
-
-            switch (topics[selTopic])
+            switch (Topics[SelTopic])
             {
                 case "Rover Controller":
                     HelpTopic("Holding a set Heading",
@@ -1283,19 +1276,19 @@ namespace MuMech
 
     public class MechJebRouteRenderer : MonoBehaviour
     {
-        public static readonly Material                     material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
-        public                 MechJebModuleRoverController ap;
-        private                LineRenderer                 pastPath;
-        private                LineRenderer                 currPath;
-        private                LineRenderer                 nextPath;
-        private                LineRenderer                 selWP;
-        private readonly       Color                        pastPathColor = new Color(0f, 0f, 1f, 0.5f);
-        private readonly       Color                        currPathColor = new Color(0f, 1f, 0f, 0.5f);
-        private readonly       Color                        nextPathColor = new Color(1f, 1f, 0f, 0.5f);
-        private readonly       Color                        selWPColor    = new Color(1f, 0f, 0f, 0.5f);
-        private                double                       addHeight;
+        private static readonly Material                     _material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
+        public                 MechJebModuleRoverController AP;
+        private                LineRenderer                 _pastPath;
+        private                LineRenderer                 _currPath;
+        private                LineRenderer                 _nextPath;
+        private                LineRenderer                 _selWp;
+        private readonly       Color                        _pastPathColor = new Color(0f, 0f, 1f, 0.5f);
+        private readonly       Color                        _currPathColor = new Color(0f, 1f, 0f, 0.5f);
+        private readonly       Color                        _nextPathColor = new Color(1f, 1f, 0f, 0.5f);
+        private readonly       Color                        _selWpColor    = new Color(1f, 0f, 0f, 0.5f);
+        private                double                       _addHeight;
 
-        public static MechJebRouteRenderer AttachToMapView(MechJebCore Core)
+        public static MechJebRouteRenderer AttachToMapView(MechJebCore core)
         {
             MechJebRouteRenderer renderer = MapView.MapCamera.gameObject.GetComponent<MechJebRouteRenderer>();
             if (!renderer)
@@ -1303,37 +1296,36 @@ namespace MuMech
                 renderer = MapView.MapCamera.gameObject.AddComponent<MechJebRouteRenderer>();
             }
 
-            renderer.ap = Core.GetComputerModule<MechJebModuleRoverController>();
+            renderer.AP = core.GetComputerModule<MechJebModuleRoverController>();
             return renderer;
         }
 
-        public static bool NewLineRenderer(ref LineRenderer line)
+        private static bool NewLineRenderer(ref LineRenderer line)
         {
             if (line != null) { return false; }
 
             var obj = new GameObject("LineRenderer");
             line               = obj.AddComponent<LineRenderer>();
             line.useWorldSpace = true;
-            line.material      = material;
+            line.material      = _material;
             line.startWidth    = 10.0f;
             line.endWidth      = 10.0f;
             line.positionCount = 2;
             return true;
         }
 
-        public static Vector3 RaisePositionOverTerrain(Vector3 Position, float HeightOffset)
+        private static Vector3 RaisePositionOverTerrain(Vector3 position, float heightOffset)
         {
             CelestialBody body = FlightGlobals.ActiveVessel.mainBody;
-            if (MapView.MapIsEnabled)
-            {
-                double lat = body.GetLatitude(Position);
-                double lon = body.GetLongitude(Position);
-                return ScaledSpace.LocalToScaledSpace(body.position +
-                                                      (body.Radius + HeightOffset + body.TerrainAltitude(lat, lon)) *
-                                                      body.GetSurfaceNVector(lat, lon));
-            }
+            if (!MapView.MapIsEnabled)
+                return body.GetWorldSurfacePosition(body.GetLatitude(position), body.GetLongitude(position),
+                    body.GetAltitude(position) + heightOffset);
+            double lat = body.GetLatitude(position);
+            double lon = body.GetLongitude(position);
+            return ScaledSpace.LocalToScaledSpace(body.position +
+                                                  (body.Radius + heightOffset + body.TerrainAltitude(lat, lon)) *
+                                                  body.GetSurfaceNVector(lat, lon));
 
-            return body.GetWorldSurfacePosition(body.GetLatitude(Position), body.GetLongitude(Position), body.GetAltitude(Position) + HeightOffset);
         }
 
         public new bool enabled
@@ -1342,184 +1334,150 @@ namespace MuMech
             set
             {
                 base.enabled = value;
-                if (pastPath != null) { pastPath.enabled = value; }
+                if (_pastPath != null) { _pastPath.enabled = value; }
 
-                if (currPath != null) { currPath.enabled = value; }
+                if (_currPath != null) { _currPath.enabled = value; }
 
-                if (nextPath != null) { nextPath.enabled = value; }
+                if (_nextPath != null) { _nextPath.enabled = value; }
             }
         }
 
         public void OnPreRender()
         {
-            if (NewLineRenderer(ref pastPath))
+            if (NewLineRenderer(ref _pastPath))
             {
-                pastPath.startColor = pastPathColor;
-                pastPath.endColor   = pastPathColor;
+                _pastPath.startColor = _pastPathColor;
+                _pastPath.endColor   = _pastPathColor;
             }
 
-            if (NewLineRenderer(ref currPath))
+            if (NewLineRenderer(ref _currPath))
             {
-                currPath.startColor = currPathColor;
-                currPath.endColor   = currPathColor;
+                _currPath.startColor = _currPathColor;
+                _currPath.endColor   = _currPathColor;
             }
 
-            if (NewLineRenderer(ref nextPath))
+            if (NewLineRenderer(ref _nextPath))
             {
-                nextPath.startColor = nextPathColor;
-                nextPath.endColor   = nextPathColor;
+                _nextPath.startColor = _nextPathColor;
+                _nextPath.endColor   = _nextPathColor;
             }
 
-            if (NewLineRenderer(ref selWP))
+            if (NewLineRenderer(ref _selWp))
             {
-                selWP.startColor = selWPColor;
-                selWP.endColor   = selWPColor;
+                _selWp.startColor = _selWpColor;
+                _selWp.endColor   = _selWpColor;
             }
 
             //Debug.Log(ap.vessel.vesselName);
-            MechJebModuleWaypointWindow window = ap.Core.GetComputerModule<MechJebModuleWaypointWindow>();
-            switch (ap.Vessel.mainBody.bodyName)
+            MechJebModuleWaypointWindow window = AP.Core.GetComputerModule<MechJebModuleWaypointWindow>();
+            _addHeight = AP.Vessel.mainBody.bodyName switch
             {
-                case "Moho":
-                    addHeight = window.MohoMapdist;
-                    break;
-                case "Eve":
-                    addHeight = window.EveMapdist;
-                    break;
-                case "Gilly":
-                    addHeight = window.GillyMapdist;
-                    break;
-                case "Kerbin":
-                    addHeight = window.KerbinMapdist;
-                    break;
-                case "Mun":
-                    addHeight = window.MunMapdist;
-                    break;
-                case "Minmus":
-                    addHeight = window.MinmusMapdist;
-                    break;
-                case "Duna":
-                    addHeight = window.DunaMapdist;
-                    break;
-                case "Ike":
-                    addHeight = window.IkeMapdist;
-                    break;
-                case "Dres":
-                    addHeight = window.DresMapdist;
-                    break;
-                case "Jool":
-                    addHeight = window.JoolMapdist;
-                    break;
-                case "Laythe":
-                    addHeight = window.LaytheMapdist;
-                    break;
-                case "Vall":
-                    addHeight = window.VallMapdist;
-                    break;
-                case "Tylo":
-                    addHeight = window.TyloMapdist;
-                    break;
-                case "Bop":
-                    addHeight = window.BopMapdist;
-                    break;
-                case "Pol":
-                    addHeight = window.PolMapdist;
-                    break;
-                case "Eeloo":
-                    addHeight = window.EelooMapdist;
-                    break;
-                default:
-                    addHeight = window.KerbinMapdist;
-                    break;
-            }
+                "Moho"   => window.MohoMapdist,
+                "Eve"    => window.EveMapdist,
+                "Gilly"  => window.GillyMapdist,
+                "Kerbin" => window.KerbinMapdist,
+                "Mun"    => window.MunMapdist,
+                "Minmus" => window.MinmusMapdist,
+                "Duna"   => window.DunaMapdist,
+                "Ike"    => window.IkeMapdist,
+                "Dres"   => window.DresMapdist,
+                "Jool"   => window.JoolMapdist,
+                "Laythe" => window.LaytheMapdist,
+                "Vall"   => window.VallMapdist,
+                "Tylo"   => window.TyloMapdist,
+                "Bop"    => window.BopMapdist,
+                "Pol"    => window.PolMapdist,
+                "Eeloo"  => window.EelooMapdist,
+                _        => window.KerbinMapdist
+            };
 
-            if (ap != null && ap.Waypoints.Count > 0 && ap.Vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)
+            if (AP != null && AP.Waypoints.Count > 0 && AP.Vessel.isActiveVessel && HighLogic.LoadedSceneIsFlight)
             {
-                float targetHeight = MapView.MapIsEnabled ? (float)addHeight : 3f;
-                float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Vessel.CoM) / 700f;
+                float targetHeight = MapView.MapIsEnabled ? (float)_addHeight : 3f;
+                float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Vessel.CoM) / 700f;
                 float width = MapView.MapIsEnabled ? (float)(0.005 * PlanetariumCamera.fetch.Distance) : scale + 0.1f;
                 //float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 
-                pastPath.startWidth = width;
-                pastPath.endWidth   = width;
-                currPath.startWidth = width;
-                currPath.endWidth   = width;
-                nextPath.startWidth = width;
-                nextPath.endWidth   = width;
-                selWP.gameObject.layer = pastPath.gameObject.layer =
-                    currPath.gameObject.layer = nextPath.gameObject.layer = MapView.MapIsEnabled ? 9 : 0;
+                _pastPath.startWidth = width;
+                _pastPath.endWidth   = width;
+                _currPath.startWidth = width;
+                _currPath.endWidth   = width;
+                _nextPath.startWidth = width;
+                _nextPath.endWidth   = width;
+                _selWp.gameObject.layer = _pastPath.gameObject.layer =
+                    _currPath.gameObject.layer = _nextPath.gameObject.layer = MapView.MapIsEnabled ? 9 : 0;
 
-                int sel = ap.Core.GetComputerModule<MechJebModuleWaypointWindow>().selIndex;
-                selWP.enabled = sel > -1 && !MapView.MapIsEnabled;
-                if (selWP.enabled)
+                int sel = AP.Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex;
+                _selWp.enabled = sel > -1 && !MapView.MapIsEnabled;
+                if (_selWp.enabled)
                 {
-                    float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, ap.Waypoints[sel].Position) / 600f + 0.1f;
-                    selWP.startWidth = 0;
-                    selWP.endWidth   = w * 10f;
-                    selWP.SetPosition(0, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f));
-                    selWP.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
+                    float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Waypoints[sel].Position) / 600f + 0.1f;
+                    _selWp.startWidth = 0;
+                    _selWp.endWidth   = w * 10f;
+                    _selWp.SetPosition(0, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f));
+                    _selWp.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
                 }
 
-                if (ap.WaypointIndex > 0)
+                if (AP.WaypointIndex > 0)
                 {
 //					Debug.Log("drawing pastPath");
-                    pastPath.enabled       = true;
-                    pastPath.positionCount = ap.WaypointIndex + 1;
-                    for (int i = 0; i < ap.WaypointIndex; i++)
+                    _pastPath.enabled       = true;
+                    _pastPath.positionCount = AP.WaypointIndex + 1;
+                    for (int i = 0; i < AP.WaypointIndex; i++)
                     {
 //						Debug.Log("vert " + i.ToString());
-                        pastPath.SetPosition(i, RaisePositionOverTerrain(ap.Waypoints[i].Position, targetHeight));
+                        _pastPath.SetPosition(i, RaisePositionOverTerrain(AP.Waypoints[i].Position, targetHeight));
                     }
 
-                    pastPath.SetPosition(ap.WaypointIndex, RaisePositionOverTerrain(ap.Vessel.CoM, targetHeight));
+                    _pastPath.SetPosition(AP.WaypointIndex, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
 //					Debug.Log("pastPath drawn");
                 }
                 else
                 {
 //					Debug.Log("no pastPath");
-                    pastPath.enabled = false;
+                    _pastPath.enabled = false;
                 }
 
-                if (ap.WaypointIndex > -1)
+                if (AP.WaypointIndex > -1)
                 {
 //					Debug.Log("drawing currPath");
-                    currPath.enabled = true;
-                    currPath.SetPosition(0, RaisePositionOverTerrain(ap.Vessel.CoM, targetHeight));
-                    currPath.SetPosition(1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex].Position, targetHeight));
+                    _currPath.enabled = true;
+                    _currPath.SetPosition(0, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
+                    _currPath.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex].Position, targetHeight));
 //					Debug.Log("currPath drawn");
                 }
                 else
                 {
 //					Debug.Log("no currPath");
-                    currPath.enabled = false;
+                    _currPath.enabled = false;
                 }
 
-                int nextCount = ap.Waypoints.Count - ap.WaypointIndex;
+                int nextCount = AP.Waypoints.Count - AP.WaypointIndex;
                 if (nextCount > 1)
                 {
 //					Debug.Log("drawing nextPath of " + nextCount + " verts");
-                    nextPath.enabled       = true;
-                    nextPath.positionCount = nextCount;
-                    nextPath.SetPosition(0,
-                        RaisePositionOverTerrain(ap.WaypointIndex == -1 ? ap.Vessel.CoM : (Vector3)ap.Waypoints[ap.WaypointIndex].Position,
+                    _nextPath.enabled       = true;
+                    _nextPath.positionCount = nextCount;
+                    _nextPath.SetPosition(0,
+                        RaisePositionOverTerrain(AP.WaypointIndex == -1 ? AP.Vessel.CoM : (Vector3)AP.Waypoints[AP.WaypointIndex].Position,
                             targetHeight));
                     for (int i = 0; i < nextCount - 1; i++)
                     {
 //						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
-                        nextPath.SetPosition(i + 1, RaisePositionOverTerrain(ap.Waypoints[ap.WaypointIndex + 1 + i].Position, targetHeight));
+                        _nextPath.SetPosition(i + 1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex + 1 + i].Position, targetHeight));
                     }
 //					Debug.Log("nextPath drawn");
                 }
                 else
                 {
 //					Debug.Log("no nextPath");
-                    nextPath.enabled = false;
+                    _nextPath.enabled = false;
                 }
             }
             else
             {
                 //Debug.Log("moo");
-                selWP.enabled = pastPath.enabled = currPath.enabled = nextPath.enabled = false;
+                _selWp.enabled = _pastPath.enabled = _currPath.enabled = _nextPath.enabled = false;
             }
         }
     }
