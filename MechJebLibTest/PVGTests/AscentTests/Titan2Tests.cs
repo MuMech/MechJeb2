@@ -74,7 +74,6 @@ namespace MechJebLibTest.PVGTests
             double t0 = 0;
             double PeR = 6.371e+6 + 185e+3;
             double ApR = 6.371e+6 + 4306022;
-            ;
             double rbody = 6.371e+6;
             double incT = Deg2Rad(28.608);
             double mu = 3.986004418e+14;

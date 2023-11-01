@@ -44,7 +44,6 @@ namespace MuMech
                     if (part.Modules[m] is T mod)
                     {
                         list.Add(mod);
-                        ;
                     }
                 }
             }
