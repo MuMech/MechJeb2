@@ -1139,8 +1139,7 @@ namespace MuMech
                     {
                         var moduleEngines = pm as ModuleEngines;
 
-                        if (!engines.ContainsKey(moduleEngines))
-                            engines.Add(moduleEngines, null);
+                        engines.TryAdd(moduleEngines, null);
                     }
                     else if (pm is ModuleResourceIntake)
                     {
