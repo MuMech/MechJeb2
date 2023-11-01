@@ -1,5 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using MechJebLib.Simulations;
 using UnityEngine;
 using static System.Math;

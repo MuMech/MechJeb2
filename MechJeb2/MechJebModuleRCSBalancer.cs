@@ -94,7 +94,7 @@ namespace MuMech
                     }
 
                     firstRcsModule =  false;
-                    thrusterStates += string.Format("({0:F0}:", pm.thrusterPower * 9);
+                    thrusterStates += $"({pm.thrusterPower * 9:F0}:";
                     for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
                         if (i != 0)
@@ -145,8 +145,8 @@ namespace MuMech
         {
             FlightCtrlState s = FlightInputHandler.state;
 
-            string xyz = string.Format("{0:F2} {1:F2} {2:F2}", s.X, s.Y, s.Z);
-            string rpy = string.Format("{0:F2} {1:F2} {2:F2}", s.roll, s.pitch, s.yaw);
+            string xyz = $"{s.X:F2} {s.Y:F2} {s.Z:F2}";
+            string rpy = $"{s.roll:F2} {s.pitch:F2} {s.yaw:F2}";
             GUILayout.BeginVertical();
             GuiUtils.SimpleLabel("X/Y/Z", xyz);
             GuiUtils.SimpleLabel("R/P/Y", rpy);

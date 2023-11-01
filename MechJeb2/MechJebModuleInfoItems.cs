@@ -413,7 +413,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_PartCountDivideMaxParts", InfoItem.Category.Vessel, showInEditor = true)] //Part count / Max parts
-        public string PartCountAndMaxPartCount() => string.Format("{0} / {1}", PartCount().ToString(), MaxPartCount());
+        public string PartCountAndMaxPartCount() => $"{PartCount().ToString()} / {MaxPartCount()}";
 
         [ValueInfoItem("#MechJeb_StrutCount", InfoItem.Category.Vessel, showInEditor = true)] //Strut count
         public int StrutCount() => parts.Count(p => p is CompoundPart && p.Modules.GetModule<CModuleStrut>());
@@ -860,7 +860,7 @@ namespace MuMech
             double atmDv = stats.AtmoStats.Count == 0 ? 0 : stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaV;
             double vacDv = stats.VacStats.Count == 0 ? 0 : stats.VacStats[stats.VacStats.Count - 1].DeltaV;
 
-            return string.Format("{0:F0}, {1:F0}", atmDv, vacDv);
+            return $"{atmDv:F0}, {vacDv:F0}";
         }
 
         [ValueInfoItem("#MechJeb_StageTimeFullThrottle", InfoItem.Category.Vessel, format = ValueInfoItem.TIME,
@@ -923,7 +923,7 @@ namespace MuMech
             double atmDv = stats.AtmoStats.Sum(s => s.DeltaV);
             double vacDv = stats.VacStats.Sum(s => s.DeltaV);
 
-            return string.Format("{0:F0}, {1:F0}", atmDv, vacDv);
+            return $"{atmDv:F0}, {vacDv:F0}";
         }
 
         [GeneralInfoItem("#MechJeb_DockingGuidance_velocity", InfoItem.Category.Target)] //Docking guidance: velocity
