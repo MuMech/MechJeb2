@@ -830,6 +830,7 @@ namespace MuMech
         }
     }
 
+    [MeansImplicitUse]
     public abstract class InfoItemAttribute : Attribute
     {
         public readonly string            name; //the name displayed in the info window
