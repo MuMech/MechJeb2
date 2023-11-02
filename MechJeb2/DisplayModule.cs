@@ -56,33 +56,35 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool ShowInFlightConfig = true;
+        // ReSharper disable once InconsistentNaming
+        public bool showInFlight = true;
 
         public bool ShowInFlight
         {
-            get => ShowInFlightConfig;
+            get => showInFlight;
             set
             {
-                if (ShowInFlightConfig != value)
+                if (showInFlight != value)
                 {
-                    ShowInFlightConfig = value;
-                    Dirty              = true;
+                    showInFlight = value;
+                    Dirty        = true;
                 }
             }
         }
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool ShowInEditorConfig;
+        // ReSharper disable once InconsistentNaming
+        public bool showInEditor;
 
         public bool ShowInEditor
         {
-            get => ShowInEditorConfig;
+            get => showInEditor;
             set
             {
-                if (ShowInEditorConfig == value) return;
-                ShowInEditorConfig = value;
-                Dirty              = true;
+                if (showInEditor == value) return;
+                showInEditor = value;
+                Dirty        = true;
             }
         }
 
@@ -121,7 +123,7 @@ namespace MuMech
 
         private GUILayoutOption[] _windowOptions;
 
-        public bool ShowInCurrentScene => HighLogic.LoadedSceneIsEditor ? ShowInEditorConfig : ShowInFlightConfig;
+        public bool ShowInCurrentScene => HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight;
 
         private readonly int _id;
         private static   int _nextID = 72190852;
