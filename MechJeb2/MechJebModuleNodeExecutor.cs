@@ -262,34 +262,35 @@ namespace MuMech
             Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL, this);
         }
 
-        private bool ShouldTerminate()
+        private bool ShouldTerminatePrincipia()
         {
-            if (_isLoadedPrincipia && _dvLeft < 0)
-            {
-                if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
-                    Init();
-                else
-                    Abort();
+            if (_dvLeft > 0) return false;
 
-                return true;
-            }
+            if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                Init();
+            else
+                Abort();
 
-            if (AngleFromNode() >= 0.5 * PI)
-            {
-                ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-
-                node.RemoveSelf();
-
-                if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
-                    Init();
-                else
-                    Abort();
-
-                return true;
-            }
-
-            return false;
+            return true;
         }
+
+        private bool ShouldTerminateStock()
+        {
+            if (AngleFromNode() < 0.5 * PI) return false;
+
+            ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
+
+            node.RemoveSelf();
+
+            if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                Init();
+            else
+                Abort();
+
+            return true;
+        }
+
+        private bool ShouldTerminate() => _isLoadedPrincipia ? ShouldTerminatePrincipia() : ShouldTerminateStock();
 
         private bool AlignedAndSettled() => AngleFromDirection() < Deg2Rad(1) && Core.vessel.angularVelocity.magnitude < 0.001;
 
