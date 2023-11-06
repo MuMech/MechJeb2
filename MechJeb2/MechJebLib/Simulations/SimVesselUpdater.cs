@@ -1,4 +1,7 @@
-#nullable enable
+/*
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
+ */
 
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,6 +12,8 @@ using MuMech;
 using UnityEngine;
 using static MechJebLib.Statics;
 using static System.Math;
+
+#nullable enable
 
 namespace MechJebLib.Simulations
 {
@@ -200,7 +205,7 @@ namespace MechJebLib.Simulations
 
                 Part kspPart = kspModuleDecouple.part;
 
-                AttachNode attach;
+                AttachNode? attach;
                 if (HighLogic.LoadedSceneIsEditor)
                 {
                     attach = kspModuleDecouple.explosiveNodeID != "srf"
@@ -212,7 +217,7 @@ namespace MechJebLib.Simulations
                     attach = kspModuleDecouple.ExplosiveNode;
                 }
 
-                if (!(attach.attachedPart is null))
+                if (attach is { attachedPart: { } })
                     decoupler.AttachedPart = _partMapping[attach.attachedPart];
             }
 
