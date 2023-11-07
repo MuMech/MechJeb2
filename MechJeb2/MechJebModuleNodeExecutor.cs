@@ -143,7 +143,7 @@ namespace MuMech
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
-            if (!AlignedAndSettled())
+            if (!Aligned())
                 return;
 
             s.Z = -1.0F;
@@ -165,7 +165,7 @@ namespace MuMech
             if (VesselState.time >= _ignitionUT - LeadTime && State != States.BURN)
                 State = States.LEAD;
 
-            if (VesselState.time >= _ignitionUT && AlignedAndSettled())
+            if (VesselState.time >= _ignitionUT && Aligned())
                 State = States.BURN;
 
             switch (State)
@@ -290,7 +290,9 @@ namespace MuMech
 
         private bool ShouldTerminate() => _isLoadedPrincipia ? ShouldTerminatePrincipia() : ShouldTerminateStock();
 
-        private bool AlignedAndSettled() => AngleFromDirection() < Deg2Rad(1) && Core.vessel.angularVelocity.magnitude < 0.001;
+        private bool Aligned() => AngleFromDirection() < Deg2Rad(1);
+
+        private bool AlignedAndSettled() => Aligned() && Core.vessel.angularVelocity.magnitude < 0.001;
 
         // This returns the angle to the node (in radians), note that you probably don't want to use this outside of
         // stock checks for maneuver termination, and probably never in principia (see SafeCurrentPrincipiaNode()).
