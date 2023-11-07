@@ -134,9 +134,7 @@ namespace MuMech
             if (State != States.LEAD || RCSOnly)
                 return;
 
-            s.Z = 0.0F;
-
-            if (!Core.Thrust.LimitToPreventUnstableIgnition || VesselState.lowestUllage == VesselState.UllageState.VeryStable)
+            if (!Core.Thrust.AutoRCSUllaging || VesselState.lowestUllage == VesselState.UllageState.VeryStable)
                 return;
 
             if (!Vessel.hasEnabledRCSModules())
