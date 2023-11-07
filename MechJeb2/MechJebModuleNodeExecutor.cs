@@ -165,7 +165,7 @@ namespace MuMech
             if (VesselState.time >= _ignitionUT - LeadTime && State != States.BURN)
                 State = States.LEAD;
 
-            if (VesselState.time >= _ignitionUT && AlignedAndSettled())
+            if (VesselState.time >= _ignitionUT && Aligned())
                 State = States.BURN;
 
             switch (State)
