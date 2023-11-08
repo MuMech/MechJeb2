@@ -531,7 +531,7 @@ namespace MuMech
             /* prevent unstable ignitions */
             if (LimitToPreventUnstableIgnition && s.mainThrottle > 0.0F && ThrottleLimit > 0.0F)
             {
-                if (VesselState.lowestUllage < VesselState.UllageState.Stable)
+                if (VesselState.lowestUllage < 0.95) // needs to match 'unstable' value in RF
                 {
                     ScreenMessages.PostScreenMessage(_preventingUnstableIgnitionsMessage);
                     Debug.Log("MechJeb Unstable Ignitions: preventing ignition in state: " + VesselState.lowestUllage);
@@ -886,10 +886,10 @@ namespace MuMech
             if (!Vessel.hasEnabledRCSModules())
                 return;
 
-            if (VesselState.lowestUllage == VesselState.UllageState.VeryStable && VesselState.time > _ullageUntil)
+            if (VesselState.lowestUllage >= 1.0 && VesselState.time > _ullageUntil)
                 return;
 
-            if (VesselState.lowestUllage != VesselState.UllageState.VeryStable)
+            if (VesselState.lowestUllage < 1.0)
                 _ullageUntil = VesselState.time + MIN_RCS_TIME;
 
             // limit the throttle only if we aren't already burning (don't waste ignitions)

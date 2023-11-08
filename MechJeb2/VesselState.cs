@@ -30,25 +30,8 @@ namespace MuMech
         // RealFuels.Ullage.UllageSet GetUllageStability method to call via reflection
         public static MethodInfo RFGetUllageStabilityMethod;
 
-        // RealFuels.Ullage.UllageSimulator fields to determine ullage status
-        public static  double RFveryStableValue;
-        private static double RFstableValue;
-        private static double RFriskyValue;
-        private static double RFveryRiskyValue;
-        private static double RFunstableValue;
-
-        public enum UllageState
-        {
-            VeryUnstable,
-            Unstable,
-            VeryRisky,
-            Risky,
-            Stable,
-            VeryStable // "Nominal" also winds up here
-        }
-
         // lowestUllage is always VeryStable without RealFuels installed
-        public UllageState lowestUllage => einfo.lowestUllage;
+        public double lowestUllage => einfo.lowestUllage;
 
         public static bool isLoadedFAR;
 
@@ -416,103 +399,6 @@ namespace MuMech
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
                     isLoadedRealFuels = false;
-                }
-
-                FieldInfo RFveryStableField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "veryStable",
-                    BindingFlags.NonPublic | BindingFlags.Static);
-                if (RFveryStableField == null)
-                {
-                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.Ullage.UllageSimulator has no veryStable field, disabling RF");
-                    isLoadedRealFuels = false;
-                }
-
-                try
-                {
-                    RFveryStableValue = (double)RFveryStableField.GetValue(null);
-                }
-                catch (Exception e1)
-                {
-                    Debug.Log(
-                        "MechJeb BUG Exception thrown while getting veryStable value from RealFuels, ullage integration disabled: " + e1.Message);
-                    isLoadedRealFuels = false;
-                    return;
-                }
-
-                FieldInfo RFstableField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "stable",
-                    BindingFlags.NonPublic | BindingFlags.Static);
-                if (RFstableField == null)
-                {
-                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.Ullage.UllageSimulator has no stable field, disabling RF");
-                    isLoadedRealFuels = false;
-                }
-
-                try
-                {
-                    RFstableValue = (double)RFstableField.GetValue(null);
-                }
-                catch (Exception e2)
-                {
-                    Debug.Log("MechJeb BUG Exception thrown while getting stable value from RealFuels, ullage integration disabled: " + e2.Message);
-                    isLoadedRealFuels = false;
-                    return;
-                }
-
-                FieldInfo RFriskyField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "risky",
-                    BindingFlags.NonPublic | BindingFlags.Static);
-                if (RFriskyField == null)
-                {
-                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.Ullage.UllageSimulator has no risky field, disabling RF");
-                    isLoadedRealFuels = false;
-                }
-
-                try
-                {
-                    RFriskyValue = (double)RFriskyField.GetValue(null);
-                }
-                catch (Exception e3)
-                {
-                    Debug.Log("MechJeb BUG Exception thrown while getting risky value from RealFuels, ullage integration disabled: " + e3.Message);
-                    isLoadedRealFuels = false;
-                    return;
-                }
-
-                FieldInfo RFveryRiskyField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "veryRisky",
-                    BindingFlags.NonPublic | BindingFlags.Static);
-                if (RFveryRiskyField == null)
-                {
-                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.Ullage.UllageSimulator has no veryRisky field, disabling RF");
-                    isLoadedRealFuels = false;
-                }
-
-                try
-                {
-                    RFveryRiskyValue = (double)RFveryRiskyField.GetValue(null);
-                }
-                catch (Exception e4)
-                {
-                    Debug.Log("MechJeb BUG Exception thrown while getting veryRisky value from RealFuels, ullage integration disabled: " +
-                              e4.Message);
-                    isLoadedRealFuels = false;
-                    return;
-                }
-
-                FieldInfo RFunstableField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.Ullage.UllageSimulator", "unstable",
-                    BindingFlags.NonPublic | BindingFlags.Static);
-                if (RFunstableField == null)
-                {
-                    Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.Ullage.UllageSimulator has no unstable field, disabling RF");
-                    isLoadedRealFuels = false;
-                }
-
-                try
-                {
-                    RFunstableValue = (double)RFunstableField.GetValue(null);
-                }
-                catch (Exception e5)
-                {
-                    Debug.Log("MechJeb BUG Exception thrown while getting unstable value from RealFuels, ullage integration disabled: " + e5.Message);
-                    isLoadedRealFuels = false;
-                    return;
                 }
 
                 if (isLoadedRealFuels)
@@ -1497,7 +1383,7 @@ namespace MuMech
             public readonly Vector6 torqueDiffThrottle = new Vector6();
 
             // lowestUllage is always VeryStable without RealFuels installed
-            public UllageState lowestUllage = UllageState.VeryStable;
+            public double lowestUllage;
 
             public struct FuelRequirement
             {
@@ -1523,7 +1409,7 @@ namespace MuMech
 
                 resourceRequired.Clear();
 
-                lowestUllage = UllageState.VeryStable;
+                lowestUllage = 1.0;
 
                 CoM = c;
 
@@ -1623,22 +1509,9 @@ namespace MuMech
                     return;
                 }
 
-                UllageState propellantState;
-
-                if (propellantStability >= RFveryStableValue)
-                    propellantState = UllageState.VeryStable;
-                else if (propellantStability >= RFstableValue)
-                    propellantState = UllageState.Stable;
-                else if (propellantStability >= RFriskyValue)
-                    propellantState = UllageState.Risky;
-                else if (propellantStability >= RFveryRiskyValue)
-                    propellantState = UllageState.VeryRisky;
-                else
-                    propellantState = UllageState.Unstable;
-
-                if (propellantState < lowestUllage)
+                if (propellantStability < lowestUllage)
                 {
-                    lowestUllage = propellantState;
+                    lowestUllage = propellantStability;
                 }
             }
 
