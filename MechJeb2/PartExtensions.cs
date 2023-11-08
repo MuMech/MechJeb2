@@ -57,7 +57,7 @@ namespace MuMech
                     return false;
                 if (VesselState.RFullageSetField.GetValue(eng) is object ullageSet)
                     if (VesselState.RFGetUllageStabilityMethod.Invoke(ullageSet, Array.Empty<object>()) is double propellantStability)
-                        if (propellantStability < VesselState.RFveryStableValue)
+                        if (propellantStability < 0.996)
                             return true;
             }
             catch (ArgumentException)
