@@ -225,6 +225,8 @@ namespace MuMech
 
         private bool _tmodeChanged;
 
+        private double _ullageUntil;
+
         private PIDController _pid;
 
         public  float LastThrottle;
@@ -873,17 +875,26 @@ namespace MuMech
         /// <param name="s"></param>
         private void ProcessUllage(FlightCtrlState s)
         {
+            // seconds to continue to apply RCS after ullage has settled to VeryStable
+            const double MIN_RCS_TIME = 0.50;
+            // seconds after VeryStable to wait before applying throttle
+            const double IGNITION_DELAY = 0.10;
+
             if (!AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
                 return;
 
             if (!Vessel.hasEnabledRCSModules())
                 return;
 
-            if (VesselState.lowestUllage == VesselState.UllageState.VeryStable)
+            if (VesselState.lowestUllage == VesselState.UllageState.VeryStable && VesselState.time > _ullageUntil)
                 return;
 
+            if (VesselState.lowestUllage != VesselState.UllageState.VeryStable)
+                _ullageUntil = VesselState.time + MIN_RCS_TIME;
+
             // limit the throttle only if we aren't already burning (don't waste ignitions)
-            if (LastThrottle <= 0)
+            // also apply RCS for IGNITION_DELAY seconds above VeryStable point.
+            if (LastThrottle <= 0 && _ullageUntil - VesselState.time < MIN_RCS_TIME - IGNITION_DELAY)
                 SetTempLimit(0.0F, LimitMode.AUTO_RCS_ULLAGE);
 
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
