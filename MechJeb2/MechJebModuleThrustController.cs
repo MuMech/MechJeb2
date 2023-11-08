@@ -68,7 +68,7 @@ namespace MuMech
 
         [ToggleInfoItem("#MechJeb_SmoothThrottle", InfoItem.Category.Thrust)] //Smooth throttle
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool SmoothThrottle = false;
+        public bool SmoothThrottle;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -113,7 +113,7 @@ namespace MuMech
 
         [ToggleInfoItem("#MechJeb_ManageAirIntakes", InfoItem.Category.Thrust)] //Manage air intakes
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool ManageIntakes = false;
+        public bool ManageIntakes;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitAcceleration;
@@ -224,8 +224,6 @@ namespace MuMech
         public float TargetThrottle;
 
         private bool _tmodeChanged;
-
-        private double _ullageUntil;
 
         private PIDController _pid;
 
@@ -878,48 +876,25 @@ namespace MuMech
             if (!AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
                 return;
 
-            bool isStable = VesselState.lowestUllage == VesselState.UllageState.VeryStable;
-            if (!isStable)
-            {
-                _ullageUntil = VesselState.time + 0.15;
-            }
-
-            if (VesselState.time >= _ullageUntil)
+            if (!Vessel.hasEnabledRCSModules())
                 return;
 
-            // Continue ullaging until at least one engine has spooled up enough to produce >1% of it's rated thrust
-            if (isStable && VesselState.enginesWrappers.Where(e => e.engine.requestedThrottle > 0.01)
-                    .All(e => e.engine.currentThrottle < 0.01))
-            {
-                _ullageUntil = VesselState.time + 0.15;
-            }
+            if (VesselState.lowestUllage == VesselState.UllageState.VeryStable)
+                return;
 
-            Debug.Log("MechJeb RCS auto-ullaging: found state below very stable: " + VesselState.lowestUllage);
-            if (Vessel.hasEnabledRCSModules())
-            {
-                if (!Vessel.ActionGroups[KSPActionGroup.RCS])
-                {
-                    Debug.Log("MechJeb RCS auto-ullaging: enabling RCS action group for automatic ullaging");
-                    Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
-                }
+            // limit the throttle only if we aren't already burning (don't waste ignitions)
+            if (LastThrottle <= 0)
+                SetTempLimit(0.0F, LimitMode.AUTO_RCS_ULLAGE);
 
-                Debug.Log("MechJeb RCS auto-ullaging: firing RCS to stabilize ulllage");
-                if (!isStable)
-                {
-                    SetTempLimit(0.0F, LimitMode.UNSTABLE_IGNITION);
-                }
+            if (!Vessel.ActionGroups[KSPActionGroup.RCS])
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
-                s.Z = -1.0F;
-            }
-            else
-            {
-                Debug.Log("MechJeb RCS auto-ullaging: vessel has no enabled/staged RCS modules");
-            }
+            s.Z = -1.0F;
         }
 
         private DifferentialThrottleStatus ComputeDifferentialThrottle(Vector3d torque)
         {
-            //var stopwatch = new Stopwatch();
+            //var stopwatch = new  Stopwatch();
             //stopwatch.Start();
 
             float mainThrottle = Vessel.ctrlState.mainThrottle;
