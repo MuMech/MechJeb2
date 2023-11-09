@@ -88,8 +88,8 @@ namespace MuMech
             Core.Warp.MinimumWarp();
             Core.Thrust.ThrustOff();
             Users.Clear();
-            _dvLeft = 0;
-            State   = States.IDLE;
+            _dvLeft   = 0;
+            State     = States.IDLE;
         }
 
         protected override void OnModuleEnabled()
@@ -119,15 +119,11 @@ namespace MuMech
         private        double   _ignitionUT;
         private static bool     _isLoadedPrincipia => VesselState.isLoadedPrincipia;
         private        bool     _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
-        private        double   _ullageUntil;
 
         public override void Drive(FlightCtrlState s) => DoRCS(s);
 
         private void DoRCS(FlightCtrlState s)
         {
-            // seconds to continue to apply RCS after ullage has settled to VeryStable
-            const double MIN_RCS_TIME = 0.50;
-
             if (State == States.BURN && RCSOnly)
             {
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
@@ -140,12 +136,6 @@ namespace MuMech
 
             if (!Core.Thrust.AutoRCSUllaging)
                 return;
-
-            if (VesselState.lowestUllage >= 1.0 && VesselState.time > _ullageUntil)
-                return;
-
-            if (VesselState.lowestUllage < 1.0)
-                _ullageUntil = VesselState.time + MIN_RCS_TIME;
 
             if (!Vessel.hasEnabledRCSModules())
                 return;
