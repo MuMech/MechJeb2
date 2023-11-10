@@ -13,7 +13,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool Autowarp = true;
 
-        // how many seconds before a burn to end warp
+        // how many seconds before a burn to end warp (and start ullaging in RO)
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble LeadTime = new EditableDouble(3);
 
@@ -140,6 +140,13 @@ namespace MuMech
 
             if (!Core.Thrust.AutoRCSUllaging)
                 return;
+
+            // always apply MIN_RCS_TIME of ullage right before the ignition time
+            // (in particular this avoids single-tick sequencing problems with MJ seeing 100% ullage
+            // but RF running later in the same tick and decrementing the ullage while allowing
+            // the engine to fire, and just generally assures that ullage is pretty stable before firing).
+            if (VesselState.time >= _ignitionUT - MIN_RCS_TIME)
+                _ullageUntil = _ignitionUT;
 
             if (VesselState.lowestUllage >= 1.0 && VesselState.time > _ullageUntil)
                 return;
