@@ -1,5 +1,6 @@
 ﻿using System;
 using MechJebLib.Core;
+using MechJebLib.Core.Lambert;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using Smooth.Pools;

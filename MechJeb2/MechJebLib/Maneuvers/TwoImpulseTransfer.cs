@@ -1,5 +1,6 @@
 ﻿using System;
 using MechJebLib.Core;
+using MechJebLib.Core.Lambert;
 using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
