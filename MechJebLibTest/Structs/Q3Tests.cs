@@ -1,7 +1,7 @@
 using AssertExtensions;
 using MechJebLib.Primitives;
 using Xunit;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.StructsTest

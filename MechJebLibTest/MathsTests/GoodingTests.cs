@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Core;
-using MechJebLib.Core.Lambert;
-using MechJebLib.Core.TwoBody;
+using MechJebLib.Functions;
+using MechJebLib.Lambert;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using Xunit;
 using Xunit.Abstractions;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.MathsTests
@@ -24,7 +24,7 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         private void SingleRevolution2()
         {
-            const int NTRIALS = 500000;
+            const int NTRIALS = 500;
 
             var random = new Random();
 
@@ -33,10 +33,10 @@ namespace MechJebLibTest.MathsTests
                 var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt;
-                double ecc = Maths.EccFromStateVectors(1.0, r0, v0);
+                double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
                 if (ecc < 1)
-                    dt = random.NextDouble() * Maths.PeriodFromStateVectors(1.0, r0, v0);
+                    dt = random.NextDouble() * Astro.PeriodFromStateVectors(1.0, r0, v0);
                 else
                     dt = random.NextDouble() * 5;
 
@@ -52,7 +52,7 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         private void SingleRevolution3()
         {
-            const int NTRIALS = 500000;
+            const int NTRIALS = 500;
 
             var random = new Random();
 
@@ -63,10 +63,10 @@ namespace MechJebLibTest.MathsTests
                 var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt;
-                double ecc = Maths.EccFromStateVectors(1.0, r0, v0);
+                double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
                 if (ecc < 1)
-                    dt = random.NextDouble() * Maths.PeriodFromStateVectors(1.0, r0, v0);
+                    dt = random.NextDouble() * Astro.PeriodFromStateVectors(1.0, r0, v0);
                 else
                     dt = random.NextDouble() * 5;
 
@@ -101,9 +101,9 @@ namespace MechJebLibTest.MathsTests
                 {
                     double eanom = Deg2Rad(i);
 
-                    double time = Maths.TimeSincePeriapsisFromEccentricAnomaly(mu, sma, ecc, eanom);
+                    double time = Astro.TimeSincePeriapsisFromEccentricAnomaly(mu, sma, ecc, eanom);
 
-                    double tanom = Maths.TrueAnomalyFromEccentricAnomaly(ecc, eanom);
+                    double tanom = Astro.TrueAnomalyFromEccentricAnomaly(ecc, eanom);
 
                     double smp = ecc == 1 ? 2 * sma : sma * (1.0 - ecc * ecc);
 

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using JetBrains.Annotations;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
-using MechJebLib.Simulations;
 using Unity.Profiling;
 
 namespace MuMech

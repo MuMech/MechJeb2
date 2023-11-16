@@ -7,11 +7,11 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using MechJebLib.Core;
+using MechJebLib.FuelFlowSimulation;
+using MechJebLib.Functions;
 using MechJebLib.PVG;
-using MechJebLib.Simulations;
 using UnityEngine;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
@@ -180,7 +180,7 @@ namespace MuMech
                 .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
                     , MainBody.gravParameter, MainBody.Radius)
                 .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), fpa, attachAltFlag, lanflag)
-                .TerminalConditions(Maths.HmagFromApsides(MainBody.gravParameter, peR, apR));
+                .TerminalConditions(Astro.HmagFromApsides(MainBody.gravParameter, peR, apR));
 
             if (Core.Guidance.Solution != null)
                 ascentBuilder.OldSolution(Core.Guidance.Solution);

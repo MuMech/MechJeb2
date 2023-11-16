@@ -6,7 +6,7 @@
 using System;
 using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Core.ODE;
+using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using Xunit;
 using static System.Math;

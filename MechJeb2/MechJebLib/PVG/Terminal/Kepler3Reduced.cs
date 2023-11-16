@@ -4,9 +4,9 @@
  */
 
 using System;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
@@ -33,8 +33,8 @@ namespace MechJebLib.PVG.Terminal
             _eccT = eccT;
             _incT = Math.Abs(ClampPi(incT));
 
-            _hTm  = Maths.HmagFromKeplerian(1.0, _smaT, _eccT);
-            _peRT = Maths.PeriapsisFromKeplerian(_smaT, _eccT);
+            _hTm  = Astro.HmagFromKeplerian(1.0, _smaT, _eccT);
+            _peRT = Astro.PeriapsisFromKeplerian(_smaT, _eccT);
         }
 
         public IPVGTerminal Rescale(Scale scale) => new Kepler3Reduced(_smaT / scale.LengthScale, _eccT, _incT);
@@ -50,7 +50,7 @@ namespace MechJebLib.PVG.Terminal
             // empirically found this combination worked better and tolerates ecc > 1e-4
             // the use of energy, eccentricity and sma did not converge as well
             double con1 = V3.Dot(hf, hf) * 0.5 - _hTm * _hTm * 0.5;                 // angular momentum
-            double con2 = Maths.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
+            double con2 = Astro.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
             double con3 = V3.Dot(n, hf.normalized) - Math.Cos(_incT);               // inclination
             double tv1 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf); // free Argp
             double tv2 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), n);  // free LAN

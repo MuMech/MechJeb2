@@ -6,7 +6,7 @@
 #nullable enable
 
 using System.Collections.Generic;
-using MechJebLib.Core.Functions;
+using MechJebLib.Functions;
 using MechJebLib.Utils;
 using static System.Math;
 

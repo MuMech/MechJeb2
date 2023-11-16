@@ -6,11 +6,11 @@
 using System;
 using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Core;
-using MechJebLib.Core.ODE;
+using MechJebLib.Functions;
+using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using Xunit;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.MathsTests
@@ -188,7 +188,7 @@ namespace MechJebLibTest.MathsTests
 
             solver.Solve(ode.dydt, y0, yf, 0, 10, events: e);
 
-            e[0].Time.ShouldEqual(Maths.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-9);
+            e[0].Time.ShouldEqual(Astro.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-9);
         }
     }
 }

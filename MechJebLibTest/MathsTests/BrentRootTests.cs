@@ -5,10 +5,10 @@
 
 using System;
 using AssertExtensions;
-using MechJebLib.Core;
+using MechJebLib.Rootfinding;
 using MechJebLib.Utils;
 using Xunit;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.MathsTests

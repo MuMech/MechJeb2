@@ -1,5 +1,5 @@
 ﻿using AssertExtensions;
-using MechJebLib.Core;
+using MechJebLib.Rootfinding;
 using Xunit;
 
 namespace MechJebLibTest.MathsTests

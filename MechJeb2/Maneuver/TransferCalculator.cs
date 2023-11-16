@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using MechJebLib.Core;
-using MechJebLib.Core.Lambert;
+using MechJebLib.Functions;
+using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using UnityEngine;
 using UnityToolbag;
@@ -219,7 +219,7 @@ namespace MuMech
             Vector3d v0 = initialOrbit.getOrbitalVelocityAtUT(ut0);
 
             // analytic solution for paring orbit ejection to hyperbolic v-infinity
-            (V3 vneg, V3 vpos, V3 r, double dt) = Maths.SingleImpulseHyperbolicBurn(initialOrbit.referenceBody.gravParameter, r0.ToV3(), v0.ToV3(),
+            (V3 vneg, V3 vpos, V3 r, double dt) = Astro.SingleImpulseHyperbolicBurn(initialOrbit.referenceBody.gravParameter, r0.ToV3(), v0.ToV3(),
                 exitVelocity.ToV3(), debug);
 
             if (!dt.IsFinite() || !r.magnitude.IsFinite() || !vpos.magnitude.IsFinite() || !vneg.magnitude.IsFinite())

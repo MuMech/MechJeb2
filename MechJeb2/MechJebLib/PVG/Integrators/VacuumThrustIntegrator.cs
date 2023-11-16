@@ -8,7 +8,7 @@
 
 using System;
 using System.Collections.Generic;
-using MechJebLib.Core.ODE;
+using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 

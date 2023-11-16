@@ -8,9 +8,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLib.PVG
@@ -263,7 +263,7 @@ namespace MechJebLib.PVG
                 u = x.PV.normalized;
             }
 
-            (double pitch, double heading) = Maths.ECIToPitchHeading(x.R, u);
+            (double pitch, double heading) = Astro.ECIToPitchHeading(x.R, u);
             return (pitch, heading);
         }
 
@@ -281,14 +281,14 @@ namespace MechJebLib.PVG
         {
             (V3 rf, V3 vf) = TerminalStateVectors();
 
-            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) = Maths.KeplerianFromStateVectors(_mu,
+            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) = Astro.KeplerianFromStateVectors(_mu,
                 rf, vf);
 
-            double peR = Maths.PeriapsisFromKeplerian(sma, ecc);
-            double apR = Maths.ApoapsisFromKeplerian(sma, ecc);
+            double peR = Astro.PeriapsisFromKeplerian(sma, ecc);
+            double apR = Astro.ApoapsisFromKeplerian(sma, ecc);
             double peA = peR - _rbody;
             double apA = apR <= 0 ? apR : apR - _rbody;
-            double fpa = Maths.FlightPathAngle(rf, vf);
+            double fpa = Astro.FlightPathAngle(rf, vf);
             double rT = rf.magnitude - _rbody;
             double vT = vf.magnitude;
 

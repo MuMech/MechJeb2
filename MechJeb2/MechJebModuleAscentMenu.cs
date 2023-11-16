@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using KSP.Localization;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.PVG;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -290,7 +290,7 @@ namespace MuMech
                         width: LAN_WIDTH)) //Launch into plane of target
                 {
                     _launchingToPlane = true;
-                    (double timeToPlane, double inclination) = Maths.MinimumTimeToPlane(
+                    (double timeToPlane, double inclination) = Astro.MinimumTimeToPlane(
                         MainBody.rotationPeriod,
                         VesselState.latitude,
                         VesselState.celestialLongitude,
@@ -309,7 +309,7 @@ namespace MuMech
                 {
                     _launchingToMatchLan = true;
                     _autopilot.StartCountdown(VesselState.time +
-                                              Maths.TimeToPlane(
+                                              Astro.TimeToPlane(
                                                   MainBody.rotationPeriod,
                                                   VesselState.latitude,
                                                   VesselState.celestialLongitude,
@@ -327,7 +327,7 @@ namespace MuMech
                     {
                         _launchingToLan = true;
                         _autopilot.StartCountdown(VesselState.time +
-                                                  Maths.TimeToPlane(
+                                                  Astro.TimeToPlane(
                                                       MainBody.rotationPeriod,
                                                       VesselState.latitude,
                                                       VesselState.celestialLongitude,
