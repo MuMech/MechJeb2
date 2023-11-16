@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -40,7 +39,7 @@ namespace MechJebLib.Control
         public double Update(double reference, double measured)
         {
             // lowpass filter the input
-            measured = Statics.IsFinite(_m1) ? _m1 + SmoothIn * (measured - _m1) : measured;
+            measured = IsFinite(_m1) ? _m1 + SmoothIn * (measured - _m1) : measured;
 
             double delta = reference - measured;
 
@@ -50,7 +49,7 @@ namespace MechJebLib.Control
                 delta -= Sign(delta) * Deadband;
 
             // clegg filtering on zero-crossing to remove integral windup
-            if (Statics.IsFinite(_delta1) && Clegg && ((delta < 0 && _delta1 > 0) || (delta > 0 && _delta1 < 0)))
+            if (IsFinite(_delta1) && Clegg && ((delta < 0 && _delta1 > 0) || (delta > 0 && _delta1 < 0)))
                 _d1 = _d2 = 0;
 
             double ep = B * delta;
@@ -66,9 +65,9 @@ namespace MechJebLib.Control
             double b2 = (4 * Kp * ep + 4 * Kd * ed * N - 2 * Ki * ei * Ts - 2 * Kp * ep * N * Ts + Ki * ei * N * Ts * Ts) / a0;
 
             // if we have NaN values saved into internal state that needs to be cleared here or it won't reset
-            if (!Statics.IsFinite(_d1))
+            if (!IsFinite(_d1))
                 _d1 = 0;
-            if (!Statics.IsFinite(_d2))
+            if (!IsFinite(_d2))
                 _d2 = 0;
 
             // transposed direct form 2
@@ -78,7 +77,7 @@ namespace MechJebLib.Control
             _d2 = b2 - a2 * u0;
 
             // low pass filter the output
-            _o1 = Statics.IsFinite(_o1) ? _o1 + SmoothOut * (u0 - _o1) : u0;
+            _o1 = IsFinite(_o1) ? _o1 + SmoothOut * (u0 - _o1) : u0;
 
             _m1     = measured;
             _delta1 = delta;

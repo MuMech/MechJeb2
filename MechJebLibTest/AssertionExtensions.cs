@@ -83,7 +83,7 @@ namespace AssertExtensions
 
         public static void ShouldBePositive(this double actual)
         {
-            if (!actual.IsFinite())
+            if (!IsFinite(actual))
                 throw new XunitException($"{actual} must be finite");
 
             if (actual <= 0)

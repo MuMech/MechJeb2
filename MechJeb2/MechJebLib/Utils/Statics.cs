@@ -210,7 +210,7 @@ namespace MechJebLib.Utils
         /// <param name="x">Value</param>
         /// <returns>True if the value is finite</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFinite(this double x) => !double.IsNaN(x) && !double.IsInfinity(x);
+        public static bool IsFinite(double x) => !double.IsNaN(x) && !double.IsInfinity(x);
 
         /// <summary>
         ///     Helper to check if a vector is finite in all its compoenents (not NaN or Ininity).
