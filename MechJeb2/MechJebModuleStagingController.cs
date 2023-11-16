@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿extern alias JetBrainsAnnotations;
+using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using Smooth.Slinq;

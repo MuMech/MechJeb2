@@ -4,9 +4,10 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+extern alias JetBrainsAnnotations;
 using System;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Functions;
 using MechJebLib.PVG;

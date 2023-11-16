@@ -1,7 +1,8 @@
 ﻿#nullable enable
 
-using JetBrains.Annotations;
-using MechJebLib;
+extern alias JetBrainsAnnotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
+using MechJebLibBindings;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.SuicideBurnSimulation;

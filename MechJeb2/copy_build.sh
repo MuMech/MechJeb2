@@ -36,21 +36,9 @@ if [ -z "${REFERENCE_PATH}" ] ; then
   exit 1
 fi
 
-if [ -z "${PDB2MDB}" ] ; then
-  PDB2MDB=`which pdb2mdb`
-fi
-
 if [[ $(uname -s) = Darwin ]]; then
   KSPDIR="$(dirname "$(dirname "$(dirname "$(dirname "$(dirname "$REFERENCE_PATH")")")")")"
 fi
-
-# Pretty sure Unity handles Portable PDB files now?
-#if [ -z "${PDB2MDB}" ] ; then
-#  echo '$PDB2MDB not found'
-#else
-#  echo "Running '${PDB2MDB}'"
-#  "${PDB2MDB}" "${TARGET_PATH}"
-#fi
 
 if [ -z "${KSPDIR}" ] ; then
   if [[ $(uname -s) = Linux ]]; then
@@ -72,13 +60,23 @@ else
     mkdir -p "${KSPDIR}/GameData/MechJeb2/Plugins/"
   fi
   echo "Copying to '${KSPDIR}'"
-  cp "${TARGET_PATH}" "${KSPDIR}/GameData/MechJeb2/Plugins/"
-  test -f "${TARGET_DIR}/${TARGET_NAME}.pdb" && cp "${TARGET_DIR}/${TARGET_NAME}.pdb" "${KSPDIR}/GameData/MechJeb2/Plugins/"
-  test -f "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" && cp "${TARGET_DIR}/${TARGET_NAME}.dll.mdb" "${KSPDIR}/GameData/MechJeb2/Plugins/"
+  for FILENAME in \
+    JetBrains.Annotations \
+    MechJeb2 \
+    MechJebLib \
+    MechJebLibBindings \
+    alglib
+  do
+    cp "${TARGET_DIR}/${FILENAME}.dll" "${KSPDIR}/GameData/MechJeb2/Plugins/"
+    test -f "${TARGET_DIR}/${FILENAME}.pdb" && cp "${TARGET_DIR}/${FILENAME}.pdb" "${KSPDIR}/GameData/MechJeb2/Plugins/"
+    test -f "${TARGET_DIR}/${FILENAME}.xml" && cp "${TARGET_DIR}/${FILENAME}.xml" "${KSPDIR}/GameData/MechJeb2/Plugins/"
+  done
+
   cp -r ${PROJECT_DIR}/../Bundles "${KSPDIR}/GameData/MechJeb2/"
   cp -r ${PROJECT_DIR}/../Icons "${KSPDIR}/GameData/MechJeb2/"
   cp -r ${PROJECT_DIR}/../Localization "${KSPDIR}/GameData/MechJeb2/"
   cp -r ${PROJECT_DIR}/../Parts "${KSPDIR}/GameData/MechJeb2/"
 fi
+
 
 exit 0

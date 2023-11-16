@@ -8,6 +8,7 @@ using System.Threading;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
+using MechJebLibBindings;
 using UnityEngine;
 using UnityToolbag;
 

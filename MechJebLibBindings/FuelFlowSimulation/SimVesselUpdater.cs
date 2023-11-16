@@ -7,15 +7,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using KSP.UI.Screens;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
-using MuMech;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 #nullable enable
 
-namespace MechJebLib.FuelFlowSimulation
+namespace MechJebLibBindings.FuelFlowSimulation
 {
     public partial class SimVesselManager
     {

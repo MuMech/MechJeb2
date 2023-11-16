@@ -35,9 +35,6 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>..\..\..\..\..\Library\Application Support\Steam\steamapps\common\Kerbal Space Program\KSP.app\Contents\Resources\Data\Managed\Assembly-CSharp.dll</HintPath>
-        </Reference>
         <Reference Include="System"/>
         <Reference Include="System.Core"/>
         <Reference Include="System.Data"/>
@@ -84,13 +81,10 @@
         <Compile Include="TestInitialization.cs"/>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\MechJeb2\MechJeb2.csproj">
-            <Project>{9fc90ae6-c2e4-47f1-a6d1-db4731a40be3}</Project>
-            <Name>MechJeb2</Name>
+        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
+          <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
+          <Name>MechJebLib</Name>
         </ProjectReference>
-    </ItemGroup>
-    <ItemGroup>
-        <Folder Include="Utils\"/>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

@@ -1,5 +1,6 @@
+extern alias JetBrainsAnnotations;
 using System;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
@@ -354,7 +355,7 @@ namespace MuMech
             {
                 // If we're more than half our own bounding box size behind the target port then use wrong side behavior
                 // Still needs improvement. The reason for these changes is that to prevent wrong side behavior when our
-                // port slipped behind the target by a fractional amount. The result is that rather than avoiding the 
+                // port slipped behind the target by a fractional amount. The result is that rather than avoiding the
                 // target ship we end up trying to pass right through it.
                 // What's really needed here is code that compares bounding box positions to determine if we just try to back up or change sides completely.
                 if (Math.Abs(zSep) > vesselBoundingBox.size.magnitude * 0.5f)

@@ -351,7 +351,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             for (int j = 0; j < Propellants.Count; j++)
             {
                 SimPropellant p = Propellants[j];
-                double density = PartResourceLibrary.Instance.GetDefinition(p.id).density;
+                double density = p.density;
 
                 // this is the individual propellant volume rate.  we are including the ignoreForIsp fuels in this loop and this will
                 // correctly calculate the volume rates of all the propellants, in L/sec.  if you sum these it'll be larger than the

@@ -1,9 +1,10 @@
-﻿using System;
+﻿extern alias JetBrainsAnnotations;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using KSP.UI.Screens;
 using UnityEngine;
@@ -473,7 +474,7 @@ namespace MuMech
         }
 
         // OnDestroy is actually run a bit too often when we have multiple MJ unit that get staged
-        // But the edge case may get a bit too complex to handle properly so for now we 
+        // But the edge case may get a bit too complex to handle properly so for now we
         // recreate the buttons a bit often.
         public override void OnDestroy()
         {

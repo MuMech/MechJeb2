@@ -1,8 +1,11 @@
+extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using System.Diagnostics;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
+using MechJebLibBindings.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
+using MechJebLibBindings;
 using Unity.Profiling;
 
 namespace MuMech

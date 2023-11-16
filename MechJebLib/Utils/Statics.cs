@@ -65,13 +65,16 @@ namespace MechJebLib.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Clamp01(double x) => Clamp(x, 0, 1);
 
+        public const double DEG2RAD = PI / 180.0;
+        public const double RAD2DEG = 180.0 / PI;
+
         /// <summary>
         ///     Convert Degrees to Radians.
         /// </summary>
         /// <param name="deg">degrees</param>
         /// <returns>radians</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Deg2Rad(double deg) => deg * UtilMath.Deg2Rad;
+        public static double Deg2Rad(double deg) => deg * DEG2RAD;
 
         /// <summary>
         ///     Linear interpolation.
@@ -89,7 +92,7 @@ namespace MechJebLib.Utils
         /// <param name="rad">Radians</param>
         /// <returns>Degrees</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Rad2Deg(double rad) => rad * UtilMath.Rad2Deg;
+        public static double Rad2Deg(double rad) => rad * RAD2DEG;
 
         /// <summary>
         ///     Safe inverse cosine that clamps its input.

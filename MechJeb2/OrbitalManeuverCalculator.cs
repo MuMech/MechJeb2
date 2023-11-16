@@ -3,6 +3,7 @@ using MechJebLib.Lambert;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using MechJebLib.Rootfinding;
+using MechJebLibBindings;
 using Smooth.Pools;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;

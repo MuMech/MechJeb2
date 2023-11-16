@@ -1,9 +1,10 @@
 // #define DEBUG
 
+extern alias JetBrainsAnnotations;
 using System;
 using System.IO;
 using System.Reflection;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
 
 namespace MuMech

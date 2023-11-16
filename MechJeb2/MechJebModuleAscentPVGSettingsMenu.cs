@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿extern alias JetBrainsAnnotations;
+using System.Collections.Generic;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.FuelFlowSimulation;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;

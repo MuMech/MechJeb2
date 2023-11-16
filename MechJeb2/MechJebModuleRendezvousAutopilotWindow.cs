@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿extern alias JetBrainsAnnotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 

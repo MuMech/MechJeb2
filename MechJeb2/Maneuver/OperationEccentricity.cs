@@ -1,5 +1,6 @@
+extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace MuMech
 {

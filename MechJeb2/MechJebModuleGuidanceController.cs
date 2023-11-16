@@ -4,9 +4,11 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.PVG;
+using MechJebLibBindings;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
