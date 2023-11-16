@@ -1,9 +1,9 @@
 ﻿using System;
 using AssertExtensions;
-using MechJebLib.Core;
-using MechJebLib.Core.TwoBody;
+using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -43,8 +43,8 @@ namespace MechJebLibTest.ManeuversTests
                 v0 = new V3(2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000);
 
                 // skip if its already an escape orbit
-                if (Maths.EccFromStateVectors(moonMu, r0, v0) > 1 ||
-                    Maths.ApoapsisFromStateVectors(moonMu, r0, v0) > moonSOI)
+                if (Astro.EccFromStateVectors(moonMu, r0, v0) > 1 ||
+                    Astro.ApoapsisFromStateVectors(moonMu, r0, v0) > moonSOI)
                     continue;
 
                 /*
@@ -79,15 +79,15 @@ namespace MechJebLibTest.ManeuversTests
                     ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, 0);
 
                 (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
-                double tt1 = Maths.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
+                double tt1 = Astro.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
                 (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
                 (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
                 V3 r3 = moonR2 + r2;
                 V3 v3 = moonV2 + v2;
 
-                _testOutputHelper.WriteLine($"periapsis: {Maths.PeriapsisFromStateVectors(centralMu, r3, v3)}");
+                _testOutputHelper.WriteLine($"periapsis: {Astro.PeriapsisFromStateVectors(centralMu, r3, v3)}");
 
-                Maths.PeriapsisFromStateVectors(centralMu, r3, v3).ShouldEqual(peR, 1e-3);
+                Astro.PeriapsisFromStateVectors(centralMu, r3, v3).ShouldEqual(peR, 1e-3);
                 newPeR.ShouldEqual(peR, 1e-3);
             }
         }

@@ -7,7 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using static MechJebLib.Statics;
+using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 #nullable enable
@@ -376,7 +377,7 @@ namespace MechJebLib.Primitives
                 $"[{x.ToString(format, formatProvider)}, {y.ToString(format, formatProvider)}, {z.ToString(format, formatProvider)}]";
         }
 
-        public bool IsFinite() => x.IsFinite() && y.IsFinite() && z.IsFinite();
+        public bool IsFinite() => Statics.IsFinite(x) && Statics.IsFinite(y) && Statics.IsFinite(z);
 
         public void CopyFrom(IList<double> other, int index = 0)
         {

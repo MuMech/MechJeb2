@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using MechJebLib.PVG;
 using UnityEngine;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 #nullable enable
 

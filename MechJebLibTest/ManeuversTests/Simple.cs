@@ -1,10 +1,10 @@
 ﻿using System;
 using AssertExtensions;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using Xunit;
 using static System.Math;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.ManeuversTests
 {
@@ -30,9 +30,9 @@ namespace MechJebLibTest.ManeuversTests
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToCircularize(mu, r, v);
 
-                Maths.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-15);
-                Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
-                Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
+                Astro.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-15);
+                Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
+                Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
             }
         }
 
@@ -60,8 +60,8 @@ namespace MechJebLibTest.ManeuversTests
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToEllipticize(mu, r, v, newPeR, newApR);
 
-                Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-4);
-                Maths.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
+                Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-4);
+                Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
             }
         }
 
@@ -83,13 +83,13 @@ namespace MechJebLibTest.ManeuversTests
                 v *= vscale;
 
                 double plusOrMinusOne = random.Next(0, 2) * 2 - 1;
-                double lat = Maths.LatitudeFromBCI(r);
+                double lat = Astro.LatitudeFromBCI(r);
                 double newInc = Abs(lat) + random.NextDouble() * (PI - 2 * Abs(lat));
                 newInc *= plusOrMinusOne;
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToChangeInclination(r, v, newInc);
 
-                Maths.IncFromStateVectors(r, v + dv).ShouldEqual(Abs(newInc), 1e-4);
+                Astro.IncFromStateVectors(r, v + dv).ShouldEqual(Abs(newInc), 1e-4);
             }
         }
 
@@ -99,7 +99,7 @@ namespace MechJebLibTest.ManeuversTests
             const double mu = 3.986004418e+14;
             const double rearth = 6.371e+6;
             const double r185 = rearth + 185e+3;
-            double v185 = Maths.CircularVelocity(mu, r185);
+            double v185 = Astro.CircularVelocity(mu, r185);
 
             var r0 = new V3(r185, 0, 0);
             var v0 = new V3(0, v185, 0);
@@ -119,7 +119,7 @@ namespace MechJebLibTest.ManeuversTests
             const double mu = 3.986004418e+14;
             const double rearth = 6.371e+6;
             const double r185 = rearth + 185e+3;
-            double v185 = Maths.CircularVelocity(mu, r185);
+            double v185 = Astro.CircularVelocity(mu, r185);
 
             var r0 = new V3(r185, 0, 0);
             var v0 = new V3(0, v185, 0);

@@ -7,7 +7,7 @@ using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Integrators;
 using MechJebLib.Utils;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 #nullable enable

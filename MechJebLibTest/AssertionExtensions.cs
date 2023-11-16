@@ -8,7 +8,7 @@ using System;
 using System.Globalization;
 using MechJebLib.Primitives;
 using Xunit.Sdk;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace AssertExtensions

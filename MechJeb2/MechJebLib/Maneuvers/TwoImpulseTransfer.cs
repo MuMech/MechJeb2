@@ -1,8 +1,8 @@
 ﻿using System;
-using MechJebLib.Core;
-using MechJebLib.Core.Lambert;
-using MechJebLib.Core.TwoBody;
+using MechJebLib.Functions;
+using MechJebLib.Lambert;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using static System.Math;
 
@@ -61,7 +61,7 @@ namespace MechJebLib.Maneuvers
             double ttmin = double.NegativeInfinity, double ttmax = double.PositiveInfinity, double offsetMin = double.NegativeInfinity,
             double offsetMax = double.PositiveInfinity, bool optguard = false)
         {
-            if (!mu.IsFinite())
+            if (!Statics.IsFinite(mu))
                 throw new ArgumentException("bad mu in ChangeOrbitalElement");
             if (!r1.IsFinite())
                 throw new ArgumentException("bad r1 in ChangeOrbitalElement");
@@ -106,7 +106,7 @@ namespace MechJebLib.Maneuvers
             offsetMin   /= scale.TimeScale;
             offsetMax   /= scale.TimeScale;
 
-            (_, _, double ttguess, _) = Maths.HohmannTransferParameters(1.0, r1, r2);
+            (_, _, double ttguess, _) = Astro.HohmannTransferParameters(1.0, r1, r2);
 
             x[0] = dtguess;
             x[1] = ttguess;
@@ -127,7 +127,7 @@ namespace MechJebLib.Maneuvers
             alglib.minbleiccreatef(x, DIFFSTEP, out alglib.minbleicstate state);
             alglib.minbleicsetbc(state, bndl, bndu);
             alglib.minbleicsetcond(state, 0.0, 0.0, EPSX, MAXITS);
-            alglib.minbleicsetstpmax(state, Maths.SynodicPeriod(1.0, r1, v1, r2, v2) / 2);
+            alglib.minbleicsetstpmax(state, Astro.SynodicPeriod(1.0, r1, v1, r2, v2) / 2);
 
             if (optguard)
             {
@@ -179,7 +179,7 @@ namespace MechJebLib.Maneuvers
                 double offsetGuess = 0;
                 double offsetMin = 0;
                 double offsetMax = 0;
-                if (lagTime.IsFinite())
+                if (Statics.IsFinite(lagTime))
                 {
                     offsetMin   = -lagTime;
                     offsetMax   = -lagTime;
@@ -198,7 +198,7 @@ namespace MechJebLib.Maneuvers
                 // we have to try the other side of the target orbit since we might get eg. the DN instead of the AN when the AN is closer
                 // (this may be insufficient and may need more of a search box but then we're O(N^2) and i think basinhopping or porkchop
                 // plots will be the better solution)
-                double targetPeriod = Maths.PeriodFromStateVectors(mu, r2, v2);
+                double targetPeriod = Astro.PeriodFromStateVectors(mu, r2, v2);
 
                 (V3 a, double b, V3 c, double d) =
                     Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar, capture, optguard: optguard);
@@ -219,7 +219,7 @@ namespace MechJebLib.Maneuvers
             double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true,
             bool fixedTime = false, bool optguard = false)
         {
-            double synodicPeriod = Maths.SynodicPeriod(mu, r1, v1, r2, v2);
+            double synodicPeriod = Astro.SynodicPeriod(mu, r1, v1, r2, v2);
 
             if (fixedTime)
                 return ManeuverInternal(mu, r1, v1, r2, v2, 0, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard,

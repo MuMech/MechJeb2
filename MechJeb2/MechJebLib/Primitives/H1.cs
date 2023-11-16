@@ -5,7 +5,7 @@
 
 #nullable enable
 
-using MechJebLib.Core.Functions;
+using MechJebLib.Functions;
 using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives

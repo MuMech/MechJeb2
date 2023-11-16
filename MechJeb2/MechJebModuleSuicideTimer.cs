@@ -1,9 +1,10 @@
 ﻿#nullable enable
 
 using JetBrains.Annotations;
+using MechJebLib;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
-using MechJebLib.Simulations;
-using MuMech.MechJebLib;
+using MechJebLib.SuicideBurnSimulation;
 
 namespace MuMech
 {

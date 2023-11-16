@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using UnityEngine;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MuMech
@@ -166,7 +166,7 @@ namespace MuMech
 
         // circular orbital speed at this instant
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double CircularOrbitSpeed(this Orbit o) => Maths.CircularVelocity(o.referenceBody.gravParameter, o.radius);
+        public static double CircularOrbitSpeed(this Orbit o) => Astro.CircularVelocity(o.referenceBody.gravParameter, o.radius);
 
         // circular orbital period at this instant
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

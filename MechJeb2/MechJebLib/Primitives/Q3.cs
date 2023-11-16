@@ -5,7 +5,7 @@
 
 using System;
 using System.Globalization;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 #nullable enable

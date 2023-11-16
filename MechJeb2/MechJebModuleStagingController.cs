@@ -2,7 +2,7 @@
 using System.Linq;
 using JetBrains.Annotations;
 using KSP.UI.Screens;
-using MechJebLib.Simulations;
+using MechJebLib.FuelFlowSimulation;
 using Smooth.Slinq;
 using UnityEngine;
 

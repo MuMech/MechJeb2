@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
-using MechJebLib.Simulations;
+using MechJebLib.FuelFlowSimulation;
 using UnityEngine;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {

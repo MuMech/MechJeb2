@@ -4,8 +4,9 @@
  */
 
 using System;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static System.Math;
 
 #nullable enable
@@ -45,29 +46,29 @@ namespace MechJebLib.Maneuvers
             switch (type)
             {
                 case Type.PERIAPSIS:
-                    Dual peR0 = Maths.PeriapsisFromStateVectors(1.0, p, q + dv0) - value;
-                    Dual peR1 = Maths.PeriapsisFromStateVectors(1.0, p, q + dv1) - value;
+                    Dual peR0 = Astro.PeriapsisFromStateVectors(1.0, p, q + dv0) - value;
+                    Dual peR1 = Astro.PeriapsisFromStateVectors(1.0, p, q + dv1) - value;
                     fi[1]     = peR0.M;
                     jac[1, 0] = peR0.D;
                     jac[1, 1] = peR1.D;
                     break;
                 case Type.APOAPSIS:
-                    Dual apR0 = 1.0 / Maths.ApoapsisFromStateVectors(1.0, p, q + dv0) - 1.0 / value;
-                    Dual apR1 = 1.0 / Maths.ApoapsisFromStateVectors(1.0, p, q + dv1) - 1.0 / value;
+                    Dual apR0 = 1.0 / Astro.ApoapsisFromStateVectors(1.0, p, q + dv0) - 1.0 / value;
+                    Dual apR1 = 1.0 / Astro.ApoapsisFromStateVectors(1.0, p, q + dv1) - 1.0 / value;
                     fi[1]     = apR0.M;
                     jac[1, 0] = apR0.D;
                     jac[1, 1] = apR1.D;
                     break;
                 case Type.SMA:
-                    Dual sma0 = 1.0 / Maths.SmaFromStateVectors(1.0, p, q + dv0) - 1.0 / value;
-                    Dual sma1 = 1.0 / Maths.SmaFromStateVectors(1.0, p, q + dv1) - 1.0 / value;
+                    Dual sma0 = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv0) - 1.0 / value;
+                    Dual sma1 = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv1) - 1.0 / value;
                     fi[1]     = sma0.M;
                     jac[1, 0] = sma0.D;
                     jac[1, 1] = sma1.D;
                     break;
                 case Type.ECC:
-                    Dual ecc0 = Maths.EccFromStateVectors(1.0, p, q + dv0) - value;
-                    Dual ecc1 = Maths.EccFromStateVectors(1.0, p, q + dv1) - value;
+                    Dual ecc0 = Astro.EccFromStateVectors(1.0, p, q + dv0) - value;
+                    Dual ecc1 = Astro.EccFromStateVectors(1.0, p, q + dv1) - value;
                     fi[1]     = ecc0.M;
                     jac[1, 0] = ecc0.D;
                     jac[1, 1] = ecc1.D;
@@ -90,16 +91,16 @@ namespace MechJebLib.Maneuvers
             switch (type)
             {
                 case Type.PERIAPSIS:
-                    fi[1] = Maths.PeriapsisFromStateVectors(1.0, p, q + dv) - value;
+                    fi[1] = Astro.PeriapsisFromStateVectors(1.0, p, q + dv) - value;
                     break;
                 case Type.APOAPSIS:
-                    fi[1] = 1.0 / Maths.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / value;
+                    fi[1] = 1.0 / Astro.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
                 case Type.SMA:
-                    fi[1] = 1.0 / Maths.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
+                    fi[1] = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
                 case Type.ECC:
-                    double ecc = Maths.EccFromStateVectors(1.0, p, q + dv);
+                    double ecc = Astro.EccFromStateVectors(1.0, p, q + dv);
                     fi[1] = ecc - value;
                     break;
             }
@@ -107,7 +108,7 @@ namespace MechJebLib.Maneuvers
 
         private static V3 DeltaV(double mu, V3 r, V3 v, double value, Type type, bool optguard = false)
         {
-            if (!mu.IsFinite())
+            if (!Statics.IsFinite(mu))
                 throw new ArgumentException("bad mu in ChangeOrbitalElement");
             if (!r.IsFinite())
                 throw new ArgumentException("bad r in ChangeOrbitalElement");
@@ -126,7 +127,7 @@ namespace MechJebLib.Maneuvers
 
             var scale = Scale.Create(mu, r.magnitude);
 
-            (V3 p, V3 q, Q3 rot) = Maths.PerifocalFromStateVectors(mu, r, v);
+            (V3 p, V3 q, Q3 rot) = Astro.PerifocalFromStateVectors(mu, r, v);
 
             p /= scale.LengthScale;
             q /= scale.VelocityScale;
@@ -179,7 +180,7 @@ namespace MechJebLib.Maneuvers
 
         public static V3 ChangePeriapsis(double mu, V3 r, V3 v, double peR, bool optguard = false)
         {
-            if (peR < 0 || (peR > r.magnitude) | !peR.IsFinite())
+            if (peR < 0 || (peR > r.magnitude) | !Statics.IsFinite(peR))
                 throw new ArgumentException($"Bad periapsis in ChangeOrbitalElement = {peR}");
 
             return DeltaV(mu, r, v, peR, Type.PERIAPSIS, optguard);
@@ -187,7 +188,7 @@ namespace MechJebLib.Maneuvers
 
         public static V3 ChangeApoapsis(double mu, V3 r, V3 v, double apR, bool optguard = false)
         {
-            if (!apR.IsFinite() || (apR > 0 && apR < r.magnitude))
+            if (!Statics.IsFinite(apR) || (apR > 0 && apR < r.magnitude))
                 throw new ArgumentException($"Bad apoapsis in ChangeOrbitalElement = {apR}");
 
             return DeltaV(mu, r, v, apR, Type.APOAPSIS, optguard);
@@ -195,7 +196,7 @@ namespace MechJebLib.Maneuvers
 
         public static V3 ChangeApsis(double mu, V3 r, V3 v, double valueR, bool optguard = false)
         {
-            if (!valueR.IsFinite())
+            if (!Statics.IsFinite(valueR))
                 throw new ArgumentException($"Bad apoapsis in ChangeOrbitalElement = {valueR}");
 
             return valueR <= r.magnitude ? DeltaV(mu, r, v, valueR, Type.PERIAPSIS, optguard) : DeltaV(mu, r, v, valueR, Type.APOAPSIS, optguard);
@@ -203,7 +204,7 @@ namespace MechJebLib.Maneuvers
 
         public static V3 ChangeSMA(double mu, V3 r, V3 v, double sma, bool optguard = false)
         {
-            if (!sma.IsFinite())
+            if (!Statics.IsFinite(sma))
                 throw new ArgumentException($"Bad SMA in ChangeOrbitalElement = {sma}");
 
             return DeltaV(mu, r, v, sma, Type.SMA, optguard);
@@ -211,7 +212,7 @@ namespace MechJebLib.Maneuvers
 
         public static V3 ChangeECC(double mu, V3 r, V3 v, double ecc, bool optguard = false)
         {
-            if (!ecc.IsFinite() || ecc < 0)
+            if (!Statics.IsFinite(ecc) || ecc < 0)
                 throw new ArgumentException($"Bad Ecc in ChangeOrbitalElement = {ecc}");
 
             return DeltaV(mu, r, v, ecc, Type.ECC, optguard);

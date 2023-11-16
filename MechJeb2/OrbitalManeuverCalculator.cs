@@ -1,11 +1,11 @@
 ﻿using System;
-using MechJebLib.Core;
-using MechJebLib.Core.Lambert;
+using MechJebLib.Lambert;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
+using MechJebLib.Rootfinding;
 using Smooth.Pools;
 using UnityEngine;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {

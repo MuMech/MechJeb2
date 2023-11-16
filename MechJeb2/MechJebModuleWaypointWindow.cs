@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using KSP.IO;
 using KSP.Localization;
 using UnityEngine;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {

@@ -7,10 +7,10 @@
 
 using System;
 using System.Diagnostics;
-using MechJebLib.Core;
-using MechJebLib.Core.TwoBody;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Statics;
+using MechJebLib.TwoBody;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLib.Maneuvers
@@ -293,23 +293,23 @@ namespace MechJebLib.Maneuvers
 
             // get the transfer orbit keplerian elements
             (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
-                Maths.KeplerianFromStateVectors(1.0, moonR0, moonV0 + dv1);
+                Astro.KeplerianFromStateVectors(1.0, moonR0, moonV0 + dv1);
 
             // calculate the true anomaly of the SOI point on the transfer orbit (using the planet scale)
             double moonSOI2 = moonSOI / moonToPlanetScale.LengthScale;
             double nuSOI = TAU - SafeAcos((sma * (1 - ecc * ecc) / moonSOI2 - 1) / ecc); // FIXME: probably assumes we're going to a periapsis?
 
-            if (Maths.EccFromStateVectors(1.0, r0, v0) < 1 && Maths.ApoapsisFromStateVectors(1.0, r0, v0) < moonSOI)
+            if (Astro.EccFromStateVectors(1.0, r0, v0) < 1 && Astro.ApoapsisFromStateVectors(1.0, r0, v0) < moonSOI)
             {
                 // get the rsoi/vsoi in the planet-centric coordinates
-                (V3 _, V3 vsoiPlanet) = Maths.StateVectorsFromKeplerian(1.0, sma, ecc, inc, lan, argp, nuSOI);
+                (V3 _, V3 vsoiPlanet) = Astro.StateVectorsFromKeplerian(1.0, sma, ecc, inc, lan, argp, nuSOI);
 
                 // now compute the lunar hyperbolic burn.
                 V3 vneg, vpos, rburn;
-                (vneg, vpos, rburn, dt) = Maths.SingleImpulseHyperbolicBurn(1.0, r0, v0, (vsoiPlanet - moonV0) * moonToPlanetScale.VelocityScale);
+                (vneg, vpos, rburn, dt) = Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, (vsoiPlanet - moonV0) * moonToPlanetScale.VelocityScale);
 
                 dv           = vpos - vneg;
-                tt1          = Maths.TimeToNextRadius(1.0, rburn, vpos, moonSOI);
+                tt1          = Astro.TimeToNextRadius(1.0, rburn, vpos, moonSOI);
                 (rsoi, vsoi) = Shepperd.Solve(1.0, tt1, rburn, vpos);
             }
             else
@@ -317,7 +317,7 @@ namespace MechJebLib.Maneuvers
                 // if we're already on an escape trajectory, try an immediate burn and hope we're reasonably close
                 dt           = 0;
                 dv           = V3.zero;
-                tt1          = Maths.TimeToNextRadius(1.0, r0, v0, moonSOI);
+                tt1          = Astro.TimeToNextRadius(1.0, r0, v0, moonSOI);
                 (rsoi, vsoi) = Shepperd.Solve(1.0, tt1, r0, v0);
             }
 
@@ -330,7 +330,7 @@ namespace MechJebLib.Maneuvers
             V3 vsoiPlanet3 = vsoiPlanet2 + ChangeOrbitalElement.ChangeApsis(1.0, rsoiPlanet, vsoiPlanet2, peR);
 
             // forward propagate that to find rf+vf conditions and transfer time
-            double tt2 = Maths.TimeToNextPeriapsis(1.0, rsoiPlanet, vsoiPlanet3);
+            double tt2 = Astro.TimeToNextPeriapsis(1.0, rsoiPlanet, vsoiPlanet3);
             (rf, vf) = Shepperd.Solve(1.0, tt2, rsoiPlanet, vsoiPlanet3);
 
             V3 r2Sph = rsoi.cart2sph;
@@ -446,13 +446,13 @@ namespace MechJebLib.Maneuvers
                     $"ReturnFromMoon.Maneuver() no feasible solution found, constraint violation: {rep.nlcerr}");
 
             (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
-                Maths.KeplerianFromStateVectors(1.0, new V3(x2[14], x2[15], x2[16]), new V3(x2[17], x2[18], x2[19]));
+                Astro.KeplerianFromStateVectors(1.0, new V3(x2[14], x2[15], x2[16]), new V3(x2[17], x2[18], x2[19]));
 
             Print(
                 $"Earth transfer orbit:\nsma:{sma * planetScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
 
             (sma, ecc, inc, lan, argp, tanom, _) =
-                Maths.KeplerianFromStateVectors(1.0, moonR0, moonV0);
+                Astro.KeplerianFromStateVectors(1.0, moonR0, moonV0);
 
             Print(
                 $"Lunar orbit:\nsma:{sma * planetScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
@@ -470,7 +470,7 @@ namespace MechJebLib.Maneuvers
                 $"ReturnFromMoon.Maneuver({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
 
             (double sma, double ecc, double incc, double lan, double argp, double tanom, _) =
-                Maths.KeplerianFromStateVectors(moonMu, r0, v0);
+                Astro.KeplerianFromStateVectors(moonMu, r0, v0);
 
             Print($"sma:{sma} ecc:{ecc} inc:{Rad2Deg(incc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
 
@@ -507,7 +507,7 @@ namespace MechJebLib.Maneuvers
             V3 dv;
             int i = 0;
 
-            (double _, double ecc) = Maths.SmaEccFromStateVectors(moonMu, r0, v0);
+            (double _, double ecc) = Astro.SmaEccFromStateVectors(moonMu, r0, v0);
 
             while (true)
             {
@@ -516,14 +516,14 @@ namespace MechJebLib.Maneuvers
                     break;
                 if (i++ >= 5)
                     throw new Exception("Maximum iterations exceeded with no valid future solution");
-                (r0, v0) = Shepperd.Solve(moonMu, Maths.PeriodFromStateVectors(moonMu, r0, v0), r0, v0);
+                (r0, v0) = Shepperd.Solve(moonMu, Astro.PeriodFromStateVectors(moonMu, r0, v0), r0, v0);
             }
 
             (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
-            double tt1 = Maths.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
+            double tt1 = Astro.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
             (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
-            double newPeR = Maths.PeriapsisFromStateVectors(centralMu, moonR2 + r2, moonV2 + v2);
+            double newPeR = Astro.PeriapsisFromStateVectors(centralMu, moonR2 + r2, moonV2 + v2);
 
             return (dv, dt, newPeR);
         }

@@ -4,9 +4,9 @@
  */
 
 using System;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 #nullable enable
 
@@ -33,7 +33,7 @@ namespace MechJebLib.PVG.Terminal
             _rT   = rT;
             _incT = Math.Abs(ClampPi(incT));
             _lanT = lanT;
-            _iHT  = Maths.HunitFromKeplerian(_incT, _lanT);
+            _iHT  = Astro.HunitFromKeplerian(_incT, _lanT);
         }
 
         public IPVGTerminal Rescale(Scale scale) => new FlightPathAngle4Energy(_rT / scale.LengthScale, _incT, _lanT);

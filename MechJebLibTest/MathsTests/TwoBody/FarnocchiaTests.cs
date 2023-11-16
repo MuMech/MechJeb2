@@ -6,12 +6,12 @@
 using System;
 using System.Collections.Generic;
 using AssertExtensions;
-using MechJebLib.Core.ODE;
-using MechJebLib.Core.TwoBody;
+using MechJebLib.ODE;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using Xunit;
 using Xunit.Abstractions;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.MathsTests

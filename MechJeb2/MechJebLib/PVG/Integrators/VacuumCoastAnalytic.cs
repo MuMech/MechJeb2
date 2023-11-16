@@ -5,8 +5,8 @@
 
 #nullable enable
 
-using MechJebLib.Core.TwoBody;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 
 namespace MechJebLib.PVG.Integrators
 {

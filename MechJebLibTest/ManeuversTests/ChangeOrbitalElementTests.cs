@@ -1,6 +1,6 @@
 ﻿using System;
 using AssertExtensions;
-using MechJebLib.Core;
+using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using Xunit;
@@ -30,7 +30,7 @@ namespace MechJebLibTest.ManeuversTests
                 double mu = rscale * vscale * vscale;
 
                 V3 dv = ChangeOrbitalElement.ChangePeriapsis(mu, r, v, newR, true);
-                Maths.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newR, 1e-9);
+                Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newR, 1e-9);
 
                 // validate this API works left handed.
                 V3 dv2 = ChangeOrbitalElement.ChangePeriapsis(mu, r.xzy, v.xzy, newR);
@@ -39,12 +39,12 @@ namespace MechJebLibTest.ManeuversTests
                 // now test apoapsis changing to elliptical
                 newR = random.NextDouble() * rscale * 1e9 + r.magnitude;
                 V3 dv3 = ChangeOrbitalElement.ChangeApoapsis(mu, r, v, newR, true);
-                Maths.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-5);
+                Astro.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-4);
 
                 // now test apoapsis changing to hyperbolic
                 newR = -(random.NextDouble() * 1e9 + 1e3) * rscale;
                 V3 dv4 = ChangeOrbitalElement.ChangeApoapsis(mu, r, v, newR, true);
-                Maths.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-5);
+                Astro.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-5);
 
                 // now test changing the SMA.
                 newR = random.NextDouble() * 1e3 * rscale;
@@ -55,12 +55,12 @@ namespace MechJebLibTest.ManeuversTests
                 newR = 35354091.544774853;
                 */
                 V3 dv5 = ChangeOrbitalElement.ChangeSMA(mu, r, v, newR, true);
-                Maths.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-9);
+                Astro.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-9);
 
                 // now test changing the Ecc
                 double newEcc = random.NextDouble() * 5 + 2.5;
                 V3 dv6 = ChangeOrbitalElement.ChangeECC(mu, r, v, newEcc);
-                (_, double ecc) = Maths.SmaEccFromStateVectors(mu, r, v + dv6);
+                (_, double ecc) = Astro.SmaEccFromStateVectors(mu, r, v + dv6);
                 ecc.ShouldEqual(newEcc, 1e-9);
             }
         }

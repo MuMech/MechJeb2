@@ -1,8 +1,8 @@
 ﻿using JetBrains.Annotations;
-using MechJebLib.Simulations;
+using MechJebLib.FuelFlowSimulation;
 using UnityEngine;
 using static System.Math;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {

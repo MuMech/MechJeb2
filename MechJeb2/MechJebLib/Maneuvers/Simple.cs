@@ -1,9 +1,9 @@
-﻿using MechJebLib.Core;
-using MechJebLib.Core.TwoBody;
+﻿using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using static System.Math;
-using static MechJebLib.Statics;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Maneuvers
 {
@@ -16,7 +16,7 @@ namespace MechJebLib.Maneuvers
             Check.NonZeroFinite(r);
 
             var h = V3.Cross(r, v);
-            return n * Maths.CircularVelocityFromHvec(mu, r, h) - v;
+            return n * Astro.CircularVelocityFromHvec(mu, r, h) - v;
         }
 
         public static V3 DeltaVToCircularize(double mu, V3 r, V3 v)
@@ -26,7 +26,7 @@ namespace MechJebLib.Maneuvers
             Check.NonZeroFinite(r);
 
             var h = V3.Cross(r, v);
-            return Maths.CircularVelocityFromHvec(mu, r, h) - v;
+            return Astro.CircularVelocityFromHvec(mu, r, h) - v;
         }
 
         public static V3 DeltaVToEllipticize(double mu, V3 r, V3 v, double newPeR, double newApR)
@@ -70,7 +70,7 @@ namespace MechJebLib.Maneuvers
 
             (V3 r1, V3 v1) = Shepperd.Solve(mu, dt, r, v);
             var h = V3.Cross(r1, v1);
-            return Maths.CircularVelocityFromHvec(mu, r, h) - v1;
+            return Astro.CircularVelocityFromHvec(mu, r, h) - v1;
         }
 
         public static (V3 dv, double dt) ManeuverToCircularizeAtPeriapsis(double mu, V3 r, V3 v)
@@ -79,7 +79,7 @@ namespace MechJebLib.Maneuvers
             Check.NonZeroFinite(r);
             Check.Finite(v);
 
-            double dt = Maths.TimeToNextPeriapsis(mu, r, v);
+            double dt = Astro.TimeToNextPeriapsis(mu, r, v);
 
             Check.Finite(dt);
 
@@ -92,7 +92,7 @@ namespace MechJebLib.Maneuvers
             Check.NonZeroFinite(r);
             Check.Finite(v);
 
-            double dt = Maths.TimeToNextApoapsis(mu, r, v);
+            double dt = Astro.TimeToNextApoapsis(mu, r, v);
             V3 dv = DeltaVToCircularizeAfterTime(mu, r, v, dt);
 
             Check.Finite(dv);
@@ -111,8 +111,8 @@ namespace MechJebLib.Maneuvers
 
             // as long as we're not launching to hyperbolic orbits, this vgo will always point
             // in 'front' of us.
-            V3 v1 = Maths.EscapeVelocityForInclination(mu, r, newInc);
-            V3 v2 = Maths.EscapeVelocityForInclination(mu, r, -newInc);
+            V3 v1 = Astro.EscapeVelocityForInclination(mu, r, newInc);
+            V3 v2 = Astro.EscapeVelocityForInclination(mu, r, -newInc);
             V3 dv1 = v1 - v;
             V3 dv2 = v2 - v;
 
@@ -133,7 +133,7 @@ namespace MechJebLib.Maneuvers
         }
 
         public static double HeadingForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq) =>
-            Maths.HeadingForVelocity(r, VelocityForLaunchInclination(mu, r, v, newInc, rotFreq));
+            Astro.HeadingForVelocity(r, VelocityForLaunchInclination(mu, r, v, newInc, rotFreq));
 
         public static V3 DeltaVToChangeInclination(V3 r, V3 v, double newInc)
         {
@@ -141,7 +141,7 @@ namespace MechJebLib.Maneuvers
             Check.Finite(v);
             Check.Finite(newInc);
 
-            V3 dv = Maths.VelocityForInclination(r, v, newInc) - v;
+            V3 dv = Astro.VelocityForInclination(r, v, newInc) - v;
 
             Check.Finite(dv);
 
@@ -154,7 +154,7 @@ namespace MechJebLib.Maneuvers
             Check.Finite(v);
             Check.Finite(newFPA);
 
-            V3 dv = Maths.VelocityForFPA(r, v, newFPA) - v;
+            V3 dv = Astro.VelocityForFPA(r, v, newFPA) - v;
 
             Check.Finite(dv);
 
