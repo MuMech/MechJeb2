@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Statics;
@@ -14,7 +15,7 @@ using static System.Math;
 
 #nullable enable
 
-namespace MechJebLib.Core
+namespace MechJebLib.Core.Lambert
 {
     public static class Gooding
     {
@@ -122,6 +123,7 @@ namespace MechJebLib.Core
          * kept as super-fugly looking C# code for those reasons.
          */
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static ( int N, double VR11, double VT11, double VR12, double VT12, double VR21, double VT21, double VR22,
             double VT22) VLAMB(double GM, double R1, double R2, double TH, double TDELT)
         {
@@ -196,6 +198,7 @@ namespace MechJebLib.Core
             return (N, VR11, VT11, VR12, VT12, VR21, VT21, VR22, VT22);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ( int N, double X, double XPL) XLAMB(int M, double Q, double QSQFM1, double TIN)
         {
             Check.Finite(M);
@@ -349,6 +352,7 @@ namespace MechJebLib.Core
             goto Five;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ( double T, double DT, double D2T, double D3T) TLAMB(int M, double Q, double QSQFM1, double X, int N)
         {
             Check.Finite(X);

@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using AssertExtensions;
 using MechJebLib.Core;
+using MechJebLib.Core.Lambert;
+using MechJebLib.Core.TwoBody;
+using MechJebLib.Primitives;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Statics;
@@ -15,6 +19,64 @@ namespace MechJebLibTest.MathsTests
         public GoodingTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
+        }
+
+        [Fact]
+        private void SingleRevolution2()
+        {
+            const int NTRIALS = 500000;
+
+            var random = new Random();
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                double dt;
+                double ecc = Maths.EccFromStateVectors(1.0, r0, v0);
+
+                if (ecc < 1)
+                    dt = random.NextDouble() * Maths.PeriodFromStateVectors(1.0, r0, v0);
+                else
+                    dt = random.NextDouble() * 5;
+
+                (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r0, v0);
+                (V3 vi, V3 vf) = Gooding.Solve(1.0, r0, v0, r1, dt, 0);
+
+                // most of the time we get 1e-10 accuracy, but not always
+                vi.ShouldEqual(v0, 1e-4);
+                vf.ShouldEqual(v1, 1e-4);
+            }
+        }
+
+        [Fact]
+        private void SingleRevolution3()
+        {
+            const int NTRIALS = 500000;
+
+            var random = new Random();
+
+            var izzo = new Izzo();
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                double dt;
+                double ecc = Maths.EccFromStateVectors(1.0, r0, v0);
+
+                if (ecc < 1)
+                    dt = random.NextDouble() * Maths.PeriodFromStateVectors(1.0, r0, v0);
+                else
+                    dt = random.NextDouble() * 5;
+
+                (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r0, v0);
+                (V3 vi, V3 vf) = izzo.Solve(1.0, r0, v0, r1, dt, 0);
+
+                // most of the time we get 1e-10 accuracy, but not always
+                vi.ShouldEqual(v0, 1e-4);
+                vf.ShouldEqual(v1, 1e-4);
+            }
         }
 
         [Fact]

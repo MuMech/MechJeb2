@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using MechJebLib.Core;
+using MechJebLib.Core.Lambert;
 using MechJebLib.Primitives;
 using UnityEngine;
 using UnityToolbag;
