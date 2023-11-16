@@ -55,7 +55,7 @@ namespace MechJebLib.Utils
          */
 
         [Conditional("DEBUG")]
-        public static void Finite(double d) => DoCheck(d.IsFinite());
+        public static void Finite(double d) => DoCheck(IsFinite(d));
 
         [Conditional("DEBUG")]
         public static void Positive(double d) => DoCheck(d > 0);
@@ -64,7 +64,7 @@ namespace MechJebLib.Utils
         public static void PositiveFinite(double d)
         {
             DoCheck(d > 0);
-            DoCheck(d.IsFinite());
+            DoCheck(IsFinite(d));
         }
 
         [Conditional("DEBUG")]
@@ -74,7 +74,7 @@ namespace MechJebLib.Utils
         public static void NonNegativeFinite(double d)
         {
             DoCheck(d >= 0);
-            DoCheck(d.IsFinite());
+            DoCheck(IsFinite(d));
         }
 
         [Conditional("DEBUG")]
@@ -84,7 +84,7 @@ namespace MechJebLib.Utils
         public static void NegativeFinite(double d)
         {
             DoCheck(d < 0);
-            DoCheck(d.IsFinite());
+            DoCheck(IsFinite(d));
         }
 
         [Conditional("DEBUG")]
@@ -94,7 +94,7 @@ namespace MechJebLib.Utils
         public static void NonPositiveFinite(double d)
         {
             DoCheck(d <= 0);
-            DoCheck(d.IsFinite());
+            DoCheck(IsFinite(d));
         }
 
         [Conditional("DEBUG")]
@@ -107,7 +107,7 @@ namespace MechJebLib.Utils
         public static void NonZeroFinite(double d)
         {
             DoCheck(d != 0);
-            DoCheck(d.IsFinite());
+            DoCheck(IsFinite(d));
         }
 
         /*
