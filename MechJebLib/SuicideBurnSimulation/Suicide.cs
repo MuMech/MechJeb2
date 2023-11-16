@@ -14,6 +14,6 @@ namespace MechJebLib.SuicideBurnSimulation
 
         public static SuicideBuilder Builder() => new SuicideBuilder();
 
-        protected override SuicideResult Run(object o) => throw new NotImplementedException();
+        protected override SuicideResult Run(object? o) => throw new NotImplementedException();
     }
 }

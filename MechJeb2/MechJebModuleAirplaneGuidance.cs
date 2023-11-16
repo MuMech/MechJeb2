@@ -1,6 +1,7 @@
+extern alias JetBrainsAnnotations;
 using System;
 using System.Linq;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 

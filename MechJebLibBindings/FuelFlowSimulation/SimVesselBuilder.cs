@@ -10,11 +10,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using KSP.UI;
 using KSP.UI.Screens;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
-using MuMech;
+using MechJebLib.Primitives;
 using UnityEngine;
 
-namespace MechJebLib.FuelFlowSimulation
+namespace MechJebLibBindings.FuelFlowSimulation
 {
     public partial class SimVesselManager
     {

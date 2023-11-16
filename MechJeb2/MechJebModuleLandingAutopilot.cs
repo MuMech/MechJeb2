@@ -1,5 +1,6 @@
+extern alias JetBrainsAnnotations;
 using System;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using ModuleWheels;
 using MuMech.Landing;

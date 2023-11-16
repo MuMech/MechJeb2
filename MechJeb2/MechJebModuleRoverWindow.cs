@@ -1,5 +1,6 @@
-﻿using System.Collections;
-using JetBrains.Annotations;
+﻿extern alias JetBrainsAnnotations;
+using System.Collections;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 

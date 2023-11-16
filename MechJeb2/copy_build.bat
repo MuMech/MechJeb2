@@ -1,6 +1,5 @@
 
 IF NOT DEFINED MONO echo MONO env variable not defined
-IF NOT DEFINED PDB2MDB echo PDB2MDB env variable not defined
 IF NOT DEFINED KSPDIR echo KSPDIR env variable not defined
 
 SET TargetPath=%1
@@ -15,17 +14,12 @@ echo Target Name: %TargetName%
 echo Project Dir: %ProjectDir%
 echo:
 echo Mono: "%MONO%"
-echo pdb2mdb: "%PDB2MDB%"
 echo kspdir: "%KSPDIR%"
 
 REM IF NOT EXIST "%MONO%" (
 REM 	echo Expected "%MONO%" to point to mono.exe
 REM 	exit 0
 REM )
-
-IF NOT EXIST "%PDB2MDB%" (
-	echo Unable to find "%PDB2MDB%"
-)
 
 IF NOT EXIST "%KSPDIR%\*" (
 	echo Expected "%KSPDIR%" to point to a directory but it is not
@@ -41,9 +35,29 @@ echo:
 IF EXIST %TargetDir%%TargetName%.pdb xcopy /Y /I "%TargetDir%%TargetName%.pdb" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%%TargetName%.dll.mdb xcopy /Y /I "%TargetDir%%TargetName%.dll.mdb" "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST %TargetDir%JetBrains.Annotations.dll xcopy /Y /I "%TargetDir%JetBrains.Annotations.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
+IF EXIST %TargetDir%JetBrains.Annotations.xml xcopy /Y /I "%TargetDir%JetBrains.Annotations.xml "%KSPDIR%\GameData\MechJeb2\Plugins\"
+echo:
+
+IF EXIST %TargetDir%MechJebLib.dll xcopy /Y /I "%TargetDir%MechJebLib.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
+echo:
+
+IF EXIST %TargetDir%MechJebLib.pdb xcopy /Y /I "%TargetDir%MechJebLib.pdb "%KSPDIR%\GameData\MechJeb2\Plugins\"
+echo:
+
+IF EXIST %TargetDir%MechJebLibBindings.dll xcopy /Y /I "%TargetDir%MechJebLibBindings.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
+echo:
+
+IF EXIST %TargetDir%MechJebLibBindings.pdb xcopy /Y /I "%TargetDir%MechJebLibBindings.pdb "%KSPDIR%\GameData\MechJeb2\Plugins\"
+echo:
+
+IF EXIST %TargetDir%alglib.dll xcopy /Y /I "%TargetDir%alglib.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
+echo:
+
+IF EXIST %TargetDir%alglib.pdb xcopy /Y /I "%TargetDir%alglib.pdb "%KSPDIR%\GameData\MechJeb2\Plugins\"
+echo:
 
 IF EXIST %ProjectDir%..\Bundles xcopy /S /Y /I "%ProjectDir%..\Bundles" "%KSPDIR%\GameData\MechJeb2\Bundles"
 echo:

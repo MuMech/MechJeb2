@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-#nullable enable
-
 using System.Collections.Generic;
+using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 
-namespace MechJebLib.FuelFlowSimulation
+namespace MechJebLibBindings.FuelFlowSimulation
 {
     // FIXME: the SimVesselManager needs to be broken out of MechJebLib eventually to isolate the parts that
     // need to link against KSP GameObjects (MechJebLibBindings.dll or something like that)
@@ -16,12 +15,12 @@ namespace MechJebLib.FuelFlowSimulation
     {
         public List<FuelStats> Segments => FuelFlowSimulation.Segments;
 
-        private readonly SimVesselBuilder   _builder;
-        private readonly SimVesselUpdater   _updater;
-        private          SimVessel          _vessel;
-        private          IShipconstruct     _kspVessel;
-        public readonly  FuelFlowSimulation FuelFlowSimulation = new FuelFlowSimulation();
-        public           bool               DVLinearThrust     = true; // include cos losses
+        private readonly SimVesselBuilder                                 _builder;
+        private readonly SimVesselUpdater                                 _updater;
+        private          SimVessel                                        _vessel;
+        private          IShipconstruct                                   _kspVessel;
+        public readonly  MechJebLib.FuelFlowSimulation.FuelFlowSimulation FuelFlowSimulation = new MechJebLib.FuelFlowSimulation.FuelFlowSimulation();
+        public           bool                                             DVLinearThrust     = true; // include cos losses
 
         private readonly Dictionary<Part, SimPart>             _partMapping              = new Dictionary<Part, SimPart>();
         private readonly Dictionary<SimPart, Part>             _inversePartMapping       = new Dictionary<SimPart, Part>();

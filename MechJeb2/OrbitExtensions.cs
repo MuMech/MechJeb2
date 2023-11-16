@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using MechJebLibBindings;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 using static System.Math;

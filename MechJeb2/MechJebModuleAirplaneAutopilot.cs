@@ -1,6 +1,7 @@
+extern alias JetBrainsAnnotations;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
 
 // ReSharper disable MemberCanBePrivate.Global

@@ -1,9 +1,10 @@
-﻿using System;
+﻿extern alias JetBrainsAnnotations;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using JetBrains.Annotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Smooth.Dispose;
 using UnityEngine;
 using UnityToolbag;

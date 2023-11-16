@@ -95,91 +95,6 @@
         <Compile Include="MathExtensions.cs"/>
         <Compile Include="MechJebAR202.cs"/>
         <Compile Include="MechJebCore.cs"/>
-        <Compile Include="MechJebLib\Control\PIDLoop.cs"/>
-        <Compile Include="MechJebLib\FunctionImpls\RealDeltaVToChangeApoapsisPrograde.cs" />
-        <Compile Include="MechJebLib\FunctionImpls\RealSingleImpulseHyperbolicBurn.cs" />
-        <Compile Include="MechJebLib\Functions\Angles.cs" />
-        <Compile Include="MechJebLib\Functions\Interpolants.cs" />
-        <Compile Include="MechJebLib\Functions\Maneuvers.cs" />
-        <Compile Include="MechJebLib\Functions\Astro.cs" />
-        <Compile Include="MechJebLib\Lambert\Gooding.cs" />
-        <Compile Include="MechJebLib\Lambert\Izzo.cs" />
-        <Compile Include="MechJebLib\Maneuvers\ChangeOrbitalElement.cs" />
-        <Compile Include="MechJebLib\Maneuvers\TwoImpulseTransfer.cs" />
-        <Compile Include="MechJebLib\Maneuvers\ReturnFromMoon.cs" />
-        <Compile Include="MechJebLib\Maneuvers\Simple.cs" />
-        <Compile Include="MechJebLib\Minimization\BrentMin.cs" />
-        <Compile Include="MechJebLib\ODE\AbstractIVP.cs" />
-        <Compile Include="MechJebLib\ODE\AbstractRungeKutta.cs" />
-        <Compile Include="MechJebLib\ODE\BS3.cs" />
-        <Compile Include="MechJebLib\ODE\DP5.cs" />
-        <Compile Include="MechJebLib\ODE\Event.cs" />
-        <Compile Include="MechJebLib\Primitives\Dual.cs" />
-        <Compile Include="MechJebLib\Primitives\DualV3.cs" />
-        <Compile Include="MechJebLib\Primitives\Vn.cs" />
-        <Compile Include="MechJebLib\Primitives\Scale.cs" />
-        <Compile Include="MechJebLib\PVG\ContinuityLayout.cs" />
-        <Compile Include="MechJebLib\PVG\InputLayout.cs" />
-        <Compile Include="MechJebLib\PVG\OutputLayout.cs" />
-        <Compile Include="MechJebLib\PVG\AscentBuilder.cs" />
-        <Compile Include="MechJebLib\PVG\Integrators\IPVGIntegrator.cs" />
-        <Compile Include="MechJebLib\PVG\Integrators\VacuumCoastAnalytic.cs" />
-        <Compile Include="MechJebLib\PVG\Integrators\VacuumThrustAnalytic.cs" />
-        <Compile Include="MechJebLib\PVG\Integrators\VacuumThrustIntegrator.cs" />
-        <Compile Include="MechJebLib\PVG\Ascent.cs" />
-        <Compile Include="MechJebLib\PVG\Phase.cs" />
-        <Compile Include="MechJebLib\PVG\Problem.cs" />
-        <Compile Include="MechJebLib\PVG\OptimizerBuilder.cs" />
-        <Compile Include="MechJebLib\PVG\ResidualLayout.cs" />
-        <Compile Include="MechJebLib\PVG\Solution.cs" />
-        <Compile Include="MechJebLib\PVG\Optimizer.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle3Energy.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Energy.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Reduced.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle4Propellant.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\FlightPathAngle5Reduced.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\Intercept6Cartesian.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\IPVGTerminal.cs" />
-        <Compile Include="MechJebLib\Primitives\H1.cs" />
-        <Compile Include="MechJebLib\Primitives\H3.cs" />
-        <Compile Include="MechJebLib\Primitives\HBase.cs" />
-        <Compile Include="MechJebLib\Primitives\Hn.cs" />
-        <Compile Include="MechJebLib\Primitives\M3.cs" />
-        <Compile Include="MechJebLib\Primitives\Q3.cs" />
-        <Compile Include="MechJebLib\Primitives\V3.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\Kepler3Reduced.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\Kepler4Reduced.cs" />
-        <Compile Include="MechJebLib\PVG\Terminal\Kepler5Reduced.cs" />
-        <Compile Include="MechJebLib\Rootfinding\Bisection.cs" />
-        <Compile Include="MechJebLib\Rootfinding\BrentRoot.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimVesselManager.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimVesselUpdater.cs" />
-        <Compile Include="MechJebLib\SuicideBurnSimulation\Suicide.cs" />
-        <Compile Include="MechJebLib\SuicideBurnSimulation\SuicideBuilder.cs" />
-        <Compile Include="MechJebLib\TwoBody\Farnocchia.cs" />
-        <Compile Include="MechJebLib\TwoBody\Shepperd.cs" />
-        <Compile Include="MechJebLib\Utils\BackgroundJob.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimVesselBuilder.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\DecouplingAnalyzer.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\FuelFlowSimulation.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\FuelStats.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\PartModules\SimModuleRCS.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimPart.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimPartModule.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\PartModules\SimLaunchClamp.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\PartModules\SimModuleDecouple.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\PartModules\SimModuleDockingNode.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\PartModules\SimModuleEngines.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\PartModules\SimProceduralFairingDecoupler.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimPropellant.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimResource.cs" />
-        <Compile Include="MechJebLib\FuelFlowSimulation\SimVessel.cs" />
-        <Compile Include="MechJebLib\Utils\Check.cs" />
-        <Compile Include="MechJebLib\Utils\Logger.cs" />
-        <Compile Include="MechJebLib\Utils\MechJebLibException.cs" />
-        <Compile Include="MechJebLib\Utils\ObjectPool.cs" />
-        <Compile Include="MechJebLib\Utils\DictOfLists.cs" />
-        <Compile Include="MechJebLib\Utils\Statics.cs" />
         <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
         <Compile Include="MechJebModuleAirplaneGuidance.cs" />
         <Compile Include="MechJebModuleAscentBaseAutopilot.cs" />
@@ -249,26 +164,12 @@
         <Compile Include="RCSSolver.cs" />
         <Compile Include="ReentrySimulation.cs" />
         <Compile Include="ReentrySimulation\SimCurves.cs" />
-        <Compile Include="ReflectionUtils.cs" />
         <Compile Include="ToolbarWrapper.cs" />
         <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
         <Compile Include="UnityToolbag\Future\Future.cs" />
         <Compile Include="Vector6.cs" />
         <Compile Include="VesselExtensions.cs" />
         <Compile Include="VesselState.cs" />
-        <Compile Include="alglib\alglibinternal.cs" />
-        <Compile Include="alglib\alglibmisc.cs" />
-        <Compile Include="alglib\ap.cs" />
-        <Compile Include="alglib\dataanalysis.cs" />
-        <Compile Include="alglib\diffequations.cs" />
-        <Compile Include="alglib\fasttransforms.cs" />
-        <Compile Include="alglib\integration.cs" />
-        <Compile Include="alglib\interpolation.cs" />
-        <Compile Include="alglib\linalg.cs" />
-        <Compile Include="alglib\optimization.cs" />
-        <Compile Include="alglib\solvers.cs" />
-        <Compile Include="alglib\specialfunctions.cs" />
-        <Compile Include="alglib\statistics.cs" />
     </ItemGroup>
     <ItemGroup>
         <EmbeddedResource Include="Properties\Resources.resx" />
@@ -290,6 +191,10 @@
         <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
+        </Reference>
+        <Reference Include="JetBrains.Annotations">
+          <HintPath>..\packages\JetBrains.Annotations.2023.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
+          <Aliases>JetBrainsAnnotations</Aliases>
         </Reference>
         <Reference Include="mscorlib">
         </Reference>
@@ -341,6 +246,20 @@
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\alglib\alglib.csproj">
+        <Project>{e8cbcddd-bcfc-4f03-9309-f58395ca4762}</Project>
+        <Name>alglib</Name>
+      </ProjectReference>
+      <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj">
+        <Project>{da770208-1300-4c86-8996-c1790b945999}</Project>
+        <Name>MechJebLibBindings</Name>
+      </ProjectReference>
+      <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
+        <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
+        <Name>MechJebLib</Name>
+      </ProjectReference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">

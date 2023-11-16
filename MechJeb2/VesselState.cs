@@ -5,6 +5,7 @@ using System.Reflection;
 using KSP.Localization;
 using Smooth.Pools;
 using UnityEngine;
+using MechJebLibBindings;
 
 namespace MuMech
 {
