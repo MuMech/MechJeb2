@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
@@ -256,7 +255,6 @@ namespace MechJebLib.Lambert
 
             return (x - lambda * z - d / y) / e;
         }
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double TimeOfFlightLagrange(double lambda, double x, int n)

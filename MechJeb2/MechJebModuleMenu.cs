@@ -129,7 +129,7 @@ namespace MuMech
 
         [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc)]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public readonly bool hideButton = false; //Hide Menu Button
+        public readonly bool hideButton; //Hide Menu Button
 
         [ToggleInfoItem("#MechJeb_UseAppLauncher", InfoItem.Category.Misc)]
         [Persistent(pass = (int)Pass.GLOBAL)]

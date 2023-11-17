@@ -8,8 +8,6 @@ using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
-#nullable enable
-
 namespace MechJebLib.PVG.Terminal
 {
     public readonly struct Kepler3Reduced : IPVGTerminal

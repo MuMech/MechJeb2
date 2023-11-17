@@ -13,7 +13,7 @@ namespace MuMech
     {
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)] //Smart RCS translation
-        public bool smartTranslation = false;
+        public bool smartTranslation;
 
         // Overdrive
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]

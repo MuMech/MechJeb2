@@ -10,8 +10,6 @@ using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-#nullable enable
-
 // ReSharper disable InconsistentNaming
 namespace MechJebLib.Functions
 {

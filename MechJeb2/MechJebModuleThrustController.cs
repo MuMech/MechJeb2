@@ -885,7 +885,7 @@ namespace MuMech
             // ullage may dramatically drop below stable (by as much as to 0.76 in a single tick) so
             // we cannot "detect" low ullage and compensate, but must apply RCS until thrust has come
             // up sufficiently.
-            if (stableUllage && VesselState.thrustCurrent > VesselState.rcsThrustAvailable.Up )
+            if (stableUllage && VesselState.thrustCurrent > VesselState.rcsThrustAvailable.Up)
                 return;
 
             // limit the throttle only if we aren't already burning (don't waste ignitions)

@@ -89,8 +89,8 @@ namespace MuMech
             Core.Warp.MinimumWarp();
             Core.Thrust.ThrustOff();
             Users.Clear();
-            _dvLeft   = 0;
-            State     = States.IDLE;
+            _dvLeft = 0;
+            State   = States.IDLE;
         }
 
         protected override void OnModuleEnabled()

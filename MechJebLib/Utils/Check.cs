@@ -9,8 +9,6 @@ using System.Diagnostics;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
-#nullable enable
-
 namespace MechJebLib.Utils
 {
     public static class Check

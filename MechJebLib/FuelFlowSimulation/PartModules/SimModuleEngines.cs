@@ -9,8 +9,6 @@ using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
-#nullable enable
-
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
     public enum SimFlowMode

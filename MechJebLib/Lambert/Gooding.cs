@@ -13,8 +13,6 @@ using static System.Math;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-#nullable enable
-
 namespace MechJebLib.Lambert
 {
     public static class Gooding

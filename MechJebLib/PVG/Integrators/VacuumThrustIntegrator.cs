@@ -4,8 +4,6 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using MechJebLib.ODE;

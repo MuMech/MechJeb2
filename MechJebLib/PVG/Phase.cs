@@ -10,8 +10,6 @@ using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-#nullable enable
-
 namespace MechJebLib.PVG
 {
     public class Phase

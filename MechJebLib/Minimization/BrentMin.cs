@@ -7,8 +7,6 @@ using System;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-#nullable enable
-
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.Minimization
 {

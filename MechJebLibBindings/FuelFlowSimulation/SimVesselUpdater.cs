@@ -13,8 +13,6 @@ using UnityEngine;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-#nullable enable
-
 namespace MechJebLibBindings.FuelFlowSimulation
 {
     public partial class SimVesselManager
