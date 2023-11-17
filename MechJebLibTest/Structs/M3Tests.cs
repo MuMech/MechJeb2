@@ -1,10 +1,9 @@
-using AssertExtensions;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.StructsTest
+namespace MechJebLibTest.Structs
 {
     public class M3Tests
     {

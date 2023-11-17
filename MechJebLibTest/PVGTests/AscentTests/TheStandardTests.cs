@@ -1,12 +1,11 @@
 ﻿using System;
-using AssertExtensions;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest.PVGTests
+namespace MechJebLibTest.PVGTests.AscentTests
 {
     public class TheStandardTests
     {

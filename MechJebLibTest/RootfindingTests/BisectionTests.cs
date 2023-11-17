@@ -1,8 +1,7 @@
-﻿using AssertExtensions;
-using MechJebLib.Rootfinding;
+﻿using MechJebLib.Rootfinding;
 using Xunit;
 
-namespace MechJebLibTest.MathsTests
+namespace MechJebLibTest.RootfindingTests
 {
     public class BisectionTests
     {

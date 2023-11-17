@@ -1,9 +1,8 @@
-﻿using AssertExtensions;
-using MechJebLib.Rootfinding;
+﻿using MechJebLib.Rootfinding;
 using Xunit;
 using static System.Math;
 
-namespace MechJebLibTest.MathsTests
+namespace MechJebLibTest.RootfindingTests
 {
     public class NewtonTests
     {

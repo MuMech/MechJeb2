@@ -5,7 +5,6 @@
  */
 
 using System;
-using AssertExtensions;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;

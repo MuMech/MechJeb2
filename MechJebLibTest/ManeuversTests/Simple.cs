@@ -1,5 +1,4 @@
 ﻿using System;
-using AssertExtensions;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using Xunit;

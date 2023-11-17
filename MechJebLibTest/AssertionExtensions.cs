@@ -11,7 +11,7 @@ using Xunit.Sdk;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace AssertExtensions
+namespace MechJebLibTest
 {
     /// <summary>
     ///     Xunit Assertion Extensions
