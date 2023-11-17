@@ -65,6 +65,7 @@
         <Compile Include="MathsTests\FunctionsTests.cs"/>
         <Compile Include="MathsTests\BrentRootTests.cs"/>
         <Compile Include="MathsTests\GoodingTests.cs"/>
+        <Compile Include="MathsTests\NewtonTests.cs"/>
         <Compile Include="MathsTests\TwoBody\FarnocchiaTests.cs"/>
         <Compile Include="MathsTests\TwoBody\ShepperdTests.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
@@ -82,8 +83,8 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
-          <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
-          <Name>MechJebLib</Name>
+            <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
+            <Name>MechJebLib</Name>
         </ProjectReference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
