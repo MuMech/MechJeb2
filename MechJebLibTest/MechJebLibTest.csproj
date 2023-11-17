@@ -55,31 +55,31 @@
     <ItemGroup>
         <Compile Include="AssertionExtensions.cs"/>
         <Compile Include="ControlTests\PIDLoopTests.cs"/>
+        <Compile Include="FunctionsTests.cs" />
+        <Compile Include="LambertTests\GoodingTests.cs" />
         <Compile Include="ManeuversTests\ChangeOrbitalElementTests.cs"/>
         <Compile Include="ManeuversTests\TwoImpulseTransferTests.cs"/>
         <Compile Include="ManeuversTests\ReturnFromMoonTests.cs"/>
         <Compile Include="ManeuversTests\Simple.cs"/>
-        <Compile Include="MathsTests\BisectionTests.cs"/>
-        <Compile Include="MathsTests\BS3Tests.c.cs"/>
-        <Compile Include="MathsTests\DP5Tests.cs"/>
-        <Compile Include="MathsTests\FunctionsTests.cs"/>
-        <Compile Include="MathsTests\BrentRootTests.cs"/>
-        <Compile Include="MathsTests\GoodingTests.cs"/>
-        <Compile Include="MathsTests\NewtonTests.cs"/>
-        <Compile Include="MathsTests\TwoBody\FarnocchiaTests.cs"/>
-        <Compile Include="MathsTests\TwoBody\ShepperdTests.cs"/>
+        <Compile Include="ODETests\BS3Tests.c.cs" />
+        <Compile Include="ODETests\DP5Tests.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <Compile Include="PVGTests\AscentTests\BuggyTests.cs"/>
         <Compile Include="PVGTests\AscentTests\TheStandardTests.cs"/>
         <Compile Include="PVGTests\AscentTests\Titan2Tests.cs"/>
         <Compile Include="PVGTests\Integrators\VacuumCoastAnalyticTests.cs"/>
         <Compile Include="PVGTests\Integrators\VacuumThrustIntegratorTests.cs"/>
+        <Compile Include="RootfindingTests\BisectionTests.cs" />
+        <Compile Include="RootfindingTests\BrentRootTests.cs" />
+        <Compile Include="RootfindingTests\NewtonTests.cs" />
         <Compile Include="StaticTests.cs"/>
         <Compile Include="Structs\HTests.cs"/>
         <Compile Include="Structs\M3Tests.cs"/>
         <Compile Include="Structs\Q3Tests.cs"/>
         <Compile Include="Structs\V3Tests.cs"/>
         <Compile Include="TestInitialization.cs"/>
+        <Compile Include="TwoBodyTests\FarnocchiaTests.cs" />
+        <Compile Include="TwoBodyTests\ShepperdTests.cs" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">

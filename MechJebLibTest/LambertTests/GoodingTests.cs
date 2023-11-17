@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using AssertExtensions;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
@@ -10,7 +9,7 @@ using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.MathsTests
+namespace MechJebLibTest.LambertTests
 {
     public class GoodingTests
     {

@@ -1,10 +1,9 @@
 using System;
-using AssertExtensions;
 using MechJebLib.Primitives;
 using Xunit;
 using static System.Math;
 
-namespace MechJebLibTest.StructsTest
+namespace MechJebLibTest.Structs
 {
     public class V3Tests
     {

@@ -1,5 +1,4 @@
 ﻿using System;
-using AssertExtensions;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
@@ -7,7 +6,7 @@ using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLibTest.PVGTests
+namespace MechJebLibTest.PVGTests.AscentTests
 {
     // test from buggy rockets that people have given me
     public class BuggyTests

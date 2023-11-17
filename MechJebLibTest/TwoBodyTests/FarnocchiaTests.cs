@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using AssertExtensions;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
@@ -14,7 +13,7 @@ using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.MathsTests
+namespace MechJebLibTest.TwoBodyTests
 {
     public class FarnocchiaTests
     {

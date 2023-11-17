@@ -4,14 +4,13 @@
  */
 
 using System;
-using AssertExtensions;
 using MechJebLib.Rootfinding;
 using MechJebLib.Utils;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.MathsTests
+namespace MechJebLibTest.RootfindingTests
 {
     public class BrentRootTests
     {

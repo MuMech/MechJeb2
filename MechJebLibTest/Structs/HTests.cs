@@ -4,11 +4,10 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
-using AssertExtensions;
 using MechJebLib.Primitives;
 using Xunit;
 
-namespace MechJebLibTest.StructsTest
+namespace MechJebLibTest.Structs
 {
     public class HTests
     {

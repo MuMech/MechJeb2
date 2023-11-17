@@ -1,11 +1,10 @@
-﻿using AssertExtensions;
-using MechJebLib.Primitives;
+﻿using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using MechJebLib.PVG.Integrators;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace MechJebLibTest.PVGTests
+namespace MechJebLibTest.PVGTests.Integrators
 {
     public class VacuumThrustIntegratorTests
     {
