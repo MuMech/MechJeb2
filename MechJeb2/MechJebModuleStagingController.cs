@@ -1,7 +1,6 @@
 ﻿extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using Smooth.Slinq;
@@ -9,7 +8,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleStagingController : ComputerModule
     {
         public MechJebModuleStagingController(MechJebCore core)

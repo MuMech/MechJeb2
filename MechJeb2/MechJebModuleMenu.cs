@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using KSP.UI.Screens;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleMenu : DisplayModule
     {
         public MechJebModuleMenu(MechJebCore core)

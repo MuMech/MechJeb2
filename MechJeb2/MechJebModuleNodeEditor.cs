@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleNodeEditor : DisplayModule
     {
         private EditableDouble prograde   = 0;

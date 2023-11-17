@@ -1,6 +1,5 @@
 extern alias JetBrainsAnnotations;
 using System;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using ModuleWheels;
 using MuMech.Landing;
@@ -13,7 +12,6 @@ namespace MuMech
     // - Fix the auto wrap stop start dance
     // - Replace the openGL code with a LineRenderer
     // -
-    [UsedImplicitly]
     public class MechJebModuleLandingAutopilot : AutopilotModule
     {
         private bool _deployedGears;

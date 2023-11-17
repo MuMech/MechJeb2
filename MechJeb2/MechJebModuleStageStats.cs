@@ -1,7 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using System.Diagnostics;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLibBindings;
@@ -10,7 +9,6 @@ using Unity.Profiling;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleStageStats : ComputerModule
     {
         [ToggleInfoItem("#MechJeb_DVincludecosinelosses", InfoItem.Category.Thrust, showInEditor = true)] //ΔV include cosine losses

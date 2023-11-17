@@ -8,7 +8,6 @@ namespace MuMech
 {
     public enum AscentType { CLASSIC, GRAVITYTURN, PVG }
 
-    [UsedImplicitly]
     public class MechJebModuleAscentSettings : ComputerModule
     {
         public MechJebModuleAscentSettings(MechJebCore core) : base(core)

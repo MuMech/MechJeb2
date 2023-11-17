@@ -1,7 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -9,7 +8,6 @@ using UnityEngine;
 namespace MuMech
 {
     [SuppressMessage("Minor Code Smell", "S1104:Fields should not have public accessibility")]
-    [UsedImplicitly]
     public class MechJebModuleAirplaneAutopilot : ComputerModule
     {
         [Persistent(pass = (int)Pass.LOCAL)]

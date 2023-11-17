@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CompoundParts;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using KSP.UI.Screens;
 using Smooth.Pools;
@@ -16,7 +15,6 @@ namespace MuMech
     //This class just exists to collect miscellaneous info item functions in one place.
     //If any of these functions are useful in another module, they should be moved there.
 
-    [UsedImplicitly]
     public class MechJebModuleInfoItems : ComputerModule
     {
         public MechJebModuleInfoItems(MechJebCore core) : base(core) { }

@@ -8,7 +8,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleThrustController : ComputerModule
     {
         public enum DifferentialThrottleStatus

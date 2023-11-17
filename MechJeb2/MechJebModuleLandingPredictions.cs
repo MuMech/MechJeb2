@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using Smooth.Dispose;
 using UnityEngine;
 using UnityToolbag;
@@ -13,7 +12,6 @@ using Random = System.Random;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleLandingPredictions : ComputerModule
     {
         // TODO Move the endASL code to the CheckResult method

@@ -9,7 +9,6 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleLandingGuidance : DisplayModule
     {
         private       MechJebModuleLandingPredictions _predictor;

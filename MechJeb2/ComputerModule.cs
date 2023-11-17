@@ -8,6 +8,7 @@ using UnityEngine.Profiling;
 
 namespace MuMech
 {
+    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public class ComputerModule : IComparable<ComputerModule>
     {
         public readonly MechJebCore Core;

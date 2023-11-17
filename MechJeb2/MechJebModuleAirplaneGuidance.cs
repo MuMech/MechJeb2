@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     internal class MechJebModuleAirplaneGuidance : DisplayModule
     {
         private static GUIStyle btNormal, btActive, btAuto, btGreen, btWhite;

@@ -1,13 +1,11 @@
 ﻿extern alias JetBrainsAnnotations;
 using System;
 using System.Linq;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleSmartASS : DisplayModule
     {
         public enum Mode
