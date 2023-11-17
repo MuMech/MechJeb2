@@ -1,11 +1,10 @@
 ﻿extern alias JetBrainsAnnotations;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
+    //[UsedImplicitly]
     public class MechJebModuleSolarPanelController : MechJebModuleDeployableController
     {
         public MechJebModuleSolarPanelController(MechJebCore core)

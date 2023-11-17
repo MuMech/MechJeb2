@@ -2,12 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleRoverController : ComputerModule
     {
         public readonly List<MechJebWaypoint> Waypoints     = new List<MechJebWaypoint>();

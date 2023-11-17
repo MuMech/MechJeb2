@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 extern alias JetBrainsAnnotations;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.SuicideBurnSimulation;
@@ -9,7 +8,6 @@ using MechJebLibBindings;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleSuicideTimer : ComputerModule
     {
         private Suicide?              _suicide;

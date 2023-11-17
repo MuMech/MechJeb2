@@ -208,7 +208,6 @@ namespace MuMech
         }
     }
 
-    [UsedImplicitly]
     public class MechJebModuleWaypointWindow : DisplayModule
     {
         public enum WaypointMode

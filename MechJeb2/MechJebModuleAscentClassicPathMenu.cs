@@ -1,13 +1,11 @@
 ﻿extern alias JetBrainsAnnotations;
 using System;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleAscentClassicPathMenu : DisplayModule
     {
         public MechJebModuleAscentClassicPathMenu(MechJebCore core)

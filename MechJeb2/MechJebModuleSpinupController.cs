@@ -8,11 +8,9 @@
 
 extern alias JetBrainsAnnotations;
 using System;
-using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleSpinupController : ComputerModule
     {
         private enum SpinupState { INITIALIZED, STARTING, STABILIZING, SPINUP, FINISHED }

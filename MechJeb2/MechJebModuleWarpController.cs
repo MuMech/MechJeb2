@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleWarpController : ComputerModule
     {
         public MechJebModuleWarpController(MechJebCore core)

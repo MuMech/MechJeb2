@@ -7,7 +7,6 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Threading.Tasks;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Functions;
 using MechJebLib.PVG;
@@ -22,7 +21,6 @@ namespace MuMech
     ///     This class isolates a bunch of glue between MJ and the PVG optimizer that I don't
     ///     yet understand how to write correctly.
     /// </summary>
-    [UsedImplicitly]
     public class MechJebModulePVGGlueBall : ComputerModule
     {
         private double _blockOptimizerUntilTime;

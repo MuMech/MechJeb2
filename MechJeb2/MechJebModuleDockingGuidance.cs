@@ -1,12 +1,10 @@
 ﻿extern alias JetBrainsAnnotations;
 using System.Linq;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleDockingGuidance : DisplayModule
     {
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }

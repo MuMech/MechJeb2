@@ -1,14 +1,12 @@
 ﻿extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleRCSBalancer : ComputerModule
     {
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]

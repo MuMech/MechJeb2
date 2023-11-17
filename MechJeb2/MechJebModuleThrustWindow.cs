@@ -1,11 +1,9 @@
 ﻿extern alias JetBrainsAnnotations;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleThrustWindow : DisplayModule
     {
         [Persistent(pass = (int)Pass.LOCAL)]

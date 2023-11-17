@@ -9,7 +9,6 @@ using UnityEngine.Profiling;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleAscentMenu : DisplayModule
     {
         private readonly string[] _ascentPathList =

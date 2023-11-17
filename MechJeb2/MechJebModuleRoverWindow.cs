@@ -1,12 +1,10 @@
 ﻿extern alias JetBrainsAnnotations;
 using System.Collections;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleRoverWindow : DisplayModule
     {
         public MechJebModuleRoverController autopilot;

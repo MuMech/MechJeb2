@@ -1,11 +1,9 @@
 ﻿extern alias JetBrainsAnnotations;
 using System;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleRCSController : ComputerModule
     {
         public Vector3d targetVelocity = Vector3d.zero;

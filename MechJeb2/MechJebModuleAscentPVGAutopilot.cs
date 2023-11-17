@@ -1,6 +1,5 @@
 extern alias JetBrainsAnnotations;
 using System;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 
 /*
@@ -9,7 +8,6 @@ using KSP.Localization;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleAscentPVGAutopilot : MechJebModuleAscentBaseAutopilot
     {
         public MechJebModuleAscentPVGAutopilot(MechJebCore core) : base(core)

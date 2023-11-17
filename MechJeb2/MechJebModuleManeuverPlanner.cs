@@ -8,7 +8,6 @@ using UnityEngine;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleManeuverPlanner : DisplayModule
     {
         public MechJebModuleManeuverPlanner(MechJebCore core) : base(core) { }

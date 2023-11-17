@@ -1,5 +1,4 @@
 ﻿extern alias JetBrainsAnnotations;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.FuelFlowSimulation;
 using UnityEngine;
 using static System.Math;
@@ -7,7 +6,6 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    [UsedImplicitly]
     public class MechJebModuleNodeExecutor : ComputerModule
     {
         // whether to auto-warp to nodes

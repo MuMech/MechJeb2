@@ -6,7 +6,6 @@
 
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.PVG;
 using MechJebLibBindings;
 using UnityEngine;
@@ -21,7 +20,6 @@ namespace MuMech
     /// <summary>
     ///     The guidance controller for PVG (responsible for taking a Solution from PVG and flying it)
     /// </summary>
-    [UsedImplicitly]
     public class MechJebModuleGuidanceController : ComputerModule
     {
         public MechJebModuleGuidanceController(MechJebCore core) : base(core) { }
