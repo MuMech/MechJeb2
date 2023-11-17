@@ -9,8 +9,6 @@ using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static System.Math;
 
-#nullable enable
-
 namespace MechJebLib.Maneuvers
 {
     public static class ChangeOrbitalElement

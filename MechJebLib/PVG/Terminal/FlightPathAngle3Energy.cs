@@ -7,8 +7,6 @@ using System;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
-#nullable enable
-
 namespace MechJebLib.PVG.Terminal
 {
     /// <summary>

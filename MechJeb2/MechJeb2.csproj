@@ -95,93 +95,93 @@
         <Compile Include="MathExtensions.cs"/>
         <Compile Include="MechJebAR202.cs"/>
         <Compile Include="MechJebCore.cs"/>
-        <Compile Include="MechJebModuleAirplaneAutopilot.cs" />
-        <Compile Include="MechJebModuleAirplaneGuidance.cs" />
-        <Compile Include="MechJebModuleAscentBaseAutopilot.cs" />
-        <Compile Include="MechJebModuleAscentClassicAutopilot.cs" />
-        <Compile Include="MechJebModuleAscentClassicPathMenu.cs" />
-        <Compile Include="MechJebModuleAscentGTAutopilot.cs" />
-        <Compile Include="MechJebModuleAscentMenu.cs" />
-        <Compile Include="MechJebModuleAscentPVGAutopilot.cs" />
-        <Compile Include="MechJebModuleAscentPVGSettingsMenu.cs" />
-        <Compile Include="MechJebModuleAscentSettings.cs" />
-        <Compile Include="MechJebModuleAscentSettingsMenu.cs" />
-        <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
-        <Compile Include="MechJebModuleAttitudeController.cs" />
-        <Compile Include="MechJebModuleCustomInfoWindow.cs" />
-        <Compile Include="MechJebModuleDebugArrows.cs" />
-        <Compile Include="MechJebModuleDeployableAntennaController.cs" />
-        <Compile Include="MechJebModuleDeployableController.cs" />
-        <Compile Include="MechJebModuleDockingAutopilot.cs" />
-        <Compile Include="MechJebModuleDockingGuidance.cs" />
-        <Compile Include="MechJebModuleFlightRecorder.cs" />
-        <Compile Include="MechJebModuleFlightRecorderGraph.cs" />
-        <Compile Include="MechJebModuleInfoItems.cs" />
-        <Compile Include="MechJebModuleLandingAutopilot.cs" />
-        <Compile Include="MechJebModuleLandingGuidance.cs" />
-        <Compile Include="MechJebModuleLandingPredictions.cs" />
-        <Compile Include="MechJebModuleManeuverPlanner.cs" />
-        <Compile Include="MechJebModuleMenu.cs" />
-        <Compile Include="MechJebModuleStageStats.cs" />
-        <Compile Include="MechJebModuleNodeEditor.cs" />
-        <Compile Include="MechJebModuleNodeExecutor.cs" />
-        <Compile Include="MechJebModuleGuidanceController.cs" />
-        <Compile Include="MechJebModuleRCSBalancer.cs" />
-        <Compile Include="MechJebModuleRCSBalancerWindow.cs" />
-        <Compile Include="MechJebModuleRCSController.cs" />
-        <Compile Include="MechJebModuleRendezvousAutopilot.cs" />
-        <Compile Include="MechJebModuleRendezvousAutopilotWindow.cs" />
-        <Compile Include="MechJebModuleRendezvousGuidance.cs" />
-        <Compile Include="MechJebModuleRoverController.cs" />
-        <Compile Include="MechJebModuleRoverWindow.cs" />
-        <Compile Include="MechJebModuleSettings.cs" />
-        <Compile Include="MechJebModuleSmartASS.cs" />
-        <Compile Include="MechJebModuleSmartRcs.cs" />
-        <Compile Include="MechJebModuleSolarPanelController.cs" />
-        <Compile Include="MechJebModuleSpaceplaneAutopilot.cs" />
-        <Compile Include="MechJebModuleSpaceplaneGuidance.cs" />
-        <Compile Include="MechJebModuleSpinupController.cs" />
-        <Compile Include="MechJebModuleStagingController.cs" />
-        <Compile Include="MechJebModuleSuicideTimer.cs" />
-        <Compile Include="MechJebModuleTargetController.cs" />
-        <Compile Include="MechJebModuleThrustController.cs" />
-        <Compile Include="MechJebModuleThrustWindow.cs" />
-        <Compile Include="MechJebModuleTranslatron.cs" />
-        <Compile Include="MechJebModuleWarpController.cs" />
-        <Compile Include="MechJebModuleWarpHelper.cs" />
-        <Compile Include="MechJebModuleWaypointWindow.cs" />
-        <Compile Include="MechjebBundlesManager.cs" />
-        <Compile Include="MechJebStageStatsHelper.cs" />
-        <Compile Include="ModExtensionDemo.cs" />
-        <Compile Include="MuUtils.cs" />
-        <Compile Include="OrbitExtensions.cs" />
-        <Compile Include="OrbitalManeuverCalculator.cs" />
-        <Compile Include="PIDController.cs" />
-        <Compile Include="PartExtensions.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="Properties\Resources.Designer.cs" />
-        <Compile Include="MechJebModulePVGGlueBall.cs" />
-        <Compile Include="RCSSolver.cs" />
-        <Compile Include="ReentrySimulation.cs" />
-        <Compile Include="ReentrySimulation\SimCurves.cs" />
-        <Compile Include="ToolbarWrapper.cs" />
-        <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
-        <Compile Include="UnityToolbag\Future\Future.cs" />
-        <Compile Include="Vector6.cs" />
-        <Compile Include="VesselExtensions.cs" />
-        <Compile Include="VesselState.cs" />
+        <Compile Include="MechJebModuleAirplaneAutopilot.cs"/>
+        <Compile Include="MechJebModuleAirplaneGuidance.cs"/>
+        <Compile Include="MechJebModuleAscentBaseAutopilot.cs"/>
+        <Compile Include="MechJebModuleAscentClassicAutopilot.cs"/>
+        <Compile Include="MechJebModuleAscentClassicPathMenu.cs"/>
+        <Compile Include="MechJebModuleAscentGTAutopilot.cs"/>
+        <Compile Include="MechJebModuleAscentMenu.cs"/>
+        <Compile Include="MechJebModuleAscentPVGAutopilot.cs"/>
+        <Compile Include="MechJebModuleAscentPVGSettingsMenu.cs"/>
+        <Compile Include="MechJebModuleAscentSettings.cs"/>
+        <Compile Include="MechJebModuleAscentSettingsMenu.cs"/>
+        <Compile Include="MechJebModuleAttitudeAdjustment.cs"/>
+        <Compile Include="MechJebModuleAttitudeController.cs"/>
+        <Compile Include="MechJebModuleCustomInfoWindow.cs"/>
+        <Compile Include="MechJebModuleDebugArrows.cs"/>
+        <Compile Include="MechJebModuleDeployableAntennaController.cs"/>
+        <Compile Include="MechJebModuleDeployableController.cs"/>
+        <Compile Include="MechJebModuleDockingAutopilot.cs"/>
+        <Compile Include="MechJebModuleDockingGuidance.cs"/>
+        <Compile Include="MechJebModuleFlightRecorder.cs"/>
+        <Compile Include="MechJebModuleFlightRecorderGraph.cs"/>
+        <Compile Include="MechJebModuleInfoItems.cs"/>
+        <Compile Include="MechJebModuleLandingAutopilot.cs"/>
+        <Compile Include="MechJebModuleLandingGuidance.cs"/>
+        <Compile Include="MechJebModuleLandingPredictions.cs"/>
+        <Compile Include="MechJebModuleManeuverPlanner.cs"/>
+        <Compile Include="MechJebModuleMenu.cs"/>
+        <Compile Include="MechJebModuleStageStats.cs"/>
+        <Compile Include="MechJebModuleNodeEditor.cs"/>
+        <Compile Include="MechJebModuleNodeExecutor.cs"/>
+        <Compile Include="MechJebModuleGuidanceController.cs"/>
+        <Compile Include="MechJebModuleRCSBalancer.cs"/>
+        <Compile Include="MechJebModuleRCSBalancerWindow.cs"/>
+        <Compile Include="MechJebModuleRCSController.cs"/>
+        <Compile Include="MechJebModuleRendezvousAutopilot.cs"/>
+        <Compile Include="MechJebModuleRendezvousAutopilotWindow.cs"/>
+        <Compile Include="MechJebModuleRendezvousGuidance.cs"/>
+        <Compile Include="MechJebModuleRoverController.cs"/>
+        <Compile Include="MechJebModuleRoverWindow.cs"/>
+        <Compile Include="MechJebModuleSettings.cs"/>
+        <Compile Include="MechJebModuleSmartASS.cs"/>
+        <Compile Include="MechJebModuleSmartRcs.cs"/>
+        <Compile Include="MechJebModuleSolarPanelController.cs"/>
+        <Compile Include="MechJebModuleSpaceplaneAutopilot.cs"/>
+        <Compile Include="MechJebModuleSpaceplaneGuidance.cs"/>
+        <Compile Include="MechJebModuleSpinupController.cs"/>
+        <Compile Include="MechJebModuleStagingController.cs"/>
+        <Compile Include="MechJebModuleSuicideTimer.cs"/>
+        <Compile Include="MechJebModuleTargetController.cs"/>
+        <Compile Include="MechJebModuleThrustController.cs"/>
+        <Compile Include="MechJebModuleThrustWindow.cs"/>
+        <Compile Include="MechJebModuleTranslatron.cs"/>
+        <Compile Include="MechJebModuleWarpController.cs"/>
+        <Compile Include="MechJebModuleWarpHelper.cs"/>
+        <Compile Include="MechJebModuleWaypointWindow.cs"/>
+        <Compile Include="MechjebBundlesManager.cs"/>
+        <Compile Include="MechJebStageStatsHelper.cs"/>
+        <Compile Include="ModExtensionDemo.cs"/>
+        <Compile Include="MuUtils.cs"/>
+        <Compile Include="OrbitExtensions.cs"/>
+        <Compile Include="OrbitalManeuverCalculator.cs"/>
+        <Compile Include="PIDController.cs"/>
+        <Compile Include="PartExtensions.cs"/>
+        <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="Properties\Resources.Designer.cs"/>
+        <Compile Include="MechJebModulePVGGlueBall.cs"/>
+        <Compile Include="RCSSolver.cs"/>
+        <Compile Include="ReentrySimulation.cs"/>
+        <Compile Include="ReentrySimulation\SimCurves.cs"/>
+        <Compile Include="ToolbarWrapper.cs"/>
+        <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs"/>
+        <Compile Include="UnityToolbag\Future\Future.cs"/>
+        <Compile Include="Vector6.cs"/>
+        <Compile Include="VesselExtensions.cs"/>
+        <Compile Include="VesselState.cs"/>
     </ItemGroup>
     <ItemGroup>
-        <EmbeddedResource Include="Properties\Resources.resx" />
+        <EmbeddedResource Include="Properties\Resources.resx"/>
     </ItemGroup>
     <ItemGroup>
-        <None Include="copy_build.bat" />
-        <None Include="copy_build.sh" />
-        <None Include="Properties\shader" />
-        <None Include="Properties\shader2" />
-        <None Include="Properties\shader3" />
-        <None Include="UnityToolbag\Dispatcher\README.md" />
-        <None Include="UnityToolbag\Future\README.md" />
+        <None Include="copy_build.bat"/>
+        <None Include="copy_build.sh"/>
+        <None Include="Properties\shader"/>
+        <None Include="Properties\shader2"/>
+        <None Include="Properties\shader3"/>
+        <None Include="UnityToolbag\Dispatcher\README.md"/>
+        <None Include="UnityToolbag\Future\README.md"/>
     </ItemGroup>
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -193,8 +193,8 @@
             <Private>False</Private>
         </Reference>
         <Reference Include="JetBrains.Annotations">
-          <HintPath>..\packages\JetBrains.Annotations.2023.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
-          <Aliases>JetBrainsAnnotations</Aliases>
+            <HintPath>..\packages\JetBrains.Annotations.2023.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
+            <Aliases>JetBrainsAnnotations</Aliases>
         </Reference>
         <Reference Include="mscorlib">
         </Reference>
@@ -248,18 +248,18 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\alglib\alglib.csproj">
-        <Project>{e8cbcddd-bcfc-4f03-9309-f58395ca4762}</Project>
-        <Name>alglib</Name>
-      </ProjectReference>
-      <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj">
-        <Project>{da770208-1300-4c86-8996-c1790b945999}</Project>
-        <Name>MechJebLibBindings</Name>
-      </ProjectReference>
-      <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
-        <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
-        <Name>MechJebLib</Name>
-      </ProjectReference>
+        <ProjectReference Include="..\alglib\alglib.csproj">
+            <Project>{e8cbcddd-bcfc-4f03-9309-f58395ca4762}</Project>
+            <Name>alglib</Name>
+        </ProjectReference>
+        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj">
+            <Project>{da770208-1300-4c86-8996-c1790b945999}</Project>
+            <Name>MechJebLibBindings</Name>
+        </ProjectReference>
+        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
+            <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
+            <Name>MechJebLib</Name>
+        </ProjectReference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">

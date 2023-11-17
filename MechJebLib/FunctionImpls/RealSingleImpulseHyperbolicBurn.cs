@@ -8,8 +8,6 @@ using MechJebLib.Minimization;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
-#nullable enable
-
 namespace MechJebLib.FunctionImpls
 {
     public static class RealSingleImpulseHyperbolicBurn

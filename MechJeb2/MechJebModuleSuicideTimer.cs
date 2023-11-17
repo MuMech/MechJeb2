@@ -2,10 +2,10 @@
 
 extern alias JetBrainsAnnotations;
 using JetBrainsAnnotations::JetBrains.Annotations;
-using MechJebLibBindings;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.SuicideBurnSimulation;
+using MechJebLibBindings;
 
 namespace MuMech
 {

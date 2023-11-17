@@ -78,8 +78,8 @@ namespace MechJebLibTest.ManeuversTests
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false);
             (V3 rburn1, V3 vburn1)                   = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 _, V3 _)                   = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 _, V3 _)                           = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
+            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
             double inc = Astro.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);
@@ -100,8 +100,8 @@ namespace MechJebLibTest.ManeuversTests
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false, rendezvous: false);
             (V3 rburn1, V3 vburn1)                   = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 _, V3 _)                   = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 _, V3 _)                           = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
+            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
             double inc = Astro.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);

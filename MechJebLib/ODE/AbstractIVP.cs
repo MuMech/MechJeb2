@@ -10,8 +10,6 @@ using MechJebLib.Primitives;
 using MechJebLib.Rootfinding;
 using static MechJebLib.Utils.Statics;
 
-#nullable enable
-
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.ODE
 {

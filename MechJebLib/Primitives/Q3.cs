@@ -8,8 +8,6 @@ using System.Globalization;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-#nullable enable
-
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable InconsistentNaming

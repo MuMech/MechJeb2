@@ -1,5 +1,4 @@
 ﻿extern alias JetBrainsAnnotations;
-
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;

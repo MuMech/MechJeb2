@@ -55,19 +55,19 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="FuelFlowSimulation\SimVesselBuilder.cs" />
-        <Compile Include="FuelFlowSimulation\SimVesselManager.cs" />
-        <Compile Include="FuelFlowSimulation\SimVesselUpdater.cs" />
-        <Compile Include="H1Extensions.cs" />
-        <Compile Include="MathExtensions.cs" />
+        <Compile Include="FuelFlowSimulation\SimVesselBuilder.cs"/>
+        <Compile Include="FuelFlowSimulation\SimVesselManager.cs"/>
+        <Compile Include="FuelFlowSimulation\SimVesselUpdater.cs"/>
+        <Compile Include="H1Extensions.cs"/>
+        <Compile Include="MathExtensions.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="ReflectionUtils.cs" />
+        <Compile Include="ReflectionUtils.cs"/>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
-        <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
-        <Name>MechJebLib</Name>
-      </ProjectReference>
+        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
+            <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
+            <Name>MechJebLib</Name>
+        </ProjectReference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

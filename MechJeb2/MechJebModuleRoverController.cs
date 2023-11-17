@@ -33,25 +33,25 @@ namespace MuMech
 
         [ToggleInfoItem("#MechJeb_BrakeOnEject", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Brake on Pilot Eject
-        public readonly bool BrakeOnEject = false;
+        public readonly bool BrakeOnEject;
 
         [ToggleInfoItem("#MechJeb_BrakeOnEnergyDepletion", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Brake on Energy Depletion
-        public readonly bool BrakeOnEnergyDepletion = false;
+        public readonly bool BrakeOnEnergyDepletion;
 
         [ToggleInfoItem("#MechJeb_WarpToDaylight", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Warp until Day if Depleted
-        public readonly bool WarpToDaylight = false;
+        public readonly bool WarpToDaylight;
 
         public bool waitingForDaylight;
 
         [ToggleInfoItem("#MechJeb_StabilityControl", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL)] // Stability Control
-        public readonly bool StabilityControl = false;
+        public readonly bool StabilityControl;
 
         [ToggleInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Rover)]
         [Persistent(pass = (int)Pass.LOCAL | (int)Pass.TYPE)] // Limit Acceleration
-        public bool LimitAcceleration = false;
+        public bool LimitAcceleration;
 
         public PIDController headingPID;
         public PIDController speedPID;

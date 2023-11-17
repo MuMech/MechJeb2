@@ -10,8 +10,6 @@ using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-#nullable enable
-
 namespace MechJebLib.Functions
 {
     public static class Astro
