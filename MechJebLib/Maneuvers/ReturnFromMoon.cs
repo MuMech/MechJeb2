@@ -231,14 +231,14 @@ namespace MechJebLib.Maneuvers
              * periapsis condition
              */
 
-            Dual p = DualV3.Dot(new DualV3(rf, new V3(1, 0, 0)).normalized, vf.normalized);
+            Dual p = DualV3.Dot(new DualV3(rf, new V3(1, 0, 0)), vf);
             fi[13]      = p.M;
             jac[13, 14] = p.D;
-            jac[13, 15] = DualV3.Dot(new DualV3(rf, new V3(0, 1, 0)).normalized, vf.normalized).D;
-            jac[13, 16] = DualV3.Dot(new DualV3(rf, new V3(0, 0, 1)).normalized, vf.normalized).D;
-            jac[13, 17] = DualV3.Dot(rf.normalized, new DualV3(vf, new V3(1, 0, 0)).normalized).D;
-            jac[13, 18] = DualV3.Dot(rf.normalized, new DualV3(vf, new V3(0, 1, 0)).normalized).D;
-            jac[13, 19] = DualV3.Dot(rf.normalized, new DualV3(vf, new V3(0, 0, 1)).normalized).D;
+            jac[13, 15] = DualV3.Dot(new DualV3(rf, new V3(0, 1, 0)), vf).D;
+            jac[13, 16] = DualV3.Dot(new DualV3(rf, new V3(0, 0, 1)), vf).D;
+            jac[13, 17] = DualV3.Dot(rf, new DualV3(vf, new V3(1, 0, 0))).D;
+            jac[13, 18] = DualV3.Dot(rf, new DualV3(vf, new V3(0, 1, 0))).D;
+            jac[13, 19] = DualV3.Dot(rf, new DualV3(vf, new V3(0, 0, 1))).D;
 
             /*
              * periapsis constraint
@@ -356,15 +356,16 @@ namespace MechJebLib.Maneuvers
             return x;
         }
 
-        //private const double DIFFSTEP = 1e-9;
-        private const double EPSX   = 1e-3;
-        private const int    MAXITS = 10000;
+        private const double DIFFSTEP = 1e-9;
+        private const double EPSX     = 1e-3;
+        private const int    MAXITS   = 10000;
 
         private const int NVARIABLES             = 20;
         private const int NEQUALITYCONSTRAINTS   = 15;
         private const int NINEQUALITYCONSTRAINTS = 0;
 
-        private static (V3 V, double dt) ManeuverScaled(Args args, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity)
+        private static (V3 V, double dt) ManeuverScaled(Args args, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
+            bool optguard = false)
         {
             Scale planetScale = args.PlanetScale;
             V3 moonR0 = args.MoonR0;
@@ -399,10 +400,11 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcsetcond(state, EPSX, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
 
-            /*
-            alglib.minnlcoptguardsmoothness(state);
-            alglib.minnlcoptguardgradient(state, DIFFSTEP);
-            */
+            if (optguard)
+            {
+                alglib.minnlcoptguardsmoothness(state);
+                alglib.minnlcoptguardgradient(state, DIFFSTEP);
+            }
 
             double[] fi = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1];
             double[,] jac = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1, NVARIABLES];
@@ -415,16 +417,17 @@ namespace MechJebLib.Maneuvers
             sw.Stop();
             Print($"optimization took {sw.ElapsedMilliseconds}ms: {rep.iterationscount} iter, {rep.nfev} fev");
 
-            /*
-            alglib.minnlcoptguardresults(state, out alglib.optguardreport ogrep);
+            if (optguard)
+            {
+                alglib.minnlcoptguardresults(state, out alglib.optguardreport ogrep);
 
-            if (ogrep.badgradsuspected)
-                throw new Exception(
-                    $"badgradsuspected: {ogrep.badgradfidx},{ogrep.badgradvidx}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, 1e-2)}");
+                if (ogrep.badgradsuspected)
+                    throw new Exception(
+                        $"badgradsuspected: {ogrep.badgradfidx},{ogrep.badgradvidx}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, 1e-2)}");
 
-            if (ogrep.nonc0suspected || ogrep.nonc1suspected)
-                throw new Exception("alglib optguard caught an error, i should report better on errors now");
-                */
+                if (ogrep.nonc0suspected || ogrep.nonc1suspected)
+                    throw new Exception("alglib optguard caught an error, i should report better on errors now");
+            }
 
             if (rep.terminationtype < 0)
                 throw new Exception(
@@ -453,7 +456,8 @@ namespace MechJebLib.Maneuvers
         }
 
         private static (V3 V, double dt) Maneuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0, double moonSOI,
-            V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity)
+            V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
+            bool optguard = false)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -484,7 +488,7 @@ namespace MechJebLib.Maneuvers
                 PlanetScale = planetScale
             };
 
-            (V3 dv, double dt) = ManeuverScaled(args, dtmin / moonScale.TimeScale, dtmax / moonScale.TimeScale);
+            (V3 dv, double dt) = ManeuverScaled(args, dtmin / moonScale.TimeScale, dtmax / moonScale.TimeScale, optguard);
 
             sw.Stop();
             Print($"total calculation took {sw.ElapsedMilliseconds}ms");
@@ -493,7 +497,8 @@ namespace MechJebLib.Maneuvers
         }
 
         public static (V3 dv, double dt, double newPeR) NextManeuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0,
-            double moonSOI, V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity)
+            double moonSOI, V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
+            bool optguard = false)
         {
             double dt;
             V3 dv;
@@ -503,7 +508,7 @@ namespace MechJebLib.Maneuvers
 
             while (true)
             {
-                (dv, dt) = Maneuver(centralMu, moonMu, moonR0, moonV0, moonSOI, r0, v0, peR, inc, dtmin, dtmax);
+                (dv, dt) = Maneuver(centralMu, moonMu, moonR0, moonV0, moonSOI, r0, v0, peR, inc, dtmin, dtmax, optguard);
                 if (dt > 0 || ecc >= 1)
                     break;
                 if (i++ >= 5)
