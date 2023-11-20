@@ -21,11 +21,10 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void NextManeuverToReturnFromMoonTest()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine(o.ToString()));
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms
             ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
 
-            // Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             const double CENTRAL_MU = 398600435436096;
             const double MOON_MU = 4902800066163.8;
             var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
@@ -50,9 +49,10 @@ namespace MechJebLibTest.ManeuversTests
                     Astro.ApoapsisFromStateVectors(MOON_MU, r0, v0) > MOON_SOI)
                     continue;
 
-                /*
                 r0 = new V3(3033960.04435434, -538512.74449519, -1569171.01639252);
                 v0 = new V3(344.550626047212, -973.108221764261, 907.813925253141);
+
+                /*
 
                 r0 = new V3(-23744.6019871556, -935848.195057236, -2970820.75826717);
                 v0 = new V3(-511.683969531061, -141.692448007731, 975.982327934346);
@@ -93,6 +93,40 @@ namespace MechJebLibTest.ManeuversTests
                 Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3).ShouldEqual(PER, 1e-3);
                 newPeR.ShouldEqual(PER, 1e-3);
             }
+        }
+
+        [Fact]
+        private void NextManeuverToReturnFromMoonOptguardTest()
+        {
+            // this forces JIT compilation(?) of the SQL solver which takes ~250ms
+            ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
+
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+            const double CENTRAL_MU = 398600435436096;
+            const double MOON_MU = 4902800066163.8;
+            var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
+            var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
+            const double MOON_SOI = 66167158.6569544;
+
+            var r0 = new V3(4198676.73768844, 5187520.71497923, -3.29371833446352);
+            var v0 = new V3(-666.230112925872, 539.234048888927, 0.000277598267012666);
+
+            const double PER = 6.3781e6 + 60000; // 60km
+
+            (V3 dv, double dt, double newPeR) =
+                ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0, optguard: true);
+
+            (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
+            double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
+            (V3 r2, V3 v2)         = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
+            (V3 moonR2, V3 moonV2) = Shepperd.Solve(CENTRAL_MU, dt + tt1, moonR0, moonV0);
+            V3 r3 = moonR2 + r2;
+            V3 v3 = moonV2 + v2;
+
+            _testOutputHelper.WriteLine($"periapsis: {Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3)}");
+
+            Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3).ShouldEqual(PER, 1e-3);
+            newPeR.ShouldEqual(PER, 1e-3);
         }
     }
 }
