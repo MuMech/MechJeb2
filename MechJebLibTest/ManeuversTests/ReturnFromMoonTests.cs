@@ -3,6 +3,7 @@ using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -20,30 +21,33 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void NextManeuverToReturnFromMoonTest()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine(o.ToString()));
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms
             ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
 
             // Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            double centralMu = 398600435436096;
-            double moonMu = 4902800066163.8;
+            const double CENTRAL_MU = 398600435436096;
+            const double MOON_MU = 4902800066163.8;
             var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
             var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
-            double moonSOI = 66167158.6569544;
+            const double MOON_SOI = 66167158.6569544;
+            /*
             var r0 = new V3(4198676.73768844, 5187520.71497923, -3.29371833446352);
             var v0 = new V3(-666.230112925872, 539.234048888927, 0.000277598267012666);
-            double peR = 6.3781e6 + 60000; // 60km
+            */
+            const double PER = 6.3781e6 + 60000; // 60km
 
             // this test periodically just fails, although its about 1-in-150 right now
             for (int i = 0; i < 1; i++)
             {
                 var random = new Random();
-                r0 = new V3(6616710 * random.NextDouble() - 3308350, 6616710 * random.NextDouble() - 3308350,
+                var r0 = new V3(6616710 * random.NextDouble() - 3308350, 6616710 * random.NextDouble() - 3308350,
                     6616710 * random.NextDouble() - 3308350);
-                v0 = new V3(2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000);
+                var v0 = new V3(2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000);
 
                 // skip if its already an escape orbit
-                if (Astro.EccFromStateVectors(moonMu, r0, v0) > 1 ||
-                    Astro.ApoapsisFromStateVectors(moonMu, r0, v0) > moonSOI)
+                if (Astro.EccFromStateVectors(MOON_MU, r0, v0) > 1 ||
+                    Astro.ApoapsisFromStateVectors(MOON_MU, r0, v0) > MOON_SOI)
                     continue;
 
                 /*
@@ -75,19 +79,19 @@ namespace MechJebLibTest.ManeuversTests
                 _testOutputHelper.WriteLine($"iteration: {i}");
 
                 (V3 dv, double dt, double newPeR) =
-                    ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, peR, 0, 0);
+                    ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0);
 
-                (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
-                double tt1 = Astro.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
-                (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
-                (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
+                (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
+                double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
+                (V3 r2, V3 v2)         = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
+                (V3 moonR2, V3 moonV2) = Shepperd.Solve(CENTRAL_MU, dt + tt1, moonR0, moonV0);
                 V3 r3 = moonR2 + r2;
                 V3 v3 = moonV2 + v2;
 
-                _testOutputHelper.WriteLine($"periapsis: {Astro.PeriapsisFromStateVectors(centralMu, r3, v3)}");
+                _testOutputHelper.WriteLine($"periapsis: {Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3)}");
 
-                Astro.PeriapsisFromStateVectors(centralMu, r3, v3).ShouldEqual(peR, 1e-3);
-                newPeR.ShouldEqual(peR, 1e-3);
+                Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3).ShouldEqual(PER, 1e-3);
+                newPeR.ShouldEqual(PER, 1e-3);
             }
         }
     }
