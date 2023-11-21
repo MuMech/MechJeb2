@@ -78,6 +78,7 @@
         <Compile Include="ODE\AbstractRungeKutta.cs"/>
         <Compile Include="ODE\BS3.cs"/>
         <Compile Include="ODE\DP5.cs"/>
+        <Compile Include="ODE\DP8.cs"/>
         <Compile Include="ODE\Event.cs"/>
         <Compile Include="Primitives\Dual.cs"/>
         <Compile Include="Primitives\DualV3.cs"/>
