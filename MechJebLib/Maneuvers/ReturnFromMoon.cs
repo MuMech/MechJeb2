@@ -357,7 +357,7 @@ namespace MechJebLib.Maneuvers
         }
 
         private const double DIFFSTEP = 1e-9;
-        private const double EPSX     = 1e-3;
+        private const double EPSX     = 1e-5;
         private const int    MAXITS   = 10000;
 
         private const int NVARIABLES             = 20;
@@ -367,10 +367,6 @@ namespace MechJebLib.Maneuvers
         private static (V3 V, double dt) ManeuverScaled(Args args, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
             bool optguard = false)
         {
-            Scale planetScale = args.PlanetScale;
-            V3 moonR0 = args.MoonR0;
-            V3 moonV0 = args.MoonV0;
-
             double[] x = GenerateInitialGuess(args);
             double[] bndl = new double[NVARIABLES];
             double[] bndu = new double[NVARIABLES];
@@ -438,20 +434,6 @@ namespace MechJebLib.Maneuvers
                 throw new Exception(
                     $"ReturnFromMoon.Maneuver() no feasible solution found, constraint violation: {rep.nlcerr}");
 
-            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
-                Astro.KeplerianFromStateVectors(1.0, new V3(x2[14], x2[15], x2[16]), new V3(x2[17], x2[18], x2[19]));
-
-            Print(
-                $"Primary transfer orbit:\nsma:{sma * planetScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
-
-            (sma, ecc, inc, lan, argp, tanom, _) =
-                Astro.KeplerianFromStateVectors(1.0, moonR0, moonV0);
-
-            Print(
-                $"Secondary orbit:\nsma:{sma * planetScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
-
-            Print($"deltaV: {new V3(x2[0], x2[1], x2[2]).magnitude} dt: {x2[3]}");
-
             return (new V3(x2[0], x2[1], x2[2]), x2[3]);
         }
 
@@ -459,16 +441,8 @@ namespace MechJebLib.Maneuvers
             V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
             bool optguard = false)
         {
-            var sw = new Stopwatch();
-            sw.Start();
 
-            Print(
-                $"ReturnFromMoon.Maneuver({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
-
-            (double sma, double ecc, double incc, double lan, double argp, double tanom, _) =
-                Astro.KeplerianFromStateVectors(moonMu, r0, v0);
-
-            Print($"sma:{sma} ecc:{ecc} inc:{Rad2Deg(incc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
+            Print($"ReturnFromMoon.Maneuver({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
 
             var moonScale = Scale.Create(moonMu, Sqrt(r0.magnitude * moonSOI));
             var planetScale = Scale.Create(centralMu, Sqrt(moonR0.magnitude * peR));
@@ -488,12 +462,74 @@ namespace MechJebLib.Maneuvers
                 PlanetScale = planetScale
             };
 
+            LogStuff1(args, moonScale);
+
+            var sw = new Stopwatch();
+            sw.Start();
+
             (V3 dv, double dt) = ManeuverScaled(args, dtmin / moonScale.TimeScale, dtmax / moonScale.TimeScale, optguard);
 
             sw.Stop();
             Print($"total calculation took {sw.ElapsedMilliseconds}ms");
 
+            LogStuff2(dv, dt, args, moonScale);
+
             return (dv * moonScale.VelocityScale, dt * moonScale.TimeScale);
+        }
+
+        private static void LogStuff1(Args args, Scale moonScale)
+        {
+            V3 r0 = args.R0;
+            V3 v0 = args.V0;
+            V3 moonR0 = args.MoonR0;
+            V3 moonV0 = args.MoonV0;
+            Scale planetScale = args.PlanetScale;
+
+            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
+                Astro.KeplerianFromStateVectors(1.0, moonR0, moonV0);
+
+            Print(
+                $"Secondary celestial orbit:\nsma:{sma * planetScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
+
+            (sma, ecc, inc, lan, argp, tanom, _) =
+                Astro.KeplerianFromStateVectors(1.0, r0, v0);
+
+            Print(
+                $"Parking orbit around Secondary:\nsma:{sma * moonScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
+        }
+
+        private static void LogStuff2(V3 dv, double dt, Args args, Scale moonScale)
+        {
+            double moonSOI = args.MoonSOI;
+            V3 r0 = args.R0;
+            V3 v0 = args.V0;
+            V3 moonR0 = args.MoonR0;
+            V3 moonV0 = args.MoonV0;
+            Scale moonToPlanetScale = args.MoonToPlanetScale;
+            Scale planetScale = args.PlanetScale;
+
+            (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r0, v0);
+            double tt1 = Astro.TimeToNextRadius(1.0, r1, v1 + dv, moonSOI);
+            (V3 r2, V3 v2)         = Shepperd.Solve(1.0, tt1, r1, v1 + dv);
+            (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, dt + tt1 / moonToPlanetScale.TimeScale, moonR0, moonV0);
+            V3 r3 = r2 / moonToPlanetScale.LengthScale + moonR2;
+            V3 v3 = v2 / moonToPlanetScale.VelocityScale + moonV2;
+
+            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
+                Astro.KeplerianFromStateVectors(1.0, r2, v2);
+
+            Print(
+                $"Ejection orbit around Secondary:\nsma:{sma * moonScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
+
+            (sma, ecc, inc, lan, argp, tanom, _) =
+                Astro.KeplerianFromStateVectors(1.0, r3, v3);
+
+            Print(
+                $"Return orbit around Primary:\nsma:{sma * planetScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
+
+            double peR = Astro.PeriapsisFromStateVectors(1.0, r3, v3);
+
+            Print($"deltaV: {(dv * moonScale.VelocityScale).magnitude} dt: {dt * moonScale.TimeScale} PeR: {peR * planetScale.LengthScale}");
         }
 
         public static (V3 dv, double dt, double newPeR) NextManeuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0,
