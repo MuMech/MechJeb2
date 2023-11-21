@@ -6,7 +6,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public enum AscentType { CLASSIC, GRAVITYTURN, PVG }
+    public enum AscentType { CLASSIC, PVG }
 
     public class MechJebModuleAscentSettings : ComputerModule
     {
@@ -287,17 +287,12 @@ namespace MuMech
 
         private MechJebModuleAscentBaseAutopilot GetAscentModule(AscentType type)
         {
-            switch (type)
+            return type switch
             {
-                case AscentType.CLASSIC:
-                    return Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
-                case AscentType.GRAVITYTURN:
-                    return Core.GetComputerModule<MechJebModuleAscentGTAutopilot>();
-                case AscentType.PVG:
-                    return Core.GetComputerModule<MechJebModuleAscentPVGAutopilot>();
-                default:
-                    return Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
-            }
+                AscentType.CLASSIC => Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>(),
+                AscentType.PVG     => Core.GetComputerModule<MechJebModuleAscentPVGAutopilot>(),
+                _                  => Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>()
+            };
         }
 
         private void DisableAscentModules()
