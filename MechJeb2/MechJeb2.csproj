@@ -100,7 +100,6 @@
         <Compile Include="MechJebModuleAscentBaseAutopilot.cs"/>
         <Compile Include="MechJebModuleAscentClassicAutopilot.cs"/>
         <Compile Include="MechJebModuleAscentClassicPathMenu.cs"/>
-        <Compile Include="MechJebModuleAscentGTAutopilot.cs"/>
         <Compile Include="MechJebModuleAscentMenu.cs"/>
         <Compile Include="MechJebModuleAscentPVGAutopilot.cs"/>
         <Compile Include="MechJebModuleAscentPVGSettingsMenu.cs"/>

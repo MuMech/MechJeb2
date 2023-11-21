@@ -175,31 +175,6 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        private void ShowGuidanceSettingsGUIElements()
-        {
-            Profiler.BeginSample("MJ.GUIWindow.ShowGuidanceSettings");
-
-
-            if (_ascentSettings.AscentType == AscentType.GRAVITYTURN)
-            {
-                GUILayout.BeginVertical(GUI.skin.box);
-
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel8, _ascentSettings.TurnStartAltitude,
-                    "km"); //Turn start altitude:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel9, _ascentSettings.TurnStartVelocity,
-                    "m/s");                                                                                                   //Turn start velocity:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel10, _ascentSettings.TurnStartPitch, "deg"); //Turn start pitch:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel11, _ascentSettings.IntermediateAltitude,
-                    "km");                                                                                              //Intermediate altitude:
-                GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel12, _ascentSettings.HoldAPTime, "s"); //Hold AP Time:
-                GUILayout.EndVertical();
-            }
-
-            _ascentSettings.LimitQaEnabled = _ascentSettings.AscentType == AscentType.PVG; // this is mandatory for PVG
-
-            Profiler.EndSample();
-        }
-
         private void ShowStatusGUIElements()
         {
             Profiler.BeginSample("MJ.GUIWindow.ShowStatus");
@@ -413,8 +388,8 @@ namespace MuMech
             //PerformanceTestGUIElements();
             VisibleSectionsGUIElements();
             ShowTargetingGUIElements();
-            ShowGuidanceSettingsGUIElements();
 
+            _ascentSettings.LimitQaEnabled = _ascentSettings.AscentType == AscentType.PVG; // this is mandatory for PVG
 
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.BeginHorizontal();
