@@ -121,7 +121,7 @@ namespace MechJebLibTest.TwoBodyTests
         [Fact]
         private void RandomComparedToDP5()
         {
-            var solver = new DP5 { Rtol = 1e-13, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+            var solver = new DP5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
 
             const int NTRIALS = 500;
 
@@ -183,7 +183,75 @@ namespace MechJebLibTest.TwoBodyTests
             }
 
             _testOutputHelper.WriteLine($"Successful: {count}");
-            Assert.True(count > 450);
+            Assert.True(count > NTRIALS * 0.90);
+        }
+
+        [Fact]
+        private void RandomComparedToTsit5()
+        {
+            var solver = new Tsit5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+
+            const int NTRIALS = 500;
+
+            var random = new Random();
+
+            int count = 0;
+
+            for (int i = 0; i < NTRIALS; i++)
+            {
+                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                double dt = 10 * random.NextDouble() - 5;
+
+                (double _, double ecc, double _, double _, double _, double _, double l) =
+                    Astro.KeplerianFromStateVectors(1.0, r0, v0);
+
+                // near-parabolic orbits are difficult for Shepperd, see the Farnocchia paper.
+                if (ecc < 1.01 && ecc > 0.99)
+                    continue;
+
+                // RK methods have issue with small SLRs
+                if (l < 0.1)
+                    continue;
+
+                (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
+
+                V3 rf2, vf2;
+
+                using (var y0 = Vn.Rent(6))
+                using (var yf = Vn.Rent(6))
+                {
+                    y0.Set(0, r0);
+                    y0.Set(3, v0);
+
+                    try
+                    {
+                        solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                    }
+                    catch (ArgumentException) // sometimes RK method still throws
+                    {
+                        continue;
+                    }
+
+                    rf2 = yf.Get(0);
+                    vf2 = yf.Get(3);
+                }
+
+                count++;
+
+                if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
+                {
+                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                                                rf2 + " vf2:" +
+                                                vf2 + "\n");
+                }
+
+                rf.ShouldEqual(rf2, 1e-5);
+                vf.ShouldEqual(vf2, 1e-5);
+            }
+
+            _testOutputHelper.WriteLine($"Successful: {count}");
+            Assert.True(count > NTRIALS * 0.90);
         }
 
         [Fact]
@@ -254,7 +322,7 @@ namespace MechJebLibTest.TwoBodyTests
 
             _testOutputHelper.WriteLine($"Successful: {count}");
 
-            Assert.True(count > 450);
+            Assert.True(count > NTRIALS * 0.90);
         }
     }
 }
