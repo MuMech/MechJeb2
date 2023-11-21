@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.ODE
 {
@@ -40,7 +42,7 @@ namespace MechJebLib.ODE
 
         #endregion
 
-        protected override void RKStep(IVPFunc f, Vn err)
+        protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
 
@@ -58,10 +60,27 @@ namespace MechJebLib.ODE
                 Ynew[i] = Y[i] + h * (A41 * Dy[i] + A42 * K[2][i] + A43 * K[3][i]);
             f(Ynew, T + h, K[4]);
 
+
+
+            K[4].CopyTo(Dynew);
+        }
+
+        protected override double ScaledErrorNorm()
+        {
+            using var err = Vn.Rent(N);
+
             for (int i = 0; i < N; i++)
                 err[i] = Dy[i] * E1 + K[2][i] * E2 + K[3][i] * E3 + K[4][i] * E4;
 
-            K[4].CopyTo(Dynew);
+            double error = 0.0;
+
+            for (int i = 0; i < N; i++)
+            {
+                double scale = Atol + Rtol * Max(Abs(Y[i]), Abs(Ynew[i]));
+                error += Powi(err[i] / scale, 2);
+            }
+
+            return Sqrt(error / N);
         }
 
         protected override void InitInterpolant()

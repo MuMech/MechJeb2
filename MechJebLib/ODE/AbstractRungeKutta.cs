@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -39,8 +38,6 @@ namespace MechJebLib.ODE
 
         protected override (double, double) Step(IVPFunc f)
         {
-            using var err = Vn.Rent(N);
-
             bool previouslyRejected = false;
 
             while (true)
@@ -52,17 +49,13 @@ namespace MechJebLib.ODE
                 else if (Habs < MinStep)
                     Habs = MinStep;
 
-                RKStep(f, err);
+                RKStep(f);
 
-                double errorNorm = ScaledErrorNorm(err);
+                double errorNorm = ScaledErrorNorm();
 
                 if (errorNorm < 1)
                 {
-                    double factor;
-                    if (errorNorm == 0)
-                        factor = MAX_FACTOR;
-                    else
-                        factor = Min(MAX_FACTOR, SAFETY * Pow(errorNorm, -_alpha) * Pow(_lastErrorNorm, Beta));
+                    double factor = errorNorm == 0 ? MAX_FACTOR : Min(MAX_FACTOR, SAFETY * Pow(errorNorm, -_alpha) * Pow(_lastErrorNorm, Beta));
 
                     if (previouslyRejected)
                         factor = Min(1.0, factor);
@@ -129,22 +122,8 @@ namespace MechJebLib.ODE
             K.Clear();
         }
 
-        protected abstract void RKStep(IVPFunc f, Vn err);
+        protected abstract void RKStep(IVPFunc f);
 
-        [UsedImplicitly]
-        protected virtual double ScaledErrorNorm(Vn err)
-        {
-            int n = err.Count;
-
-            double error = 0.0;
-
-            for (int i = 0; i < n; i++)
-            {
-                double scale = Atol + Rtol * Max(Abs(Y[i]), Abs(Ynew[i]));
-                error += Powi(err[i] / scale, 2);
-            }
-
-            return Sqrt(error / n);
-        }
+        protected abstract double ScaledErrorNorm();
     }
 }

@@ -6,6 +6,8 @@
 using System;
 using System.Collections.Generic;
 using MechJebLib.Primitives;
+using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.ODE
@@ -94,7 +96,7 @@ namespace MechJebLib.ODE
 
         #endregion
 
-        protected override void RKStep(IVPFunc f, Vn err)
+        protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
 
@@ -125,10 +127,26 @@ namespace MechJebLib.ODE
 
             f(Ynew, T + h, K[7]);
 
+
+            K[7].CopyTo(Dynew);
+        }
+
+        protected override double ScaledErrorNorm()
+        {
+            using var err = Vn.Rent(N);
+
             for (int i = 0; i < N; i++)
                 err[i] = K[1][i] * E1 + K[3][i] * E3 + K[4][i] * E4 + K[5][i] * E5 + K[6][i] * E6 + K[7][i] * E7;
 
-            K[7].CopyTo(Dynew);
+            double error = 0.0;
+
+            for (int i = 0; i < N; i++)
+            {
+                double scale = Atol + Rtol * Max(Abs(Y[i]), Abs(Ynew[i]));
+                error += Powi(err[i] / scale, 2);
+            }
+
+            return Sqrt(error / N);
         }
 
         protected override void InitInterpolant()
@@ -153,9 +171,7 @@ namespace MechJebLib.ODE
             double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
 
             for (int i = 0; i < N; i++)
-            {
                 yout[i] = Y[i] + h * s * (bs1 * K[1][i] + bs3 * K[3][i] + bs4 * K[4][i] + bs5 * K[5][i] + bs6 * K[6][i] + bs7 * K[7][i]);
-            }
         }
     }
 }
