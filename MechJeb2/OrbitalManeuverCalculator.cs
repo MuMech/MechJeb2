@@ -354,6 +354,8 @@ namespace MuMech
 
         public static (Vector3d dv, double dt) DeltaVAndTimeForMoonReturnEjection(Orbit o, double ut, double targetPrimaryRadius)
         {
+            var solver = new ReturnFromMoon();
+
             CelestialBody moon = o.referenceBody;
             CelestialBody primary = moon.referenceBody;
             (V3 moonR0, V3 moonV0) = moon.orbit.RightHandedStateVectorsAtUT(ut);
@@ -362,7 +364,7 @@ namespace MuMech
 
             double dtmin = o.eccentricity >= 1 ? 0 : double.NegativeInfinity;
 
-            (V3 dv, double dt, double newPeR) = ReturnFromMoon.NextManeuver(primary.gravParameter, moon.gravParameter, moonR0,
+            (V3 dv, double dt, double newPeR) = solver.NextManeuver(primary.gravParameter, moon.gravParameter, moonR0,
                 moonV0, moonSOI, r0, v0, targetPrimaryRadius, 0, dtmin);
 
             Debug.Log($"Solved PeR from calcluator: {newPeR}");
