@@ -6,6 +6,7 @@
 using System;
 using System.Diagnostics;
 using MechJebLib.Functions;
+using MechJebLib.Minimization;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using static MechJebLib.Utils.Statics;
@@ -13,7 +14,7 @@ using static System.Math;
 
 namespace MechJebLib.Maneuvers
 {
-    public static class ReturnFromMoon
+    public class ReturnFromMoon
     {
         private struct Args
         {
@@ -28,71 +29,25 @@ namespace MechJebLib.Maneuvers
             public V3 MoonV0;
 
             public Scale MoonToPlanetScale;
-
-            //public Scale  MoonScale;
+            public Scale MoonScale;
             public Scale PlanetScale;
         }
 
-        /* I was going to try to implement the differnetial correction procedure in Ocampo and Saudemont as a
-           least-squares minimization problem, but decided not to, but this is the constraint function if I ever
-           come back to it
-        private static void GuessFunction(double[] x, double[] fi, object o)
-        {
-            var args = (Args)o;
+        private Args _args;
 
-            double moonSOI = args.MoonSOI;
-            double peR = args.PeR;
-            double inc = args.Inc;
-            V3 r0 = args.R0;
-            V3 v0 = args.V0;
-            V3 moonR0 = args.MoonR0;
-            V3 moonV0 = args.MoonV0;
-            Scale moonToPlanetScale = args.MoonToPlanetScale;
-
-            double tf = x[0];
-            var rf = new V3(x[1], x[2], x[3]);
-            var vf = new V3(x[4], x[5], x[6]);
-            double tsoiMinus = x[7];
-            double tsoiPlus = x[8];
-            double burnTime = x[9];
-            var dv = new V3(x[10], x[11], x[12]);
-
-            (V3 rburn, V3 vburn)   = Shepperd.Solve(1.0, burnTime, r0, v0);
-            (V3 rsoi, V3 vsoi)     = Shepperd.Solve(1.0, tsoiMinus, rburn, vburn + dv);
-            (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, tsoiMinus, moonR0, moonV0);
-
-            V3 rsoiMinus = rsoi / moonToPlanetScale.LengthScale + moonR2;
-            V3 vsoiMinus = vsoi / moonToPlanetScale.VelocityScale + moonV2;
-
-            (V3 rsoiPlus, V3 vsoiPlus) = Shepperd.Solve(1.0, tf - tsoiPlus, rf, vf);
-
-            fi[0] = rsoiPlus.x - rsoiMinus.x;
-            fi[1] = rsoiPlus.y - rsoiMinus.y;
-            fi[2] = rsoiPlus.z - rsoiMinus.z;
-            fi[3] = vsoiPlus.x - vsoiMinus.x;
-            fi[4] = vsoiPlus.y - vsoiMinus.y;
-            fi[5] = vsoiPlus.z - vsoiMinus.z;
-            fi[6] = tsoiPlus - tsoiMinus;
-            fi[7] = V3.Dot(rf.normalized, vf.normalized);
-            fi[8] = rf.sqrMagnitude - peR * peR;
-        }
-        */
-
-        private static void NLPFunction(double[] x, double[] fi, double[,] jac, object o)
+        private void NLPFunction(double[] x, double[] fi, double[,] jac, object? o)
         {
             /*
              * unpacking constants
              */
-            var args = (Args)o;
-
-            double moonSOI = args.MoonSOI;
-            double peR = args.PeR;
-            //double inc = args.Inc;
-            V3 r0 = args.R0;
-            V3 v0 = args.V0;
-            V3 moonR0 = args.MoonR0;
-            V3 moonV0 = args.MoonV0;
-            Scale moonToPlanetScale = args.MoonToPlanetScale;
+            double moonSOI = _args.MoonSOI;
+            double peR = _args.PeR;
+            //double inc = _args.Inc;
+            V3 r0 = _args.R0;
+            V3 v0 = _args.V0;
+            V3 moonR0 = _args.MoonR0;
+            V3 moonV0 = _args.MoonV0;
+            Scale moonToPlanetScale = _args.MoonToPlanetScale;
 
             /*
              * unpacking optimizer variables
@@ -253,102 +208,207 @@ namespace MechJebLib.Maneuvers
              * time constraints
              */
 
-            fi[15]      = moonDt1 + moonDt2 + burnTime - moonDt;
-            jac[15, 3]  = 1.0;
-            jac[15, 4]  = 1.0;
-            jac[15, 5]  = 1.0;
+            fi[15]     = moonDt1 + moonDt2 + burnTime - moonDt;
+            jac[15, 3] = 1.0;
+            jac[15, 4] = 1.0;
+            jac[15, 5] = 1.0;
             jac[15, 11] = -1.0;
+
+            /*
+             * midpoint time constraints
+             */
+
+            fi[16]      = moonDt1 - moonDt2;
+            jac[16, 4]  = 1.0;
+            jac[16, 5]  = -1.0;
+            fi[17]      = planetDt1 - planetDt2;
+            jac[17, 12] = 1.0;
+            jac[17, 13] = -1.0;
         }
 
-        private static double[] GenerateInitialGuess(Args args)
+        private (V3 dv, double dt, V3 rf, V3 vf, double tt2) Guess(double inc, bool type2, bool full = false)
+        {
+            double moonSOI = _args.MoonSOI;
+            double peR = _args.PeR;
+            V3 r0 = _args.R0;
+            V3 v0 = _args.V0;
+            V3 moonR0 = _args.MoonR0;
+            V3 moonV0 = _args.MoonV0;
+            Scale planetScale = _args.PlanetScale;
+            Scale moonScale = _args.MoonScale;
+            Scale moonToPlanetScale = _args.MoonToPlanetScale;
+
+            V3 moonRsoi = moonR0;
+            V3 moonVsoi = moonV0;
+            V3 dv = V3.maxvalue;
+            V3 vf = V3.zero, rf = V3.zero;
+            double dt = 0;
+            double tt2 = 0;
+
+            for (int i = 0; i < 2; i++)
+            {
+                // kick the moon's orbit to the new peR and inc to build the return ellipse
+                V3 dv1 = ChangeOrbitalElement.ChangeApsis(1.0, moonRsoi, moonVsoi, peR);
+                dv1 += Simple.DeltaVToChangeInclination(moonRsoi, moonVsoi + dv1, inc);
+
+                // get the return ellipse keplerian elements
+                (double sma, double ecc, double _, double lan, double argp, double _, double l) =
+                    Astro.KeplerianFromStateVectors(1.0, moonRsoi, moonVsoi + dv1);
+
+                // find approximate tanom of the moon's SOI on the return ellipse
+                double moonSOI2 = moonSOI / moonToPlanetScale.LengthScale;
+                double rsoi = 2 * sma - moonSOI2;
+                double nuSOI = SafeAcos((sma * (1 - ecc * ecc) / rsoi - 1) / ecc);
+
+                // type2 return a transfer that starts with tanom < 180
+                if (!type2)
+                    nuSOI = TAU - nuSOI;
+
+                // get the SOI ejection point on the return ellipse
+                (V3 rsoiPlanet, V3 vsoiPlanet) = Astro.StateVectorsFromKeplerian(1.0, 1.2 * l, ecc, inc, lan, argp, nuSOI);
+                tt2                            = Astro.TimeToNextTrueAnomaly(1.0, rsoiPlanet, vsoiPlanet, 0);
+
+                if (full)
+                {
+                    // get the final periapsis position on the return ellipse for actual initial guess
+                    (rf, vf) = Astro.StateVectorsFromKeplerian(1.0, l, ecc, inc, lan, argp, 0);
+
+                    (double sma3, double ecc3, double inc3, double lan3, double argp3, double tanom3, double l3) =
+                        Astro.KeplerianFromStateVectors(1.0, rsoiPlanet, vsoiPlanet);
+
+                    Print(
+                        $"Guessed return ellipse:\nsma:{sma3 * planetScale.LengthScale} ecc:{ecc3} inc:{Rad2Deg(inc3)} lan:{Rad2Deg(lan3)} argp:{Rad2Deg(argp3)} tanom:{Rad2Deg(tanom3)}");
+
+                    Print($"vinf fed to hyperbolic guesser: {(vsoiPlanet - moonVsoi) * moonToPlanetScale.VelocityScale * moonScale.VelocityScale}");
+                }
+
+                V3 vneg, vpos, rburn;
+
+                (vneg, vpos, rburn, dt) =
+                    Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, (vsoiPlanet - moonVsoi) * moonToPlanetScale.VelocityScale);
+
+                dv = vpos - vneg;
+
+                double tt = Astro.TimeToNextRadius(1.0, rburn, vpos, moonSOI);
+
+                (moonRsoi, moonVsoi) = Shepperd.Solve(1.0, (dt + tt) / moonToPlanetScale.TimeScale, moonR0, moonV0);
+            }
+
+            return (dv, dt, rf, vf, tt2);
+        }
+
+        private (double inc, bool type2) GuessOptimizer()
+        {
+            double f, fx;
+            double imin = 0, imincost = double.MaxValue;
+            bool type2 = false;
+            (f, fx) = BrentMin.Solve((x, o) => Guess(x, false).Item1.magnitude, -PI, 0, rtol: 1e-2);
+            if (fx < imincost)
+            {
+                imin     = f;
+                imincost = fx;
+                type2    = false;
+            }
+
+            (f, fx) = BrentMin.Solve((x, o) => Guess(x, false).Item1.magnitude, 0, PI, rtol: 1e-2);
+            if (fx < imincost)
+            {
+                imin     = f;
+                imincost = fx;
+                type2    = false;
+            }
+
+            (f, fx) = BrentMin.Solve((x, o) => Guess(x, true).Item1.magnitude, -PI, 0, rtol: 1e-2);
+            if (fx < imincost)
+            {
+                imin     = f;
+                imincost = fx;
+                type2    = true;
+            }
+
+            (f, fx) = BrentMin.Solve((x, o) => Guess(x, true).Item1.magnitude, 0, PI, rtol: 1e-2);
+            if (fx < imincost)
+            {
+                imin     = f;
+                imincost = fx;
+                type2    = true;
+            }
+
+            Scale moonScale = _args.MoonScale;
+            Print($"{Rad2Deg(imin)} {imincost * moonScale.VelocityScale} {type2}");
+            return (imin, type2);
+        }
+
+        private double[] GenerateInitialGuess()
         {
             var sw = new Stopwatch();
             sw.Start();
 
             double[] x = new double[NVARIABLES];
 
-            double moonSOI = args.MoonSOI;
-            double peR = args.PeR;
-            V3 r0 = args.R0;
-            V3 v0 = args.V0;
-            V3 moonR0 = args.MoonR0;
-            V3 moonV0 = args.MoonV0;
-            Scale moonToPlanetScale = args.MoonToPlanetScale;
+            double moonSOI = _args.MoonSOI;
+            double peR = _args.PeR;
+            V3 r0 = _args.R0;
+            V3 v0 = _args.V0;
+            V3 moonR0 = _args.MoonR0;
+            V3 moonV0 = _args.MoonV0;
+            Scale moonScale = _args.MoonScale;
+            Scale moonToPlanetScale = _args.MoonToPlanetScale;
 
-            double dt, tt1;
-            V3 rf, vf, dv, rsoi, vsoi;
-
-            // kick the moon's orbit to the new apsis to build the transfer orbit
-            V3 dv1 = ChangeOrbitalElement.ChangeApsis(1.0, moonR0, moonV0, peR);
-
-            // get the transfer orbit keplerian elements
-            (double sma, double ecc, double inc, double lan, double argp, double _, _) =
-                Astro.KeplerianFromStateVectors(1.0, moonR0, moonV0 + dv1);
-
-            // calculate the true anomaly of the SOI point on the transfer orbit (using the planet scale)
-            double moonSOI2 = moonSOI / moonToPlanetScale.LengthScale;
-            double nuSOI = TAU - SafeAcos((sma * (1 - ecc * ecc) / moonSOI2 - 1) / ecc); // FIXME: probably assumes we're going to a periapsis?
+            double dt, tt2 = 0;
+            V3 dv, rf = V3.zero, vf = V3.zero;
 
             if (Astro.EccFromStateVectors(1.0, r0, v0) < 1 && Astro.ApoapsisFromStateVectors(1.0, r0, v0) < moonSOI)
             {
-                // get the rsoi/vsoi in the planet-centric coordinates
-                (V3 _, V3 vsoiPlanet) = Astro.StateVectorsFromKeplerian(1.0, sma, ecc, inc, lan, argp, nuSOI);
-
-                // now compute the lunar hyperbolic burn.
-                V3 vneg, vpos, rburn;
-                (vneg, vpos, rburn, dt) = Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, (vsoiPlanet - moonV0) * moonToPlanetScale.VelocityScale);
-
-                dv           = vpos - vneg;
-                tt1          = Astro.TimeToNextRadius(1.0, rburn, vpos, moonSOI);
-                (rsoi, vsoi) = Shepperd.Solve(1.0, tt1, rburn, vpos);
+                (double imin, bool type2) = GuessOptimizer();
+                (dv, dt, rf, vf, tt2)     = Guess(imin, type2, true);
             }
             else
             {
                 // if we're already on an escape trajectory, try an immediate burn and hope we're reasonably close
-                dt           = 0;
-                dv           = V3.zero;
-                tt1          = Astro.TimeToNextRadius(1.0, r0, v0, moonSOI);
-                (rsoi, vsoi) = Shepperd.Solve(1.0, tt1, r0, v0);
+                (dv, dt, rf, vf, tt2) = InitiallyHyperbolicGuess();
             }
 
-            // get the rsoi/vsoi in planet-coordinates of the forward-propagated feasible orbit from the burn.
-            (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, (dt + tt1) / moonToPlanetScale.TimeScale, moonR0, moonV0);
-            V3 rsoiPlanet = rsoi / moonToPlanetScale.LengthScale + moonR2;
-            V3 vsoiPlanet2 = vsoi / moonToPlanetScale.VelocityScale + moonV2;
+            (V3 rburn, V3 vburn) = Shepperd.Solve(1.0, dt, r0, v0);
+            double tt1 = Astro.TimeToNextRadius(1.0, rburn, vburn + dv, moonSOI);
+            (V3 rsoi, V3 vsoi) = Shepperd.Solve(1.0, tt1, rburn, vburn + dv);
 
-            // construct rf + vf by introducing a discontinuity at the SOI
-            V3 vsoiPlanet3 = vsoiPlanet2 + ChangeOrbitalElement.ChangeApsis(1.0, rsoiPlanet, vsoiPlanet2, peR);
+            Print($"vsoi from analytic ejection guess: {vsoi * moonScale.VelocityScale}");
 
-            // forward propagate that to find rf+vf conditions and transfer time
-            double tt2 = Astro.TimeToNextPeriapsis(1.0, rsoiPlanet, vsoiPlanet3);
-            (rf, vf) = Shepperd.Solve(1.0, tt2, rsoiPlanet, vsoiPlanet3);
+            (V3 rsoiPlanet, V3 vsoiPlanet) = Shepperd.Solve(1.0, -tt2, rf, vf);
+            (V3 moonR1, V3 moonV1)         = Shepperd.Solve(1.0, dt + tt1, moonR0, moonV0);
+            V3 vsoi2 = (vsoiPlanet - moonV1) * moonToPlanetScale.VelocityScale;
+
+            Print($"vsoi working backwards from rf, vf: {vsoi2 * moonScale.VelocityScale}");
 
             V3 r2Sph = rsoi.cart2sph;
-            //V3 v2Sph = vsoi.cart2sph;
+            //V3 v2Sph = vsoi2.cart2sph;
             // taking the average of the mismatch in vsoi and spreading the infeasibility over both SOIs seems to actually
             // produce better convergence properties.
-            V3 v2Sph = (((vsoiPlanet3 - moonV2) * moonToPlanetScale.VelocityScale + vsoi) / 2).cart2sph;
+            V3 v2Sph = ((vsoi2 + vsoi) / 2).cart2sph;
 
-            x[0]  = dv.x;      // maneuver x
-            x[1]  = dv.y;      // maneuver y
-            x[2]  = dv.z;      // maneuver z
-            x[3]  = dt;        // maneuver dt
-            x[4]  = tt1 * 0.2; // 1/2 coast time through moon SOI
-            x[5]  = tt1 * 0.8; // 1/2 coast time through moon SOI
-            x[6]  = r2Sph[1];  // theta of SOI position
-            x[7]  = r2Sph[2];  // phi of SOI position
-            x[8]  = v2Sph[0];  // r of SOI velocity
-            x[9]  = v2Sph[1];  // theta of SOI velocity
-            x[10] = v2Sph[2];  // phi of SOI velocity
-            x[11] = tt1 + dt;  // total time in the moon SOI
-            x[12] = tt2 * 0.2; // 1/2 coast time through planet SOI
-            x[13] = tt2 * 0.8; // 1/2 coast time thorugh planet SOI
-            x[14] = rf.x;      // final rx
-            x[15] = rf.y;      // final ry
-            x[16] = rf.z;      // final rz
-            x[17] = vf.x;      // final vx
-            x[18] = vf.y;      // final vy
-            x[19] = vf.z;      // final vz
+            Print($"vsoi in initial guess: {v2Sph.sph2cart * moonScale.VelocityScale}");
+
+            x[0]  = dv.x;      // maneuver x (moonscale)
+            x[1]  = dv.y;      // maneuver y (moonscale)
+            x[2]  = dv.z;      // maneuver z (moonscale)
+            x[3]  = dt;        // maneuver dt (moonscale)
+            x[4]  = tt1 * 0.5; // 1/2 coast time through moon SOI (moonscale)
+            x[5]  = tt1 * 0.5; // 1/2 coast time through moon SOI (moonscale)
+            x[6]  = r2Sph[1];  // theta of SOI position (angle)
+            x[7]  = r2Sph[2];  // phi of SOI position (angle)
+            x[8]  = v2Sph[0];  // magnitude of SOI velocity (moonscale)
+            x[9]  = v2Sph[1];  // theta of SOI velocity (angle)
+            x[10] = v2Sph[2];  // phi of SOI velocity (angle)
+            x[11] = tt1 + dt;  // total time in the moon SOI (moonscale)
+            x[12] = tt2 * 0.5; // 1/2 coast time through planet SOI (planetscale)
+            x[13] = tt2 * 0.5; // 1/2 coast time thorugh planet SOI (planetscale)
+            x[14] = rf.x;      // final rx (planetscale)
+            x[15] = rf.y;      // final ry (planetscale)
+            x[16] = rf.z;      // final rz (planetscale)
+            x[17] = vf.x;      // final vx (planetscale)
+            x[18] = vf.y;      // final vy (planetscale)
+            x[19] = vf.z;      // final vz (planetscale)
 
             sw.Stop();
             Print($"initial guess generation took {sw.ElapsedMilliseconds}ms");
@@ -356,18 +416,43 @@ namespace MechJebLib.Maneuvers
             return x;
         }
 
+        private (V3 dv, double dt, V3 rf, V3 vf, double tt2) InitiallyHyperbolicGuess()
+        {
+            double moonSOI = _args.MoonSOI;
+            double peR = _args.PeR;
+            V3 r0 = _args.R0;
+            V3 v0 = _args.V0;
+            V3 moonR0 = _args.MoonR0;
+            V3 moonV0 = _args.MoonV0;
+            Scale moonToPlanetScale = _args.MoonToPlanetScale;
+
+            double tt1 = Astro.TimeToNextRadius(1.0, r0, v0, moonSOI);
+            (V3 r2, V3 v2)         = Shepperd.Solve(1.0, tt1, r0, v0);
+            (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, tt1 / moonToPlanetScale.TimeScale, moonR0, moonV0);
+            V3 r3 = r2 / moonToPlanetScale.LengthScale + moonR2;
+            V3 v3 = v2 / moonToPlanetScale.VelocityScale + moonV2;
+            (V3 rf, V3 vf) = Astro.StateVectorsAtTrueAnomaly(1.0, r3, v3, 0);
+            double tt2 = Astro.TimeToNextTrueAnomaly(1.0, r3, v3, 0);
+
+            rf = rf.normalized * peR;
+            vf = V3.Cross(V3.Cross(rf, vf), rf).normalized * vf.magnitude;
+
+            return (V3.zero, 0, rf, vf, tt2);
+        }
+
         private const double DIFFSTEP = 1e-9;
         private const double EPSX     = 1e-5;
+        private const double STPMAX   = 1e-4;
         private const int    MAXITS   = 10000;
 
         private const int NVARIABLES             = 20;
-        private const int NEQUALITYCONSTRAINTS   = 15;
+        private const int NEQUALITYCONSTRAINTS   = 17;
         private const int NINEQUALITYCONSTRAINTS = 0;
 
-        private static (V3 V, double dt) ManeuverScaled(Args args, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
+        private (V3 V, double dt, V3 vinf) ManeuverScaled(double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
             bool optguard = false)
         {
-            double[] x = GenerateInitialGuess(args);
+            double[] x = GenerateInitialGuess();
             double[] bndl = new double[NVARIABLES];
             double[] bndu = new double[NVARIABLES];
 
@@ -380,14 +465,11 @@ namespace MechJebLib.Maneuvers
             bndl[3] = dtmin;
             bndu[3] = dtmax;
 
-            var sw = new Stopwatch();
-            sw.Start();
-
             //alglib.minnlccreatef(NVARIABLES, x, DIFFSTEP, out alglib.minnlcstate state);
             alglib.minnlccreate(NVARIABLES, x, out alglib.minnlcstate state);
 
             alglib.minnlcsetbc(state, bndl, bndu);
-            alglib.minnlcsetstpmax(state, 1e-4);
+            alglib.minnlcsetstpmax(state, STPMAX);
             //double rho = 1000.0;
             //int outerits = 5;
             //alglib.minnlcsetalgoaul(state, rho, outerits);
@@ -405,13 +487,23 @@ namespace MechJebLib.Maneuvers
             double[] fi = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1];
             double[,] jac = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1, NVARIABLES];
 
-            NLPFunction(x, fi, jac, args);
+            NLPFunction(x, fi, jac, null);
 
-            alglib.minnlcoptimize(state, NLPFunction, null, args);
-            alglib.minnlcresults(state, out double[] x2, out alglib.minnlcreport rep);
+            var sw = new Stopwatch();
+            sw.Start();
+
+            alglib.minnlcoptimize(state, NLPFunction, null, null);
 
             sw.Stop();
+
+            alglib.minnlcresults(state, out double[] x2, out alglib.minnlcreport rep);
             Print($"optimization took {sw.ElapsedMilliseconds}ms: {rep.iterationscount} iter, {rep.nfev} fev");
+
+            NLPFunction(x2, fi, jac, null);
+
+            for (int i = 0; i < x2.Length; i++)
+                Print($"x[{i}]: {x2[i]} - {x[i]} = {x2[i] - x[i]} ({100 * (x2[i] - x[i]) / x2[i]}%)");
+
 
             if (optguard)
             {
@@ -434,21 +526,21 @@ namespace MechJebLib.Maneuvers
                 throw new Exception(
                     $"ReturnFromMoon.Maneuver() no feasible solution found, constraint violation: {rep.nlcerr}");
 
-            return (new V3(x2[0], x2[1], x2[2]), x2[3]);
+            return (new V3(x2[0], x2[1], x2[2]), x2[3], new V3(x2[8], x2[9], x2[10]).sph2cart);
         }
 
-        private static (V3 V, double dt) Maneuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0, double moonSOI,
+        private (V3 V, double dt) Maneuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0, double moonSOI,
             V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
             bool optguard = false)
         {
-
-            Print($"ReturnFromMoon.Maneuver({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
+            Print(
+                $"ReturnFromMoon.Maneuver({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
 
             var moonScale = Scale.Create(moonMu, Sqrt(r0.magnitude * moonSOI));
             var planetScale = Scale.Create(centralMu, Sqrt(moonR0.magnitude * peR));
             Scale moonToPlanetScale = moonScale.ConvertTo(planetScale);
 
-            var args = new Args
+            _args = new Args
             {
                 MoonSOI = moonSOI / moonScale.LengthScale,
                 PeR     = peR / planetScale.LengthScale,
@@ -458,32 +550,45 @@ namespace MechJebLib.Maneuvers
                 MoonR0            = moonR0 / planetScale.LengthScale,
                 MoonV0            = moonV0 / planetScale.VelocityScale,
                 MoonToPlanetScale = moonToPlanetScale,
-                //MoonScale         = moonScale,
-                PlanetScale = planetScale
+                MoonScale         = moonScale,
+                PlanetScale       = planetScale
             };
 
-            LogStuff1(args, moonScale);
+            LogStuff1(moonScale);
+
+            /*
+            for(double i = -PI; i <= PI; i += PI/36)
+            {
+                (V3 dv2, _, _, _, _) = Guess(i, false);
+                Print($"{Rad2Deg(i)} false {dv2.magnitude * moonScale.VelocityScale}");
+            }
+            for(double i = -PI; i <= PI; i += PI/36)
+            {
+                (V3 dv2, _, _, _, _) = Guess(i, true);
+                Print($"{Rad2Deg(i)} true {dv2.magnitude * moonScale.VelocityScale}");
+            }
+            */
 
             var sw = new Stopwatch();
             sw.Start();
 
-            (V3 dv, double dt) = ManeuverScaled(args, dtmin / moonScale.TimeScale, dtmax / moonScale.TimeScale, optguard);
+            (V3 dv, double dt, V3 vinf) = ManeuverScaled(dtmin / moonScale.TimeScale, dtmax / moonScale.TimeScale, optguard);
 
             sw.Stop();
             Print($"total calculation took {sw.ElapsedMilliseconds}ms");
 
-            LogStuff2(dv, dt, args, moonScale);
+            LogStuff2(dv, dt, vinf);
 
             return (dv * moonScale.VelocityScale, dt * moonScale.TimeScale);
         }
 
-        private static void LogStuff1(Args args, Scale moonScale)
+        private void LogStuff1(Scale moonScale)
         {
-            V3 r0 = args.R0;
-            V3 v0 = args.V0;
-            V3 moonR0 = args.MoonR0;
-            V3 moonV0 = args.MoonV0;
-            Scale planetScale = args.PlanetScale;
+            V3 r0 = _args.R0;
+            V3 v0 = _args.V0;
+            V3 moonR0 = _args.MoonR0;
+            V3 moonV0 = _args.MoonV0;
+            Scale planetScale = _args.PlanetScale;
 
             (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
                 Astro.KeplerianFromStateVectors(1.0, moonR0, moonV0);
@@ -498,20 +603,21 @@ namespace MechJebLib.Maneuvers
                 $"Parking orbit around Secondary:\nsma:{sma * moonScale.LengthScale} ecc:{ecc} inc:{Rad2Deg(inc)} lan:{Rad2Deg(lan)} argp:{Rad2Deg(argp)} tanom:{Rad2Deg(tanom)}");
         }
 
-        private static void LogStuff2(V3 dv, double dt, Args args, Scale moonScale)
+        private void LogStuff2(V3 dv, double dt, V3 vinf)
         {
-            double moonSOI = args.MoonSOI;
-            V3 r0 = args.R0;
-            V3 v0 = args.V0;
-            V3 moonR0 = args.MoonR0;
-            V3 moonV0 = args.MoonV0;
-            Scale moonToPlanetScale = args.MoonToPlanetScale;
-            Scale planetScale = args.PlanetScale;
+            double moonSOI = _args.MoonSOI;
+            V3 r0 = _args.R0;
+            V3 v0 = _args.V0;
+            V3 moonR0 = _args.MoonR0;
+            V3 moonV0 = _args.MoonV0;
+            Scale moonToPlanetScale = _args.MoonToPlanetScale;
+            Scale planetScale = _args.PlanetScale;
+            Scale moonScale = _args.MoonScale;
 
             (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(1.0, r1, v1 + dv, moonSOI);
             (V3 r2, V3 v2)         = Shepperd.Solve(1.0, tt1, r1, v1 + dv);
-            (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, dt + tt1 / moonToPlanetScale.TimeScale, moonR0, moonV0);
+            (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, (dt + tt1) / moonToPlanetScale.TimeScale, moonR0, moonV0);
             V3 r3 = r2 / moonToPlanetScale.LengthScale + moonR2;
             V3 v3 = v2 / moonToPlanetScale.VelocityScale + moonV2;
 
@@ -529,10 +635,21 @@ namespace MechJebLib.Maneuvers
 
             double peR = Astro.PeriapsisFromStateVectors(1.0, r3, v3);
 
-            Print($"deltaV: {(dv * moonScale.VelocityScale).magnitude} dt: {dt * moonScale.TimeScale} PeR: {peR * planetScale.LengthScale}");
+            Print(
+                $"deltaV: {dv * moonScale.VelocityScale}/{dv.magnitude * moonScale.VelocityScale} dt: {dt * moonScale.TimeScale} vinf: {vinf * moonScale.VelocityScale} PeR: {peR * planetScale.LengthScale} (solved)");
+
+            if (Astro.EccFromStateVectors(1.0, r0, v0) < 1 && Astro.ApoapsisFromStateVectors(1.0, r0, v0) < moonSOI)
+            {
+                (V3 vneg, V3 vpos, V3 _, double dt2) = Astro.SingleImpulseHyperbolicBurn(1.0, r0, v0, vinf);
+
+                V3 dv2 = vpos - vneg;
+
+                Print(
+                    $"deltaV: {dv2 * moonScale.VelocityScale}/{dv2.magnitude * moonScale.VelocityScale} dt: {dt2 * moonScale.TimeScale} (analytic validation)");
+            }
         }
 
-        public static (V3 dv, double dt, double newPeR) NextManeuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0,
+        public (V3 dv, double dt, double newPeR) NextManeuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0,
             double moonSOI, V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
             bool optguard = false)
         {

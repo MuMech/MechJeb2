@@ -364,6 +364,13 @@ namespace MechJebLib.Functions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static V3 VelocityForInclination(V3 r, double vmag, double newInc)
+        {
+            V3 vf = ENUHeadingForInclination(newInc, r) * vmag;
+            return ENUToECI(r, vf);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForFPA(V3 r, V3 v, double newFPA)
         {
             V3 v0 = ECIToENU(r, v);
@@ -562,6 +569,14 @@ namespace MechJebLib.Functions
             var two = new V3(-snu, ecc + cnu, 0);
 
             return (one * l / (1 + ecc * cnu), two * Sqrt(mu / l));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (V3 r, V3 v) StateVectorsAtTrueAnomaly(double mu, V3 r, V3 v, double nu)
+        {
+            // TODO? there may be a more efficient way to do this
+            (double _, double ecc, double inc, double lan, double argp, double _, double l) = KeplerianFromStateVectors(mu, r, v);
+            return StateVectorsFromKeplerian(mu, l, ecc, inc, lan, argp, nu);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

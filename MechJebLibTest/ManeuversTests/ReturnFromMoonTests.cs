@@ -24,6 +24,8 @@ namespace MechJebLibTest.ManeuversTests
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms
             ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
 
+            var solver = new ReturnFromMoon();
+
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             const double CENTRAL_MU = 398600435436096;
             const double MOON_MU = 4902800066163.8;
@@ -48,7 +50,7 @@ namespace MechJebLibTest.ManeuversTests
                 _testOutputHelper.WriteLine($"iteration: {i}");
 
                 (V3 dv, double dt, double newPeR) =
-                    ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0);
+                    solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0);
 
                 (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
                 double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
@@ -70,6 +72,8 @@ namespace MechJebLibTest.ManeuversTests
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms
             ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
 
+            var solver = new ReturnFromMoon();
+
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             const double CENTRAL_MU = 398600435436096;
             const double MOON_MU = 4902800066163.8;
@@ -83,7 +87,7 @@ namespace MechJebLibTest.ManeuversTests
             const double PER = 6.3781e6 + 60000; // 60km
 
             (V3 dv, double dt, double newPeR) =
-                ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0, optguard: true);
+                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0, optguard: true);
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
@@ -100,17 +104,23 @@ namespace MechJebLibTest.ManeuversTests
 
         [Theory]
         [InlineData(3033960.04435434, -538512.74449519, -1569171.01639252, 344.550626047212, -973.108221764261, 907.813925253141, 1062.48341419771)]
-        [InlineData(-23744.6019871556, -935848.195057236, -2970820.75826717, -511.683969531061, -141.692448007731, 975.982327934346,1075.82405788302)]
-        [InlineData(-1358340.16497667, -2896749.43027493, -2706207.90479207, 774.176044284448, -468.922061598358, -642.571722922182, 619.911214044732)]
-        [InlineData(-2370135.82005065, -78770.3300753334, 504857.052794559, -735.735041897621, -590.266316007015, -137.364944041411, 563.130459005366)]
+        [InlineData(-23744.6019871556, -935848.195057236, -2970820.75826717, -511.683969531061, -141.692448007731, 975.982327934346,
+            1075.82405788302)]
+        [InlineData(-1358340.16497667, -2896749.43027493, -2706207.90479207, 774.176044284448, -468.922061598358, -642.571722922182,
+            619.911214044732)]
+        [InlineData(-2370135.82005065, -78770.3300753334, 504857.052794559, -735.735041897621, -590.266316007015, -137.364944041411,
+            563.130459005366)]
         [InlineData(1922287.76973033, 1688857.60199125, -1128186.04080648, -644.272529354446, 90.1035308326145, -74.2516010414118, 1558.41290770448)]
-        [InlineData(1448096.6091073, 2242802.60448088, 593799.176165359, 316.818652356425, -684.168486708854, -453.106628476226, 1520.61711756932)]
-        [InlineData(72567.8252483425, -1202508.27881747, 995820.818247795, 733.61121478193, -501.358138165138, -26.4032981481417, 2004.4290059346)]
-        [InlineData(1105140.06213014, -8431008.05414815, -4729658.84487529, -293.374690393787, -1173.3597686151, -411.755491683683, 0)] // initial hyperbolic
+        [InlineData(1448096.6091073, 2242802.60448088, 593799.176165359, 316.818652356425, -684.168486708854, -453.106628476226, 1092.1980531031697)]
+        [InlineData(72567.8252483425, -1202508.27881747, 995820.818247795, 733.61121478193, -501.358138165138, -26.4032981481417, 1959.1953018440845)]
+        [InlineData(1105140.06213014, -8431008.05414815, -4729658.84487529, -293.374690393787, -1173.3597686151, -411.755491683683,
+            0)] // initial hyperbolic
         public void NextManeuverToReturnFromMoonHard(double rx, double ry, double rz, double vx, double vy, double vz, double dvOpt)
         {
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms
             ChangeOrbitalElement.ChangePeriapsis(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), 1.0);
+
+            var solver = new ReturnFromMoon();
 
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             const double CENTRAL_MU = 398600435436096;
@@ -125,7 +135,7 @@ namespace MechJebLibTest.ManeuversTests
             const double PER = 6.3781e6 + 60000; // 60km
 
             (V3 dv, double dt, double newPeR) =
-                ReturnFromMoon.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0, optguard: true);
+                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0);
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);

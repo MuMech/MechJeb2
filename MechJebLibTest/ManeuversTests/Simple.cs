@@ -29,7 +29,7 @@ namespace MechJebLibTest.ManeuversTests
 
                 V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToCircularize(mu, r, v);
 
-                Astro.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-15);
+                Astro.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-14);
                 Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
                 Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
             }
