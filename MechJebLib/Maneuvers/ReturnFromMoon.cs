@@ -473,8 +473,8 @@ namespace MechJebLib.Maneuvers
             //double rho = 1000.0;
             //int outerits = 5;
             //alglib.minnlcsetalgoaul(state, rho, outerits);
-            //alglib.minnlcsetalgoslp(state);
-            alglib.minnlcsetalgosqp(state);
+            alglib.minnlcsetalgoslp(state);
+            //alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, EPSX, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
 
@@ -650,7 +650,7 @@ namespace MechJebLib.Maneuvers
         }
 
         public (V3 dv, double dt, double newPeR) NextManeuver(double centralMu, double moonMu, V3 moonR0, V3 moonV0,
-            double moonSOI, V3 r0, V3 v0, double peR, double inc, double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
+            double moonSOI, V3 r0, V3 v0, double peR, double inc, double dtmin = 0, double dtmax = double.PositiveInfinity,
             bool optguard = false)
         {
             double dt;
@@ -666,9 +666,11 @@ namespace MechJebLib.Maneuvers
                     break;
                 if (i++ >= 5)
                     throw new Exception("Maximum iterations exceeded with no valid future solution");
-                (r0, v0) = Shepperd.Solve(moonMu, Astro.PeriodFromStateVectors(moonMu, r0, v0), r0, v0);
+                double period = Astro.PeriodFromStateVectors(moonMu, r0, v0);
+                dtmin += period;
             }
 
+            // propagate burn forward to determine newPeR as a validation step
             (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
             (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);

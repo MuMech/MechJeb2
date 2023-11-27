@@ -50,7 +50,7 @@ namespace MechJebLibTest.ManeuversTests
                 _testOutputHelper.WriteLine($"iteration: {i}");
 
                 (V3 dv, double dt, double newPeR) =
-                    solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0);
+                    solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0);
 
                 (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
                 double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
@@ -87,7 +87,7 @@ namespace MechJebLibTest.ManeuversTests
             const double PER = 6.3781e6 + 60000; // 60km
 
             (V3 dv, double dt, double newPeR) =
-                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0, optguard: true);
+                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, optguard: true);
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
@@ -135,7 +135,7 @@ namespace MechJebLibTest.ManeuversTests
             const double PER = 6.3781e6 + 60000; // 60km
 
             (V3 dv, double dt, double newPeR) =
-                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, 0);
+                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0);
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
