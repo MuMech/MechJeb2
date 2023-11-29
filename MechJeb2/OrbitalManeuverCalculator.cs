@@ -362,10 +362,8 @@ namespace MuMech
             double moonSOI = moon.sphereOfInfluence;
             (V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(ut);
 
-            double dtmin = o.eccentricity >= 1 ? 0 : double.NegativeInfinity;
-
             (V3 dv, double dt, double newPeR) = solver.NextManeuver(primary.gravParameter, moon.gravParameter, moonR0,
-                moonV0, moonSOI, r0, v0, targetPrimaryRadius, 0, dtmin);
+                moonV0, moonSOI, r0, v0, targetPrimaryRadius, 0);
 
             Debug.Log($"Solved PeR from calcluator: {newPeR}");
 

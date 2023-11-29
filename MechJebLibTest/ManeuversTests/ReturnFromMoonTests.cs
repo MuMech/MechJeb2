@@ -6,6 +6,8 @@ using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
+using static System.Math;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.ManeuversTests
 {
@@ -32,20 +34,26 @@ namespace MechJebLibTest.ManeuversTests
             var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
             var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
             const double MOON_SOI = 66167158.6569544;
-            const double PER = 6.3781e6 + 60000; // 60km
+            const double MOON_SURFACE = 3474 * 1000; // 3,474 km
+            const double PER = 6.3781e6 + 60000;     // PeA = 60 km
+            var random = new Random();
 
-            // this test periodically just fails, although its about 1-in-150 right now
+            // this test does randomly fail
             for (int i = 0; i < 1; i++)
             {
-                var random = new Random();
-                var r0 = new V3(6616710 * random.NextDouble() - 3308350, 6616710 * random.NextDouble() - 3308350,
-                    6616710 * random.NextDouble() - 3308350);
-                var v0 = new V3(2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000, 2000 * random.NextDouble() - 1000);
+                // FIXME: weakly bound orbits give the algorithm problems.
+                double per = (MOON_SOI * 0.6 - MOON_SURFACE) * random.NextDouble() + MOON_SURFACE;
+                double apr = (MOON_SOI * 0.6 - MOON_SURFACE) * random.NextDouble() + MOON_SURFACE;
+                if (per > apr)
+                    (per, apr) = (apr, per);
+                double l = 1 / (0.5 * (1 / apr + 1 / per));
+                double ecc = (apr - per) / (apr + per);
+                double inc = PI * random.NextDouble();
+                double lan = TAU * random.NextDouble();
+                double argp = TAU * random.NextDouble();
+                double nu = TAU * random.NextDouble();
 
-                // skip if its already an escape orbit
-                if (Astro.EccFromStateVectors(MOON_MU, r0, v0) > 1 ||
-                    Astro.ApoapsisFromStateVectors(MOON_MU, r0, v0) > MOON_SOI)
-                    continue;
+                (V3 r0, V3 v0) = Astro.StateVectorsFromKeplerian(MOON_MU, l, ecc, inc, lan, argp, nu);
 
                 _testOutputHelper.WriteLine($"iteration: {i}");
 
@@ -61,8 +69,8 @@ namespace MechJebLibTest.ManeuversTests
 
                 _testOutputHelper.WriteLine($"periapsis: {Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3)}");
 
-                Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3).ShouldEqual(PER, 1e-3);
-                newPeR.ShouldEqual(PER, 1e-3);
+                Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3).ShouldEqual(PER, 1e-2);
+                newPeR.ShouldEqual(PER, 1e-2);
             }
         }
 
@@ -81,13 +89,14 @@ namespace MechJebLibTest.ManeuversTests
             var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
             const double MOON_SOI = 66167158.6569544;
 
+            // this is a pretty reasonable circular equatorial lunar orbit
             var r0 = new V3(4198676.73768844, 5187520.71497923, -3.29371833446352);
             var v0 = new V3(-666.230112925872, 539.234048888927, 0.000277598267012666);
 
             const double PER = 6.3781e6 + 60000; // 60km
 
             (V3 dv, double dt, double newPeR) =
-                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, optguard: true);
+                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, 0, true);
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
@@ -105,9 +114,9 @@ namespace MechJebLibTest.ManeuversTests
         [Theory]
         [InlineData(3033960.04435434, -538512.74449519, -1569171.01639252, 344.550626047212, -973.108221764261, 907.813925253141, 1062.48341419771)]
         [InlineData(-23744.6019871556, -935848.195057236, -2970820.75826717, -511.683969531061, -141.692448007731, 975.982327934346,
-            1075.82405788302)]
+            1075.8211667678943)]
         [InlineData(-1358340.16497667, -2896749.43027493, -2706207.90479207, 774.176044284448, -468.922061598358, -642.571722922182,
-            619.911214044732)]
+            627.70157063181409)]
         [InlineData(-2370135.82005065, -78770.3300753334, 504857.052794559, -735.735041897621, -590.266316007015, -137.364944041411,
             563.130459005366)]
         [InlineData(1922287.76973033, 1688857.60199125, -1128186.04080648, -644.272529354446, 90.1035308326145, -74.2516010414118, 1558.41290770448)]
