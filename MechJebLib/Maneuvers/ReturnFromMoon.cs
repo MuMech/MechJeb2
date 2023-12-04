@@ -52,8 +52,9 @@ namespace MechJebLib.Maneuvers
             V3 rsoi = new V3(moonSOI, x[2], x[3]).sph2cart;
 
             (V3 rburn, V3 vneg) = Shepperd.Solve(1.0, dt, r0, v0);
-            (V3 vpos, V3 vsoi)  = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0);
+            (V3 vpos, V3 vsoi)  = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0, bypass: true);
             V3 dv = vpos - vneg;
+            Print($"dot(rsoi,vsoi): {V3.Dot(rsoi, vsoi)}");
 
             return (dv, dt, vsoi);
         }
@@ -82,7 +83,7 @@ namespace MechJebLib.Maneuvers
             V3 reei = new V3(peR, x[5], x[6]).sph2cart;
 
             (V3 rburn, V3 vneg) = Shepperd.Solve(1.0, dt, r0, v0);
-            (V3 vpos, V3 vsoi)  = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0);
+            (V3 vpos, V3 vsoi)  = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0, bypass: true);
             V3 dv = vpos - vneg;
 
             (V3 moonRsoi, V3 moonVsoi) = Shepperd.Solve(1.0, (dt + tt1) / moonToPlanetScale.TimeScale, moonR0, moonV0);
@@ -520,12 +521,12 @@ namespace MechJebLib.Maneuvers
                 while (true)
                 {
                     (dv, dt) = Maneuver(centralMu, moonMu, moonR0, moonV0, moonSOI, r0, v0, peR, inc, dtmin, dtmax, periodOffset, optguard);
-                    if (NearlyEqual(dt, dtmin, 1e-5) || dt <= 0)
+                    if (dt <= 1e-4)
                     {
                         periodOffset += 1;
                         dtmax        += period;
                     }
-                    else if (NearlyEqual(dt, dtmax, 1e-5) || dt >= dtmax)
+                    else if (NearlyEqual(dt, dtmax, 1e-4) || dt >= dtmax)
                     {
                         dtmax += period;
                     }

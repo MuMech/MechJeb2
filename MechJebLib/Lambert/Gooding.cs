@@ -28,7 +28,7 @@ namespace MechJebLib.Lambert
          * Vf = final velocity vector of transfer orbit
          */
 
-        public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev)
+        public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev, bool bypass = false)
         {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */
 
@@ -49,22 +49,25 @@ namespace MechJebLib.Lambert
 
             double theta = SafeAcos(V3.Dot(ux1, ux2));
 
-            /* calculate the angle between the orbit normal of the initial orbit and the fundamental reference plane */
-
-            double angle_to_on = SafeAcos(V3.Dot(ur1xv1, uz1));
-
-            /* if angle to orbit normal is greater than 90 degrees and posigrade orbit, then flip the orbit normal and the transfer angle */
-
-            if (angle_to_on > 0.5 * PI && tof > 0.0)
+            if (!bypass)
             {
-                theta = TAU - theta;
-                uz1   = -uz1;
-            }
+                /* calculate the angle between the orbit normal of the initial orbit and the fundamental reference plane */
 
-            if (angle_to_on < 0.5 * PI && tof < 0.0)
-            {
-                theta = TAU - theta;
-                uz1   = -uz1;
+                double angle_to_on = SafeAcos(V3.Dot(ur1xv1, uz1));
+
+                /* if angle to orbit normal is greater than 90 degrees and posigrade orbit, then flip the orbit normal and the transfer angle */
+
+                if (angle_to_on > 0.5 * PI && tof > 0.0)
+                {
+                    theta = TAU - theta;
+                    uz1   = -uz1;
+                }
+
+                if (angle_to_on < 0.5 * PI && tof < 0.0)
+                {
+                    theta = TAU - theta;
+                    uz1   = -uz1;
+                }
             }
 
             V3 uz2 = uz1;
