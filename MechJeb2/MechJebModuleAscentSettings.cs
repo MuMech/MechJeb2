@@ -50,32 +50,16 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult TurnStartVelocity = new EditableDoubleMult(50);
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult TurnStartPitch = new EditableDoubleMult(25);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult IntermediateAltitude = new EditableDoubleMult(45000, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult HoldAPTime = new EditableDoubleMult(1);
-
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public int _ascentTypeInteger;
+        public int AscentTypeInteger;
 
         public AscentType AscentType
         {
-            get
-            {
-                // intended to be temporary fix for deletion of the stock-style gravity turn and
-                // remapping the old PVG=2 mapping to PVG=1
-                if (_ascentTypeInteger > 1)
-                    _ascentTypeInteger = 1;
-                return (AscentType)_ascentTypeInteger;
-            }
+            get => (AscentType)AscentTypeInteger;
             set
             {
-                _ascentTypeInteger = (int)value;
+                AscentTypeInteger = (int)value;
                 DisableAscentModules();
             }
         }
