@@ -13,9 +13,9 @@ namespace MuMech
     {
         private readonly string[] _ascentPathList =
         {
-            Localizer.Format("#MechJeb_Ascent_ascentPathList1"), Localizer.Format("#MechJeb_Ascent_ascentPathList2"),
+            Localizer.Format("#MechJeb_Ascent_ascentPathList1"),
             Localizer.Format("#MechJeb_Ascent_ascentPathList3")
-        }; // "Classic Ascent Profile", "Stock-style GravityTurn™", "Primer Vector Guidance (RSS/RO)"
+        }; // "Classic Ascent Profile", "Primer Vector Guidance (RSS/RO)"
 
         public MechJebModuleAscentMenu(MechJebCore core) : base(core) { }
 
