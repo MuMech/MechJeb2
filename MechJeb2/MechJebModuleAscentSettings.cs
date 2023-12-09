@@ -65,7 +65,14 @@ namespace MuMech
 
         public AscentType AscentType
         {
-            get => (AscentType)_ascentTypeInteger;
+            get
+            {
+                // intended to be temporary fix for deletion of the stock-style gravity turn and
+                // remapping the old PVG=2 mapping to PVG=1
+                if (_ascentTypeInteger > 1)
+                    _ascentTypeInteger = 1;
+                return (AscentType)_ascentTypeInteger;
+            }
             set
             {
                 _ascentTypeInteger = (int)value;
