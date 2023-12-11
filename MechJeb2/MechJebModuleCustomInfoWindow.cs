@@ -979,12 +979,12 @@ General:InfoItems.AllStageStats
                     @"--- MechJeb Custom Window ---
 Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname5") + @"
 Show in: flight
-Value:FlightRecorder.deltaVExpended
-Value:FlightRecorder.gravityLosses
-Value:FlightRecorder.dragLosses
-Value:FlightRecorder.steeringLosses
-Value:FlightRecorder.timeSinceMark
-Value:FlightRecorder.phaseAngleFromMark
+Value:FlightRecorder.DeltaVExpended
+Value:FlightRecorder.GravityLosses
+Value:FlightRecorder.DragLosses
+Value:FlightRecorder.SteeringLosses
+Value:FlightRecorder.TimeSinceMark
+Value:FlightRecorder.PhaseAngleFromMark
 Value:FlightRecorder.GroundDistanceFromMark
 -----------------------------" //Ascent Stats
             },
@@ -1052,7 +1052,7 @@ Value:InfoItems.RelativeInclinationToTarget
 Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname9") + @"
 Show in: flight
 Action:FlightRecorder.Mark
-Value:FlightRecorder.timeSinceMark
+Value:FlightRecorder.TimeSinceMark
 Value:VesselState.time
 -----------------------------" //Stopwatch
             },
@@ -1078,13 +1078,13 @@ Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname11") + @"
 Show in: flight
 Value:VesselState.AoA
 Value:VesselState.AoS
-Value:VesselState.AoD
+Value:VesselState.displacementAngle
 Value:VesselState.mach
 Value:VesselState.dynamicPressure
-Value.VesselState.maxDynamicPressure
-Value.VesselState.intakeAir
-Value.VesselState.intakeAirAllIntakes
-Value.VesselState.intakeAirNeeded
+Value:VesselState.maxDynamicPressure
+Value:VesselState.intakeAir
+Value:VesselState.intakeAirAllIntakes
+Value:VesselState.intakeAirNeeded
 Value:VesselState.atmosphericDensityGrams
 Value:InfoItems.AtmosphericPressure
 Value:InfoItems.AtmosphericDrag
