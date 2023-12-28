@@ -3,7 +3,7 @@ TARGET_PATH=$1
 TARGET_DIR=$2
 TARGET_NAME=$3
 PROJECT_DIR=$4
-REFERENCE_PATH=$5
+KSPDIR=$5
 
 if [ -z "${TARGET_PATH}" ] ; then
   echo 'Expected $TARGET_PATH to be defined but it is not' >&2
@@ -29,15 +29,6 @@ fi
 if [ -z "${PROJECT_DIR}" ] ; then
   echo 'Expected PROJECT_DIR to be defined but it is not' >&2
   exit 1
-fi
-
-if [ -z "${REFERENCE_PATH}" ] ; then
-  echo 'Expected REFERENCE_PATH to be defined but it is not' >&2
-  exit 1
-fi
-
-if [[ $(uname -s) = Darwin ]]; then
-  KSPDIR="$(dirname "$(dirname "$(dirname "$(dirname "$(dirname "$REFERENCE_PATH")")")")")"
 fi
 
 if [ -z "${KSPDIR}" ] ; then
