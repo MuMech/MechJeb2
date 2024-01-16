@@ -213,8 +213,11 @@ namespace MuMech
             {
                 Debug.Log("Awaiting Liftoff");
                 Status = Localizer.Format("#MechJeb_Ascent_status6"); //"Awaiting liftoff"
-                // kill the optimizer if it is running.
-                Core.Guidance.Enabled = false;
+
+                if (TMinus > AscentSettings.WarpCountDown)
+                    Core.Guidance.Enabled = false;
+                else
+                    Core.Guidance.AssertStart(false);
 
                 Core.Attitude.SetAxisControl(false, false, false);
                 return;
