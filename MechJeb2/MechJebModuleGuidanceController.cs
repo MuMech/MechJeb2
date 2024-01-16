@@ -75,7 +75,7 @@ namespace MuMech
         private bool _allowExecution;
 
         // we wait until we get a signal to allow execution to start
-        public void AssertStart(bool allow_execution = true) => _allowExecution = allow_execution;
+        public void AssertStart(bool allowExecution = true) => _allowExecution = allowExecution;
 
         public override void OnFixedUpdate()
         {
