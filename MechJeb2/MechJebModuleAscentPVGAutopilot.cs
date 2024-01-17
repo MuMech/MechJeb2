@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
+using UnityEngine;
 
 /*
  * Optimized launches for RSS/RO
@@ -32,6 +33,24 @@ namespace MuMech
             Core.Glueball.Users.Remove(this);
         }
 
+        public override void Drive(FlightCtrlState s)
+        {
+            if (TimedLaunch)
+            {
+                if (TMinus <= AscentSettings.WarpCountDown)
+                {
+                    SetTarget();
+                    Core.Guidance.AssertStart(false);
+                }
+            }
+            else
+            {
+                SetTarget();
+                Core.Guidance.AssertStart();
+            }
+            base.Drive(s);
+        }
+
         private enum AscentMode
         {
             VERTICAL_ASCENT,
@@ -43,14 +62,8 @@ namespace MuMech
 
         private AscentMode _mode;
 
-        protected override void TimedLaunchHook() =>
-            // timedLaunch kills the optimizer so re-enable it here
-            Core.Guidance.Enabled = true;
-
         protected override bool DriveAscent2()
         {
-            SetTarget();
-            Core.Guidance.AssertStart();
             switch (_mode)
             {
                 case AscentMode.VERTICAL_ASCENT:
