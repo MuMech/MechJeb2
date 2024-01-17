@@ -112,7 +112,6 @@ namespace MuMech
                 {
                     if (Enabled && VesselState.thrustAvailable < 10E-4) // only stage if we have no engines active
                         StageManager.ActivateNextStage();
-                    TimedLaunchHook(); // let ascentPath modules do stuff edge triggered on launch starting
                     TimedLaunch = false;
                 }
                 else
@@ -214,11 +213,6 @@ namespace MuMech
                 Debug.Log("Awaiting Liftoff");
                 Status = Localizer.Format("#MechJeb_Ascent_status6"); //"Awaiting liftoff"
 
-                if (TMinus > AscentSettings.WarpCountDown)
-                    Core.Guidance.Enabled = false;
-                else
-                    Core.Guidance.AssertStart(false);
-
                 Core.Attitude.SetAxisControl(false, false, false);
                 return;
             }
@@ -288,11 +282,6 @@ namespace MuMech
         }
 
         protected abstract bool DriveAscent2();
-
-        protected virtual void TimedLaunchHook()
-        {
-            // triggered when timed launches start the actual launch
-        }
 
         //data used by ThrottleToRaiseApoapsis
         private          float         _raiseApoapsisLastThrottle;
