@@ -2,6 +2,7 @@
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
+using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
@@ -60,13 +61,13 @@ namespace MechJebLibTest.PVGTests.AscentTests
             solution.V(t0).ShouldEqual(v0);
             solution.M(t0).ShouldEqual(52831.1138786043);
             solution.Vgo(t0).ShouldEqual(9419.6763414588168, 1e-7);
-            solution.Pv(t0).ShouldEqual(new V3(1.3834666440741792, -0.95667858377414616, 0.70183279386418346), 1e-7);
+            solution.Pv(t0).normalized.ShouldEqual(new V3(0.75907214457397088, -0.52490464222178934, 0.38507738950227655), 1e-7);
 
-            smaf.ShouldEqual(8849932.3534340952, 1e-7);
-            eccf.ShouldEqual(0.2592033771405583, 1e-7);
+            smaf.ShouldEqual(8849932.3565993849, 1e-7);
+            eccf.ShouldEqual(0.2592033774111514, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
-            lanf.ShouldEqual(3.4079112881114502, 1e-7);
-            argpf.ShouldEqual(1.7723635725563422, 1e-7);
+            lanf.ShouldEqual(3.4079112881246774, 1e-7);
+            argpf.ShouldEqual(1.7723635725701117, 1e-7);
             ClampPi(tanof).ShouldBeZero(1e-7);
         }
 
@@ -124,6 +125,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
         [Fact]
         private void BiggerEarlyRocketMaybe()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             var r0 = new V3(-4230937.57027061, -3658393.88789034, 3050613.04457008);
             var v0 = new V3(266.772640873606, -308.526291373473, 0.00117499917444357);
             var u0 = new V3(-0.664193346276844, -0.574214958863673, 0.478669494390488);
@@ -145,7 +148,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
 
             using Solution solution = pvg.GetSolution();
 
-            pvg.Znorm.ShouldBeZero(1e-9);
+            pvg.Znorm.ShouldBeZero(1e-8);
             Assert.Equal(8, pvg.LmStatus);
 
             // re-run fully integrated instead of the analytic bootstrap

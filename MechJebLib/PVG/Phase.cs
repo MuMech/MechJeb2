@@ -22,6 +22,7 @@ namespace MechJebLib.PVG
         public          double maxt;
         public          double mint;
         public          double ve;
+        public          double c => ve; // alias for normalized ve
         public readonly double a0;
         public          double tau;
         public          double mdot;
@@ -44,7 +45,7 @@ namespace MechJebLib.PVG
 
         public          bool Unguided;
         public readonly bool MassContinuity = false;
-        public          bool LastFreeBurn   = false;
+        public          bool BeforeCoast    = false;
         public          bool Normalized;
         public readonly int  KSPStage;
         public readonly int  MJPhase;
@@ -58,6 +59,7 @@ namespace MechJebLib.PVG
             if (Coast)
                 return new VacuumCoastAnalytic();
 
+            //return new VacuumThrustIntegrator();
             return Analytic ? (IPVGIntegrator)new VacuumThrustAnalytic() : new VacuumThrustIntegrator();
         }
 

@@ -22,14 +22,14 @@ namespace MechJebLib.PVG
 
         public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, IPVGTerminal terminal)
         {
-            Scale    = Scale.Create(mu, r0.magnitude, m0);
-            Mu       = mu;
-            R0       = r0 / Scale.LengthScale;
-            V0       = v0 / Scale.VelocityScale;
-            M0       = m0 / Scale.MassScale;
-            U0       = u0;
-            Rbody    = rbody;
-            Terminal = terminal.Rescale(Scale);
+            Scale      = Scale.Create(mu, r0.magnitude, m0);
+            Mu         = mu;
+            R0         = r0 / Scale.LengthScale;
+            V0         = v0 / Scale.VelocityScale;
+            M0         = m0 / Scale.MassScale;
+            U0         = u0;
+            Rbody      = rbody;
+            Terminal   = terminal.Rescale(Scale);
 
             T0 = t0;
         }

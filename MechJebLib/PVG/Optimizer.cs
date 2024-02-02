@@ -14,6 +14,8 @@ namespace MechJebLib.PVG
 {
     public partial class Optimizer : IDisposable
     {
+        private const double PM0 = 1;
+
         public readonly double      ZnormTerminationLevel = 1e-9;
         public          double      Znorm;
         public          int         MaxIter          { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
@@ -64,45 +66,43 @@ namespace MechJebLib.PVG
         {
             var yfp = OutputLayout.CreateFrom(_terminal[p]);
             var y0p = InputLayout.CreateFrom(_initial[p]);
+            var y0 = InputLayout.CreateFrom(_initial[0]);
             var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
 
             // handle coasts
             if (_phases[p].Coast && _phases[p].OptimizeTime)
             {
-                return yfp.H0; // coast after jettison or an initial first coast
+                var y0p1 = InputLayout.CreateFrom(_initial[p+1]);
+
+                double k = _phases[lastPhase].c * yf.PV.magnitude / ( yf.M * yf.Pm);
+
+                return y0p1.PV.magnitude / y0p1.M - k * y0p1.Pm / _phases[p+1].c;
             }
 
             if (_phases[p].OptimizeTime)
             {
-                if (_phases[p].Coast)
-                {
-                    if (p == 0)
-                        return yfp.H0; // initial first coast
-                    return yfp.H0;     // coast after jettison
-                    // FIXME: coasts during stages
-                }
+                    //if (_phases[lastPhase].BeforeCoast) // no coast so no mass costate
+                        return y0.CostateMagnitude - 1;
+                    return H(yf, lastPhase);
 
-                // handle the optimized burntime that gives rise to the free final time constraint
-                if (_phases[p].LastFreeBurn)
-                {
-                    //if (_phases[p].FinalMassProblem) return H(yf[phases.Count - 1], phases.Count - 1);
-                    return yf.CostateMagnitude - 1;
-                }
-
+                /*
                 if (_phases[p].DropMass > 0 && p < lastPhase)
                 {
+                    throw new Exception("this doesn't work yet");
                     var y0p1 = OutputLayout.CreateFrom(_initial[p + 1]);
                     return H(yfp, p) - H(y0p1, p + 1);
                 }
+                */
 
                 // any other optimized burntimes
                 return yfp.H0 - y0p.H0;
             }
 
+            // fixed burntime
             return y0p.Bt - _phases[p].bt;
         }
 
-        private double H(OutputLayout y, int p) => y.H0 + _phases[p].thrust * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot;
+        private double H(OutputLayout y, int p) => y.H0 + _phases[p].thrust * (y.PV.magnitude / y.M - y.Pm / _phases[p].c);
 
         private void BaseResiduals()
         {
@@ -110,12 +110,15 @@ namespace MechJebLib.PVG
             var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
             var z = ResidualLayout.CreateFrom(_residual[0]);
 
-            z.R        = y0.R - _problem.R0;
-            z.V        = y0.V - _problem.V0;
-            z.M        = y0.M - _problem.M0;
+            z.R  = y0.R - _problem.R0;
+            z.V  = y0.V - _problem.V0;
+            z.M  = y0.M - _problem.M0;
+            if (_phases[0].Coast && _phases[0].OptimizeTime)
+                z.Pm = y0.Pm - PM0;
+            else
+                z.Pm = y0.Pm;
             z.Terminal = _problem.Terminal.TerminalConstraints(yf);
             z.Bt       = CalcBTConstraint(0);
-            //z.Pm_transversality = yf_scratch[phases.Count - 1].Pm - 1;
             z.CopyTo(_residual[0]);
         }
 
@@ -131,6 +134,13 @@ namespace MechJebLib.PVG
                 z.V  = yf.V - y0.V;
                 z.Pv = yf.PV - y0.PV;
                 z.Pr = yf.PR - y0.PR;
+
+                if (_phases[p].BeforeCoast)
+                    z.Pm = y0.Pm;
+                else if (_phases[p].Coast)
+                    z.Pm = y0.Pm - PM0;
+                else
+                    z.Pm = yf.Pm - y0.Pm;
 
                 if (_phases[p].MassContinuity)
                     z.M = yf.M - (_phases[p - 1].DropMass + y0.M);
@@ -191,28 +201,12 @@ namespace MechJebLib.PVG
             }
         }
 
-        private void AnalyzePhases()
-        {
-            int lastFreeBurnPhase = -1;
-
-            for (int p = 0; p <= lastPhase; p++)
-            {
-                _phases[p].LastFreeBurn = false;
-                if (_phases[p].OptimizeTime && !_phases[p].Coast)
-                    lastFreeBurnPhase = p;
-            }
-
-            if (lastFreeBurnPhase >= 0)
-                _phases[lastFreeBurnPhase].LastFreeBurn = true;
-        }
-
         private CancellationToken _timeoutToken;
 
         private void UnSafeRun()
         {
             _terminating = false;
 
-            AnalyzePhases();
             ExpandArrays();
 
             double[] yGuess = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
@@ -234,7 +228,7 @@ namespace MechJebLib.PVG
             {
                 // pin the maximum time of any finite burn phase to below the tau value of the stage
                 if (!_phases[i].Coast && !_phases[i].Infinite && _phases[i].OptimizeTime)
-                    bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau;
+                    bndu[i * InputLayout.INPUT_LAYOUT_LEN + InputLayout.BT_INDEX] = _phases[i].tau * (1 - 1e-9);
 
                 // pin the time of any phase which isn't allowed to be optimized
                 if (!_phases[i].OptimizeTime)
@@ -315,30 +309,6 @@ namespace MechJebLib.PVG
             return this;
         }
 
-        private void IntegrateMassCostate()
-        {
-            double pm = 1;
-
-            for (int p = lastPhase; p >= 0; p--)
-            {
-                _terminal[p][OutputLayout.PM_INDEX] = pm;
-
-                // FIXME: okay this is harder than I thought, so here's what needs to get done I think:
-                // - need dense output high fidelity interpolant from the integrator for just the Pv 3-vector.
-                // - need to write a real simple 1-dimensional integration kernel for Pm that uses that
-                //   interpolant to integrate the Pm backwards.
-                // - then need to figure out the jump condition due to mass loss between stages.
-                // - alternatively it might be possible to use analyic expressions for Pv to integrate backwards
-                //   in closed-form without any interpolant or using RK here.
-                // - obviously, when using analytic thrust integrals it makes sense to do exactly that, so maybe
-                //   that is really the first step?
-
-                _initial[p][InputLayout.PM_INDEX] = pm;
-
-                pm += 0; // replace with jump condition between stages
-            }
-        }
-
         private void Shooting(Solution? solution = null)
         {
             using var integArray = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
@@ -356,9 +326,14 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R = _problem.R0;
-                    y0.V = _problem.V0;
+                    y0.R  = _problem.R0;
+                    y0.V  = _problem.V0;
                 }
+
+                if (phase.BeforeCoast)
+                    y0.Pm = 0;
+                if (phase.Coast && phase.OptimizeTime)
+                    y0.Pm = PM0;
 
                 y0.M = phase.m0;
 
@@ -382,10 +357,14 @@ namespace MechJebLib.PVG
 
                 t0 += bt;
             }
-
-            IntegrateMassCostate();
         }
 
+        /// <summary>
+        /// This does single-shooting given the initial conditions and a guess of the costate which is internally feasible but does
+        /// not meet the terminal conditions.
+        /// </summary>
+        /// <param name="pv0"></param>
+        /// <param name="pr0"></param>
         public Optimizer Bootstrap(V3 pv0, V3 pr0)
         {
             if (Status != OptimStatus.CREATED)
@@ -419,6 +398,11 @@ namespace MechJebLib.PVG
                     y0.Bt = phase.bt;
                 }
 
+                if (phase.BeforeCoast)
+                    y0.Pm = 0;
+                if (phase.Coast && phase.OptimizeTime)
+                    y0.Pm = PM0;
+
                 y0.M = phase.m0;
 
                 y0.CopyTo(_initial[p]);
@@ -437,8 +421,6 @@ namespace MechJebLib.PVG
 
                 t0 += tf;
             }
-
-            IntegrateMassCostate();
 
             CalculateResiduals();
 
@@ -473,6 +455,10 @@ namespace MechJebLib.PVG
             return this;
         }
 
+        /// <summary>
+        /// This does multiple shooting using an old solution state as the initial guess.
+        /// </summary>
+        /// <param name="solution"></param>
         public Optimizer Bootstrap(Solution solution)
         {
             if (Status != OptimStatus.CREATED)
@@ -508,6 +494,11 @@ namespace MechJebLib.PVG
                     y0.Bt = phase.bt;
                 }
 
+                if (phase.BeforeCoast)
+                    y0.Pm = 0;
+                if (phase.Coast && phase.OptimizeTime)
+                    y0.Pm = PM0;
+
                 y0.M = phase.m0;
 
                 y0.CopyTo(_initial[p]);
@@ -527,8 +518,6 @@ namespace MechJebLib.PVG
 
                 t0 += tf;
             }
-
-            IntegrateMassCostate();
 
             CalculateResiduals();
 

@@ -30,6 +30,15 @@ namespace MechJebLib.PVG
 
                 double m0 = _phases[0].m0;
 
+                bool beforeCoast = true;
+
+                for(int i = 0; i < _phases.Count; i++)
+                {
+                    if (_phases[i].Coast && _phases[i].OptimizeTime)
+                        beforeCoast = false;
+                    _phases[i].BeforeCoast = beforeCoast;
+                }
+
                 if (_terminal == null)
                     throw new Exception("Optimizer.Build() called with no terminal conditions");
 

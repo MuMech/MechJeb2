@@ -205,6 +205,10 @@ namespace MechJebLib.PVG
 
         private Optimizer InitialBootstrappingOptimized(Optimizer.OptimizerBuilder builder)
         {
+            /*
+             * Analytic initial bootstrapping with infinite upper stage and no coast, forced FPA attachment
+             */
+
             ApplyFPA(builder);
 
             // guess the initial launch direction
@@ -231,10 +235,18 @@ namespace MechJebLib.PVG
 
             using Optimizer pvg = builder.Build(bootphases);
             pvg.Bootstrap(pvGuess, _r0.normalized);
+
+            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
             pvg.Run();
 
             if (!pvg.Success())
                 throw new Exception("Target unreachable (infinite ISP)");
+
+            /*
+             * Analytic bootstrapping with finite upper stage and coast, forced FPA attachment
+             */
+
+            ForceNumericalIntegration(); // FIXME: DELETEME
 
             using Solution solution = pvg.GetSolution();
             ApplyOldBurnTimesToPhases(solution);
@@ -250,46 +262,73 @@ namespace MechJebLib.PVG
                 _phases[_optimizedCoastPhase].bt           = total;
             }
 
-            Optimizer pvg2 = builder.Build(_phases);
+            using Optimizer pvg2 = builder.Build(_phases);
             pvg2.Bootstrap(solution);
+            Print("*** PHASE 2: ADDING COAST AND FINITE UPPER STAGE ***");
             pvg2.Run();
 
-            if (!pvg2.Success())
+            /*
+             * Numerical re-bootstrapping with finite upper stage and coast, forced FPA attachment
+             */
+
+            ForceNumericalIntegration();
+            Optimizer pvg3 = builder.Build(_phases);
+            if (pvg2.Success())
             {
-                // when analytic thrust integrals fail, the numerical thrust integrals may succeed.
-                ForceNumericalIntegration();
-                pvg2 = builder.Build(_phases);
-                pvg2.Bootstrap(solution);
-                pvg2.Run();
-                if (!pvg2.Success())
+                using Solution solution2 = pvg2.GetSolution();
+                pvg3.Bootstrap(solution2);
+                Print("*** PHASE 3: REDOING WITH NUMERICAL INTEGRATION ***");
+                pvg3.Run();
+                if (!pvg3.Success())
+                    throw new Exception("Target unreachable after analytic convergence");
+            }
+            else
+            {
+                pvg3.Bootstrap(solution);
+                Print("*** PHASE 3: ATTEMPTING NUMERICAL INTEGRATION AFTER ANALYTICAL FAILURE ***");
+                pvg3.Run();
+                if (!pvg3.Success())
                     throw new Exception("Target unreachable");
             }
 
             if (_attachAltFlag || _eccT < 1e-4)
-                return pvg2;
+                return pvg3;
 
-            // we have a periapsis attachment solution, redo with free attachment
-            using Solution solution2 = pvg2.GetSolution();
+            /*
+             * Numerical re-bootstrapping with finite upper stage and coast, free attachment
+             */
 
-            ApplyKepler(builder);
-            ApplyOldBurnTimesToPhases(solution2);
-
-            Optimizer pvg3 = builder.Build(_phases);
-            pvg3.Bootstrap(solution2);
-            pvg3.Run();
-
-            if (!pvg3.Success())
-                return pvg2;
-
-            // sanity check to force back near-apoapsis attatchment back to periapsis attachment
             using Solution solution3 = pvg3.GetSolution();
 
-            (V3 rf, V3 vf) = solution3.TerminalStateVectors();
+            ApplyKepler(builder);
+            ApplyOldBurnTimesToPhases(solution3);
+
+            Optimizer pvg4 = builder.Build(_phases);
+            pvg4.Bootstrap(solution3);
+            Print("*** PHASE 4: RELAXING TO FREE ATTACHMENT ***");
+            pvg4.Run();
+
+            if (!pvg4.Success())
+            {
+                Print("*** FREE ATTACHMENT FAILED, FALLING BACK TO PERIAPSIS ***");
+                return pvg3;
+            }
+
+            /*
+             * Sanity check to ensure free attachment did not attach to the apoapsis
+             */
+
+            using Solution solution4 = pvg4.GetSolution();
+
+            (V3 rf, V3 vf) = solution4.TerminalStateVectors();
 
             (_, _, _, _, _, double tanof, _) =
                 Astro.KeplerianFromStateVectors(_mu, rf, vf);
 
-            return Abs(ClampPi(tanof)) > PI / 2.0 ? pvg2 : pvg3;
+            if (Abs(ClampPi(tanof)) > PI / 2.0)
+                Print("*** FREE ATTACHMENT NEAR APOAPSIS, FALLING BACK TO PERIAPSIS ***");
+
+            return Abs(ClampPi(tanof)) > PI / 2.0 ? pvg3 : pvg4;
         }
 
         private void ForceNumericalIntegration()
@@ -314,7 +353,7 @@ namespace MechJebLib.PVG
                         continue;
 
                     if (!_phases[i].Coast)
-                        _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].bt);
+                        _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].tau * 0.99);
                     else
                         _phases[i].bt = oldSolution.Bt(j, _t0);
                 }

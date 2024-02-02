@@ -64,6 +64,16 @@ namespace MechJebLib.PVG
             return tbar;
         }
 
+        public double Tminbar(int segment)
+        {
+            return _tmin[segment];
+        }
+
+        public double Tmaxbar(int segment)
+        {
+            return _tmax[segment];
+        }
+
         public V3 R(double t)
         {
             double tbar = (t - T0) / _timeScale;
@@ -78,6 +88,20 @@ namespace MechJebLib.PVG
             using Vn xraw = Interpolate(tbar);
             var x = OutputLayout.CreateFrom(xraw);
             return V3.Cross(x.PR, x.R) + V3.Cross(x.PV, x.V);
+        }
+
+        public double Switch(double tbar, int i)
+        {
+            Phase phase = Phases[i];
+
+            using Vn xrawf = Interpolate(Segments - 1, Tmax);
+            var xf = OutputLayout.CreateFrom(xrawf);
+
+            double k = Phases[Phases.Count-1].c * xf.PV.magnitude / ( xf.M * xf.Pm);
+
+            using Vn xraw = Interpolate(i, tbar);
+            var x = OutputLayout.CreateFrom(xraw);
+            return x.PV.magnitude / x.M - k * x.Pm / phase.c;
         }
 
         public V3 V(double t)
@@ -112,6 +136,19 @@ namespace MechJebLib.PVG
             using Vn xraw = Interpolate(tbar);
             var x = OutputLayout.CreateFrom(xraw);
             return x.PR;
+        }
+
+        public double Pm(double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+            return PmBar(tbar);
+        }
+
+        public double PmBar(double tbar)
+        {
+            using Vn xraw = Interpolate(tbar);
+            var x = OutputLayout.CreateFrom(xraw);
+            return x.Pm;
         }
 
         public double M(double t)
