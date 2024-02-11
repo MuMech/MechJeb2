@@ -159,13 +159,13 @@ namespace MechJebLibTest.PVGTests.AscentTests
             solution.V(0).ShouldEqual(v0);
             solution.M(0).ShouldEqual(157355.487476332);
 
-            tanof.ShouldEqual(0.00011188681598373051, 0.1);
+            tanof.ShouldEqual(0.0063452857807080321, 0.1);
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
 
             // this is 0.12 seconds before tau with an 18 kg final mass
-            solution.Vgo(0).ShouldEqual(27198.792190399912, 1e-7);
+            solution.Vgo(0).ShouldEqual(27198.789343451925, 1e-7);
             solution.Pv(0).normalized.ShouldEqual(new V3(0.87754205429590737, 0.029189246151212624, 0.47861041657202014), 1e-7);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
@@ -179,7 +179,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
             eccf.ShouldEqual(0.00013329824589634466, 1e-4);
             incf.ShouldEqual(incT, 1e-4);
             lanf.ShouldEqual(Deg2Rad(270), 1e-4);
-            argpf.ShouldEqual(1.6027767642296471, 1e-4);
+            argpf.ShouldEqual(1.5965429879704516, 1e-4);
         }
 
         [Fact]
@@ -257,9 +257,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
                 .Build();
 
             ascent.Run();
-
             Optimizer pvg = ascent.GetOptimizer() ?? throw new Exception("null optimzer");
-
             Solution solution = pvg.GetSolution();
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -267,24 +265,18 @@ namespace MechJebLibTest.PVGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double _, double _, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(0).ShouldEqual(r0);
-            solution.V(0).ShouldEqual(v0);
-            solution.M(0).ShouldEqual(157355.487476332);
+            solution.R(t0).ShouldEqual(r0);
+            solution.V(t0).ShouldEqual(v0);
+            solution.M(t0).ShouldEqual(157355.487476332);
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldBePositive();
             solution.Tgo(solution.T0, 2).ShouldBePositive();
 
-//            solution.PmBar(solution.Tmaxbar(2)).ShouldBeZero();
-            solution.Switch(solution.Tmax, 2).ShouldBeZero(1e-4);
-            solution.Switch(solution.Tmaxbar(2), 2).ShouldBeZero(1e-4);
-            solution.Switch(solution.Tminbar(2), 2).ShouldBeZero(1e-4);
-            solution.Switch(solution.Tmaxbar(1), 1).ShouldBeZero(1e-4);
-
             solution.Constant(0).ShouldBeZero(1e-4);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-4);
-            solution.Vgo(0).ShouldEqual(8476.5717630546133, 1e-7);
-//            solution.Pv(0).ShouldEqual(new V3(0.29751921167855305, 0.28243066138021455, 0.16226663323796464), 1e-7);
+            solution.Vgo(t0).ShouldEqual(8476.5717630546133, 1e-7);
+            solution.Pv(t0).normalized.ShouldEqual(new V3(0.67441405475890959, 0.64021145728388051, 0.36782464939981474), 1e-7);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
@@ -297,6 +289,42 @@ namespace MechJebLibTest.PVGTests.AscentTests
             eccf.ShouldEqual(0, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
             lanf.ShouldEqual(Deg2Rad(270), 1e-4);
+
+            // Test that by using a one second shorter fixed coast that the solution is less optimal
+
+            double shorterCoast = solution.Tgo(solution.T0, 1) - 1;
+
+            Ascent ascent2 = Ascent.Builder()
+                .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)
+                .AddFixedCoast(32758.6353093992, shorterCoast, 3,3)
+                .AddStageUsingThrust(32758.6353093992, 456100.006103516, 315.000112652779, 178.63040653022, 3, 3, true)
+                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
+                .Build();
+
+            ascent2.Run();
+            Optimizer pvg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution solution2 = pvg2.GetSolution();
+
+            solution2.Vgo(t0).ShouldEqual(8476.5894126007715, 1e-7);
+
+            // Test that by using a one second longer fixed coast that the solution is less optimal
+
+            double longerCoast = solution.Tgo(solution.T0, 1) + 1;
+
+            Ascent ascent3 = Ascent.Builder()
+                .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)
+                .AddFixedCoast(32758.6353093992, longerCoast, 3,3)
+                .AddStageUsingThrust(32758.6353093992, 456100.006103516, 315.000112652779, 178.63040653022, 3, 3, true)
+                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
+                .Build();
+
+            ascent3.Run();
+            Optimizer pvg3 = ascent3.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution solution3 = pvg3.GetSolution();
+
+            solution3.Vgo(t0).ShouldEqual(8476.5893385219297, 1e-7);
         }
     }
 }

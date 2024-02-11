@@ -101,7 +101,7 @@ namespace MechJebLib.PVG
             (_, _, _, _, _, double tanof, _) =
                 Astro.KeplerianFromStateVectors(_mu, rf, vf);
 
-            if (_attachAltFlag || Abs(ClampPi(tanof)) < PI / 2.0)
+            if (_attachAltFlag || _fixedBurnTime || Abs(ClampPi(tanof)) < PI / 2.0)
                 return pvg;
 
             ApplyFPA(builder);
@@ -209,6 +209,8 @@ namespace MechJebLib.PVG
              * Analytic initial bootstrapping with infinite upper stage and no coast, forced FPA attachment
              */
 
+            ForceNumericalIntegration(); // FIXME: DELETEME AFTER ANALYTICAL SOLUTION DOES MASS COSTATE INTEGRATION
+
             ApplyFPA(builder);
 
             // guess the initial launch direction
@@ -233,10 +235,9 @@ namespace MechJebLib.PVG
             bootphases[bootphases.Count - 1].Unguided     = false;
             bootphases[bootphases.Count - 1].OptimizeTime = true;
 
+            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
             using Optimizer pvg = builder.Build(bootphases);
             pvg.Bootstrap(pvGuess, _r0.normalized);
-
-            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
             pvg.Run();
 
             if (!pvg.Success())
@@ -246,7 +247,7 @@ namespace MechJebLib.PVG
              * Analytic bootstrapping with finite upper stage and coast, forced FPA attachment
              */
 
-            ForceNumericalIntegration(); // FIXME: DELETEME
+            ForceNumericalIntegration(); // FIXME: DELETEME AFTER ANALYTICAL SOLUTION DOES MASS COSTATE INTEGRATION
 
             using Solution solution = pvg.GetSolution();
             ApplyOldBurnTimesToPhases(solution);
@@ -262,9 +263,9 @@ namespace MechJebLib.PVG
                 _phases[_optimizedCoastPhase].bt           = total;
             }
 
+            Print("*** PHASE 2: ADDING COAST AND FINITE UPPER STAGE ***");
             using Optimizer pvg2 = builder.Build(_phases);
             pvg2.Bootstrap(solution);
-            Print("*** PHASE 2: ADDING COAST AND FINITE UPPER STAGE ***");
             pvg2.Run();
 
             /*
@@ -275,18 +276,20 @@ namespace MechJebLib.PVG
             Optimizer pvg3 = builder.Build(_phases);
             if (pvg2.Success())
             {
+                Print("*** PHASE 3: REDOING WITH NUMERICAL INTEGRATION ***");
                 using Solution solution2 = pvg2.GetSolution();
                 pvg3.Bootstrap(solution2);
-                Print("*** PHASE 3: REDOING WITH NUMERICAL INTEGRATION ***");
                 pvg3.Run();
+
                 if (!pvg3.Success())
                     throw new Exception("Target unreachable after analytic convergence");
             }
             else
             {
-                pvg3.Bootstrap(solution);
                 Print("*** PHASE 3: ATTEMPTING NUMERICAL INTEGRATION AFTER ANALYTICAL FAILURE ***");
+                pvg3.Bootstrap(solution);
                 pvg3.Run();
+
                 if (!pvg3.Success())
                     throw new Exception("Target unreachable");
             }
@@ -303,9 +306,9 @@ namespace MechJebLib.PVG
             ApplyKepler(builder);
             ApplyOldBurnTimesToPhases(solution3);
 
+            Print("*** PHASE 4: RELAXING TO FREE ATTACHMENT ***");
             Optimizer pvg4 = builder.Build(_phases);
             pvg4.Bootstrap(solution3);
-            Print("*** PHASE 4: RELAXING TO FREE ATTACHMENT ***");
             pvg4.Run();
 
             if (!pvg4.Success())
@@ -320,15 +323,14 @@ namespace MechJebLib.PVG
 
             using Solution solution4 = pvg4.GetSolution();
 
-            (V3 rf, V3 vf) = solution4.TerminalStateVectors();
+            if (solution3.Vgo(solution3.T0) < solution4.Vgo(solution4.T0))
+            {
+                // this probably means apoapsis attachment or wrong side of the periapsis
+                Print("*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL THAN FREE ATTACHMENT SOLN ***");
+                return pvg3;
+            }
 
-            (_, _, _, _, _, double tanof, _) =
-                Astro.KeplerianFromStateVectors(_mu, rf, vf);
-
-            if (Abs(ClampPi(tanof)) > PI / 2.0)
-                Print("*** FREE ATTACHMENT NEAR APOAPSIS, FALLING BACK TO PERIAPSIS ***");
-
-            return Abs(ClampPi(tanof)) > PI / 2.0 ? pvg3 : pvg4;
+            return pvg4;
         }
 
         private void ForceNumericalIntegration()
@@ -352,10 +354,7 @@ namespace MechJebLib.PVG
                     if (oldSolution.CoastPhase(j) != _phases[i].Coast)
                         continue;
 
-                    if (!_phases[i].Coast)
-                        _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].tau * 0.99);
-                    else
-                        _phases[i].bt = oldSolution.Bt(j, _t0);
+                    _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].tau * 0.99);
                 }
             }
         }

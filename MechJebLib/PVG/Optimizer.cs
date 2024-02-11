@@ -14,7 +14,7 @@ namespace MechJebLib.PVG
 {
     public partial class Optimizer : IDisposable
     {
-        private const double PM0 = 1;
+        private const double PM0 = 0;
 
         public readonly double      ZnormTerminationLevel = 1e-9;
         public          double      Znorm;
@@ -73,36 +73,24 @@ namespace MechJebLib.PVG
             if (_phases[p].Coast && _phases[p].OptimizeTime)
             {
                 var y0p1 = InputLayout.CreateFrom(_initial[p+1]);
-
-                double k = _phases[lastPhase].c * yf.PV.magnitude / ( yf.M * yf.Pm);
-
-                return y0p1.PV.magnitude / y0p1.M - k * y0p1.Pm / _phases[p+1].c;
+                return S(y0p1, p + 1);
             }
 
             if (_phases[p].OptimizeTime)
             {
-                    //if (_phases[lastPhase].BeforeCoast) // no coast so no mass costate
-                        return y0.CostateMagnitude - 1;
-                    return H(yf, lastPhase);
-
-                /*
-                if (_phases[p].DropMass > 0 && p < lastPhase)
-                {
-                    throw new Exception("this doesn't work yet");
-                    var y0p1 = OutputLayout.CreateFrom(_initial[p + 1]);
-                    return H(yfp, p) - H(y0p1, p + 1);
-                }
-                */
-
-                // any other optimized burntimes
-                return yfp.H0 - y0p.H0;
+                    //if (_phases[p].Infinite)
+                        //return y0.CostateMagnitude - 1;
+                    return S(yfp, p);
             }
 
             // fixed burntime
             return y0p.Bt - _phases[p].bt;
         }
 
-        private double H(OutputLayout y, int p) => y.H0 + _phases[p].thrust * (y.PV.magnitude / y.M - y.Pm / _phases[p].c);
+        private double H(OutputLayout y, int p) => y.H0 + _phases[p].thrust * S(y,p);
+        private double S(OutputLayout y, int p) => y.PV.magnitude / y.M - y.Pm / _phases[p].c;
+        private double H(InputLayout y, int p) => y.H0 + _phases[p].thrust * S(y,p);
+        private double S(InputLayout y, int p) => y.PV.magnitude / y.M - y.Pm / _phases[p].c;
 
         private void BaseResiduals()
         {
@@ -110,13 +98,10 @@ namespace MechJebLib.PVG
             var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
             var z = ResidualLayout.CreateFrom(_residual[0]);
 
-            z.R  = y0.R - _problem.R0;
-            z.V  = y0.V - _problem.V0;
-            z.M  = y0.M - _problem.M0;
-            if (_phases[0].Coast && _phases[0].OptimizeTime)
-                z.Pm = y0.Pm - PM0;
-            else
-                z.Pm = y0.Pm;
+            z.R        = y0.R - _problem.R0;
+            z.V        = y0.V - _problem.V0;
+            z.M        = y0.M - _problem.M0;
+            z.Pm       = OutputLayout.CreateFrom(_terminal[1]).Pm - 1;
             z.Terminal = _problem.Terminal.TerminalConstraints(yf);
             z.Bt       = CalcBTConstraint(0);
             z.CopyTo(_residual[0]);
@@ -134,11 +119,8 @@ namespace MechJebLib.PVG
                 z.V  = yf.V - y0.V;
                 z.Pv = yf.PV - y0.PV;
                 z.Pr = yf.PR - y0.PR;
-
-                if (_phases[p].BeforeCoast)
-                    z.Pm = y0.Pm;
-                else if (_phases[p].Coast)
-                    z.Pm = y0.Pm - PM0;
+                if (_phases[p].Coast && _phases[p].OptimizeTime)
+                    z.Pm = 0;
                 else
                     z.Pm = yf.Pm - y0.Pm;
 
@@ -330,11 +312,6 @@ namespace MechJebLib.PVG
                     y0.V  = _problem.V0;
                 }
 
-                if (phase.BeforeCoast)
-                    y0.Pm = 0;
-                if (phase.Coast && phase.OptimizeTime)
-                    y0.Pm = PM0;
-
                 y0.M = phase.m0;
 
                 y0.CopyTo(_initial[p]);
@@ -389,6 +366,7 @@ namespace MechJebLib.PVG
                     y0.V  = _problem.V0;
                     y0.PV = pv0;
                     y0.PR = pr0;
+                    y0.Pm = PM0;
                     y0.Bt = phase.bt;
                 }
                 else
@@ -397,11 +375,6 @@ namespace MechJebLib.PVG
                     y0.CopyFrom(_initial[p]);
                     y0.Bt = phase.bt;
                 }
-
-                if (phase.BeforeCoast)
-                    y0.Pm = 0;
-                if (phase.Coast && phase.OptimizeTime)
-                    y0.Pm = PM0;
 
                 y0.M = phase.m0;
 
@@ -485,6 +458,7 @@ namespace MechJebLib.PVG
                     y0.V  = _problem.V0;
                     y0.Bt = phase.bt;
                     y0.PV = solution.Pv(_problem.T0);
+                    y0.Pm = solution.Pm(_problem.T0);
                     y0.PR = solution.Pr(_problem.T0);
                 }
                 else
@@ -493,11 +467,6 @@ namespace MechJebLib.PVG
                     y0.CopyFrom(_initial[p]);
                     y0.Bt = phase.bt;
                 }
-
-                if (phase.BeforeCoast)
-                    y0.Pm = 0;
-                if (phase.Coast && phase.OptimizeTime)
-                    y0.Pm = PM0;
 
                 y0.M = phase.m0;
 

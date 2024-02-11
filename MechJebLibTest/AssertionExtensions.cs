@@ -68,6 +68,14 @@ namespace MechJebLibTest
                 );
         }
 
+        public static void ShouldBeZeroRadians(this double actual, double epsilon = EPS)
+        {
+            if (actual > PI)
+                actual.ShouldEqual(TAU, epsilon);
+            else
+                actual.ShouldBeZero(epsilon);
+        }
+
         // Comparison to zero within a tolerance
         public static void ShouldBeZero(this V3 actual, double epsilon = EPS)
         {

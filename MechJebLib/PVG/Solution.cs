@@ -90,20 +90,6 @@ namespace MechJebLib.PVG
             return V3.Cross(x.PR, x.R) + V3.Cross(x.PV, x.V);
         }
 
-        public double Switch(double tbar, int i)
-        {
-            Phase phase = Phases[i];
-
-            using Vn xrawf = Interpolate(Segments - 1, Tmax);
-            var xf = OutputLayout.CreateFrom(xrawf);
-
-            double k = Phases[Phases.Count-1].c * xf.PV.magnitude / ( xf.M * xf.Pm);
-
-            using Vn xraw = Interpolate(i, tbar);
-            var x = OutputLayout.CreateFrom(xraw);
-            return x.PV.magnitude / x.M - k * x.Pm / phase.c;
-        }
-
         public V3 V(double t)
         {
             double tbar = (t - T0) / _timeScale;
