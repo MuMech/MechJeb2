@@ -299,7 +299,7 @@ namespace MechJebLib.PVG
 
             ForceNumericalIntegration();
             Optimizer pvg3 = builder.Build(_phases);
-            if (!pvg2.Success())
+            if (pvg2.Success())
             {
                 Print("*** PHASE 3: REDOING WITH NUMERICAL INTEGRATION ***");
                 using Solution solution2 = pvg2.GetSolution();
