@@ -81,6 +81,15 @@ namespace MechJebLibTest
                 );
         }
 
+        // Handles radians wrapping around at 2PI
+        public static void ShouldBeZeroRadians(this double actual, double epsilon = EPS)
+        {
+            if (actual > PI)
+                actual.ShouldEqual(TAU, epsilon);
+            else
+                actual.ShouldBeZero(epsilon);
+        }
+
         public static void ShouldBePositive(this double actual)
         {
             if (!IsFinite(actual))

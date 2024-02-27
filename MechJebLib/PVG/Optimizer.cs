@@ -14,16 +14,16 @@ namespace MechJebLib.PVG
 {
     public partial class Optimizer : IDisposable
     {
-        public readonly double      ZnormTerminationLevel = 1e-9;
-        public          double      Znorm;
-        public          int         MAXITS   { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
-        public          double      EPSX     { get; set; } = EPS;    // rely more on manual termination at znorm=1e-9
-        public          double      DIFFSTEP { get; set; } = 1e-9;
-        public          double      STPMAX = 1e-4;
-        public          int         OptimizerTimeout { get; set; } = 5000; // milliseconds
-        public          int         TerminationType;
-        public          int         Iterations;
-        public          OptimStatus Status;
+        public double      ZnormTerminationLevel = 1e-9;
+        public double      Znorm;
+        public int         MAXITS   { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
+        public double      EPSX     { get; set; } = EPS;    // rely more on manual termination at znorm=1e-9
+        public double      DIFFSTEP { get; set; } = 1e-9;
+        public double      STPMAX = 1e-4;
+        public int         OptimizerTimeout { get; set; } = 5000; // milliseconds
+        public int         TerminationType;
+        public int         Iterations;
+        public OptimStatus Status;
 
         private readonly Problem                  _problem;
         private readonly List<Phase>              _phases;
