@@ -17,7 +17,6 @@ namespace MechJebLib.PVG
         public V3     Pv;
         public V3     Pr;
         public double M;
-        public double Pm;
         public double Bt;
 
         public void CopyTo(IList<double> other)
@@ -27,8 +26,7 @@ namespace MechJebLib.PVG
             Pv.CopyTo(other, 6);
             Pr.CopyTo(other, 9);
             other[12] = M;
-            other[13] = Pm;
-            other[14] = Bt;
+            other[13] = Bt;
         }
 
         public void CopyFrom(IList<double> other)
@@ -38,8 +36,7 @@ namespace MechJebLib.PVG
             Pv.CopyFrom(other, 6);
             Pr.CopyFrom(other, 9);
             M  = other[12];
-            Pm = other[13];
-            Bt = other[14];
+            Bt = other[13];
         }
 
         public static ContinuityLayout CreateFrom(IList<double> other)

@@ -12,9 +12,8 @@ namespace MechJebLib.PVG
     public struct OutputLayout
     {
         public const int M_INDEX           = 12;
-        public const int PM_INDEX          = 13;
-        public const int DV_INDEX          = 14;
-        public const int OUTPUT_LAYOUT_LEN = 15;
+        public const int DV_INDEX          = 13;
+        public const int OUTPUT_LAYOUT_LEN = 14;
 
         public V3 R;
 
@@ -27,8 +26,6 @@ namespace MechJebLib.PVG
         public double CostateMagnitude => Sqrt(PR.sqrMagnitude + PV.sqrMagnitude);
 
         public double M;
-
-        public double Pm;
 
         public double H0
         {
@@ -49,7 +46,6 @@ namespace MechJebLib.PVG
             PV = other.PV;
             PR = other.PR;
             M  = other.M;
-            Pm = other.Pm;
             DV = 0;
         }
 
@@ -60,7 +56,6 @@ namespace MechJebLib.PVG
             PV.CopyTo(other, 6);
             PR.CopyTo(other, 9);
             other[M_INDEX]  = M;
-            other[PM_INDEX] = Pm;
             other[DV_INDEX] = DV;
         }
 
@@ -71,7 +66,6 @@ namespace MechJebLib.PVG
             PV.CopyFrom(other, 6);
             PR.CopyFrom(other, 9);
             M  = other[M_INDEX];
-            Pm = other[PM_INDEX];
             DV = other[DV_INDEX];
         }
 

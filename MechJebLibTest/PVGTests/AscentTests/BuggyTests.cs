@@ -51,7 +51,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
             using Solution solution = pvg.GetSolution();
 
             pvg.Znorm.ShouldBeZero(1e-9);
-            Assert.Equal(8, pvg.LmStatus);
+            Assert.Equal(8, pvg.TerminationType);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -71,7 +71,6 @@ namespace MechJebLibTest.PVGTests.AscentTests
             argpf.ShouldEqual(1.7723635725563422, 1e-7);
             ClampPi(tanof).ShouldBeZero(1e-7);
         }
-
 
         [Fact]
         // this is a buggy rocket, not an actual delta4 heavy, but it is being used to test that
@@ -106,7 +105,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
             using Solution solution = pvg.GetSolution();
 
             pvg.Znorm.ShouldBeZero(1e-9);
-            Assert.Equal(8, pvg.LmStatus);
+            Assert.Equal(8, pvg.TerminationType);
         }
 
         [Fact]
@@ -135,7 +134,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
             using Solution solution = pvg.GetSolution();
 
             pvg.Znorm.ShouldBeZero(1e-9);
-            Assert.Equal(8, pvg.LmStatus);
+            Assert.Equal(8, pvg.TerminationType);
         }
     }
 }

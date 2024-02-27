@@ -21,8 +21,8 @@ namespace MechJebLib.PVG
         public          double      DIFFSTEP { get; set; } = 1e-9;
         public          double      STPMAX = 1e-4;
         public          int         OptimizerTimeout { get; set; } = 5000; // milliseconds
-        public          int         LmStatus;
-        public          int         LmIterations;
+        public          int         TerminationType;
+        public          int         Iterations;
         public          OptimStatus Status;
 
         private readonly Problem                  _problem;
@@ -31,9 +31,9 @@ namespace MechJebLib.PVG
         private readonly List<Vn>                 _terminal = new List<Vn>();
         private readonly List<Vn>                 _residual = new List<Vn>();
         private          int                      lastPhase => _phases.Count - 1;
-        private readonly alglib.minnlcreport       _rep = new alglib.minnlcreport();
+        private readonly alglib.minnlcreport      _rep = new alglib.minnlcreport();
         private readonly alglib.ndimensional_fvec _residualHandle;
-        private          alglib.minnlcstate        _state = new alglib.minnlcstate();
+        private          alglib.minnlcstate       _state = new alglib.minnlcstate();
 
         public enum OptimStatus { CREATED, BOOTSTRAPPED, SUCCESS, FAILED }
 
@@ -67,43 +67,16 @@ namespace MechJebLib.PVG
             var y0p = InputLayout.CreateFrom(_initial[p]);
             var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
 
-            // handle coasts
-            if (_phases[p].Coast && _phases[p].OptimizeTime)
-            {
-                return yfp.H0; // coast after jettison or an initial first coast
-            }
-
             if (_phases[p].OptimizeTime)
             {
                 if (_phases[p].Coast)
-                {
-                    if (p == 0)
-                        return yfp.H0; // initial first coast
-                    return yfp.H0;     // coast after jettison
-                    // FIXME: coasts during stages
-                }
+                    return yfp.H0;
 
-                // handle the optimized burntime that gives rise to the free final time constraint
-                if (_phases[p].LastFreeBurn)
-                {
-                    //if (_phases[p].FinalMassProblem) return H(yf[phases.Count - 1], phases.Count - 1);
-                    return yf.CostateMagnitude - 1;
-                }
-
-                if (_phases[p].DropMass > 0 && p < lastPhase)
-                {
-                    var y0p1 = OutputLayout.CreateFrom(_initial[p + 1]);
-                    return H(yfp, p) - H(y0p1, p + 1);
-                }
-
-                // any other optimized burntimes
-                return yfp.H0 - y0p.H0;
+                return yf.CostateMagnitude - 1;
             }
 
             return y0p.Bt - _phases[p].bt;
         }
-
-        private double H(OutputLayout y, int p) => y.H0 + _phases[p].thrust * y.PV.magnitude / y.M - y.Pm * _phases[p].mdot;
 
         private void BaseResiduals()
         {
@@ -153,9 +126,9 @@ namespace MechJebLib.PVG
         private void CopyToZ(double[] z)
         {
             z[0] = 0;
-            for (int i = 0; i < z.Length-1; i++)
+            for (int i = 0; i < z.Length - 1; i++)
             {
-                z[i+1] = _residual[i / ResidualLayout.RESIDUAL_LAYOUT_LEN][i % ResidualLayout.RESIDUAL_LAYOUT_LEN];
+                z[i + 1] = _residual[i / ResidualLayout.RESIDUAL_LAYOUT_LEN][i % ResidualLayout.RESIDUAL_LAYOUT_LEN];
             }
         }
 
@@ -259,8 +232,8 @@ namespace MechJebLib.PVG
             alglib.minnlccreatef(InputLayout.INPUT_LAYOUT_LEN * _phases.Count, yGuess, DIFFSTEP, out _state);
             alglib.minnlcsetbc(_state, bndl, bndu);
             alglib.minnlcsetstpmax(_state, STPMAX);
-            //alglib.minnlcsetalgoslp(_state);
-            alglib.minnlcsetalgosqp(_state);
+            alglib.minnlcsetalgoslp(_state);
+            //alglib.minnlcsetalgosqp(_state);
             alglib.minnlcsetcond(_state, EPSX, MAXITS);
             alglib.minnlcsetnlc(_state, ResidualLayout.RESIDUAL_LAYOUT_LEN * _phases.Count, 0);
             alglib.minnlcoptimize(_state, _residualHandle, null, null);
@@ -274,11 +247,11 @@ namespace MechJebLib.PVG
             alglib.minlmresultsbuf(_state, ref yNew, _rep);
             */
 
-            LmStatus     = _rep.terminationtype;
-            LmIterations = _rep.iterationscount;
+            TerminationType = _rep.terminationtype;
+            Iterations      = _rep.iterationscount;
 
-            Print("lmstatus: " + LmStatus);
-            Print("lmiterations: " + LmIterations);
+            Print("terminationtype: " + TerminationType);
+            Print("iterations: " + Iterations);
 
             if (_rep.terminationtype != 8)
                 ResidualFunction(yNew, z, null);
@@ -331,30 +304,6 @@ namespace MechJebLib.PVG
             return this;
         }
 
-        private void IntegrateMassCostate()
-        {
-            double pm = 1;
-
-            for (int p = lastPhase; p >= 0; p--)
-            {
-                _terminal[p][OutputLayout.PM_INDEX] = pm;
-
-                // FIXME: okay this is harder than I thought, so here's what needs to get done I think:
-                // - need dense output high fidelity interpolant from the integrator for just the Pv 3-vector.
-                // - need to write a real simple 1-dimensional integration kernel for Pm that uses that
-                //   interpolant to integrate the Pm backwards.
-                // - then need to figure out the jump condition due to mass loss between stages.
-                // - alternatively it might be possible to use analyic expressions for Pv to integrate backwards
-                //   in closed-form without any interpolant or using RK here.
-                // - obviously, when using analytic thrust integrals it makes sense to do exactly that, so maybe
-                //   that is really the first step?
-
-                _initial[p][InputLayout.PM_INDEX] = pm;
-
-                pm += 0; // replace with jump condition between stages
-            }
-        }
-
         private void Shooting(Solution? solution = null)
         {
             using var integArray = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
@@ -398,8 +347,6 @@ namespace MechJebLib.PVG
 
                 t0 += bt;
             }
-
-            IntegrateMassCostate();
         }
 
         public Optimizer Bootstrap(V3 pv0, V3 pr0)
@@ -453,8 +400,6 @@ namespace MechJebLib.PVG
 
                 t0 += tf;
             }
-
-            IntegrateMassCostate();
 
             CalculateResiduals();
 
@@ -543,8 +488,6 @@ namespace MechJebLib.PVG
 
                 t0 += tf;
             }
-
-            IntegrateMassCostate();
 
             CalculateResiduals();
 

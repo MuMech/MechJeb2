@@ -103,8 +103,6 @@ namespace MechJebLib.PVG.Integrators
             else
                 yf.DV = y0.DV + phase.thrust / phase.m0 * dt;
 
-            yf.Pm = y0.Pm; // FIXME: this is certainly wrong
-
             yf.CopyTo(yfout);
         }
 

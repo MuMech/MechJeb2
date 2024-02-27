@@ -86,8 +86,8 @@ namespace MuMech
                     Debug.Log("failed guidance, znorm: " + pvg.Znorm);
                 }
 
-                LastLmStatus     = pvg.LmStatus;
-                LastLmIterations = pvg.LmIterations;
+                LastLmStatus     = pvg.TerminationType;
+                LastLmIterations = pvg.Iterations;
                 LastZnorm        = pvg.Znorm;
 
                 if (LastLmIterations > MaxLmIterations)
