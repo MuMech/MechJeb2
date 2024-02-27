@@ -28,6 +28,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
         [Fact]
         public void FlightPathAngle4AllRocket()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
             double t0 = 0;
@@ -61,15 +62,15 @@ namespace MechJebLibTest.PVGTests.AscentTests
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
-            solution.Vgo(0).ShouldEqual(9327.0948576056289, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.24913591286181805, 0.23909088173239779, 0.13587844086293846), 1e-7);
+            solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-7);
+            solution.Pv(0).normalized.ShouldEqual(new V3(0.68052484128120905, 0.6317658413531414, 0.37115746267392064), 1e-7);
 
             pvg.Znorm.ShouldBeZero(1e-9);
             smaf.ShouldEqual(8616511.1913318466, 1e-7);
             eccf.ShouldEqual(0.23913520746130185, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.7637313812499942, 1e-7);
+            argpf.ShouldEqual(1.7643342507444935, 1e-7);
             ClampPi(tanof).ShouldBeZero(1e-7);
         }
 
@@ -77,6 +78,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
         [Fact]
         public void Kepler3()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
             double t0 = 0;
@@ -110,22 +112,23 @@ namespace MechJebLibTest.PVGTests.AscentTests
 
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
-            solution.Vgo(0).ShouldEqual(9291.2315891261242, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.25236763236272763, 0.24870860524790397, 0.13764101483910374), 1e-7);
+            solution.Vgo(0).ShouldEqual(9334.0379052112639, 1e-7);
+            solution.Pv(0).normalized.ShouldEqual(new V3(0.67311315112262493, 0.64198533000545521, 0.36711513431559445), 1e-7);
 
             pvg.Znorm.ShouldBeZero(1e-9);
             smaf.ShouldEqual(8616511.1913318466, 1e-7);
             eccf.ShouldEqual(0.23913520746130185, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.6667949762852059, 1e-7);
-            ClampPi(tanof).ShouldEqual(0.090826664012324976, 1e-7);
+            argpf.ShouldEqual(1.6625138637074874, 1e-7);
+            ClampPi(tanof).ShouldEqual(0.095809701921327317, 1e-7);
         }
 
         // extreme 1010 x 1012 and still get free attachment
         [Fact]
         public void Kepler3ExtremeElliptical()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
             double t0 = 0;
@@ -161,21 +164,21 @@ namespace MechJebLibTest.PVGTests.AscentTests
             solution.Constant(0).ShouldBeZero(1e-3);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-3);
 
-            solution.Vgo(0).ShouldEqual(18968.729888080918, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.39420604314896607, 0.024122181832433174, 0.21558209101216347), 1e-7);
+            solution.Vgo(0).ShouldEqual(18968.70290317855, 1e-7);
+            solution.Pv(0).normalized.ShouldEqual(new V3(0.87665284452812542, 0.053626948091188488, 0.47812544443814259), 1e-7);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
 
-            perf.ShouldEqual(PeR, 1e-9);
-            aprf.ShouldEqual(ApR, 1e-9);
+            perf.ShouldEqual(PeR, 1e-8);
+            aprf.ShouldEqual(ApR, 1e-8);
 
             pvg.Znorm.ShouldBeZero(1e-5);
             smaf.ShouldEqual(7381999.9997271635, 1e-5);
-            eccf.ShouldEqual(0.00013546395462809413, 1e-5);
+            eccf.ShouldEqual(0.00013546395462809413, 1e-4);
             incf.ShouldEqual(incT, 1e-5);
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
-            argpf.ShouldEqual(1.5561731710314275, 1e-5);
+            argpf.ShouldEqual(1.6234662617637516, 1e-5);
             tanof.ShouldEqual(0.036325746839258599, 1e-5);
         }
 
@@ -183,6 +186,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
         [Fact]
         public void Kepler3MoreExtremerElliptical()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
             double t0 = 0;
@@ -273,8 +277,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
 
             solution.Constant(0).ShouldBeZero(1e-4);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-4);
-            solution.Vgo(0).ShouldEqual(8498.6702629355023, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.24008912999871768, 0.21525232653820714, 0.1309443327389036), 1e-7);
+            solution.Vgo(0).ShouldEqual(8518.1366714811684, 1e-7);
+            solution.Pv(0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-7);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);

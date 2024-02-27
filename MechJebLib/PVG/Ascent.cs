@@ -68,6 +68,35 @@ namespace MechJebLib.PVG
             }
         }
 
+        public void Test(V3 pv0, V3 pr0)
+        {
+            (_smaT, _eccT) = Astro.SmaEccFromApsides(_peR, _apR);
+
+            using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
+                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
+                .TerminalConditions(_hT);
+
+            ForceNumericalIntegration();
+
+            if (_fixedBurnTime)
+            {
+                ApplyEnergy(builder);
+            }
+            else
+            {
+                if (_attachAltFlag || _eccT < 1e-4)
+                    ApplyFPA(builder);
+                else
+                    ApplyKepler(builder);
+            }
+
+            using Optimizer pvg = builder.Build(_phases);
+            pvg.Bootstrap(pv0, pr0);
+            pvg.Run();
+
+            _optimizer = pvg;
+        }
+
         public Optimizer? GetOptimizer() => _optimizer;
 
         private Optimizer ConvergedOptimization(Optimizer.OptimizerBuilder builder, Solution solution)
@@ -101,7 +130,7 @@ namespace MechJebLib.PVG
             (_, _, _, _, _, double tanof, _) =
                 Astro.KeplerianFromStateVectors(_mu, rf, vf);
 
-            if (_attachAltFlag || Abs(ClampPi(tanof)) < PI / 2.0)
+            if (_attachAltFlag || _fixedBurnTime || Abs(ClampPi(tanof)) < PI / 2.0)
                 return pvg;
 
             ApplyFPA(builder);
@@ -205,6 +234,10 @@ namespace MechJebLib.PVG
 
         private Optimizer InitialBootstrappingOptimized(Optimizer.OptimizerBuilder builder)
         {
+            /*
+             * Analytic initial bootstrapping with infinite upper stage and no coast, forced FPA attachment
+             */
+
             ApplyFPA(builder);
 
             // guess the initial launch direction
@@ -229,12 +262,17 @@ namespace MechJebLib.PVG
             bootphases[bootphases.Count - 1].Unguided     = false;
             bootphases[bootphases.Count - 1].OptimizeTime = true;
 
+            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
             using Optimizer pvg = builder.Build(bootphases);
             pvg.Bootstrap(pvGuess, _r0.normalized);
             pvg.Run();
 
             if (!pvg.Success())
                 throw new Exception("Target unreachable (infinite ISP)");
+
+            /*
+             * Analytic bootstrapping with finite upper stage and coast, forced FPA attachment
+             */
 
             using Solution solution = pvg.GetSolution();
             ApplyOldBurnTimesToPhases(solution);
@@ -250,46 +288,74 @@ namespace MechJebLib.PVG
                 _phases[_optimizedCoastPhase].bt           = total;
             }
 
-            Optimizer pvg2 = builder.Build(_phases);
+            Print("*** PHASE 2: ADDING COAST AND FINITE UPPER STAGE ***");
+            using Optimizer pvg2 = builder.Build(_phases);
             pvg2.Bootstrap(solution);
             pvg2.Run();
 
+            /*
+             * Numerical re-bootstrapping with finite upper stage and coast, forced FPA attachment
+             */
+
+            ForceNumericalIntegration();
+            Optimizer pvg3 = builder.Build(_phases);
             if (!pvg2.Success())
             {
-                // when analytic thrust integrals fail, the numerical thrust integrals may succeed.
-                ForceNumericalIntegration();
-                pvg2 = builder.Build(_phases);
-                pvg2.Bootstrap(solution);
-                pvg2.Run();
-                if (!pvg2.Success())
-                    throw new Exception("Target unreachable");
+                Print("*** PHASE 3: REDOING WITH NUMERICAL INTEGRATION ***");
+                using Solution solution2 = pvg2.GetSolution();
+                pvg3.Bootstrap(solution2);
+                pvg3.Run();
+
+                if (!pvg3.Success())
+                    throw new Exception("Target unreachable after analytic convergence");
+            }
+            else
+            {
+                Print("*** PHASE 3: ATTEMPTING NUMERICAL INTEGRATION AFTER ANALYTICAL FAILURE ***");
+                pvg3.Bootstrap(solution);
+                pvg3.Run();
+
+                if (!pvg3.Success())
+                     throw new Exception("Target unreachable");
             }
 
             if (_attachAltFlag || _eccT < 1e-4)
-                return pvg2;
+                return pvg3;
 
-            // we have a periapsis attachment solution, redo with free attachment
-            using Solution solution2 = pvg2.GetSolution();
+            /*
+             * Numerical re-bootstrapping with finite upper stage and coast, free attachment
+             */
 
-            ApplyKepler(builder);
-            ApplyOldBurnTimesToPhases(solution2);
-
-            Optimizer pvg3 = builder.Build(_phases);
-            pvg3.Bootstrap(solution2);
-            pvg3.Run();
-
-            if (!pvg3.Success())
-                return pvg2;
-
-            // sanity check to force back near-apoapsis attatchment back to periapsis attachment
             using Solution solution3 = pvg3.GetSolution();
 
-            (V3 rf, V3 vf) = solution3.TerminalStateVectors();
+            ApplyKepler(builder);
+            ApplyOldBurnTimesToPhases(solution3);
 
-            (_, _, _, _, _, double tanof, _) =
-                Astro.KeplerianFromStateVectors(_mu, rf, vf);
+            Print("*** PHASE 4: RELAXING TO FREE ATTACHMENT ***");
+            Optimizer pvg4 = builder.Build(_phases);
+            pvg4.Bootstrap(solution3);
+            pvg4.Run();
 
-            return Abs(ClampPi(tanof)) > PI / 2.0 ? pvg2 : pvg3;
+            if (!pvg4.Success())
+            {
+                Print("*** FREE ATTACHMENT FAILED, FALLING BACK TO PERIAPSIS ***");
+                return pvg3;
+            }
+
+            /*
+             * Sanity check to ensure free attachment did not attach to the apoapsis
+             */
+
+            using Solution solution4 = pvg4.GetSolution();
+
+            if (solution3.Vgo(solution3.T0) < solution4.Vgo(solution4.T0))
+            {
+                 // this probably means apoapsis attachment or wrong side of the periapsis
+                 Print($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution3.Vgo(solution3.T0)} < {solution4.Vgo(solution4.T0)}) THAN FREE ATTACHMENT SOLN ***");
+                 return pvg3;
+            }
+
+            return pvg4;
         }
 
         private void ForceNumericalIntegration()
@@ -313,10 +379,7 @@ namespace MechJebLib.PVG
                     if (oldSolution.CoastPhase(j) != _phases[i].Coast)
                         continue;
 
-                    if (!_phases[i].Coast)
-                        _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].bt);
-                    else
-                        _phases[i].bt = oldSolution.Bt(j, _t0);
+                    _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].tau * 0.99);
                 }
             }
         }
