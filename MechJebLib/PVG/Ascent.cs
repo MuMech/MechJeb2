@@ -50,6 +50,35 @@ namespace MechJebLib.PVG
             _input = builder;
         }
 
+        public void Test(V3 pv0, V3 pr0)
+        {
+            (_smaT, _eccT) = Astro.SmaEccFromApsides(_peR, _apR);
+
+            using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
+                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
+                .TerminalConditions(_hT);
+
+            ForceNumericalIntegration();
+
+            if (_fixedBurnTime)
+            {
+                ApplyEnergy(builder);
+            }
+            else
+            {
+                if (_attachAltFlag || _eccT < 1e-4)
+                    ApplyFPA(builder);
+                else
+                    ApplyKepler(builder);
+            }
+
+            using Optimizer pvg = builder.Build(_phases);
+            pvg.Bootstrap(pv0, pr0);
+            pvg.Run();
+
+            _optimizer = pvg;
+        }
+
         public void Run()
         {
             (_smaT, _eccT) = Astro.SmaEccFromApsides(_peR, _apR);

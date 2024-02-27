@@ -232,8 +232,69 @@ namespace MechJebLibTest.PVGTests.AscentTests
             Assert.True(solution.Vgo(t0) < solution3.Vgo(t0));
         }
 
-                // Carnasa's TheStandard rocket (ish).
+        // these only produce one transversality condition:
+        // start of coast:
+        // H0f(1) = 0
+        // H0i(2) = 0
+        // end of coast:
+        // H0f(2) = 0
+        // H0i(3) = 0
+
+        // this has to be the second transversality condition?
+        // Hi(1) = 0
+
+        // these are degenerate with H0=0 conditions
+        // Hf(1) = 0
+        // Hi(2) = 0
+        // Hf(2) = 0
+        // so Hi(3) != 0 becauseo of a jump in the hamiltonian due to the constraints on the control in the 4th phase
+        // and Si(3) != 0 as well.
+
+        // this is imposed to scale the mass costate of the second stage
+        // Sf(1) = 0
+        // that doesn't actually seem useful?
+        // optimum:  ctmin: 236.563629014638 dvmin: 9673.89237593156
+        [Fact]
+        public void TheStandardFuckery()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
+            var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
+            var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
+            double t0 = 661803.431918959;
+            double mu = 3.986004418e+14;
+            double rbody = 6.371e+6;
+
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 10e+6;
+            double incT = Deg2Rad(28.608);
+
+            V3 pv0 = new V3(0.0131705073396151,-0.00992075635699253,0.00471657341333147);
+            V3 pr0 = new V3(-0.00215175659811265,-0.0245451738885,0.0134364409252076);
+
+                Ascent ascent2 = Ascent.Builder()
+                    .Initial(r0, v0, u0, t0, mu, rbody)
+                    .SetTarget(PeR, ApR, PeR, incT, 0, 0, true, false)
+                    .AddStageUsingFinalMass(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726, 3, 3)
+                    .AddStageUsingFinalMass(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409, 1, 1, true)
+                    //.AddFixedCoast(678.290157913434, 236.563629014638, 1, 1)
+                    .AddOptimizedCoast(678.290157913434, 0, 500, 1, 1)
+                    .AddStageUsingFinalMass(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005, 0, 0, false, true)
+                    .Build();
+
+                ascent2.Test(pv0, pr0);
+                Optimizer pvg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
+                Solution solution2 = pvg2.GetSolution();
+
+                solution2.Tgo(solution2.T0, 2).ShouldEqual(236.563629014638, 1e-10);
+
+                solution2.Vgo(t0);
+        }
+
+        // Carnasa's TheStandard rocket (ish).
         // This tests optimality of a burn-optimizedBurn-coast-burn with all stages guided with periapsis attachment
+        // optimum:  ctmin: 236.563629014638 dvmin: 9673.89237593156
         [Fact]
         public void TheStandardPeriapsis()
         {
@@ -266,12 +327,13 @@ namespace MechJebLibTest.PVGTests.AscentTests
             ascent.Run();
 
             Optimizer pvg = ascent.GetOptimizer() ?? throw new Exception("null optimzer");
+            pvg.ZnormTerminationLevel = 1e-15;
 
             using Solution solution = pvg.GetSolution();
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldBePositive();
-            solution.Tgo(solution.T0, 2).ShouldBePositive();
+            solution.Tgo(solution.T0, 2).ShouldEqual(236.563629014638);
             solution.Tgo(solution.T0, 3).ShouldBePositive();
 
             pvg.Znorm.ShouldBeZero(1e-9);
@@ -284,7 +346,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
             solution.R(t0).ShouldEqual(r0);
             solution.V(t0).ShouldEqual(v0);
             solution.M(t0).ShouldEqual(49119.7842689869);
-            solution.Vgo(t0).ShouldEqual(OPTIMUMVGO, 1e-7);
+            solution.Vgo(t0).ShouldEqual(OPTIMUMVGO, 1e-15);
             //solution.Pv(t0).normalized.ShouldEqual(new V3(0.7679501685731982, -0.57846262060949616, 0.27501551800942209), 1e-7);
 
             //smaf.ShouldEqual(11463499.98898875, 1e-7);
